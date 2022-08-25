@@ -29,7 +29,12 @@ function main {
 
 		git reset --hard HEAD
 
-		git fetch ../liferay-portal ${branch}:${branch}
+		if [ ${branch} == $(parse_git_current_branch) ]
+		then
+			git pull ../liferay-portal ${branch}:${branch}
+		else
+			git fetch ../liferay-portal ${branch}:${branch}
+		fi
 
 		git push origin ${branch}
 
