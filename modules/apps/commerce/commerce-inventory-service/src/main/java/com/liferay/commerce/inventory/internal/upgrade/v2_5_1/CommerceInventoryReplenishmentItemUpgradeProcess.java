@@ -29,8 +29,8 @@ public class CommerceInventoryReplenishmentItemUpgradeProcess
 			StringBundler.concat(
 				"delete from CIReplenishmentItem where ",
 				"CIReplenishmentItem.sku not in (select CIWarehouseItem.sku ",
-				"from CIWarehouseItem where CIReplenishmentItem.companyid = ",
-				"CIWarehouseItem.companyid and ",
+				"from CIWarehouseItem where CIReplenishmentItem.companyId = ",
+				"CIWarehouseItem.companyId and ",
 				"CIReplenishmentItem.commerceInventoryWarehouseId = ",
 				"CIWarehouseItem.commerceInventoryWarehouseId)"));
 	}
