@@ -1298,11 +1298,11 @@ public class ObjectEntryLocalServiceImpl
 			return predicate;
 		}
 
+		Predicate searchPredicate = null;
+
 		List<ObjectField> objectFields =
 			_objectFieldPersistence.findByODI_DBT_I(
 				objectDefinitionId, "String", true);
-
-		Predicate searchPredicate = null;
 
 		for (ObjectField objectField : objectFields) {
 			Table<?> table = _objectFieldLocalService.getTable(
