@@ -671,17 +671,20 @@ public class JSONUtil {
 	}
 
 	public static <T> JSONArray toJSONArray(
-			List<T> list, UnsafeFunction<T, Object, Exception> unsafeFunction)
+			Collection<T> collection,
+			UnsafeFunction<T, Object, Exception> unsafeFunction)
 		throws Exception {
 
 		JSONArray jsonArray = _createJSONArray();
 
-		if (list == null) {
+		if (collection == null) {
 			return jsonArray;
 		}
 
-		for (T t : list) {
-			Object item = unsafeFunction.apply(t);
+		Iterator<T> iterator = collection.iterator();
+
+		while (iterator.hasNext()) {
+			Object item = unsafeFunction.apply(iterator.next());
 
 			if (item != null) {
 				jsonArray.put(item);
@@ -692,18 +695,21 @@ public class JSONUtil {
 	}
 
 	public static <T> JSONArray toJSONArray(
-		List<T> list, UnsafeFunction<T, Object, Exception> unsafeFunction,
+		Collection<T> collection,
+		UnsafeFunction<T, Object, Exception> unsafeFunction,
 		Consumer<Exception> exceptionConsumer) {
 
 		JSONArray jsonArray = _createJSONArray();
 
-		if (list == null) {
+		if (collection == null) {
 			return jsonArray;
 		}
 
-		for (T t : list) {
+		Iterator<T> iterator = collection.iterator();
+
+		while (iterator.hasNext()) {
 			try {
-				Object item = unsafeFunction.apply(t);
+				Object item = unsafeFunction.apply(iterator.next());
 
 				if (item != null) {
 					jsonArray.put(item);
@@ -718,71 +724,11 @@ public class JSONUtil {
 	}
 
 	public static <T> JSONArray toJSONArray(
-		List<T> list, UnsafeFunction<T, Object, Exception> unsafeFunction,
-		Log log) {
+		Collection<T> collection,
+		UnsafeFunction<T, Object, Exception> unsafeFunction, Log log) {
 
 		return toJSONArray(
-			list, unsafeFunction,
-			exception -> {
-				if (log.isWarnEnabled()) {
-					log.warn(exception, exception);
-				}
-			});
-	}
-
-	public static <T> JSONArray toJSONArray(
-			Set<T> set, UnsafeFunction<T, Object, Exception> unsafeFunction)
-		throws Exception {
-
-		JSONArray jsonArray = _createJSONArray();
-
-		if (set == null) {
-			return jsonArray;
-		}
-
-		for (T t : set) {
-			Object item = unsafeFunction.apply(t);
-
-			if (item != null) {
-				jsonArray.put(item);
-			}
-		}
-
-		return jsonArray;
-	}
-
-	public static <T> JSONArray toJSONArray(
-		Set<T> set, UnsafeFunction<T, Object, Exception> unsafeFunction,
-		Consumer<Exception> exceptionConsumer) {
-
-		JSONArray jsonArray = _createJSONArray();
-
-		if (set == null) {
-			return jsonArray;
-		}
-
-		for (T t : set) {
-			try {
-				Object item = unsafeFunction.apply(t);
-
-				if (item != null) {
-					jsonArray.put(item);
-				}
-			}
-			catch (Exception exception) {
-				exceptionConsumer.accept(exception);
-			}
-		}
-
-		return jsonArray;
-	}
-
-	public static <T> JSONArray toJSONArray(
-		Set<T> set, UnsafeFunction<T, Object, Exception> unsafeFunction,
-		Log log) {
-
-		return toJSONArray(
-			set, unsafeFunction,
+			collection, unsafeFunction,
 			exception -> {
 				if (log.isWarnEnabled()) {
 					log.warn(exception, exception);
