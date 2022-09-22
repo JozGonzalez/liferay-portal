@@ -214,8 +214,7 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 									currentPortletCategory, themeDisplay);
 
 						return JSONUtil.toJSONArray(
-							new ArrayList<>(
-								childPortletCategoryJSONObjectsMap.values()),
+							childPortletCategoryJSONObjectsMap.values(),
 							portletCategoryJSONObject ->
 								portletCategoryJSONObject);
 					}
