@@ -297,7 +297,8 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 
 			return ListUtil.filter(
 				serviceReferenceTuples,
-				srst -> filter.match(srst.getServiceReference()));
+				serviceReferenceTuple -> filter.match(
+					serviceReferenceTuple.getServiceReference()));
 		}
 		catch (InvalidSyntaxException invalidSyntaxException) {
 			throw new RuntimeException(
