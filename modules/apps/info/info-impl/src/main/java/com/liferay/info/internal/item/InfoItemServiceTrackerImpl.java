@@ -302,7 +302,7 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 		}
 		catch (InvalidSyntaxException invalidSyntaxException) {
 			throw new RuntimeException(
-				"Incorrect filter string", invalidSyntaxException);
+				"Invalid filter string", invalidSyntaxException);
 		}
 	}
 
