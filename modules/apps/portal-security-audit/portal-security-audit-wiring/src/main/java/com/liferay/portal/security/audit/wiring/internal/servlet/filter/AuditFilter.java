@@ -99,13 +99,12 @@ public class AuditFilter extends BaseFilter implements TryFilter {
 
 		Long userId = (Long)httpSession.getAttribute(WebKeys.USER_ID);
 
-		Long companyId = _portal.getCompanyId(httpServletRequest);
-
 		String userLogin = StringPool.BLANK;
 
 		if (userId != null) {
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+					CompanyThreadLocal.setWithSafeCloseable(
+						_portal.getCompanyId(httpServletRequest))) {
 
 				User user = _userLocalService.getUser(userId);
 
