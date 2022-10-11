@@ -191,11 +191,11 @@ public class ShardedEhcachePortalCacheTest {
 		_companyIdThreadLocal.set(CompanyConstants.SYSTEM);
 
 		Assert.assertSame(
-			_TEST_VALUE_SYSTEM,
-			_shardedEhcachePortalCache.get(_TEST_KEY_SYSTEM));
-		Assert.assertSame(
 			_TEST_VALUE_1, _shardedEhcachePortalCache.get(_TEST_KEY_1));
 		Assert.assertNull(_shardedEhcachePortalCache.get(_TEST_KEY_2));
+		Assert.assertSame(
+			_TEST_VALUE_SYSTEM,
+			_shardedEhcachePortalCache.get(_TEST_KEY_SYSTEM));
 
 		_companyIdThreadLocal.set(_TEST_COMPANY_ID_1);
 
