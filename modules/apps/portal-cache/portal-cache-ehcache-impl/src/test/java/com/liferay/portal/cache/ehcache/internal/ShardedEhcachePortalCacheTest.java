@@ -187,6 +187,13 @@ public class ShardedEhcachePortalCacheTest {
 	}
 
 	@Test
+	public void testEhcacheName() {
+		_assertEhcacheName(CompanyConstants.SYSTEM);
+		_assertEhcacheName(_TEST_COMPANY_ID_1);
+		_assertEhcacheName(_TEST_COMPANY_ID_2);
+	}
+
+	@Test
 	public void testGet() {
 		_companyIdThreadLocal.set(CompanyConstants.SYSTEM);
 
@@ -208,13 +215,6 @@ public class ShardedEhcachePortalCacheTest {
 		Assert.assertNull(_shardedEhcachePortalCache.get(_TEST_KEY_1));
 		Assert.assertSame(
 			_TEST_VALUE_2, _shardedEhcachePortalCache.get(_TEST_KEY_2));
-	}
-
-	@Test
-	public void testEhcacheName() {
-		_assertEhcacheName(CompanyConstants.SYSTEM);
-		_assertEhcacheName(_TEST_COMPANY_ID_1);
-		_assertEhcacheName(_TEST_COMPANY_ID_2);
 	}
 
 	@Test
