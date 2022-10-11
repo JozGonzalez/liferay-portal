@@ -67,20 +67,6 @@ public class ShardedEhcachePortalCacheTest {
 
 	@Before
 	public void setUp() {
-		_dbPartitionUtilMockedStatic.when(
-			DBPartitionUtil::getCurrentCompanyId
-		).thenAnswer(
-			(Answer<Long>)invocationOnMock -> {
-				long currentCompanyId = _companyIdThreadLocal.get();
-
-				if (_companyIdThreadLocal.get() == CompanyConstants.SYSTEM) {
-					currentCompanyId = _TEST_COMPANY_ID_1;
-				}
-
-				return currentCompanyId;
-			}
-		);
-
 		Configuration configuration = new Configuration();
 
 		configuration.addDefaultCache(
@@ -96,6 +82,20 @@ public class ShardedEhcachePortalCacheTest {
 				_MAX_ENTRIES_LOCAL_HEAP_TEST_CACHE_COMPANY_1));
 
 		_cacheManager = new CacheManager(configuration);
+
+		_dbPartitionUtilMockedStatic.when(
+			DBPartitionUtil::getCurrentCompanyId
+		).thenAnswer(
+			(Answer<Long>)invocationOnMock -> {
+				long currentCompanyId = _companyIdThreadLocal.get();
+
+				if (_companyIdThreadLocal.get() == CompanyConstants.SYSTEM) {
+					currentCompanyId = _TEST_COMPANY_ID_1;
+				}
+
+				return currentCompanyId;
+			}
+		);
 
 		_ehcachePortalCacheManager = new EhcachePortalCacheManager();
 
