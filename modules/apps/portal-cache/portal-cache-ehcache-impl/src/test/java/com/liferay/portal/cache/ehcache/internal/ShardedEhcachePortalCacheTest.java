@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -220,12 +219,9 @@ public class ShardedEhcachePortalCacheTest {
 	public void testGetKeys() {
 		_companyIdThreadLocal.set(_TEST_COMPANY_ID_1);
 
-		ArrayList<String> keys = new ArrayList<>();
-
-		keys.add(_TEST_KEY_1);
-		keys.add(_TEST_KEY_SYSTEM);
-
-		Assert.assertEquals(keys, _shardedEhcachePortalCache.getKeys());
+		Assert.assertEquals(
+			Arrays.asList(_TEST_KEY_1, _TEST_KEY_SYSTEM),
+			_shardedEhcachePortalCache.getKeys());
 
 		_companyIdThreadLocal.set(_TEST_COMPANY_ID_2);
 
