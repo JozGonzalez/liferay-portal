@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -49,7 +50,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -463,9 +463,7 @@ public class OIDCUserInfoProcessor {
 
 			if (role == null) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"No such role with role name: " +
-							rolesJSONArray.getString(i));
+					_log.warn("No role name " + rolesJSONArray.getString(i));
 				}
 
 				continue;
@@ -478,11 +476,7 @@ public class OIDCUserInfoProcessor {
 			return null;
 		}
 
-		Stream<Long> stream = roleIds.stream();
-
-		return stream.mapToLong(
-			roleId -> roleId.longValue()
-		).toArray();
+		return ArrayUtil.toLongArray(roleIds);
 	}
 
 	private long[] _getRoleIds(long companyId, String issuer) {
