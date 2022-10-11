@@ -141,6 +141,20 @@ public class DBPartitionUtil {
 		}
 	}
 
+	public static long getCurrentCompanyId() {
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		if (!_DATABASE_PARTITION_ENABLED) {
+			return companyId;
+		}
+
+		if (companyId == CompanyConstants.SYSTEM) {
+			companyId = _defaultCompanyId;
+		}
+
+		return companyId;
+	}
+
 	public static boolean isPartitionEnabled() {
 		return _DATABASE_PARTITION_ENABLED;
 	}
