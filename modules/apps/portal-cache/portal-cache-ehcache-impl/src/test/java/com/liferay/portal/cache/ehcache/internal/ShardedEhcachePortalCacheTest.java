@@ -211,8 +211,10 @@ public class ShardedEhcachePortalCacheTest {
 	}
 
 	@Test
-	public void testGetDefaultCompanyEhcacheName() {
+	public void testEhcacheName() {
+		_assertEhcacheName(CompanyConstants.SYSTEM);
 		_assertEhcacheName(_TEST_COMPANY_ID_1);
+		_assertEhcacheName(_TEST_COMPANY_ID_2);
 	}
 
 	@Test
@@ -228,16 +230,6 @@ public class ShardedEhcachePortalCacheTest {
 		Assert.assertEquals(
 			Collections.singletonList(_TEST_KEY_2),
 			_shardedEhcachePortalCache.getKeys());
-	}
-
-	@Test
-	public void testGetNondefaultCompanyEhcacheName() {
-		_assertEhcacheName(_TEST_COMPANY_ID_2);
-	}
-
-	@Test
-	public void testGetSystemCompanyEhcacheName() {
-		_assertEhcacheName(CompanyConstants.SYSTEM);
 	}
 
 	@Test
