@@ -46,7 +46,7 @@ public class LayoutLocalizationConstraintResolver
 
 	@Override
 	public String getResolutionDescriptionKey() {
-		return "duplicate-layout-localization-were-removed";
+		return "duplicate-layout-localization-was-removed";
 	}
 
 	@Override
