@@ -26,7 +26,7 @@ SiteNavigationLocaleFriendlyURLConfiguration siteNavigationLocaleFriendlyURLConf
 
 		<aui:select label="site-navigation-locale-friendly-url-configuration-name" name="localePrependFriendlyURLStyle" type="text" value="<%= Validator.isNotNull(siteNavigationLocaleFriendlyURLConfiguration.localeFriendlyURL()) ? siteNavigationLocaleFriendlyURLConfiguration.localeFriendlyURL() : PropsValues.LOCALE_PREPEND_FRIENDLY_URL_STYLE %>">
 			<aui:option label="locale-is-not-automatically-prepended-to-a-url" value="0" />
-			<aui:option label="locale-is-automatically-prepended-to-a-url-when-the-requested-locale-is-not-the-default-user-locale" value="1" />
+			<aui:option label="locale-is-automatically-prepended-to-a-url-when-the-requested-locale-is-not-the-default-locale" value="1" />
 			<aui:option label="locale-is-automatically-prepended-to-every-url" value="2" />
 			<aui:option label="locale-is-automatically-prepended-to-a-url-when-the-requested-locale-is-not-default-user-locale" value="3" />
 		</aui:select>
