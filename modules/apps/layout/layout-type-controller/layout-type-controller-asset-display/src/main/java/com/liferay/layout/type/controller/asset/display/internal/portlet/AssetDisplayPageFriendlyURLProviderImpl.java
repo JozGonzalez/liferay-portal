@@ -17,6 +17,7 @@ package com.liferay.layout.type.controller.asset.display.internal.portlet;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.display.page.util.AssetDisplayPageUtil;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
@@ -53,7 +54,8 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderTracker.
-				getLayoutDisplayPageProviderByClassName(className);
+				getLayoutDisplayPageProviderByClassName(
+					_infoSearchClassMapperTracker.getClassName(className));
 
 		if (layoutDisplayPageProvider == null) {
 			return null;
@@ -179,6 +181,9 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
 
 	@Reference
 	private Language _language;
