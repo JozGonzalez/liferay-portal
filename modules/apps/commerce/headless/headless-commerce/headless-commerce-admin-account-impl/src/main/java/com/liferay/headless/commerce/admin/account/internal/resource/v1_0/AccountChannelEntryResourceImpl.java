@@ -186,7 +186,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_BILLING_ADDRESS,
 			pagination);
@@ -206,7 +206,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_CURRENCY, pagination);
 	}
@@ -225,7 +225,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_DELIVERY_TERM,
 			pagination);
@@ -245,7 +245,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_DISCOUNT, pagination);
 	}
@@ -264,7 +264,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT_TERM,
 			pagination);
@@ -284,7 +284,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_PRICE_LIST,
 			pagination);
@@ -304,7 +304,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_SHIPPING_ADDRESS,
 			pagination);
@@ -324,7 +324,7 @@ public class AccountChannelEntryResourceImpl
 			throw new NoSuchEntryException();
 		}
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			accountEntry.getAccountEntryId(),
 			CommerceChannelAccountEntryRelConstants.TYPE_USER, pagination);
 	}
@@ -410,7 +410,7 @@ public class AccountChannelEntryResourceImpl
 				Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_BILLING_ADDRESS,
 			pagination);
 	}
@@ -420,7 +420,7 @@ public class AccountChannelEntryResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_CURRENCY,
 			pagination);
 	}
@@ -431,7 +431,7 @@ public class AccountChannelEntryResourceImpl
 				Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_DELIVERY_TERM,
 			pagination);
 	}
@@ -441,7 +441,7 @@ public class AccountChannelEntryResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_DISCOUNT,
 			pagination);
 	}
@@ -451,7 +451,7 @@ public class AccountChannelEntryResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT_TERM,
 			pagination);
 	}
@@ -461,7 +461,7 @@ public class AccountChannelEntryResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_PRICE_LIST,
 			pagination);
 	}
@@ -472,7 +472,7 @@ public class AccountChannelEntryResourceImpl
 				Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_SHIPPING_ADDRESS,
 			pagination);
 	}
@@ -482,7 +482,7 @@ public class AccountChannelEntryResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _getAccountChannelEntryPage(
+		return _getPage(
 			id, CommerceChannelAccountEntryRelConstants.TYPE_USER, pagination);
 	}
 
@@ -835,7 +835,7 @@ public class AccountChannelEntryResourceImpl
 		}
 	}
 
-	private Page<AccountChannelEntry> _getAccountChannelEntryPage(
+	private Page<AccountChannelEntry> _getPage(
 			long accountEntryId, int accountEntryType, Pagination pagination)
 		throws Exception {
 
