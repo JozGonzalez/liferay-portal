@@ -835,25 +835,6 @@ public class AccountChannelEntryResourceImpl
 		}
 	}
 
-	private Page<AccountChannelEntry> _getPage(
-			long accountEntryId, int accountEntryType, Pagination pagination)
-		throws Exception {
-
-		return Page.of(
-			transform(
-				_commerceChannelAccountEntryRelService.
-					getCommerceChannelAccountEntryRels(
-						accountEntryId, accountEntryType,
-						pagination.getStartPosition(),
-						pagination.getEndPosition(), null),
-				commerceChannelAccountEntryRel -> _toAccountChannelEntry(
-					commerceChannelAccountEntryRel)),
-			pagination,
-			_commerceChannelAccountEntryRelService.
-				getCommerceChannelAccountEntryRelsCount(
-					accountEntryId, accountEntryType));
-	}
-
 	private long _getClassPK(AccountChannelEntry accountChannelEntry, int type)
 		throws Exception {
 
@@ -1059,6 +1040,25 @@ public class AccountChannelEntryResourceImpl
 		}
 
 		return commerceChannel.getCommerceChannelId();
+	}
+
+	private Page<AccountChannelEntry> _getPage(
+			long accountEntryId, int accountEntryType, Pagination pagination)
+		throws Exception {
+
+		return Page.of(
+			transform(
+				_commerceChannelAccountEntryRelService.
+					getCommerceChannelAccountEntryRels(
+						accountEntryId, accountEntryType,
+						pagination.getStartPosition(),
+						pagination.getEndPosition(), null),
+				commerceChannelAccountEntryRel -> _toAccountChannelEntry(
+					commerceChannelAccountEntryRel)),
+			pagination,
+			_commerceChannelAccountEntryRelService.
+				getCommerceChannelAccountEntryRelsCount(
+					accountEntryId, accountEntryType));
 	}
 
 	private AccountChannelEntry _patchAccountChannelEntry(
