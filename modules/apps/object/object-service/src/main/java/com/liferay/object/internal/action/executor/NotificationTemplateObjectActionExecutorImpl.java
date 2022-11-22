@@ -25,6 +25,7 @@ import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -83,7 +84,8 @@ public class NotificationTemplateObjectActionExecutorImpl
 			).userId(
 				userId
 			).portletId(
-				objectDefinition.getPortletId()
+				objectDefinition.isSystem() ? StringPool.BLANK :
+					objectDefinition.getPortletId()
 			).build());
 	}
 
