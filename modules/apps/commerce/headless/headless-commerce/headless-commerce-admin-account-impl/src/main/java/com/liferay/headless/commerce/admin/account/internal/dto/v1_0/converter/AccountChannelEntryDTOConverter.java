@@ -99,7 +99,6 @@ public class AccountChannelEntryDTOConverter
 
 						return null;
 					});
-
 				setChannelExternalReferenceCode(
 					() -> {
 						CommerceChannel commerceChannel =
@@ -116,7 +115,6 @@ public class AccountChannelEntryDTOConverter
 
 						return null;
 					});
-
 				setClassExternalReferenceCode(
 					() -> {
 						int type = commerceChannelAccountEntryRel.getType();
