@@ -116,119 +116,100 @@ public class AccountChannelEntryDTOConverter
 						return null;
 					});
 				setClassExternalReferenceCode(
-					() -> {
-						int type = commerceChannelAccountEntryRel.getType();
-
-						if ((type ==
-								CommerceChannelAccountEntryRelConstants.
-									TYPE_BILLING_ADDRESS) ||
-							(type ==
-								CommerceChannelAccountEntryRelConstants.
-									TYPE_SHIPPING_ADDRESS)) {
-
-							Address address = _addressService.getAddress(
-								GetterUtil.getLong(
-									commerceChannelAccountEntryRel.
-										getClassPK()));
-
-							if (!Validator.isBlank(
-									address.getExternalReferenceCode())) {
-
-								return address.getExternalReferenceCode();
-							}
-						}
-						else if (type ==
-									CommerceChannelAccountEntryRelConstants.
-										TYPE_DELIVERY_TERM) {
-
-							CommerceTermEntry commerceTermEntry =
-								_commerceTermEntryService.getCommerceTermEntry(
-									GetterUtil.getLong(
-										commerceChannelAccountEntryRel.
-											getClassPK()));
-
-							if (!Validator.isBlank(
-									commerceTermEntry.
-										getExternalReferenceCode())) {
-
-								return commerceTermEntry.
-									getExternalReferenceCode();
-							}
-						}
-						else if (type ==
-									CommerceChannelAccountEntryRelConstants.
-										TYPE_DISCOUNT) {
-
-							CommerceDiscount commerceDiscount =
-								_commerceDiscountService.getCommerceDiscount(
-									GetterUtil.getLong(
-										commerceChannelAccountEntryRel.
-											getClassPK()));
-
-							if (!Validator.isBlank(
-									commerceDiscount.
-										getExternalReferenceCode())) {
-
-								return commerceDiscount.
-									getExternalReferenceCode();
-							}
-						}
-						else if (type ==
-									CommerceChannelAccountEntryRelConstants.
-										TYPE_PAYMENT_TERM) {
-
-							CommerceTermEntry commerceTermEntry =
-								_commerceTermEntryService.getCommerceTermEntry(
-									GetterUtil.getLong(
-										commerceChannelAccountEntryRel.
-											getClassPK()));
-
-							if (!Validator.isBlank(
-									commerceTermEntry.
-										getExternalReferenceCode())) {
-
-								return commerceTermEntry.
-									getExternalReferenceCode();
-							}
-						}
-						else if (type ==
-									CommerceChannelAccountEntryRelConstants.
-										TYPE_PRICE_LIST) {
-
-							CommercePriceList commercePriceList =
-								_commercePriceListService.getCommercePriceList(
-									GetterUtil.getLong(
-										commerceChannelAccountEntryRel.
-											getClassPK()));
-
-							if (!Validator.isBlank(
-									commercePriceList.
-										getExternalReferenceCode())) {
-
-								return commercePriceList.
-									getExternalReferenceCode();
-							}
-						}
-						else if (type ==
-									CommerceChannelAccountEntryRelConstants.
-										TYPE_USER) {
-
-							User user = _userService.getUserById(
-								GetterUtil.getLong(
-									commerceChannelAccountEntryRel.
-										getClassPK()));
-
-							if (!Validator.isBlank(
-									user.getExternalReferenceCode())) {
-
-								return user.getExternalReferenceCode();
-							}
-						}
-
-						return null;
-					});
+					() -> _toClassExternalReferenceCode(
+						commerceChannelAccountEntryRel));
 			}
 		};
+	}
+
+	private String _toClassExternalReferenceCode(
+			CommerceChannelAccountEntryRel commerceChannelAccountEntryRel)
+		throws Exception {
+
+		int type = commerceChannelAccountEntryRel.getType();
+
+		if ((type ==
+				CommerceChannelAccountEntryRelConstants.TYPE_BILLING_ADDRESS) ||
+			(type ==
+				CommerceChannelAccountEntryRelConstants.
+					TYPE_SHIPPING_ADDRESS)) {
+
+			Address address = _addressService.getAddress(
+				GetterUtil.getLong(
+					commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(address.getExternalReferenceCode())) {
+				return address.getExternalReferenceCode();
+			}
+		}
+		else if (type ==
+					CommerceChannelAccountEntryRelConstants.
+						TYPE_DELIVERY_TERM) {
+
+			CommerceTermEntry commerceTermEntry =
+				_commerceTermEntryService.getCommerceTermEntry(
+					GetterUtil.getLong(
+						commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(
+					commerceTermEntry.getExternalReferenceCode())) {
+
+				return commerceTermEntry.getExternalReferenceCode();
+			}
+		}
+		else if (type ==
+					CommerceChannelAccountEntryRelConstants.TYPE_DISCOUNT) {
+
+			CommerceDiscount commerceDiscount =
+				_commerceDiscountService.getCommerceDiscount(
+					GetterUtil.getLong(
+						commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(
+					commerceDiscount.getExternalReferenceCode())) {
+
+				return commerceDiscount.getExternalReferenceCode();
+			}
+		}
+		else if (type ==
+					CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT_TERM) {
+
+			CommerceTermEntry commerceTermEntry =
+				_commerceTermEntryService.getCommerceTermEntry(
+					GetterUtil.getLong(
+						commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(
+					commerceTermEntry.getExternalReferenceCode())) {
+
+				return commerceTermEntry.getExternalReferenceCode();
+			}
+		}
+		else if (type ==
+					CommerceChannelAccountEntryRelConstants.TYPE_PRICE_LIST) {
+
+			CommercePriceList commercePriceList =
+				_commercePriceListService.getCommercePriceList(
+					GetterUtil.getLong(
+						commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(
+					commercePriceList.getExternalReferenceCode())) {
+
+				return commercePriceList.getExternalReferenceCode();
+			}
+		}
+		else if (type == CommerceChannelAccountEntryRelConstants.TYPE_USER) {
+			User user = _userService.getUserById(
+				GetterUtil.getLong(
+					commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(user.getExternalReferenceCode())) {
+				return user.getExternalReferenceCode();
+			}
+		}
+
+		return null;
 	}
 
 	@Reference
