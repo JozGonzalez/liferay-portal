@@ -1021,7 +1021,7 @@ public class AccountChannelEntryResourceImpl
 		}
 
 		throw new CommerceChannelAccountEntryRelTypeException(
-			"Type is undefined");
+			"Unknown type: " + type);
 	}
 
 	private CommerceChannelAccountEntryRel _getCommerceChannelAccountEntryRel(
