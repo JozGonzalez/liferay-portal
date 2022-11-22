@@ -1034,7 +1034,7 @@ public class AccountChannelEntryResourceImpl
 
 		if (type != commerceChannelAccountEntryRel.getType()) {
 			throw new CommerceChannelAccountEntryRelTypeException(
-				"Type mismatch");
+				"Types do not match");
 		}
 
 		return commerceChannelAccountEntryRel;
