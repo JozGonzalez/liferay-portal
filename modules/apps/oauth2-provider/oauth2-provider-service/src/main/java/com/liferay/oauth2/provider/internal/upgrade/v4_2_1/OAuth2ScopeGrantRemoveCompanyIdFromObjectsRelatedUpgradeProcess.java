@@ -37,7 +37,7 @@ public class OAuth2ScopeGrantRemoveCompanyIdFromObjectsRelatedUpgradeProcess
 	protected void doUpgrade() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				"select companyId, applicationName, oauth2ScopeGrantId, " +
+				"select oauth2ScopeGrantId, companyId, applicationName, " +
 					"scopeAliases from OAuth2ScopeGrant where " +
 						"bundleSymbolicName = ?")) {
 
