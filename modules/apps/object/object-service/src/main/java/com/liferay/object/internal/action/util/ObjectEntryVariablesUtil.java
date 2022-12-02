@@ -251,10 +251,7 @@ public class ObjectEntryVariablesUtil {
 				return payloadJSONObject.toMap();
 			}
 
-			if (object instanceof Map) {
-				variables.putAll((Map<String, Object>)object);
-			}
-			else if (object instanceof JSONObject) {
+			if (object instanceof JSONObject) {
 				Map<String, Object> map = ObjectMapperUtil.readValue(
 					Map.class, object);
 
@@ -262,6 +259,9 @@ public class ObjectEntryVariablesUtil {
 					(Map<String, Object>)map.get("_jsonObject");
 
 				variables.putAll((Map<String, Object>)jsonObjectMap.get("map"));
+			}
+			else if (object instanceof Map) {
+				variables.putAll((Map<String, Object>)object);
 			}
 
 			String contentType = _getContentType(
