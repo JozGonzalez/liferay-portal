@@ -116,10 +116,10 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 
 		InfoField infoField = contentInfoFieldValue.getInfoField();
 
-		Optional<Boolean> htmlOptional = infoField.getAttributeOptional(
+		Optional<Boolean> optional = infoField.getAttributeOptional(
 			TextInfoFieldType.HTML);
 
-		Assert.assertTrue(htmlOptional.orElse(false));
+		Assert.assertTrue(optional.orElse(false));
 	}
 
 	@Test

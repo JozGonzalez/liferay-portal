@@ -169,10 +169,10 @@ public class TemplateInfoItemFieldSetProviderTest {
 				journalArticleTemplateEntry.getTemplateEntryId(),
 			infoField.getName());
 
-		Optional<Boolean> htmlOptional = infoField.getAttributeOptional(
+		Optional<Boolean> optional = infoField.getAttributeOptional(
 			TextInfoFieldType.HTML);
 
-		Assert.assertTrue(htmlOptional.orElse(false));
+		Assert.assertTrue(optional.orElse(false));
 	}
 
 	@Test
@@ -213,10 +213,10 @@ public class TemplateInfoItemFieldSetProviderTest {
 				categoryTemplateEntry.getTemplateEntryId(),
 			infoField.getName());
 
-		Optional<Boolean> htmlOptional = infoField.getAttributeOptional(
+		Optional<Boolean> optional = infoField.getAttributeOptional(
 			TextInfoFieldType.HTML);
 
-		Assert.assertTrue(htmlOptional.orElse(false));
+		Assert.assertTrue(optional.orElse(false));
 	}
 
 	@Test
@@ -279,10 +279,10 @@ public class TemplateInfoItemFieldSetProviderTest {
 				_portal.getSiteDefaultLocale(_group.getGroupId())),
 			infoFieldValue.getValue());
 
-		Optional<Boolean> htmlOptional = infoField.getAttributeOptional(
+		Optional<Boolean> optional = infoField.getAttributeOptional(
 			TextInfoFieldType.HTML);
 
-		Assert.assertTrue(htmlOptional.orElse(false));
+		Assert.assertTrue(optional.orElse(false));
 	}
 
 	@Test
