@@ -76,6 +76,13 @@ public class NotificationUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"3.2.0", "3.3.0",
+			UpgradeProcessFactory.dropColumns(
+				"NotificationRecipient", "className"),
+			UpgradeProcessFactory.addColumns(
+				"NotificationRecipient", "classNameId LONG"));
 	}
 
 }
