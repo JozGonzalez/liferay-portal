@@ -102,11 +102,7 @@ public class NotificationRecipientUpgradeProcess extends UpgradeProcess {
 			}
 		}
 
-		throw new UpgradeException(
-			StringBundler.concat(
-				"Please manually re-create recipient data in your ",
-				"Notifications portlet, as this data was erroneously deleted ",
-				"during a previous upgrade process"));
+		throw new UpgradeException();
 	}
 
 	private void _insertNotificationRecipient(
