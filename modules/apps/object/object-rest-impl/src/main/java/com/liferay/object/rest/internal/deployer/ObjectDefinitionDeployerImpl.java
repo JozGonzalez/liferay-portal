@@ -148,10 +148,10 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	public ObjectDefinition getObjectDefinition(
 		long companyId, String restContextPath) {
 
+		ObjectDefinition objectDefinition = null;
+
 		Map<Long, ObjectDefinition> objectDefinitions =
 			_objectDefinitionsMap.get(restContextPath);
-
-		ObjectDefinition objectDefinition = null;
 
 		if (objectDefinitions != null) {
 			objectDefinition = objectDefinitions.get(companyId);
