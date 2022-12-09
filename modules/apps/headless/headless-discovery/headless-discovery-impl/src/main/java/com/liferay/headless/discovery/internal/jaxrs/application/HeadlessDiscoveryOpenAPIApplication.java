@@ -88,7 +88,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		RuntimeDTO runtimeDTO = _jaxrsServiceRuntime.getRuntimeDTO();
 
 		List<ApplicationDTO> filteredApplicationsByCompany =
-			_filterObjectsApplicationByCompany(runtimeDTO.applicationDTOs);
+			_filterApplicationDTOs(runtimeDTO.applicationDTOs);
 
 		for (ApplicationDTO applicationDTO : filteredApplicationsByCompany) {
 			List<String> paths = new ArrayList<>();
@@ -131,7 +131,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 				public Application addingService(
 					ServiceReference<Application> serviceReference) {
 
-					_storeObjectApplicationCompanyIds(serviceReference);
+					_populateCompanyIds(serviceReference);
 
 					return bundleContext.getService(serviceReference);
 				}
@@ -141,7 +141,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 					ServiceReference<Application> serviceReference,
 					Application application) {
 
-					_storeObjectApplicationCompanyIds(serviceReference);
+					_populateCompanyIds(serviceReference);
 				}
 
 				@Override
@@ -149,11 +149,11 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 					ServiceReference<Application> serviceReference,
 					Application application) {
 
-					Object osgiJaxrsBase = serviceReference.getProperty(
+					Object osgiJaxRsApplicationBase = serviceReference.getProperty(
 						"osgi.jaxrs.application.base");
 
-					if (osgiJaxrsBase instanceof String) {
-						_objectApplicationCompanyIdsMap.remove(osgiJaxrsBase);
+					if (osgiJaxRsApplicationBase instanceof String) {
+						_companyIds.remove(osgiJaxRsApplicationBase);
 					}
 
 					bundleContext.ungetService(serviceReference);
@@ -185,7 +185,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		}
 	}
 
-	private List<ApplicationDTO> _filterObjectsApplicationByCompany(
+	private List<ApplicationDTO> _filterApplicationDTOs(
 		ApplicationDTO[] applicationDTOS) {
 
 		Stream<ApplicationDTO> applicationDTOStream = Arrays.stream(
@@ -193,11 +193,11 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 
 		return applicationDTOStream.filter(
 			applicationDTO -> {
-				if (_objectApplicationCompanyIdsMap.containsKey(
+				if (_companyIds.containsKey(
 						applicationDTO.base)) {
 
 					List<String> companyIds =
-						_objectApplicationCompanyIdsMap.get(
+						_companyIds.get(
 							applicationDTO.base);
 
 					return companyIds.contains(
@@ -211,16 +211,18 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		);
 	}
 
-	private void _storeObjectApplicationCompanyIds(
+	private void _populateCompanyIds(
 		ServiceReference<Application> serviceReference) {
 
 		Object companyIds = serviceReference.getProperty("companyId");
-		Object osgiJaxrsBase = serviceReference.getProperty(
+		Object osgiJaxRsApplicationBase = serviceReference.getProperty(
 			"osgi.jaxrs.application.base");
 
-		if ((companyIds instanceof List) && (osgiJaxrsBase instanceof String)) {
-			_objectApplicationCompanyIdsMap.put(
-				(String)osgiJaxrsBase, (List<String>)companyIds);
+		if ((companyIds instanceof List) &&
+			(osgiJaxRsApplicationBase instanceof String)) {
+
+			_companyIds.put(
+				(String)osgiJaxRsApplicationBase, (List<String>)companyIds);
 		}
 	}
 
@@ -230,7 +232,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 	@Reference
 	private JaxrsServiceRuntime _jaxrsServiceRuntime;
 
-	private final Map<String, List<String>> _objectApplicationCompanyIdsMap =
+	private final Map<String, List<String>> _companyIds =
 		new HashMap<>();
 
 	@Reference
