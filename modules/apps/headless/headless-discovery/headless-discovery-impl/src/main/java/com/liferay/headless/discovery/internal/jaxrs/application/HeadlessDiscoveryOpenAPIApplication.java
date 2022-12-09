@@ -87,10 +87,9 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 
 		RuntimeDTO runtimeDTO = _jaxrsServiceRuntime.getRuntimeDTO();
 
-		List<ApplicationDTO> filteredApplicationsByCompany =
-			_filterApplicationDTOs(runtimeDTO.applicationDTOs);
+		for (ApplicationDTO applicationDTO :
+				_getApplicationDTOs(runtimeDTO.applicationDTOs)) {
 
-		for (ApplicationDTO applicationDTO : filteredApplicationsByCompany) {
 			List<String> paths = new ArrayList<>();
 
 			String base = applicationDTO.base;
@@ -185,7 +184,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		}
 	}
 
-	private List<ApplicationDTO> _filterApplicationDTOs(
+	private List<ApplicationDTO> _getApplicationDTOs(
 		ApplicationDTO[] applicationDTOS) {
 
 		Stream<ApplicationDTO> applicationDTOStream = Arrays.stream(
