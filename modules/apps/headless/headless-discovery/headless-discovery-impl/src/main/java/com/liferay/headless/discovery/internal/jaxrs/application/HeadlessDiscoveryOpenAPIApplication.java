@@ -18,6 +18,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -184,13 +185,11 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		}
 	}
 
-	private List<ApplicationDTO> _getApplicationDTOs(
+	private ApplicationDTO[] _getApplicationDTOs(
 		ApplicationDTO[] applicationDTOS) {
 
-		Stream<ApplicationDTO> applicationDTOStream = Arrays.stream(
-			applicationDTOS);
-
-		return applicationDTOStream.filter(
+		return ArrayUtil.filter(
+			applicationDTOS,
 			applicationDTO -> {
 				if (_companyIds.containsKey(
 						applicationDTO.base)) {
@@ -204,10 +203,7 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 				}
 
 				return true;
-			}
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private void _populateCompanyIds(
