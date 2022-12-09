@@ -23,15 +23,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -149,8 +146,9 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 					ServiceReference<Application> serviceReference,
 					Application application) {
 
-					Object osgiJaxRsApplicationBase = serviceReference.getProperty(
-						"osgi.jaxrs.application.base");
+					Object osgiJaxRsApplicationBase =
+						serviceReference.getProperty(
+							"osgi.jaxrs.application.base");
 
 					if (osgiJaxRsApplicationBase instanceof String) {
 						_companyIds.remove(osgiJaxRsApplicationBase);
@@ -191,12 +189,9 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		return ArrayUtil.filter(
 			applicationDTOS,
 			applicationDTO -> {
-				if (_companyIds.containsKey(
-						applicationDTO.base)) {
-
-					List<String> companyIds =
-						_companyIds.get(
-							applicationDTO.base);
+				if (_companyIds.containsKey(applicationDTO.base)) {
+					List<String> companyIds = _companyIds.get(
+						applicationDTO.base);
 
 					return companyIds.contains(
 						String.valueOf(CompanyThreadLocal.getCompanyId()));
@@ -221,14 +216,13 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		}
 	}
 
+	private final Map<String, List<String>> _companyIds = new HashMap<>();
+
 	@Context
 	private HttpServletRequest _httpServletRequest;
 
 	@Reference
 	private JaxrsServiceRuntime _jaxrsServiceRuntime;
-
-	private final Map<String, List<String>> _companyIds =
-		new HashMap<>();
 
 	@Reference
 	private Portal _portal;
