@@ -612,9 +612,10 @@ public class DefaultObjectEntryManagerImplTest {
 
 	@Test
 	public void testAddObjectEntryAccountRestriction() throws Exception {
-		_user = _addPrincipalUser();
 
-		// Account scope
+		// Account entry scope
+
+		_user = _addPrincipalUser();
 
 		AccountEntry accountEntry1 = _addAccountEntry();
 
@@ -677,7 +678,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_removeResourcePermission("ADD_OBJECT_ENTRY", _accountManagerRole);
 
-		// Sub Organization scope
+		// Suborganization scope
 
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
@@ -697,7 +698,6 @@ public class DefaultObjectEntryManagerImplTest {
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
 			suborganization1.getOrganizationId());
-
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry2.getAccountEntryId(),
 			suborganization2.getOrganizationId());
@@ -727,14 +727,17 @@ public class DefaultObjectEntryManagerImplTest {
 
 	@Test
 	public void testDeleteObjectEntryAccountRestriction() throws Exception {
-		AccountEntry accountEntry1 = _addAccountEntry();
-		AccountEntry accountEntry2 = _addAccountEntry();
-
-		ObjectEntry objectEntry1 = _addObjectEntry(accountEntry1);
-		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
 		// Regular roles' company scope permissions should not be restricted by
-		// account
+		// account entry
+
+		AccountEntry accountEntry1 = _addAccountEntry();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(accountEntry1);
+
+		AccountEntry accountEntry2 = _addAccountEntry();
+
+		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
 		_user = _addPrincipalUser();
 
@@ -776,7 +779,7 @@ public class DefaultObjectEntryManagerImplTest {
 		}
 
 		// Regular roles' individual permissions should not be restricted by
-		// account
+		// account entry
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_adminUser));
@@ -806,7 +809,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		objectEntry1 = _addObjectEntry(accountEntry1);
 
-		// Account scope
+		// Account entry scope
 
 		_user = _addPrincipalUser();
 
@@ -911,7 +914,7 @@ public class DefaultObjectEntryManagerImplTest {
 				accountEntry2.getAccountEntryId(),
 				organization2.getOrganizationId());
 
-		// Sub organization scope
+		// Suborganization scope
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_adminUser));
@@ -1225,18 +1228,20 @@ public class DefaultObjectEntryManagerImplTest {
 
 	@Test
 	public void testGetObjectEntriesAccountRestrictions() throws Exception {
+
+		// Regular roles permissions should not be restricted by account entry
+
 		AccountEntry accountEntry1 = _addAccountEntry();
-		AccountEntry accountEntry2 = _addAccountEntry();
 
 		ObjectEntry objectEntry1 = _addObjectEntry(accountEntry1);
+
+		AccountEntry accountEntry2 = _addAccountEntry();
 
 		_addObjectEntry(accountEntry2);
 
 		_user = _addPrincipalUser();
 
 		_assertObjectEntriesSize(0);
-
-		// Regular roles permissions should not be restricted by account
 
 		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -1255,7 +1260,7 @@ public class DefaultObjectEntryManagerImplTest {
 			randomRole.getRoleId(), ActionKeys.VIEW);
 
 		// Regular roles' individual permissions should not be restricted by
-		// account
+		// account entry
 
 		_resourcePermissionLocalService.setResourcePermissions(
 			_companyId, _objectDefinition3.getClassName(),
@@ -1304,7 +1309,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		// The User who is associated an organization must be able to view all
+		// The user who is associated an organization must be able to view all
 		// entries related to account entries that belong to that organization
 		// if the user has the VIEW resource permission in at least one
 		// organization role assigned to them
@@ -1344,7 +1349,7 @@ public class DefaultObjectEntryManagerImplTest {
 				accountEntry1.getAccountEntryId(),
 				organization1.getOrganizationId());
 
-		// The User who is associated an organization must be able to view all
+		// The user who is associated an organization must be able to view all
 		// entries related to account entries that belong to that organization
 		// and its sub organizations if the user has the VIEW resource
 		// permission in at least one organization role assigned to them
@@ -1390,14 +1395,17 @@ public class DefaultObjectEntryManagerImplTest {
 
 	@Test
 	public void testUpdateObjectEntryAccountRestriction() throws Exception {
-		AccountEntry accountEntry1 = _addAccountEntry();
-		AccountEntry accountEntry2 = _addAccountEntry();
-
-		ObjectEntry objectEntry1 = _addObjectEntry(accountEntry1);
-		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
 		// Regular roles' company scope permissions should not be restricted by
-		// account
+		// account entry
+
+		AccountEntry accountEntry1 = _addAccountEntry();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(accountEntry1);
+
+		AccountEntry accountEntry2 = _addAccountEntry();
+
+		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
 		_user = _addPrincipalUser();
 
@@ -1434,7 +1442,7 @@ public class DefaultObjectEntryManagerImplTest {
 				objectEntry2.getId(), objectEntry2));
 
 		// Regular roles' individual permissions should not be restricted by
-		// account
+		// account entry
 
 		_resourcePermissionLocalService.setResourcePermissions(
 			_companyId, _objectDefinition3.getClassName(),
@@ -1446,7 +1454,7 @@ public class DefaultObjectEntryManagerImplTest {
 			_simpleDTOConverterContext, _objectDefinition3,
 			objectEntry1.getId(), objectEntry1);
 
-		// Account scope
+		// Account entry scope
 
 		_addResourcePermission(ActionKeys.UPDATE, _accountAdministratorRole);
 		_addResourcePermission(ActionKeys.VIEW, _accountAdministratorRole);
@@ -1513,7 +1521,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_removeResourcePermission(ActionKeys.UPDATE, _accountManagerRole);
 
-		// Sub organization scope
+		// Suborganization scope
 
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
