@@ -66,35 +66,24 @@ public class SamlPeerBindingLocalServiceImpl
 	}
 
 	@Override
-	public SamlPeerBinding fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
+	public SamlPeerBinding fetchSamlPeerBinding(
 		long companyId, boolean deleted, String samlNameIdFormat,
 		String samlNameIdNameQualifier, String samlNameIdValue,
 		String samlPeerEntityId) {
 
-		List<SamlPeerBinding> list =
-			samlPeerBindingLocalService.findByC_D_SNIF_SNINQ_SNIV_SPEI(
-				companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
-				samlNameIdValue, samlPeerEntityId);
+		List<SamlPeerBinding> samlPeerBindings = getSamlPeerBindings(
+			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
+			samlNameIdValue, samlPeerEntityId);
 
-		if (!list.isEmpty()) {
-			return list.get(0);
+		if (!samlPeerBindings.isEmpty()) {
+			return samlPeerBindings.get(0);
 		}
 
 		return null;
 	}
 
 	@Override
-	public SamlPeerBinding fetchSamlPeerBinding(
-		long companyId, String samlNameIdFormat, String samlNameIdNameQualifier,
-		String samlNameIdValue, String samlSpEntityId) {
-
-		return fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-			companyId, false, samlNameIdFormat, samlNameIdNameQualifier,
-			samlNameIdValue, samlSpEntityId);
-	}
-
-	@Override
-	public List<SamlPeerBinding> findByC_D_SNIF_SNINQ_SNIV_SPEI(
+	public List<SamlPeerBinding> getSamlPeerBindings(
 		long companyId, boolean deleted, String samlNameIdFormat,
 		String samlNameIdNameQualifier, String samlNameIdValue,
 		String samlPeerEntityId) {
@@ -111,21 +100,25 @@ public class SamlPeerBindingLocalServiceImpl
 					GetterUtil.getString(samlNameIdFormat),
 					samlPeerBinding.getSamlNameIdFormat()) &&
 				Objects.equals(
-					GetterUtil.getString(samlPeerEntityId),
-					samlPeerBinding.getSamlPeerEntityId()) &&
-				Objects.equals(
 					GetterUtil.getString(samlNameIdNameQualifier),
-					samlPeerBinding.getSamlNameIdNameQualifier()));
+					samlPeerBinding.getSamlNameIdNameQualifier()) &&
+				Objects.equals(
+					GetterUtil.getString(samlPeerEntityId),
+					samlPeerBinding.getSamlPeerEntityId()));
 	}
 
-	public List<SamlPeerBinding> findByC_U_D_SNIF_SNINQ_SPEI(
-		long companyId, long userId, boolean deleted, String samlNameIdFormat,
-		String samlNameIdNameQualifier, String samlPeerEntityId) {
+	@Override
+	public List<SamlPeerBinding> getUserSamlPeerBindings(
+			long userId, boolean deleted, String samlNameIdFormat,
+			String samlNameIdNameQualifier, String samlPeerEntityId)
+		throws PortalException {
+
+		User user = _userLocalService.getUserById(userId);
 
 		List<SamlPeerBinding> samlPeerBindings =
 			samlPeerBindingPersistence.findByC_U_D_SPEI(
-				companyId, userId, deleted, samlPeerEntityId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
+				user.getCompanyId(), userId, deleted, samlPeerEntityId,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		return ListUtil.filter(
 			samlPeerBindings,
