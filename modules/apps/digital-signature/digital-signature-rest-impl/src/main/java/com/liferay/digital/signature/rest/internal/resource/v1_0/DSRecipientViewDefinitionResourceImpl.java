@@ -17,7 +17,6 @@ package com.liferay.digital.signature.rest.internal.resource.v1_0;
 import com.liferay.digital.signature.manager.DSRecipientViewDefinitionManager;
 import com.liferay.digital.signature.rest.dto.v1_0.DSEnvelopeSignatureURL;
 import com.liferay.digital.signature.rest.dto.v1_0.DSRecipientViewDefinition;
-import com.liferay.digital.signature.rest.internal.dto.v1_0.util.DSRecipientViewDefinitionUtil;
 import com.liferay.digital.signature.rest.resource.v1_0.DSRecipientViewDefinitionResource;
 
 import org.osgi.service.component.annotations.Component;
@@ -47,9 +46,26 @@ public class DSRecipientViewDefinitionResourceImpl
 					_dsRecipientViewDefinitionManager.
 						addDSRecipientViewDefinition(
 							contextCompany.getCompanyId(), siteId, dsEnvelopeId,
-							DSRecipientViewDefinitionUtil.
-								toDSRecipientViewDefinition(
-									dsRecipientViewDefinition));
+							_toDSRecipientViewDefinition(
+								dsRecipientViewDefinition));
+			}
+		};
+	}
+
+	private com.liferay.digital.signature.model.DSRecipientViewDefinition
+		_toDSRecipientViewDefinition(
+			DSRecipientViewDefinition dsRecipientViewDefinition) {
+
+		return new com.liferay.digital.signature.model.
+			DSRecipientViewDefinition() {
+
+			{
+				authenticationMethod =
+					dsRecipientViewDefinition.getAuthenticationMethod();
+				dsClientUserId = dsRecipientViewDefinition.getDsClientUserId();
+				emailAddress = dsRecipientViewDefinition.getEmailAddress();
+				returnURL = dsRecipientViewDefinition.getReturnURL();
+				userName = dsRecipientViewDefinition.getUserName();
 			}
 		};
 	}
