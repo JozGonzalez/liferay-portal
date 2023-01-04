@@ -205,27 +205,13 @@ public interface SamlPeerBindingLocalService
 		DynamicQuery dynamicQuery, Projection projection);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public SamlPeerBinding fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-		long companyId, boolean deleted, String samlNameIdFormat,
-		String samlNameIdNameQualifier, String samlNameIdValue,
-		String samlPeerEntityId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SamlPeerBinding fetchSamlPeerBinding(long samlPeerBindingId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SamlPeerBinding fetchSamlPeerBinding(
-		long companyId, String samlNameIdFormat, String samlNameIdNameQualifier,
-		String samlNameIdValue, String samlSpEntityId);
-
-	public List<SamlPeerBinding> findByC_D_SNIF_SNINQ_SNIV_SPEI(
 		long companyId, boolean deleted, String samlNameIdFormat,
 		String samlNameIdNameQualifier, String samlNameIdValue,
 		String samlPeerEntityId);
-
-	public List<SamlPeerBinding> findByC_U_D_SNIF_SNINQ_SPEI(
-		long companyId, long userId, boolean deleted, String samlNameIdFormat,
-		String samlNameIdNameQualifier, String samlPeerEntityId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -273,6 +259,12 @@ public interface SamlPeerBindingLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SamlPeerBinding> getSamlPeerBindings(int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SamlPeerBinding> getSamlPeerBindings(
+		long companyId, boolean deleted, String samlNameIdFormat,
+		String samlNameIdNameQualifier, String samlNameIdValue,
+		String samlPeerEntityId);
+
 	/**
 	 * Returns the number of saml peer bindings.
 	 *
@@ -280,6 +272,12 @@ public interface SamlPeerBindingLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getSamlPeerBindingsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SamlPeerBinding> getUserSamlPeerBindings(
+			long userId, boolean deleted, String samlNameIdFormat,
+			String samlNameIdNameQualifier, String samlPeerEntityId)
+		throws PortalException;
 
 	/**
 	 * Updates the saml peer binding in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.

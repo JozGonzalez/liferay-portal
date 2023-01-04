@@ -223,46 +223,18 @@ public class SamlPeerBindingLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static SamlPeerBinding fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-		long companyId, boolean deleted, String samlNameIdFormat,
-		String samlNameIdNameQualifier, String samlNameIdValue,
-		String samlPeerEntityId) {
-
-		return getService().fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
-			samlNameIdValue, samlPeerEntityId);
-	}
-
 	public static SamlPeerBinding fetchSamlPeerBinding(long samlPeerBindingId) {
 		return getService().fetchSamlPeerBinding(samlPeerBindingId);
 	}
 
 	public static SamlPeerBinding fetchSamlPeerBinding(
-		long companyId, String samlNameIdFormat, String samlNameIdNameQualifier,
-		String samlNameIdValue, String samlSpEntityId) {
-
-		return getService().fetchSamlPeerBinding(
-			companyId, samlNameIdFormat, samlNameIdNameQualifier,
-			samlNameIdValue, samlSpEntityId);
-	}
-
-	public static List<SamlPeerBinding> findByC_D_SNIF_SNINQ_SNIV_SPEI(
 		long companyId, boolean deleted, String samlNameIdFormat,
 		String samlNameIdNameQualifier, String samlNameIdValue,
 		String samlPeerEntityId) {
 
-		return getService().findByC_D_SNIF_SNINQ_SNIV_SPEI(
+		return getService().fetchSamlPeerBinding(
 			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
 			samlNameIdValue, samlPeerEntityId);
-	}
-
-	public static List<SamlPeerBinding> findByC_U_D_SNIF_SNINQ_SPEI(
-		long companyId, long userId, boolean deleted, String samlNameIdFormat,
-		String samlNameIdNameQualifier, String samlPeerEntityId) {
-
-		return getService().findByC_U_D_SNIF_SNINQ_SPEI(
-			companyId, userId, deleted, samlNameIdFormat,
-			samlNameIdNameQualifier, samlPeerEntityId);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
@@ -326,6 +298,16 @@ public class SamlPeerBindingLocalServiceUtil {
 		return getService().getSamlPeerBindings(start, end);
 	}
 
+	public static List<SamlPeerBinding> getSamlPeerBindings(
+		long companyId, boolean deleted, String samlNameIdFormat,
+		String samlNameIdNameQualifier, String samlNameIdValue,
+		String samlPeerEntityId) {
+
+		return getService().getSamlPeerBindings(
+			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
+			samlNameIdValue, samlPeerEntityId);
+	}
+
 	/**
 	 * Returns the number of saml peer bindings.
 	 *
@@ -333,6 +315,16 @@ public class SamlPeerBindingLocalServiceUtil {
 	 */
 	public static int getSamlPeerBindingsCount() {
 		return getService().getSamlPeerBindingsCount();
+	}
+
+	public static List<SamlPeerBinding> getUserSamlPeerBindings(
+			long userId, boolean deleted, String samlNameIdFormat,
+			String samlNameIdNameQualifier, String samlPeerEntityId)
+		throws PortalException {
+
+		return getService().getUserSamlPeerBindings(
+			userId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
+			samlPeerEntityId);
 	}
 
 	/**

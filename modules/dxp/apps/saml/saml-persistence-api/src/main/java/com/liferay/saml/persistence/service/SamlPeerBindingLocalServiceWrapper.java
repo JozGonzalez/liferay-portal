@@ -253,19 +253,6 @@ public class SamlPeerBindingLocalServiceWrapper
 
 	@Override
 	public com.liferay.saml.persistence.model.SamlPeerBinding
-		fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-			long companyId, boolean deleted, String samlNameIdFormat,
-			String samlNameIdNameQualifier, String samlNameIdValue,
-			String samlPeerEntityId) {
-
-		return _samlPeerBindingLocalService.
-			fetchByC_D_SNIF_SNINQ_SNIV_SPEI_First(
-				companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
-				samlNameIdValue, samlPeerEntityId);
-	}
-
-	@Override
-	public com.liferay.saml.persistence.model.SamlPeerBinding
 		fetchSamlPeerBinding(long samlPeerBindingId) {
 
 		return _samlPeerBindingLocalService.fetchSamlPeerBinding(
@@ -275,37 +262,13 @@ public class SamlPeerBindingLocalServiceWrapper
 	@Override
 	public com.liferay.saml.persistence.model.SamlPeerBinding
 		fetchSamlPeerBinding(
-			long companyId, String samlNameIdFormat,
-			String samlNameIdNameQualifier, String samlNameIdValue,
-			String samlSpEntityId) {
-
-		return _samlPeerBindingLocalService.fetchSamlPeerBinding(
-			companyId, samlNameIdFormat, samlNameIdNameQualifier,
-			samlNameIdValue, samlSpEntityId);
-	}
-
-	@Override
-	public java.util.List<com.liferay.saml.persistence.model.SamlPeerBinding>
-		findByC_D_SNIF_SNINQ_SNIV_SPEI(
 			long companyId, boolean deleted, String samlNameIdFormat,
 			String samlNameIdNameQualifier, String samlNameIdValue,
 			String samlPeerEntityId) {
 
-		return _samlPeerBindingLocalService.findByC_D_SNIF_SNINQ_SNIV_SPEI(
+		return _samlPeerBindingLocalService.fetchSamlPeerBinding(
 			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
 			samlNameIdValue, samlPeerEntityId);
-	}
-
-	@Override
-	public java.util.List<com.liferay.saml.persistence.model.SamlPeerBinding>
-		findByC_U_D_SNIF_SNINQ_SPEI(
-			long companyId, long userId, boolean deleted,
-			String samlNameIdFormat, String samlNameIdNameQualifier,
-			String samlPeerEntityId) {
-
-		return _samlPeerBindingLocalService.findByC_U_D_SNIF_SNINQ_SPEI(
-			companyId, userId, deleted, samlNameIdFormat,
-			samlNameIdNameQualifier, samlPeerEntityId);
 	}
 
 	@Override
@@ -378,6 +341,18 @@ public class SamlPeerBindingLocalServiceWrapper
 		return _samlPeerBindingLocalService.getSamlPeerBindings(start, end);
 	}
 
+	@Override
+	public java.util.List<com.liferay.saml.persistence.model.SamlPeerBinding>
+		getSamlPeerBindings(
+			long companyId, boolean deleted, String samlNameIdFormat,
+			String samlNameIdNameQualifier, String samlNameIdValue,
+			String samlPeerEntityId) {
+
+		return _samlPeerBindingLocalService.getSamlPeerBindings(
+			companyId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
+			samlNameIdValue, samlPeerEntityId);
+	}
+
 	/**
 	 * Returns the number of saml peer bindings.
 	 *
@@ -386,6 +361,18 @@ public class SamlPeerBindingLocalServiceWrapper
 	@Override
 	public int getSamlPeerBindingsCount() {
 		return _samlPeerBindingLocalService.getSamlPeerBindingsCount();
+	}
+
+	@Override
+	public java.util.List<com.liferay.saml.persistence.model.SamlPeerBinding>
+			getUserSamlPeerBindings(
+				long userId, boolean deleted, String samlNameIdFormat,
+				String samlNameIdNameQualifier, String samlPeerEntityId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _samlPeerBindingLocalService.getUserSamlPeerBindings(
+			userId, deleted, samlNameIdFormat, samlNameIdNameQualifier,
+			samlPeerEntityId);
 	}
 
 	/**
