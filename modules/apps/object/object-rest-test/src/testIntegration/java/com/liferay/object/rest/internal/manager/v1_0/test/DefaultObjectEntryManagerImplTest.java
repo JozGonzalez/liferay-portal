@@ -380,11 +380,9 @@ public class DefaultObjectEntryManagerImplTest {
 		_accountManagerRole = _roleLocalService.getRole(
 			_companyId,
 			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_MANAGER);
-
 		_accountAdministratorRole = _roleLocalService.getRole(
 			_companyId,
 			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR);
-
 		_buyerRole = _roleLocalService.getRole(_companyId, "Buyer");
 	}
 
@@ -615,9 +613,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		// Account entry scope
 
-		_user = _addPrincipalUser();
-
 		AccountEntry accountEntry1 = _addAccountEntry();
+		_user = _addUser();
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntry1.getAccountEntryId(), _user.getUserId());
@@ -650,7 +647,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
@@ -702,7 +699,7 @@ public class DefaultObjectEntryManagerImplTest {
 			accountEntry2.getAccountEntryId(),
 			suborganization2.getOrganizationId());
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveOrganizationRole(organization1, _accountManagerRole, _user);
 
@@ -739,7 +736,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -811,7 +808,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		// Account entry scope
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntry1.getAccountEntryId(), _user.getUserId());
@@ -860,7 +857,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		objectEntry1 = _addObjectEntry(accountEntry1);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
@@ -923,7 +920,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		objectEntry1 = _addObjectEntry(accountEntry1);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveOrganizationRole(organization1, _accountManagerRole, _user);
 
@@ -1239,7 +1236,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_addObjectEntry(accountEntry2);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_assertObjectEntriesSize(0);
 
@@ -1326,7 +1323,7 @@ public class DefaultObjectEntryManagerImplTest {
 			accountEntry2.getAccountEntryId(),
 			organization1.getOrganizationId());
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveOrganizationRole(organization1, _accountManagerRole, _user);
 
@@ -1372,7 +1369,7 @@ public class DefaultObjectEntryManagerImplTest {
 			accountEntry2.getAccountEntryId(),
 			suborganization2.getOrganizationId());
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveOrganizationRole(organization1, _accountManagerRole, _user);
 
@@ -1407,7 +1404,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -1459,7 +1456,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_addResourcePermission(ActionKeys.UPDATE, _accountAdministratorRole);
 		_addResourcePermission(ActionKeys.VIEW, _accountAdministratorRole);
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveAccountRole(accountEntry1, _accountAdministratorRole, _user);
 
@@ -1485,7 +1482,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		// Organization scope
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
@@ -1539,7 +1536,7 @@ public class DefaultObjectEntryManagerImplTest {
 			accountEntry2.getAccountEntryId(),
 			suborganization2.getOrganizationId());
 
-		_user = _addPrincipalUser();
+		_user = _addUser();
 
 		_giveOrganizationRole(organization1, _accountManagerRole, _user);
 
@@ -1647,7 +1644,7 @@ public class DefaultObjectEntryManagerImplTest {
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 
-	private User _addPrincipalUser() throws Exception {
+	private User _addUser() throws Exception {
 		User user = UserTestUtil.addUser();
 
 		PermissionThreadLocal.setPermissionChecker(
