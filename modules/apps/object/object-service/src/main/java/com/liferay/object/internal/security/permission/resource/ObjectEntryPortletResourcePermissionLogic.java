@@ -58,60 +58,67 @@ public class ObjectEntryPortletResourcePermissionLogic
 		PermissionChecker permissionChecker, String name, Group group,
 		String actionId) {
 
+		try {
+			return _contains(permissionChecker, name, group, actionId);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return false;
+		}
+	}
+
+	private Boolean _contains(
+			PermissionChecker permissionChecker, String name, Group group,
+			String actionId)
+		throws PortalException {
+
 		if (permissionChecker.hasPermission(group, name, 0, actionId)) {
 			return true;
 		}
 
-		try {
-			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.getObjectDefinition(
-					GetterUtil.getLong(
-						StringUtil.removeSubstring(
-							name, "com.liferay.object#")));
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				GetterUtil.getLong(
+					StringUtil.removeSubstring(name, "com.liferay.object#")));
 
-			if (!objectDefinition.isAccountEntryRestricted()) {
-				return false;
-			}
+		if (!objectDefinition.isAccountEntryRestricted()) {
+			return false;
+		}
 
-			List<AccountEntry> accountEntries =
-				_accountEntryLocalService.getUserAccountEntries(
-					permissionChecker.getUserId(),
-					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
-					new String[] {
-						AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
-						AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON
-					},
-					WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS);
+		List<AccountEntry> accountEntries =
+			_accountEntryLocalService.getUserAccountEntries(
+				permissionChecker.getUserId(),
+				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
+				new String[] {
+					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
+					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON
+				},
+				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
 
-			for (AccountEntry accountEntry : accountEntries) {
-				if (permissionChecker.hasPermission(
-						accountEntry.getAccountEntryGroupId(), name, 0,
-						actionId)) {
+		for (AccountEntry accountEntry : accountEntries) {
+			if (permissionChecker.hasPermission(
+					accountEntry.getAccountEntryGroupId(), name, 0, actionId)) {
 
-					return true;
-				}
-			}
-
-			List<Organization> organizations =
-				_organizationLocalService.getUserOrganizations(
-					permissionChecker.getUserId());
-
-			for (Organization organization : organizations) {
-				Group organizationGroup =
-					_groupLocalService.getOrganizationGroup(
-						permissionChecker.getCompanyId(),
-						organization.getOrganizationId());
-
-				if (permissionChecker.hasPermission(
-						organizationGroup.getGroupId(), name, 0, actionId)) {
-
-					return true;
-				}
+				return true;
 			}
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+
+		List<Organization> organizations =
+			_organizationLocalService.getUserOrganizations(
+				permissionChecker.getUserId());
+
+		for (Organization organization : organizations) {
+			Group organizationGroup = _groupLocalService.getOrganizationGroup(
+				permissionChecker.getCompanyId(),
+				organization.getOrganizationId());
+
+			if (permissionChecker.hasPermission(
+					organizationGroup.getGroupId(), name, 0, actionId)) {
+
+				return true;
+			}
 		}
 
 		return false;
