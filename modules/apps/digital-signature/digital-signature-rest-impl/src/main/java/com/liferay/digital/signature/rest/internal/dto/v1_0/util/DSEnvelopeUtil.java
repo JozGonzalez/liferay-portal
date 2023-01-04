@@ -100,6 +100,7 @@ public class DSEnvelopeUtil {
 
 		return new DSRecipient() {
 			{
+				dsClientUserId = dsRecipient.getDSClientUserId();
 				emailAddress = dsRecipient.getEmailAddress();
 				id = dsRecipient.getDSRecipientId();
 				name = dsRecipient.getName();
@@ -113,6 +114,7 @@ public class DSEnvelopeUtil {
 
 		return new com.liferay.digital.signature.model.DSRecipient() {
 			{
+				dsClientUserId = dsRecipient.getDsClientUserId();
 				dsRecipientId = dsRecipient.getId();
 				emailAddress = dsRecipient.getEmailAddress();
 				name = dsRecipient.getName();
