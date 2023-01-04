@@ -420,7 +420,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 			throw new ObjectDefinitionAccountEntryRestrictedException(
 				StringBundler.concat(
 					"User ", getUserId(),
-					" has no access to the account entry ", accountEntryId));
+					" does not have access to account entry ", accountEntryId));
 		}
 	}
 

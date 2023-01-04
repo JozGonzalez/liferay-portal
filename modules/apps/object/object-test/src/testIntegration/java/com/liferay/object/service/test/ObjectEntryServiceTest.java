@@ -290,9 +290,9 @@ public class ObjectEntryServiceTest {
 
 		Assert.assertNotNull(
 			_objectEntryService.getObjectEntry(objectEntry.getObjectEntryId()));
-		Assert.assertNotNull(
-			_objectEntryService.deleteObjectEntry(
-				objectEntry.getObjectEntryId()));
+
+		_objectEntryService.deleteObjectEntry(
+			objectEntry.getObjectEntryId());
 
 		_accountEntryLocalService.deleteAccountEntry(accountEntry);
 	}

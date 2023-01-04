@@ -642,7 +642,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_assertFailure(
 			StringBundler.concat(
 				"User ", String.valueOf(_user.getUserId()),
-				" has no access to the account entry ",
+				" does not have access to account entry ",
 				String.valueOf(accountEntry2.getAccountEntryId())),
 			() -> _addObjectEntry(accountEntry2));
 
@@ -672,7 +672,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_assertFailure(
 			StringBundler.concat(
 				"User ", String.valueOf(_user.getUserId()),
-				" has no access to the account entry ",
+				" does not have access to account entry ",
 				String.valueOf(accountEntry2.getAccountEntryId())),
 			() -> _addObjectEntry(accountEntry2));
 
@@ -720,7 +720,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_assertFailure(
 			StringBundler.concat(
 				"User ", String.valueOf(_user.getUserId()),
-				" has no access to the account entry ",
+				" does not have access to account entry ",
 				String.valueOf(accountEntry2.getAccountEntryId())),
 			() -> _addObjectEntry(accountEntry2));
 	}
