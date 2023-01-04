@@ -191,7 +191,7 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 		dsRecipientViewDefinition.setAuthenticationMethod(regex);
 		dsRecipientViewDefinition.setDsClientUserId(regex);
 		dsRecipientViewDefinition.setEmailAddress(regex);
-		dsRecipientViewDefinition.setReturnUrl(regex);
+		dsRecipientViewDefinition.setReturnURL(regex);
 		dsRecipientViewDefinition.setUserName(regex);
 
 		String json = DSRecipientViewDefinitionSerDes.toJSON(
@@ -206,7 +206,7 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 		Assert.assertEquals(
 			regex, dsRecipientViewDefinition.getDsClientUserId());
 		Assert.assertEquals(regex, dsRecipientViewDefinition.getEmailAddress());
-		Assert.assertEquals(regex, dsRecipientViewDefinition.getReturnUrl());
+		Assert.assertEquals(regex, dsRecipientViewDefinition.getReturnURL());
 		Assert.assertEquals(regex, dsRecipientViewDefinition.getUserName());
 	}
 
@@ -367,8 +367,8 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("returnUrl", additionalAssertFieldName)) {
-				if (dsRecipientViewDefinition.getReturnUrl() == null) {
+			if (Objects.equals("returnURL", additionalAssertFieldName)) {
+				if (dsRecipientViewDefinition.getReturnURL() == null) {
 					valid = false;
 				}
 
@@ -539,10 +539,10 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("returnUrl", additionalAssertFieldName)) {
+			if (Objects.equals("returnURL", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						dsRecipientViewDefinition1.getReturnUrl(),
-						dsRecipientViewDefinition2.getReturnUrl())) {
+						dsRecipientViewDefinition1.getReturnURL(),
+						dsRecipientViewDefinition2.getReturnURL())) {
 
 					return false;
 				}
@@ -719,9 +719,9 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 			return sb.toString();
 		}
 
-		if (entityFieldName.equals("returnUrl")) {
+		if (entityFieldName.equals("returnURL")) {
 			sb.append("'");
-			sb.append(String.valueOf(dsRecipientViewDefinition.getReturnUrl()));
+			sb.append(String.valueOf(dsRecipientViewDefinition.getReturnURL()));
 			sb.append("'");
 
 			return sb.toString();
@@ -788,7 +788,7 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 				emailAddress =
 					StringUtil.toLowerCase(RandomTestUtil.randomString()) +
 						"@liferay.com";
-				returnUrl = StringUtil.toLowerCase(
+				returnURL = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				userName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());

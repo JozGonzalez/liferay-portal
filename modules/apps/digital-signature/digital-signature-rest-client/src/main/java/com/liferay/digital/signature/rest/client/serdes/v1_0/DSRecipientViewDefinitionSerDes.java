@@ -102,16 +102,16 @@ public class DSRecipientViewDefinitionSerDes {
 			sb.append("\"");
 		}
 
-		if (dsRecipientViewDefinition.getReturnUrl() != null) {
+		if (dsRecipientViewDefinition.getReturnURL() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"returnUrl\": ");
+			sb.append("\"returnURL\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(dsRecipientViewDefinition.getReturnUrl()));
+			sb.append(_escape(dsRecipientViewDefinition.getReturnURL()));
 
 			sb.append("\"");
 		}
@@ -180,13 +180,13 @@ public class DSRecipientViewDefinitionSerDes {
 				String.valueOf(dsRecipientViewDefinition.getEmailAddress()));
 		}
 
-		if (dsRecipientViewDefinition.getReturnUrl() == null) {
-			map.put("returnUrl", null);
+		if (dsRecipientViewDefinition.getReturnURL() == null) {
+			map.put("returnURL", null);
 		}
 		else {
 			map.put(
-				"returnUrl",
-				String.valueOf(dsRecipientViewDefinition.getReturnUrl()));
+				"returnURL",
+				String.valueOf(dsRecipientViewDefinition.getReturnURL()));
 		}
 
 		if (dsRecipientViewDefinition.getUserName() == null) {
@@ -237,9 +237,9 @@ public class DSRecipientViewDefinitionSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "returnUrl")) {
+			else if (Objects.equals(jsonParserFieldName, "returnURL")) {
 				if (jsonParserFieldValue != null) {
-					dsRecipientViewDefinition.setReturnUrl(
+					dsRecipientViewDefinition.setReturnURL(
 						(String)jsonParserFieldValue);
 				}
 			}

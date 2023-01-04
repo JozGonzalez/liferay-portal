@@ -143,20 +143,20 @@ public class DSRecipientViewDefinition implements Serializable {
 	protected String emailAddress;
 
 	@Schema
-	public String getReturnUrl() {
-		return returnUrl;
+	public String getReturnURL() {
+		return returnURL;
 	}
 
-	public void setReturnUrl(String returnUrl) {
-		this.returnUrl = returnUrl;
+	public void setReturnURL(String returnURL) {
+		this.returnURL = returnURL;
 	}
 
 	@JsonIgnore
-	public void setReturnUrl(
-		UnsafeSupplier<String, Exception> returnUrlUnsafeSupplier) {
+	public void setReturnURL(
+		UnsafeSupplier<String, Exception> returnURLUnsafeSupplier) {
 
 		try {
-			returnUrl = returnUrlUnsafeSupplier.get();
+			returnURL = returnURLUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -168,7 +168,7 @@ public class DSRecipientViewDefinition implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String returnUrl;
+	protected String returnURL;
 
 	@Schema
 	public String getUserName() {
@@ -268,16 +268,16 @@ public class DSRecipientViewDefinition implements Serializable {
 			sb.append("\"");
 		}
 
-		if (returnUrl != null) {
+		if (returnURL != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"returnUrl\": ");
+			sb.append("\"returnURL\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(returnUrl));
+			sb.append(_escape(returnURL));
 
 			sb.append("\"");
 		}

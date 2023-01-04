@@ -97,26 +97,26 @@ public class DSRecipientViewDefinition implements Cloneable, Serializable {
 
 	protected String emailAddress;
 
-	public String getReturnUrl() {
-		return returnUrl;
+	public String getReturnURL() {
+		return returnURL;
 	}
 
-	public void setReturnUrl(String returnUrl) {
-		this.returnUrl = returnUrl;
+	public void setReturnURL(String returnURL) {
+		this.returnURL = returnURL;
 	}
 
-	public void setReturnUrl(
-		UnsafeSupplier<String, Exception> returnUrlUnsafeSupplier) {
+	public void setReturnURL(
+		UnsafeSupplier<String, Exception> returnURLUnsafeSupplier) {
 
 		try {
-			returnUrl = returnUrlUnsafeSupplier.get();
+			returnURL = returnURLUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected String returnUrl;
+	protected String returnURL;
 
 	public String getUserName() {
 		return userName;
