@@ -377,12 +377,12 @@ public class DefaultObjectEntryManagerImplTest {
 				_adminUser.getUserId(),
 				_objectDefinition3.getObjectDefinitionId());
 
-		_accountManagerRole = _roleLocalService.getRole(
-			_companyId,
-			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_MANAGER);
 		_accountAdministratorRole = _roleLocalService.getRole(
 			_companyId,
 			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR);
+		_accountManagerRole = _roleLocalService.getRole(
+			_companyId,
+			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_MANAGER);
 		_buyerRole = _roleLocalService.getRole(_companyId, "Buyer");
 	}
 
@@ -744,11 +744,11 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			role.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.DELETE);
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			role.getRoleId(), ActionKeys.DELETE);
+			role.getRoleId(), ActionKeys.VIEW);
 
 		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
@@ -813,7 +813,6 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntry1.getAccountEntryId(), _user.getUserId());
-
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntry2.getAccountEntryId(), _user.getUserId());
 
@@ -1272,10 +1271,15 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		// Users who only have SHARED account roles (e.g.: Account Member)
-		// should be able to view all entries related to the account entry that
-		// the users belong if those account roles have the view resource
-		// permission
+		// User should be able to view object entries for account entry 1
+		// because he has the Account Administrator role (i.e.
+		// com.liferay.portal.kernel.model.Role) that is scoped to
+		// account entries. See
+		// AddDefaultAccountRolesPortalInstanceLifecycleListener#
+		// portalInstanceRegistered.
+
+		Assert.assertTrue(
+			AccountRoleConstants.isSharedRole(_accountAdministratorRole));
 
 		_assignAccountEntryRole(
 			accountEntry1, _accountAdministratorRole, _user);
@@ -1288,15 +1292,17 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		// Users who only have OWNED account roles (e.g.: Foo Account Role)
-		// should be able to view all entries related to the account entry that
-		// they (User and owned roles) belong if those account roles have the
-		// view resource permission
+		// User should be able to view object entries for account entry 2
+		// because he has an account role (i.e.
+		// com.liferay.account.model.AccountRole)
 
 		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
 			_user.getUserId(), accountEntry2.getAccountEntryId(),
 			RandomTestUtil.randomString(), Collections.emptyMap(),
 			Collections.emptyMap());
+
+		Assert.assertFalse(
+			AccountRoleConstants.isSharedRole(accountRole.getRole()));
 
 		_assignAccountEntryRole(accountEntry2, accountRole.getRole(), _user);
 
@@ -1308,10 +1314,12 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		// The user who is associated an organization must be able to view all
-		// entries related to account entries that belong to that organization
-		// if the user has the VIEW resource permission in at least one
-		// organization role assigned to them
+		// User should be able to view object entries for account entry 1 and
+		// account entry 2 because he has the Account Manager role (i.e.
+		// com.liferay.portal.kernel.model.Role) that is scoped to
+		// organizations. See
+		// AddDefaultAccountRolesPortalInstanceLifecycleListener#
+		// portalInstanceRegistered.
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
@@ -1320,7 +1328,6 @@ public class DefaultObjectEntryManagerImplTest {
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
 			organization1.getOrganizationId());
-
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry2.getAccountEntryId(),
 			organization1.getOrganizationId());
@@ -1348,10 +1355,7 @@ public class DefaultObjectEntryManagerImplTest {
 				accountEntry1.getAccountEntryId(),
 				organization1.getOrganizationId());
 
-		// The user who is associated an organization must be able to view all
-		// entries related to account entries that belong to that organization
-		// and its sub organizations if the user has the VIEW resource
-		// permission in at least one organization role assigned to them
+		// Check suborganizations
 
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
@@ -1413,11 +1417,11 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			role.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.UPDATE);
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			role.getRoleId(), ActionKeys.UPDATE);
+			role.getRoleId(), ActionKeys.VIEW);
 
 		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
