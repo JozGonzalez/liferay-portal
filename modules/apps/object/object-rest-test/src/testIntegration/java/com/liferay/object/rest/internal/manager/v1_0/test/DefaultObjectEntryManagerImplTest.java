@@ -677,9 +677,18 @@ public class DefaultObjectEntryManagerImplTest {
 
 		// Suborganization scope
 
+		_accountEntryOrganizationRelLocalService.
+			deleteAccountEntryOrganizationRel(
+				accountEntry1.getAccountEntryId(),
+				organization1.getOrganizationId());
+
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
+
+		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
+			accountEntry1.getAccountEntryId(),
+			suborganization1.getOrganizationId());
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
 
@@ -687,14 +696,6 @@ public class DefaultObjectEntryManagerImplTest {
 			organization2.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry1.getAccountEntryId(),
-				organization1.getOrganizationId());
-
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			suborganization1.getOrganizationId());
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry2.getAccountEntryId(),
 			suborganization2.getOrganizationId());
