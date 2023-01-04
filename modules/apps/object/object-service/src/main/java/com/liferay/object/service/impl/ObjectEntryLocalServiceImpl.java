@@ -2252,13 +2252,13 @@ public class ObjectEntryLocalServiceImpl
 								ResourcePermissionTable.INSTANCE.name.eq(
 									objectDefinition.getClassName())
 							).and(
+								ResourcePermissionTable.INSTANCE.scope.eq(
+									ResourceConstants.SCOPE_GROUP_TEMPLATE)
+							).and(
 								ResourcePermissionTable.INSTANCE.primKey.eq("0")
 							).and(
 								ResourcePermissionTable.INSTANCE.roleId.in(
 									dslQuery)
-							).and(
-								ResourcePermissionTable.INSTANCE.scope.eq(
-									ResourceConstants.SCOPE_GROUP_TEMPLATE)
 							).and(
 								ResourcePermissionTable.INSTANCE.viewActionId.
 									eq(true)
