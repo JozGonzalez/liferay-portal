@@ -86,7 +86,7 @@ public class RelationshipObjectFieldBusinessType
 		throws PortalException {
 
 		return HashMapBuilder.<String, Object>put(
-			"accountEntryRestrictor",
+			"accountEntryRestrictedObjectField",
 			() -> {
 				ObjectDefinition objectDefinition =
 					_objectDefinitionLocalService.getObjectDefinition(

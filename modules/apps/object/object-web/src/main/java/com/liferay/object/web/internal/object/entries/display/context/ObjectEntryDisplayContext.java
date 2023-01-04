@@ -957,17 +957,11 @@ public class ObjectEntryDisplayContext {
 							ddmFormField, ddmFormFieldValue, values);
 					}
 
-					// TODO This approach was agreed by the BPM team, but we
-					//  should implement the complete one after U58,
-					//  the complete approach consists in checking permissions
-					//  of the user roles to know if they're able to update
-					//  an account restrictor field value of the entry that must
-					//  be related to an account entry that the user has
-					//  permission ADD
+					// TODO Temporary workaround for LPS-171782
 
 					if (GetterUtil.getBoolean(
 							ddmFormField.getProperty(
-								"accountEntryRestrictor"))) {
+								"accountEntryRestrictedObjectField"))) {
 
 						Value value = ddmFormFieldValue.getValue();
 
