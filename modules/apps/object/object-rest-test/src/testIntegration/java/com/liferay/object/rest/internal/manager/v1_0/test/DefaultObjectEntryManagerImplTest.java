@@ -1410,8 +1410,6 @@ public class DefaultObjectEntryManagerImplTest {
 
 		ObjectEntry objectEntry2 = _addObjectEntry(accountEntry2);
 
-		_user = _addUser();
-
 		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		_resourcePermissionLocalService.addResourcePermission(
@@ -1422,6 +1420,8 @@ public class DefaultObjectEntryManagerImplTest {
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
 			role.getRoleId(), ActionKeys.VIEW);
+
+		_user = _addUser();
 
 		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
