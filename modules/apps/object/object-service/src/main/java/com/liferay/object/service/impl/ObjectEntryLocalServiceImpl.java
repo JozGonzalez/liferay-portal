@@ -1554,8 +1554,6 @@ public class ObjectEntryLocalServiceImpl
 	private Predicate _fillObjectFieldPredicate(
 		Column<?, Object> column, String dbType, String search) {
 
-		Predicate objectFieldPredicate = null;
-
 		if (StringUtil.equals(
 				dbType, ObjectFieldConstants.DB_TYPE_BIG_DECIMAL) ||
 			dbType.equals(ObjectFieldConstants.DB_TYPE_DOUBLE)) {
@@ -1564,14 +1562,14 @@ public class ObjectEntryLocalServiceImpl
 				GetterUtil.getDouble(search));
 
 			if (searchBigDecimal.compareTo(BigDecimal.ZERO) != 0) {
-				objectFieldPredicate = column.eq(searchBigDecimal);
+				return column.eq(searchBigDecimal);
 			}
 		}
 		else if (StringUtil.equals(dbType, ObjectFieldConstants.DB_TYPE_CLOB) ||
 				 StringUtil.equals(
 					 dbType, ObjectFieldConstants.DB_TYPE_STRING)) {
 
-			objectFieldPredicate = column.like("%" + search + "%");
+			return column.like("%" + search + "%");
 		}
 		else if (StringUtil.equals(
 					dbType, ObjectFieldConstants.DB_TYPE_INTEGER) ||
@@ -1580,11 +1578,11 @@ public class ObjectEntryLocalServiceImpl
 			long searchLong = GetterUtil.getLong(search);
 
 			if (searchLong != 0L) {
-				objectFieldPredicate = column.eq(searchLong);
+				return column.eq(searchLong);
 			}
 		}
 
-		return objectFieldPredicate;
+		return null;
 	}
 
 	private Predicate _fillPredicate(
