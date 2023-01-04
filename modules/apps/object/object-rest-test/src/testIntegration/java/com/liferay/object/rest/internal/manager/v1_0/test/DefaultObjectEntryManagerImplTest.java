@@ -647,13 +647,13 @@ public class DefaultObjectEntryManagerImplTest {
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
-		_user = _addUser();
-
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
 			organization1.getOrganizationId());
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_assertFailure(
 			StringBundler.concat(
@@ -701,7 +701,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_assertFailure(
 			StringBundler.concat(
@@ -863,7 +863,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_addResourcePermission(ActionKeys.VIEW, _accountManagerRole);
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
@@ -922,7 +922,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
@@ -1276,7 +1276,7 @@ public class DefaultObjectEntryManagerImplTest {
 		// the users belong if those account roles have the view resource
 		// permission
 
-		_giveAccountRole(accountEntry1, _accountAdministratorRole, _user);
+		_assignAccountEntryRole(accountEntry1, _accountAdministratorRole, _user);
 
 		_addResourcePermission(ActionKeys.VIEW, _accountAdministratorRole);
 
@@ -1296,7 +1296,7 @@ public class DefaultObjectEntryManagerImplTest {
 			RandomTestUtil.randomString(), Collections.emptyMap(),
 			Collections.emptyMap());
 
-		_giveAccountRole(accountEntry2, accountRole.getRole(), _user);
+		_assignAccountEntryRole(accountEntry2, accountRole.getRole(), _user);
 
 		_addResourcePermission(ActionKeys.VIEW, accountRole.getRole());
 
@@ -1325,7 +1325,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_assertObjectEntriesSize(2);
 
@@ -1371,11 +1371,11 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_assertObjectEntriesSize(1);
 
-		_giveOrganizationRole(suborganization2, _accountManagerRole, _user);
+		_assignOrganizationRole(suborganization2, _accountManagerRole, _user);
 
 		_assertObjectEntriesSize(2);
 
@@ -1458,11 +1458,11 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveAccountRole(accountEntry1, _accountAdministratorRole, _user);
+		_assignAccountEntryRole(accountEntry1, _accountAdministratorRole, _user);
 
 		_addResourcePermission(ActionKeys.VIEW, _buyerRole);
 
-		_giveAccountRole(accountEntry2, _buyerRole, _user);
+		_assignAccountEntryRole(accountEntry2, _buyerRole, _user);
 
 		_assertObjectEntriesSize(2);
 
@@ -1488,7 +1488,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_addResourcePermission(ActionKeys.VIEW, _accountManagerRole);
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
 			accountEntry1.getAccountEntryId(),
@@ -1538,7 +1538,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_giveOrganizationRole(organization1, _accountManagerRole, _user);
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
 		_assertObjectEntriesSize(1);
 
@@ -1959,7 +1959,7 @@ public class DefaultObjectEntryManagerImplTest {
 		return dlFileEntry.getFileEntryId();
 	}
 
-	private void _giveAccountRole(
+	private void _assignAccountEntryRole(
 			AccountEntry accountEntry, Role role, User user)
 		throws Exception {
 
@@ -1971,7 +1971,7 @@ public class DefaultObjectEntryManagerImplTest {
 			role.getRoleId());
 	}
 
-	private void _giveOrganizationRole(
+	private void _assignOrganizationRole(
 			Organization organization, Role role, User user)
 		throws Exception {
 
