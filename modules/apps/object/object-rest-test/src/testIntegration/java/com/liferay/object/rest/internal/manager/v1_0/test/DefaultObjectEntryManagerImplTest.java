@@ -739,18 +739,18 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.VIEW);
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.DELETE);
+			role.getRoleId(), ActionKeys.DELETE);
 
-		_userLocalService.addRoleUser(randomRole.getRoleId(), _user);
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
 		_objectEntryManager.deleteObjectEntry(
 			_objectDefinition3, objectEntry1.getId());
@@ -758,7 +758,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.removeResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.DELETE);
+			role.getRoleId(), ActionKeys.DELETE);
 
 		try {
 			_objectEntryManager.deleteObjectEntry(
@@ -794,7 +794,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.setResourcePermissions(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
-			String.valueOf(objectEntry1.getId()), randomRole.getRoleId(),
+			String.valueOf(objectEntry1.getId()), role.getRoleId(),
 			new String[] {ActionKeys.DELETE});
 
 		_objectEntryManager.deleteObjectEntry(
@@ -1241,21 +1241,21 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.VIEW);
 
-		_userLocalService.addRoleUser(randomRole.getRoleId(), _user);
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
 		_assertObjectEntriesSize(2);
 
 		_resourcePermissionLocalService.removeResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.VIEW);
 
 		// Regular roles' individual permissions should not be restricted by
 		// account entry
@@ -1263,12 +1263,12 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.setResourcePermissions(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
-			String.valueOf(objectEntry1.getId()), randomRole.getRoleId(),
+			String.valueOf(objectEntry1.getId()), role.getRoleId(),
 			new String[] {ActionKeys.VIEW});
 
 		_assertObjectEntriesSize(1);
 
-		_userLocalService.deleteRoleUser(randomRole.getRoleId(), _user);
+		_userLocalService.deleteRoleUser(role.getRoleId(), _user);
 
 		_assertObjectEntriesSize(0);
 
@@ -1277,7 +1277,8 @@ public class DefaultObjectEntryManagerImplTest {
 		// the users belong if those account roles have the view resource
 		// permission
 
-		_assignAccountEntryRole(accountEntry1, _accountAdministratorRole, _user);
+		_assignAccountEntryRole(
+			accountEntry1, _accountAdministratorRole, _user);
 
 		_addResourcePermission(ActionKeys.VIEW, _accountAdministratorRole);
 
@@ -1407,18 +1408,18 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		Role randomRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.VIEW);
+			role.getRoleId(), ActionKeys.VIEW);
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.UPDATE);
+			role.getRoleId(), ActionKeys.UPDATE);
 
-		_userLocalService.addRoleUser(randomRole.getRoleId(), _user);
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
 		_objectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition3,
@@ -1427,7 +1428,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.removeResourcePermission(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
-			randomRole.getRoleId(), ActionKeys.UPDATE);
+			role.getRoleId(), ActionKeys.UPDATE);
 
 		_assertFailure(
 			StringBundler.concat(
@@ -1445,7 +1446,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.setResourcePermissions(
 			_companyId, _objectDefinition3.getClassName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
-			String.valueOf(objectEntry1.getId()), randomRole.getRoleId(),
+			String.valueOf(objectEntry1.getId()), role.getRoleId(),
 			new String[] {ActionKeys.UPDATE});
 
 		_objectEntryManager.updateObjectEntry(
@@ -1459,7 +1460,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_user = _addUser();
 
-		_assignAccountEntryRole(accountEntry1, _accountAdministratorRole, _user);
+		_assignAccountEntryRole(
+			accountEntry1, _accountAdministratorRole, _user);
 
 		_addResourcePermission(ActionKeys.VIEW, _buyerRole);
 
@@ -1645,17 +1647,6 @@ public class DefaultObjectEntryManagerImplTest {
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 
-	private User _addUser() throws Exception {
-		User user = UserTestUtil.addUser();
-
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(user));
-
-		PrincipalThreadLocal.setName(user.getUserId());
-
-		return user;
-	}
-
 	private void _addResourcePermission(String actionId, Role role)
 		throws Exception {
 
@@ -1668,6 +1659,17 @@ public class DefaultObjectEntryManagerImplTest {
 		_resourcePermissionLocalService.addResourcePermission(
 			_companyId, name, ResourceConstants.SCOPE_GROUP_TEMPLATE, "0",
 			role.getRoleId(), actionId);
+	}
+
+	private User _addUser() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
+
+		PrincipalThreadLocal.setName(user.getUserId());
+
+		return user;
 	}
 
 	private void _assertCountAggregationObjectFieldValue(
@@ -1860,6 +1862,32 @@ public class DefaultObjectEntryManagerImplTest {
 			objectEntries.toString(), size, objectEntries.size());
 	}
 
+	private void _assignAccountEntryRole(
+			AccountEntry accountEntry, Role role, User user)
+		throws Exception {
+
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), user.getUserId());
+
+		_userGroupRoleLocalService.addUserGroupRole(
+			user.getUserId(), accountEntry.getAccountEntryGroupId(),
+			role.getRoleId());
+	}
+
+	private void _assignOrganizationRole(
+			Organization organization, Role role, User user)
+		throws Exception {
+
+		_organizationLocalService.addUserOrganization(
+			user.getUserId(), organization.getOrganizationId());
+
+		Group group = _groupLocalService.getOrganizationGroup(
+			_companyId, organization.getOrganizationId());
+
+		_userGroupRoleLocalService.addUserGroupRole(
+			user.getUserId(), group.getGroupId(), role.getRoleId());
+	}
+
 	private String _buildEqualsExpressionFilterString(
 		String fieldName, String value) {
 
@@ -1958,32 +1986,6 @@ public class DefaultObjectEntryManagerImplTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		return dlFileEntry.getFileEntryId();
-	}
-
-	private void _assignAccountEntryRole(
-			AccountEntry accountEntry, Role role, User user)
-		throws Exception {
-
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			accountEntry.getAccountEntryId(), user.getUserId());
-
-		_userGroupRoleLocalService.addUserGroupRole(
-			user.getUserId(), accountEntry.getAccountEntryGroupId(),
-			role.getRoleId());
-	}
-
-	private void _assignOrganizationRole(
-			Organization organization, Role role, User user)
-		throws Exception {
-
-		_organizationLocalService.addUserOrganization(
-			user.getUserId(), organization.getOrganizationId());
-
-		Group group = _groupLocalService.getOrganizationGroup(
-			_companyId, organization.getOrganizationId());
-
-		_userGroupRoleLocalService.addUserGroupRole(
-			user.getUserId(), group.getGroupId(), role.getRoleId());
 	}
 
 	private void _removeResourcePermission(String actionId, Role role)
