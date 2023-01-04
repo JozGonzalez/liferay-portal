@@ -15,7 +15,6 @@
 package com.liferay.digital.signature.manager;
 
 import com.liferay.digital.signature.model.DSRecipientViewDefinition;
-import com.liferay.portal.kernel.json.JSONObject;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -25,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DSRecipientViewDefinitionManager {
 
-	public JSONObject addDSRecipientViewDefinition(
+	public String addDSRecipientViewDefinition(
 			long companyId, long groupId, String dsEnvelopeId,
 			DSRecipientViewDefinition dsRecipientViewDefinition)
 		throws Exception;

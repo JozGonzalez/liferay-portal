@@ -34,8 +34,8 @@ public class DSRecipientViewDefinition {
 		return emailAddress;
 	}
 
-	public String getReturnUrl() {
-		return returnUrl;
+	public String getReturnURL() {
+		return returnURL;
 	}
 
 	public String getUserName() {
@@ -54,8 +54,8 @@ public class DSRecipientViewDefinition {
 		this.emailAddress = emailAddress;
 	}
 
-	public void setReturnUrl(String returnUrl) {
-		this.returnUrl = returnUrl;
+	public void setReturnURL(String returnURL) {
+		this.returnURL = returnURL;
 	}
 
 	public void setUserName(String userName) {
@@ -70,7 +70,7 @@ public class DSRecipientViewDefinition {
 		).put(
 			"email", getEmailAddress()
 		).put(
-			"returnUrl", getReturnUrl()
+			"returnUrl", getReturnURL()
 		).put(
 			"userName", getUserName()
 		);
@@ -84,7 +84,7 @@ public class DSRecipientViewDefinition {
 	protected String authenticationMethod;
 	protected String dsClientUserId;
 	protected String emailAddress;
-	protected String returnUrl;
+	protected String returnURL;
 	protected String userName;
 
 }

@@ -34,7 +34,7 @@ public class DSRecipientViewDefinitionManagerImpl
 	implements DSRecipientViewDefinitionManager {
 
 	@Override
-	public JSONObject addDSRecipientViewDefinition(
+	public String addDSRecipientViewDefinition(
 			long companyId, long groupId, String dsEnvelopeId,
 			DSRecipientViewDefinition dsRecipientViewDefinition)
 		throws Exception {
@@ -48,11 +48,13 @@ public class DSRecipientViewDefinitionManagerImpl
 			throw new PrincipalException.MustBeCompanyAdmin(permissionChecker);
 		}
 
-		return _dsHttp.post(
+		JSONObject jsonObject = _dsHttp.post(
 			companyId, groupId,
 			StringBundler.concat(
 				"envelopes/", dsEnvelopeId, "/views/recipient"),
 			dsRecipientViewDefinition.toJSONObject());
+
+		return jsonObject.getString("url");
 	}
 
 	@Reference

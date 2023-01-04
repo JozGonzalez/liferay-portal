@@ -41,11 +41,17 @@ public class DSRecipientViewDefinitionResourceImpl
 			DSRecipientViewDefinition dsRecipientViewDefinition)
 		throws Exception {
 
-		return DSRecipientViewDefinitionUtil.toDSEnvelopeSignUrl(
-			_dsRecipientViewDefinitionManager.addDSRecipientViewDefinition(
-				contextCompany.getCompanyId(), siteId, dsEnvelopeId,
-				DSRecipientViewDefinitionUtil.toDSRecipientViewDefinition(
-					dsRecipientViewDefinition)));
+		return new DSEnvelopeSignatureURL() {
+			{
+				url =
+					_dsRecipientViewDefinitionManager.
+						addDSRecipientViewDefinition(
+							contextCompany.getCompanyId(), siteId, dsEnvelopeId,
+							DSRecipientViewDefinitionUtil.
+								toDSRecipientViewDefinition(
+									dsRecipientViewDefinition));
+			}
+		};
 	}
 
 	@Reference

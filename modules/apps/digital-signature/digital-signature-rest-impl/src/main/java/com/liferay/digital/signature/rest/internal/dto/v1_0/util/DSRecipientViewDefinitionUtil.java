@@ -14,24 +14,12 @@
 
 package com.liferay.digital.signature.rest.internal.dto.v1_0.util;
 
-import com.liferay.digital.signature.rest.dto.v1_0.DSEnvelopeSignatureURL;
 import com.liferay.digital.signature.rest.dto.v1_0.DSRecipientViewDefinition;
-import com.liferay.portal.kernel.json.JSONObject;
 
 /**
  * @author José Abelenda
  */
 public class DSRecipientViewDefinitionUtil {
-
-	public static DSEnvelopeSignatureURL toDSEnvelopeSignUrl(
-		JSONObject jsonObject) {
-
-		return new DSEnvelopeSignatureURL() {
-			{
-				url = jsonObject.getString("url");
-			}
-		};
-	}
 
 	public static DSRecipientViewDefinition toDSRecipientViewDefinition(
 		com.liferay.digital.signature.model.DSRecipientViewDefinition
@@ -43,7 +31,7 @@ public class DSRecipientViewDefinitionUtil {
 					dsRecipientViewDefinition.getAuthenticationMethod();
 				dsClientUserId = dsRecipientViewDefinition.getDSClientUserId();
 				emailAddress = dsRecipientViewDefinition.getEmailAddress();
-				returnUrl = dsRecipientViewDefinition.getReturnUrl();
+				returnURL = dsRecipientViewDefinition.getReturnURL();
 				userName = dsRecipientViewDefinition.getUserName();
 			}
 		};
@@ -61,7 +49,7 @@ public class DSRecipientViewDefinitionUtil {
 					dsRecipientViewDefinition.getAuthenticationMethod();
 				dsClientUserId = dsRecipientViewDefinition.getDsClientUserId();
 				emailAddress = dsRecipientViewDefinition.getEmailAddress();
-				returnUrl = dsRecipientViewDefinition.getReturnUrl();
+				returnURL = dsRecipientViewDefinition.getReturnURL();
 				userName = dsRecipientViewDefinition.getUserName();
 			}
 		};
