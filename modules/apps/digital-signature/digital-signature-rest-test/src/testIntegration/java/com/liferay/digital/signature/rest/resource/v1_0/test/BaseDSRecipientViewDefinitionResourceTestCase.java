@@ -211,21 +211,6 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLPostSiteDSRecipientViewDefinition()
-		throws Exception {
-
-		DSRecipientViewDefinition randomDSRecipientViewDefinition =
-			randomDSRecipientViewDefinition();
-
-		DSRecipientViewDefinition dsRecipientViewDefinition =
-			testGraphQLDSRecipientViewDefinition_addDSRecipientViewDefinition(
-				randomDSRecipientViewDefinition);
-
-		Assert.assertTrue(
-			equals(randomDSRecipientViewDefinition, dsRecipientViewDefinition));
-	}
-
-	@Test
 	public void testPostSiteDSRecipientViewDefinition() throws Exception {
 		Assert.assertTrue(true);
 	}
