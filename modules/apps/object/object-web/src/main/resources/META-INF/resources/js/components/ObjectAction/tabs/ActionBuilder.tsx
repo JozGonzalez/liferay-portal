@@ -731,7 +731,6 @@ export default function ActionBuilder({
 							>
 								{notificationTemplates.map(
 									(option) =>
-										Liferay.FeatureFlags['LPS-162133'] &&
 										option.type && (
 											<ClayLabel
 												displayType={
