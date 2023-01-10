@@ -59,20 +59,22 @@ public class BaseConfigurationModelListener
 
 				Object value = entry.getValue();
 
-				if (key.equals("osgi.jaxrs.application.base") &&
-					value.equals(dictionary.get("path"))) {
+				if (!key.equals("osgi.jaxrs.application.base") ||
+					!value.equals(dictionary.get("path"))) {
 
-					if ((Boolean)dictionary.get("restEnabled")) {
-						_serviceComponentRuntime.enableComponent(
-							componentDescriptionDTO);
-					}
-					else {
-						_serviceComponentRuntime.disableComponent(
-							componentDescriptionDTO);
-					}
-
-					break;
+					continue;
 				}
+
+				if ((Boolean)dictionary.get("restEnabled")) {
+					_serviceComponentRuntime.enableComponent(
+						componentDescriptionDTO);
+				}
+				else {
+					_serviceComponentRuntime.disableComponent(
+						componentDescriptionDTO);
+				}
+
+				break;
 			}
 		}
 	}
