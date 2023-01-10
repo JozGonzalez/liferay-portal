@@ -55,13 +55,20 @@ public class DefaultUsersProvider
 
 		return TransformUtil.unsafeTransform(
 			notificationRecipient.getNotificationRecipientSettings(),
-			user -> hasViewPermission(
-				notificationContext.getClassName(),
-				notificationContext.getClassPK(), user),
-			notificationRecipientSetting ->
-				_userLocalService.getUserByScreenName(
+			notificationRecipientSetting -> {
+				User user = _userLocalService.getUserByScreenName(
 					notificationRecipientSetting.getCompanyId(),
-					notificationRecipientSetting.getValue()));
+					notificationRecipientSetting.getValue());
+
+				if (!hasViewPermission(
+						notificationContext.getClassName(),
+						notificationContext.getClassPK(), user)) {
+
+					return null;
+				}
+
+				return user;
+			});
 	}
 
 	@Reference

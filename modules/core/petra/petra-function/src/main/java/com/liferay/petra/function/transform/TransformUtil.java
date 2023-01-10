@@ -21,7 +21,6 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * @author Brian Wing Shun Chan
@@ -74,8 +73,7 @@ public class TransformUtil {
 	}
 
 	public static <T, R, E extends Throwable> List<R> unsafeTransform(
-			Collection<T> collection, Predicate<R> predicate,
-			UnsafeFunction<T, R, E> unsafeFunction)
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		if (collection == null) {
@@ -87,19 +85,12 @@ public class TransformUtil {
 		for (T item : collection) {
 			R newItem = unsafeFunction.apply(item);
 
-			if ((newItem != null) && predicate.test(newItem)) {
+			if (newItem != null) {
 				list.add(newItem);
 			}
 		}
 
 		return list;
-	}
-
-	public static <T, R, E extends Throwable> List<R> unsafeTransform(
-			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
-		throws E {
-
-		return unsafeTransform(collection, r -> true, unsafeFunction);
 	}
 
 	public static <T, R, E extends Throwable> R[] unsafeTransform(

@@ -76,10 +76,18 @@ public class RoleUsersProvider
 
 		return TransformUtil.unsafeTransform(
 			userIds,
-			user -> hasViewPermission(
-				notificationContext.getClassName(),
-				notificationContext.getClassPK(), user),
-			userId -> _userLocalService.getUser(userId));
+			userId -> {
+				User user = _userLocalService.getUser(userId);
+
+				if (!hasViewPermission(
+						notificationContext.getClassName(),
+						notificationContext.getClassPK(), user)) {
+
+					return null;
+				}
+
+				return user;
+			});
 	}
 
 	@Reference

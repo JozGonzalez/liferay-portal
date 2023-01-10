@@ -54,9 +54,10 @@ public class TermUsersProvider
 	public List<User> provide(NotificationContext notificationContext)
 		throws PortalException {
 
+		List<User> users = new ArrayList<>();
+
 		List<String> screenNames = new ArrayList<>();
 		List<String> terms = new ArrayList<>();
-		List<User> users = new ArrayList<>();
 
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
@@ -81,11 +82,19 @@ public class TermUsersProvider
 		users.addAll(
 			TransformUtil.unsafeTransform(
 				screenNames,
-				user -> hasViewPermission(
-					notificationContext.getClassName(),
-					notificationContext.getClassPK(), user),
-				screenName -> _userLocalService.getUserByScreenName(
-					notificationRecipient.getCompanyId(), screenName)));
+				screenName -> {
+					User user = _userLocalService.getUserByScreenName(
+						notificationRecipient.getCompanyId(), screenName);
+
+					if (!hasViewPermission(
+							notificationContext.getClassName(),
+							notificationContext.getClassPK(), user)) {
+
+						return null;
+					}
+
+					return user;
+				}));
 
 		for (NotificationTermEvaluator notificationTermEvaluator :
 				_notificationTermEvaluatorTracker.getNotificationTermEvaluators(
@@ -94,14 +103,23 @@ public class TermUsersProvider
 			users.addAll(
 				TransformUtil.unsafeTransform(
 					terms,
-					user -> hasViewPermission(
-						notificationContext.getClassName(),
-						notificationContext.getClassPK(), user),
-					term -> _userLocalService.getUser(
-						GetterUtil.getLong(
-							notificationTermEvaluator.evaluate(
-								NotificationTermEvaluator.Context.RECIPIENT,
-								notificationContext.getTermValues(), term)))));
+					term -> {
+						User user = _userLocalService.getUser(
+							GetterUtil.getLong(
+								notificationTermEvaluator.evaluate(
+									NotificationTermEvaluator.Context.RECIPIENT,
+									notificationContext.getTermValues(),
+									term)));
+
+						if (!hasViewPermission(
+								notificationContext.getClassName(),
+								notificationContext.getClassPK(), user)) {
+
+							return null;
+						}
+
+						return user;
+					}));
 		}
 
 		return users;
