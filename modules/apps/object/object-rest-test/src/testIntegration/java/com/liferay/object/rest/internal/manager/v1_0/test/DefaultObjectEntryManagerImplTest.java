@@ -67,6 +67,7 @@ import com.liferay.object.service.ObjectFilterLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
@@ -107,7 +108,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -621,7 +621,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" must have ADD_OBJECT_ENTRY permission for ",
 				_objectDefinition3.getResourceName(), StringPool.SPACE),
 			() -> _addObjectEntry(accountEntry1));
@@ -638,9 +638,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" does not have access to account entry ",
-				String.valueOf(accountEntry2.getAccountEntryId())),
+				accountEntry2.getAccountEntryId()),
 			() -> _addObjectEntry(accountEntry2));
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
@@ -648,7 +648,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" must have ADD_OBJECT_ENTRY permission for ",
 				_objectDefinition3.getResourceName(), StringPool.SPACE),
 			() -> _addObjectEntry(accountEntry2));
@@ -673,7 +673,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" must have ADD_OBJECT_ENTRY permission for ",
 				_objectDefinition3.getResourceName(), StringPool.SPACE),
 			() -> _addObjectEntry(accountEntry1));
@@ -684,9 +684,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" does not have access to account entry ",
-				String.valueOf(accountEntry2.getAccountEntryId())),
+				accountEntry2.getAccountEntryId()),
 			() -> _addObjectEntry(accountEntry2));
 
 		_removeResourcePermission("ADD_OBJECT_ENTRY", _accountManagerRole);
@@ -722,7 +722,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" must have ADD_OBJECT_ENTRY permission for ",
 				_objectDefinition3.getResourceName(), StringPool.SPACE),
 			() -> _addObjectEntry(accountEntry1));
@@ -733,9 +733,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
+				"User ", _user.getUserId(),
 				" does not have access to account entry ",
-				String.valueOf(accountEntry2.getAccountEntryId())),
+				accountEntry2.getAccountEntryId()),
 			() -> _addObjectEntry(accountEntry2));
 	}
 
@@ -786,10 +786,10 @@ public class DefaultObjectEntryManagerImplTest {
 			Assert.assertEquals(
 				exception.getMessage(),
 				StringBundler.concat(
-					"User ", String.valueOf(_user.getUserId()),
+					"User ", _user.getUserId(),
 					" must have DELETE permission for ",
 					_objectDefinition3.getClassName(), StringPool.SPACE,
-					String.valueOf(objectEntry2.getId())));
+					objectEntry2.getId()));
 		}
 
 		// Regular roles' individual permissions should not be restricted by
@@ -858,10 +858,10 @@ public class DefaultObjectEntryManagerImplTest {
 			Assert.assertEquals(
 				exception.getMessage(),
 				StringBundler.concat(
-					"User ", String.valueOf(_user.getUserId()),
+					"User ", _user.getUserId(),
 					" must have DELETE permission for ",
 					_objectDefinition3.getClassName(), StringPool.SPACE,
-					String.valueOf(objectEntry2.getId())));
+					objectEntry2.getId()));
 		}
 
 		// Organization scope
@@ -902,7 +902,7 @@ public class DefaultObjectEntryManagerImplTest {
 		catch (Exception exception) {
 			Assert.assertEquals(
 				exception.getMessage(),
-				com.liferay.petra.string.StringBundler.concat(
+				StringBundler.concat(
 					"User ", _user.getUserId(), " must have DELETE permission ",
 					"for ", _objectDefinition3.getClassName(), StringPool.SPACE,
 					objectEntry1.getId()));
@@ -969,7 +969,7 @@ public class DefaultObjectEntryManagerImplTest {
 		catch (Exception exception) {
 			Assert.assertEquals(
 				exception.getMessage(),
-				com.liferay.petra.string.StringBundler.concat(
+				StringBundler.concat(
 					"User ", _user.getUserId(), " must have DELETE permission ",
 					"for ", _objectDefinition3.getClassName(), StringPool.SPACE,
 					objectEntry1.getId()));
@@ -1452,10 +1452,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
-				" must have UPDATE permission for ",
+				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
-				String.valueOf(objectEntry2.getId())),
+				objectEntry2.getId()),
 			() -> _objectEntryManager.updateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition3,
 				objectEntry2.getId(), objectEntry2));
@@ -1495,10 +1494,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
-				" must have UPDATE permission for ",
+				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
-				String.valueOf(objectEntry2.getId())),
+				objectEntry2.getId()),
 			() -> _objectEntryManager.updateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition3,
 				objectEntry2.getId(), objectEntry2));
@@ -1525,10 +1523,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
-				" must have UPDATE permission for ",
+				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
-				String.valueOf(objectEntry1.getId())),
+				objectEntry1.getId()),
 			() -> _objectEntryManager.updateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition3,
 				objectEntry1.getId(), objectEntry1));
@@ -1567,10 +1564,9 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertFailure(
 			StringBundler.concat(
-				"User ", String.valueOf(_user.getUserId()),
-				" must have UPDATE permission for ",
+				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
-				String.valueOf(objectEntry1.getId())),
+				objectEntry1.getId()),
 			() -> _objectEntryManager.updateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition3,
 				objectEntry1.getId(), objectEntry1));
@@ -1942,8 +1938,7 @@ public class DefaultObjectEntryManagerImplTest {
 		for (int value : values) {
 			valuesList.add(
 				StringBundler.concat(
-					"(x ", includes ? "eq " : "ne ", String.valueOf(value),
-					")"));
+					"(x ", includes ? "eq " : "ne ", value, ")"));
 		}
 
 		return StringBundler.concat(

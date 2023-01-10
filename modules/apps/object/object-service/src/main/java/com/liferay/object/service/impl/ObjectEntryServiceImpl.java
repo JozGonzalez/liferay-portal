@@ -437,10 +437,10 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 					" does not have access to account entry ", accountEntryId));
 		}
 
+		Set<Long> rolesIds = new HashSet<>();
+
 		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
 			accountEntryId);
-
-		Set<Long> rolesIds = new HashSet<>();
 
 		rolesIds.addAll(
 			TransformUtil.transform(
