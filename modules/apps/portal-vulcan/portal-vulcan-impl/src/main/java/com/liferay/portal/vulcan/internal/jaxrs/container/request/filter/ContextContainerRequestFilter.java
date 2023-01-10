@@ -112,12 +112,12 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 			HttpServletRequest httpServletRequest, Message message)
 		throws Exception {
 
+		Company company = _portal.getCompany(httpServletRequest);
+
 		String path = StringUtil.removeFirst(
 			(String)message.get(Message.BASE_PATH), "/o");
 
 		path = StringUtil.replaceLast(path, '/', "");
-
-		Company company = _portal.getCompany(httpServletRequest);
 
 		Set<String> excludedOperationIds =
 			ConfigurationUtil.getExcludedOperationIds(
