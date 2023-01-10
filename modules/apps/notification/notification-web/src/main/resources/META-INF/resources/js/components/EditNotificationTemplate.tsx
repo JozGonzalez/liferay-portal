@@ -546,13 +546,6 @@ export default function EditNotificationTemplate({
 									type="text"
 									value={values.description}
 								/>
-
-								<SingleSelect
-									disabled
-									label={Liferay.Language.get('type')}
-									options={[]}
-									value={Liferay.Language.get('email')}
-								/>
 							</Card>
 						</div>
 
