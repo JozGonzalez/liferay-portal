@@ -67,16 +67,20 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 			int quantity, ServiceContext serviceContext)
 		throws PortalException {
 
-		CPDefinition cpDefinition = null;
-		User user = _userLocalService.getUser(serviceContext.getUserId());
-
-		_validate(cpDefinitionId, entryCProductId, quantity, false);
-
-		long cpDefinitionGroupedEntryId = counterLocalService.increment();
-
 		CPDefinitionGroupedEntry cpDefinitionGroupedEntry =
-			cpDefinitionGroupedEntryPersistence.create(
-				cpDefinitionGroupedEntryId);
+			cpDefinitionGroupedEntryPersistence.fetchByC_E(
+				cpDefinitionId, entryCProductId);
+
+		if (cpDefinitionGroupedEntry != null) {
+			throw new DuplicateCPDefinitionGroupedEntryException();
+		}
+
+		_validate(cpDefinitionId, entryCProductId, quantity);
+
+		cpDefinitionGroupedEntry = cpDefinitionGroupedEntryPersistence.create(
+			counterLocalService.increment());
+
+		CPDefinition cpDefinition = null;
 
 		if (_cpDefinitionLocalService.isVersionable(cpDefinitionId)) {
 			cpDefinition = _cpDefinitionLocalService.copyCPDefinition(
@@ -88,9 +92,13 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 		}
 
 		cpDefinitionGroupedEntry.setGroupId(cpDefinition.getGroupId());
+
+		User user = _userLocalService.getUser(serviceContext.getUserId());
+
 		cpDefinitionGroupedEntry.setCompanyId(user.getCompanyId());
 		cpDefinitionGroupedEntry.setUserId(user.getUserId());
 		cpDefinitionGroupedEntry.setUserName(user.getFullName());
+
 		cpDefinitionGroupedEntry.setCPDefinitionId(
 			cpDefinition.getCPDefinitionId());
 		cpDefinitionGroupedEntry.setEntryCProductId(entryCProductId);
@@ -206,7 +214,7 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 
 		_validate(
 			cpDefinitionGroupedEntry.getCPDefinitionId(),
-			cpDefinitionGroupedEntry.getEntryCProductId(), quantity, true);
+			cpDefinitionGroupedEntry.getEntryCProductId(), quantity);
 
 		cpDefinitionGroupedEntry.setPriority(priority);
 		cpDefinitionGroupedEntry.setQuantity(quantity);
@@ -216,19 +224,8 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 	}
 
 	private void _validate(
-			long cpDefinitionId, long entryCProductId, int quantity,
-			boolean update)
+			long cpDefinitionId, long entryCProductId, int quantity)
 		throws PortalException {
-
-		if (!update) {
-			CPDefinitionGroupedEntry cpDefinitionGroupedEntry =
-				cpDefinitionGroupedEntryPersistence.fetchByC_E(
-					cpDefinitionId, entryCProductId);
-
-			if (cpDefinitionGroupedEntry != null) {
-				throw new DuplicateCPDefinitionGroupedEntryException();
-			}
-		}
 
 		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
 			cpDefinitionId);
