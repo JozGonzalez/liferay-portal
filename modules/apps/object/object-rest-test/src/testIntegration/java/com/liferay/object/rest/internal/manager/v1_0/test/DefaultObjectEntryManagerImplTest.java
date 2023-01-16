@@ -1305,7 +1305,7 @@ public class DefaultObjectEntryManagerImplTest {
 		_assertObjectEntriesSize(0);
 
 		// User should be able to view object entries for account entry 1 and
-		// account entry 2 because he is a member of the organization that
+		// account entry 2 because he is a member of an organization that
 		// contains account entry 1 and account entry 2.
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
