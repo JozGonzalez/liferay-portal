@@ -235,8 +235,6 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		).put(
 			"customViews", _getCustomViews()
 		).put(
-			"uniformActionsDisplay", getUniformActionsDisplay()
-		).put(
 			"namespace", getNamespace()
 		).put(
 			"pagination",
@@ -249,6 +247,8 @@ public class BaseDisplayTag extends AttributesTagSupport {
 			).build()
 		).put(
 			"selectedItems", _selectedItems
+		).put(
+			"uniformActionsDisplay", getUniformActionsDisplay()
 		).build();
 	}
 
