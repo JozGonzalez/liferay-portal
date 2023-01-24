@@ -1270,14 +1270,23 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			int chunk = 2000;
 
 			for (int i = 0; i < groupIds.length; i += chunk) {
-				long[] curGroupIds = Arrays.copyOfRange(
-					groupIds, i, Math.min(groupIds.length, i + chunk));
 
-				// LPS-173475 we cannot use an "in" clause here because more
-				// than 1000 items in the list causes a syntax error when using
-				// Oracle (ORA-01795).
+				// We cannot use an "in" clause because more than 1000 items in
+				// a list causes a syntax error in Oracle. See LPS-173475 and
+				// ORA-01795.
+
+				/*groupRoles.addAll(
+					dslQuery(
+						joinStep.where(
+							Groups_RolesTable.INSTANCE.groupId.in(
+								ArrayUtil.toLongArray(
+									Arrays.copyOfRange(
+										groupIds, i, i + chunk))))));*/
 
 				Predicate predicate = null;
+
+				long[] curGroupIds = Arrays.copyOfRange(
+					groupIds, i, Math.min(groupIds.length, i + chunk));
 
 				for (long curGroupId : curGroupIds) {
 					predicate = Predicate.or(
