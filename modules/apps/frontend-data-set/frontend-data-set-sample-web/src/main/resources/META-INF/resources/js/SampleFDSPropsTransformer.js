@@ -27,14 +27,14 @@ export default function propsTransformer({
 			sampleCustomDataRenderer: SampleCustomDataRenderer,
 		},
 		onActionDropdownItemClick({action, itemData, loadData, openSidePanel}) {
-			if (action.data.id === 'sampleMessage') {
-				alert(`${greeting} ${itemData.title}!`);
+			if (action.data.id === 'openSidePanel') {
+				openSidePanel({url: 'about:blank'});
 			}
 			else if (action.data.id === 'reload') {
 				loadData();
 			}
-			else if (action.data.id === 'openSidePanel') {
-				openSidePanel({url: 'about:blank'});
+			else if (action.data.id === 'sampleMessage') {
+				alert(`${greeting} ${itemData.title}!`);
 			}
 		},
 		onBulkActionItemClick({
