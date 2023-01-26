@@ -180,23 +180,23 @@ public class ObjectEntryRowInfoItemRenderer
 
 						Object value = values.get(objectField.getName());
 
-						if (GetterUtil.getLong(value) > 0) {
-							try {
-								ObjectRelationship objectRelationship =
-									_objectRelationshipLocalService.
-										fetchObjectRelationshipByObjectFieldId2(
-											objectField.getObjectFieldId());
-
-								return _objectEntryLocalService.getTitleValue(
-									objectRelationship.getObjectDefinitionId1(),
-									(Long)values.get(objectField.getName()));
-							}
-							catch (PortalException portalException) {
-								throw new RuntimeException(portalException);
-							}
+						if (GetterUtil.getLong(value) <= 0) {
+							return StringPool.BLANK;
 						}
 
-						return StringPool.BLANK;
+						try {
+							ObjectRelationship objectRelationship =
+								_objectRelationshipLocalService.
+									fetchObjectRelationshipByObjectFieldId2(
+										objectField.getObjectFieldId());
+
+							return _objectEntryLocalService.getTitleValue(
+								objectRelationship.getObjectDefinitionId1(),
+								(Long)values.get(objectField.getName()));
+						}
+						catch (PortalException portalException) {
+							throw new RuntimeException(portalException);
+						}
 					}
 
 					return Optional.ofNullable(
