@@ -171,6 +171,28 @@ public class ObjectEntryRowInfoItemRenderer
 							serviceContext.getLocale());
 					}
 					else if (Objects.equals(
+								objectField.getBusinessType(),
+								ObjectFieldConstants.
+									BUSINESS_TYPE_ATTACHMENT)) {
+
+						long dlFileEntryId = GetterUtil.getLong(
+							values.get(objectField.getName()));
+
+						if (dlFileEntryId == GetterUtil.DEFAULT_LONG) {
+							return StringPool.BLANK;
+						}
+
+						DLFileEntry dlFileEntry =
+							_dlFileEntryLocalService.fetchDLFileEntry(
+								dlFileEntryId);
+
+						if (dlFileEntry == null) {
+							return StringPool.BLANK;
+						}
+
+						return dlFileEntry.getFileName();
+					}
+					else if (Objects.equals(
 								objectField.getDBType(),
 								ObjectFieldConstants.DB_TYPE_DATE)) {
 
@@ -201,28 +223,6 @@ public class ObjectEntryRowInfoItemRenderer
 						catch (PortalException portalException) {
 							throw new RuntimeException(portalException);
 						}
-					}
-					else if (Objects.equals(
-								objectField.getBusinessType(),
-								ObjectFieldConstants.
-									BUSINESS_TYPE_ATTACHMENT)) {
-
-						long dlFileEntryId = GetterUtil.getLong(
-							values.get(objectField.getName()));
-
-						if (dlFileEntryId == GetterUtil.DEFAULT_LONG) {
-							return StringPool.BLANK;
-						}
-
-						DLFileEntry dlFileEntry =
-							_dlFileEntryLocalService.fetchDLFileEntry(
-								dlFileEntryId);
-
-						if (dlFileEntry == null) {
-							return StringPool.BLANK;
-						}
-
-						return dlFileEntry.getFileName();
 					}
 
 					return Optional.ofNullable(
