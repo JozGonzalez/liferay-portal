@@ -15,6 +15,8 @@
 package com.liferay.object.web.internal.info.item.renderer;
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
@@ -65,6 +67,7 @@ public class ObjectEntryRowInfoItemRenderer
 
 	public ObjectEntryRowInfoItemRenderer(
 		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
+		DLFileEntryLocalService dlFileEntryLocalService,
 		ListTypeEntryLocalService listTypeEntryLocalService,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryLocalService objectEntryLocalService,
@@ -74,6 +77,7 @@ public class ObjectEntryRowInfoItemRenderer
 
 		_assetDisplayPageFriendlyURLProvider =
 			assetDisplayPageFriendlyURLProvider;
+		_dlFileEntryLocalService = dlFileEntryLocalService;
 		_listTypeEntryLocalService = listTypeEntryLocalService;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryLocalService = objectEntryLocalService;
@@ -198,6 +202,28 @@ public class ObjectEntryRowInfoItemRenderer
 							throw new RuntimeException(portalException);
 						}
 					}
+					else if (Objects.equals(
+								objectField.getBusinessType(),
+								ObjectFieldConstants.
+									BUSINESS_TYPE_ATTACHMENT)) {
+
+						long dlFileEntryId = GetterUtil.getLong(
+							values.get(objectField.getName()));
+
+						if (dlFileEntryId == GetterUtil.DEFAULT_LONG) {
+							return StringPool.BLANK;
+						}
+
+						DLFileEntry dlFileEntry =
+							_dlFileEntryLocalService.fetchDLFileEntry(
+								dlFileEntryId);
+
+						if (dlFileEntry == null) {
+							return StringPool.BLANK;
+						}
+
+						return dlFileEntry.getFileName();
+					}
 
 					return Optional.ofNullable(
 						entry.getValue()
@@ -211,6 +237,7 @@ public class ObjectEntryRowInfoItemRenderer
 
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+	private final DLFileEntryLocalService _dlFileEntryLocalService;
 	private final ListTypeEntryLocalService _listTypeEntryLocalService;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryLocalService _objectEntryLocalService;
