@@ -184,7 +184,6 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 		String userAccountEmailAddress =
 			oAuth2ProviderApplicationHeadlessServerConfiguration.
 				userAccountEmailAddress();
-
 		String userAccountScreenName =
 			oAuth2ProviderApplicationHeadlessServerConfiguration.
 				userAccountScreenName();
@@ -196,7 +195,7 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 
 			if (!Validator.isEmailAddress(userAccountEmailAddress)) {
 				throw new IllegalArgumentException(
-					"User account email address must be a valid email address");
+					"User account email address is not an email address");
 			}
 
 			return userLocalService.getUserByEmailAddress(
@@ -205,7 +204,7 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 
 		if (Validator.isNull(userAccountScreenName)) {
 			throw new IllegalArgumentException(
-				"User account screen name must not be empty");
+				"User account screen name is null");
 		}
 
 		if (Objects.equals(
