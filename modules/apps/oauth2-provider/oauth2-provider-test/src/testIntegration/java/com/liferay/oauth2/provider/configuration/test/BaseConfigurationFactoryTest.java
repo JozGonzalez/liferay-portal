@@ -137,10 +137,10 @@ public class BaseConfigurationFactoryTest {
 
 			Assert.assertNotNull(oAuth2Application);
 			Assert.assertEquals(
-				externalReferenceCode, oAuth2Application.getName());
-			Assert.assertEquals(
 				user.getUserId(),
 				oAuth2Application.getClientCredentialUserId());
+			Assert.assertEquals(
+				externalReferenceCode, oAuth2Application.getName());
 		}
 		finally {
 			ConfigurationTestUtil.deleteConfiguration(configuration);
