@@ -60,7 +60,7 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 			_log.debug("Activate " + properties);
 		}
 
-		ConfigurationFactoryUtil.doTaskAsCompany(
+		ConfigurationFactoryUtil.executeAsCompany(
 			companyLocalService, properties,
 			companyId -> {
 				String externalReferenceCode =
