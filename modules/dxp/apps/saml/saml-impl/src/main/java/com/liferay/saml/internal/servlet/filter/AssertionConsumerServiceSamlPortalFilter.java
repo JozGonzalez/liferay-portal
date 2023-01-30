@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
 		"enabled=true",
 		"init-param.url-regex-ignore-pattern=^/html/.+\\.(css|gif|html|ico|jpg|js|png)(\\?.*)?$",
 		"servlet-context-name=",
-		"servlet-filter-name=Assertion Consumer Service Saml Portal Filter",
+		"servlet-filter-name=Assertion Consumer Service SAML Portal Filter",
 		"url-pattern=/c/portal/saml/acs"
 	},
 	service = Filter.class

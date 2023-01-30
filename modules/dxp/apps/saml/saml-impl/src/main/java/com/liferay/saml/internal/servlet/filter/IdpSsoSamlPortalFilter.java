@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"after-filter=Virtual Host Filter", "dispatcher=FORWARD",
 		"dispatcher=REQUEST", "servlet-context-name=",
-		"servlet-filter-name=Idp Sso Saml Portal Filter",
+		"servlet-filter-name=IDP SSO SAML Portal Filter",
 		"url-pattern=/c/portal/logout"
 	},
 	service = Filter.class

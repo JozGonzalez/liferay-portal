@@ -56,7 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 		"dispatcher=REQUEST",
 		"init-param.url-regex-ignore-pattern=^/html/.+\\.(css|gif|html|ico|jpg|js|png)(\\?.*)?$",
 		"servlet-context-name=",
-		"servlet-filter-name=Sp Sso Saml Portal Filter", "url-pattern=/*"
+		"servlet-filter-name=SP SSO SAML Portal Filter", "url-pattern=/*"
 	},
 	service = Filter.class
 )
