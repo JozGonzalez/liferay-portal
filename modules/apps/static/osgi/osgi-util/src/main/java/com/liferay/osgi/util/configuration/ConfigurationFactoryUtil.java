@@ -37,9 +37,10 @@ import org.osgi.framework.Constants;
  */
 public class ConfigurationFactoryUtil {
 
-	public static <E extends Throwable> void doTaskAsCompany(
+	public static <E extends Throwable> void executeAsCompany(
 			CompanyLocalService companyLocalService,
-			Map<String, Object> properties, UnsafeConsumer<Long, E> task)
+			Map<String, Object> properties,
+			UnsafeConsumer<Long, E> unsafeConsumer)
 		throws E {
 
 		long companyId = getCompanyId(companyLocalService, properties);
@@ -47,7 +48,7 @@ public class ConfigurationFactoryUtil {
 		try (SafeCloseable safeCloseable =
 				CompanyThreadLocal.setWithSafeCloseable(companyId)) {
 
-			task.accept(companyId);
+			unsafeConsumer.accept(companyId);
 		}
 	}
 
