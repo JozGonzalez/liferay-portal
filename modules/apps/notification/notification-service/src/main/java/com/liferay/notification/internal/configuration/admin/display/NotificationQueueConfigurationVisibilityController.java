@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.notification.internal.configuration.display;
+package com.liferay.notification.internal.configuration.admin.display;
 
 import com.liferay.configuration.admin.display.ConfigurationVisibilityController;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
