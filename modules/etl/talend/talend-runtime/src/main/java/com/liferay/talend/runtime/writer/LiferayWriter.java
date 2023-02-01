@@ -109,8 +109,7 @@ public class LiferayWriter
 		}
 
 		_handleSuccessRecord(
-			_jsonObjectIndexedRecordConverter.toIndexedRecord(
-				jsonObject.get()));
+			_jsonObjectIndexedRecordConverter.toIndexedRecord(jsonObject));
 	}
 
 	public void doReplace(IndexedRecord indexedRecord) throws IOException {
@@ -125,8 +124,7 @@ public class LiferayWriter
 		}
 
 		_handleSuccessRecord(
-			_jsonObjectIndexedRecordConverter.toIndexedRecord(
-				jsonObject.get()));
+			_jsonObjectIndexedRecordConverter.toIndexedRecord(jsonObject));
 	}
 
 	public void doUpdate(IndexedRecord indexedRecord) throws IOException {
@@ -141,8 +139,7 @@ public class LiferayWriter
 		}
 
 		_handleSuccessRecord(
-			_jsonObjectIndexedRecordConverter.toIndexedRecord(
-				jsonObject.get()));
+			_jsonObjectIndexedRecordConverter.toIndexedRecord(jsonObject));
 	}
 
 	@Override
