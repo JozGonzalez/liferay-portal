@@ -63,7 +63,7 @@ public class ObjectFieldUtil {
 			return 0;
 		}
 
-		if (Validator.isNotNull(objectField.getListTypeDefinitionId())) {
+		if (objectField.getListTypeDefinitionId() != null) {
 			return objectField.getListTypeDefinitionId();
 		}
 
