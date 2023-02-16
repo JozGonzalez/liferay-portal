@@ -92,7 +92,7 @@ public class OAuth2RedirectURIInterpolatorTest {
 				"https://localhost@port-with-colon@/foo"),
 			true);
 
-		// Secure, over port 80
+		// Secure, port 80
 
 		_testInterpolateRedirectURIsList(
 			80, "https://localhost/foo", "https://localhost/foo",
