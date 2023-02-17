@@ -160,26 +160,26 @@ public class DSDocument implements Cloneable, Serializable {
 
 	protected String name;
 
-	public Boolean getTransformPdfFields() {
-		return transformPdfFields;
+	public Boolean getTransformPDFFields() {
+		return transformPDFFields;
 	}
 
-	public void setTransformPdfFields(Boolean transformPdfFields) {
-		this.transformPdfFields = transformPdfFields;
+	public void setTransformPDFFields(Boolean transformPDFFields) {
+		this.transformPDFFields = transformPDFFields;
 	}
 
-	public void setTransformPdfFields(
-		UnsafeSupplier<Boolean, Exception> transformPdfFieldsUnsafeSupplier) {
+	public void setTransformPDFFields(
+		UnsafeSupplier<Boolean, Exception> transformPDFFieldsUnsafeSupplier) {
 
 		try {
-			transformPdfFields = transformPdfFieldsUnsafeSupplier.get();
+			transformPDFFields = transformPDFFieldsUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Boolean transformPdfFields;
+	protected Boolean transformPDFFields;
 
 	public String getUri() {
 		return uri;

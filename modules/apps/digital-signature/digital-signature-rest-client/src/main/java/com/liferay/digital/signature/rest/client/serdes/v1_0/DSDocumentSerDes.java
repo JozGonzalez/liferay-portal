@@ -137,14 +137,14 @@ public class DSDocumentSerDes {
 			sb.append("\"");
 		}
 
-		if (dsDocument.getTransformPdfFields() != null) {
+		if (dsDocument.getTransformPDFFields() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"transformPdfFields\": ");
+			sb.append("\"transformPDFFields\": ");
 
-			sb.append(dsDocument.getTransformPdfFields());
+			sb.append(dsDocument.getTransformPDFFields());
 		}
 
 		if (dsDocument.getUri() != null) {
@@ -226,13 +226,13 @@ public class DSDocumentSerDes {
 			map.put("name", String.valueOf(dsDocument.getName()));
 		}
 
-		if (dsDocument.getTransformPdfFields() == null) {
-			map.put("transformPdfFields", null);
+		if (dsDocument.getTransformPDFFields() == null) {
+			map.put("transformPDFFields", null);
 		}
 		else {
 			map.put(
-				"transformPdfFields",
-				String.valueOf(dsDocument.getTransformPdfFields()));
+				"transformPDFFields",
+				String.valueOf(dsDocument.getTransformPDFFields()));
 		}
 
 		if (dsDocument.getUri() == null) {
@@ -301,10 +301,10 @@ public class DSDocumentSerDes {
 				}
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "transformPdfFields")) {
+						jsonParserFieldName, "transformPDFFields")) {
 
 				if (jsonParserFieldValue != null) {
-					dsDocument.setTransformPdfFields(
+					dsDocument.setTransformPDFFields(
 						(Boolean)jsonParserFieldValue);
 				}
 			}

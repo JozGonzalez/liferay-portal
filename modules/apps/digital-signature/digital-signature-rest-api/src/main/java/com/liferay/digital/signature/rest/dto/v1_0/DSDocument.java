@@ -225,20 +225,20 @@ public class DSDocument implements Serializable {
 	protected String name;
 
 	@Schema
-	public Boolean getTransformPdfFields() {
-		return transformPdfFields;
+	public Boolean getTransformPDFFields() {
+		return transformPDFFields;
 	}
 
-	public void setTransformPdfFields(Boolean transformPdfFields) {
-		this.transformPdfFields = transformPdfFields;
+	public void setTransformPDFFields(Boolean transformPDFFields) {
+		this.transformPDFFields = transformPDFFields;
 	}
 
 	@JsonIgnore
-	public void setTransformPdfFields(
-		UnsafeSupplier<Boolean, Exception> transformPdfFieldsUnsafeSupplier) {
+	public void setTransformPDFFields(
+		UnsafeSupplier<Boolean, Exception> transformPDFFieldsUnsafeSupplier) {
 
 		try {
-			transformPdfFields = transformPdfFieldsUnsafeSupplier.get();
+			transformPDFFields = transformPDFFieldsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -250,7 +250,7 @@ public class DSDocument implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Boolean transformPdfFields;
+	protected Boolean transformPDFFields;
 
 	@Schema
 	public String getUri() {
@@ -389,14 +389,14 @@ public class DSDocument implements Serializable {
 			sb.append("\"");
 		}
 
-		if (transformPdfFields != null) {
+		if (transformPDFFields != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"transformPdfFields\": ");
+			sb.append("\"transformPDFFields\": ");
 
-			sb.append(transformPdfFields);
+			sb.append(transformPDFFields);
 		}
 
 		if (uri != null) {

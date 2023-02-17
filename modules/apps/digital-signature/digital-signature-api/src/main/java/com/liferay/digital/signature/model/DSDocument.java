@@ -42,8 +42,8 @@ public class DSDocument {
 		return name;
 	}
 
-	public Boolean getTransformPdfFields() {
-		return transformPdfFields;
+	public Boolean getTransformPDFFields() {
+		return transformPDFFields;
 	}
 
 	public String getURI() {
@@ -70,8 +70,8 @@ public class DSDocument {
 		this.name = name;
 	}
 
-	public void setTransformPdfFields(Boolean transformPdfFields) {
-		this.transformPdfFields = transformPdfFields;
+	public void setTransformPDFFields(Boolean transformPDFFields) {
+		this.transformPDFFields = transformPDFFields;
 	}
 
 	public void setURI(String uri) {
@@ -90,7 +90,7 @@ public class DSDocument {
 		).put(
 			"name", getName()
 		).put(
-			"transformPdfFields", getTransformPdfFields()
+			"transformPDFFields", getTransformPDFFields()
 		);
 	}
 
@@ -99,7 +99,7 @@ public class DSDocument {
 	protected String dsDocumentId;
 	protected String fileExtension;
 	protected String name;
-	protected Boolean transformPdfFields;
+	protected Boolean transformPDFFields;
 	protected String uri;
 
 }
