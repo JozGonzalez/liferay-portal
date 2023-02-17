@@ -42,12 +42,12 @@ public class DSDocument {
 		return name;
 	}
 
-	public Boolean getTransformPDFFields() {
-		return transformPDFFields;
-	}
-
 	public String getURI() {
 		return uri;
+	}
+
+	public boolean isTransformPDFFields() {
+		return transformPDFFields;
 	}
 
 	public void setAssignTabsToDSRecipientId(String assignTabsToDSRecipientId) {
@@ -90,7 +90,7 @@ public class DSDocument {
 		).put(
 			"name", getName()
 		).put(
-			"transformPdfFields", getTransformPDFFields()
+			"transformPdfFields", isTransformPDFFields()
 		);
 	}
 
