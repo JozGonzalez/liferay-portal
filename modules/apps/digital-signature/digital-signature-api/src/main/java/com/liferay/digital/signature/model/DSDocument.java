@@ -70,7 +70,7 @@ public class DSDocument {
 		this.name = name;
 	}
 
-	public void setTransformPDFFields(Boolean transformPDFFields) {
+	public void setTransformPDFFields(boolean transformPDFFields) {
 		this.transformPDFFields = transformPDFFields;
 	}
 
@@ -99,7 +99,7 @@ public class DSDocument {
 	protected String dsDocumentId;
 	protected String fileExtension;
 	protected String name;
-	protected Boolean transformPDFFields;
+	protected boolean transformPDFFields;
 	protected String uri;
 
 }
