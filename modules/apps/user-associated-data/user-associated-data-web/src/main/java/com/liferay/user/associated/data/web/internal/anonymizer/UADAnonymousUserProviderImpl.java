@@ -180,7 +180,7 @@ public class UADAnonymousUserProviderImpl implements UADAnonymousUserProvider {
 					"userId", anonymousUser.getUserId()
 				).build());
 
-			_updateStatus(anonymousUser);
+			_inactivateAnonymousUSer(anonymousUser);
 
 			return anonymousUser;
 		}
@@ -204,12 +204,12 @@ public class UADAnonymousUserProviderImpl implements UADAnonymousUserProvider {
 
 		configuration.update(properties);
 
-		_updateStatus(anonymousUser);
+		_inactivateAnonymousUSer(anonymousUser);
 
 		return anonymousUser;
 	}
 
-	private void _updateStatus(User anonymousUser) throws Exception {
+	private void _inactivateAnonymousUSer(User anonymousUser) throws Exception {
 		_userLocalService.updateStatus(
 			anonymousUser.getUserId(), WorkflowConstants.STATUS_INACTIVE,
 			new ServiceContext());
