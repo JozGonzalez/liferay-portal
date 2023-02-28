@@ -318,6 +318,7 @@ public class CTServicePublisher<T extends CTModel<T>> {
 			for (CTEntry ctEntry : ctEntries) {
 				if (i == _BATCH_SIZE) {
 					sb.setStringAt(")", sb.index() - 1);
+
 					sb.append(" or ");
 					sb.append(tableName);
 					sb.append(".");
@@ -334,6 +335,7 @@ public class CTServicePublisher<T extends CTModel<T>> {
 			}
 
 			sb.setStringAt(")", sb.index() - 1);
+
 			sb.append(")");
 		}
 
