@@ -1029,6 +1029,12 @@ public class ObjectEntryDisplayContextImpl
 			return _objectEntry;
 		}
 
+		ObjectDefinition objectDefinition = getObjectDefinition1();
+
+		ObjectEntryManager objectEntryManager =
+			_objectEntryManagerRegistry.getObjectEntryManager(
+				objectDefinition.getStorageType());
+
 		String externalReferenceCode = ParamUtil.getString(
 			_objectRequestHelper.getRequest(), "externalReferenceCode");
 
@@ -1039,12 +1045,6 @@ public class ObjectEntryDisplayContextImpl
 			externalReferenceCode = (String)httpServletRequest.getAttribute(
 				ObjectWebKeys.EXTERNAL_REFERENCE_CODE);
 		}
-
-		ObjectDefinition objectDefinition = getObjectDefinition1();
-
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				objectDefinition.getStorageType());
 
 		try {
 			_objectEntry = objectEntryManager.getObjectEntry(
