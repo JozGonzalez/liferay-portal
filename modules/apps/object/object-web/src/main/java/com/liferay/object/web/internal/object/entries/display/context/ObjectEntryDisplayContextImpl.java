@@ -154,7 +154,7 @@ public class ObjectEntryDisplayContextImpl
 
 		_objectRequestHelper = new ObjectRequestHelper(httpServletRequest);
 		_readOnly = (Boolean)httpServletRequest.getAttribute(
-			ObjectWebKeys.OBJECT_ENTRY_DISPLAY_CONTEXT_READ_ONLY);
+			ObjectWebKeys.OBJECT_ENTRY_READ_ONLY);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -1043,7 +1043,7 @@ public class ObjectEntryDisplayContextImpl
 				_objectRequestHelper.getRequest();
 
 			externalReferenceCode = (String)httpServletRequest.getAttribute(
-				ObjectWebKeys.EXTERNAL_REFERENCE_CODE);
+				ObjectWebKeys.OBJECT_ENTRY_EXTERNAL_REFERENCE_CODE);
 		}
 
 		try {
