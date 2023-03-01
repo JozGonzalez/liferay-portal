@@ -174,10 +174,10 @@ public class ObjectEntryAssetRenderer
 		throws Exception {
 
 		httpServletRequest.setAttribute(
+			ObjectWebKeys.OBJECT_DEFINITION, _objectDefinition);
+		httpServletRequest.setAttribute(
 			ObjectWebKeys.OBJECT_ENTRY_EXTERNAL_REFERENCE_CODE,
 			_objectEntry.getExternalReferenceCode());
-		httpServletRequest.setAttribute(
-			ObjectWebKeys.OBJECT_DEFINITION, _objectDefinition);
 		httpServletRequest.setAttribute(
 			ObjectWebKeys.OBJECT_ENTRY_READ_ONLY, Boolean.TRUE);
 		httpServletRequest.setAttribute(

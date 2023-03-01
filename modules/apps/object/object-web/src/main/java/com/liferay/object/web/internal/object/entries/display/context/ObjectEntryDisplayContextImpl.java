@@ -975,11 +975,9 @@ public class ObjectEntryDisplayContextImpl
 					}
 				}
 
-				if (currentObjectField == null) {
-					continue;
-				}
+				if ((currentObjectField == null) ||
+					!_isActive(currentObjectField)) {
 
-				if (!_isActive(currentObjectField)) {
 					continue;
 				}
 
