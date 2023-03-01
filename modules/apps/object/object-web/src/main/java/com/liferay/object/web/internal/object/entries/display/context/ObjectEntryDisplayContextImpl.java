@@ -182,7 +182,7 @@ public class ObjectEntryDisplayContextImpl
 
 	@Override
 	public ObjectEntry getObjectEntry() throws PortalException {
-		return _toObjectEntry(_getObjectEntry());
+		return _toServiceBuilderObjectEntry(_getObjectEntry());
 	}
 
 	@Override
@@ -1215,7 +1215,7 @@ public class ObjectEntryDisplayContextImpl
 		}
 	}
 
-	private ObjectEntry _toObjectEntry(
+	private ObjectEntry _toServiceBuilderObjectEntry(
 		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry) {
 
 		if (objectEntry == null) {
