@@ -182,7 +182,7 @@ public class ObjectEntryDisplayContextImpl
 
 	@Override
 	public ObjectEntry getObjectEntry() throws PortalException {
-		return _toObjectEntry(_getObjectEntryDTO());
+		return _toObjectEntry(_getObjectEntry());
 	}
 
 	@Override
@@ -482,7 +482,7 @@ public class ObjectEntryDisplayContextImpl
 
 		try {
 			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
-				_getObjectEntryDTO();
+				_getObjectEntry();
 
 			if (objectEntry == null) {
 				return false;
@@ -530,7 +530,7 @@ public class ObjectEntryDisplayContextImpl
 		ddmFormRenderingContext.setContainerId("editObjectEntry");
 
 		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
-			_getObjectEntryDTO();
+			_getObjectEntry();
 
 		if (objectEntry != null) {
 			ddmFormRenderingContext.addProperty(
@@ -626,7 +626,7 @@ public class ObjectEntryDisplayContextImpl
 		objectFieldRenderingContext.setLocale(_objectRequestHelper.getLocale());
 
 		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
-			_getObjectEntryDTO();
+			_getObjectEntry();
 
 		if (objectEntry != null) {
 			objectFieldRenderingContext.setExternalReferenceCode(
@@ -655,7 +655,7 @@ public class ObjectEntryDisplayContextImpl
 
 		if (!readOnly) {
 			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
-				_getObjectEntryDTO();
+				_getObjectEntry();
 
 			if (objectEntry != null) {
 				readOnly =
@@ -1020,7 +1020,7 @@ public class ObjectEntryDisplayContextImpl
 			});
 	}
 
-	private com.liferay.object.rest.dto.v1_0.ObjectEntry _getObjectEntryDTO()
+	private com.liferay.object.rest.dto.v1_0.ObjectEntry _getObjectEntry()
 		throws PortalException {
 
 		if (_objectEntry != null) {
