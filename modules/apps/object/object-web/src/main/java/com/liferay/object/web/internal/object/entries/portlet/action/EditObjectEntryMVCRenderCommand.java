@@ -48,8 +48,7 @@ public class EditObjectEntryMVCRenderCommand implements MVCRenderCommand {
 			renderRequest);
 
 		httpServletRequest.setAttribute(
-			ObjectWebKeys.OBJECT_ENTRY_DISPLAY_CONTEXT_READ_ONLY,
-			Boolean.FALSE);
+			ObjectWebKeys.OBJECT_ENTRY_READ_ONLY, Boolean.FALSE);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
