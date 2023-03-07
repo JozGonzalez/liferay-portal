@@ -47,7 +47,9 @@ import io.fabric8.mockwebserver.ServerRequest;
 import io.fabric8.mockwebserver.ServerResponse;
 
 import java.net.InetAddress;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -55,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -309,6 +313,8 @@ public class PortalK8sAgentImplTest {
 		Assert.assertNotNull(configuration);
 
 		try {
+			_assertNotStoredInDatabase(configuration.getPid());
+
 			Dictionary<String, Object> properties =
 				configuration.getProcessedProperties(null);
 
@@ -372,6 +378,8 @@ public class PortalK8sAgentImplTest {
 		Assert.assertNotNull(configuration);
 
 		try {
+			_assertNotStoredInDatabase(configuration.getPid());
+
 			Dictionary<String, Object> properties =
 				configuration.getProcessedProperties(null);
 
@@ -433,6 +441,22 @@ public class PortalK8sAgentImplTest {
 			PortalK8sConfigMapModifier.Result.UNCHANGED, result);
 	}
 
+	private void _assertNotStoredInDatabase(String pid) throws Exception {
+		try (Connection connection = _dataSource.getConnection();
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				"select configurationId, dictionary from Configuration_ " +
+					"where configurationId = ?")) {
+
+			preparedStatement.setString(1, pid);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				boolean stored = resultSet.next();
+
+				Assert.assertFalse(stored);
+			}
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortalK8sAgentImplTest.class);
 
@@ -445,6 +469,9 @@ public class PortalK8sAgentImplTest {
 
 	@Inject
 	private static ConfigurationAdmin _configurationAdmin;
+
+	@Inject
+	private static DataSource _dataSource;
 
 	private static NamespacedKubernetesClient _kubernetesMockClient;
 	private static KubernetesMockServer _kubernetesMockServer;
