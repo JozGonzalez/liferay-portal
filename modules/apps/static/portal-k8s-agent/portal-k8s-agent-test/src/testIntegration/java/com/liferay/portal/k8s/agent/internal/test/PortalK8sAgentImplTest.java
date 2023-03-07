@@ -47,9 +47,11 @@ import io.fabric8.mockwebserver.ServerRequest;
 import io.fabric8.mockwebserver.ServerResponse;
 
 import java.net.InetAddress;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
