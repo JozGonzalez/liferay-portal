@@ -313,7 +313,7 @@ public class PortalK8sAgentImplTest {
 		Assert.assertNotNull(configuration);
 
 		try {
-			_assertNotStoredInDatabase(configuration.getPid());
+			_assertNotInDatabase(configuration.getPid());
 
 			Dictionary<String, Object> properties =
 				configuration.getProcessedProperties(null);
@@ -378,7 +378,7 @@ public class PortalK8sAgentImplTest {
 		Assert.assertNotNull(configuration);
 
 		try {
-			_assertNotStoredInDatabase(configuration.getPid());
+			_assertNotInDatabase(configuration.getPid());
 
 			Dictionary<String, Object> properties =
 				configuration.getProcessedProperties(null);
@@ -441,7 +441,7 @@ public class PortalK8sAgentImplTest {
 			PortalK8sConfigMapModifier.Result.UNCHANGED, result);
 	}
 
-	private void _assertNotStoredInDatabase(String pid) throws Exception {
+	private void _assertNotInDatabase(String pid) throws Exception {
 		try (Connection connection = _dataSource.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select configurationId, dictionary from Configuration_ " +
