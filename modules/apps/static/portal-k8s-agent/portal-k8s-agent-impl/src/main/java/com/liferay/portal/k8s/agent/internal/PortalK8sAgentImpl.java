@@ -474,75 +474,78 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 		String virtualInstancePid = _getVirtualInstancePid(
 			config, virtualInstanceId);
 
-		Configuration configuration = null;
-
-		Configuration[] configurations = _configurationAdmin.listConfigurations(
-			StringBundler.concat("(.k8s.config.key=", virtualInstancePid, ")"));
-
-		if (ArrayUtil.isNotEmpty(configurations)) {
-			configuration = configurations[0];
-
-			Dictionary<String, Object> properties =
-				configuration.getProperties();
-
-			if (Objects.equals(
-					properties.get(".k8s.config.resource.version"),
-					objectMeta.getResourceVersion())) {
-
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						"Configuration and Kubernetes resource versions are " +
-							"identical");
-				}
-
-				return;
-			}
-		}
-		else {
-			configuration = _getConfiguration(virtualInstancePid);
-		}
-
-		Set<Configuration.ConfigurationAttribute> configurationAttributes =
-			configuration.getAttributes();
-
-		if (configurationAttributes.contains(
-				Configuration.ConfigurationAttribute.READ_ONLY)) {
-
-			configuration.removeAttributes(
-				Configuration.ConfigurationAttribute.READ_ONLY);
-		}
-
-		Dictionary<String, Object> properties = config.getProperties();
-
-		for (PortalK8sConfigurationPropertiesMutator
-				portalK8sConfigurationPropertiesMutator :
-					_portalK8sConfigurationPropertiesMutators) {
-
-			portalK8sConfigurationPropertiesMutator.
-				mutateConfigurationProperties(
-					objectMeta.getAnnotations(), labels, properties);
-		}
-
-		properties.put(".k8s.config.key", virtualInstancePid);
-		properties.put(
-			".k8s.config.resource.version", objectMeta.getResourceVersion());
-		properties.put(".k8s.config.uid", objectMeta.getUid());
-
-		if (_log.isInfoEnabled()) {
-			_log.info("Processed configuration " + properties);
-		}
-
 		try {
 			InMemoryOnlyConfigurationThreadLocal.setInMemoryOnly(true);
 
+			Configuration configuration = null;
+
+			Configuration[] configurations =
+				_configurationAdmin.listConfigurations(
+					StringBundler.concat(
+						"(.k8s.config.key=", virtualInstancePid, ")"));
+
+			if (ArrayUtil.isNotEmpty(configurations)) {
+				configuration = configurations[0];
+
+				Dictionary<String, Object> properties =
+					configuration.getProperties();
+
+				if (Objects.equals(
+						properties.get(".k8s.config.resource.version"),
+						objectMeta.getResourceVersion())) {
+
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Configuration and Kubernetes resource versions " +
+								"are identical");
+					}
+
+					return;
+				}
+			}
+			else {
+				configuration = _getConfiguration(virtualInstancePid);
+			}
+
+			Set<Configuration.ConfigurationAttribute> configurationAttributes =
+				configuration.getAttributes();
+
+			if (configurationAttributes.contains(
+					Configuration.ConfigurationAttribute.READ_ONLY)) {
+
+				configuration.removeAttributes(
+					Configuration.ConfigurationAttribute.READ_ONLY);
+			}
+
+			Dictionary<String, Object> properties = config.getProperties();
+
+			for (PortalK8sConfigurationPropertiesMutator
+					portalK8sConfigurationPropertiesMutator :
+						_portalK8sConfigurationPropertiesMutators) {
+
+				portalK8sConfigurationPropertiesMutator.
+					mutateConfigurationProperties(
+						objectMeta.getAnnotations(), labels, properties);
+			}
+
+			properties.put(".k8s.config.key", virtualInstancePid);
+			properties.put(
+				".k8s.config.resource.version",
+				objectMeta.getResourceVersion());
+			properties.put(".k8s.config.uid", objectMeta.getUid());
+
+			if (_log.isInfoEnabled()) {
+				_log.info("Processed configuration " + properties);
+			}
+
 			configuration.updateIfDifferent(properties);
+
+			configuration.addAttributes(
+				Configuration.ConfigurationAttribute.READ_ONLY);
 		}
 		finally {
 			InMemoryOnlyConfigurationThreadLocal.setInMemoryOnly(false);
 		}
-
-		configuration.addAttributes(
-			Configuration.ConfigurationAttribute.READ_ONLY);
 	}
 
 	private void _processConfigurations(
