@@ -2316,7 +2316,7 @@
 			</library>
 			<library>
 				<file-name>com.liferay.oauth.client.persistence.service.jar!oauth2-oidc-sdk.jar</file-name>
-				<version>8.4.3</version>
+				<version>8.11</version>
 				<project-name>OAuth 2.0 SDK with OpenID Connect extensions</project-name>
 				<project-url>https://connect2id.com</project-url>
 				<licenses>
@@ -3949,7 +3949,7 @@
 			</library>
 			<library>
 				<file-name>com.liferay.portal.security.sso.openid.connect.impl.jar!oauth2-oidc-sdk.jar</file-name>
-				<version>8.4.3</version>
+				<version>8.11</version>
 				<project-name>OAuth 2.0 SDK with OpenID Connect extensions</project-name>
 				<project-url>https://connect2id.com</project-url>
 				<licenses>
@@ -4047,7 +4047,7 @@
 			</library>
 			<library>
 				<file-name>com.liferay.portal.security.sso.openid.connect.persistence.service.jar!oauth2-oidc-sdk.jar</file-name>
-				<version>8.4.3</version>
+				<version>8.11</version>
 				<project-name>OAuth 2.0 SDK with OpenID Connect extensions</project-name>
 				<project-url>https://connect2id.com</project-url>
 				<licenses>
