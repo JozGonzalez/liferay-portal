@@ -110,10 +110,10 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 		long[] currentSegmentsExperienceIds = GetterUtil.getLongValues(
 			httpServletRequest.getAttribute(
 				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS));
-		boolean currentPortletDecorate = GetterUtil.getBoolean(
-			httpServletRequest.getAttribute(WebKeys.PORTLET_DECORATE));
 		Layout currentLayout = (Layout)httpServletRequest.getAttribute(
 			WebKeys.LAYOUT);
+		boolean currentPortletDecorate = GetterUtil.getBoolean(
+			httpServletRequest.getAttribute(WebKeys.PORTLET_DECORATE));
 
 		try {
 			long segmentsExperienceId = ParamUtil.getLong(
@@ -158,13 +158,13 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 			ServiceContext serviceContext =
 				ServiceContextThreadLocal.getServiceContext();
 
-			ServiceContext cloneServiceContext =
+			ServiceContext clonedServiceContext =
 				(ServiceContext)serviceContext.clone();
 
-			cloneServiceContext.setPlid(layout.getPlid());
-			cloneServiceContext.setScopeGroupId(layout.getGroupId());
+			clonedServiceContext.setPlid(layout.getPlid());
+			clonedServiceContext.setScopeGroupId(layout.getGroupId());
 
-			ServiceContextThreadLocal.pushServiceContext(cloneServiceContext);
+			ServiceContextThreadLocal.pushServiceContext(clonedServiceContext);
 
 			httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 			httpServletRequest.setAttribute(
