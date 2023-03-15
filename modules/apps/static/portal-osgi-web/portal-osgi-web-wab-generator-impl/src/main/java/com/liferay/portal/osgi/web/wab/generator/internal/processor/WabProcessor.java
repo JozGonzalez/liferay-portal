@@ -281,10 +281,18 @@ public class WabProcessor {
 		String batchPathString = pluginPackageProperties.getProperty(
 			_LIFERAY_CLIENT_EXTENSION_BATCH, "batch/");
 
+		if (!batchPathString.endsWith("/")) {
+			batchPathString += "/";
+		}
+
 		boolean staticDetected = false;
 
 		String staticPathString = pluginPackageProperties.getProperty(
 			_LIFERAY_CLIENT_EXTENSION_STATIC, "static/");
+
+		if (!staticPathString.endsWith("/")) {
+			staticPathString += "/";
+		}
 
 		try (ZipFile zipFile = new ZipFile(_file)) {
 			clientExtensionBundlePath = Files.createTempDirectory(
