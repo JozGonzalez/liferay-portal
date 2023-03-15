@@ -122,11 +122,11 @@ public class WabProcessor {
 	}
 
 	public File getProcessedFile() throws IOException {
-		String fileExtension = MapUtil.getString(_parameters, "fileExtension");
-
 		Properties pluginPackageProperties = _getPluginPackageProperties();
 
-		if (Objects.equals(fileExtension, "zip")) {
+		if (Objects.equals(
+				MapUtil.getString(_parameters, "fileExtension"), "zip")) {
+
 			_pluginDir = _convertToClientExtensionBundleDir(
 				pluginPackageProperties);
 		}
@@ -486,31 +486,31 @@ public class WabProcessor {
 	}
 
 	private Properties _getPluginPackageProperties() throws IOException {
-		if (_pluginPackageProperties == null) {
-			try (ZipFile zipFile = new ZipFile(_file)) {
-				ZipEntry zipEntry = zipFile.getEntry(
-					"WEB-INF/liferay-plugin-package.properties");
-
-				if (zipEntry == null) {
-					return _pluginPackageProperties = new Properties();
-				}
-
-				try {
-					return _pluginPackageProperties = PropertiesUtil.load(
-						zipFile.getInputStream(zipEntry),
-						StandardCharsets.UTF_8.name());
-				}
-				catch (IOException ioException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(ioException);
-					}
-
-					return _pluginPackageProperties = new Properties();
-				}
-			}
+		if (_pluginPackageProperties != null) {
+			return _pluginPackageProperties;
 		}
 
-		return _pluginPackageProperties;
+		try (ZipFile zipFile = new ZipFile(_file)) {
+			ZipEntry zipEntry = zipFile.getEntry(
+				"WEB-INF/liferay-plugin-package.properties");
+
+			if (zipEntry == null) {
+				return _pluginPackageProperties = new Properties();
+			}
+
+			try {
+				return _pluginPackageProperties = PropertiesUtil.load(
+					zipFile.getInputStream(zipEntry),
+					StandardCharsets.UTF_8.name());
+			}
+			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
+				return _pluginPackageProperties = new Properties();
+			}
+		}
 	}
 
 	private String _getVersionedServicePackageName(String partialPackageName) {
