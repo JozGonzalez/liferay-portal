@@ -278,12 +278,12 @@ public class WabProcessor {
 
 		boolean batchDetected = false;
 
-		String batchPath = pluginPackageProperties.getProperty(
+		String batchPathString = pluginPackageProperties.getProperty(
 			_LIFERAY_CLIENT_EXTENSION_BATCH, "batch/");
 
 		boolean staticDetected = false;
 
-		String staticPath = pluginPackageProperties.getProperty(
+		String staticPathString = pluginPackageProperties.getProperty(
 			_LIFERAY_CLIENT_EXTENSION_STATIC, "static/");
 
 		try (ZipFile zipFile = new ZipFile(_file)) {
@@ -305,17 +305,17 @@ public class WabProcessor {
 				String name = zipEntry.getName();
 
 				if (zipEntry.isDirectory()) {
-					if (name.startsWith(batchPath)) {
+					if (name.startsWith(batchPathString)) {
 						Files.createDirectories(
 							metatInfBatchPath.resolve(
-								name.replaceFirst("^" + batchPath, "")));
+								name.replaceFirst("^" + batchPathString, "")));
 
 						batchDetected = true;
 					}
-					else if (name.startsWith(staticPath)) {
+					else if (name.startsWith(staticPathString)) {
 						Files.createDirectories(
 							metatInfResourcesPath.resolve(
-								name.replaceFirst("^" + staticPath, "")));
+								name.replaceFirst("^" + staticPathString, "")));
 
 						staticDetected = true;
 					}
@@ -328,19 +328,19 @@ public class WabProcessor {
 							zipFile.getInputStream(zipEntry),
 							osgiInfConfiguratorPath.resolve(name));
 					}
-					else if (name.startsWith(batchPath)) {
+					else if (name.startsWith(batchPathString)) {
 						Files.copy(
 							zipFile.getInputStream(zipEntry),
 							metatInfBatchPath.resolve(
-								name.replaceFirst(batchPathRegex, "")));
+								name.replaceFirst("^" + batchPathString, "")));
 
 						batchDetected = true;
 					}
-					else if (name.startsWith(staticPath)) {
+					else if (name.startsWith(staticPathString)) {
 						Files.copy(
 							zipFile.getInputStream(zipEntry),
 							metatInfResourcesPath.resolve(
-								name.replaceFirst(staticPathRegex, "")));
+								name.replaceFirst("^" + staticPathString, "")));
 
 						staticDetected = true;
 					}
