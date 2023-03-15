@@ -279,22 +279,14 @@ public class WabProcessor {
 		boolean batchDetected = false;
 
 		String batchPath = pluginPackageProperties.getProperty(
-			_LIFERAY_CLIENT_EXTENSION_BATCH);
-
-		if (batchPath == null) {
-			batchPath = "batch/";
-		}
+			_LIFERAY_CLIENT_EXTENSION_BATCH, "batch/");
 
 		String batchPathRegex = "^".concat(batchPath);
 
 		boolean staticDetected = false;
 
 		String staticPath = pluginPackageProperties.getProperty(
-			_LIFERAY_CLIENT_EXTENSION_STATIC);
-
-		if (staticPath == null) {
-			staticPath = "static/";
-		}
+			_LIFERAY_CLIENT_EXTENSION_STATIC, "static/");
 
 		String staticPathRegex = "^".concat(staticPath);
 
