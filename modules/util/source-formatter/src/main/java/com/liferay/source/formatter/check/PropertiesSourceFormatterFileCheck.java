@@ -398,8 +398,6 @@ public class PropertiesSourceFormatterFileCheck extends BaseFileCheck {
 				StringUtil.trim(matcher.group(1)));
 
 			if (index == -1) {
-				System.out.println(fileName + " " + matcher.group(1));
-
 				continue;
 			}
 
