@@ -9,7 +9,7 @@ import com.liferay.frontend.js.loader.modules.extender.internal.configuration.De
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.frontend.esm.FrontendESMUtil;
-import com.liferay.portal.kernel.security.csp.CSPNonceProvider;
+import com.liferay.portal.kernel.security.csp.ContentSecurityPolicyNonceProvider;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
@@ -55,7 +55,8 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		String cspNonce = _cspNonceProvider.getCSPNonce(httpServletRequest);
+		String cspNonce = _contentSecurityPolicyNonceProvider.getCSPNonce(
+			httpServletRequest);
 
 		printWriter.write("<script data-senna-track=\"temporary\"");
 
@@ -172,7 +173,8 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 	private volatile Bundle _bundle;
 
 	@Reference
-	private CSPNonceProvider _cspNonceProvider;
+	private ContentSecurityPolicyNonceProvider
+		_contentSecurityPolicyNonceProvider;
 
 	private volatile Details _details;
 	private volatile String _lastModified;
