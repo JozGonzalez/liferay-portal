@@ -307,16 +307,15 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
 
-		List<Long> ids = ListUtil.toList(
-			ListUtil.fromString(
-				MapUtil.getString(
-					fdsViewObjectEntry.getProperties(), "fdsFieldsOrder"),
-				StringPool.COMMA),
-			Long::parseLong);
-
 		Set<ObjectEntry> fdsFieldObjectEntries = new TreeSet<>(
-			Comparator.comparing(
-				ObjectEntry::getId, Comparator.comparingInt(ids::indexOf)));
+			new ObjectEntryComparator(
+				ListUtil.toList(
+					ListUtil.fromString(
+						MapUtil.getString(
+							fdsViewObjectEntry.getProperties(),
+							"fdsFieldsOrder"),
+						StringPool.COMMA),
+					Long::parseLong)));
 
 		fdsFieldObjectEntries.addAll(
 			_getRelatedObjectEntries(
@@ -376,16 +375,15 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
 
-		List<Long> ids = ListUtil.toList(
-			ListUtil.fromString(
-				MapUtil.getString(
-					fdsViewObjectEntry.getProperties(), "fdsFiltersOrder"),
-				StringPool.COMMA),
-			Long::parseLong);
-
 		Set<ObjectEntry> fdsFilterObjectEntries = new TreeSet<>(
-			Comparator.comparing(
-				ObjectEntry::getId, Comparator.comparingInt(ids::indexOf)));
+			new ObjectEntryComparator(
+				ListUtil.toList(
+					ListUtil.fromString(
+						MapUtil.getString(
+							fdsViewObjectEntry.getProperties(),
+							"fdsFiltersOrder"),
+						StringPool.COMMA),
+					Long::parseLong)));
 
 		fdsFilterObjectEntries.addAll(
 			_getRelatedObjectEntries(
@@ -532,5 +530,39 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private ReactRenderer _reactRenderer;
+
+	private static class ObjectEntryComparator
+		implements Comparator<ObjectEntry> {
+
+		public ObjectEntryComparator(List<Long> ids) {
+			_ids = ids;
+		}
+
+		@Override
+		public int compare(ObjectEntry objectEntry1, ObjectEntry objectEntry2) {
+			long id1 = objectEntry1.getId();
+			long id2 = objectEntry2.getId();
+
+			int index1 = _ids.indexOf(id1);
+			int index2 = _ids.indexOf(id2);
+
+			if ((index1 == -1) && (index2 == -1)) {
+				return Long.compare(id1, id2);
+			}
+
+			if (index1 == -1) {
+				return 1;
+			}
+
+			if (index2 == -1) {
+				return -1;
+			}
+
+			return Long.compare(index1, index2);
+		}
+
+		private final List<Long> _ids;
+
+	}
 
 }
