@@ -11,6 +11,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.frontend.data.set.constants.FDSEntityFieldTypes;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
@@ -413,7 +414,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 
 				if (Objects.equals(type, "date")) {
 					return JSONUtil.put(
-						"entityFieldType", type
+						"entityFieldType", FDSEntityFieldTypes.DATE
 					).put(
 						"id", properties.get("fieldName")
 					).put(
@@ -450,7 +451,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 					return JSONUtil.put(
 						"autocompleteEnabled", true
 					).put(
-						"entityFieldType", type
+						"entityFieldType", FDSEntityFieldTypes.STRING
 					).put(
 						"id", properties.get("fieldName")
 					).put(
