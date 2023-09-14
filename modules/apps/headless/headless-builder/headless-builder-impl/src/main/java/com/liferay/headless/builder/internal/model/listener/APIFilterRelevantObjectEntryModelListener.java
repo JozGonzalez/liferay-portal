@@ -75,10 +75,8 @@ public class APIFilterRelevantObjectEntryModelListener
 
 				throw new ObjectEntryValuesException.InvalidObjectField(
 					null,
-					"The API endpoint specified already has an API filter " +
-						"associated",
-					"the-api-endpoint-specified-already-has-an-api-filter-" +
-						"associated");
+					"The API endpoint already has an associated API filter",
+					"the-api-endpoint-already-has-an-associated-api-filter");
 			}
 		}
 		catch (Exception exception) {
