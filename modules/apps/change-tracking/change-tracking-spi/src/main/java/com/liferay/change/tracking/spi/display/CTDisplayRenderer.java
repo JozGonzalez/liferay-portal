@@ -162,12 +162,6 @@ public interface CTDisplayRenderer<T> {
 		return false;
 	}
 
-	/**
-	 * Returns whether the model may be moved by default.
-	 *
-	 * @param  model the model to be shown or hidden by default
-	 * @return whether the model may be hidden by default
-	 */
 	public default boolean isMovable(T model) {
 		return !isHideable(model);
 	}
