@@ -39,7 +39,6 @@ public class EditRankingDisplayBuilderTest extends BaseRankingsWebTestCase {
 	@Before
 	public void setUp() throws Exception {
 		_setUpHttpServletRequest();
-
 		_setUpLearnMessages();
 
 		_editRankingDisplayBuilder = new EditRankingDisplayBuilder(
