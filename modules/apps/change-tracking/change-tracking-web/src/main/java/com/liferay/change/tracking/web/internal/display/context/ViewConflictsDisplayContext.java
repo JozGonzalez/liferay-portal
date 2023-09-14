@@ -314,10 +314,10 @@ public class ViewConflictsDisplayContext {
 			if (!conflictInfo.isResolved()) {
 				JSONArray actionsJSONArray = JSONFactoryUtil.createJSONArray();
 
-				String conflictType = conflictInfo.getConflictDescription(
-					resourceBundle);
+				String conflictDescription =
+					conflictInfo.getConflictDescription(resourceBundle);
 
-				if (!conflictType.equals(
+				if (!conflictDescription.equals(
 						LanguageUtil.get(
 							resourceBundle,
 							"deletion-modification-conflict"))) {
