@@ -212,8 +212,8 @@ public class FeatureFlagsDisplayContextFactory {
 
 		dependencyFeatureFlags.addAll(
 			featureFlagsBag.getFeatureFlags(
-				featureFlag1 -> ArrayUtil.contains(
-					dependencyKeys.toArray(), featureFlag1.getKey())));
+				curFeatureFlag -> ArrayUtil.contains(
+					dependencyKeys.toArray(), curFeatureFlag.getKey())));
 
 		return dependencyFeatureFlags;
 	}
