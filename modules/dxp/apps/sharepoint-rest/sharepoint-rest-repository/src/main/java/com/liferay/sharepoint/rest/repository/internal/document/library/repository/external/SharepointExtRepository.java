@@ -528,7 +528,7 @@ public class SharepointExtRepository implements ExtRepository {
 				StringPool.DASH));
 
 		_sharepointURLHelper = new SharepointURLHelper(
-			_siteAbsoluteURL, _DEFAULT_RESULTS_SOURCE_ID);
+			_siteAbsoluteURL, _RESULTS_SOURCE_ID);
 
 		_sharepointServerResponseConverter =
 			new SharepointServerResponseConverter(
@@ -899,7 +899,7 @@ public class SharepointExtRepository implements ExtRepository {
 		}
 	}
 
-	private static final String _DEFAULT_RESULTS_SOURCE_ID =
+	private static final String _RESULTS_SOURCE_ID =
 		"8413cd39-2156-4e00-b54d-11efd9abdb89";
 
 	private String _libraryPath;
