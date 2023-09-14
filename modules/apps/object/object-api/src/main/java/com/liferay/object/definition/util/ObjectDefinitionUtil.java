@@ -57,16 +57,17 @@ public class ObjectDefinitionUtil {
 			return true;
 		}
 
-		return ArrayUtil.exists(
-			_ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES,
-			allowedInvokerBundleSymbolicName -> StringUtil.startsWith(
-				BatchEngineUnitThreadLocal.getFileName(),
-				allowedInvokerBundleSymbolicName));
-	}
+		String fileName = BatchEngineUnitThreadLocal.getFileName();
 
-	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
-		"com.liferay.headless.builder.impl", "com.liferay.object.service"
-	};
+		if (StringUtil.startsWith(
+				fileName, "com.liferay.headless.builder.impl") ||
+			StringUtil.startsWith(fileName, "com.liferay.object.service")) {
+
+			return true;
+		}
+
+		return false;
+	}
 
 	private static final Map<String, String>
 		_allowedModifiableSystemObjectDefinitionNames = HashMapBuilder.put(
