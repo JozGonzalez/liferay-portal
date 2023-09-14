@@ -324,7 +324,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	private String _getSaveAndContinueRedirect(
 		ActionRequest actionRequest, ActionResponse actionResponse,
-		BlogsEntry entry, String portletResource, String redirect) {
+		BlogsEntry entry, String redirect, String portletResource) {
 
 		PortletConfig portletConfig = (PortletConfig)actionRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_CONFIG);
@@ -392,8 +392,8 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, actionResponse,
 			_getSaveAndContinueRedirect(
 				actionRequest, actionResponse, entry,
-				ParamUtil.getString(actionRequest, "portletResource"),
-				ParamUtil.getString(actionRequest, "redirect")));
+				ParamUtil.getString(actionRequest, "redirect"),
+				ParamUtil.getString(actionRequest, "portletResource")));
 	}
 
 	private void _sendUpdateRedirect(
