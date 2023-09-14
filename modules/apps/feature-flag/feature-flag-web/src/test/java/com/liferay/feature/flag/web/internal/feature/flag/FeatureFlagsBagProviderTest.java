@@ -146,10 +146,9 @@ public class FeatureFlagsBagProviderTest {
 			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				String.format(
-					"The system feature flag %s cannot depend on the " +
-						"non-system feature flag %s",
-					key1, key2),
+				StringBundler.concat(
+					"The system feature flag ", key1,
+					" cannot depend on the nonsystem feature flag ", key2),
 				logEntry.getMessage());
 		}
 	}
