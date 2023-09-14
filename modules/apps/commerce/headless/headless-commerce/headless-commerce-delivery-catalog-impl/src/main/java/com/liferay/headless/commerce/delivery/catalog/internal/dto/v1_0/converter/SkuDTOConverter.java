@@ -132,7 +132,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 					cpInstance.getGroupId(),
 					commerceContext.getCommerceChannelGroupId(),
 					cpSkuDTOConverterConvertContext.getCompanyId(), cpInstance,
-					cpInstance.getSku(), StringPool.BLANK,
+					cpInstance.getSku(),
+					cpSkuDTOConverterConvertContext.getUnitOfMeasureKey(),
 					cpSkuDTOConverterConvertContext.getLocale());
 				depth = cpInstance.getDepth();
 				discontinued = cpInstance.isDiscontinued();
@@ -146,7 +147,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 					_cpContentHelper.getIncomingQuantityLabel(
 						cpSkuDTOConverterConvertContext.getCompanyId(),
 						cpSkuDTOConverterConvertContext.getLocale(),
-						cpInstance.getSku(), StringPool.BLANK,
+						cpInstance.getSku(),
+						cpSkuDTOConverterConvertContext.getUnitOfMeasureKey(),
 						cpSkuDTOConverterConvertContext.getUser());
 				manufacturerPartNumber = cpInstance.getManufacturerPartNumber();
 				price = _getPrice(
@@ -158,9 +160,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 							skuOption -> _jsonFactory.createJSONObject(
 								skuOption.toString()))),
 					cpSkuDTOConverterConvertContext.getLocale(),
-					BigDecimal.valueOf(
-						cpSkuDTOConverterConvertContext.getQuantity()),
-					StringPool.BLANK);
+					cpSkuDTOConverterConvertContext.getQuantity(),
+					cpSkuDTOConverterConvertContext.getUnitOfMeasureKey());
 				published = cpInstance.isPublished();
 				purchasable = cpInstance.isPurchasable();
 				sku = cpInstance.getSku();
@@ -202,6 +203,13 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						return commercePriceConfiguration.
 							displayDiscountLevels();
 					});
+				setProductId(
+					() -> {
+						CPDefinition cpDefinition =
+							cpInstance.getCPDefinition();
+
+						return cpDefinition.getCProductId();
+					});
 				setReplacementSku(
 					() -> {
 						if (replacementCPInstance == null) {
@@ -235,9 +243,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 													replacementSkuSkuOption.
 														toString()))),
 									cpSkuDTOConverterConvertContext.getLocale(),
-									BigDecimal.valueOf(
-										cpSkuDTOConverterConvertContext.
-											getQuantity()),
+									cpSkuDTOConverterConvertContext.
+										getQuantity(),
 									StringPool.BLANK);
 								sku = replacementCPInstance.getSku();
 								skuId = replacementCPInstance.getCPInstanceId();
