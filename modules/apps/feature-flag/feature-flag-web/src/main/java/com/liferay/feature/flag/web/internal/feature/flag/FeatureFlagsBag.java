@@ -29,10 +29,10 @@ import java.util.function.Predicate;
 public class FeatureFlagsBag {
 
 	public FeatureFlagsBag(
-		Map<String, FeatureFlag> featureFlagsMap, long companyId) {
+		long companyId, Map<String, FeatureFlag> featureFlagsMap) {
 
-		_featureFlagsMap = featureFlagsMap;
 		_companyId = companyId;
+		_featureFlagsMap = featureFlagsMap;
 	}
 
 	public List<FeatureFlag> getFeatureFlags(Predicate<FeatureFlag> predicate) {

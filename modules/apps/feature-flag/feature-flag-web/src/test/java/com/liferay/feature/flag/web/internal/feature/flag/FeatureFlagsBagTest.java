@@ -58,7 +58,7 @@ public class FeatureFlagsBagTest {
 			featureFlagsMap.put(featureFlag.getKey(), featureFlag);
 		}
 
-		_featureFlagsBag = new FeatureFlagsBag(featureFlagsMap, _COMPANY_ID);
+		_featureFlagsBag = new FeatureFlagsBag(_COMPANY_ID, featureFlagsMap);
 	}
 
 	@Test

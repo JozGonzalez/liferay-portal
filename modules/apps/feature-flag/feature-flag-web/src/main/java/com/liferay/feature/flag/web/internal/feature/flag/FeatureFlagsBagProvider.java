@@ -209,7 +209,7 @@ public class FeatureFlagsBagProvider {
 			}
 
 			return new FeatureFlagsBag(
-				Collections.unmodifiableMap(featureFlagsMap), companyId);
+				companyId, Collections.unmodifiableMap(featureFlagsMap));
 		}
 	}
 
