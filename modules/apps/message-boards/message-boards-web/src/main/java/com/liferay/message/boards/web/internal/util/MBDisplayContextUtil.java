@@ -27,7 +27,7 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class MBDisplayContextUtil {
 
-	public static MBAdminListDisplayContext getMbAdminListDisplayContext(
+	public static MBAdminListDisplayContext getMBAdminListDisplayContext(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long categoryId) {
 
@@ -67,7 +67,7 @@ public class MBDisplayContextUtil {
 		return mbHomeDisplayContext;
 	}
 
-	public static MBListDisplayContext getMbListDisplayContext(
+	public static MBListDisplayContext getMBListDisplayContext(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long categoryId,
 		String mvcRenderCommandName) {
