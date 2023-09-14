@@ -88,9 +88,8 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 		printWriter.write(FrontendESMUtil.getScriptType());
 		printWriter.write("', namespace:'Liferay', nonce: '");
 		printWriter.write(nonce);
-		printWriter.write("', ");
 		printWriter.write(
-			"reportMismatchedAnonymousModules: 'warn', resolvePath: '");
+			"', reportMismatchedAnonymousModules: 'warn', resolvePath: '");
 		printWriter.write(_getResolvePath(httpServletRequest));
 		printWriter.write("', url: '");
 		printWriter.write(_getURL(httpServletRequest, themeDisplay));
