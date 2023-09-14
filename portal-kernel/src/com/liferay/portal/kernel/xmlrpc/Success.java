@@ -29,16 +29,11 @@ public class Success implements Response {
 
 	@Override
 	public String toXml() throws XmlRpcException {
-		StringBundler sb = new StringBundler(8);
+		StringBundler sb = new StringBundler(3);
 
-		sb.append("<?xml version=\"1.0\"?>");
-		sb.append("<methodResponse>");
-		sb.append("<params>");
-		sb.append("<param>");
+		sb.append("<?xml version=\"1.0\"?><methodResponse><params><param>");
 		sb.append(XmlRpcParser.wrapValue(_description));
-		sb.append("</param>");
-		sb.append("</params>");
-		sb.append("</methodResponse>");
+		sb.append("</param></params></methodResponse>");
 
 		return sb.toString();
 	}
