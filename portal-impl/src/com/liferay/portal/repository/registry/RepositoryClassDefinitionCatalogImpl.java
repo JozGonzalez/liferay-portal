@@ -172,6 +172,9 @@ public class RepositoryClassDefinitionCatalogImpl
 		public ServiceRegistration<RepositoryFactory> addingService(
 			ServiceReference<RepositoryDefiner> serviceReference) {
 
+			long companyId = GetterUtil.getLong(
+				serviceReference.getProperty("companyId"));
+
 			RepositoryDefiner repositoryDefiner = _bundleContext.getService(
 				serviceReference);
 
@@ -179,9 +182,6 @@ public class RepositoryClassDefinitionCatalogImpl
 			RepositoryClassDefinition repositoryClassDefinition =
 				RepositoryClassDefinition.fromRepositoryDefiner(
 					repositoryDefiner);
-
-			long companyId = GetterUtil.getLong(
-				serviceReference.getProperty("companyId"));
 
 			if (repositoryDefiner.isExternalRepository()) {
 				Map<String, RepositoryClassDefinition>
