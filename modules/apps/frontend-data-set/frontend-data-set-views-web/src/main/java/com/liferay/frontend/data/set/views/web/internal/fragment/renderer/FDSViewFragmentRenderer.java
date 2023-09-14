@@ -470,9 +470,15 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						"multiple", properties.get("multiple")
 					).put(
 						"selectedData",
-						_getSelectedDataJSONObject(
-							listTypeEntries, themeDisplay.getLocale(),
-							MapUtil.getString(properties, "preselectedValues"))
+						JSONUtil.put(
+							"exclude", false
+						).put(
+							"selectedItems",
+							_getSelectedItemsJSONArray(
+								listTypeEntries, themeDisplay.getLocale(),
+								MapUtil.getString(
+									properties, "preselectedValues"))
+						)
 					).put(
 						"type", "selection"
 					);
@@ -545,7 +551,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		return relatedObjectEntriesPage.getItems();
 	}
 
-	private JSONObject _getSelectedDataJSONObject(
+	private JSONArray _getSelectedItemsJSONArray(
 			List<ListTypeEntry> listTypeEntries, Locale locale,
 			String preselectedValues)
 		throws JSONException {
@@ -572,11 +578,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		return JSONUtil.put(
-			"exclude", false
-		).put(
-			"selectedItems", jsonArray
-		);
+		return jsonArray;
 	}
 
 	private String _interpolateURL(
