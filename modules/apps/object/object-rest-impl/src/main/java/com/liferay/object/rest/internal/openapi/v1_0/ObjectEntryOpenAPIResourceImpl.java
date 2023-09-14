@@ -169,6 +169,20 @@ public class ObjectEntryOpenAPIResourceImpl
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_DATE) &&
+				 _fieldNameMappings.containsKey(objectField.getName())) {
+
+			return new DTOProperty(
+				null, _fieldNameMappings.get(objectField.getName()),
+				ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME) {
+
+				{
+					setRequired(objectField.isRequired());
+				}
+			};
+		}
+		else if (Objects.equals(
+					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
 
 			return new DTOProperty(
@@ -181,20 +195,6 @@ public class ObjectEntryOpenAPIResourceImpl
 						objectField)
 				).build(),
 				objectField.getName(), objectField.getDBType()) {
-
-				{
-					setRequired(objectField.isRequired());
-				}
-			};
-		}
-		else if (Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_DATE) &&
-				 _fieldNameMappings.containsKey(objectField.getName())) {
-
-			return new DTOProperty(
-				null, _fieldNameMappings.get(objectField.getName()),
-				ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME) {
 
 				{
 					setRequired(objectField.isRequired());
