@@ -7,6 +7,7 @@ package com.liferay.feature.flag.web.internal.feature.flag;
 
 import com.liferay.feature.flag.web.internal.model.FeatureFlagWrapper;
 import com.liferay.feature.flag.web.internal.model.PreferenceAwareFeatureFlag;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.feature.flag.FeatureFlag;
 import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -84,9 +85,9 @@ public class FeatureFlagsBag {
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
-				String.format(
-					"Feature flag %s is not available for company with id %s",
-					key, _companyId));
+				StringBundler.concat(
+					"Feature flag ", key, " is not available for company ",
+					_companyId));
 		}
 
 		return GetterUtil.getBoolean(

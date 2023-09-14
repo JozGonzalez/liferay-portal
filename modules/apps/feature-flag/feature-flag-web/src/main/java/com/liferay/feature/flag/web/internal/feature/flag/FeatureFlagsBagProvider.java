@@ -166,10 +166,11 @@ public class FeatureFlagsBagProvider {
 										getValue())))) {
 
 						_log.error(
-							String.format(
-								"The system feature flag %s cannot depend on " +
-									"the non-system feature flag %s",
-								featureFlag.getKey(), dependencyKey));
+							StringBundler.concat(
+								"The system feature flag ",
+								featureFlag.getKey(),
+								"cannot depend on the nonsystem feature flag ",
+								dependencyKey));
 
 						continue;
 					}

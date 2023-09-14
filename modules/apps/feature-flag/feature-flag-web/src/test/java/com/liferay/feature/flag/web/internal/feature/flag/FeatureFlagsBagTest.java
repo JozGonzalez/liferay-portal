@@ -6,6 +6,7 @@
 package com.liferay.feature.flag.web.internal.feature.flag;
 
 import com.liferay.feature.flag.web.internal.model.FeatureFlagImpl;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.feature.flag.FeatureFlag;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagType;
 import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
@@ -130,9 +131,9 @@ public class FeatureFlagsBagTest {
 			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				String.format(
-					"Feature flag %s is not available for company with id %s",
-					key, _COMPANY_ID),
+				StringBundler.concat(
+					"Feature flag ", key, " is not available for company ",
+					_COMPANY_ID),
 				logEntry.getMessage());
 		}
 	}
