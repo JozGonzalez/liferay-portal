@@ -446,8 +446,6 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						_listTypeEntryLocalService.getListTypeEntries(
 							listTypeDefinition.getListTypeDefinitionId());
 
-					Locale locale = themeDisplay.getLocale();
-
 					return JSONUtil.put(
 						"autocompleteEnabled", true
 					).put(
@@ -461,7 +459,8 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 							listTypeEntry -> JSONUtil.put(
 								"key", listTypeEntry.getKey()
 							).put(
-								"label", listTypeEntry.getName(locale)
+								"label",
+								listTypeEntry.getName(themeDisplay.getLocale())
 							).put(
 								"value", listTypeEntry.getKey()
 							))
@@ -472,7 +471,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 					).put(
 						"selectedData",
 						_getSelectedDataJSONObject(
-							listTypeEntries, locale,
+							listTypeEntries, themeDisplay.getLocale(),
 							MapUtil.getString(properties, "preselectedValues"))
 					).put(
 						"type", "selection"
