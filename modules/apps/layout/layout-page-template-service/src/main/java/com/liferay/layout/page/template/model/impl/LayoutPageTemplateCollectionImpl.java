@@ -34,20 +34,19 @@ public class LayoutPageTemplateCollectionImpl
 
 	@Override
 	public List<LayoutPageTemplateCollection> getAncestors() {
-		List<LayoutPageTemplateCollection>
-			ancestorsLayoutPageTemplateCollection = new ArrayList<>();
+		List<LayoutPageTemplateCollection> layoutPageTemplateCollections =
+			new ArrayList<>();
 
-		LayoutPageTemplateCollection curLayoutPageTemplateCollection = this;
+		LayoutPageTemplateCollection layoutPageTemplateCollection = this;
 
-		while (curLayoutPageTemplateCollection != null) {
-			ancestorsLayoutPageTemplateCollection.add(
-				curLayoutPageTemplateCollection);
+		while (layoutPageTemplateCollection != null) {
+			layoutPageTemplateCollections.add(layoutPageTemplateCollection);
 
-			curLayoutPageTemplateCollection =
-				curLayoutPageTemplateCollection.getAncestor();
+			layoutPageTemplateCollection =
+				layoutPageTemplateCollection.getAncestor();
 		}
 
-		return ancestorsLayoutPageTemplateCollection;
+		return layoutPageTemplateCollections;
 	}
 
 }
