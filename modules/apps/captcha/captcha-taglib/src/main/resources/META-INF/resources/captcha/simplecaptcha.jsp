@@ -42,8 +42,7 @@ String url = (String)request.getAttribute("liferay-captcha:captcha:url");
 			</label>
 
 			<input
-				aria-labelledby="<portlet:namespace />captchaLabel <portlet:namespace />captchaError" class="form-control"
-				name="<portlet:namespace />captchaText" required="<%= true %>" size="10" type="text" value=""
+				aria-labelledby="<portlet:namespace />captchaLabel <portlet:namespace />captchaError" class="form-control" name="<portlet:namespace />captchaText" required="<%= true %>" size="10" type="text" value=""
 			/>
 
 			<c:if test="<%= Validator.isNotNull(errorMessage) %>">
