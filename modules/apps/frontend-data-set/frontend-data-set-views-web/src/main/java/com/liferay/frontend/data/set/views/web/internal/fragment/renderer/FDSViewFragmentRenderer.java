@@ -575,30 +575,23 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 
 			for (ListTypeEntry listTypeEntry : listTypeEntries) {
 				if (Objects.equals(listTypeEntry.getKey(), key)) {
-					JSONObject jsonObject = _jsonFactory.createJSONObject();
-
-					jsonObject.put(
-						"label", listTypeEntry.getName(locale)
-					).put(
-						"value", listTypeEntry.getKey()
-					);
-
-					jsonArray.put(jsonObject);
+					jsonArray.put(
+						JSONUtil.put(
+							"label", listTypeEntry.getName(locale)
+						).put(
+							"value", listTypeEntry.getKey()
+						));
 
 					break;
 				}
 			}
 		}
 
-		JSONObject jsonObject = _jsonFactory.createJSONObject();
-
-		jsonObject.put(
+		return JSONUtil.put(
 			"exclude", false
 		).put(
 			"selectedItems", jsonArray
 		);
-
-		return jsonObject;
 	}
 
 	private String _interpolateURL(
