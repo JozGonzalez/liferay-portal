@@ -228,16 +228,10 @@ public class DisplayPageLayoutTypeControllerDisplayContext {
 	}
 
 	public boolean isDefaultDisplayPage() {
-		boolean defaultDisplayPage = GetterUtil.getBoolean(
+		return GetterUtil.getBoolean(
 			_httpServletRequest.getAttribute(
 				LayoutDisplayPageWebKeys.DEFAULT_LAYOUT_DISPLAY),
 			true);
-
-		if (defaultDisplayPage) {
-			return true;
-		}
-
-		return false;
 	}
 
 	public boolean isForbidden(HttpServletResponse httpServletResponse) {
