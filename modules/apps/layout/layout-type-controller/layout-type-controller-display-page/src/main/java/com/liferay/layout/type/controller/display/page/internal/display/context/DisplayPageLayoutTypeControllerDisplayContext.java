@@ -128,19 +128,19 @@ public class DisplayPageLayoutTypeControllerDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		AssetRendererFactory<?> assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				_infoSearchClassMapperRegistry.getSearchClassName(
-					infoItemDetails.getClassName()));
-
-		InfoItemReference infoItemReference =
-			infoItemDetails.getInfoItemReference();
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		try {
+			AssetRendererFactory<?> assetRendererFactory =
+				AssetRendererFactoryRegistryUtil.
+					getAssetRendererFactoryByClassName(
+						_infoSearchClassMapperRegistry.getSearchClassName(
+							infoItemDetails.getClassName()));
+
+			InfoItemReference infoItemReference =
+				infoItemDetails.getInfoItemReference();
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			if (assetRendererFactory == null) {
 				return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
 					infoItemReference, themeDisplay);
