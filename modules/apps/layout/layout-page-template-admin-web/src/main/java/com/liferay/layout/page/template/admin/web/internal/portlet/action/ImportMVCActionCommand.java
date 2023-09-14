@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.File;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
@@ -87,7 +87,7 @@ public class ImportMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-				new ArrayList<>();
+				Collections.emptyList();
 
 			try (SafeCloseable safeCloseable =
 					CheckUnlockedLayoutThreadLocal.setWithSafeCloseable(
