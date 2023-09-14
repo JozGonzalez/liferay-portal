@@ -134,48 +134,38 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 				value="<%= rankingEntryDisplayContext.getHiddenResultsCount() %>"
 			/>
 
-			<% if (FeatureFlagManagerUtil.isEnabled("LPS-157988") || FeatureFlagManagerUtil.isEnabled("LPS-159650")) {
-			%>
-
+			<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-157988") || FeatureFlagManagerUtil.isEnabled("LPS-159650") %>'>
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand-smallest table-cell-minw-150"
 					name="scope"
 				>
-					<% if (Validator.isNotNull(rankingEntryDisplayContext.getGroupExternalReferenceCode())) {
-						Group group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
-							rankingEntryDisplayContext.getGroupExternalReferenceCode(), themeDisplay.getCompanyId());
-					%>
+					<c:choose>
+						<c:when test="<%= Validator.isNotNull(rankingEntryDisplayContext.getGroupExternalReferenceCode()) %>">
 
-						<span class="lfr-portal-tooltip" data-title='<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>'>
-							<liferay-ui:message key="site" />
-						</span>
+							<%
+							Group group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(rankingEntryDisplayContext.getGroupExternalReferenceCode(), themeDisplay.getCompanyId());
+							%>
 
-					<%
-					}
-					else if (Validator.isNotNull(rankingEntryDisplayContext.getSXPBlueprintExternalReferenceCode())) {
-						SXPBlueprint sxpBlueprint = SXPBlueprintLocalServiceUtil.getSXPBlueprintByExternalReferenceCode(rankingEntryDisplayContext.getSXPBlueprintExternalReferenceCode(), themeDisplay.getCompanyId());
-					%>
+							<span class="lfr-portal-tooltip" data-title='<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>'>
+								<liferay-ui:message key="site" />
+							</span>
+						</c:when>
+						<c:when test="<%= Validator.isNotNull(rankingEntryDisplayContext.getSXPBlueprintExternalReferenceCode()) %>">
 
-						<span class="lfr-portal-tooltip" data-title='<%= HtmlUtil.escape(sxpBlueprint.getTitle(locale)) %>'>
-							<liferay-ui:message key="blueprint" />
-						</span>
+							<%
+							SXPBlueprint sxpBlueprint = SXPBlueprintLocalServiceUtil.getSXPBlueprintByExternalReferenceCode(rankingEntryDisplayContext.getSXPBlueprintExternalReferenceCode(), themeDisplay.getCompanyId());
+							%>
 
-					<%
-					}
-					else {
-					%>
-
-						<liferay-ui:message key="everything" />
-
-					<%
-					}
-					%>
-
+							<span class="lfr-portal-tooltip" data-title='<%= HtmlUtil.escape(sxpBlueprint.getTitle(locale)) %>'>
+								<liferay-ui:message key="blueprint" />
+							</span>
+						</c:when>
+						<c:otherwise>
+							<liferay-ui:message key="everything" />
+						</c:otherwise>
+					</c:choose>
 				</liferay-ui:search-container-column-text>
-
-			<%
-			}
-			%>
+			</c:if>
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand-smallest table-cell-minw-150"
