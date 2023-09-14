@@ -476,25 +476,18 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 	}
 
 	private JSONArray _getListTypeEntriesJSONArray(
-		List<ListTypeEntry> listTypeEntries, Locale locale) {
+			List<ListTypeEntry> listTypeEntries, Locale locale)
+		throws Exception {
 
-		JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-		for (ListTypeEntry listTypeEntry : listTypeEntries) {
-			JSONObject jsonObject = _jsonFactory.createJSONObject();
-
-			jsonObject.put(
+		return JSONUtil.toJSONArray(
+			listTypeEntries,
+			listTypeEntry -> JSONUtil.put(
 				"key", listTypeEntry.getKey()
 			).put(
 				"label", listTypeEntry.getName(locale)
 			).put(
 				"value", listTypeEntry.getKey()
-			);
-
-			jsonArray.put(jsonObject);
-		}
-
-		return jsonArray;
+			));
 	}
 
 	private ObjectEntry _getObjectEntry(
