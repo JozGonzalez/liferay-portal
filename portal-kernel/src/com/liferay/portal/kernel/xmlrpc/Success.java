@@ -31,8 +31,7 @@ public class Success implements Response {
 	public String toXml() throws XmlRpcException {
 		StringBundler sb = new StringBundler(8);
 
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-
+		sb.append("<?xml version=\"1.0\"?>");
 		sb.append("<methodResponse>");
 		sb.append("<params>");
 		sb.append("<param>");
