@@ -128,11 +128,11 @@ public abstract class Base${schemaName}ResourceImpl
 		<#assign
 			parentSchemaName = javaMethodSignature.parentSchemaName!
 		/>
-		<#if javaMethodSignature.requestBodyMediaTypes?seq_contains("multipart/form-data")>
-			<#if freeMarkerTool.getMultipartBodySchemas(javaMethodSignature)??>
-				<#assign generateMultipartBodyClasses = generateMultipartBodyClasses + [javaMethodSignature] />
-			</#if>
+
+		<#if javaMethodSignature.requestBodyMediaTypes?seq_contains("multipart/form-data") && freeMarkerTool.getMultipartBodySchemas(javaMethodSignature)??>
+			<#assign generateMultipartBodyClasses = generateMultipartBodyClasses + [javaMethodSignature] />
 		</#if>
+
 		<#if stringUtil.equals(javaMethodSignature.methodName, "delete" + schemaName)>
 			<#assign deleteBatchJavaMethodSignature = javaMethodSignature />
 		<#elseif stringUtil.equals(javaMethodSignature.methodName, "get" + schemaName + "ByExternalReferenceCode") || stringUtil.equals(javaMethodSignature.methodName, "get" + parentSchemaName + schemaName + "ByExternalReferenceCode")>
