@@ -5,7 +5,7 @@
 
 package com.liferay.asset.categories.internal.service;
 
-import com.liferay.asset.categories.internal.util.AssetEntryAssetCategoryRelAssetCategoryIdComparator;
+import com.liferay.asset.categories.internal.util.comparator.AssetEntryAssetCategoryRelAssetCategoryIdComparator;
 import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
 import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
