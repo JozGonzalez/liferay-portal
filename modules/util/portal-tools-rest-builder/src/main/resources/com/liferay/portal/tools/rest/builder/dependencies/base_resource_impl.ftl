@@ -1378,20 +1378,20 @@ public abstract class Base${schemaName}ResourceImpl
 
 	<#if generateMultipartBodyClasses?has_content>
 		<#list generateMultipartBodyClasses as javaMethodSignatureWithMultipartBody>
-			private class ${stringUtil.upperCaseFirstLetter(javaMethodSignatureWithMultipartBody.methodName)}RequestBody{
-				<#assign requestBodyPropertySchemas = freeMarkerTool.getMultipartBodySchemas(javaMethodSignatureWithMultipartBody) />
-				<#list requestBodyPropertySchemas as schemaName, propertySchema>
+			private class ${stringUtil.upperCaseFirstLetter(javaMethodSignatureWithMultipartBody.methodName)}RequestBody {
+				<#assign multipartBodySchemas = freeMarkerTool.getMultipartBodySchemas(javaMethodSignatureWithMultipartBody) />
+
+				<#list multipartBodySchemas as schemaName, propertySchema>
 					<#if stringUtil.equals(propertySchema.type, "string") && stringUtil.equals(propertySchema.format, "binary")>
 						@io.swagger.v3.oas.annotations.media.Schema(
-							type = "string", format = "binary", description = "${stringUtil.upperCaseFirstLetter(schemaName)}"
+							description = "${stringUtil.upperCaseFirstLetter(schemaName)}", format = "binary", type = "string"
 						)
 						public String ${schemaName};
-
 					<#else>
 						public ${stringUtil.upperCaseFirstLetter(schemaName)} ${schemaName};
-
 					</#if>
 				</#list>
+
 			}
 		</#list>
 	</#if>
