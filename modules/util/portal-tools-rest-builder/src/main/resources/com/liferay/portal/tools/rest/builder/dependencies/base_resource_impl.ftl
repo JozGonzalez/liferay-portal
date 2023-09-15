@@ -1382,7 +1382,7 @@ public abstract class Base${schemaName}ResourceImpl
 				<#assign multipartBodySchemas = freeMarkerTool.getMultipartBodySchemas(javaMethodSignatureWithMultipartBody) />
 
 				<#list multipartBodySchemas as schemaName, propertySchema>
-					<#if stringUtil.equals(propertySchema.type, "string") && stringUtil.equals(propertySchema.format, "binary")>
+					<#if stringUtil.equals(propertySchema.format, "binary") && stringUtil.equals(propertySchema.type, "string")>
 						@io.swagger.v3.oas.annotations.media.Schema(
 							description = "${stringUtil.upperCaseFirstLetter(schemaName)}", format = "binary", type = "string"
 						)
