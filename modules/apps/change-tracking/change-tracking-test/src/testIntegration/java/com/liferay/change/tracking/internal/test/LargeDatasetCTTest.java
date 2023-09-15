@@ -155,10 +155,8 @@ public class LargeDatasetCTTest {
 	}
 
 	@Test
-	public void testAssignOrganization() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer(
-				"Assigning orgs in production")) {
-
+	public void testAssignOrganizations() throws Exception {
+		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			long[] organizationIds = ListUtil.toLongArray(
 				_organizationLocalService.getOrganizations(
 					0, _COUNT_ORGANIZATIONS / 2),
@@ -170,8 +168,7 @@ public class LargeDatasetCTTest {
 				TestPropsValues.getUserId(), organizationIds);
 		}
 
-		try (LoggingTimer loggingTimer = new LoggingTimer(
-				"Assigning orgs in publication");
+		try (LoggingTimer loggingTimer = new LoggingTimer();
 			SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection.getCtCollectionId())) {
