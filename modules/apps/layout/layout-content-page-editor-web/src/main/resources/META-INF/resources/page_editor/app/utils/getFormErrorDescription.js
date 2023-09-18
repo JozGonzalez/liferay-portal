@@ -31,7 +31,7 @@ export function getFormErrorDescription({name = null, type}) {
 			return {
 				message: sub(
 					Liferay.Language.get(
-						'x-form-does-not-allow-to-create-entries-as-draft'
+						'x-form-does-not-allow-creating-entries-as-draft'
 					),
 					name
 				),
