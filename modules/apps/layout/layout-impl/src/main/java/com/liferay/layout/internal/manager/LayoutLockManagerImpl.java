@@ -173,7 +173,7 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 					)
 				).leftJoinOn(
 					LayoutPageTemplateEntryTable.INSTANCE,
-					_getLayoutPageTemplateEntryTableLeftJoin(
+					_getLayoutPageTemplateEntryTableLeftJoinOnPredicate(
 						groupId, lockedLayoutType)
 				).leftJoinOn(
 					LayoutUtilityPageEntryTable.INSTANCE,
@@ -380,7 +380,7 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 		}
 	}
 
-	private Predicate _getLayoutPageTemplateEntryTableLeftJoin(
+	private Predicate _getLayoutPageTemplateEntryTableLeftJoinOnPredicate(
 		long groupId, LockedLayoutType lockedLayoutType) {
 
 		if ((lockedLayoutType == null) ||
