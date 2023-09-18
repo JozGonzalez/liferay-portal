@@ -203,15 +203,9 @@ public class JournalFeedTypeUpgradeProcess extends UpgradeProcess {
 						long userId = _userLocalService.getGuestUserId(
 							company.getCompanyId());
 
-						ServiceContext serviceContext = new ServiceContext();
-
-						serviceContext.setAddGroupPermissions(true);
-						serviceContext.setAddGuestPermissions(true);
-
 						Locale defaultLocale = LocaleUtil.fromLanguageId(
 							UpgradeProcessUtil.getDefaultLanguageId(
 								company.getCompanyId()));
-
 						String assetVocabularyTitle = "type";
 
 						Map<Locale, String> assetVocabularyTitleMap =
@@ -220,12 +214,15 @@ public class JournalFeedTypeUpgradeProcess extends UpgradeProcess {
 									company.getGroupId()),
 								defaultLocale, assetVocabularyTitle);
 
-						String assetVocabularyName =
-							assetVocabularyTitleMap.get(defaultLocale);
+						ServiceContext serviceContext = new ServiceContext();
+
+						serviceContext.setAddGroupPermissions(true);
+						serviceContext.setAddGuestPermissions(true);
 
 						AssetVocabulary assetVocabulary =
 							_assetVocabularyLocalService.fetchGroupVocabulary(
-								company.getGroupId(), assetVocabularyName);
+								company.getGroupId(),
+								assetVocabularyTitleMap.get(defaultLocale));
 
 						if (assetVocabulary == null) {
 							AssetVocabularySettingsHelper
