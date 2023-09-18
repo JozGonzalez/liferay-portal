@@ -58,9 +58,15 @@ public class ObjectDefinitionUtil {
 
 		String fileName = BatchEngineUnitThreadLocal.getFileName();
 
-		if (StringUtil.startsWith(
-				fileName, "com.liferay.headless.builder.impl") ||
-			StringUtil.startsWith(fileName, "com.liferay.object.service")) {
+		if (fileName.matches(
+				"com\\.liferay\\.frontend\\.data\\.set\\.views\\.web_\\d+" +
+					"\\.\\d+\\.\\d+\\s+\\[\\d+\\]") ||
+			fileName.matches(
+				"com\\.liferay\\.headless\\.builder\\.impl_\\d+\\.\\d+\\." +
+					"\\d+\\s+\\[\\d+\\]") ||
+			fileName.matches(
+				"com\\.liferay\\.object\\.service_\\d+\\.\\d+\\.\\d+\\s+" +
+					"\\[\\d+\\]")) {
 
 			return true;
 		}
