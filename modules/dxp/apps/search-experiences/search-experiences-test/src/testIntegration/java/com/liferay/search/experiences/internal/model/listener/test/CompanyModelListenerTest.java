@@ -40,7 +40,7 @@ public class CompanyModelListenerTest {
 		Bundle bundle = FrameworkUtil.getBundle(_modelListener.getClass());
 
 		Class<?> clazz = bundle.loadClass(
-			"com.liferay.search.experiences.internal.util.SXPElementsUtil");
+			"com.liferay.search.experiences.internal.util.SXPElementUtil");
 
 		List<SXPElement> sxpElements = ReflectionTestUtil.getFieldValue(
 			clazz, "_sxpElements");
