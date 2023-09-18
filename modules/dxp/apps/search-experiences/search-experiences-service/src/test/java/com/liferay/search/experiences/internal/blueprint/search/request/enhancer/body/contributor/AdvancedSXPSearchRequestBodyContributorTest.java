@@ -49,16 +49,16 @@ public class AdvancedSXPSearchRequestBodyContributorTest {
 
 	@Test
 	public void testStoredFields() {
-		List<String> storedFields = Arrays.asList(
-			Field.TITLE, Field.DESCRIPTION);
+		Configuration configuration = new Configuration();
 
 		AdvancedConfiguration advancedConfiguration =
 			new AdvancedConfiguration();
 
+		List<String> storedFields = Arrays.asList(
+			Field.TITLE, Field.DESCRIPTION);
+
 		advancedConfiguration.setStored_fields(
 			storedFields.toArray(new String[0]));
-
-		Configuration configuration = new Configuration();
 
 		configuration.setAdvancedConfiguration(advancedConfiguration);
 
