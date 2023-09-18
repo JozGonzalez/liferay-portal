@@ -36,7 +36,7 @@ import org.osgi.framework.FrameworkUtil;
 /**
  * @author Renan Vasconcelos
  */
-public class SXPElementUtil {
+public class SXPElementsUtil {
 
 	public static void addSXPElements(
 			Company company, SXPElementLocalService sxpElementLocalService)

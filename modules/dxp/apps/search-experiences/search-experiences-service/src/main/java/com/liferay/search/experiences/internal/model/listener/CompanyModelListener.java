@@ -12,7 +12,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
-import com.liferay.search.experiences.internal.util.SXPElementUtil;
+import com.liferay.search.experiences.internal.util.SXPElementsUtil;
 import com.liferay.search.experiences.service.SXPBlueprintLocalService;
 import com.liferay.search.experiences.service.SXPElementLocalService;
 
@@ -30,7 +30,7 @@ public class CompanyModelListener extends BaseModelListener<Company> {
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				try {
-					SXPElementUtil.addSXPElements(
+					SXPElementsUtil.addSXPElements(
 						company, _sxpElementLocalService);
 				}
 				catch (PortalException portalException) {
