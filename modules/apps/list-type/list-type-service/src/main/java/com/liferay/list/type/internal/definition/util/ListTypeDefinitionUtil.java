@@ -16,23 +16,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 public class ListTypeDefinitionUtil {
 
 	public static void validateInvokerBundle(
-			String action, boolean system, boolean entry)
+			String message, boolean system)
 		throws PortalException {
 
 		if (!system || ObjectDefinitionUtil.isInvokerBundleAllowed()) {
 			return;
 		}
 
-		String finalSentence = "";
-
-		if (entry) {
-			finalSentence = " entries";
-		}
-
-		throw new ListTypeDefinitionSystemException(
-			StringBundler.concat(
-				"Only allowed bundles can ", action, " system picklists",
-				finalSentence));
+		throw new ListTypeDefinitionSystemException(message);
 	}
 
 }

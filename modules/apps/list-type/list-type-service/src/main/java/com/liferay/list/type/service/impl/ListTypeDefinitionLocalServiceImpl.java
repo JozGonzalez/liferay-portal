@@ -73,7 +73,9 @@ public class ListTypeDefinitionLocalServiceImpl
 			List<ListTypeEntry> listTypeEntries)
 		throws PortalException {
 
-		ListTypeDefinitionUtil.validateInvokerBundle("create", system, false);
+		ListTypeDefinitionUtil.validateInvokerBundle(
+			"Only allowed bundles can add system list type definitions",
+			system);
 
 		_validateName(nameMap, LocaleUtil.getSiteDefault());
 
@@ -99,7 +101,8 @@ public class ListTypeDefinitionLocalServiceImpl
 		throws PortalException {
 
 		ListTypeDefinitionUtil.validateInvokerBundle(
-			"delete", listTypeDefinition.isSystem(), false);
+			"Only allowed bundles can delete system list type definitions",
+			listTypeDefinition.isSystem());
 
 		int count =
 			_objectFieldLocalService.getObjectFieldsCountByListTypeDefinitionId(

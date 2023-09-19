@@ -53,7 +53,8 @@ public class ListTypeEntryLocalServiceImpl
 				listTypeDefinitionId);
 
 		ListTypeDefinitionUtil.validateInvokerBundle(
-			"create", listTypeDefinition.isSystem(), true);
+			"Only allowed bundles can add system list type entries",
+			listTypeDefinition.isSystem());
 
 		User user = _userLocalService.getUser(userId);
 
@@ -88,7 +89,8 @@ public class ListTypeEntryLocalServiceImpl
 				listTypeEntry.getListTypeDefinitionId());
 
 		ListTypeDefinitionUtil.validateInvokerBundle(
-			"delete", listTypeDefinition.isSystem(), true);
+			"Only allowed bundles can delete system list type entries",
+			listTypeDefinition.isSystem());
 
 		return listTypeEntryPersistence.remove(listTypeEntry);
 	}
@@ -178,10 +180,10 @@ public class ListTypeEntryLocalServiceImpl
 			Map<Locale, String> nameMap)
 		throws PortalException {
 
+		_validateName(nameMap);
+
 		ListTypeEntry listTypeEntry = listTypeEntryPersistence.findByPrimaryKey(
 			listTypeEntryId);
-
-		_validateName(nameMap);
 
 		listTypeEntry.setNameMap(nameMap);
 
