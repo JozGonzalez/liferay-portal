@@ -345,6 +345,9 @@ public class FragmentEntryLinkManager {
 			}
 		}
 
+		defaultFragmentRendererContext.setInfoForm(
+			_getInfoForm(fragmentEntryLink, layoutStructure));
+
 		String languageId = ParamUtil.getString(
 			httpServletRequest, "languageId", themeDisplay.getLanguageId());
 
@@ -352,8 +355,6 @@ public class FragmentEntryLinkManager {
 			LocaleUtil.fromLanguageId(languageId));
 
 		defaultFragmentRendererContext.setMode(FragmentEntryLinkConstants.EDIT);
-		defaultFragmentRendererContext.setInfoForm(
-			_getInfoForm(fragmentEntryLink, layoutStructure));
 
 		return _fragmentRendererController.render(
 			defaultFragmentRendererContext, httpServletRequest,
