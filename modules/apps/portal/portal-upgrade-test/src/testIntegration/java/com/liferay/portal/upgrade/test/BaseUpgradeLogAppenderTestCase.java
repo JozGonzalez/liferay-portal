@@ -446,8 +446,8 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 	@Test
 	public void testSchemaVersion() throws Exception {
-		int initialBuildNumber;
-		Version initialSchemaVersion;
+		int initialBuildNumber = 0;
+		Version initialSchemaVersion = null;
 
 		try (Connection connection = DataAccess.getConnection()) {
 			initialBuildNumber = PortalUpgradeProcess.getCurrentBuildNumber(
