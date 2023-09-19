@@ -134,19 +134,31 @@ public abstract class BaseConfigurationFactory {
 				labels.put(
 					"dxp.lxc.liferay.com/virtualInstanceId",
 					_virtualInstanceId);
+				labels.put(
+					"ext.lxc.liferay.com/projectId",
+					GetterUtil.getString(
+						properties.get("ext.lxc.liferay.com.projectId"),
+						GetterUtil.getString(
+							properties.get("ext.lxc.liferay.com/projectId"))));
 				labels.put("ext.lxc.liferay.com/projectName", _projectName);
 				labels.put(
 					"ext.lxc.liferay.com/projectUid",
 					GetterUtil.getString(
-						properties.get("ext.lxc.liferay.com.projectUid")));
+						properties.get("ext.lxc.liferay.com.projectUid"),
+						GetterUtil.getString(
+							properties.get("ext.lxc.liferay.com/projectUid"))));
 				labels.put(
 					"ext.lxc.liferay.com/serviceId",
 					GetterUtil.getString(
-						properties.get("ext.lxc.liferay.com.serviceId")));
+						properties.get("ext.lxc.liferay.com.serviceId"),
+						GetterUtil.getString(
+							properties.get("ext.lxc.liferay.com/serviceId"))));
 				labels.put(
 					"ext.lxc.liferay.com/serviceUid",
 					GetterUtil.getString(
-						properties.get("ext.lxc.liferay.com.serviceUid")));
+						properties.get("ext.lxc.liferay.com.serviceUid"),
+						GetterUtil.getString(
+							properties.get("ext.lxc.liferay.com/serviceUid"))));
 				labels.put("lxc.liferay.com/metadataType", "ext-init");
 			},
 			_configMapName);
