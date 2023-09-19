@@ -214,19 +214,21 @@ public class ConfigurationModelToDDMFormValuesConverter {
 		for (DDMFormFieldValue ddmFormFieldValue :
 				ddmFormValues.getDDMFormFieldValues()) {
 
-			if (configurationOverrideProperties.containsKey(
+			if (!configurationOverrideProperties.containsKey(
 					ddmFormFieldValue.getName())) {
 
-				LocalizedValue localizedValue = new LocalizedValue();
-
-				localizedValue.addString(
-					ddmFormValues.getDefaultLocale(),
-					MapUtil.getString(
-						configurationOverrideProperties,
-						ddmFormFieldValue.getName()));
-
-				ddmFormFieldValue.setValue(localizedValue);
+				continue;
 			}
+
+			LocalizedValue localizedValue = new LocalizedValue();
+
+			localizedValue.addString(
+				ddmFormValues.getDefaultLocale(),
+				MapUtil.getString(
+					configurationOverrideProperties,
+					ddmFormFieldValue.getName()));
+
+			ddmFormFieldValue.setValue(localizedValue);
 		}
 	}
 
