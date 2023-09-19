@@ -118,11 +118,11 @@ public class EditKBArticleDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		Format dateTimeFormat = FastDateFormatFactoryUtil.getSimpleDateFormat(
+		Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd HH:mm", _themeDisplay.getLocale(),
 			_themeDisplay.getTimeZone());
 
-		return dateTimeFormat.format(kbArticle.getDisplayDate());
+		return format.format(kbArticle.getDisplayDate());
 	}
 
 	public List<DropdownItem> getEditKBArticleActionDropdownItems() {
@@ -348,18 +348,18 @@ public class EditKBArticleDisplayContext {
 		return StringUtil.shorten(sb.toString(), 40) + StringPool.SLASH;
 	}
 
-	public String getUserFormattedDisplayDate() {
+	public String getUserFormattedDisplayDateString() {
 		KBArticle kbArticle = getKBArticle();
 
 		if (kbArticle == null) {
 			return StringPool.BLANK;
 		}
 
-		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+		Format format = FastDateFormatFactoryUtil.getDateTime(
 			FastDateFormatConstants.LONG, FastDateFormatConstants.SHORT,
 			_themeDisplay.getLocale(), _themeDisplay.getTimeZone());
 
-		return dateTimeFormat.format(kbArticle.getDisplayDate());
+		return format.format(kbArticle.getDisplayDate());
 	}
 
 	public boolean hasKBArticleSections() throws ConfigurationException {

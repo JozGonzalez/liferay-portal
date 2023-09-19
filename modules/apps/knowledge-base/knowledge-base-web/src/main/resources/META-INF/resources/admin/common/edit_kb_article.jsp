@@ -69,7 +69,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 												id='<%= liferayPortletResponse.getNamespace() + "scheduledButton" %>'
 												label="scheduled"
 												small="<%= true %>"
-												title='<%= LanguageUtil.format(request, "this-article-will-be-published-on-x", editKBArticleDisplayContext.getUserFormattedDisplayDate()) %>'
+												title='<%= LanguageUtil.format(request, "this-article-will-be-published-on-x", editKBArticleDisplayContext.getUserFormattedDisplayDateString()) %>'
 												type="button"
 											/>
 										</span>
@@ -360,9 +360,9 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 </aui:form>
 
 <portlet:renderURL var="scheduleModalURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="displayDate" value="<%= editKBArticleDisplayContext.getDatePickerFormattedDisplayDate() %>" />
-	<portlet:param name="isScheduled" value="<%= String.valueOf(editKBArticleDisplayContext.isScheduled()) %>" />
 	<portlet:param name="mvcPath" value="/admin/common/schedule_modal.jsp" />
+	<portlet:param name="displayDate" value="<%= editKBArticleDisplayContext.getDatePickerFormattedDisplayDate() %>" />
+	<portlet:param name="scheduled" value="<%= String.valueOf(editKBArticleDisplayContext.isScheduled()) %>" />
 </portlet:renderURL>
 
 <liferay-frontend:component

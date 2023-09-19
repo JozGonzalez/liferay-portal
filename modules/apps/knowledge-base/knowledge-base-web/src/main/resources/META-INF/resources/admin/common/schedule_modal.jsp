@@ -14,7 +14,7 @@
 			HashMapBuilder.<String, Object>put(
 				"displayDate", ParamUtil.getString(request, "displayDate")
 			).put(
-				"isScheduled", ParamUtil.getBoolean(request, "isScheduled")
+				"isScheduled", ParamUtil.getBoolean(request, "scheduled")
 			).build()
 		%>'
 	/>
