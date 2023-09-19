@@ -47,7 +47,7 @@ public class ContentSecurityPolicyTopHeadDynamicInclude
 
 		printWriter.print(
 			" type=\"text/javascript\">window.Liferay = window.Liferay || ");
-		printWriter.print("{};window.Liferay.CSP={nonce:'");
+		printWriter.print("{}; window.Liferay.CSP = {nonce: '");
 		printWriter.print(nonce);
 		printWriter.println("'};</script>");
 	}
