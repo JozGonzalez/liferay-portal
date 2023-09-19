@@ -48,7 +48,6 @@ public class EditCategoriesBulkSelectionAction
 
 		Set<Long> toAddCategoryIdsSet = _toLongSet(
 			inputMap, "toAddCategoryIds");
-
 		Set<Long> toRemoveCategoryIdsSet = _toLongSet(
 			inputMap, "toRemoveCategoryIds");
 
