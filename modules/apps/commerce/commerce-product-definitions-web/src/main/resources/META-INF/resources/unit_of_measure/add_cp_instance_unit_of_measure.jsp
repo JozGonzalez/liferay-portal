@@ -28,7 +28,7 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 
 		<c:if test="<%= !cpInstanceUnitOfMeasureDisplayContext.hasCPInstanceUnitOfMeasure() %>">
 			<div class="alert alert-info">
-				<liferay-ui:message key="by-creating-the-first-unit-of-measure-for-this-sku-all-existing-sku-stock-and-pricing-will-be-mapped-to-the-first-unit-of-measure-created" />
+				<liferay-ui:message key="by-creating-the-first-unit-of-measure-for-this-sku,-all-existing-sku-stock-and-pricing-(if-any)-will-be-mapped-to-the-first-unit-of-measure-created" />
 			</div>
 
 			<aui:input name="primary" type="hidden" value="<%= true %>" />
