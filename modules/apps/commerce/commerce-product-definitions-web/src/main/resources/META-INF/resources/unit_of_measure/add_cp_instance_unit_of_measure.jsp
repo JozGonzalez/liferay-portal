@@ -41,7 +41,7 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 		<c:if test="<%= cpInstanceUnitOfMeasureDisplayContext.hasCPInstanceUnitOfMeasure() %>">
 			<div class="row">
 				<div class="col-6">
-					<aui:input checked="<%= true %>" helpMessage="set-as-primary-uom-help" inlineLabel="right" label="set-as-primary-uom" name="primary" type="toggle-switch" value="<%= false %>" />
+					<aui:input checked="<%= true %>" helpMessage="set-as-primary-unit-of-measure-help" inlineLabel="right" label="set-as-primary-unit-of-measure" name="primary" type="toggle-switch" value="<%= false %>" />
 				</div>
 			</div>
 

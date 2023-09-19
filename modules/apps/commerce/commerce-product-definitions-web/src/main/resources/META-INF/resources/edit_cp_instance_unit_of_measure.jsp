@@ -40,7 +40,7 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 					<c:if test="<%= !cpInstanceUnitOfMeasure.isPrimary() %>">
 						<div class="row">
 							<div class="col-6">
-								<aui:input helpMessage="set-as-primary-uom-help" inlineLabel="right" label="set-as-primary-uom" name="primary" type="toggle-switch" value="<%= cpInstanceUnitOfMeasure.getPrimary() %>" />
+								<aui:input helpMessage="set-as-primary-unit-of-measure-help" inlineLabel="right" label="set-as-primary-unit-of-measure" name="primary" type="toggle-switch" value="<%= cpInstanceUnitOfMeasure.getPrimary() %>" />
 							</div>
 						</div>
 
