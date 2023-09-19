@@ -33,7 +33,7 @@ public class ContentSecurityPolicyNonceProviderUtil {
 			getContentSecurityPolicyNonceProvider();
 
 		if (contentSecurityPolicyNonceProvider == null) {
-			_log.error("Using empty CSP nonce because provider is not present");
+			_log.error("Content security policy nonce provider is null");
 
 			return StringPool.BLANK;
 		}
