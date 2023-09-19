@@ -55,8 +55,8 @@ public class EditCTCollectionMVCActionCommand extends BaseMVCActionCommand {
 
 		long ctCollectionId = ParamUtil.getLong(
 			actionRequest, "ctCollectionId");
-		long ctRemoteId = ParamUtil.getLong(actionRequest, "ctRemoteId");
 
+		long ctRemoteId = ParamUtil.getLong(actionRequest, "ctRemoteId");
 		String name = ParamUtil.getString(actionRequest, "name");
 		String description = ParamUtil.getString(actionRequest, "description");
 
