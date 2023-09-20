@@ -124,12 +124,14 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 			picklistItemJSONObject.getString("key"), _LIST_TYPE_ENTRY_KEY_2);
 	}
 
-	private static final String _LIST_TYPE_ENTRY_KEY_1 = "key1";
+	private static final String _LIST_TYPE_ENTRY_KEY_1 =
+		RandomTestUtil.randomString();
 
-	private static final String _LIST_TYPE_ENTRY_KEY_2 = "key2";
+	private static final String _LIST_TYPE_ENTRY_KEY_2 =
+		RandomTestUtil.randomString();
 
 	private static final String _MULTISELECT_PICKLIST_FIELD_NAME =
-		"testMultiselectPicklistField";
+		RandomTestUtil.randomString();
 
 	@Inject
 	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
