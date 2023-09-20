@@ -107,10 +107,10 @@ public class MultiselectPicklistObjectFieldBusinessType
 			ObjectField objectField, long userId, Map<String, Object> values)
 		throws PortalException {
 
-		Object picklistValues = values.get(objectField.getName());
+		Object object = values.get(objectField.getName());
 
-		if (picklistValues instanceof List) {
-			List<?> list = (List)picklistValues;
+		if (object instanceof List) {
+			List<?> list = (List)object;
 
 			if (!list.isEmpty() && (list.get(0) instanceof Map)) {
 				values.put(
