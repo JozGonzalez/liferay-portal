@@ -88,7 +88,7 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 					).listTypeDefinitionId(
 						listTypeDefinition.getListTypeDefinitionId()
 					).name(
-						_MULTISELECT_PICKLIST_FIELD_NAME
+						_OBJECT_FIELD_NAME
 					).build()));
 
 		_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -100,7 +100,7 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 	public void testPostMultiselectPicklistAsArrayOfMaps() throws Exception {
 		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 			JSONUtil.put(
-				_MULTISELECT_PICKLIST_FIELD_NAME,
+				_OBJECT_FIELD_NAME,
 				JSONUtil.putAll(
 					JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_1),
 					JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_2))
@@ -108,7 +108,7 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 			_objectDefinition.getRESTContextPath(), Http.Method.POST);
 
 		JSONArray multiselectJSONArray = jsonObject.getJSONArray(
-			_MULTISELECT_PICKLIST_FIELD_NAME);
+			_OBJECT_FIELD_NAME);
 
 		Assert.assertEquals(2, multiselectJSONArray.length());
 
@@ -130,7 +130,7 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 	private static final String _LIST_TYPE_ENTRY_KEY_2 =
 		RandomTestUtil.randomString();
 
-	private static final String _MULTISELECT_PICKLIST_FIELD_NAME =
+	private static final String _OBJECT_FIELD_NAME =
 		RandomTestUtil.randomString();
 
 	@Inject
