@@ -83,16 +83,16 @@ public class BasicFragmentEntryVerticalCardTest {
 
 		Mockito.when(
 			_httpServletRequest.getAttribute(
-				FragmentEntryValidator.class.getName())
+				FragmentEntryProcessorRegistry.class.getName())
 		).thenReturn(
-			Mockito.mock(FragmentEntryValidator.class)
+			Mockito.mock(FragmentEntryProcessorRegistry.class)
 		);
 
 		Mockito.when(
 			_httpServletRequest.getAttribute(
-				FragmentEntryProcessorRegistry.class.getName())
+				FragmentEntryValidator.class.getName())
 		).thenReturn(
-			Mockito.mock(FragmentEntryProcessorRegistry.class)
+			Mockito.mock(FragmentEntryValidator.class)
 		);
 
 		Assert.assertEquals(1, _getLabelsSize());
