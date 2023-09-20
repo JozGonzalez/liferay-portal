@@ -122,7 +122,7 @@ public class LayoutModelDocumentContributor
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Unable to generate content for plid " + layout.getPlid(),
+					"Unable to get layout content for PLID " + layout.getPlid(),
 					exception);
 			}
 		}
