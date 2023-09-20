@@ -62,7 +62,7 @@ export default function BetaButton({
 						<LearnMessage
 							className="pl-1"
 							resource="frontend-js-components-web"
-							resourceKey="beta-features-page"
+							resourceKey="beta-features"
 						/>
 					</ClayPopover>
 				</div>

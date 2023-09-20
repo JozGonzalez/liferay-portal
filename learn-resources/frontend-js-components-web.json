@@ -1,7 +1,7 @@
 {
-	"beta-features-page": {
+	"beta-features": {
 		"en_US": {
-			"message": "Learn more about beta features",
+			"message": "Learn more about beta features.",
 			"url": "https://learn.liferay.com/w/dxp/system-administration/configuring-liferay/feature-flags"
 		}
 	}
