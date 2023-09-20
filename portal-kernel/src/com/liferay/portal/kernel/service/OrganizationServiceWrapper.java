@@ -46,7 +46,6 @@ public class OrganizationServiceWrapper
 	 * including its resources, metadata, and internal data structures.
 	 * </p>
 	 *
-	 * @param externalReferenceCode External Reference Code of the organization
 	 * @param parentOrganizationId the primary key of the organization's parent
 	 organization
 	 * @param name the organization's name
@@ -95,7 +94,6 @@ public class OrganizationServiceWrapper
 	 * including its resources, metadata, and internal data structures.
 	 * </p>
 	 *
-	 * @param externalReferenceCode External Reference Code of the organization
 	 * @param parentOrganizationId the primary key of the organization's parent
 	 organization
 	 * @param name the organization's name
@@ -461,7 +459,6 @@ public class OrganizationServiceWrapper
 	/**
 	 * Updates the organization with additional parameters.
 	 *
-	 * @param externalReferenceCode External Reference Code of the organization
 	 * @param organizationId the primary key of the organization
 	 * @param parentOrganizationId the primary key of the organization's parent
 	 organization
@@ -511,7 +508,6 @@ public class OrganizationServiceWrapper
 	/**
 	 * Updates the organization.
 	 *
-	 * @param externalReferenceCode External Reference Code of the organization
 	 * @param organizationId the primary key of the organization
 	 * @param parentOrganizationId the primary key of the organization's parent
 	 organization
