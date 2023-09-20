@@ -64,7 +64,6 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 			_LIST_TYPE_ENTRY_KEY_1,
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString()));
-
 		_listTypeEntryLocalService.addListTypeEntry(
 			null, TestPropsValues.getUserId(),
 			listTypeDefinition.getListTypeDefinitionId(),
@@ -98,30 +97,29 @@ public class MultiselectPicklistObjectFieldBusinessTypeTest {
 
 	@Test
 	public void testPostMultiselectPicklistAsArrayOfMaps() throws Exception {
-		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
-			JSONUtil.put(
-				_OBJECT_FIELD_NAME,
-				JSONUtil.putAll(
-					JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_1),
-					JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_2))
-			).toString(),
-			_objectDefinition.getRESTContextPath(), Http.Method.POST);
+		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
+			HTTPTestUtil.invokeToJSONObject(
+				JSONUtil.put(
+					_OBJECT_FIELD_NAME,
+					JSONUtil.putAll(
+						JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_1),
+						JSONUtil.put("key", _LIST_TYPE_ENTRY_KEY_2))
+				).toString(),
+				_objectDefinition.getRESTContextPath(), Http.Method.POST),
+			"JSONArray/" + _OBJECT_FIELD_NAME);
 
-		JSONArray multiselectJSONArray = jsonObject.getJSONArray(
-			_OBJECT_FIELD_NAME);
+		Assert.assertEquals(2, jsonArray.length());
 
-		Assert.assertEquals(2, multiselectJSONArray.length());
-
-		JSONObject picklistItemJSONObject = multiselectJSONArray.getJSONObject(
+		JSONObject jsonObject = jsonArray.getJSONObject(
 			0);
 
 		Assert.assertEquals(
-			picklistItemJSONObject.getString("key"), _LIST_TYPE_ENTRY_KEY_1);
+			jsonObject.getString("key"), _LIST_TYPE_ENTRY_KEY_1);
 
-		picklistItemJSONObject = multiselectJSONArray.getJSONObject(1);
+		jsonObject = jsonArray.getJSONObject(1);
 
 		Assert.assertEquals(
-			picklistItemJSONObject.getString("key"), _LIST_TYPE_ENTRY_KEY_2);
+			jsonObject.getString("key"), _LIST_TYPE_ENTRY_KEY_2);
 	}
 
 	private static final String _LIST_TYPE_ENTRY_KEY_1 =
