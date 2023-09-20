@@ -44,12 +44,13 @@ public class PortalPullRequestSFJobEntity extends BaseJobEntity {
 		}
 
 		for (BuildEntity initialBuildEntity : getInitialBuildEntities()) {
-			System.out.println("initialBuildEntity=" + initialBuildEntity);
+			System.out.println("Initial build entity " + initialBuildEntity);
 
 			BuildParameterEntity buildParameterEntity =
 				initialBuildEntity.getBuildParameterEntity("PULL_REQUEST_URL");
 
-			System.out.println("buildParameterEntity=" + buildParameterEntity);
+			System.out.println(
+				"Build parameter entity " + buildParameterEntity);
 
 			if (buildParameterEntity != null) {
 				_pullRequestURL = StringUtil.toURL(
