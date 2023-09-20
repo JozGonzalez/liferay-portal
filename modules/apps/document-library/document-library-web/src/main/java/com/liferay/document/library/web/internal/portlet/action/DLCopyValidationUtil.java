@@ -22,7 +22,6 @@ public class DLCopyValidationUtil {
 				LocaleUtil.getDefault(),
 				"file-cannot-be-copied-because-it-exceeds-the-limit-defined-" +
 					"in-site-settings");
-
 			String messageSuffix = LanguageUtil.format(
 				LocaleUtil.getDefault(),
 				"the-total-number-of-files-must-not-exceed-x",
@@ -37,7 +36,6 @@ public class DLCopyValidationUtil {
 				LocaleUtil.getDefault(),
 				"file-cannot-be-copied-because-it-exceeds-the-limit-defined-" +
 					"in-instance-settings");
-
 			String messageSuffix = LanguageUtil.format(
 				LocaleUtil.getDefault(),
 				"the-total-number-of-files-must-not-exceed-x",
@@ -51,7 +49,6 @@ public class DLCopyValidationUtil {
 			LocaleUtil.getDefault(),
 			"file-cannot-be-copied-because-it-exceeds-the-limit-defined-in-" +
 				"system-settings");
-
 		String messageSuffix = LanguageUtil.format(
 			LocaleUtil.getDefault(),
 			"the-total-number-of-files-must-not-exceed-x",
