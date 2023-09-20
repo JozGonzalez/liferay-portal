@@ -929,10 +929,13 @@ class App extends EventEmitter {
 	 */
 	maybeUpdateScrollPositionState_() {
 		const hash = window.location.hash;
+
 		if (hash) {
 			const anchorElement = document.getElementById(hash.substring(1));
+
 			if (anchorElement) {
 				const {offsetLeft, offsetTop} = getNodeOffset(anchorElement);
+
 				this.saveHistoryCurrentPageScrollPosition_(
 					offsetTop,
 					offsetLeft
