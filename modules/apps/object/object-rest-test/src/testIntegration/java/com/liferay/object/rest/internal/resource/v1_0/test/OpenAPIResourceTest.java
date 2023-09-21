@@ -231,18 +231,17 @@ public class OpenAPIResourceTest {
 						"/{",
 						StringUtil.lowerCaseFirstLetter(
 							_objectDefinition1.getShortName()),
-						"Id}/", objectRelationship.getName(), "/{",
-						StringUtil.lowerCaseFirstLetter(
-							_objectDefinition2.getShortName()),
-						"Id}")));
-
+						"Id}/", objectRelationship.getName())));
 			Assert.assertNotNull(
 				jsonObject.getJSONObject(
 					StringBundler.concat(
 						"/{",
 						StringUtil.lowerCaseFirstLetter(
 							_objectDefinition1.getShortName()),
-						"Id}/", objectRelationship.getName())));
+						"Id}/", objectRelationship.getName(), "/{",
+						StringUtil.lowerCaseFirstLetter(
+							_objectDefinition2.getShortName()),
+						"Id}")));
 		}
 		else {
 			Assert.assertNull(
@@ -251,18 +250,17 @@ public class OpenAPIResourceTest {
 						"/{",
 						StringUtil.lowerCaseFirstLetter(
 							_objectDefinition1.getShortName()),
-						"Id}/", objectRelationship.getName(), "/{",
-						StringUtil.lowerCaseFirstLetter(
-							_objectDefinition2.getShortName()),
-						"Id}")));
-
+						"Id}/", objectRelationship.getName())));
 			Assert.assertNull(
 				jsonObject.getJSONObject(
 					StringBundler.concat(
 						"/{",
 						StringUtil.lowerCaseFirstLetter(
 							_objectDefinition1.getShortName()),
-						"Id}/", objectRelationship.getName())));
+						"Id}/", objectRelationship.getName(), "/{",
+						StringUtil.lowerCaseFirstLetter(
+							_objectDefinition2.getShortName()),
+						"Id}")));
 		}
 	}
 
