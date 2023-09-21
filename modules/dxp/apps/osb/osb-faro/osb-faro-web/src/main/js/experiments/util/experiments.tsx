@@ -367,7 +367,7 @@ export const getVariantLabels: GetVariantLabels = ({
 
 	if (
 		winnerDXPVariantId === dxpVariantId &&
-		(status === 'FINISHED_WINNER' || status === 'COMPLETED')
+		(status === 'COMPLETED' || status === 'FINISHED_WINNER')
 	) {
 		labels.push({
 			status: 'success',
