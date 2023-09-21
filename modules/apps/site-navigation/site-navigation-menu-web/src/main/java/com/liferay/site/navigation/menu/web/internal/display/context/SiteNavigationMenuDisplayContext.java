@@ -76,26 +76,16 @@ public class SiteNavigationMenuDisplayContext {
 		if (getSelectSiteNavigationMenuType() ==
 				SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY) {
 
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("the-navigation-being-displayed-here-is-the-private-");
-			sb.append("pages-hierarchy.-if-a-public-page-inherits-this-page-");
-			sb.append("template-the-public-pages-hierarchy-will-be-displayed-");
-			sb.append("there-instead");
-
-			_alertKey = sb.toString();
+			_alertKey =
+				"the-navigation-being-displayed-here-is-the-private-pages-" +
+					"hierarchy";
 		}
 		else if (getSelectSiteNavigationMenuType() ==
 					SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY) {
 
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("the-navigation-being-displayed-here-is-the-public-");
-			sb.append("pages-hierarchy.-if-a-private-page-inherits-this-page-");
-			sb.append("template-the-private-pages-hierarchy-will-be-");
-			sb.append("displayed-there-instead");
-
-			_alertKey = sb.toString();
+			_alertKey =
+				"the-navigation-being-displayed-here-is-the-public-pages-" +
+					"hierarchy";
 		}
 		else {
 			_alertKey = StringPool.BLANK;
