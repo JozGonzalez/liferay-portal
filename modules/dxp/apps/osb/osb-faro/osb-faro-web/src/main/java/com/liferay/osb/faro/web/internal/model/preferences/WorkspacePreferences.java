@@ -103,7 +103,7 @@ public class WorkspacePreferences {
 		distributionCardTabsPreferences.removeDistributionTab(id);
 	}
 
-	public boolean removeEmailReportPreference(String channelId) {
+	public boolean removeEmailReportPreferences(String channelId) {
 		EmailReportPreferences emailReportPreferences =
 			_emailReportPreferences.remove(channelId);
 
