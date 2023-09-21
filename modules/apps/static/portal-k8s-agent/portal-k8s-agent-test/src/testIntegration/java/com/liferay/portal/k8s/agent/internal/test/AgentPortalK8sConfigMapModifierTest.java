@@ -197,7 +197,7 @@ public class AgentPortalK8sConfigMapModifierTest {
 		).withName(
 			webId.concat("-lxc-dxp-metadata")
 		).waitUntilCondition(
-			it -> it != null, 20, TimeUnit.SECONDS
+			curConfigMap -> curConfigMap != null, 20, TimeUnit.SECONDS
 		);
 
 		Assert.assertNotNull(configMap);
@@ -229,7 +229,7 @@ public class AgentPortalK8sConfigMapModifierTest {
 		).withName(
 			webId.concat("-lxc-dxp-metadata")
 		).waitUntilCondition(
-			it -> it == null, 20, TimeUnit.SECONDS
+			curConfigMap -> curConfigMap == null, 20, TimeUnit.SECONDS
 		);
 
 		Assert.assertNull(configMap);
