@@ -45,13 +45,13 @@ public class UploadTestUtil {
 				uploadServletRequest, "_fileParameters", fileParameters);
 		}
 
+		ReflectionTestUtil.setFieldValue(
+			uploadServletRequest, "_liferayServletRequest", null);
+
 		if (regularParameters != null) {
 			ReflectionTestUtil.setFieldValue(
 				uploadServletRequest, "_regularParameters", regularParameters);
 		}
-
-		ReflectionTestUtil.setFieldValue(
-			uploadServletRequest, "_liferayServletRequest", null);
 
 		return uploadServletRequest;
 	}
