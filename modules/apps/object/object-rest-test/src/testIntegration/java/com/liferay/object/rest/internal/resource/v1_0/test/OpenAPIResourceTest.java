@@ -133,19 +133,17 @@ public class OpenAPIResourceTest {
 	@Test
 	public void testGetObjectRelationshipEndpoints() throws Exception {
 
-		// Active related object definition
+		// Active
 
 		_testGetObjectRelationshipEndpoints(
 			true, ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
-
 		_testGetObjectRelationshipEndpoints(
 			true, ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
-		// Inactive related object definition
+		// Inactive
 
 		_testGetObjectRelationshipEndpoints(
 			false, ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
-
 		_testGetObjectRelationshipEndpoints(
 			false, ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
