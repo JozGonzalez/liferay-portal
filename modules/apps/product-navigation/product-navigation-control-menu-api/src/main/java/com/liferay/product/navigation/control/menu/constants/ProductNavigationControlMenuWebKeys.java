@@ -11,6 +11,6 @@ package com.liferay.product.navigation.control.menu.constants;
 public interface ProductNavigationControlMenuWebKeys {
 
 	public static final String BETA =
-		"com.liferay.product.navigation.control.menu.beta";
+		ProductNavigationControlMenuWebKeys.class.getName() + "#BETA";
 
 }

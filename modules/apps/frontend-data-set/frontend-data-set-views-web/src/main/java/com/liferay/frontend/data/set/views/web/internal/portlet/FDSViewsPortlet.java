@@ -112,7 +112,6 @@ public class FDSViewsPortlet extends MVCPortlet {
 			new FDSViewsDisplayContext(
 				_cetManager, _objectDefinitionLocalService, renderRequest,
 				renderResponse, _serviceTrackerList));
-
 		renderRequest.setAttribute(
 			ProductNavigationControlMenuWebKeys.BETA, Boolean.TRUE);
 

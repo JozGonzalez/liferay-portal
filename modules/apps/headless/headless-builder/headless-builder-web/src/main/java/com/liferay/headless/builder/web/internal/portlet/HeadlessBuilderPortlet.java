@@ -64,7 +64,6 @@ public class HeadlessBuilderPortlet extends MVCPortlet {
 			new HeadlessBuilderWebDisplayContext(
 				_editorConfigurationFactory,
 				_portal.getHttpServletRequest(renderRequest)));
-
 		renderRequest.setAttribute(
 			ProductNavigationControlMenuWebKeys.BETA, Boolean.TRUE);
 
