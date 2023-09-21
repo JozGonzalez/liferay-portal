@@ -123,9 +123,7 @@ public class ExportImportHelperUtilTest {
 			int actualRank = portletDataHandler.getRank();
 
 			if (previousRank != null) {
-				Assert.assertTrue(
-					"Portlets should be in ascending order by rank",
-					previousRank <= actualRank);
+				Assert.assertTrue(previousRank <= actualRank);
 			}
 
 			previousRank = actualRank;
@@ -144,9 +142,7 @@ public class ExportImportHelperUtilTest {
 
 			DataLevel portletDataLevel = portletDataHandler.getDataLevel();
 
-			Assert.assertTrue(
-				"Wrong dataLevel returned.",
-				!portletDataLevel.equals(DataLevel.PORTAL));
+			Assert.assertTrue(!portletDataLevel.equals(DataLevel.PORTAL));
 		}
 	}
 
@@ -163,7 +159,6 @@ public class ExportImportHelperUtilTest {
 			DataLevel portletDataLevel = portletDataHandler.getDataLevel();
 
 			Assert.assertTrue(
-				"Wrong dataLevel returned.",
 				!(portletDataLevel.equals(DataLevel.PORTAL) ||
 				  portletDataLevel.equals(DataLevel.PORTLET_INSTANCE)));
 		}
