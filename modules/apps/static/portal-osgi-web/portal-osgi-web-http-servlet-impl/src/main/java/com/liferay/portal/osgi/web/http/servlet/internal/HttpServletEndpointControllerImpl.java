@@ -64,10 +64,6 @@ public class HttpServletEndpointControllerImpl
 		_bundleContext = bundleContext;
 		_parentServletContext = parentServletContext;
 
-		String targetFilter =
-			"(http.servlet.endpoint.id=" +
-				attributesMap.get("http.servlet.endpoint.id") + ")";
-
 		_contextControllers = ServiceTrackerListFactory.open(
 			bundleContext, ServletContextHelper.class, null,
 			new ServletContextHelperServiceTrackerCustomizer());
@@ -84,7 +80,9 @@ public class HttpServletEndpointControllerImpl
 				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH,
 				Const.SLASH
 			).put(
-				HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, targetFilter
+				HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET,
+				"(http.servlet.endpoint.id=" +
+					attributesMap.get("http.servlet.endpoint.id") + ")"
 			).build());
 	}
 
@@ -314,14 +312,14 @@ public class HttpServletEndpointControllerImpl
 				if (contextName == null) {
 					throw new IllegalContextNameException(
 						HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME +
-							" is null. Ignoring!",
+							" is null",
 						DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 				}
 
 				if (contextPath == null) {
 					throw new IllegalContextPathException(
 						HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH +
-							" is null. Ignoring!",
+							" is null",
 						DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 				}
 
