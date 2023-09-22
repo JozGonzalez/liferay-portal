@@ -144,7 +144,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			objectField.getObjectFieldSettings());
 	}
 
-	private void _createFdsActionObjectDefintion(
+	private void _createFDSActionObjectDefintion(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -215,7 +215,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private void _createFdsClientExtensionFilterObjectDefintion(
+	private void _createFDSClientExtensionFilterObjectDefintion(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -260,7 +260,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private void _createFdsDateFilterObjectDefinition(
+	private void _createFDSDateFilterObjectDefinition(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -308,7 +308,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private void _createFdsDynamicFilterObjectDefintion(
+	private void _createFDSDynamicFilterObjectDefintion(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -363,7 +363,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private ObjectDefinition _createFdsEntryObjectDefinition(
+	private ObjectDefinition _createFDSEntryObjectDefinition(
 			Locale locale, long userId)
 		throws Exception {
 
@@ -402,7 +402,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 		return fdsEntryObjectDefinition;
 	}
 
-	private void _createFdsFieldObjectDefinition(
+	private void _createFDSFieldObjectDefinition(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -456,7 +456,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private void _createFdsSortObjectDefinition(
+	private void _createFDSSortObjectDefinition(
 			ObjectDefinition fdsViewObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -492,7 +492,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
-	private ObjectDefinition _createFdsViewObjectDefinition(
+	private ObjectDefinition _createFDSViewObjectDefinition(
 			ObjectDefinition fdsEntryObjectDefinition, Locale locale,
 			long userId)
 		throws Exception {
@@ -593,24 +593,24 @@ public class FDSViewsPortlet extends MVCPortlet {
 			return;
 		}
 
-		fdsEntryObjectDefinition = _createFdsEntryObjectDefinition(
+		fdsEntryObjectDefinition = _createFDSEntryObjectDefinition(
 			locale, userId);
 
 		ObjectDefinition fdsViewObjectDefinition =
-			_createFdsViewObjectDefinition(
+			_createFDSViewObjectDefinition(
 				fdsEntryObjectDefinition, locale, userId);
 
-		_createFdsActionObjectDefintion(
+		_createFDSActionObjectDefintion(
 			fdsViewObjectDefinition, locale, userId);
-		_createFdsClientExtensionFilterObjectDefintion(
+		_createFDSClientExtensionFilterObjectDefintion(
 			fdsViewObjectDefinition, locale, userId);
-		_createFdsDateFilterObjectDefinition(
+		_createFDSDateFilterObjectDefinition(
 			fdsViewObjectDefinition, locale, userId);
-		_createFdsDynamicFilterObjectDefintion(
+		_createFDSDynamicFilterObjectDefintion(
 			fdsViewObjectDefinition, locale, userId);
-		_createFdsFieldObjectDefinition(
+		_createFDSFieldObjectDefinition(
 			fdsViewObjectDefinition, locale, userId);
-		_createFdsSortObjectDefinition(fdsViewObjectDefinition, locale, userId);
+		_createFDSSortObjectDefinition(fdsViewObjectDefinition, locale, userId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
