@@ -243,7 +243,7 @@ public abstract class BaseEntityDALO<T extends Entity>
 
 			@Override
 			public JSONObject execute() {
-				String response;
+				String response = null;
 
 				try {
 					response = WebClient.create(
@@ -284,7 +284,7 @@ public abstract class BaseEntityDALO<T extends Entity>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringUtil.combine(
-					"Retrieved ", _getEntityLabel(), " with id " + id));
+					"Retrieved ", _getEntityLabel(), " with ID " + id));
 		}
 
 		return retryable.executeWithRetries();
