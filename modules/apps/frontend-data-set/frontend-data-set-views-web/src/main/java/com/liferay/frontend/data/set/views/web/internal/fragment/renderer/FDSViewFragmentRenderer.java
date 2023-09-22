@@ -272,7 +272,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 				"id", "FDS_" + fragmentRendererContext.getFragmentElementId()
 			).put(
 				"itemsActions",
-				_getActionsJSONArray(
+				_getItemsActionsJSONArray(
 					fdsViewObjectDefinition, fdsViewObjectEntry)
 			).put(
 				"namespace", fragmentRendererContext.getFragmentElementId()
@@ -308,7 +308,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		return sb.toString();
 	}
 
-	private JSONArray _getActionsJSONArray(
+	private JSONArray _getItemsActionsJSONArray(
 			ObjectDefinition fdsViewObjectDefinition,
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
