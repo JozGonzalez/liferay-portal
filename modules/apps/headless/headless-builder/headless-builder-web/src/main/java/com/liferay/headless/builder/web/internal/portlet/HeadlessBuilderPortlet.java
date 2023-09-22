@@ -5,6 +5,7 @@
 
 package com.liferay.headless.builder.web.internal.portlet;
 
+import com.liferay.headless.builder.web.internal.constants.HeadlessBuilderPortletKeys;
 import com.liferay.headless.builder.web.internal.display.context.HeadlessBuilderWebDisplayContext;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
