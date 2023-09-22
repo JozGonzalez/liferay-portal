@@ -296,9 +296,9 @@ public class PoshiProperties extends Properties {
 		}
 
 		throw new IllegalArgumentException(
-			"Illegal value \"" + propertyValue + "\" for property: " +
-				propertyName + "\nValid property values: " +
-					validPoshiPropertyValues.toString());
+			"Illegal property value \"" + propertyValue +
+				"\" for property name: " + propertyName +
+					"\nValid property values: " + validPoshiPropertyValues.toString());
 	}
 
 	public PoshiProperties() {
