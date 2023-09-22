@@ -88,7 +88,7 @@ public class ObjectValidationRuleLocalServiceImpl
 		throws PortalException {
 
 		_validateInvokerBundle(
-			"Only allowed bundles can create system object validations",
+			"Only allowed bundles can create system object validation rules",
 			system);
 
 		User user = _userLocalService.getUser(userId);
@@ -145,7 +145,7 @@ public class ObjectValidationRuleLocalServiceImpl
 		throws PortalException {
 
 		_validateInvokerBundle(
-			"Only allowed bundles can delete system object validations",
+			"Only allowed bundles can delete system object validation rules",
 			objectValidationRule.isSystem());
 
 		objectValidationRule = objectValidationRulePersistence.remove(
@@ -262,7 +262,7 @@ public class ObjectValidationRuleLocalServiceImpl
 				objectValidationRuleId);
 
 		_validateInvokerBundle(
-			"Only allowed bundles can edit system object validations",
+			"Only allowed bundles can edit system object validation rules",
 			objectValidationRule.isSystem());
 
 		_validate(
