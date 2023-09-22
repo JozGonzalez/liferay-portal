@@ -5,7 +5,6 @@
 
 package com.liferay.headless.builder.web.internal.portlet;
 
-import com.liferay.headless.builder.web.internal.constants.HeadlessBuilderPortletKeys;
 import com.liferay.headless.builder.web.internal.display.context.HeadlessBuilderWebDisplayContext;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -58,8 +57,6 @@ public class HeadlessBuilderPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		renderRequest.setAttribute(
-			ProductNavigationControlMenuWebKeys.BETA, Boolean.TRUE);
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			new HeadlessBuilderWebDisplayContext(
