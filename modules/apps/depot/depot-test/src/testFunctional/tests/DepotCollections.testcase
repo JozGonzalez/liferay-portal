@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,7 +35,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanBePublishedViaLocalStaging {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -120,14 +120,15 @@ definition {
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DepotCollections#CanBePublishedViaRemoteStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Depot.remoteStagingSetUp(
 			depotName = "Test Depot Name",
 			remotePort = 9080,
 			remoteStaging = "true");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -225,7 +226,7 @@ definition {
 			site = "false",
 			title = "WC Depot Title");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -300,7 +301,7 @@ definition {
 			site = "false",
 			title = "WC WebContent Title");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -376,7 +377,7 @@ definition {
 			itemSubtype = "Basic Document",
 			itemType = "Document");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -443,7 +444,7 @@ definition {
 
 		AssetListsAdmin.addTagsFilter(tagNameList = "tag1");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -624,7 +625,7 @@ definition {
 			site = "false",
 			title = "Depot Manual Asset List");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
@@ -711,7 +712,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanSelectDMFromOtherScopeDynamically {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		for (var scope : list "Depot,Site") {
 			JSONDocument.addFileWithUploadedFile(
@@ -976,7 +977,7 @@ definition {
 	@refactordone
 	test CanSelectWCFromAllScopesDynamically {
 		for (var i : list "1,2") {
-			JSONGroup.addGroup(groupName = "Test Site Name ${i}");
+			HeadlessSite.addSite(siteName = "Test Site Name ${i}");
 		}
 
 		JSONWebcontent.addWebContent(
@@ -1080,7 +1081,7 @@ definition {
 	@description = "This ensures that a depot image in Asset Publisher can be rendered correctly on a connected site after moving it to a folder."
 	@priority = 4
 	test CanViewImageViaAPAfterMovingToFolder {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",

@@ -772,6 +772,24 @@ definition {
 		}
 	}
 
+	macro assertScreenNameDisabled {
+		AssertClick(
+			key_assetTitle = "Information",
+			locator1 = "NavBar#ASSET_TITLE",
+			value1 = "Information");
+
+		AssertElementPresent(locator1 = "UsersAndOrganizationsEditUser#DETAILS_SCREEN_NAME_FIELD_DISABLED");
+	}
+
+	macro assertSection {
+		for (var sectionName : list ${sectionName}) {
+			AssertClick(
+				key_assetTitle = ${sectionName},
+				locator1 = "NavBar#ASSET_TITLE",
+				value1 = ${sectionName});
+		}
+	}
+
 	macro assignAccountCP {
 		User.openUsersAdmin();
 
@@ -933,10 +951,9 @@ definition {
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
 			value1 = ${userGroupName});
 
-		AssertClick(
-			key_dmDocumentTypeName = ${userGroupName},
-			locator1 = "DocumentsAndMediaSelectDocument#DOCUMENTS_TABLE_CHOOSE",
-			value1 = "Choose");
+		Click(
+			key_card = ${userGroupName},
+			locator1 = "Card#CARD");
 
 		SelectFrame(value1 = "relative=top");
 
@@ -1129,7 +1146,7 @@ definition {
 				value1 = "test1");
 
 			Type(
-				locator1 = "TextInput#ENTER_AGAIN",
+				locator1 = "TextInput#REENTER_PASSWORD",
 				value1 = "test1");
 
 			Button.clickSave();
@@ -1162,7 +1179,7 @@ definition {
 				value1 = "test1");
 
 			Type(
-				locator1 = "TextInput#ENTER_AGAIN",
+				locator1 = "TextInput#REENTER_PASSWORD",
 				value1 = "test1");
 
 			PortletEntry.save();
@@ -1186,7 +1203,9 @@ definition {
 	}
 
 	macro changeProfileImage {
-		Button.click(button = "Change");
+		Click(
+			ariaLabel = "Change Image",
+			locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 		IFrame.selectModalFrame();
 
@@ -1209,6 +1228,28 @@ definition {
 		AssertVisible(
 			key_imageName = ${imageName},
 			locator1 = "UsersAndOrganizationsEditUser#DETAILS_PROFILE_IMAGE");
+	}
+
+	macro configureCustomPasswordField {
+		PortalSettings.gotoConfiguration(
+			baseURL = ${baseURL},
+			configurationCategory = "Users",
+			configurationName = "Fields",
+			configurationScope = "Virtual Instance Scope");
+
+		if (${enableCustomPassword} == "true") {
+			FormFields.enableCheckbox(fieldName = "login.create.account.allow.custom.password");
+		}
+		else {
+			FormFields.disableCheckbox(fieldName = "login.create.account.allow.custom.password");
+		}
+
+		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			PortletEntry.update();
+		}
+		else if (IsElementPresent(locator1 = "Button#SAVE")) {
+			PortletEntry.save();
+		}
 	}
 
 	macro confirmPassword {
@@ -1253,7 +1294,7 @@ definition {
 			value1 = ${newPassword});
 
 		Type(
-			locator1 = "TextInput#ENTER_AGAIN",
+			locator1 = "TextInput#REENTER_PASSWORD",
 			value1 = ${newPassword});
 
 		Button.clickSave();
@@ -1301,10 +1342,10 @@ definition {
 	}
 
 	macro deleteProfileImage {
-		var key_text = "Delete";
-
-		if (!(IsElementPresent(locator1 = "CustomerPortalSite#ANY_DISABLED_BUTTON"))) {
-			Button.click(button = "Delete");
+		if (!(IsElementPresent(key_title = "Clear Image", locator1 = "Button#ANY_TITLE_DISABLED"))) {
+			Click(
+				ariaLabel = "Clear Image",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 		}
 
 		AssertVisible(
@@ -1438,16 +1479,16 @@ definition {
 			value1 = ${newPassword});
 
 		Type(
-			locator1 = "TextInput#ENTER_AGAIN",
+			locator1 = "TextInput#REENTER_PASSWORD",
 			value1 = ${newPassword});
 
 		if (IsElementPresent(checkboxName = "Require Password Reset", locator1 = "Checkbox#ANY_CHECKBOX")) {
-			if (${requirePasswordReset} == "true") {
+			if ((${requirePasswordReset} == "true") && (IsNotChecked(checkboxName = "Require Password Reset", locator1 = "Checkbox#ANY_CHECKBOX"))) {
 				Check(
 					checkboxName = "Require Password Reset",
 					locator1 = "Checkbox#ANY_CHECKBOX");
 			}
-			else {
+			else if (!(isSet(requirePasswordReset)) || (${requirePasswordReset} == "false")) {
 				Uncheck(
 					checkboxName = "Require Password Reset",
 					locator1 = "Checkbox#ANY_CHECKBOX");
@@ -1790,7 +1831,6 @@ definition {
 			locator1 = "ExportPersonalData#HEADER");
 	}
 
-	@summary = "Log into Liferay via '${userScreenName}' using URL navigation"
 	macro firstLoginByScreenNamePG {
 		if (isSet(virtualHostsURL)) {
 			Navigator.openSpecificURL(url = ${virtualHostsURL});
@@ -1825,9 +1865,10 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	@summary = "Log into Liferay using URL navigation"
 	macro firstLoginPG {
 		var appServerType = PropsUtil.get("app.server.type");
+		var password = JSONUtil2.getDefaultUserFirstPassword(customDefaultUserFirstPassword = ${password});
+		var userEmailAddress = JSONUtil2.getDefaultUserEmail(customDefaultUserEmail = ${userEmailAddress});
 
 		if (${appServerType} == "weblogic") {
 
@@ -1847,15 +1888,30 @@ definition {
 
 		UserBar.signOut();
 
-		JSONUser.agreeToTermsAndAnswerReminderQuery(
-			portalURL = ${virtualHostsURL},
-			userEmailAddress = ${userEmailAddress});
+		if (isSet(virtualHostsURL)) {
+			var portalURL = ${virtualHostsURL};
+		}
+		else {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		var isLXC = JSONUtil2.getLXCEnvironment();
+
+		if (${isLXC} != "true") {
+
+			// Workaround for LXC not supporting JSON call currently
+
+			JSONUser.agreeToTermsAndAnswerReminderQuery(
+				password = ${password},
+				portalURL = ${portalURL},
+				userEmailAddress = ${userEmailAddress});
+		}
 
 		if (isSet(virtualHostsURL)) {
 			Navigator.openSpecificURL(url = "${virtualHostsURL}/web/guest?SM_USER=${userEmailAddress}");
 		}
 		else {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 
 			Navigator.openSpecificURL(url = "${baseURL}/web/guest?SM_USER=${userEmailAddress}");
 		}
@@ -1884,7 +1940,6 @@ definition {
 		}
 	}
 
-	@summary = "Log into Liferay using the UI"
 	macro firstLoginUI {
 		if (isSet(specificURL)) {
 			Navigator.openSpecificURL(
@@ -1993,7 +2048,6 @@ definition {
 		UserBar.gotoDropdown();
 	}
 
-	@summary = "Log into Liferay Portal as '${userScreenName}' using the password '${password}'"
 	macro loginByScreenNamePG {
 		JSONUser.agreeToTermsAndAnswerReminderQueryByScreenName(
 			creatorPassword = ${password},
@@ -2020,7 +2074,6 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	@summary = "Log into Liferay Portal as '${userEmailAddress}' using the password '${password}'"
 	macro loginPG {
 		JSONUser.agreeToTermsAndAnswerReminderQuery(
 			portalURL = ${virtualHostsURL},
@@ -2193,6 +2246,8 @@ definition {
 
 		OpenIDConnect.acceptConditions();
 
+		OpenIDConnect.acceptConditions();
+
 		AssertElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
 	}
 
@@ -2218,7 +2273,7 @@ definition {
 	macro logoutAndLoginPG {
 		Navigator.openURL();
 
-		UserBar.signOut();
+		UserBar.signOut(signOutLocalizationName = ${signOutLocalizationName});
 
 		User.loginPG(
 			authenticationMethod = ${authenticationMethod},
@@ -2237,7 +2292,14 @@ definition {
 			Navigator.openURL();
 		}
 
-		UserBar.signOut();
+		UserBar.signOut(signOutLocalizationName = ${signOutLocalizationName});
+	}
+
+	@description = "Log out of Liferay Portal via URL."
+	macro logoutViaURL {
+		var baseURL = PropsUtil.get("portal.url");
+
+		Open(locator1 = "${baseURL}/c/portal/logout");
 	}
 
 	// This new macro is created after LPS-168612. Once Contact Information are fixed the same way as LPS-168612, then we can consolidate this macro and User.makePrimary
@@ -2309,7 +2371,7 @@ definition {
 			else {
 				Button.clickSubmitButton();
 
-				AssertElementNotPresent(locator1 = "TextInput#ENTER_AGAIN");
+				AssertElementNotPresent(locator1 = "TextInput#REENTER_PASSWORD");
 			}
 		}
 	}
@@ -2896,6 +2958,23 @@ definition {
 		}
 	}
 
+	macro viewNoPasswordSection {
+		if (isSet(specificURL)) {
+			Navigator.openSpecificURL(url = ${specificURL});
+		}
+		else {
+			Navigator.openURL();
+		}
+
+		UserBar.signOut();
+
+		SignInNavigator.gotoCreateAccount();
+
+		AssertElementNotPresent(locator1 = "TextInput#PASSWORD");
+
+		AssertElementNotPresent(locator1 = "TextInput#REENTER_PASSWORD");
+	}
+
 	macro viewNotPrimary {
 		if (isSet(primaryValue)) {
 			var key_primaryValue = ${primaryValue};
@@ -2915,6 +2994,23 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No users were found.");
+	}
+
+	macro viewPasswordSection {
+		if (isSet(specificURL)) {
+			Navigator.openSpecificURL(url = ${specificURL});
+		}
+		else {
+			Navigator.openURL();
+		}
+
+		UserBar.signOut();
+
+		SignInNavigator.gotoCreateAccount();
+
+		AssertElementPresent(locator1 = "TextInput#PASSWORD");
+
+		AssertElementPresent(locator1 = "TextInput#REENTER_PASSWORD");
 	}
 
 	macro viewSessionNotExpired {

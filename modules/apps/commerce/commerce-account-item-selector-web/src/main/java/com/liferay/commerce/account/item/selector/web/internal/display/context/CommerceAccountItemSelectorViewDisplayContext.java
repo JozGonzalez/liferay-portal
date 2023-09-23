@@ -1,24 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.account.item.selector.web.internal.display.context;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.item.selector.web.internal.display.context.helper.CommerceAccountItemSelectorRequestHelper;
 import com.liferay.commerce.account.item.selector.web.internal.search.CommerceAccountItemSelectorChecker;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -35,11 +28,13 @@ import javax.servlet.http.HttpServletRequest;
 public class CommerceAccountItemSelectorViewDisplayContext {
 
 	public CommerceAccountItemSelectorViewDisplayContext(
-		CommerceAccountLocalService commerceAccountLocalService,
+		AccountEntryLocalService accountEntryLocalService,
+		CommerceAccountHelper commerceAccountHelper,
 		HttpServletRequest httpServletRequest, PortletURL portletURL,
 		String itemSelectedEventName) {
 
-		_commerceAccountLocalService = commerceAccountLocalService;
+		_accountEntryLocalService = accountEntryLocalService;
+		_commerceAccountHelper = commerceAccountHelper;
 		_itemSelectedEventName = itemSelectedEventName;
 
 		_commerceAccountItemSelectorRequestHelper =
@@ -75,7 +70,7 @@ public class CommerceAccountItemSelectorViewDisplayContext {
 		return _portletURL;
 	}
 
-	public SearchContainer<CommerceAccount> getSearchContainer()
+	public SearchContainer<AccountEntry> getSearchContainer()
 		throws PortalException {
 
 		if (_searchContainer != null) {
@@ -90,15 +85,17 @@ public class CommerceAccountItemSelectorViewDisplayContext {
 		_searchContainer.setOrderByCol(getOrderByCol());
 		_searchContainer.setOrderByType(getOrderByType());
 		_searchContainer.setResultsAndTotal(
-			() -> _commerceAccountLocalService.getUserCommerceAccounts(
+			() -> _accountEntryLocalService.getUserAccountEntries(
 				_commerceAccountItemSelectorRequestHelper.getUserId(),
-				CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID,
-				CommerceAccountConstants.SITE_TYPE_B2X, getKeywords(),
+				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, getKeywords(),
+				_commerceAccountHelper.toAccountEntryTypes(
+					CommerceChannelConstants.SITE_TYPE_B2X),
 				_searchContainer.getStart(), _searchContainer.getEnd()),
-			_commerceAccountLocalService.getUserCommerceAccountsCount(
+			_accountEntryLocalService.getUserAccountEntriesCount(
 				_commerceAccountItemSelectorRequestHelper.getUserId(),
-				CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID,
-				CommerceAccountConstants.SITE_TYPE_B2X, getKeywords()));
+				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, getKeywords(),
+				_commerceAccountHelper.toAccountEntryTypes(
+					CommerceChannelConstants.SITE_TYPE_B2X)));
 		_searchContainer.setRowChecker(
 			new CommerceAccountItemSelectorChecker(
 				_commerceAccountItemSelectorRequestHelper.getRenderResponse(),
@@ -125,12 +122,13 @@ public class CommerceAccountItemSelectorViewDisplayContext {
 			"checkedCommerceAccountIds");
 	}
 
+	private final AccountEntryLocalService _accountEntryLocalService;
+	private final CommerceAccountHelper _commerceAccountHelper;
 	private final CommerceAccountItemSelectorRequestHelper
 		_commerceAccountItemSelectorRequestHelper;
-	private final CommerceAccountLocalService _commerceAccountLocalService;
 	private final String _itemSelectedEventName;
 	private String _keywords;
 	private final PortletURL _portletURL;
-	private SearchContainer<CommerceAccount> _searchContainer;
+	private SearchContainer<AccountEntry> _searchContainer;
 
 }

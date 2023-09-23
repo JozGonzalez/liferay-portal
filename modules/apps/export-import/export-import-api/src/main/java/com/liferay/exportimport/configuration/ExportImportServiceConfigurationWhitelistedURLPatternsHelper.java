@@ -1,0 +1,28 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.exportimport.configuration;
+
+/**
+ * @author Michael Bowerman
+ */
+public interface ExportImportServiceConfigurationWhitelistedURLPatternsHelper {
+
+	public boolean isWhitelistedURL(long companyId, String url);
+
+	public void rebuildURLPatternMapper(long companyId) throws Exception;
+
+	public void rebuildURLPatternMapper(
+			long companyId,
+			ExportImportServiceConfiguration exportImportServiceConfiguration)
+		throws Exception;
+
+	public void rebuildURLPatternMappers();
+
+	public void removeURLPatternMapper(long companyId);
+
+	public void removeURLPatternMappers();
+
+}

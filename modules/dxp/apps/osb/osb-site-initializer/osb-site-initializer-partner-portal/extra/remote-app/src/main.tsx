@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayIconSpriteContext} from '@clayui/icon';
@@ -25,8 +19,11 @@ import MDFClaimList from './routes/MDFClaimList';
 import MDFRequestForm from './routes/MDFRequestForm';
 import MDFRequestList from './routes/MDFRequestList';
 import PartnerOpportunitiesList from './routes/PartnerOpportunitiesList';
-import getOpportunityDates from './routes/PartnerOpportunitiesList/utils/getOpportunityDates';
-import getRenewalsDates from './routes/PartnerOpportunitiesList/utils/getRenewalsDates';
+import DealsChart from './routes/dashboard/DealsChart';
+import LevelChart from './routes/dashboard/LevelChart';
+import MDFRequestChart from './routes/dashboard/MDFRequestChart';
+import RenewalsChart from './routes/dashboard/RenewalsChart';
+import RevenueChart from './routes/dashboard/RevenueChart';
 
 interface IProps {
 	liferayWebDAV: string;
@@ -63,14 +60,8 @@ const appRoutes: AppRouteComponent = {
 					label: 'End Date',
 				},
 			]}
-			getDates={(item) =>
-				getOpportunityDates(
-					item.projectSubscriptionStartDate,
-					item.projectSubscriptionStartDate
-				)
-			}
-			getFilteredItems={(items) => items}
 			name="Partner Opportunities"
+			newButtonDeal={false}
 			sort="dateCreated:desc"
 		/>
 	),
@@ -82,14 +73,17 @@ const appRoutes: AppRouteComponent = {
 					label: 'Close Date',
 				},
 			]}
-			getDates={(item) => getRenewalsDates(item.closeDate)}
-			getFilteredItems={(items) =>
-				items.filter((item) => item.STAGE !== 'Closed Lost')
-			}
 			name="Renewal Opportunities"
+			newButtonDeal={false}
+			opportunityFilter="stage ne 'Closed Lost' and type eq 'Existing Business'"
 			sort="closeDate:asc"
 		/>
 	),
+	[AppRouteType.DASHBOARD_DEALS_CHART]: <DealsChart />,
+	[AppRouteType.DASHBOARD_LEVEL_CHART]: <LevelChart />,
+	[AppRouteType.DASHBOARD_MDF_REQUEST_CHART]: <MDFRequestChart />,
+	[AppRouteType.DASHBOARD_RENEWALS_CHART]: <RenewalsChart />,
+	[AppRouteType.DASHBOARD_REVENUE_CHART]: <RevenueChart />,
 };
 
 const PartnerPortalApp = ({liferayWebDAV, route}: IProps) => {

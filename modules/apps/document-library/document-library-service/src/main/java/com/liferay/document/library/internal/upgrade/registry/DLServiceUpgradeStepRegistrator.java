@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.upgrade.registry;
@@ -27,6 +18,7 @@ import com.liferay.document.library.internal.upgrade.v3_2_2.DLFileEntryUpgradePr
 import com.liferay.document.library.internal.upgrade.v3_2_4.DLSizeLimitConfigurationUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_5.DLFileEntryTypesDDMStructureUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_6.DeleteStalePWCVersionsUpgradeProcess;
+import com.liferay.document.library.internal.upgrade.v3_2_7.DownloadViewActionResourcePermissionUpgradeProcess;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
@@ -134,6 +126,10 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 		registry.register(
 			"3.2.5", "3.2.6", new DeleteStalePWCVersionsUpgradeProcess(_store));
+
+		registry.register(
+			"3.2.6", "3.2.7",
+			new DownloadViewActionResourcePermissionUpgradeProcess());
 	}
 
 	@Reference

@@ -21,11 +21,13 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
-		if (${testPortalInstance} == "true") {
+		//ACUtils.tearDownAC();
+
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -33,7 +35,7 @@ definition {
 	@description = "Feature ID: LRAC-8720 | Automation ID: LRAC-10622 | Test Summary: Modal is displayed on first access to a new workspace"
 	@priority = 5
 	test ModalDisplayedWhenFirstAccessToWorkspace {
-		property test.name.skip.portal.instance = "Onboarding#ModalDisplayedWhenFirstAccessToWorkspace";
+		property test.run.type = "single";
 
 		var supportedFPVersionList = "DXP 7.3 Fix Pack 1,DXP 7.2 Fix Pack 11,DXP 7.1 Fix Pack 22,DXP 7.0 Fix Pack 98";
 
@@ -72,9 +74,9 @@ definition {
 		task ("Click on 'click here' and check if a new tab with connection documentation appears") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Click here");
 
-			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 		}
 
 		task ("Switch to the AC tab") {
@@ -82,13 +84,13 @@ definition {
 		}
 
 		task ("Copy the token from AC") {
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Go to DXP and connect the DXP to AC") {
 			ACUtils.launchDXP();
 
-			ACDXPSettings.connectDXPtoAnalyticsCloud();
+			ACDXPSettings.connectDXPtoAnalyticsCloud(acToken = ${token});
 		}
 
 		// Now we are going to add a new DXP Data Source and validate the info shown in the connection modal from Settings.
@@ -132,9 +134,9 @@ definition {
 		task ("Click on 'click here' and check if a new tab with connection documentation appears") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Click here");
 
-			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 		}
 	}
 

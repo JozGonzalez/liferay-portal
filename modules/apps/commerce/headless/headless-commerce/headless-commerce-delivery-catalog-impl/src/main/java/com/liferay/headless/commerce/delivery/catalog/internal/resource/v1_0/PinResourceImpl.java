@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
-import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
@@ -29,6 +19,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramPin;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramPinLocalService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Pin;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.PinDTOConverterContext;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
@@ -101,7 +92,7 @@ public class PinResourceImpl extends BasePinResourceImpl {
 
 		if (countUserCommerceAccounts > 1) {
 			if (accountId == null) {
-				throw new NoSuchAccountException();
+				throw new NoSuchEntryException();
 			}
 		}
 		else {
@@ -110,12 +101,12 @@ public class PinResourceImpl extends BasePinResourceImpl {
 					contextUser.getUserId(), commerceChannel.getGroupId());
 
 			if (commerceAccountIds.length == 0) {
-				CommerceAccount commerceAccount =
-					_commerceAccountLocalService.getGuestCommerceAccount(
-						contextUser.getCompanyId());
+				AccountEntry accountEntry =
+					_accountEntryLocalService.getGuestAccountEntry(
+						contextCompany.getCompanyId());
 
 				commerceAccountIds = new long[] {
-					commerceAccount.getCommerceAccountId()
+					accountEntry.getAccountEntryId()
 				};
 			}
 
@@ -144,10 +135,10 @@ public class PinResourceImpl extends BasePinResourceImpl {
 	}
 
 	@Reference
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private CommerceAccountHelper _commerceAccountHelper;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

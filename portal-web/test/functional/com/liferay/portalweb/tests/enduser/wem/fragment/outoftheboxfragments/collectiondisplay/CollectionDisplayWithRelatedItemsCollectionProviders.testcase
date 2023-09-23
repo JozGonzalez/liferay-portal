@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -1065,7 +1066,10 @@ definition {
 	@priority = 5
 	test PreviewMappedContentOfCollectionItemOnDisplayPageTemplateForCategory {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#PreviewMappedContentOfCollectionItemOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
 
 		task ("Enable the DDMStructure and DLFileEntry feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -1081,13 +1085,13 @@ definition {
 
 		task ("Add a vocabulary") {
 			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Vocabulary Name");
 		}
 
 		task ("Add a category") {
 			var categoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Category Name",
 				vocabularyName = "Vocabulary Name");
 		}
@@ -1096,26 +1100,24 @@ definition {
 			JSONWebcontent.addWebContent(
 				assetCategoryIds = ${categoryId},
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Web Content Title");
 		}
 
 		task ("Add a blogs entry with category") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "test-site-name");
-
-			Blogs.addEntryWithCategory(
-				categoryName = "Category Name",
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title",
-				vocabularyName = "Vocabulary Name");
+			HeadlessBlog.addBlogEntry(
+				assetCategoryIds = ${categoryId},
+				content = "Blogs Entry Content",
+				groupId = ${groupId},
+				title = "Blogs Entry Title");
 		}
 
 		task ("Add a document with category") {
 			JSONDocument.addFileWithUploadedFile(
 				assetCategoryIds = ${categoryId},
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
 				mimeType = "image/jpeg",
+				repositoryId = ${groupId},
 				sourceFileName = "Document_1.jpg");
 		}
 
@@ -1124,7 +1126,7 @@ definition {
 				JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 					contentType = "Category",
 					displayPageTemplateEntryName = "Display Page Name ${n}",
-					groupName = "Test Site Name");
+					groupId = ${groupId});
 			}
 		}
 
@@ -1256,24 +1258,13 @@ definition {
 				imageDescription = "",
 				imageFileName = "Document_1.jpg");
 		}
-
-		task ("Disable the DDMStructure and DLFileEntry feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.journal.web.internal.instance.lifecycle.DDMStructureModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.document.library.web.internal.model.listener.DLFileEntryTypeModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-		}
 	}
 
 	@description = "This is a test for LPS-127025. The DPT author can view the available mappable fields of collection item in DPT for Category."
 	@priority = 4
 	test ViewAvailableMappableFieldsOfCollectionItemOnDisplayPageTemplateForCategory {
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#ViewAvailableMappableFieldsOfCollectionItemOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable the DDMStructure and DLFileEntry feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -1646,25 +1637,14 @@ definition {
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 		}
-
-		task ("Disable the DDMStructure and DLFileEntry feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.journal.web.internal.instance.lifecycle.DDMStructureModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.document.library.web.internal.model.listener.DLFileEntryTypeModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-		}
 	}
 
 	@description = "This is a test for LPS-127025. The DPT author can use Basic Document related item collection provider in DPT for Category."
 	@priority = 5
 	test ViewCollectionItemsBasedOnBasicDocumentOnDisplayPageTemplateForCategory {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#ViewCollectionItemsBasedOnBasicDocumentOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable the DLFileEntry feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -1772,21 +1752,14 @@ definition {
 				key_rowPosition = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM");
 		}
-
-		task ("Disable the DLFileEntry feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.document.library.web.internal.model.listener.DLFileEntryTypeModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-		}
 	}
 
 	@description = "This is a test for LPS-127025. The DPT author can use Basic Web Content related item collection provider in DPT for Category."
 	@priority = 5
 	test ViewCollectionItemsBasedOnBasicWebContentOnDisplayPageTemplateForCategory {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#ViewCollectionItemsBasedOnBasicWebContentOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable the DDMStructure feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -1886,14 +1859,6 @@ definition {
 				key_fragmentName = "Collection Display",
 				key_position = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM_CONTENT_IN_BORDERED_LIST_AT_VIEW_MODE");
-		}
-
-		task ("Disable the DDMStructure feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.journal.web.internal.instance.lifecycle.DDMStructureModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
 		}
 	}
 
@@ -2012,7 +1977,8 @@ definition {
 	@description = "This is a test for LPS-127025. The DPT author can use custom document type related item collection provider in DPT for Category."
 	@priority = 4
 	test ViewCollectionItemsBasedOnCustomDocumentTypeOnDisplayPageTemplateForCategory {
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#ViewCollectionItemsBasedOnCustomDocumentTypeOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable the DLFileEntry feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -2132,20 +2098,13 @@ definition {
 				key_position = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM_CONTENT_IN_BORDERED_LIST_AT_VIEW_MODE");
 		}
-
-		task ("Disable the DLFileEntry feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.document.library.web.internal.model.listener.DLFileEntryTypeModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
-		}
 	}
 
 	@description = "This is a test for LPS-127025. The DPT author can use custom web content structure related item collection provider in DPT for Category."
 	@priority = 4
 	test ViewCollectionItemsBasedOnCustomWebContentStructureOnDisplayPageTemplateForCategory {
-		property test.name.skip.portal.instance = "CollectionDisplayWithRelatedItemsCollectionProviders#ViewCollectionItemsBasedOnCustomWebContentStructureOnDisplayPageTemplateForCategory";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable the DDMStructure feature via gogo shell") {
 			GogoShell.openGogoShellAdmin();
@@ -2275,14 +2234,6 @@ definition {
 				key_fragmentName = "Collection Display",
 				key_position = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM_CONTENT_IN_BORDERED_LIST_AT_VIEW_MODE");
-		}
-
-		task ("Disable the DDMStructure feature via gogo shell") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:disable com.liferay.journal.web.internal.instance.lifecycle.DDMStructureModelListener");
-
-			GogoShell.viewOutput(outputContent = "true");
 		}
 	}
 
@@ -2562,11 +2513,13 @@ definition {
 		property portal.acceptance = "true";
 		property testray.component.names = "Display Page Templates,Fragments";
 
+		var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
+
 		task ("Add a display page template for Web Content Article and Basic Web Content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Web Content DPT",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				subType = "Basic Web Content");
 		}
 
@@ -2574,14 +2527,14 @@ definition {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Blogs Entry",
 				displayPageTemplateEntryName = "Blogs Entry DPT",
-				groupName = "Test Site Name");
+				groupId = ${groupId});
 		}
 
 		task ("Add a display page template for Document and Basic Document") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Document",
 				displayPageTemplateEntryName = "Document DPT",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				subType = "Basic Document");
 		}
 
@@ -2613,25 +2566,25 @@ definition {
 			PageEditor.publish();
 		}
 
-		task ("Add a Web Content Article, a Blogs Entry and a Document") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-
-			HeadlessBlog.addBlogEntry(
+		task ("Add a Blogs Entry and a Document") {
+			var entryId = HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Blogs Entry Title");
-
-			JSONDocument.addFileWithUploadedFile(
+			var fileEntryId = JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
 				mimeType = "image/jpeg",
+				repositoryId = ${groupId},
 				sourceFileName = "Document_1.jpg");
 		}
 
-		task ("Edit the web content, Select display page template and Select related assets") {
+		task ("Add a web content, Select display page template and Select related assets") {
+			HeadlessWebcontent.addBasicWebContent(
+				content = "Web Content Content",
+				groupId = ${groupId},
+				relatedContents = "{\"contentType\": \"BlogPosting\", \"id\": ${entryId}},{\"contentType\": \"Document\", \"id\": ${fileEntryId}}",
+				title = "Web Content Title");
+
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
@@ -2640,28 +2593,16 @@ definition {
 				pageName = "Web Content DPT",
 				pageType = "Display Page Templates");
 
-			RelatedAssets.selectAsset(
-				assetTitle = "Blogs Entry Title",
-				assetType = "Blogs Entry");
-
-			WaitForElementNotPresent(locator1 = "IFrame#DIALOG");
-
-			RelatedAssets.selectAsset(
-				assetTitle = "Document Title",
-				assetType = "Basic Document");
-
-			WaitForElementNotPresent(locator1 = "IFrame#DIALOG");
-
 			PortletEntry.publish();
 		}
 
 		task ("Add a widget page and Add an Asset Publisher to page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				layoutName = "Test Page Name");
 
 			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				layoutName = "Test Page Name",
 				widgetName = "Asset Publisher");
 		}
@@ -2675,17 +2616,10 @@ definition {
 
 			ControlMenu.viewHeaderTitle(headerTitle = "Web Content Title");
 
-			var n = 1;
-
 			for (var title : list "Document Title,Blogs Entry Title") {
-				AssertTextEquals(
-					key_colPosition = 1,
-					key_fragmentName = "heading",
-					key_rowPosition = ${n},
-					locator1 = "Fragment#CONTRIBUTED_FRAGMENT_INLINE_CONTENT_IN_COLLECTION_DISPLAY",
-					value1 = ${title});
-
-				var n = ${n} + 1;
+				AssertVisible(
+					key_text = ${title},
+					locator1 = "Fragment#EDITABLE_FIELD_CONTENT");
 			}
 		}
 
@@ -2735,16 +2669,10 @@ definition {
 
 			ControlMenu.viewHeaderTitle(headerTitle = "Blogs Entry Title");
 
-			var n = 1;
-
 			for (var title : list "Web Content Title,Document Title") {
 				AssertVisible(
-					key_entryContent = "[normalize-space(text())='${title}']",
-					key_fragmentName = "Collection Display",
-					key_position = ${n},
-					locator1 = "PageEditor#COLLECTION_ITEM_CONTENT_IN_BORDERED_LIST_AT_VIEW_MODE");
-
-				var n = ${n} + 1;
+					key_text = ${title},
+					locator1 = "PageEditor#COLLECTION_ITEM_CONTENT");
 			}
 		}
 
@@ -2794,14 +2722,10 @@ definition {
 
 			ControlMenu.viewHeaderTitle(headerTitle = "Document Title");
 
-			var n = 1;
-
 			for (var content : list "Blogs Entry Title,Web Content Title") {
-				ContentPages.viewFragmentTextInCollectionDisplay(
-					row = ${n},
-					text = ${content});
-
-				var n = ${n} + 1;
+				AssertVisible(
+					key_text = ${content},
+					locator1 = "PageEditor#COLLECTION_ITEM_CONTENT");
 			}
 		}
 	}
@@ -2811,11 +2735,13 @@ definition {
 	test ViewRelatedCategoriesInCollectionDisplayWithCategoriesForThisItem {
 		property portal.acceptance = "true";
 
+		var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
+
 		task ("Add a display page template for Web Content Article and Basic Web Content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Web Content DPT",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				subType = "Basic Web Content");
 		}
 
@@ -2823,14 +2749,14 @@ definition {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Blogs Entry",
 				displayPageTemplateEntryName = "Blogs Entry DPT",
-				groupName = "Test Site Name");
+				groupId = ${groupId});
 		}
 
 		task ("Add a display page template for Document and Basic Document") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Document",
 				displayPageTemplateEntryName = "Document DPT",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				subType = "Basic Document");
 		}
 
@@ -2864,21 +2790,21 @@ definition {
 
 		task ("Add a vocabulary") {
 			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Vocabulary Name");
 		}
 
 		task ("Add three categories in vocabulary") {
 			var firstCategoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Category Name 1",
 				vocabularyName = "Vocabulary Name");
 			var secondCategoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Category Name 2",
 				vocabularyName = "Vocabulary Name");
 			var thirdCategoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Category Name 3",
 				vocabularyName = "Vocabulary Name");
 		}
@@ -2887,7 +2813,7 @@ definition {
 			JSONWebcontent.addWebContent(
 				assetCategoryIds = "${firstCategoryId},${secondCategoryId},${thirdCategoryId}",
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Web Content Title");
 		}
 
@@ -2907,7 +2833,7 @@ definition {
 			HeadlessBlog.addBlogEntry(
 				assetCategoryIds = "${firstCategoryId},${secondCategoryId},${thirdCategoryId}",
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				title = "Blogs Entry Title");
 		}
 
@@ -2927,8 +2853,8 @@ definition {
 			JSONDocument.addFileWithUploadedFile(
 				assetCategoryIds = "${firstCategoryId},${secondCategoryId},${thirdCategoryId}",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
 				mimeType = "image/jpeg",
+				repositoryId = ${groupId},
 				sourceFileName = "Document_1.jpg");
 		}
 
@@ -2948,11 +2874,11 @@ definition {
 
 		task ("Add a widget page then add an Asset Publisher to page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				layoutName = "Test Page Name");
 
 			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
+				groupId = ${groupId},
 				layoutName = "Test Page Name",
 				widgetName = "Asset Publisher");
 		}

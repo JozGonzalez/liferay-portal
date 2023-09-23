@@ -1,42 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.simulation.web.internal.application.list;
 
 import com.liferay.application.list.BaseJSPPanelApp;
 import com.liferay.application.list.PanelApp;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.simulation.constants.ProductNavigationSimulationConstants;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
+import com.liferay.segments.service.SegmentsEntryLocalService;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.simulation.web.internal.display.context.SegmentsSimulationDisplayContext;
 
 import java.io.IOException;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -64,10 +54,16 @@ public class SegmentsSimulationPanelApp extends BaseJSPPanelApp {
 
 	@Override
 	public String getLabel(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, getClass());
+		if (FeatureFlagManagerUtil.isEnabled("LPS-186558")) {
+			return _language.get(locale, "page-content");
+		}
 
-		return _language.get(resourceBundle, "segments");
+		return _language.get(locale, "segments");
+	}
+
+	@Override
+	public Portlet getPortlet() {
+		return _portlet;
 	}
 
 	@Override
@@ -81,18 +77,12 @@ public class SegmentsSimulationPanelApp extends BaseJSPPanelApp {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		try {
-			SegmentsSimulationDisplayContext segmentsSimulationDisplayContext =
-				new SegmentsSimulationDisplayContext(
-					httpServletRequest, _segmentsConfigurationProvider);
-
-			httpServletRequest.setAttribute(
-				WebKeys.PORTLET_DISPLAY_CONTEXT,
-				segmentsSimulationDisplayContext);
-		}
-		catch (Exception exception) {
-			_log.error(exception);
-		}
+		httpServletRequest.setAttribute(
+			WebKeys.PORTLET_DISPLAY_CONTEXT,
+			new SegmentsSimulationDisplayContext(
+				httpServletRequest, _itemSelector, _language,
+				_segmentsConfigurationProvider, _segmentsEntryLocalService,
+				_segmentsExperienceLocalService));
 
 		return super.include(httpServletRequest, httpServletResponse);
 	}
@@ -109,31 +99,20 @@ public class SegmentsSimulationPanelApp extends BaseJSPPanelApp {
 	}
 
 	@Override
-	@Reference(
-		target = "(javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_SIMULATION + ")",
-		unbind = "-"
-	)
-	public void setPortlet(Portlet portlet) {
-		super.setPortlet(portlet);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.segments.simulation.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		SegmentsSimulationPanelApp.class);
+	@Reference
+	private ItemSelector _itemSelector;
 
 	@Reference
 	private Language _language;
 
-	@Reference
-	private Portal _portal;
+	@Reference(
+		target = "(javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_SIMULATION + ")"
+	)
+	private Portlet _portlet;
 
 	@Reference(
 		target = "(resource.name=" + SegmentsConstants.RESOURCE_NAME + ")"
@@ -142,5 +121,16 @@ public class SegmentsSimulationPanelApp extends BaseJSPPanelApp {
 
 	@Reference
 	private SegmentsConfigurationProvider _segmentsConfigurationProvider;
+
+	@Reference
+	private SegmentsEntryLocalService _segmentsEntryLocalService;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.segments.simulation.web)"
+	)
+	private ServletContext _servletContext;
 
 }

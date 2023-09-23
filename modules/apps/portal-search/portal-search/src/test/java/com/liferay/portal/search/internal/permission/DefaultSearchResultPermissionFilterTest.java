@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.permission;
@@ -153,7 +144,7 @@ public class DefaultSearchResultPermissionFilterTest {
 			Mockito.mock(Props.class),
 			Mockito.mock(RelatedEntryIndexerRegistry.class), _searchFunction,
 			searchRequestBuilderFactory,
-			_searchResultPermissionFilterConfiguration);
+			_defaultSearchResultPermissionFilterConfiguration);
 	}
 
 	private Document _getDocument(String companyId, int index) {
@@ -250,9 +241,8 @@ public class DefaultSearchResultPermissionFilterTest {
 	}
 
 	private void _mockPermission(SearchContext searchContext) {
-		searchContext.setAttribute(Field.STATUS, 1);
-
 		searchContext.setAttribute(Field.GROUP_ID, _USER_GROUP_ID);
+		searchContext.setAttribute(Field.STATUS, 1);
 
 		Mockito.when(
 			_permissionChecker.getCompanyId()
@@ -269,14 +259,14 @@ public class DefaultSearchResultPermissionFilterTest {
 
 	private void _mockSearchResultPermissionFilterConfiguration() {
 		Mockito.when(
-			_searchResultPermissionFilterConfiguration.
+			_defaultSearchResultPermissionFilterConfiguration.
 				permissionFilteredSearchResultAccurateCountThreshold()
 		).thenReturn(
 			_permissionFilteredSearchResultAccurateCountThreshold
 		);
 
 		Mockito.when(
-			_searchResultPermissionFilterConfiguration.
+			_defaultSearchResultPermissionFilterConfiguration.
 				searchQueryResultWindowLimit()
 		).thenReturn(
 			100
@@ -308,6 +298,9 @@ public class DefaultSearchResultPermissionFilterTest {
 	private static final SearchRequest _searchRequest = Mockito.mock(
 		SearchRequest.class);
 
+	private final DefaultSearchResultPermissionFilterConfiguration
+		_defaultSearchResultPermissionFilterConfiguration = Mockito.mock(
+			DefaultSearchResultPermissionFilterConfiguration.class);
 	private Document[] _documents;
 	private boolean _groupAdmin;
 	private final PermissionChecker _permissionChecker = Mockito.mock(
@@ -315,8 +308,5 @@ public class DefaultSearchResultPermissionFilterTest {
 	private int _permissionFilteredSearchResultAccurateCountThreshold;
 	private final Function<SearchContext, Hits> _searchFunction = Mockito.mock(
 		Function.class);
-	private final DefaultSearchResultPermissionFilterConfiguration
-		_searchResultPermissionFilterConfiguration = Mockito.mock(
-			DefaultSearchResultPermissionFilterConfiguration.class);
 
 }

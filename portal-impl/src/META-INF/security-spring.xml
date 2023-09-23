@@ -4,9 +4,8 @@
 	default-destroy-method="destroy"
 	default-init-method="afterPropertiesSet"
 	xmlns="http://www.springframework.org/schema/beans"
-	xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
 >
 	<bean class="com.liferay.portal.kernel.internal.security.permission.resource.ModelResourcePermissionDefinitionTracker" id="com.liferay.portal.kernel.internal.security.permission.resource.ModelResourcePermissionDefinitionTracker" />
 	<bean class="com.liferay.portal.kernel.internal.security.permission.resource.PortletResourcePermissionDefinitionTracker" id="com.liferay.portal.kernel.internal.security.permission.resource.PortletResourcePermissionDefinitionTracker" />
@@ -66,6 +65,9 @@
 		<property name="resourceActions" ref="com.liferay.portal.kernel.security.permission.ResourceActions" />
 	</bean>
 	<bean class="com.liferay.portal.security.permission.UserBagFactoryImpl" id="com.liferay.portal.kernel.security.permission.UserBagFactory" />
+	<bean class="com.liferay.portal.kernel.security.permission.UserBagFactoryUtil" id="com.liferay.portal.kernel.security.permission.UserBagFactoryUtil">
+		<property name="userBagFactory" ref="com.liferay.portal.kernel.security.permission.UserBagFactory" />
+	</bean>
 	<bean class="com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl" id="com.liferay.portal.kernel.security.xml.SecureXMLFactoryProvider" />
 	<bean class="com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil" id="com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil">
 		<property name="secureXMLFactoryProvider" ref="com.liferay.portal.kernel.security.xml.SecureXMLFactoryProvider" />
@@ -100,8 +102,6 @@
 	<bean class="com.liferay.portal.security.auth.EmailAddressGeneratorFactory" id="com.liferay.portal.security.auth.EmailAddressGeneratorFactory" />
 	<bean class="com.liferay.portal.security.auth.EmailAddressValidatorFactory" id="com.liferay.portal.security.auth.EmailAddressValidatorFactory" />
 	<bean class="com.liferay.portal.security.auth.FullNameValidatorFactory" id="com.liferay.portal.security.auth.FullNameValidatorFactory" />
-	<bean class="com.liferay.portal.security.auth.LoginFailure" id="com.liferay.portal.security.auth.LoginFailure" />
-	<bean class="com.liferay.portal.security.auth.LoginMaxFailures" id="com.liferay.portal.security.auth.LoginMaxFailures" />
 	<bean class="com.liferay.portal.security.auth.MVCPortletAuthTokenWhitelist" id="com.liferay.portal.security.auth.MVCPortletAuthTokenWhitelist" />
 	<bean class="com.liferay.portal.security.auth.ScreenNameGeneratorFactory" id="com.liferay.portal.security.auth.ScreenNameGeneratorFactory" />
 	<bean class="com.liferay.portal.security.auth.ScreenNameValidatorFactory" id="com.liferay.portal.security.auth.ScreenNameValidatorFactory" />

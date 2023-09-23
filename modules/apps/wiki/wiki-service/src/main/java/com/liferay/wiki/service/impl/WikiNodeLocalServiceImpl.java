@@ -1,25 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.service.impl;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -57,7 +47,7 @@ import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
 import com.liferay.wiki.constants.WikiConstants;
 import com.liferay.wiki.exception.DuplicateNodeNameException;
 import com.liferay.wiki.exception.NodeNameException;
-import com.liferay.wiki.importer.WikiImporter;
+import com.liferay.wiki.internal.importer.MediaWikiImporter;
 import com.liferay.wiki.internal.util.WikiCacheThreadLocal;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
@@ -86,6 +76,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(
+	configurationPid = "com.liferay.wiki.configuration.WikiGroupServiceConfiguration",
 	property = "model.class.name=com.liferay.wiki.model.WikiNode",
 	service = AopService.class
 )
@@ -391,17 +382,9 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 
 	@Override
 	public void importPages(
-			long userId, long nodeId, String importer,
-			InputStream[] inputStreams, Map<String, String[]> options)
+			long userId, long nodeId, InputStream[] inputStreams,
+			Map<String, String[]> options)
 		throws PortalException {
-
-		WikiImporter wikiImporter = _wikiImporterServiceTrackerMap.getService(
-			importer);
-
-		if (wikiImporter == null) {
-			throw new SystemException(
-				"Unable to instantiate wiki importer with name " + importer);
-		}
 
 		WikiNode node = getNode(nodeId);
 
@@ -412,7 +395,7 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 			NotificationThreadLocal.setEnabled(false);
 			WikiCacheThreadLocal.setClearCache(false);
 
-			wikiImporter.importPages(userId, node, inputStreams, options);
+			_mediaWikiImporter.importPages(userId, node, inputStreams, options);
 		}
 		finally {
 			NotificationThreadLocal.setEnabled(notificationsEnabled);
@@ -557,10 +540,11 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 	}
 
 	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_wikiImporterServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, WikiImporter.class, "importer");
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		_wikiGroupServiceConfiguration = ConfigurableUtil.createConfigurable(
+			WikiGroupServiceConfiguration.class, properties);
 
 		_portalCache = _multiVMPool.getPortalCache(
 			WikiPageDisplay.class.getName());
@@ -571,7 +555,7 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 
 		Group group = _groupLocalService.getGroup(groupId);
 
-		long defaultUserId = _userLocalService.getDefaultUserId(
+		long guestUserId = _userLocalService.getGuestUserId(
 			group.getCompanyId());
 
 		ServiceContext serviceContext = new ServiceContext();
@@ -581,7 +565,7 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 		serviceContext.setScopeGroupId(groupId);
 
 		WikiNode node = wikiNodeLocalService.addDefaultNode(
-			defaultUserId, serviceContext);
+			guestUserId, serviceContext);
 
 		return ListUtil.fromArray(node);
 	}
@@ -657,6 +641,9 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 	private IndexerRegistry _indexerRegistry;
 
 	@Reference
+	private MediaWikiImporter _mediaWikiImporter;
+
+	@Reference
 	private MultiVMPool _multiVMPool;
 
 	private PortalCache<?, ?> _portalCache;
@@ -679,11 +666,7 @@ public class WikiNodeLocalServiceImpl extends WikiNodeLocalServiceBaseImpl {
 	@Reference
 	private UserLocalService _userLocalService;
 
-	@Reference
 	private WikiGroupServiceConfiguration _wikiGroupServiceConfiguration;
-
-	private ServiceTrackerMap<String, WikiImporter>
-		_wikiImporterServiceTrackerMap;
 
 	@Reference
 	private WikiPageLocalService _wikiPageLocalService;

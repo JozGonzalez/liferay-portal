@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
@@ -26,6 +18,7 @@ import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
 import com.liferay.expando.kernel.model.ExpandoBridge;
@@ -34,6 +27,7 @@ import com.liferay.headless.commerce.admin.order.dto.v1_0.Status;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
@@ -70,8 +64,7 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 	public Order toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
-			(Long)dtoConverterContext.getId());
+		CommerceOrder commerceOrder = _getCommerceOrder(dtoConverterContext);
 
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
@@ -121,12 +114,13 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				paymentStatus = commerceOrder.getPaymentStatus();
 				paymentStatusInfo = _getPaymentStatusInfo(
 					commerceOrder.getPaymentStatus(),
-					CommerceOrderConstants.getPaymentStatusLabel(
+					CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(
 						commerceOrder.getPaymentStatus()),
 					_language.get(
 						resourceBundle,
-						CommerceOrderConstants.getPaymentStatusLabel(
-							commerceOrder.getPaymentStatus())));
+						CommerceOrderPaymentConstants.
+							getOrderPaymentStatusLabel(
+								commerceOrder.getPaymentStatus())));
 				paymentTermDescription =
 					commerceOrder.getPaymentCommerceTermEntryDescription();
 				paymentTermId = commerceOrder.getPaymentCommerceTermEntryId();
@@ -151,10 +145,10 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 
 				setAccountExternalReferenceCode(
 					() -> {
-						CommerceAccount commerceAccount =
-							commerceOrder.getCommerceAccount();
+						AccountEntry accountEntry =
+							commerceOrder.getAccountEntry();
 
-						return commerceAccount.getExternalReferenceCode();
+						return accountEntry.getExternalReferenceCode();
 					});
 				setCreatorEmailAddress(
 					() -> {
@@ -200,6 +194,27 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 		}
 
 		return _commercePriceFormatter.format(commerceCurrency, price, locale);
+	}
+
+	private CommerceOrder _getCommerceOrder(
+			DTOConverterContext dtoConverterContext)
+		throws Exception {
+
+		CommerceOrder commerceOrder = null;
+
+		boolean secure = GetterUtil.getBoolean(
+			dtoConverterContext.getAttribute("secure"), true);
+
+		if (secure) {
+			commerceOrder = _commerceOrderService.getCommerceOrder(
+				(Long)dtoConverterContext.getId());
+		}
+		else {
+			commerceOrder = _commerceOrderLocalService.getCommerceOrder(
+				(Long)dtoConverterContext.getId());
+		}
+
+		return commerceOrder;
 	}
 
 	private String _getCommerceOrderStatusLabel(
@@ -525,6 +540,9 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private CommerceOrderLocalService _commerceOrderLocalService;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;

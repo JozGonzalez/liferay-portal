@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button from '@clayui/button';
@@ -17,7 +11,6 @@ import PRMFormikPageProps from '../../../../common/components/PRMFormik/interfac
 import ResumeCard from '../../../../common/components/ResumeCard';
 import MDFRequest from '../../../../common/interfaces/mdfRequest';
 import MDFRequestActivity from '../../../../common/interfaces/mdfRequestActivity';
-import {Status} from '../../../../common/utils/constants/status';
 import getIntlNumberFormat from '../../../../common/utils/getIntlNumberFormat';
 import ActivityPanel from '../../components/ActivityPanel';
 import {StepType} from '../../enums/stepType';
@@ -32,9 +25,12 @@ const Review = ({
 	onPrevious,
 	onSaveAsDraft,
 }: PRMFormikPageProps & MDFRequestStepProps) => {
-	const {isSubmitting, values, ...formikHelpers} = useFormikContext<
-		MDFRequest
-	>();
+	const {
+		isSubmitting,
+		status: submitted,
+		values,
+		...formikHelpers
+	} = useFormikContext<MDFRequest>();
 
 	return (
 		<div className="d-flex flex-column">
@@ -47,8 +43,9 @@ const Review = ({
 			<Body name="Activities" title="Insurance Industry Lead Gen">
 				<div className="border mb-3"></div>
 
-				{values?.activities.map(
-					(activity: MDFRequestActivity, index: number) => (
+				{values?.activities
+					.filter((activity) => !activity.removed)
+					.map((activity: MDFRequestActivity, index: number) => (
 						<ActivityPanel
 							activity={activity}
 							detail
@@ -59,8 +56,7 @@ const Review = ({
 								mdfRequestActivity={activity}
 							/>
 						</ActivityPanel>
-					)
-				)}
+					))}
 			</Body>
 
 			<Body>
@@ -76,7 +72,7 @@ const Review = ({
 						<ResumeCard
 							className="mt-3"
 							leftContent="Claim Percent"
-							rightContent={`${0.5 * 100}%`}
+							rightContent={`${values.claimPercent * 100}%`}
 						/>
 
 						<ResumeCard
@@ -94,6 +90,7 @@ const Review = ({
 						<div className="d-flex justify-content-between mr-auto">
 							<Button
 								className="mr-4"
+								disabled={submitted || isSubmitting}
 								displayType={null}
 								onClick={() =>
 									onPrevious?.(StepType.ACTIVITIES)
@@ -104,24 +101,23 @@ const Review = ({
 
 							<Button
 								className="inline-item inline-item-after pl-0"
-								disabled={isSubmitting}
+								disabled={submitted || isSubmitting}
 								displayType={null}
 								onClick={() =>
 									onSaveAsDraft?.(values, formikHelpers)
 								}
 							>
 								Save as Draft
-								{isSubmitting &&
-									values.mdfRequestStatus ===
-										Status.DRAFT && (
-										<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-									)}
+								{isSubmitting && (
+									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+								)}
 							</Button>
 						</div>
 
 						<div className="d-flex justify-content-between px-2 px-md-0">
 							<Button
 								className="mr-4"
+								disabled={submitted || isSubmitting}
 								displayType="secondary"
 								onClick={onCancel}
 							>
@@ -130,15 +126,13 @@ const Review = ({
 
 							<Button
 								className="inline-item inline-item-after"
-								disabled={isSubmitting}
+								disabled={submitted || isSubmitting}
 								type="submit"
 							>
 								Submit
-								{isSubmitting &&
-									values.mdfRequestStatus ===
-										Status.PENDING && (
-										<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-									)}
+								{isSubmitting && (
+									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+								)}
 							</Button>
 						</div>
 					</div>

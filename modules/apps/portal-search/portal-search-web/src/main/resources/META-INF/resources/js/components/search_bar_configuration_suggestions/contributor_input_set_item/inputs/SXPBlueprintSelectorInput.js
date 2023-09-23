@@ -1,19 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
-import {ClayInput} from '@clayui/form';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useModal} from '@clayui/modal';
@@ -26,7 +17,7 @@ import SelectSXPBlueprintModal from '../../../select_sxp_blueprint_modal/SelectS
 function SXPBlueprintSelectorInput({
 	onBlur,
 	onSubmit,
-	sxpBlueprintId,
+	sxpBlueprintExternalReferenceCode,
 	touched,
 }) {
 	const [showModal, setShowModal] = useState(false);
@@ -58,22 +49,23 @@ function SXPBlueprintSelectorInput({
 		setShowModal(true);
 	};
 
-	const _handleSubmit = (id, title) => {
-		onSubmit(id);
+	const _handleSubmit = (externalReferenceCode, title) => {
+		onSubmit(externalReferenceCode);
 
 		setSXPBlueprint({loading: false, title});
 	};
 
 	useEffect(() => {
 
-		// Fetch the blueprint title using sxpBlueprintId inside attributes, since
-		// title is not saved within initialSuggestionsContributorConfiguration.
+		// Fetch the blueprint title using sxpBlueprintExternalReferenceCode
+		// inside attributes, since title is not saved within
+		// initialSuggestionsContributorConfiguration.
 
-		if (sxpBlueprintId) {
+		if (sxpBlueprintExternalReferenceCode) {
 			setSXPBlueprint({loading: true, title: ''});
 
 			fetch(
-				`/o/search-experiences-rest/v1.0/sxp-blueprints/${sxpBlueprintId}`,
+				`/o/search-experiences-rest/v1.0/sxp-blueprints/by-external-reference-code/${sxpBlueprintExternalReferenceCode}`,
 				{
 					headers: new Headers({
 						'Accept': 'application/json',
@@ -94,14 +86,14 @@ function SXPBlueprintSelectorInput({
 						loading: false,
 						title:
 							!ok || data.status === 'NOT_FOUND'
-								? JSON.stringify(sxpBlueprintId)
+								? sxpBlueprintExternalReferenceCode
 								: data.title,
 					});
 				})
 				.catch(() => {
 					setSXPBlueprint({
 						loading: false,
-						title: JSON.stringify(sxpBlueprintId),
+						title: sxpBlueprintExternalReferenceCode,
 					});
 				});
 		}
@@ -114,56 +106,66 @@ function SXPBlueprintSelectorInput({
 					observer={observer}
 					onClose={onClose}
 					onSubmit={_handleSubmit}
-					selectedId={sxpBlueprintId || ''}
+					selectedExternalReferenceCode={
+						sxpBlueprintExternalReferenceCode || ''
+					}
 				/>
 			)}
 
 			<ClayInput.GroupItem
 				className={getCN({
-					'has-error': !sxpBlueprintId && touched,
+					'has-error': !sxpBlueprintExternalReferenceCode && touched,
 				})}
 			>
-				<label>
-					{Liferay.Language.get('blueprint')}
+				<ClayForm.Group className="c-mb-0 w-100">
+					<label>
+						{Liferay.Language.get('blueprint')}
 
-					<span className="reference-mark">
-						<ClayIcon symbol="asterisk" />
-					</span>
-				</label>
+						<span className="reference-mark">
+							<ClayIcon symbol="asterisk" />
+						</span>
+					</label>
 
-				<div className="select-sxp-blueprint">
-					{sxpBlueprint.loading ? (
-						<div className="form-control" readOnly>
-							<ClayLoadingIndicator small />
-						</div>
-					) : (
-						<ClayInput
-							onBlur={onBlur}
-							onChange={_handleChange}
-							required
-							type="text"
-							value={sxpBlueprint.title}
-						/>
-					)}
+					<ClayInput.Group>
+						<ClayInput.GroupItem prepend>
+							<ClayInput
+								className="bg-transparent form-control input-group-inset input-group-inset-after"
+								onBlur={onBlur}
+								onChange={_handleChange}
+								required
+								style={{caretColor: 'transparent'}}
+								type="text"
+								value={sxpBlueprint.title}
+							/>
 
-					{sxpBlueprint.title && (
-						<ClayButton
-							className="remove-sxp-blueprint"
-							displayType="secondary"
-							onClick={_handleClickRemove}
-							small
-						>
-							<ClayIcon symbol="times-circle" />
-						</ClayButton>
-					)}
+							<ClayInput.GroupInsetItem
+								after
+								className="bg-transparent rounded-0"
+							>
+								{sxpBlueprint.loading && (
+									<ClayLoadingIndicator small />
+								)}
 
-					<ClayButton
-						displayType="secondary"
-						onClick={_handleClickSelect}
-					>
-						{Liferay.Language.get('select')}
-					</ClayButton>
-				</div>
+								{sxpBlueprint.title && (
+									<ClayButtonWithIcon
+										displayType="unstyled"
+										onClick={_handleClickRemove}
+										symbol="times-circle"
+									/>
+								)}
+							</ClayInput.GroupInsetItem>
+						</ClayInput.GroupItem>
+
+						<ClayInput.GroupItem append shrink>
+							<ClayButton
+								displayType="secondary"
+								onClick={_handleClickSelect}
+							>
+								{Liferay.Language.get('select')}
+							</ClayButton>
+						</ClayInput.GroupItem>
+					</ClayInput.Group>
+				</ClayForm.Group>
 			</ClayInput.GroupItem>
 		</>
 	);

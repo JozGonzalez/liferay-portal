@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -21,7 +12,10 @@ import React, {useContext} from 'react';
 
 import LearnMessage from '../../../shared/LearnMessage';
 import SearchContext from '../../../shared/SearchContext';
-import {CONTRIBUTOR_TYPES} from '../../../utils/types/contributorTypes';
+import {
+	CONTRIBUTOR_TYPES,
+	CONTRIBUTOR_TYPES_ASAH_DEFAULT_DISPLAY_GROUP_NAMES,
+} from '../../../utils/types/contributorTypes';
 import InputSetItemHeader from './InputSetItemHeader';
 import CharacterThresholdInput from './inputs/CharacterThresholdInput';
 import DisplayGroupNameInput from './inputs/DisplayGroupNameInput';
@@ -37,7 +31,7 @@ function getSiteActivitiesContributorActivityOptions(learnMessages) {
 					{Liferay.Language.get('top-searches-help')}
 
 					<LearnMessage
-						className="ml-1"
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="search-bar-suggestions-site-activities"
 					/>
@@ -52,7 +46,7 @@ function getSiteActivitiesContributorActivityOptions(learnMessages) {
 					{Liferay.Language.get('trending-searches-help')}
 
 					<LearnMessage
-						className="ml-1"
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="search-bar-suggestions-site-activities"
 					/>
@@ -82,6 +76,10 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 	const _handleActivityInputClick = (contributorName) => () => {
 		onInputSetItemChange(index, {
 			contributorName,
+			displayGroupName:
+				CONTRIBUTOR_TYPES_ASAH_DEFAULT_DISPLAY_GROUP_NAMES[
+					contributorName
+				] || '',
 		});
 	};
 
@@ -100,14 +98,14 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 					)}
 
 					<LearnMessage
-						className="ml-1"
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="search-bar-suggestions-site-activities"
 					/>
 				</InputSetItemHeader.Description>
 			</InputSetItemHeader>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-3 form-group-autofit">
 				<ClayInput.GroupItem>
 					<label>
 						{Liferay.Language.get('activity')}
@@ -164,7 +162,7 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 				</ClayInput.GroupItem>
 			</div>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-3 form-group-autofit">
 				<DisplayGroupNameInput
 					onBlur={onBlur('displayGroupName')}
 					onChange={onInputSetItemChange(index, 'displayGroupName')}
@@ -180,7 +178,7 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 				/>
 			</div>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-0 form-group-autofit">
 				<CharacterThresholdInput
 					onBlur={onBlur('attributes.characterThreshold')}
 					onChange={_handleChangeAttribute('characterThreshold')}
@@ -194,7 +192,7 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 
 						<ClayTooltipProvider>
 							<span
-								className="ml-2"
+								className="c-ml-2"
 								data-tooltip-align="top"
 								title={Liferay.Language.get(
 									'match-display-language-help'
@@ -227,10 +225,10 @@ function SiteActivities({index, onBlur, onInputSetItemChange, touched, value}) {
 				</ClayInput.GroupItem>
 
 				<MinimumSearchesInput
-					onBlur={onBlur('attributes.count')}
-					onChange={_handleChangeAttribute('count')}
-					touched={touched['attributes.count']}
-					value={value.attributes?.count}
+					onBlur={onBlur('attributes.minCounts')}
+					onChange={_handleChangeAttribute('minCounts')}
+					touched={touched['attributes.minCounts']}
+					value={value.attributes?.minCounts}
 				/>
 			</div>
 		</>

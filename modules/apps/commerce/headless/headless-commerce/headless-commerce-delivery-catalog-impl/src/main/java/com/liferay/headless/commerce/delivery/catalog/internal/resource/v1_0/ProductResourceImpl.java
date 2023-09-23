@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
-import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
@@ -30,6 +21,7 @@ import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.ProductDTOConverterContext;
 import com.liferay.headless.commerce.delivery.catalog.internal.odata.entity.v1_0.ProductEntityModel;
@@ -126,8 +118,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
 			).put(
 				"commerceAccountGroupIds",
-				_commerceAccountHelper.getCommerceAccountGroupIds(
-					commerceAccountId)
+				_accountGroupLocalService.getAccountGroupIds(commerceAccountId)
 			).put(
 				"commerceChannelGroupId", commerceChannel.getGroupId()
 			).build());
@@ -201,7 +192,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (countUserCommerceAccounts > 1) {
 			if (accountId == null) {
-				throw new NoSuchAccountException();
+				throw new NoSuchEntryException();
 			}
 		}
 		else {
@@ -210,12 +201,12 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 					contextUser.getUserId(), commerceChannel.getGroupId());
 
 			if (commerceAccountIds.length == 0) {
-				CommerceAccount commerceAccount =
-					_commerceAccountLocalService.getGuestCommerceAccount(
-						contextUser.getCompanyId());
+				AccountEntry accountEntry =
+					_accountEntryLocalService.getGuestAccountEntry(
+						contextCompany.getCompanyId());
 
 				commerceAccountIds = new long[] {
-					commerceAccount.getCommerceAccountId()
+					accountEntry.getAccountEntryId()
 				};
 			}
 
@@ -259,10 +250,13 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private static final EntityModel _entityModel = new ProductEntityModel();
 
 	@Reference
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
+
+	@Reference
+	private CommerceAccountHelper _commerceAccountHelper;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

@@ -1,26 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.field.business.type;
 
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.exception.ObjectFieldSettingNameException;
 import com.liferay.object.exception.ObjectFieldSettingValueException;
 import com.liferay.object.field.render.ObjectFieldRenderingContext;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
@@ -45,8 +43,23 @@ public interface ObjectFieldBusinessType {
 
 	public String getDDMFormFieldTypeName();
 
+	public default String getDDMFormFieldTypeName(boolean localized) {
+		return getDDMFormFieldTypeName();
+	}
+
 	public default String getDescription(Locale locale) {
 		return StringPool.BLANK;
+	}
+
+	public default Object getDisplayContextValue(
+			ObjectField objectField, long userId, Map<String, Object> values)
+		throws PortalException {
+
+		if (objectField.isLocalized()) {
+			return values.get(objectField.getI18nObjectFieldName());
+		}
+
+		return getValue(objectField, userId, values);
 	}
 
 	public String getLabel(Locale locale);
@@ -63,18 +76,54 @@ public interface ObjectFieldBusinessType {
 
 	public PropertyDefinition.PropertyType getPropertyType();
 
-	public default Set<String> getRequiredObjectFieldSettingsNames() {
+	public default Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
+		return Collections.emptySet();
+	}
+
+	public default Set<String> getUnmodifiableObjectFieldSettingsNames() {
 		return Collections.emptySet();
 	}
 
 	public default Object getValue(
-			ObjectField objectField, Map<String, Object> values)
+			ObjectField objectField, long userId, Map<String, Object> values)
 		throws PortalException {
 
-		return values.get(objectField.getName());
+		if (!objectField.isLocalized()) {
+			return values.get(objectField.getName());
+		}
+
+		Map<String, String> localizedValues = (Map<String, String>)values.get(
+			objectField.getI18nObjectFieldName());
+
+		if (localizedValues == null) {
+			return values.get(objectField.getName());
+		}
+
+		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
+
+		if (locale == null) {
+			locale = LocaleThreadLocal.getSiteDefaultLocale();
+		}
+
+		if (locale == null) {
+			User user = GuestOrUserUtil.getGuestOrUser();
+
+			locale = user.getLocale();
+		}
+
+		String localizedValue = localizedValues.get(
+			LocaleUtil.toLanguageId(locale));
+
+		if (localizedValue != null) {
+			return localizedValue;
+		}
+
+		return StringPool.BLANK;
 	}
 
-	public default boolean isVisible() {
+	public default boolean isVisible(ObjectDefinition objectDefinition) {
 		return true;
 	}
 
@@ -85,7 +134,7 @@ public interface ObjectFieldBusinessType {
 	}
 
 	public default void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
@@ -99,7 +148,7 @@ public interface ObjectFieldBusinessType {
 		}
 
 		for (String requiredObjectFieldSettingName :
-				getRequiredObjectFieldSettingsNames()) {
+				getRequiredObjectFieldSettingsNames(objectField)) {
 
 			if (Validator.isNull(
 					objectFieldSettingsValuesMap.get(
@@ -112,7 +161,7 @@ public interface ObjectFieldBusinessType {
 
 		if (!missingRequiredObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingValueException.MissingRequiredValues(
-				objectFieldName, missingRequiredObjectFieldSettingsNames);
+				objectField.getName(), missingRequiredObjectFieldSettingsNames);
 		}
 
 		Set<String> notAllowedObjectFieldSettingsNames = new HashSet<>(
@@ -121,11 +170,40 @@ public interface ObjectFieldBusinessType {
 		notAllowedObjectFieldSettingsNames.removeAll(
 			getAllowedObjectFieldSettingsNames());
 		notAllowedObjectFieldSettingsNames.removeAll(
-			getRequiredObjectFieldSettingsNames());
+			getRequiredObjectFieldSettingsNames(objectField));
 
 		if (!notAllowedObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingNameException.NotAllowedNames(
-				objectFieldName, notAllowedObjectFieldSettingsNames);
+				objectField.getName(), notAllowedObjectFieldSettingsNames);
+		}
+
+		validateObjectFieldSettingsDefaultValue(
+			objectField, objectFieldSettingsValuesMap);
+	}
+
+	public default void validateObjectFieldSettingsDefaultValue(
+			ObjectField objectField,
+			Map<String, String> objectFieldSettingsValuesMap)
+		throws PortalException {
+
+		String defaultValueType = objectFieldSettingsValuesMap.get(
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
+
+		if (defaultValueType == null) {
+			return;
+		}
+
+		if (!(StringUtil.equals(
+				defaultValueType,
+				ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER) ||
+			  StringUtil.equals(
+				  defaultValueType,
+				  ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE))) {
+
+			throw new ObjectFieldSettingValueException.InvalidValue(
+				objectField.getName(),
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+				defaultValueType);
 		}
 	}
 

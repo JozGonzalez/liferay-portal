@@ -1,19 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {array, number, object, string} from 'yup';
 
 import isObjectEmpty from '../../../../../common/utils/isObjectEmpty';
 
-const phoneZipRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{2,4}?[ \\-]*[0-9]{3,4}?$/;
+const phoneRegex = /^[0-9-+.\][ ()]*$/;
+
+const postalCodetRegex = /^[a-zA-Z0-9 _.-]*$/;
 
 const generalSchema = object({
 	additionalContact: object({
@@ -62,7 +58,7 @@ const generalSchema = object({
 			.required('Required'),
 		phone: string()
 			.trim()
-			.matches(phoneZipRegExp, 'Phone number is not valid')
+			.matches(phoneRegex, 'Phone number is not valid')
 			.required('Required'),
 	}),
 	projectCategories: array().min(1, 'Required'),
@@ -94,7 +90,7 @@ const generalSchema = object({
 		}).test('is-empty', 'Required', (value) => !isObjectEmpty(value)),
 		postalCode: string()
 			.trim()
-			.matches(phoneZipRegExp, 'Postal Code is not valid')
+			.matches(postalCodetRegex, 'Postal Code is not valid')
 			.required('Required'),
 		state: object({
 			key: string(),

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.info.internal.item.provider;
@@ -19,6 +10,7 @@ import com.liferay.asset.info.internal.item.AssetEntryInfoItemFields;
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
@@ -132,8 +124,10 @@ public class AssetEntryInfoItemFieldValuesProvider
 
 		try {
 			return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				_portal.getClassName(assetEntry.getClassNameId()),
-				assetEntry.getClassPK(), themeDisplay);
+				new InfoItemReference(
+					assetEntry.getClassName(),
+					new ClassPKInfoItemIdentifier(assetEntry.getClassPK())),
+				themeDisplay);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {

@@ -1,25 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.internal.comment.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.comment.configuration.CommentGroupServiceConfiguration;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.message.boards.service.MBBanLocalService;
+import com.liferay.petra.function.UnsafeRunnable;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.model.Group;
@@ -34,7 +29,6 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUti
 import com.liferay.portal.kernel.service.IdentityServiceContextFunction;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -42,11 +36,12 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
+import java.util.Dictionary;
 import java.util.List;
 
 import org.junit.Assert;
@@ -55,6 +50,9 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * @author Sergio González
@@ -108,13 +106,11 @@ public class MBDiscussionPermissionImplTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(_siteUser1);
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(permissionChecker);
-
 		Assert.assertFalse(
-			discussionPermission.hasAddPermission(
-				TestPropsValues.getCompanyId(), _group.getGroupId(),
-				DLFileEntry.class.getName(), _fileEntry.getFileEntryId()));
+			_discussionPermission.hasAddPermission(
+				permissionChecker, TestPropsValues.getCompanyId(),
+				_group.getGroupId(), DLFileEntry.class.getName(),
+				_fileEntry.getFileEntryId()));
 	}
 
 	@Test
@@ -127,13 +123,11 @@ public class MBDiscussionPermissionImplTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(_siteUser1);
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(permissionChecker);
-
 		Assert.assertFalse(
-			discussionPermission.hasAddPermission(
-				TestPropsValues.getCompanyId(), _group.getGroupId(),
-				DLFileEntry.class.getName(), _fileEntry.getFileEntryId()));
+			_discussionPermission.hasAddPermission(
+				permissionChecker, TestPropsValues.getCompanyId(),
+				_group.getGroupId(), DLFileEntry.class.getName(),
+				_fileEntry.getFileEntryId()));
 	}
 
 	@Test
@@ -141,13 +135,11 @@ public class MBDiscussionPermissionImplTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(_siteUser1);
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(permissionChecker);
-
 		Assert.assertTrue(
-			discussionPermission.hasAddPermission(
-				TestPropsValues.getCompanyId(), _group.getGroupId(),
-				DLFileEntry.class.getName(), _fileEntry.getFileEntryId()));
+			_discussionPermission.hasAddPermission(
+				permissionChecker, TestPropsValues.getCompanyId(),
+				_group.getGroupId(), DLFileEntry.class.getName(),
+				_fileEntry.getFileEntryId()));
 	}
 
 	@Test
@@ -157,70 +149,41 @@ public class MBDiscussionPermissionImplTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(_siteUser1);
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(permissionChecker);
-
-		Assert.assertFalse(discussionPermission.hasUpdatePermission(commentId));
+		Assert.assertFalse(
+			_discussionPermission.hasUpdatePermission(
+				permissionChecker, commentId));
 	}
 
 	@Test
 	public void testUserCannotUpdateSomeoneElseCommentIfPropsEnabled()
 		throws Exception {
 
-		boolean discussionCommentsAlwaysEditableByOwner =
-			PropsValues.DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER;
+		_withAlwaysEditableByOwnerEnabled(
+			() -> {
+				long commentId = _addComment(_siteUser1);
 
-		try {
-			ReflectionTestUtil.setFieldValue(
-				PropsValues.class,
-				"DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER", true);
+				PermissionChecker permissionChecker =
+					PermissionCheckerFactoryUtil.create(_siteUser2);
 
-			long commentId = _addComment(_siteUser1);
-
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(_siteUser2);
-
-			DiscussionPermission discussionPermission =
-				_commentManager.getDiscussionPermission(permissionChecker);
-
-			Assert.assertFalse(
-				discussionPermission.hasUpdatePermission(commentId));
-		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PropsValues.class,
-				"DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER",
-				discussionCommentsAlwaysEditableByOwner);
-		}
+				Assert.assertFalse(
+					_discussionPermission.hasUpdatePermission(
+						permissionChecker, commentId));
+			});
 	}
 
 	@Test
 	public void testUserCanUpdateHisCommentIfPropsEnabled() throws Exception {
-		boolean discussionCommentsAlwaysEditableByOwner =
-			PropsValues.DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER;
+		_withAlwaysEditableByOwnerEnabled(
+			() -> {
+				long commentId = _addComment(_siteUser1);
 
-		try {
-			ReflectionTestUtil.setFieldValue(
-				PropsValues.class,
-				"DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER", true);
+				PermissionChecker permissionChecker =
+					PermissionCheckerFactoryUtil.create(_siteUser1);
 
-			long commentId = _addComment(_siteUser1);
-
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(_siteUser1);
-
-			DiscussionPermission discussionPermission =
-				_commentManager.getDiscussionPermission(permissionChecker);
-
-			Assert.assertTrue(
-				discussionPermission.hasUpdatePermission(commentId));
-		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PropsValues.class,
-				"DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER",
-				discussionCommentsAlwaysEditableByOwner);
-		}
+				Assert.assertTrue(
+					_discussionPermission.hasUpdatePermission(
+						permissionChecker, commentId));
+			});
 	}
 
 	private long _addComment(User user) throws Exception {
@@ -235,10 +198,44 @@ public class MBDiscussionPermissionImplTest {
 			StringUtil.randomString(), serviceContextFunction);
 	}
 
+	private void _withAlwaysEditableByOwnerEnabled(
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		Configuration configuration = _configurationAdmin.getConfiguration(
+			CommentGroupServiceConfiguration.class.getName(),
+			StringPool.QUESTION);
+
+		Dictionary<String, Object> originalConfigurationProperties =
+			configuration.getProperties();
+
+		ConfigurationTestUtil.saveConfiguration(
+			configuration,
+			HashMapDictionaryBuilder.putAll(
+				originalConfigurationProperties
+			).put(
+				"alwaysEditableByOwner", true
+			).build());
+
+		try {
+			unsafeRunnable.run();
+		}
+		finally {
+			ConfigurationTestUtil.saveConfiguration(
+				configuration, originalConfigurationProperties);
+		}
+	}
+
+	@Inject
+	private static ConfigurationAdmin _configurationAdmin;
+
 	@Inject(
 		filter = "component.name=com.liferay.message.boards.comment.internal.MBCommentManagerImpl"
 	)
 	private CommentManager _commentManager;
+
+	@Inject
+	private DiscussionPermission _discussionPermission;
 
 	private FileEntry _fileEntry;
 

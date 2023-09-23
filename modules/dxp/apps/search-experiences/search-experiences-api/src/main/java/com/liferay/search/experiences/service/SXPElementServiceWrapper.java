@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service;
@@ -57,6 +48,24 @@ public class SXPElementServiceWrapper
 		return _sxpElementService.deleteSXPElement(sxpElementId);
 	}
 
+	@Override
+	public com.liferay.search.experiences.model.SXPElement fetchSXPElement(
+			long sxpElementId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _sxpElementService.fetchSXPElement(sxpElementId);
+	}
+
+	@Override
+	public com.liferay.search.experiences.model.SXPElement
+			fetchSXPElementByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _sxpElementService.fetchSXPElementByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -73,6 +82,16 @@ public class SXPElementServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sxpElementService.getSXPElement(sxpElementId);
+	}
+
+	@Override
+	public com.liferay.search.experiences.model.SXPElement
+			getSXPElementByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _sxpElementService.getSXPElementByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	@Override

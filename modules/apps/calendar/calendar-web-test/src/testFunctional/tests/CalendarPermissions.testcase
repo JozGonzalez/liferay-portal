@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -74,13 +69,11 @@ definition {
 	test CanClearTheResultsOfASearch {
 		CalendarPermissions.gotoPermissions();
 
-		CalendarPermissions.searchRoleName(searchTerm = "Guest");
+		Search.searchCP(searchTerm = "Guest");
 
-		CalendarPermissions.viewSearchResult(searchResults = "1 Result for \"Guest\"");
+		Click(locator1 = "CalendarPermissions#PERMISSIONS_SEARCH_CLEAR");
 
-		CalendarPermissions.cleanSearchResult();
-
-		CalendarPermissions.resultBarIsnotDisplayed();
+		AssertElementNotPresent(locator1 = "CalendarPermissions#PERMISSIONS_RESULTS_BAR");
 	}
 
 	@description = "LRQA-71890 - Verify that the user can search for a existent permission"
@@ -88,19 +81,32 @@ definition {
 	test CanSearchOnPermissionsPage {
 		CalendarPermissions.gotoPermissions();
 
-		CalendarPermissions.searchRoleName(searchTerm = "Guest");
+		Search.searchCP(searchTerm = "Guest");
 
-		CalendarPermissions.viewSearchResult(searchResults = "1 Result for \"Guest\"");
+		AssertTextEquals(
+			locator1 = "Search#SEARCH_INFO",
+			value1 = "1 Result for \"Guest\"");
 
-		CalendarPermissions.viewPermissionsRoleName(roleName = "Guest");
+		Click(locator1 = "TextInput#SEARCH");
 
-		CalendarPermissions.cleanSearchResult();
+		AssertTextEquals.assertPartialText(
+			key_roleTitle = "Guest",
+			locator1 = "Permissions#CONTENT_PERMISSIONS_ROLE_NAME",
+			value1 = "Guest");
 
-		CalendarPermissions.searchRoleName(searchTerm = "DXP Client");
+		Search.clearSearchResult();
 
-		CalendarPermissions.viewSearchResult(searchResults = "0 Results for \"DXP Client\"");
+		Search.searchCP(searchTerm = "DXP Client");
 
-		CalendarPermissions.viewTableDisplay(message = "No roles were found.");
+		AssertTextEquals(
+			locator1 = "Search#SEARCH_INFO",
+			value1 = "0 Results for \"DXP Client\"");
+
+		Click(locator1 = "TextInput#SEARCH");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No roles were found.");
 	}
 
 	@description = "LRQA-71890 - Verify that when the user search for a non existent role, the system displays a message"
@@ -108,11 +114,15 @@ definition {
 	test SystemDisplaysMessageWhenNoRoleIsFound {
 		CalendarPermissions.gotoPermissions();
 
-		CalendarPermissions.searchRoleName(searchTerm = "DXP Client");
+		Search.searchCP(searchTerm = "DXP Client");
 
-		CalendarPermissions.viewSearchResult(searchResults = "0 Results for \"DXP Client\"");
+		AssertTextEquals(
+			locator1 = "CalendarPermissions#PERMISSIONS_RESULTS_BAR",
+			value1 = "0 Results for \"DXP Client\"");
 
-		CalendarPermissions.viewTableDisplay(message = "No roles were found.");
+		AssertTextEquals(
+			locator1 = "CalendarPermissions#NO_ROLES_WERE_FOUND",
+			value1 = "No roles were found.");
 	}
 
 }

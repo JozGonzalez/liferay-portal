@@ -1,22 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
+boolean copyPermissions = ParamUtil.getBoolean(request, "copyPermissions");
 long sourcePlid = ParamUtil.getLong(request, "sourcePlid");
 
 List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.getAutoSiteNavigationMenus();
@@ -24,7 +16,7 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 <clay:container-fluid>
 	<liferay-frontend:edit-form
-		action="<%= (sourcePlid <= 0) ? layoutsAdminDisplayContext.getAddLayoutURL() : layoutsAdminDisplayContext.getCopyLayoutURL(sourcePlid) %>"
+		action="<%= (sourcePlid <= 0) ? layoutsAdminDisplayContext.getAddLayoutURL() : layoutsAdminDisplayContext.getCopyLayoutActionURL(copyPermissions, sourcePlid) %>"
 		cssClass="add-layout-form"
 		method="post"
 		name="fm"
@@ -41,7 +33,7 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 					<liferay-ui:message key="add-this-page-to-the-following-menus" />
 
 					<clay:container-fluid
-						cssClass="auto-site-navigation-menus mt-3"
+						cssClass="auto-site-navigation-menus c-mt-3"
 					>
 						<clay:row>
 
@@ -69,7 +61,7 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 					%>
 
 					<clay:container-fluid
-						cssClass="auto-site-navigation-menus mt-3"
+						cssClass="auto-site-navigation-menus c-mt-3"
 					>
 						<clay:row>
 							<aui:input id='<%= "menu_" + autoSiteNavigationMenu.getSiteNavigationMenuId() %>' label='<%= LanguageUtil.format(request, "add-this-page-to-x", HtmlUtil.escape(autoSiteNavigationMenu.getName())) %>' name="TypeSettingsProperties--siteNavigationMenuId--" type="checkbox" value="<%= autoSiteNavigationMenu.getSiteNavigationMenuId() %>" />
@@ -79,7 +71,7 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 			</c:choose>
 
 			<c:if test="<%= layoutsAdminDisplayContext.hasRequiredVocabularies() %>">
-				<aui:fieldset cssClass="mb-4">
+				<aui:fieldset cssClass="c-mb-4">
 					<div class="h3 sheet-subtitle"><liferay-ui:message key="categorization" /></div>
 
 					<c:choose>
@@ -92,9 +84,11 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 							/>
 						</c:when>
 						<c:otherwise>
-							<div class="alert alert-warning text-justify">
-								<liferay-ui:message key="pages-have-required-vocabularies.-you-need-to-create-at-least-one-category-in-all-required-vocabularies-in-order-to-create-a-page" />
-							</div>
+							<clay:alert
+								cssClass="text-justify"
+								displayType="warning"
+								message="pages-have-required-vocabularies.-you-need-to-create-at-least-one-category-in-all-required-vocabularies-in-order-to-create-a-page"
+							/>
 						</c:otherwise>
 					</c:choose>
 				</aui:fieldset>
@@ -112,5 +106,6 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 <liferay-frontend:component
 	componentId='<%= liferayPortletResponse.getNamespace() + "addLayout" %>'
+	context="<%= layoutsAdminDisplayContext.getProps() %>"
 	module="js/AddLayout"
 />

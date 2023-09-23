@@ -1,14 +1,16 @@
 definition {
 
-	@summary = "Add a displayPageTemplateEntry to an existing site"
 	macro addDisplayPageTemplateEntry {
-		Variables.assertDefined(parameterList = "${contentType},${displayPageTemplateEntryName},${groupName}");
+		Variables.assertDefined(parameterList = "${contentType},${displayPageTemplateEntryName}");
 
-		var groupId = JSONLayoutpagetemplateSetter.setGroupId(
-			grandParentGroupName = ${grandParentGroupName},
-			groupKey = ${groupName},
-			parentGroupName = ${parentGroupName},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutpagetemplateSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupKey = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
+
 		var classNameId = JSONLayoutpagetemplateSetter.setClassNameId(contentType = ${contentType});
 
 		if ((${subType} == "Basic Document") || (${contentType} == "Blogs Entry") || (${contentType} == "Category") || (${contentType} == "Commerce Order") || (${contentType} == "Commerce Product") || (${contentType} == "Knowledge Base Article")) {
@@ -111,7 +113,6 @@ definition {
 			status = ${status});
 	}
 
-	@summary = "Add a PageTemplateEntry to the Global site"
 	macro addGlobalPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${pageTemplateEntryActive},${pageTemplateEntryName}");
 
@@ -131,7 +132,6 @@ definition {
 			serviceContext = ${serviceContext});
 	}
 
-	@summary = "Add a layoutPageTemplateCollection to an existing site"
 	macro addLayoutPageTemplateCollection {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateCollectionName}");
 
@@ -148,6 +148,13 @@ definition {
 			var description = "";
 		}
 
+		if (${layoutPageTemplateType} == "Display Page Template") {
+			var type = 1;
+		}
+		else {
+			var type = 0;
+		}
+
 		var serviceContext = JSONLayoutpagetemplateSetter.setServiceContext(
 			addGuestPermissions = "true",
 			assetCategoryIds = ${assetCategoryIds},
@@ -159,10 +166,10 @@ definition {
 			description = ${description},
 			groupId = ${groupId},
 			layoutPageTemplateCollectionName = ${layoutPageTemplateCollectionName},
-			serviceContext = ${serviceContext});
+			serviceContext = ${serviceContext},
+			type = ${type});
 	}
 
-	@summary = "Add a layoutPageTemplateEntry to an existing site"
 	macro addLayoutPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${layoutPageTemplateType},${layoutPageTemplateStatus}");
 
@@ -175,7 +182,8 @@ definition {
 		if (isSet(layoutPageTemplateCollectionName)) {
 			var layoutPageTemplateCollectionId = JSONLayoutpagetemplateSetter.setLayoutPageTemplateCollectionId(
 				groupId = ${groupId},
-				layoutPageTemplateCollectionName = ${layoutPageTemplateCollectionName});
+				layoutPageTemplateCollectionName = ${layoutPageTemplateCollectionName},
+				layoutPageTemplateType = ${layoutPageTemplateType});
 		}
 		else {
 			var layoutPageTemplateCollectionId = 0;
@@ -196,8 +204,8 @@ definition {
 			assetTagNames = ${assetTagNames},
 			serviceContext = ${serviceContext},
 			workflowAction = ${workflowAction});
-		var status = JSONLayoutpagetemplateUtil._getStatus(layoutPageTemplateStatus = ${layoutPageTemplateStatus});
 		var type = JSONLayoutpagetemplateUtil._getType(layoutPageTemplateType = ${layoutPageTemplateType});
+		var status = JSONLayoutpagetemplateUtil._getStatus(layoutPageTemplateStatus = ${layoutPageTemplateStatus});
 
 		JSONLayoutpagetemplateAPI._addLayoutPageTemplateEntry(
 			groupId = ${groupId},
@@ -209,7 +217,6 @@ definition {
 			type = ${type});
 	}
 
-	@summary = "Add a masterPageTemplateEntry to an existing site"
 	macro addMasterPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${groupName},${masterPageTemplateEntryName}");
 
@@ -231,7 +238,6 @@ definition {
 			serviceContext = ${serviceContext});
 	}
 
-	@summary = "Delete a layoutPageTemplateEntry under an existing site"
 	macro deleteLayoutPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${type}");
 
@@ -247,7 +253,6 @@ definition {
 		JSONLayoutpagetemplateAPI._deleteLayoutPageTemplateEntry(layoutPageTemplateEntryId = ${layoutPageTemplateEntryId});
 	}
 
-	@summary = "Get the layoutPrototypeId from a layoutPageTemplateEntry"
 	macro getLayoutPrototypeId {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${layoutPageTemplateType}");
 
@@ -264,7 +269,6 @@ definition {
 		return ${layoutPrototypeId};
 	}
 
-	@summary = "Set a layoutPageTemplateEntry as default"
 	macro setLayoutPageTemplateEntryAsDefault {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${type}");
 
@@ -278,6 +282,21 @@ definition {
 			type = ${type});
 
 		JSONLayoutpagetemplateAPI._setLayoutPageTemplateEntryAsDefault(layoutPageTemplateEntryId = ${layoutPageTemplateEntryId});
+	}
+
+	macro setLayoutPageTemplateEntryAsNonDefault {
+		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${type}");
+
+		var groupId = JSONLayoutpagetemplateSetter.setGroupId(
+			groupKey = ${groupName},
+			site = ${site});
+
+		var layoutPageTemplateEntryId = JSONLayoutpagetemplateSetter.setLayoutPageTemplateEntryId(
+			groupId = ${groupId},
+			layoutPageTemplateEntryName = ${layoutPageTemplateEntryName},
+			type = ${type});
+
+		JSONLayoutpagetemplateAPI._setLayoutPageTemplateEntryAsNonDefault(layoutPageTemplateEntryId = ${layoutPageTemplateEntryId});
 	}
 
 }

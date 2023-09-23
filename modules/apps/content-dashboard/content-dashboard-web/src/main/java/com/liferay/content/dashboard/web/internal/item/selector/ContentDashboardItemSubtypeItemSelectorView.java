@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.item.selector;
@@ -20,12 +11,11 @@ import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifie
 import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactory;
-import com.liferay.content.dashboard.web.internal.display.context.ContentDashboardItemSubtypeItemSelectorViewDisplayContext;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
 import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
-import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemReference;
@@ -40,6 +30,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -50,30 +41,30 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.template.react.renderer.ComponentDescriptor;
+import com.liferay.portal.template.react.renderer.ReactRenderer;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -112,76 +103,74 @@ public class ContentDashboardItemSubtypeItemSelectorView
 			ContentDashboardItemSubtypeItemSelectorCriterion
 				contentDashboardItemSubtypeItemSelectorCriterion,
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
-		throws IOException, ServletException {
+		throws IOException {
 
-		try {
-			servletRequest.setAttribute(
-				ContentDashboardItemSubtypeItemSelectorViewDisplayContext.class.
-					getName(),
-				new ContentDashboardItemSubtypeItemSelectorViewDisplayContext(
-					_getContentDashboardItemTypesJSONArray(
-						servletRequest,
-						(ThemeDisplay)servletRequest.getAttribute(
-							WebKeys.THEME_DISPLAY)),
-					itemSelectedEventName));
-		}
-		catch (JSONException jsonException) {
-			throw new IOException(jsonException);
-		}
+		PrintWriter printWriter = servletResponse.getWriter();
 
-		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher(
-				"/view_content_dashboard_item_types.jsp");
+		printWriter.write("<section class=\"h-100\">");
 
-		requestDispatcher.include(servletRequest, servletResponse);
+		String moduleName = _npmResolver.resolveModuleName(
+			"@liferay/content-dashboard-web");
+
+		_reactRenderer.renderReact(
+			new ComponentDescriptor(
+				moduleName + "/js/components/SelectTypeAndSubtype"),
+			HashMapBuilder.<String, Object>put(
+				"contentDashboardItemTypes",
+				_getContentDashboardItemTypesJSONArray(servletRequest)
+			).put(
+				"itemSelectorSaveEvent", itemSelectedEventName
+			).build(),
+			(HttpServletRequest)servletRequest, printWriter);
+
+		printWriter.write("</section>");
 	}
 
 	private Set<InfoItemReference>
 		_getCheckedContentDashboardItemSubtypesInfoItemReferences(
 			ServletRequest servletRequest) {
 
-		return Stream.of(
-			Optional.ofNullable(
-				servletRequest.getParameterValues(
-					"checkedContentDashboardItemSubtypesPayload")
-			).orElseGet(
-				() -> new String[0]
-			)
-		).map(
-			jsonObjectString -> {
-				try {
-					return _jsonFactory.createJSONObject(jsonObjectString);
-				}
-				catch (JSONException jsonException) {
-					_log.error(jsonException);
+		String[] parameterValues = servletRequest.getParameterValues(
+			"checkedContentDashboardItemSubtypesPayload");
 
-					return null;
-				}
+		if (ArrayUtil.isEmpty(parameterValues)) {
+			return Collections.emptySet();
+		}
+
+		Set<InfoItemReference> infoItemReferences = new HashSet<>();
+
+		for (String parameterValue : parameterValues) {
+			try {
+				JSONObject jsonObject = _jsonFactory.createJSONObject(
+					parameterValue);
+
+				infoItemReferences.add(
+					new InfoItemReference(
+						jsonObject.getString("className"),
+						new ClassNameClassPKInfoItemIdentifier(
+							jsonObject.getString("entryClassName"),
+							jsonObject.getLong("classPK"))));
 			}
-		).filter(
-			Objects::nonNull
-		).map(
-			jsonObject -> new InfoItemReference(
-				jsonObject.getString("className"),
-				new ClassNameClassPKInfoItemIdentifier(
-					jsonObject.getString("entryClassName"),
-					jsonObject.getLong("classPK")))
-		).collect(
-			Collectors.toSet()
-		);
+			catch (JSONException jsonException) {
+				_log.error(jsonException);
+			}
+		}
+
+		return infoItemReferences;
 	}
 
 	private JSONArray _getContentDashboardItemTypesJSONArray(
-			ServletRequest servletRequest, ThemeDisplay themeDisplay)
-		throws JSONException {
+		ServletRequest servletRequest) {
+
+		JSONArray contentDashboardItemTypesJSONArray =
+			_jsonFactory.createJSONArray();
 
 		Set<InfoItemReference>
 			checkedContentDashboardItemSubtypesInfoItemReferences =
 				_getCheckedContentDashboardItemSubtypesInfoItemReferences(
 					servletRequest);
-
-		JSONArray contentDashboardItemTypesJSONArray =
-			_jsonFactory.createJSONArray();
+		ThemeDisplay themeDisplay = (ThemeDisplay)servletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		for (String className :
 				_contentDashboardItemFactoryRegistry.getClassNames()) {
@@ -216,15 +205,22 @@ public class ContentDashboardItemSubtypeItemSelectorView
 	}
 
 	private String _getIcon(String className) {
-		return Optional.ofNullable(
-			_infoSearchClassMapperRegistry.getSearchClassName(className)
-		).map(
-			AssetRendererFactoryRegistryUtil::getAssetRendererFactoryByClassName
-		).map(
-			AssetRendererFactory::getIconCssClass
-		).orElseGet(
-			null
-		);
+		String searchClassName =
+			_infoSearchClassMapperRegistry.getSearchClassName(className);
+
+		if (searchClassName == null) {
+			return null;
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				searchClassName);
+
+		if (assetRendererFactory == null) {
+			return null;
+		}
+
+		return assetRendererFactory.getIconCssClass();
 	}
 
 	private String _getInfoItemFormVariationLabel(
@@ -242,11 +238,20 @@ public class ContentDashboardItemSubtypeItemSelectorView
 			return label;
 		}
 
-		String value = _language.format(
-			locale, "x-group-x",
-			new String[] {
-				label, ContentDashboardGroupUtil.getGroupName(group, locale)
-			});
+		String value = null;
+
+		try {
+			value = _language.format(
+				locale, "x-group-x",
+				new String[] {label, group.getDescriptiveName(locale)});
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			value = _language.format(
+				locale, "x-group-x",
+				new String[] {label, group.getName(locale)});
+		}
 
 		if (value != null) {
 			return value;
@@ -428,9 +433,10 @@ public class ContentDashboardItemSubtypeItemSelectorView
 	@Reference
 	private Language _language;
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.content.dashboard.web)"
-	)
-	private ServletContext _servletContext;
+	@Reference
+	private NPMResolver _npmResolver;
+
+	@Reference
+	private ReactRenderer _reactRenderer;
 
 }

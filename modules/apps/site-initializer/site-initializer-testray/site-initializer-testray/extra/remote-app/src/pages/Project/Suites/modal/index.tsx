@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useState} from 'react';
+import {useOutletContext} from 'react-router-dom';
+import {TestraySuite} from '~/services/rest';
 
 import Form from '../../../../components/Form';
 import Modal from '../../../../components/Modal';
 import {FormModalOptions} from '../../../../hooks/useFormModal';
 import i18n from '../../../../i18n';
+import {getCaseParameters} from '../useSuiteCaseFilter';
 import SelectCase from './SelectCase';
-import SelectCaseParameters from './SelectCaseParameters';
+import SelectCaseParameters, {State} from './SelectCaseParameters';
 
 type SuiteSelectCasesModalProps = {
 	modal: FormModalOptions;
@@ -32,7 +26,11 @@ const SuiteFormSelectModal: React.FC<SuiteSelectCasesModalProps> = ({
 	selectedCaseIds,
 	type,
 }) => {
-	const [state, setState] = useState<any>({});
+	const {testraySuite}: {testraySuite: TestraySuite} = useOutletContext();
+
+	const caseParameters = getCaseParameters(testraySuite);
+
+	const [state, setState] = useState<State>(caseParameters || {});
 
 	return (
 		<Modal
@@ -51,7 +49,11 @@ const SuiteFormSelectModal: React.FC<SuiteSelectCasesModalProps> = ({
 			visible={visible}
 		>
 			{type === 'select-case-parameters' && (
-				<SelectCaseParameters setState={setState} state={state} />
+				<SelectCaseParameters
+					selectedCaseIds={selectedCaseIds}
+					setState={setState}
+					state={state}
+				/>
 			)}
 
 			{type === 'select-cases' && (

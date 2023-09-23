@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.contributor.test;
@@ -30,6 +21,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -37,20 +29,16 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -80,8 +68,17 @@ public class FragmentCollectionContributorTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
+		_originalServiceContext = ServiceContextThreadLocal.getServiceContext();
+
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getGroupId());
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		ServiceContextThreadLocal.pushServiceContext(_originalServiceContext);
 	}
 
 	@Test
@@ -281,78 +278,11 @@ public class FragmentCollectionContributorTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
+	private ServiceContext _originalServiceContext;
+
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
-
-	private static class TestFragmentCollectionContributor
-		implements FragmentCollectionContributor {
-
-		public TestFragmentCollectionContributor(
-			String fragmentCollectionKey,
-			Map<Integer, FragmentEntry> fragmentEntriesMap) {
-
-			_fragmentCollectionKey = fragmentCollectionKey;
-			_fragmentEntriesMap = fragmentEntriesMap;
-		}
-
-		@Override
-		public String getFragmentCollectionKey() {
-			return _fragmentCollectionKey;
-		}
-
-		@Override
-		public List<FragmentEntry> getFragmentEntries() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public List<FragmentEntry> getFragmentEntries(int type) {
-			FragmentEntry fragmentEntry = _fragmentEntriesMap.get(type);
-
-			if (fragmentEntry != null) {
-				return Collections.singletonList(fragmentEntry);
-			}
-
-			return Collections.emptyList();
-		}
-
-		@Override
-		public List<FragmentEntry> getFragmentEntries(int[] types) {
-			List<FragmentEntry> fragmentEntries = new ArrayList<>();
-
-			for (int type : types) {
-				FragmentEntry fragmentEntry = _fragmentEntriesMap.get(type);
-
-				if (fragmentEntry != null) {
-					fragmentEntries.add(fragmentEntry);
-				}
-			}
-
-			return fragmentEntries;
-		}
-
-		@Override
-		public List<FragmentEntry> getFragmentEntries(Locale locale) {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public String getName() {
-			return "Test Fragment Collection Contributor";
-		}
-
-		@Override
-		public Map<Locale, String> getNames() {
-			return HashMapBuilder.put(
-				LocaleUtil.getSiteDefault(), getName()
-			).build();
-		}
-
-		private final String _fragmentCollectionKey;
-		private final Map<Integer, FragmentEntry> _fragmentEntriesMap;
-
-	}
 
 }

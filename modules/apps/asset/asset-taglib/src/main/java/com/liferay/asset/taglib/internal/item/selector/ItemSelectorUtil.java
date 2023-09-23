@@ -1,53 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.taglib.internal.item.selector;
 
 import com.liferay.item.selector.ItemSelector;
-
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import com.liferay.osgi.util.service.Snapshot;
 
 /**
  * @author Pavel Savinov
  */
-@Component(service = {})
 public class ItemSelectorUtil {
 
 	public static ItemSelector getItemSelector() {
-		return _itemSelectorUtil._getItemSelector();
+		return _itemSelectorSnapshot.get();
 	}
 
-	@Activate
-	protected void activate() {
-		_itemSelectorUtil = this;
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_itemSelectorUtil = null;
-	}
-
-	private ItemSelector _getItemSelector() {
-		return _itemSelector;
-	}
-
-	private static ItemSelectorUtil _itemSelectorUtil;
-
-	@Reference
-	private ItemSelector _itemSelector;
+	private static final Snapshot<ItemSelector> _itemSelectorSnapshot =
+		new Snapshot<>(ItemSelectorUtil.class, ItemSelector.class);
 
 }

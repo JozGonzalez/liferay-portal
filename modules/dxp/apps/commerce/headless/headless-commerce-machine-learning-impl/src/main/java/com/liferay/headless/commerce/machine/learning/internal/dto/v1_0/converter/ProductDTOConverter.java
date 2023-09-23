@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter;
@@ -19,6 +10,9 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPDefinitionOptionRel;
+import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
+import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -46,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.product.model.CPDefinition",
-	service = {DTOConverter.class, ProductDTOConverter.class}
+	service = DTOConverter.class
 )
 public class ProductDTOConverter
 	implements DTOConverter<CPDefinition, Product> {
@@ -113,7 +107,7 @@ public class ProductDTOConverter
 						CommerceChannel commerceChannel =
 							commerceChannelRel.getCommerceChannel();
 
-						return commerceChannel.getGroupId();
+						return commerceChannel.getCommerceChannelId();
 					},
 					Long.class);
 				productId = cProduct.getCProductId();
@@ -161,13 +155,22 @@ public class ProductDTOConverter
 	@Reference
 	private CPTypeRegistry _cpTypeRegistry;
 
-	@Reference
-	private ProductOptionDTOConverter _productOptionDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.ProductOptionDTOConverter)"
+	)
+	private DTOConverter<CPDefinitionOptionRel, ProductOption>
+		_productOptionDTOConverter;
 
-	@Reference
-	private ProductSpecificationDTOConverter _productSpecificationDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.ProductSpecificationDTOConverter)"
+	)
+	private DTOConverter
+		<CPDefinitionSpecificationOptionValue, ProductSpecification>
+			_productSpecificationDTOConverter;
 
-	@Reference
-	private SkuDTOConverter _skuDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.SkuDTOConverter)"
+	)
+	private DTOConverter<CPInstance, Sku> _skuDTOConverter;
 
 }

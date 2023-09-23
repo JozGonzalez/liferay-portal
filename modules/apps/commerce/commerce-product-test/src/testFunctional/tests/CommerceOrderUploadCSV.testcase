@@ -55,7 +55,10 @@ definition {
 		}
 
 		task ("And when the user downloads the CSV template file") {
-			Button.click(button = "Download Template");
+			AssertClick(
+				key_text = "Download Template",
+				locator1 = "Button#ANY",
+				value1 = "Download Template");
 		}
 
 		task ("Then the template is downloaded as .csv file and populated") {
@@ -194,7 +197,11 @@ definition {
 
 			SelectFrameTop();
 
-			Alert.viewErrorMessage(errorMessage = "1 row was not imported.");
+			WaitForElementPresent(locator1 = "Message#ERROR");
+
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Error: 1 row was not imported.");
 		}
 	}
 
@@ -405,9 +412,9 @@ definition {
 		}
 
 		task ("And can see data set is filled with the following data in the preview modal and only twenty items are displayed") {
-			Pagination.changePagination(itemsPerPage = "20 items");
+			Pagination.changePagination(itemsPerPage = "20 Items");
 
-			CommerceEntry.viewPaginationResults(results = "Showing 1 to 20 of 216");
+			CommerceEntry.viewPaginationResults(results = "Showing 1 to 20 of 216 entries.");
 
 			CommerceOrders.assertOrderImportPreviewEntry(
 				productName = "Brake Fluid",
@@ -427,7 +434,7 @@ definition {
 		}
 
 		task ("Then twenty different items are displayed") {
-			CommerceEntry.viewPaginationResults(results = "Showing 21 to 40 of 216");
+			CommerceEntry.viewPaginationResults(results = "Showing 21 to 40 of 216 entries.");
 
 			CommerceOrders.assertOrderImportPreviewEntry(
 				productName = "Drive Shafts",
@@ -461,7 +468,7 @@ definition {
 
 			Click(locator1 = "ACUtils#PREVIOUS_PAGES");
 
-			CommerceEntry.viewPaginationResults(results = "Showing 1 to 20 of 216");
+			CommerceEntry.viewPaginationResults(results = "Showing 1 to 20 of 216 entries.");
 
 			CommerceOrders.assertOrderImportPreviewEntry(
 				productName = "Brake Fluid",
@@ -471,7 +478,7 @@ definition {
 				key_pageNumber = 3,
 				locator1 = "ACUtils#ANY_PAGE");
 
-			CommerceEntry.viewPaginationResults(results = "Showing 41 to 60 of 216");
+			CommerceEntry.viewPaginationResults(results = "Showing 41 to 60 of 216 entries.");
 
 			CommerceOrders.assertOrderImportPreviewEntry(
 				productName = "U-Joint",

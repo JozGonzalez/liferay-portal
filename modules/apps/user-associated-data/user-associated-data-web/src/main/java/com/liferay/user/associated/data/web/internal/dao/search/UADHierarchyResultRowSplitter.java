@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.dao.search;
@@ -43,19 +34,18 @@ public class UADHierarchyResultRowSplitter implements ResultRowSplitter {
 		List<ResultRowSplitterEntry> resultRowSplitterEntries =
 			new ArrayList<>();
 
-		Map<Class<?>, List<ResultRow>> classResultRowsMap = new HashMap<>();
+		Map<String, List<ResultRow>> classResultRowsMap = new HashMap<>();
 
 		for (UADDisplay<?> uadDisplay : _uadDisplays) {
-			classResultRowsMap.put(
-				uadDisplay.getTypeClass(), new ArrayList<>());
+			classResultRowsMap.put(uadDisplay.getTypeKey(), new ArrayList<>());
 		}
 
 		for (ResultRow resultRow : resultRows) {
 			UADEntity<?> uadEntity = (UADEntity<?>)resultRow.getObject();
 
-			if (classResultRowsMap.containsKey(uadEntity.getTypeClass())) {
+			if (classResultRowsMap.containsKey(uadEntity.getTypeKey())) {
 				List<ResultRow> classResultRows = classResultRowsMap.get(
-					uadEntity.getTypeClass());
+					uadEntity.getTypeKey());
 
 				classResultRows.add(resultRow);
 			}
@@ -63,7 +53,7 @@ public class UADHierarchyResultRowSplitter implements ResultRowSplitter {
 
 		for (UADDisplay<?> uadDisplay : _uadDisplays) {
 			List<ResultRow> classResultRows = classResultRowsMap.get(
-				uadDisplay.getTypeClass());
+				uadDisplay.getTypeKey());
 
 			if (!classResultRows.isEmpty()) {
 				resultRowSplitterEntries.add(

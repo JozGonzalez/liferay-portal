@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.js.web.internal.servlet.taglib.aui;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.servlet.taglib.aui.AMDRequire;
 import com.liferay.portal.kernel.servlet.taglib.aui.ESImport;
 import com.liferay.portal.kernel.servlet.taglib.aui.JSFragment;
@@ -37,6 +29,28 @@ public class PortletDataRendererImplTest {
 
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@Test
+	public void testAliasedESImports() throws Exception {
+		PortletDataRendererImpl portletDataRendererImpl =
+			new PortletDataRendererImpl();
+
+		PortletData portletData = new PortletData();
+
+		portletData.add(
+			new JSFragment(
+				null, null, "content",
+				Arrays.asList(new ESImport("alias", "module", "symbol"))));
+
+		Writer writer = new CharArrayWriter();
+
+		portletDataRendererImpl.write(Arrays.asList(portletData), writer);
+
+		String code = writer.toString();
+
+		Assert.assertTrue(
+			code, code.contains("import {symbol as alias} from 'module';"));
+	}
 
 	@Test
 	public void testAMDCodeIsWrappedInIIFE() throws Exception {
@@ -99,6 +113,28 @@ public class PortletDataRendererImplTest {
 		String code = writer.toString();
 
 		Assert.assertTrue(code.contains("{\ncontent\n}\n"));
+	}
+
+	@Test
+	public void testESImports() throws Exception {
+		PortletDataRendererImpl portletDataRendererImpl =
+			new PortletDataRendererImpl();
+
+		PortletData portletData = new PortletData();
+
+		portletData.add(
+			new JSFragment(
+				null, null, "content",
+				Arrays.asList(new ESImport("module", "symbol"))));
+
+		Writer writer = new CharArrayWriter();
+
+		portletDataRendererImpl.write(Arrays.asList(portletData), writer);
+
+		String code = writer.toString();
+
+		Assert.assertTrue(
+			code, code.contains("import {symbol} from 'module';"));
 	}
 
 	@Test
@@ -251,6 +287,28 @@ public class PortletDataRendererImplTest {
 	}
 
 	@Test
+	public void testSameAliasAndSymbolOmitsAlias() throws Exception {
+		PortletDataRendererImpl portletDataRendererImpl =
+			new PortletDataRendererImpl();
+
+		PortletData portletData = new PortletData();
+
+		portletData.add(
+			new JSFragment(
+				null, null, "content",
+				Arrays.asList(new ESImport("symbol", "module", "symbol"))));
+
+		Writer writer = new CharArrayWriter();
+
+		portletDataRendererImpl.write(Arrays.asList(portletData), writer);
+
+		String code = writer.toString();
+
+		Assert.assertTrue(
+			code, code.contains("import {symbol} from 'module';"));
+	}
+
+	@Test
 	public void testScriptTypeIsModuleWhenESMImportsArePresent()
 		throws Exception {
 
@@ -291,6 +349,28 @@ public class PortletDataRendererImplTest {
 		String code = writer.toString();
 
 		Assert.assertTrue(code.contains("<script type=\"text/javascript\">"));
+	}
+
+	@Test
+	public void testSymbolLessESImports() throws Exception {
+		PortletDataRendererImpl portletDataRendererImpl =
+			new PortletDataRendererImpl();
+
+		PortletData portletData = new PortletData();
+
+		portletData.add(
+			new JSFragment(
+				null, null, "content",
+				Arrays.asList(
+					new ESImport("alias", "module", StringPool.BLANK))));
+
+		Writer writer = new CharArrayWriter();
+
+		portletDataRendererImpl.write(Arrays.asList(portletData), writer);
+
+		String code = writer.toString();
+
+		Assert.assertTrue(code, code.contains("import alias from 'module';"));
 	}
 
 	private void _assertAliases(String code, String... aliases) {

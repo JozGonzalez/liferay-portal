@@ -13,8 +13,7 @@ definition {
 		return ${getItem};
 	}
 
-	@summary = "Get the value from the Applications page and put it in a list"
-	macro getValueFromApplicationsPage {
+	macro getValue {
 		var number = 0;
 		var list = ListUtil.newList();
 

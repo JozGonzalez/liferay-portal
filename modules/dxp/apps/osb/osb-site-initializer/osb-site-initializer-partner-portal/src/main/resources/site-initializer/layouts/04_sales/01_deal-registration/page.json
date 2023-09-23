@@ -1,10 +1,8 @@
 {
-	"friendlyURL_i18n": {
-		"en_US": "/sales/deal-registrations"
-	},
-	"hidden": true,
+	"friendlyURL": "/sales/deal-registrations",
+	"hidden": false,
 	"name_i18n": {
-		"en_US": "Partner Deal Registration"
+		"en_US": "Deal Registrations"
 	},
 	"permissions": [
 		{
@@ -15,16 +13,71 @@
 		},
 		{
 			"actionIds": [
-				"VIEW"
 			],
-			"roleName": "User",
+			"roleName": "Site Member",
 			"scope": 4
 		},
 		{
 			"actionIds": [
 				"VIEW"
 			],
-			"roleName": "Site Member",
+			"roleName": "Partner Manager (PM)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Partner Marketing User (PMU)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Partner Sales User (PSU)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Partner Technical User (PTU)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Channel Account Manager (CAM)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Channel Operations Manager (COM)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Channel Marketing Manager (CMM)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Channel Marketing Director (CMD)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Channel Finance Manager (CFM)",
 			"scope": 4
 		}
 	],

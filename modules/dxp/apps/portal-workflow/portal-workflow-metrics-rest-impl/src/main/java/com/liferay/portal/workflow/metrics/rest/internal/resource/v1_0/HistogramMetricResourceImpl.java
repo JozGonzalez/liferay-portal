@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -25,12 +16,13 @@ import com.liferay.portal.search.aggregation.bucket.RangeAggregationResult;
 import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Histogram;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.HistogramMetric;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.HistogramMetricResource;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -92,8 +84,8 @@ public class HistogramMetricResourceImpl
 		searchSearchRequest.addAggregation(dateRangeAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE);
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
@@ -154,8 +146,8 @@ public class HistogramMetricResourceImpl
 	private Histogram _createHistogram(LocalDateTime localDateTime) {
 		return new Histogram() {
 			{
-				setKey(localDateTime.toString());
-				setValue(0.0);
+				key = localDateTime.toString();
+				value = 0.0;
 			}
 		};
 	}
@@ -297,9 +289,8 @@ public class HistogramMetricResourceImpl
 	private final DateTimeFormatter _dateTimeFormatter =
 		DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
-	private WorkflowMetricsIndexNameBuilder
-		_instanceWorkflowMetricsIndexNameBuilder;
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Queries _queries;

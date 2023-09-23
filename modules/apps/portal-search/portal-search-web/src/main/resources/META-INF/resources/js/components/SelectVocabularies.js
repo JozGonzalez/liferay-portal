@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -39,24 +30,13 @@ const SELECT_OPTIONS = {
 };
 
 /**
- * Converts a stringified list of IDs into an array of numbers. This separates
- * values by commas, filters out empty values, and parses the string into a
- * number, if possible.
+ * Converts a stringified list of IDs into an array of IDs. This separates
+ * values by commas and filters out empty values.
  * @param {string} idsString The list of IDs as a string
- * @return {Array} Array of ID numbers
+ * @return {Array} Array of IDs as strings
  */
 const convertToIDArray = (idsString) =>
-	idsString
-		.split(',')
-		.filter((id) => id !== '')
-		.map((id) => {
-			try {
-				return JSON.parse(id);
-			}
-			catch {
-				return id;
-			}
-		});
+	idsString.split(',').filter((id) => id !== '');
 
 function SiteRow({disabled, name, onSelect, vocabularies}) {
 	const _handleSelect = (select = true) => (event) => {
@@ -66,7 +46,10 @@ function SiteRow({disabled, name, onSelect, vocabularies}) {
 	};
 
 	return (
-		<div className="autofit-row">
+		<div
+			className="autofit-row"
+			style={{marginLeft: vocabularies.length ? '0' : '-24px'}}
+		>
 			<div className="autofit-col">
 				<ClayButton
 					className="component-expander"
@@ -86,35 +69,41 @@ function SiteRow({disabled, name, onSelect, vocabularies}) {
 				</ClayButton>
 			</div>
 
-			<div className="autofit-col">{name}</div>
+			<div className={getCN('autofit-col', {'text-muted': disabled})}>
+				{name}
+			</div>
 
 			<div className="autofit-col autofit-col-expand" />
 
 			{!!vocabularies.length && !disabled && (
 				<div className="autofit-col">
-					<ClayButton.Group spaced>
-						<ClayButton
-							className="quick-action-item"
-							displayType="secondary"
-							onClick={_handleSelect()}
-							small
-						>
-							<span className="c-inner" tabIndex="-2">
-								{Liferay.Language.get('select-all')}
-							</span>
-						</ClayButton>
+					<span className="autofit-row">
+						<span className="autofit-col c-mr-1">
+							<ClayButton
+								className="quick-action-item"
+								displayType="secondary"
+								onClick={_handleSelect()}
+								small
+							>
+								<span className="c-inner" tabIndex="-2">
+									{Liferay.Language.get('select-all')}
+								</span>
+							</ClayButton>
+						</span>
 
-						<ClayButton
-							className="quick-action-item"
-							displayType="secondary"
-							onClick={_handleSelect(false)}
-							small
-						>
-							<span className="c-inner" tabIndex="-2">
-								{Liferay.Language.get('deselect-all')}
-							</span>
-						</ClayButton>
-					</ClayButton.Group>
+						<span className="autofit-col">
+							<ClayButton
+								className="quick-action-item"
+								displayType="secondary"
+								onClick={_handleSelect(false)}
+								small
+							>
+								<span className="c-inner" tabIndex="-2">
+									{Liferay.Language.get('deselect-all')}
+								</span>
+							</ClayButton>
+						</span>
+					</span>
 				</div>
 			)}
 		</div>
@@ -143,7 +132,7 @@ function VocabularyTree({
 		setSelectedKeys(newList);
 	};
 
-	const _handleToggle = (id) => () => {
+	const _handleToggle = (id) => {
 		_handleSelect([{id}], !selectedKeys.has(id));
 	};
 
@@ -158,6 +147,7 @@ function VocabularyTree({
 				aria-disabled="true"
 				checked={checked}
 				className="custom-control-input"
+				disabled={true}
 				readOnly
 				type="checkbox"
 			/>
@@ -208,7 +198,10 @@ function VocabularyTree({
 										)}
 									</TreeView.Item>
 								) : (
-									<TreeView.Item key={id}>
+									<TreeView.Item
+										key={id}
+										style={{cursor: 'unset'}}
+									>
 										<ClayCheckbox
 											checked={selectedKeys.has(id)}
 											onChange={() => _handleToggle(id)}
@@ -230,7 +223,7 @@ function VocabularyTree({
 			)}
 		</TreeView>
 	) : (
-		<span className="text-3 text-secondary">
+		<span className="c-mb-0 sheet-text text-3">
 			{Liferay.Language.get(
 				'an-error-has-occurred-and-we-were-unable-to-load-the-results'
 			)}
@@ -274,11 +267,31 @@ function SelectVocabularies({
 	const _handleFetchVocabularyTree = () => {
 		setVocabularyTreeLoading(true);
 
-		fetch('/o/headless-admin-user/v1.0/my-user-account', CONFIGURATION)
+		fetch(
+			'/o/headless-admin-user/v1.0/my-user-account/sites',
+			CONFIGURATION
+		)
 			.then((response) => response.json())
-			.then(({siteBriefs}) => {
+			.then(({items}) => {
+
+				// Check for presence of Global Site. If unavailable, add to the list.
+
+				const itemsWithGlobalSite = items.some(
+					({id}) =>
+						id.toString() ===
+						Liferay.ThemeDisplay.getCompanyGroupId().toString()
+				)
+					? items
+					: [
+							{
+								descriptiveName: Liferay.Language.get('global'),
+								id: Liferay.ThemeDisplay.getCompanyGroupId(),
+							},
+							...items,
+					  ];
+
 				Promise.all(
-					siteBriefs.map((site) =>
+					itemsWithGlobalSite.map((site) =>
 						fetch(
 							`/o/headless-admin-taxonomy/v1.0/sites/${site.id}/taxonomy-vocabularies?page=0&pageSize=0`,
 							CONFIGURATION
@@ -290,13 +303,13 @@ function SelectVocabularies({
 
 						setVocabularyTree(
 							response.map((vocabularies, index) => ({
-								...siteBriefs[index],
+								...itemsWithGlobalSite[index],
 								children: (vocabularies?.items || []).map(
 									({id, name}) => {
-										ids.push(id); // Collect IDs for _isDisplayInfoSelectedVocabulariesHidden
+										ids.push(id.toString()); // Collect IDs for _isDisplayInfoSelectedVocabulariesHidden
 
 										return {
-											id,
+											id: id.toString(),
 											name,
 										};
 									}
@@ -326,7 +339,7 @@ function SelectVocabularies({
 		);
 
 	return (
-		<div className={getCN('select-vocabularies', {disabled})}>
+		<div className="select-vocabularies">
 			<label className={getCN({disabled})}>
 				{Liferay.Language.get('select-vocabularies')}
 			</label>
@@ -343,14 +356,16 @@ function SelectVocabularies({
 				}
 			/>
 
-			<div className="select-vocabularies-helptext text-3">
-				{Liferay.Language.get(
-					'select-vocabularies-configuration-description'
-				)}
+			<div className="c-mb-3 c-mt-2 sheet-text text-3">
+				<span className={getCN({'text-muted': disabled})}>
+					{Liferay.Language.get(
+						'select-vocabularies-configuration-description'
+					)}
+				</span>
 
 				{!disabled && (
 					<LearnMessage
-						className="ml-1"
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="tag-and-category-facet"
 					/>
@@ -375,6 +390,7 @@ function SelectVocabularies({
 				_isDisplayInfoSelectedVocabulariesHidden() && (
 					<ClayAlert
 						displayType="info"
+						style={{opacity: disabled ? 0.5 : 1}}
 						title={`${Liferay.Language.get('info')}:`}
 					>
 						{Liferay.Language.get(
@@ -382,6 +398,7 @@ function SelectVocabularies({
 						)}
 
 						<LearnMessage
+							className="c-ml-1"
 							learnMessages={learnMessages}
 							resourceKey="tag-and-category-facet"
 						/>

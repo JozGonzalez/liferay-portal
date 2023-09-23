@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context;
@@ -33,6 +24,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -53,7 +45,6 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowEngineManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.util.RepositoryUtil;
@@ -86,171 +77,194 @@ public class FolderActionDisplayContext {
 
 	public List<DropdownItem> getActionDropdownItems() {
 		return DropdownItemListBuilder.addGroup(
-			dropdownGroupItem -> dropdownGroupItem.setDropdownItems(
-				DropdownItemListBuilder.add(
-					this::_isDownloadFolderActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getDownloadFolderURL());
-						dropdownItem.setIcon("download");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "download"));
-					}
-				).add(
-					this::_isEditFolderActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getEditFolderURL());
-						dropdownItem.setIcon("pencil");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "edit"));
-					}
-				).add(
-					this::_isMoveFolderActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getMoveFolderURL());
-						dropdownItem.setIcon("move-folder");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "move"));
-					}
-				).add(
-					this::_isDeleteExpiredTemporaryFileEntriesActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_getDeleteExpiredTemporaryFileEntriesURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest,
-								"delete-expired-temporary-files"));
-					}
-				).add(
-					this::_isAddFolderActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getAddFolderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "add-folder"));
-					}
-				).add(
-					this::_isAddRepositoryActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getAddRepositoryURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "add-repository"));
-					}
-				).add(
-					this::_isAddMediaActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getAddMediaURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "add-file-entry"));
-					}
-				).add(
-					() ->
-						_isAddMediaActionVisible() &&
-						_isMultipleUploadSupported(),
-					dropdownItem -> {
-						dropdownItem.put(
-							"class",
-							"dropdown-item hide upload-multiple-documents");
-						dropdownItem.setHref(_getAddMultipleMediaURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "multiple-media"));
-					}
-				).add(
-					this::_isViewSlideShowActionVisible,
-					dropdownItem -> {
-						dropdownItem.putData("action", "slideShow");
-						dropdownItem.putData(
-							"viewSlideShowURL", _getViewSlideShowURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "view-slide-show"));
-					}
-				).add(
-					this::_isAddFileShortcutActionVisible,
-					dropdownItem -> {
-						dropdownItem.setHref(_getAddFileShortcutURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "add-shortcut"));
-					}
-				).add(
-					this::_isAccessFromDesktopActionVisible,
-					dropdownItem -> {
-						dropdownItem.putData("action", "accessFromDesktop");
-
-						LearnMessage learnMessage =
-							LearnMessageUtil.getLearnMessage(
-								"webdav",
-								LanguageUtil.getLanguageId(_httpServletRequest),
-								"document-library-web");
-
-						dropdownItem.putData(
-							"learnMessage", learnMessage.getMessage());
-						dropdownItem.putData(
-							"learnURL", learnMessage.getMessage());
-
-						ThemeDisplay themeDisplay =
-							(ThemeDisplay)_httpServletRequest.getAttribute(
-								WebKeys.THEME_DISPLAY);
-
-						dropdownItem.putData(
-							"webDavURL",
-							DLURLHelperUtil.getWebDavURL(
-								themeDisplay, _getFolder(), null));
-
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "access-from-desktop"));
-					}
-				).add(
-					this::_isPermissionsActionVisible,
-					dropdownItem -> {
-						dropdownItem.putData("action", "permissions");
-
-						String permissionsURL = PermissionsURLTag.doTag(
-							StringPool.BLANK, _getModelResource(),
-							HtmlUtil.escape(_getModelResourceDescription()),
-							null, String.valueOf(_getResourcePrimKey()),
-							LiferayWindowState.POP_UP.toString(), null,
-							_httpServletRequest);
-
-						dropdownItem.putData("permissionsURL", permissionsURL);
-
-						dropdownItem.setIcon("password-policies");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "permissions"));
-					}
-				).add(
-					this::_isDeleteFolderActionVisible,
-					dropdownItem -> {
-						if (_isTrashEnabled()) {
-							dropdownItem.setHref(_getDeleteFolderURL());
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						this::_isDownloadFolderActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getDownloadFolderURL());
+							dropdownItem.setIcon("download");
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "download"));
 						}
-						else {
-							dropdownItem.putData("action", "delete");
+					).add(
+						this::_isEditFolderActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getEditFolderURL());
+							dropdownItem.setIcon("pencil");
+							dropdownItem.setLabel(
+								LanguageUtil.get(_httpServletRequest, "edit"));
+						}
+					).add(
+						this::_isMoveFolderActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getMoveFolderURL());
+							dropdownItem.setIcon("move-folder");
+							dropdownItem.setLabel(
+								LanguageUtil.get(_httpServletRequest, "move"));
+						}
+					).add(
+						this::_isCopyActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getCopyURL());
+							dropdownItem.setIcon("copy");
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "copy-to"));
+						}
+					).add(
+						this::_isDeleteExpiredTemporaryFileEntriesActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(
+								_getDeleteExpiredTemporaryFileEntriesURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									"delete-expired-temporary-files"));
+						}
+					).add(
+						this::_isAddFolderActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getAddFolderURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "add-folder"));
+						}
+					).add(
+						this::_isAddRepositoryActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getAddRepositoryURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "add-repository"));
+						}
+					).add(
+						this::_isAddMediaActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getAddMediaURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "add-file-entry"));
+						}
+					).add(
+						() ->
+							_isAddMediaActionVisible() &&
+							_isMultipleUploadSupported(),
+						dropdownItem -> {
+							dropdownItem.put(
+								"class",
+								"dropdown-item hide upload-multiple-documents");
+							dropdownItem.setHref(_getAddMultipleMediaURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "multiple-media"));
+						}
+					).add(
+						this::_isViewSlideShowActionVisible,
+						dropdownItem -> {
+							dropdownItem.putData("action", "slideShow");
 							dropdownItem.putData(
-								"deleteURL", _getDeleteFolderURL());
+								"viewSlideShowURL", _getViewSlideShowURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "view-slide-show"));
 						}
+					).add(
+						this::_isAddFileShortcutActionVisible,
+						dropdownItem -> {
+							dropdownItem.setHref(_getAddFileShortcutURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "add-shortcut"));
+						}
+					).add(
+						this::_isAccessFromDesktopActionVisible,
+						dropdownItem -> {
+							dropdownItem.putData("action", "accessFromDesktop");
 
-						dropdownItem.setIcon("trash");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "delete"));
-					}
-				).add(
-					this::_isPublishFolderActionVisible,
-					dropdownItem -> {
-						dropdownItem.putData("action", "publish");
-						dropdownItem.putData(
-							"publishURL", _getPublishFolderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "publish-to-live"));
-					}
-				).build())
+							LearnMessage learnMessage =
+								LearnMessageUtil.getLearnMessage(
+									"webdav",
+									LanguageUtil.getLanguageId(
+										_httpServletRequest),
+									"document-library-web");
+
+							dropdownItem.putData(
+								"learnMessage", learnMessage.getMessage());
+							dropdownItem.putData(
+								"learnURL", learnMessage.getMessage());
+
+							ThemeDisplay themeDisplay =
+								(ThemeDisplay)_httpServletRequest.getAttribute(
+									WebKeys.THEME_DISPLAY);
+
+							dropdownItem.putData(
+								"webDavURL",
+								DLURLHelperUtil.getWebDavURL(
+									themeDisplay, _getFolder(), null));
+
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									"access-from-desktop"));
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
+			}
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						this::_isPermissionsActionVisible,
+						dropdownItem -> {
+							dropdownItem.putData("action", "permissions");
+
+							String permissionsURL = PermissionsURLTag.doTag(
+								StringPool.BLANK, _getModelResource(),
+								HtmlUtil.escape(_getModelResourceDescription()),
+								null, String.valueOf(_getResourcePrimKey()),
+								LiferayWindowState.POP_UP.toString(), null,
+								_httpServletRequest);
+
+							dropdownItem.putData(
+								"permissionsURL", permissionsURL);
+
+							dropdownItem.setIcon("password-policies");
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "permissions"));
+						}
+					).add(
+						this::_isDeleteFolderActionVisible,
+						dropdownItem -> {
+							if (_isTrashEnabled()) {
+								dropdownItem.setHref(_getDeleteFolderURL());
+							}
+							else {
+								dropdownItem.putData("action", "delete");
+								dropdownItem.putData(
+									"deleteURL", _getDeleteFolderURL());
+							}
+
+							dropdownItem.setIcon("trash");
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "delete"));
+						}
+					).add(
+						this::_isPublishFolderActionVisible,
+						dropdownItem -> {
+							dropdownItem.putData("action", "publish");
+							dropdownItem.putData(
+								"publishURL", _getPublishFolderURL());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "publish-to-live"));
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
+			}
 		).build();
 	}
 
@@ -349,6 +363,20 @@ public class FolderActionDisplayContext {
 			_dlRequestHelper.getCurrentURL()
 		).setParameter(
 			"folderId", _getFolderId()
+		).buildString();
+	}
+
+	private String _getCopyURL() {
+		return PortletURLBuilder.createRenderURL(
+			_dlRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/document_library/copy_folder"
+		).setRedirect(
+			_dlRequestHelper.getCurrentURL()
+		).setParameter(
+			"sourceFolderId", _getFolderId()
+		).setParameter(
+			"sourceRepositoryId", _getRepositoryId()
 		).buildString();
 	}
 
@@ -760,6 +788,28 @@ public class FolderActionDisplayContext {
 		return false;
 	}
 
+	private Boolean _isCopyActionVisible() throws PortalException {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_dlRequestHelper.getCompanyId(), "LPS-182512")) {
+
+			return false;
+		}
+
+		Folder folder = _getFolder();
+
+		if ((folder == null) ||
+			RepositoryUtil.isExternalRepository(_getRepositoryId())) {
+
+			return false;
+		}
+
+		if (_hasViewPermission()) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isDeleteExpiredTemporaryFileEntriesActionVisible() {
 		try {
 			Folder folder = _getFolder();
@@ -981,10 +1031,6 @@ public class FolderActionDisplayContext {
 	}
 
 	private boolean _isWorkflowEnabled() {
-		if (!WorkflowEngineManagerUtil.isDeployed()) {
-			return false;
-		}
-
 		WorkflowHandler<Object> workflowHandler =
 			WorkflowHandlerRegistryUtil.getWorkflowHandler(
 				DLFileEntry.class.getName());

@@ -16,8 +16,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ARTICLE_PREVIEW_VERSION_NUMBER</td>
-	<td>//span[contains(@class,'workflow-version')]/span[contains(@class,'workflow-value')]</td>
+	<td>ARTICLE_VERSION_NUMBER</td>
+	<td>//span[contains(@class,'label-info')]/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -311,6 +311,16 @@
 	<td>//div[contains(@id,'knowledge_base_web') and contains(@id,'newParent')]//label[contains(@class,'control-label') and contains(.,'Priority')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>MOVE_MODAL_SEARCH_BAR</td>
+	<td>//div[contains(@class,'container-fluid')]//div[contains(@class,'input-group-sm')]//input[@placeholder='Search for']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MOVE_MODAL_SEARCH_RESULT</td>
+	<td>//ul[contains(@class,'list-group')]//div[contains(@class,'autofit-col')]//span[contains(.,'${key_itemName}')]</td>
+	<td></td>
+</tr>
 
 <!--PAGE_TREE-->
 
@@ -402,7 +412,7 @@
 </tr>
 <tr>
 	<td>SEARCH_FIELD</td>
-	<td>//input[@placeholder='Search for']</td>
+	<td>//div[contains(@class,'sidebar')]//input[@placeholder='Search for']</td>
 	<td></td>
 </tr>
 </tbody>

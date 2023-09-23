@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,48 +19,42 @@ if (rssFeeds.isEmpty()) {
 }
 %>
 
-<c:choose>
-	<c:when test="<%= rssFeeds.isEmpty() %>">
-		<div class="alert alert-info text-center">
-			<div>
-				<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
-			</div>
+			<c:choose>
+				<c:when test="<%= rssFeeds.isEmpty() %>">
+					<clay:alert
+						displayType="info"
+					>
+						<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 
-			<c:if test="<%= rssDisplayContext.isShowConfigurationLink() %>">
-				<div>
-					<aui:a href="javascript:void(0);" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-at-least-one-valid-rss-feed-to-make-it-visible" /></aui:a>
-				</div>
-			</c:if>
-		</div>
-	</c:when>
-	<c:otherwise>
-		<liferay-ddm:template-renderer
-			className="<%= RSSFeed.class.getName() %>"
-			contextObjects="<%= contextObjects %>"
-			displayStyle="<%= rssPortletInstanceConfiguration.displayStyle() %>"
-			displayStyleGroupId="<%= rssDisplayContext.getDisplayStyleGroupId() %>"
-			entries="<%= rssFeeds %>"
-		>
+						<c:if test="<%= rssDisplayContext.isShowConfigurationLink() %>">
+								<clay:button
+									cssClass="align-text-bottom border-0 p-0"
+									displayType="link"
+									label="select-at-least-one-valid-rss-feed-to-make-it-visible"
+									onClick="<%= portletDisplay.getURLConfigurationJS() %>"
+									small="<%= true %>"
+								/>
+						</c:if>
+					</clay:alert>
+				</c:when>
+				<c:otherwise>
+					<liferay-ddm:template-renderer
+						className="<%= RSSFeed.class.getName() %>"
+						contextObjects="<%= contextObjects %>"
+						displayStyle="<%= rssPortletInstanceConfiguration.displayStyle() %>"
+						displayStyleGroupId="<%= rssDisplayContext.getDisplayStyleGroupId() %>"
+						entries="<%= rssFeeds %>"
+					>
+						<% for (int i = 0; i < rssFeeds.size(); i++) { RSSFeed
+						rssFeed = rssFeeds.get(i); boolean last = false; if (i
+						== (rssFeeds.size() - 1)) { last = true; } SyndFeed
+						syndFeed = rssFeed.getSyndFeed(); %> <%@ include file="/feed.jspf" %> <%
+							}
+%>
 
-			<%
-			for (int i = 0; i < rssFeeds.size(); i++) {
-				RSSFeed rssFeed = rssFeeds.get(i);
-
-				boolean last = false;
-
-				if (i == (rssFeeds.size() - 1)) {
-					last = true;
-				}
-
-				SyndFeed syndFeed = rssFeed.getSyndFeed();
-			%>
-
-				<%@ include file="/feed.jspf" %>
-
-			<%
-			}
-			%>
-
-		</liferay-ddm:template-renderer>
-	</c:otherwise>
-</c:choose>
+					</liferay-ddm:template-renderer>
+				</c:otherwise>
+			</c:choose></String,
+		></String,
+	></RSSFeed
+>

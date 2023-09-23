@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.connection;
@@ -30,7 +21,9 @@ import java.util.concurrent.Future;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -45,6 +38,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
 import org.apache.http.protocol.HttpContext;
@@ -67,6 +61,15 @@ public class RestHighLevelClientFactory {
 	public RestHighLevelClient newRestHighLevelClient() {
 		RestClientBuilder restClientBuilder = RestClient.builder(
 			_getHttpHosts()
+		).setDefaultHeaders(
+			new Header[] {
+				new BasicHeader(
+					HttpHeaders.ACCEPT,
+					"application/vnd.elasticsearch+json;compatible-with=7"),
+				new BasicHeader(
+					HttpHeaders.CONTENT_TYPE,
+					"application/vnd.elasticsearch+json;compatible-with=7")
+			}
 		).setHttpClientConfigCallback(
 			this::_customizeHttpClient
 		).setRequestConfigCallback(
@@ -241,7 +244,6 @@ public class RestHighLevelClientFactory {
 					_proxyConfig.getHost(), _proxyConfig.getPort(), "http"));
 		}
 
-		httpClientBuilder.disableAuthCaching();
 		httpClientBuilder.disableAutomaticRetries();
 		httpClientBuilder.disableConnectionState();
 		httpClientBuilder.disableContentCompression();

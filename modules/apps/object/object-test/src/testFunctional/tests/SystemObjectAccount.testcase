@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -47,6 +47,16 @@ definition {
 			labelName = "Custom Object",
 			objectName = "CustomObject",
 			pluralLabelName = "Custom Objects");
+
+		// Workaround for LPS-193897
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject");
 
 		ObjectAdmin.addObjectRelationshipViaAPI(
 			objectName_1 = "AccountEntry",
@@ -138,7 +148,9 @@ definition {
 
 		ObjectAdmin.gotoRelationshipsTab();
 
-		CreateObject.assertRelatedObject(relatedObject = "CustomObject");
+		AssertElementPresent(
+			key_relatedObject = "CustomObject",
+			locator1 = "CreateObject#VIEW_RELATED_OBJECT_ON_RELATIONSHIP_FIELD");
 	}
 
 	@description = "LPS-151765 - Verify if Cascade deletion type of Relationship One to Many can delete and you also will delete the child related entry (if you also have permissions for it)"
@@ -476,7 +488,9 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Account");
+		AssertElementPresent(
+			key_labelName = "Account",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-151765 - Verify if is possible to choose by Description Field on entries, when Title Field is Description"
@@ -492,6 +506,16 @@ definition {
 			labelName = "Custom Object 153528",
 			objectName = "CustomObject153528",
 			pluralLabelName = "Custom Objects 153528");
+
+		// Workaround for LPS-193897
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject153528");
 
 		ObjectAdmin.addObjectRelationshipViaAPI(
 			objectName_1 = "AccountEntry",
@@ -553,7 +577,9 @@ definition {
 		for (var label : list "Name,Type") {
 			ObjectAdmin.goToFieldsDetails(label = ${label});
 
-			ObjectField.assertType(fieldType = "Text");
+			AssertElementPresent(
+				locator1 = "ObjectField#TYPE_FIELD",
+				value1 = "Text");
 
 			AssertChecked.assertCheckedNotVisible(locator1 = "ObjectField#MANDATORY_TOGGLE");
 
@@ -574,6 +600,16 @@ definition {
 			labelName = "Custom Object 153527",
 			objectName = "CustomObject153527",
 			pluralLabelName = "Custom Objects 153527");
+
+		// Workaround for LPS-193897
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject153527");
 
 		ObjectAdmin.addObjectRelationshipViaAPI(
 			objectName_1 = "AccountEntry",
@@ -693,6 +729,16 @@ definition {
 			objectName = "CustomObject153526",
 			pluralLabelName = "Custom Objects 153526");
 
+		// Workaround for LPS-193897
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject153526");
+
 		ObjectAdmin.addObjectRelationshipViaAPI(
 			objectName_1 = "AccountEntry",
 			objectName_2 = "CustomObject153526",
@@ -738,7 +784,9 @@ definition {
 
 		ObjectPortlet.selectSystemObject(label = "Account");
 
-		CreateObject.assertTitleFieldIsSelected(fieldLabel = "Type");
+		AssertElementPresent(
+			locator1 = "CreateObject#TITLE_FIELD",
+			value1 = "Type");
 	}
 
 	@description = "LPS-151765 - Verify if the Widget option is disable on System Object Account"
@@ -748,7 +796,7 @@ definition {
 
 		ObjectPortlet.selectSystemObject(label = "Account");
 
-		AssertNotChecked.assertNotCheckedNotVisible(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		AssertNotChecked.assertNotCheckedNotVisible(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 	}
 
 }

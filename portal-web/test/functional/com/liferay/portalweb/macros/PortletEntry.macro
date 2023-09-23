@@ -115,6 +115,13 @@ definition {
 			value1 = ${name});
 	}
 
+	macro inputNumber {
+		Type(
+			key_fieldLabel = ${fieldLabel},
+			locator1 = "TextInput#GENERIC_NUMBER_INPUT",
+			value1 = ${number});
+	}
+
 	macro inputStructureKeyTextInput {
 		Type(
 			locator1 = "TextInput#STRUCTURE_KEY_FIELD",
@@ -144,15 +151,14 @@ definition {
 	macro publish {
 		Button.clickPublish();
 
-		Alert.viewSuccessMessage();
-	}
+		WaitForElementPresent.waitForElementPresentNoException(locator1 = "Message#ALERT_DISMISSIBLE");
 
-	macro publishAndWait {
-		Button.clickPublish();
-
-		Pause(locator1 = 3000);
-
-		Alert.viewSuccessMessage();
+		if (IsElementPresent(locator1 = "Message#WARNING")) {
+			VerifyElementPresent(locator1 = "Message#WARNING");
+		}
+		else {
+			Alert.viewSuccessMessage();
+		}
 	}
 
 	macro save {

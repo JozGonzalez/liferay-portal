@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -17,10 +18,9 @@ definition {
 		}
 
 		task ("Enable local live") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(siteName = "Test Site Name");
 		}
 
 		task ("Add a fragment collection to staging site") {
@@ -32,9 +32,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {

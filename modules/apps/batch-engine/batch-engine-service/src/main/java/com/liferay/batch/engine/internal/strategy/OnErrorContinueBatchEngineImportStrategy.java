@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.strategy;
 
+import com.liferay.batch.engine.action.ImportTaskPostAction;
+import com.liferay.batch.engine.action.ImportTaskPreAction;
 import com.liferay.batch.engine.internal.util.ItemIndexThreadLocal;
-import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.batch.engine.model.BatchEngineImportTask;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Matija Petanjek
@@ -28,41 +22,41 @@ public class OnErrorContinueBatchEngineImportStrategy
 	extends BaseBatchEngineImportStrategy {
 
 	public OnErrorContinueBatchEngineImportStrategy(
-		long batchEngineImportTaskId, long companyId, long userId) {
+		BatchEngineImportTask batchEngineImportTask,
+		List<ImportTaskPostAction> importTaskPostActions,
+		List<ImportTaskPreAction> importTaskPreActions) {
 
-		_batchEngineImportTaskId = batchEngineImportTaskId;
-		_companyId = companyId;
-		_userId = userId;
+		super(
+			batchEngineImportTask, importTaskPostActions, importTaskPreActions);
 	}
 
 	@Override
-	public <T> void apply(
-			Collection<T> collection,
-			UnsafeConsumer<T, Exception> unsafeConsumer)
-		throws Exception {
+	public <T> T importItem(
+		T item, UnsafeFunction<T, T, Exception> unsafeFunction) {
 
-		for (T item : collection) {
-			try {
-				unsafeConsumer.accept(item);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
+		T persistedItem = null;
 
-				addBatchEngineImportTaskError(
-					_companyId, _userId, _batchEngineImportTaskId,
-					item.toString(), ItemIndexThreadLocal.get(item),
-					exception.toString());
-			}
+		try {
+			persistedItem = unsafeFunction.apply(item);
 		}
+		catch (Exception exception) {
+			_log.error(exception);
+
+			addBatchEngineImportTaskError(
+				batchEngineImportTask.getCompanyId(),
+				batchEngineImportTask.getUserId(),
+				batchEngineImportTask.getBatchEngineImportTaskId(),
+				item.toString(), ItemIndexThreadLocal.get(),
+				exception.toString());
+		}
+		finally {
+			ItemIndexThreadLocal.remove();
+		}
+
+		return persistedItem;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		OnErrorContinueBatchEngineImportStrategy.class);
-
-	private final long _batchEngineImportTaskId;
-	private final long _companyId;
-	private final long _userId;
 
 }

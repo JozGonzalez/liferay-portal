@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
@@ -26,21 +19,25 @@ import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
+
+import java.math.BigDecimal;
 
 import java.util.HashMap;
 import java.util.List;
@@ -66,6 +63,12 @@ public class MiniCartTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			if (accountEntry != null) {
+				_accountEntryId = accountEntry.getAccountEntryId();
+			}
+
 			_checkoutURL = StringPool.BLANK;
 
 			PortletURL portletURL = PortletProviderUtil.getPortletURL(
@@ -129,6 +132,8 @@ public class MiniCartTag extends IncludeTag {
 
 				_orderId = 0;
 			}
+
+			_requestQuoteEnabled = _isRequestQuoteEnabled();
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -201,6 +206,7 @@ public class MiniCartTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_accountEntryId = 0;
 		_checkoutURL = null;
 		_commerceChannelGroupId = 0;
 		_commerceChannelId = 0;
@@ -213,6 +219,7 @@ public class MiniCartTag extends IncludeTag {
 		_orderDetailURL = null;
 		_orderId = 0;
 		_productURLSeparator = StringPool.BLANK;
+		_requestQuoteEnabled = false;
 		_siteDefaultURL = StringPool.BLANK;
 		_toggleable = true;
 		_views = new HashMap<>();
@@ -225,6 +232,8 @@ public class MiniCartTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:accountEntryId", _accountEntryId);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:cartViews", _views);
 		httpServletRequest.setAttribute(
@@ -254,6 +263,8 @@ public class MiniCartTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:productURLSeparator", _productURLSeparator);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:requestQuoteEnabled", _requestQuoteEnabled);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:siteDefaultURL", _siteDefaultURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:toggleable", _toggleable);
@@ -264,8 +275,11 @@ public class MiniCartTag extends IncludeTag {
 		throws PortalException {
 
 		if (_displayTotalItemsQuantity) {
-			return _commerceOrderHttpHelper.getCommerceOrderItemsQuantity(
-				httpServletRequest);
+			BigDecimal quantity =
+				_commerceOrderHttpHelper.getCommerceOrderItemsQuantity(
+					httpServletRequest);
+
+			return quantity.intValue();
 		}
 
 		List<CommerceOrderItem> commerceOrderItems =
@@ -300,10 +314,26 @@ public class MiniCartTag extends IncludeTag {
 		}
 	}
 
+	private boolean _isRequestQuoteEnabled() throws PortalException {
+		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
+			return false;
+		}
+
+		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderFieldsConfiguration.class,
+				new GroupServiceSettingsLocator(
+					_commerceChannelGroupId,
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER_FIELDS));
+
+		return commerceOrderFieldsConfiguration.requestQuoteEnabled();
+	}
+
 	private static final String _PAGE = "/mini_cart/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
+	private long _accountEntryId;
 	private String _checkoutURL;
 	private long _commerceChannelGroupId;
 	private long _commerceChannelId;
@@ -316,6 +346,7 @@ public class MiniCartTag extends IncludeTag {
 	private String _orderDetailURL;
 	private long _orderId;
 	private String _productURLSeparator = StringPool.BLANK;
+	private boolean _requestQuoteEnabled;
 	private String _siteDefaultURL = StringPool.BLANK;
 	private boolean _toggleable = true;
 	private Map<String, String> _views = new HashMap<>();

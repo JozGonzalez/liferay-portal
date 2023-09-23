@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useIsMounted} from '@liferay/frontend-js-react-web';
@@ -17,7 +8,6 @@ import {fetch} from 'frontend-js-web';
 import {useCallback, useEffect, useReducer} from 'react';
 
 import {
-	EXPORT_FILE_NAME,
 	HEADERS,
 	POLL_INTERVAL,
 	PROCESS_COMPLETED,
@@ -186,27 +176,11 @@ const Poller = (
 		[dispatch, isMounted]
 	);
 
-	const download = (url, filename) => {
-		const linkElement = document.createElement('a');
-
-		linkElement.style.display = 'none';
-		linkElement.href = url;
-		linkElement.download = filename;
-
-		document.body.appendChild(linkElement);
-
-		linkElement.click();
-
-		window.URL.revokeObjectURL(url);
-	};
-
 	const downloadFile = useCallback(async () => {
 		dispatchIfMounted({type: LOADING});
 
 		try {
-			const blobUrl = await requestTaskFile(state.externalReferenceCode);
-
-			download(blobUrl, EXPORT_FILE_NAME);
+			requestTaskFile(state.externalReferenceCode);
 
 			dispatchIfMounted({type: STOP_LOADING});
 		}

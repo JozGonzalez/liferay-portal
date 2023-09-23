@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.resource.v1_0;
@@ -18,7 +9,6 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
 import com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword;
-import com.liferay.headless.admin.taxonomy.internal.dto.v1_0.converter.KeywordDTOConverter;
 import com.liferay.headless.admin.taxonomy.internal.odata.entity.v1_0.KeywordEntityModel;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.KeywordResource;
 import com.liferay.petra.string.StringPool;
@@ -39,6 +29,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -331,46 +322,10 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 		return new Date(timestamp.getTime());
 	}
 
-	private Keyword _toKeyword(AssetTag assetTag) {
+	private Keyword _toKeyword(AssetTag assetTag) throws Exception {
 		return _keywordDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.put(
-					"delete",
-					addAction(
-						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
-						"deleteKeyword", assetTag.getUserId(),
-						AssetTagsPermission.RESOURCE_NAME,
-						assetTag.getGroupId())
-				).put(
-					"get",
-					addAction(
-						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
-						"getKeyword", assetTag.getUserId(),
-						AssetTagsPermission.RESOURCE_NAME,
-						assetTag.getGroupId())
-				).put(
-					"replace",
-					addAction(
-						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
-						"putKeyword", assetTag.getUserId(),
-						AssetTagsPermission.RESOURCE_NAME,
-						assetTag.getGroupId())
-				).put(
-					"subscribe",
-					addAction(
-						ActionKeys.SUBSCRIBE, assetTag.getTagId(),
-						"putKeywordSubscribe", assetTag.getUserId(),
-						AssetTagsPermission.RESOURCE_NAME,
-						assetTag.getGroupId())
-				).put(
-					"unsubscribe",
-					addAction(
-						ActionKeys.SUBSCRIBE, assetTag.getTagId(),
-						"putKeywordUnsubscribe", assetTag.getUserId(),
-						AssetTagsPermission.RESOURCE_NAME,
-						assetTag.getGroupId())
-				).build(),
+				contextAcceptLanguage.isAcceptAllLanguages(), null,
 				_dtoConverterRegistry, assetTag.getTagId(),
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser),
@@ -388,7 +343,9 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private KeywordDTOConverter _keywordDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.admin.taxonomy.internal.dto.v1_0.converter.KeywordDTOConverter)"
+	)
+	private DTOConverter<AssetTag, Keyword> _keywordDTOConverter;
 
 }

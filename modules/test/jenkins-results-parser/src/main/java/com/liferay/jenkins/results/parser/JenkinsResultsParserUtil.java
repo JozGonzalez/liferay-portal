@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.CountingInputStream;
+
+import com.liferay.poshi.core.pql.PQLEntityFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -170,6 +163,14 @@ public class JenkinsResultsParserUtil {
 	};
 
 	public static boolean debug;
+
+	public static void addRedactToken(String token) {
+		if (_redactTokens.isEmpty()) {
+			_initializeRedactTokens();
+		}
+
+		_redactTokens.add(token);
+	}
 
 	public static void append(File file, String content) throws IOException {
 		if (debug) {
@@ -697,6 +698,12 @@ public class JenkinsResultsParserUtil {
 			_MILLIS_BASH_COMMAND_TIMEOUT_DEFAULT, commands);
 	}
 
+	public static Process executeBashCommands(long timeout, String... commands)
+		throws IOException, TimeoutException {
+
+		return executeBashCommands(true, new File("."), timeout, commands);
+	}
+
 	public static Process executeBashCommands(String... commands)
 		throws IOException, TimeoutException {
 
@@ -899,7 +906,13 @@ public class JenkinsResultsParserUtil {
 	public static List<File> findFiles(File baseDir, String regex) {
 		List<File> files = new ArrayList<>();
 
-		for (File file : baseDir.listFiles()) {
+		File[] filesArray = baseDir.listFiles();
+
+		if (filesArray == null) {
+			return files;
+		}
+
+		for (File file : filesArray) {
 			String fileName = file.getName();
 
 			if (file.isDirectory()) {
@@ -1403,7 +1416,7 @@ public class JenkinsResultsParserUtil {
 			_buildProperties.putAll(properties);
 		}
 
-		return properties;
+		return new SecureProperties(properties);
 	}
 
 	public static String getBuildProperty(
@@ -1590,7 +1603,7 @@ public class JenkinsResultsParserUtil {
 
 		ciPropertyURLs.add(sb.toString());
 
-		Properties ciProperties = new Properties();
+		Properties ciProperties = new SecureProperties();
 
 		for (String ciPropertyURL : ciPropertyURLs) {
 			try {
@@ -1799,6 +1812,44 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return excludedFiles;
+	}
+
+	public static File getFileFromPathSnippet(
+		File baseDir, final String pathSnippet) {
+
+		final List<File> matchingFiles = new ArrayList<>();
+
+		try {
+			Files.walkFileTree(
+				baseDir.toPath(),
+				new SimpleFileVisitor<Path>() {
+
+					@Override
+					public FileVisitResult visitFile(
+							Path filePath,
+							BasicFileAttributes basicFileAttributes)
+						throws IOException {
+
+						String filePathString = filePath.toString();
+
+						if (filePathString.contains(pathSnippet)) {
+							matchingFiles.add(filePath.toFile());
+						}
+
+						return FileVisitResult.CONTINUE;
+					}
+
+				});
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (matchingFiles.isEmpty()) {
+			return null;
+		}
+
+		return matchingFiles.get(0);
 	}
 
 	public static String getGitDirectoryName(
@@ -2159,7 +2210,7 @@ public class JenkinsResultsParserUtil {
 			_jenkinsBuildProperties.putAll(properties);
 		}
 
-		return properties;
+		return new SecureProperties(properties);
 	}
 
 	public static String getJenkinsBuildResult(String buildURL) {
@@ -2362,9 +2413,9 @@ public class JenkinsResultsParserUtil {
 			properties.putAll(getProperties(jenkinsPropertiesFile));
 		}
 
-		_jenkinsProperties = properties;
+		_jenkinsProperties = new SecureProperties(properties);
 
-		return properties;
+		return (Properties)_jenkinsProperties;
 	}
 
 	public static Document getJobConfigDocument(
@@ -2663,7 +2714,7 @@ public class JenkinsResultsParserUtil {
 			}
 		}
 
-		return properties;
+		return new SecureProperties(properties);
 	}
 
 	public static String getProperty(Properties properties, String name) {
@@ -4684,7 +4735,7 @@ public class JenkinsResultsParserUtil {
 
 		properties.load(new StringReader(toString(url)));
 
-		return properties;
+		return new SecureProperties(properties);
 	}
 
 	public static String toString(String url) throws IOException {
@@ -4980,7 +5031,7 @@ public class JenkinsResultsParserUtil {
 
 	public static void updateBuildDescription(
 		String buildDescription, int buildNumber, String jobName,
-		String masterHostname) {
+		final String masterHostname) {
 
 		buildDescription = buildDescription.replaceAll("\"", "\\\\\"");
 		buildDescription = buildDescription.replaceAll("\'", "\\\\\'");
@@ -4988,13 +5039,46 @@ public class JenkinsResultsParserUtil {
 		jobName = jobName.replace("%28", "(");
 		jobName = jobName.replace("%29", ")");
 
-		String jenkinsScript = combine(
+		final String jenkinsScript = combine(
 			"def job = Jenkins.instance.getItemByFullName(\"", jobName,
 			"\"); def build = job.getBuildByNumber(",
 			String.valueOf(buildNumber), "); build.description = \"",
 			buildDescription, "\";");
 
-		executeJenkinsScript(masterHostname, jenkinsScript);
+		Retryable<Object> retryable = new Retryable<Object>(true, 3, 3, true) {
+
+			@Override
+			public Object execute() {
+				String responseText = executeJenkinsScript(
+					masterHostname, jenkinsScript);
+
+				if (responseText == null) {
+					throw new RuntimeException(
+						"Unable to update build description");
+				}
+
+				return responseText;
+			}
+
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return combine(
+					"Unable to update build description: ",
+					super.getRetryMessage(retryCount));
+			}
+
+		};
+
+		try {
+			retryable.executeWithRetries();
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(
+				combine(
+					"Unable to update build description to \"",
+					buildDescription, "\""),
+				exception);
+		}
 	}
 
 	public static void updateBuildResult(
@@ -5007,6 +5091,16 @@ public class JenkinsResultsParserUtil {
 			"); build.@result = hudson.model.Result.", buildResult, ";");
 
 		executeJenkinsScript(masterHostname, jenkinsScript);
+	}
+
+	public static void validatePQL(String pql, File file) {
+		try {
+			PQLEntityFactory.newPQLEntity(pql);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(
+				"Invalid PQL at " + file + ": " + pql, exception);
+		}
 	}
 
 	public static void write(File file, String content) throws IOException {
@@ -5163,6 +5257,23 @@ public class JenkinsResultsParserUtil {
 
 	}
 
+	public static class BearerHTTPAuthorization extends HTTPAuthorization {
+
+		public BearerHTTPAuthorization(String token) {
+			super(Type.BEARER);
+
+			this.token = token;
+		}
+
+		@Override
+		public String toString() {
+			return "Bearer " + token;
+		}
+
+		protected String token;
+
+	}
+
 	public abstract static class HTTPAuthorization {
 
 		public Type getType() {
@@ -5171,7 +5282,7 @@ public class JenkinsResultsParserUtil {
 
 		public static enum Type {
 
-			BASIC, TOKEN
+			BASIC, BEARER, TOKEN
 
 		}
 
@@ -5227,7 +5338,7 @@ public class JenkinsResultsParserUtil {
 			int count = 0;
 
 			for (String propertyOpt : propertyOptSet) {
-				if (propertyOpt.contains(".+")) {
+				if (propertyOpt.contains(".*")) {
 					count++;
 				}
 			}
@@ -5820,7 +5931,7 @@ public class JenkinsResultsParserUtil {
 				propertyName, getProperty(properties, propertyName));
 		}
 
-		return properties;
+		return new SecureProperties(properties);
 	}
 
 	private static String _getProperty(
@@ -5941,7 +6052,7 @@ public class JenkinsResultsParserUtil {
 			String opt = Pattern.quote(
 				propertyName.substring(indices.get(i) + 1, nextIndex));
 
-			propertyOptSet.add(opt.replaceAll("\\*", "\\\\E.+\\\\Q"));
+			propertyOptSet.add(opt.replaceAll("\\*", "\\\\E.*\\\\Q"));
 
 			i++;
 		}
@@ -5963,8 +6074,6 @@ public class JenkinsResultsParserUtil {
 			throw new RuntimeException(
 				"Unable to get build properties", ioException);
 		}
-
-		_redactTokens.clear();
 
 		for (int i = 1; properties.containsKey(_getRedactTokenKey(i)); i++) {
 			String key = _getRedactTokenKey(i);
@@ -6034,8 +6143,7 @@ public class JenkinsResultsParserUtil {
 	private static final String _DIST_PORTAL_BUNDLES_URL_DEFAULT =
 		"http://test-1-0/userContent/bundles/test-portal-acceptance-upstream";
 
-	private static final String _DIST_PORTAL_JOB_URL_DEFAULT =
-		"http://test-1-1/job/test-portal-acceptance-upstream";
+	private static final String _DIST_PORTAL_JOB_URL_DEFAULT;
 
 	private static final long _MILLIS_BASH_COMMAND_TIMEOUT_DEFAULT =
 		1000 * 60 * 60;
@@ -6135,6 +6243,17 @@ public class JenkinsResultsParserUtil {
 		System.getProperty("user.home"));
 
 	static {
+		try {
+			_DIST_PORTAL_JOB_URL_DEFAULT = combine(
+				"http://",
+				getBuildProperty("upstream.acceptance.jenkins.master"),
+				"/job/test-portal-acceptance-upstream");
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to upstream acceptance Jenkins master property");
+		}
+
 		try {
 			_initializeRedactTokens();
 

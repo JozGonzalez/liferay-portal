@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -30,7 +21,6 @@ import com.liferay.portal.kernel.util.URLCodec;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 
 import java.lang.reflect.Method;
 
@@ -46,9 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -68,14 +55,13 @@ public class PortalClassPathUtil {
 		ProcessConfig.Builder builder = new ProcessConfig.Builder(
 			_portalProcessConfig);
 
-		builder.setRuntimeClassPath(
-			_buildRuntimeClasspath(
-				seedClass, _portalProcessConfig.getRuntimeClassPath()));
-
 		builder.setReactClassLoader(
 			AggregateClassLoader.getAggregateClassLoader(
 				PortalClassLoaderUtil.getClassLoader(),
 				seedClass.getClassLoader()));
+		builder.setRuntimeClassPath(
+			_buildRuntimeClasspath(
+				seedClass, _portalProcessConfig.getRuntimeClassPath()));
 
 		return builder.build();
 	}
@@ -176,7 +162,9 @@ public class PortalClassPathUtil {
 			files.length * 2);
 
 		for (File file : files) {
-			if (_isPetraJar(file)) {
+			String filePath = file.getAbsolutePath();
+
+			if (filePath.contains("petra")) {
 				bootstrapClassPathSB.append(file.getAbsolutePath());
 				bootstrapClassPathSB.append(File.pathSeparator);
 			}
@@ -283,38 +271,6 @@ public class PortalClassPathUtil {
 		sb.append(portalRuntiemClasspath);
 
 		return sb.toString();
-	}
-
-	private static boolean _isPetraJar(File file) {
-		String filePath = file.getAbsolutePath();
-
-		if (filePath.contains("petra")) {
-			try (JarFile jarFile = new JarFile(new File(filePath))) {
-				Manifest manifest = jarFile.getManifest();
-
-				if (manifest == null) {
-					return false;
-				}
-
-				Attributes attributes = manifest.getMainAttributes();
-
-				if (attributes.containsKey(
-						new Attributes.Name("Liferay-Releng-App-Title"))) {
-
-					return false;
-				}
-
-				return true;
-			}
-			catch (IOException ioException) {
-				_log.error(
-					"Unable to resolve bootstrap entry: " + file.getName() +
-						" from bundle",
-					ioException);
-			}
-		}
-
-		return false;
 	}
 
 	private static File[] _listClassPathFiles(Class<?> clazz) {

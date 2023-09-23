@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.odata.entity.v1_0;
@@ -21,11 +12,10 @@ import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
-import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -54,23 +44,12 @@ import javax.ws.rs.BadRequestException;
  */
 public class ObjectEntryEntityModel implements EntityModel {
 
-	public ObjectEntryEntityModel(List<ObjectField> objectFields) {
-		_entityFieldsMap = _getStringEntityFieldsMap(objectFields);
-	}
-
 	public ObjectEntryEntityModel(
-			long objectDefinitionId, List<ObjectField> objectFields)
+			ObjectDefinition objectDefinition, List<ObjectField> objectFields)
 		throws Exception {
 
-		_entityFieldsMap = _getStringEntityFieldsMap(objectFields);
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-154672")) {
-			return;
-		}
-
-		ObjectDefinition objectDefinition =
-			ObjectDefinitionLocalServiceUtil.getObjectDefinition(
-				objectDefinitionId);
+		_entityFieldsMap = _getStringEntityFieldsMap(
+			objectDefinition, objectFields);
 
 		List<ObjectRelationship> objectRelationships =
 			ObjectRelationshipLocalServiceUtil.getAllObjectRelationships(
@@ -83,6 +62,8 @@ public class ObjectEntryEntityModel implements EntityModel {
 					objectRelationship.getName(),
 					_getRelatedObjectDefinitionEntityFields(
 						objectRelationship, objectDefinition)));
+
+			_handledObjectDefinitions.clear();
 		}
 	}
 
@@ -98,7 +79,15 @@ public class ObjectEntryEntityModel implements EntityModel {
 
 		if (Objects.equals(
 				objectField.getBusinessType(),
-				ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+				ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
+
+			return new DateTimeEntityField(
+				objectField.getName(), locale -> objectField.getName(),
+				locale -> objectField.getName());
+		}
+		else if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
 
 			return new CollectionEntityField(
 				new StringEntityField(
@@ -154,40 +143,34 @@ public class ObjectEntryEntityModel implements EntityModel {
 			"Unable to get entity field for bject field " + objectField);
 	}
 
-	private ObjectDefinition _getRelatedObjectDefinition(
-			ObjectDefinition objectDefinition,
-			ObjectRelationship objectRelationship)
-		throws Exception {
-
-		long objectDefinitionId1 = objectRelationship.getObjectDefinitionId1();
-
-		if (objectDefinitionId1 != objectDefinition.getObjectDefinitionId()) {
-			return ObjectDefinitionLocalServiceUtil.getObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
-		}
-
-		return ObjectDefinitionLocalServiceUtil.getObjectDefinition(
-			objectRelationship.getObjectDefinitionId2());
-	}
-
 	private List<EntityField> _getRelatedObjectDefinitionEntityFields(
 			ObjectRelationship objectRelationship,
 			ObjectDefinition objectDefinition)
 		throws Exception {
 
-		_relatedObjectRelationships.add(
-			objectRelationship.getObjectRelationshipId());
+		_handledObjectDefinitions.add(objectDefinition.getObjectDefinitionId());
 
-		ObjectDefinition relatedObjectDefinition = _getRelatedObjectDefinition(
-			objectDefinition, objectRelationship);
+		ObjectDefinition relatedObjectDefinition =
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				objectDefinition, objectRelationship);
 
 		Map<String, EntityField> relatedObjectDefinitionEntityFieldsMap =
 			_getStringEntityFieldsMap(
+				objectDefinition,
 				ObjectFieldLocalServiceUtil.getObjectFields(
 					relatedObjectDefinition.getObjectDefinitionId()));
 
 		List<EntityField> relatedObjectDefinitionEntityFields = new ArrayList<>(
 			relatedObjectDefinitionEntityFieldsMap.values());
+
+		if (_handledObjectDefinitions.contains(
+				relatedObjectDefinition.getObjectDefinitionId())) {
+
+			_handledObjectDefinitions.remove(
+				objectDefinition.getObjectDefinitionId());
+
+			return relatedObjectDefinitionEntityFields;
+		}
 
 		List<ObjectRelationship> relatedObjectDefinitionObjectRelationships =
 			ObjectRelationshipLocalServiceUtil.getAllObjectRelationships(
@@ -198,8 +181,8 @@ public class ObjectEntryEntityModel implements EntityModel {
 
 			if ((relatedObjectRelationship.getObjectRelationshipId() ==
 					objectRelationship.getObjectRelationshipId()) ||
-				_relatedObjectRelationships.contains(
-					relatedObjectRelationship.getObjectRelationshipId())) {
+				_isHandledObjectDefinition(
+					relatedObjectDefinition, relatedObjectRelationship)) {
 
 				continue;
 			}
@@ -217,7 +200,7 @@ public class ObjectEntryEntityModel implements EntityModel {
 	}
 
 	private Map<String, EntityField> _getStringEntityFieldsMap(
-		List<ObjectField> objectFields) {
+		ObjectDefinition objectDefinition, List<ObjectField> objectFields) {
 
 		Map<String, EntityField> entityFieldsMap =
 			HashMapBuilder.<String, EntityField>put(
@@ -243,15 +226,9 @@ public class ObjectEntryEntityModel implements EntityModel {
 				"id", new IdEntityField("id", locale -> "id", String::valueOf)
 			).put(
 				"keywords",
-				() -> {
-					if (FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
-						return new CollectionEntityField(
-							new StringEntityField(
-								"keywords", locale -> "assetTagNames.raw"));
-					}
-
-					return null;
-				}
+				new CollectionEntityField(
+					new StringEntityField(
+						"keywords", locale -> "assetTagNames.raw"))
 			).put(
 				"objectDefinitionId",
 				new IntegerEntityField(
@@ -265,23 +242,19 @@ public class ObjectEntryEntityModel implements EntityModel {
 					new IntegerEntityField("status", locale -> Field.STATUS))
 			).put(
 				"taxonomyCategoryIds",
-				() -> {
-					if (FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
-						return new CollectionEntityField(
-							new IntegerEntityField(
-								"taxonomyCategoryIds",
-								locale -> "assetCategoryIds"));
-					}
-
-					return null;
-				}
+				new CollectionEntityField(
+					new IntegerEntityField(
+						"taxonomyCategoryIds", locale -> "assetCategoryIds"))
 			).put(
 				"userId",
 				new IntegerEntityField("userId", locale -> Field.USER_ID)
 			).build();
 
 		for (ObjectField objectField : objectFields) {
-			if (objectField.isSystem()) {
+			if (objectField.isSystem() &&
+				!(objectDefinition.isModifiable() &&
+				  objectDefinition.isSystem())) {
+
 				continue;
 			}
 
@@ -332,8 +305,21 @@ public class ObjectEntryEntityModel implements EntityModel {
 		return entityFieldsMap;
 	}
 
+	private boolean _isHandledObjectDefinition(
+			ObjectDefinition relatedObjectDefinition,
+			ObjectRelationship relatedObjectRelationship)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				relatedObjectDefinition, relatedObjectRelationship);
+
+		return _handledObjectDefinitions.contains(
+			objectDefinition.getObjectDefinitionId());
+	}
+
 	private final Map<String, EntityField> _entityFieldsMap;
-	private final List<Long> _relatedObjectRelationships = new ArrayList<>();
+	private final List<Long> _handledObjectDefinitions = new ArrayList<>();
 	private final Set<String> _unsupportedBusinessTypes = SetUtil.fromArray(
 		ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION,
 		ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,

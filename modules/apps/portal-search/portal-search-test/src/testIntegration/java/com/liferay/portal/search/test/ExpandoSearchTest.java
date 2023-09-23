@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test;
@@ -24,8 +15,10 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -52,7 +45,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.documentlibrary.util.DLSearcher;
-import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 
 import java.io.Serializable;
 
@@ -373,8 +365,9 @@ public class ExpandoSearchTest {
 			password1, password2, autoScreenName, screenName, emailAddress,
 			locale, firstName, middleName, lastName, prefixListTypeId,
 			suffixListTypeId, male, birthdayMonth, birthdayDay, birthdayYear,
-			jobTitle, new long[] {TestPropsValues.getGroupId()},
-			organizationIds, roleIds, userGroupIds, sendMail, serviceContext);
+			jobTitle, UserConstants.TYPE_REGULAR,
+			new long[] {TestPropsValues.getGroupId()}, organizationIds, roleIds,
+			userGroupIds, sendMail, serviceContext);
 
 		_users.add(user);
 

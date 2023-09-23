@@ -279,6 +279,12 @@ definition {
 		ContentDashboard.applySelectedFilter();
 	}
 
+	macro filterByToBeReviewed {
+		ContentDashboard.openFilterAndOrder();
+
+		Click(locator1 = "ContentDashboard#FILTER_BY_OPTION");
+	}
+
 	macro filterByType {
 		ContentDashboard.openFilterModal(filterOption = "Type");
 
@@ -367,7 +373,9 @@ definition {
 	}
 
 	macro openAuditGraphConfiguration {
-		Click(locator1 = "ContentDashboard#AUDIT_GRAPH_CONFIGURATION_BUTTON");
+		Click(
+			key_text = "cog",
+			locator1 = "Icon#ANY");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
@@ -390,11 +398,24 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
+	macro openInfoPanel {
+		Click.javaScriptClick(
+			key_tableEntry = ${assetName},
+			key_text = "info-circle",
+			locator1 = "LexiconTable#TABLE_ENTRY_ICON");
+	}
+
 	macro openVersionsTab {
 		Click(locator1 = "ContentDashboard#INFO_PANEL_VERSIONS_TAB");
 	}
 
 	macro orderByModificationDate {
+		ContentDashboard.openFilterAndOrder();
+
+		Click(locator1 = "ContentDashboard#FILTER_BY_OPTION");
+	}
+
+	macro orderByReviewDate {
 		ContentDashboard.openFilterAndOrder();
 
 		Click(locator1 = "ContentDashboard#FILTER_BY_OPTION");
@@ -440,11 +461,11 @@ definition {
 
 		var secondVocabulary = selenium.getText("ContentDashboard#AUDIT_GRAPH_CONFIGURATION_SECOND_VOCABULARY_IN_USE");
 
-		if (contains(${secondVocabulary}, ${key_vocabularyName})) {
+		if (!(contains(${secondVocabulary}, ${key_vocabularyName}))) {
 			Click(locator1 = "ContentDashboard#AUDIT_GRAPH_CONFIGURATION_VOCABULARY_IN_USE");
 
 			Click(
-				ariaLabel = "Reorder Up",
+				ariaLabel = "Reorder Down",
 				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 		}
 
@@ -460,7 +481,7 @@ definition {
 
 		var firstVocabulary = selenium.getText("ContentDashboard#AUDIT_GRAPH_CONFIGURATION_FIRST_VOCABULARY_IN_USE");
 
-		if (contains(${key_vocabularyName}, ${firstVocabulary})) {
+		if (!(contains(${firstVocabulary}, ${key_vocabularyName}))) {
 			Click(locator1 = "ContentDashboard#AUDIT_GRAPH_CONFIGURATION_VOCABULARY_IN_USE");
 
 			Click(
@@ -498,7 +519,7 @@ definition {
 	}
 
 	macro viewAssetsTranslatedVersion {
-		Panel.expandPanel(panel = "Details");
+		Panel.expandPanel(panel = "Properties");
 
 		ClickNoError(
 			key_language = ${language},

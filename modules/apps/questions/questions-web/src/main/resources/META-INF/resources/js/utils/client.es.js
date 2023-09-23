@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fetch} from 'frontend-js-web';
@@ -330,6 +321,7 @@ export const getThreadQuery = `
 			keywords
 			locked
 			messageBoardSection {
+				friendlyUrlPath
 				id
 				numberOfMessageBoardSections
 				parentMessageBoardSectionId
@@ -361,6 +353,7 @@ export const getSectionByMessageQuery = `
 			friendlyUrlPath
 			messageBoardThread {
 				messageBoardSection {
+					friendlyUrlPath
 					id
 					title
 				}
@@ -503,6 +496,7 @@ export const getSectionThreadsQuery = `
 				keywords
 				locked
 				messageBoardSection {
+					friendlyUrlPath
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
 					title
@@ -558,6 +552,7 @@ export const getThreadsQuery = `
 				keywords
 				locked
 				messageBoardSection {
+					friendlyUrlPath
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
 					title
@@ -609,6 +604,7 @@ export const getRankedThreadsQuery = `
 				keywords
 				locked
 				messageBoardSection {
+					friendlyUrlPath
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
 					title
@@ -631,12 +627,61 @@ export const getSectionsQuery = `
 			actions
 			items {
 				description
+				friendlyUrlPath
 				id
 				numberOfMessageBoardThreads
 				parentMessageBoardSectionId
 				subscribed
 				title
 			}
+		}
+	}
+`;
+
+export const getMessageBoardSectionByFriendlyUrlPathQuery = `
+	query messageBoardSectionByFriendlyUrlPath($friendlyUrlPath: String!, $siteKey: String!) {
+		messageBoardSectionByFriendlyUrlPath(
+			friendlyUrlPath: $friendlyUrlPath
+			siteKey: $siteKey
+		) {
+			actions
+			friendlyUrlPath
+			id
+			messageBoardSections(sort: "title:asc") {
+				actions
+				items {
+					id
+					description
+					friendlyUrlPath
+					numberOfMessageBoardSections
+					numberOfMessageBoardThreads
+					parentMessageBoardSectionId
+					subscribed
+					title
+				}
+			}
+			numberOfMessageBoardSections
+			parentMessageBoardSection {
+				friendlyUrlPath
+				id
+				messageBoardSections {
+					items {
+						id
+						friendlyUrlPath
+						numberOfMessageBoardSections
+						parentMessageBoardSectionId
+						subscribed
+						title
+					}
+				}
+				numberOfMessageBoardSections
+				parentMessageBoardSectionId
+				subscribed
+				title
+			}
+			parentMessageBoardSectionId
+			subscribed
+			title
 		}
 	}
 `;
@@ -668,9 +713,11 @@ export const getSectionBySectionTitleQuery = `
 				}
 				numberOfMessageBoardSections
 				parentMessageBoardSection {
+					friendlyUrlPath
 					id
 					messageBoardSections {
 						items {
+							friendlyUrlPath
 							id
 							numberOfMessageBoardSections
 							parentMessageBoardSectionId
@@ -717,6 +764,7 @@ export const getRelatedThreadsQuery = `
 				id
 				locked
 				messageBoardSection {
+					friendlyUrlPath
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
 					title
@@ -735,9 +783,11 @@ export const getSectionQuery = `
 	query messageBoardSection($messageBoardSectionId: Long!) {
 		messageBoardSection(messageBoardSectionId: $messageBoardSectionId) {
 			actions
+			friendlyUrlPath
 			id
 			messageBoardSections(sort: "title:asc") {
 				items {
+					friendlyUrlPath
 					id
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
@@ -819,6 +869,7 @@ export const getUserActivityQuery = `
 				keywords
 				messageBoardThread {
 					messageBoardSection {
+						friendlyUrlPath
 						id
 						title
 					}
@@ -980,6 +1031,7 @@ export const getSubscriptionsQuery = `
 						id
 						keywords
 						messageBoardSection {
+							friendlyUrlPath
 							id
 							numberOfMessageBoardSections
 							parentMessageBoardSectionId

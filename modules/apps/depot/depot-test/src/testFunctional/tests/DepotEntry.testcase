@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -34,7 +34,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanAccessAppsViaProductMenu {
-		property test.name.skip.portal.instance = "DepotEntry#CanAccessAppsViaProductMenu";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -459,7 +460,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CannotAddNameThatDuplicatesSite {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -671,7 +672,7 @@ definition {
 	@refactordone
 	test CanViewConnectionsInCardView {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = ${siteName});
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		JSONDepot.addDepot(
@@ -724,7 +725,7 @@ definition {
 	@refactordone
 	test CanViewConnectionsInTableView {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = ${siteName});
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		JSONDepot.addDepot(

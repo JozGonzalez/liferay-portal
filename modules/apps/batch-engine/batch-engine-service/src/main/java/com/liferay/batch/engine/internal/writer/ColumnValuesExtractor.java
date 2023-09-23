@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.writer;
@@ -133,7 +124,7 @@ public class ColumnValuesExtractor {
 
 			if (field == null) {
 				columnDescriptors[localIndex] = ColumnDescriptor._from(
-					null, masterIndex++, parentColumnDescriptor,
+					null, fieldName, masterIndex++, parentColumnDescriptor,
 					_getUnsafeFunction(fieldsMap, fieldName));
 
 				localIndex++;
@@ -142,7 +133,7 @@ public class ColumnValuesExtractor {
 			}
 
 			columnDescriptors[localIndex] = ColumnDescriptor._from(
-				field, masterIndex++, parentColumnDescriptor,
+				field, field.getName(), masterIndex++, parentColumnDescriptor,
 				_getUnsafeFunction(fieldsMap, fieldName));
 
 			Class<?> fieldClass = field.getType();
@@ -388,12 +379,13 @@ public class ColumnValuesExtractor {
 		}
 
 		private static ColumnDescriptor _from(
-			Field field, int index, ColumnDescriptor parentColumnDescriptor,
+			Field field, String fieldName, int index,
+			ColumnDescriptor parentColumnDescriptor,
 			UnsafeFunction<Object, Object, ReflectiveOperationException>
 				unsafeFunction) {
 
 			ColumnDescriptor columnDescriptor = new ColumnDescriptor(
-				field, index, unsafeFunction);
+				field, fieldName, index, unsafeFunction);
 
 			if (parentColumnDescriptor == null) {
 				return columnDescriptor;
@@ -405,11 +397,12 @@ public class ColumnValuesExtractor {
 		}
 
 		private ColumnDescriptor(
-			Field field, int index,
+			Field field, String fieldName, int index,
 			UnsafeFunction<Object, Object, ReflectiveOperationException>
 				unsafeFunction) {
 
 			_field = field;
+			_fieldName = fieldName;
 			_index = index;
 			_unsafeFunction = unsafeFunction;
 		}
@@ -449,17 +442,11 @@ public class ColumnValuesExtractor {
 		}
 
 		private String _getSanitizedFieldName() {
-			if (_field == null) {
-				return StringPool.POUND;
+			if (_fieldName.startsWith(StringPool.UNDERLINE)) {
+				return _fieldName.substring(1);
 			}
 
-			String name = _field.getName();
-
-			if (name.startsWith(StringPool.UNDERLINE)) {
-				return name.substring(1);
-			}
-
-			return name;
+			return _fieldName;
 		}
 
 		private Object _getValue(Object object)
@@ -491,6 +478,7 @@ public class ColumnValuesExtractor {
 		}
 
 		private final Field _field;
+		private final String _fieldName;
 		private final int _index;
 		private final List<ColumnDescriptor> _parentColumnDescriptors =
 			new ArrayList<>();

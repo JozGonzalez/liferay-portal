@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.dao.db;
@@ -18,7 +9,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -28,7 +18,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,12 +33,35 @@ import java.util.regex.Pattern;
  */
 public class DBInspector {
 
+	public static boolean isObjectTable(
+		List<Long> companyIds, String tableName) {
+
+		for (long companyId : companyIds) {
+
+			// See ObjectDefinitionImpl#getExtensionDBTableName and
+			// ObjectDefinitionLocalServiceImpl#_getDBTableName
+
+			if (tableName.endsWith("_x_" + companyId) ||
+				tableName.startsWith("L_" + companyId + "_") ||
+				tableName.startsWith("O_" + companyId + "_")) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public DBInspector(Connection connection) {
 		_connection = connection;
 	}
 
 	public String getCatalog() throws SQLException {
 		return _connection.getCatalog();
+	}
+
+	public ResultSet getColumnsResultSet(String tableName) throws SQLException {
+		return _getColumnsResultSet(tableName, null);
 	}
 
 	public String getSchema() {
@@ -59,14 +77,30 @@ public class DBInspector {
 		}
 	}
 
-	public boolean hasColumn(String tableName, String columnName)
-		throws Exception {
+	public List<String> getTableNames(String tableNamePattern)
+		throws SQLException {
+
+		List<String> tableNames = new ArrayList<>();
 
 		DatabaseMetaData databaseMetaData = _connection.getMetaData();
 
-		try (ResultSet resultSet = databaseMetaData.getColumns(
-				getCatalog(), getSchema(), normalizeName(tableName),
-				normalizeName(columnName))) {
+		try (ResultSet resultSet = databaseMetaData.getTables(
+				_connection.getCatalog(), _connection.getSchema(),
+				tableNamePattern, new String[] {"TABLE"})) {
+
+			while (resultSet.next()) {
+				tableNames.add(resultSet.getString("TABLE_NAME"));
+			}
+		}
+
+		return tableNames;
+	}
+
+	public boolean hasColumn(String tableName, String columnName)
+		throws Exception {
+
+		try (ResultSet resultSet = _getColumnsResultSet(
+				tableName, columnName)) {
 
 			if (!resultSet.next()) {
 				return false;
@@ -85,12 +119,8 @@ public class DBInspector {
 			String tableName, String columnName, String columnType)
 		throws Exception {
 
-		DatabaseMetaData databaseMetaData = _connection.getMetaData();
-
-		try (ResultSet resultSet = databaseMetaData.getColumns(
-				getCatalog(), getSchema(),
-				normalizeName(tableName, databaseMetaData),
-				normalizeName(columnName, databaseMetaData))) {
+		try (ResultSet resultSet = _getColumnsResultSet(
+				tableName, columnName)) {
 
 			if (!resultSet.next()) {
 				return false;
@@ -120,6 +150,18 @@ public class DBInspector {
 				return false;
 			}
 
+			Integer expectedColumnDecimalDigits = _getByColumnType(
+				columnType, DB::getSQLTypeDecimalDigits);
+
+			if (expectedColumnDecimalDigits != DB.SQL_SIZE_NONE) {
+				int actualColumnDecimalDigits = resultSet.getInt(
+					"DECIMAL_DIGITS");
+
+				if (expectedColumnDecimalDigits != actualColumnDecimalDigits) {
+					return false;
+				}
+			}
+
 			boolean expectedColumnNullable = _isColumnNullable(columnType);
 
 			int actualColumnNullable = resultSet.getInt("NULLABLE");
@@ -130,6 +172,22 @@ public class DBInspector {
 				 (actualColumnNullable != DatabaseMetaData.columnNoNulls))) {
 
 				return false;
+			}
+
+			if (!expectedColumnNullable) {
+				String expectedColumnDefaultValue = _getColumnDefaultValue(
+					columnType);
+				String actualColumnDefaultValue = _getColumnDefaultValue(
+					resultSet.getString("COLUMN_DEF"), DB::getDefaultValue);
+
+				if (Validator.isNull(expectedColumnDefaultValue) &&
+					Validator.isNull(actualColumnDefaultValue)) {
+
+					return true;
+				}
+
+				return StringUtil.equals(
+					expectedColumnDefaultValue, actualColumnDefaultValue);
 			}
 
 			return true;
@@ -188,17 +246,31 @@ public class DBInspector {
 	public boolean hasTable(String tableName, boolean caseSensitive)
 		throws Exception {
 
-		if (caseSensitive) {
-			if (_hasTable(tableName)) {
-				return true;
-			}
-
-			return false;
-		}
-
 		DatabaseMetaData databaseMetaData = _connection.getMetaData();
 
-		if (_hasTable(normalizeName(tableName, databaseMetaData))) {
+		if (!caseSensitive) {
+			tableName = normalizeName(tableName, databaseMetaData);
+		}
+
+		try (ResultSet resultSet = databaseMetaData.getTables(
+				getCatalog(), getSchema(), tableName, new String[] {"TABLE"})) {
+
+			while (resultSet.next()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean isControlTable(List<Long> companyIds, String tableName)
+		throws Exception {
+
+		if (!isPartitionedControlTable(tableName) &&
+			!isObjectTable(companyIds, tableName) &&
+			(_controlTableNames.contains(StringUtil.toLowerCase(tableName)) ||
+			 !hasColumn(tableName, "companyId"))) {
+
 			return true;
 		}
 
@@ -208,12 +280,8 @@ public class DBInspector {
 	public boolean isNullable(String tableName, String columnName)
 		throws SQLException {
 
-		DatabaseMetaData databaseMetaData = _connection.getMetaData();
-
-		try (ResultSet resultSet = databaseMetaData.getColumns(
-				getCatalog(), getSchema(),
-				normalizeName(tableName, databaseMetaData),
-				normalizeName(columnName, databaseMetaData))) {
+		try (ResultSet resultSet = _getColumnsResultSet(
+				tableName, columnName)) {
 
 			if (!resultSet.next()) {
 				throw new SQLException(
@@ -230,6 +298,16 @@ public class DBInspector {
 
 			return false;
 		}
+	}
+
+	public boolean isPartitionedControlTable(String tableName) {
+		if (_partitionedControlTableNames.contains(
+				StringUtil.toLowerCase(tableName))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public String normalizeName(String name) throws SQLException {
@@ -262,7 +340,27 @@ public class DBInspector {
 		return biFunction.apply(DBManagerUtil.getDB(), matcher.group(1));
 	}
 
-	private int _getColumnSize(String columnType) throws UpgradeException {
+	private String _getColumnDefaultValue(String columnType) {
+		Matcher matcher = _columnDefaultClausePattern.matcher(columnType);
+
+		if (matcher.find()) {
+			return StringUtil.unquote(matcher.group(1));
+		}
+
+		return null;
+	}
+
+	private String _getColumnDefaultValue(
+		String columnDef, BiFunction<DB, String, String> biFunction) {
+
+		if (Validator.isNull(columnDef)) {
+			return columnDef;
+		}
+
+		return biFunction.apply(DBManagerUtil.getDB(), columnDef);
+	}
+
+	private int _getColumnSize(String columnType) throws Exception {
 		Matcher matcher = _columnSizePattern.matcher(columnType);
 
 		if (!matcher.matches()) {
@@ -276,7 +374,7 @@ public class DBInspector {
 				return Integer.parseInt(columnSize);
 			}
 			catch (NumberFormatException numberFormatException) {
-				throw new UpgradeException(
+				throw new Exception(
 					StringBundler.concat(
 						"Column type ", columnType,
 						" has an invalid column size ", columnSize),
@@ -284,8 +382,7 @@ public class DBInspector {
 			}
 		}
 
-		Integer dataTypeSize = _getByColumnType(
-			columnType, DB::getSQLVarcharSize);
+		Integer dataTypeSize = _getByColumnType(columnType, DB::getSQLTypeSize);
 
 		if (dataTypeSize != null) {
 			return dataTypeSize;
@@ -294,18 +391,18 @@ public class DBInspector {
 		return DB.SQL_SIZE_NONE;
 	}
 
-	private boolean _hasTable(String tableName) throws Exception {
-		DatabaseMetaData metadata = _connection.getMetaData();
+	private ResultSet _getColumnsResultSet(String tableName, String columnName)
+		throws SQLException {
 
-		try (ResultSet resultSet = metadata.getTables(
-				getCatalog(), getSchema(), tableName, null)) {
+		DatabaseMetaData databaseMetaData = _connection.getMetaData();
 
-			while (resultSet.next()) {
-				return true;
-			}
+		if (columnName != null) {
+			columnName = normalizeName(columnName, databaseMetaData);
 		}
 
-		return false;
+		return databaseMetaData.getColumns(
+			getCatalog(), getSchema(),
+			normalizeName(tableName, databaseMetaData), columnName);
 	}
 
 	private boolean _isColumnNullable(String typeName) {
@@ -322,10 +419,16 @@ public class DBInspector {
 
 	private static final Log _log = LogFactoryUtil.getLog(DBInspector.class);
 
+	private static final Pattern _columnDefaultClausePattern = Pattern.compile(
+		".*DEFAULT ((?:'[^']+')|(?:\\S+)) NOT NULL", Pattern.CASE_INSENSITIVE);
 	private static final Pattern _columnSizePattern = Pattern.compile(
 		"^\\w+(?:\\((\\d+)\\))?.*", Pattern.CASE_INSENSITIVE);
 	private static final Pattern _columnTypePattern = Pattern.compile(
 		"(^\\w+)", Pattern.CASE_INSENSITIVE);
+	private static final Set<String> _controlTableNames = new HashSet<>(
+		Arrays.asList("company", "virtualhost"));
+	private static final Set<String> _partitionedControlTableNames =
+		new HashSet<>(Arrays.asList("classname_"));
 
 	private final Connection _connection;
 

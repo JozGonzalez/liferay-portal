@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -22,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -1555,7 +1556,8 @@ definition {
 	@description = "This is a test case for LPS-128652. View the changes of fragment on content page still persist after overwrite the fragment."
 	@priority = 4
 	test ViewChangesOfFragmentOnContentPagePersistAfterOverwriteTheFragment {
-		property test.name.skip.portal.instance = "FragmentsExportImport#ViewChangesOfFragmentOnContentPagePersistAfterOverwriteTheFragment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable Propagate Fragment Changes Automatically in System Settings") {
 			ApplicationsMenu.gotoPortlet(

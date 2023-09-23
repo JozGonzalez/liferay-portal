@@ -1,6 +1,7 @@
 [
 	{
-		"cpDefinitionExternalReferenceCode": "TESTPROD001",
+		"categoryKey": "",
+		"cpDefinitionExternalReferenceCode": "TESTCOMMERCEPRODUCT1",
 		"description": "",
 		"facetable": false,
 		"key": "test-product-specification-1",

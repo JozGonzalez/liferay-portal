@@ -1,6 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -18,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -269,6 +270,10 @@ definition {
 
 		PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Page Template Name");
 
+		Refresh();
+
+		WaitForPageLoad();
+
 		Portlet.addPG(portletName = "Web Content Display");
 
 		WebContentDisplayPortlet.selectWebContent(
@@ -331,7 +336,7 @@ definition {
 			templateFieldNames = "Web Content",
 			templateName = "WC Template Name");
 
-		DDLDataDefinition.save();
+		PortletEntry.save();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -608,6 +613,9 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewCustomizedWCInAP {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Page Name");
@@ -687,6 +695,9 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewCustomizedWCInWCD {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Page Name");

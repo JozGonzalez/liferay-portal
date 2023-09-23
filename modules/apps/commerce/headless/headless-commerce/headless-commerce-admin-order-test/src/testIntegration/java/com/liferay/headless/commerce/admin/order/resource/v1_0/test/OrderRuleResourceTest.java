@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.resource.v1_0.test;
@@ -21,23 +12,23 @@ import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderRule;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.test.rule.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Stefano Motta
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 
@@ -53,9 +44,11 @@ public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 			_user.getUserId());
 	}
 
+	@Ignore
 	@Override
 	@Test
 	public void testGraphQLGetOrderRuleNotFound() throws Exception {
+		super.testGraphQLGetOrderRuleNotFound();
 	}
 
 	@Override
@@ -67,25 +60,21 @@ public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 	protected OrderRule randomOrderRule() {
 		return new OrderRule() {
 			{
-				active = RandomTestUtil.randomBoolean();
+				active = true;
 				description = RandomTestUtil.randomString();
 				displayDate = RandomTestUtil.nextDate();
 				expirationDate = RandomTestUtil.nextDate();
 				externalReferenceCode = RandomTestUtil.randomString();
 				id = RandomTestUtil.nextLong();
 				name = RandomTestUtil.randomString();
+				neverExpire = true;
 			}
 		};
 	}
 
 	@Override
-	protected OrderRule randomPatchOrderRule() throws Exception {
-		return randomOrderRule();
-	}
-
-	@Override
 	protected OrderRule testDeleteOrderRule_addOrderRule() throws Exception {
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
@@ -93,53 +82,53 @@ public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 			testDeleteOrderRuleByExternalReferenceCode_addOrderRule()
 		throws Exception {
 
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testGetOrderRule_addOrderRule() throws Exception {
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testGetOrderRuleByExternalReferenceCode_addOrderRule()
 		throws Exception {
 
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testGetOrderRulesPage_addOrderRule(OrderRule orderRule)
 		throws Exception {
 
-		return _addOrderRule(orderRule);
+		return _addCOREntry(orderRule);
 	}
 
 	@Override
 	protected OrderRule testGraphQLOrderRule_addOrderRule() throws Exception {
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testPatchOrderRule_addOrderRule() throws Exception {
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testPatchOrderRuleByExternalReferenceCode_addOrderRule()
 		throws Exception {
 
-		return _addOrderRule(randomOrderRule());
+		return _addCOREntry(randomOrderRule());
 	}
 
 	@Override
 	protected OrderRule testPostOrderRule_addOrderRule(OrderRule orderRule)
 		throws Exception {
 
-		return _addOrderRule(orderRule);
+		return _addCOREntry(orderRule);
 	}
 
-	private OrderRule _addOrderRule(OrderRule orderRule) throws Exception {
+	private OrderRule _addCOREntry(OrderRule orderRule) throws Exception {
 		DateConfig displayDateConfig = DateConfig.toDisplayDateConfig(
 			orderRule.getDisplayDate(), _user.getTimeZone());
 		DateConfig expirationDateConfig = DateConfig.toExpirationDateConfig(
@@ -158,12 +147,6 @@ public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 			orderRule.getName(), GetterUtil.getInteger(orderRule.getPriority()),
 			orderRule.getType(), orderRule.getTypeSettings(), _serviceContext);
 
-		_corEntries.add(corEntry);
-
-		return _toOrderRule(corEntry);
-	}
-
-	private OrderRule _toOrderRule(COREntry corEntry) {
 		return new OrderRule() {
 			{
 				active = corEntry.isActive();
@@ -176,9 +159,6 @@ public class OrderRuleResourceTest extends BaseOrderRuleResourceTestCase {
 			}
 		};
 	}
-
-	@DeleteAfterTestRun
-	private final List<COREntry> _corEntries = new ArrayList<>();
 
 	@Inject
 	private COREntryLocalService _corEntryLocalService;

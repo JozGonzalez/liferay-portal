@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.portlet.display.template;
@@ -26,13 +17,13 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Release;
-import com.liferay.portal.kernel.portletdisplaytemplate.BasePortletDisplayTemplateHandler;
-import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManager;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portlet.display.template.BasePortletDisplayTemplateHandler;
+import com.liferay.portlet.display.template.constants.PortletDisplayTemplateConstants;
 import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.trash.TrashHelper;
 
@@ -64,9 +55,9 @@ public class BlogsPortletDisplayTemplateHandler
 	@Override
 	public Map<String, Object> getCustomContextObjects() {
 		return HashMapBuilder.<String, Object>put(
-			"blogsEntryAssetEntryUtil", _blogsEntryAssetEntryUtil
+			"blogsEntryAssetEntryUtil", new BlogsEntryAssetEntryUtil()
 		).put(
-			"blogsEntryPermission", _blogsEntryPermission
+			"blogsEntryPermission", new BlogsEntryPermission()
 		).put(
 			"blogsEntryUtil", _blogsEntryUtil
 		).put(
@@ -133,7 +124,7 @@ public class BlogsPortletDisplayTemplateHandler
 		fieldsTemplateVariableGroup.empty();
 
 		fieldsTemplateVariableGroup.addCollectionVariable(
-			"blog-entries", List.class, PortletDisplayTemplateManager.ENTRIES,
+			"blog-entries", List.class, PortletDisplayTemplateConstants.ENTRIES,
 			"blog-entry", BlogsEntry.class, "curBlogEntry", "title");
 
 		return templateVariableGroups;
@@ -152,12 +143,6 @@ public class BlogsPortletDisplayTemplateHandler
 	}
 
 	private volatile BlogsConfiguration _blogsConfiguration;
-
-	@Reference
-	private BlogsEntryAssetEntryUtil _blogsEntryAssetEntryUtil;
-
-	@Reference
-	private BlogsEntryPermission _blogsEntryPermission;
 
 	@Reference
 	private BlogsEntryUtil _blogsEntryUtil;

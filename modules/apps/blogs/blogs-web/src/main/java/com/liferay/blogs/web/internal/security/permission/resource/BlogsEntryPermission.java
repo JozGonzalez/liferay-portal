@@ -1,31 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.security.permission.resource;
 
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Preston Crary
  */
-@Component(service = BlogsEntryPermission.class)
 public class BlogsEntryPermission {
 
 	public static boolean contains(
@@ -33,29 +21,17 @@ public class BlogsEntryPermission {
 			String actionId)
 		throws PortalException {
 
-		return _blogsEntryModelResourcePermission.contains(
+		ModelResourcePermission<BlogsEntry> blogsEntryModelResourcePermission =
+			_blogsEntryModelResourcePermissionSnapshot.get();
+
+		return blogsEntryModelResourcePermission.contains(
 			permissionChecker, entry, actionId);
 	}
 
-	public static boolean contains(
-			PermissionChecker permissionChecker, long entryId, String actionId)
-		throws PortalException {
-
-		return _blogsEntryModelResourcePermission.contains(
-			permissionChecker, entryId, actionId);
-	}
-
-	@Reference(
-		target = "(model.class.name=com.liferay.blogs.model.BlogsEntry)",
-		unbind = "-"
-	)
-	protected void setEntryModelPermission(
-		ModelResourcePermission<BlogsEntry> modelResourcePermission) {
-
-		_blogsEntryModelResourcePermission = modelResourcePermission;
-	}
-
-	private static ModelResourcePermission<BlogsEntry>
-		_blogsEntryModelResourcePermission;
+	private static final Snapshot<ModelResourcePermission<BlogsEntry>>
+		_blogsEntryModelResourcePermissionSnapshot = new Snapshot<>(
+			BlogsEntryPermission.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.blogs.model.BlogsEntry)");
 
 }

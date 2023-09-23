@@ -15,10 +15,18 @@ definition {
 
 		Click(locator1 = "Segmentation#PROPERTIES_SEARCH");
 
-		DragAndDrop.javaScriptDragAndDropToObject(
-			locator1 = "Segmentation#ADD_FIELD_TYPE",
-			locator2 = "Segmentation#ADD_FIELD_POSITION",
-			value1 = ${propertyOption});
+		if (isSet(indexNumber)) {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				locator1 = "Segmentation#ADD_FIELD_TYPE_VISIBLE",
+				locator2 = "Segmentation#ADD_FIELD_POSITION_N",
+				value1 = ${propertyOption});
+		}
+		else {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				locator1 = "Segmentation#ADD_FIELD_TYPE_VISIBLE",
+				locator2 = "Segmentation#ADD_FIELD_POSITION",
+				value1 = ${propertyOption});
+		}
 	}
 
 	macro addSecondProperty {
@@ -28,13 +36,13 @@ definition {
 
 		if (IsElementPresent(locator1 = "Segmentation#ADD_FIELD_POSITION_EMPTY")) {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				locator1 = "Segmentation#ADD_FIELD_TYPE",
+				locator1 = "Segmentation#ADD_FIELD_TYPE_VISIBLE",
 				locator2 = "Segmentation#ADD_FIELD_POSITION_EMPTY",
 				value1 = ${propertyOption});
 		}
 		else {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				locator1 = "Segmentation#ADD_FIELD_TYPE",
+				locator1 = "Segmentation#ADD_FIELD_TYPE_VISIBLE",
 				locator2 = "Segmentation#ADD_FIELD_POSITION_EDIT",
 				value1 = ${propertyOption});
 		}
@@ -283,15 +291,19 @@ definition {
 
 			Click(locator1 = "Modal#SELECT_BUTTON");
 		}
-		else if (isSet(chooseItem)) {
+		else if (isSet(selectCategory)) {
+			Button.clickSelect();
+
+			AssetCategorization.selectCategory(categoryName = ${selectCategory});
+
+			SelectFrame(value1 = "relative=top");
+		}
+		else if (isSet(selectCard)) {
 			Button.clickSelect();
 
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-			AssertClick(
-				key_rowEntry = ${chooseItem},
-				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHOOSE",
-				value1 = "Choose");
+			LexiconCard.clickCardTitle(card = ${selectCard});
 
 			SelectFrame(value1 = "relative=top");
 		}
@@ -312,6 +324,25 @@ definition {
 				key_rowEntry = ${selectLink},
 				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
 				value1 = ${selectLink});
+
+			SelectFrame(value1 = "relative=top");
+		}
+		else if (isSet(selectEntry)) {
+			if (isSet(indexNumber)) {
+				Click(
+					key_indexNumber = ${indexNumber},
+					key_text = "Select",
+					locator1 = "Button#ANY_N");
+			}
+			else {
+				Button.clickSelect();
+			}
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			Click(
+				key_rowEntry = ${selectEntry},
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
 			SelectFrame(value1 = "relative=top");
 		}
@@ -349,10 +380,11 @@ definition {
 	macro getPortalInstanceDefaultLanguageId {
 		var portalURL = PropsUtil.get("portal.url");
 		var companyId = JSONCompany.getCompanyId(portalInstanceName = ${portalInstanceName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/country/get-company-countries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d companyId=${companyId} \
 				-d start=0 \
 				-d end=1 \
@@ -401,9 +433,7 @@ definition {
 	}
 
 	macro gotoSidebar {
-		Click(
-			key_typeName = ${fieldType},
-			locator1 = "Segmentation#SEGMENT_FIELDS_TYPE");
+		Panel.expandPanel(panel = ${fieldType});
 	}
 
 	macro openSegmentOptions {
@@ -505,7 +535,7 @@ definition {
 			key_text = "View Members",
 			locator1 = "Button#ANY");
 
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (!(isSet(memberNameList))) {
 			var memberNameList = ${memberName};
@@ -517,11 +547,7 @@ definition {
 				locator1 = "LexiconTable#TABLE_ENTRY");
 		}
 
-		SelectFrame(value1 = "relative=top");
-
-		Click(locator1 = "Icon#CLOSE");
-
-		SelectFrame(value1 = "relative=top");
+		IFrame.closeFrame();
 	}
 
 }

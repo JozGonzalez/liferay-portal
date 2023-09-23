@@ -1,87 +1,60 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-long folderId = ParamUtil.getLong(request, "folderId");
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
 
 Folder folder = null;
 
-DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
+long folderId = ParamUtil.getLong(request, "folderId");
 
 if (folderId != dlAdminDisplayContext.getRootFolderId()) {
 	folder = DLAppServiceUtil.getFolder(folderId);
 }
 
-List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+List<Folder> mountFolders = dlAdminDisplayContext.getMountFolders();
 %>
 
-<c:if test="<%= !(mountFolders.isEmpty() && (folder == null)) %>">
+<c:if test="<%= (folder != null) || !mountFolders.isEmpty() %>">
 	<div class="search-info">
-		<liferay-util:whitespace-remover>
-			<liferay-ui:message key="search-colon" />
 
-			<%
-			long repositoryId = ParamUtil.getLong(request, "repositoryId");
+		<%
+		long repositoryId = ParamUtil.getLong(request, "repositoryId");
 
-			if (repositoryId == 0) {
-				repositoryId = scopeGroupId;
-			}
+		if (repositoryId == 0) {
+			repositoryId = scopeGroupId;
+		}
 
-			PortletURL searchEverywhereURL = PortletURLBuilder.createRenderURL(
-				liferayPortletResponse
-			).setMVCRenderCommandName(
-				"/document_library/search"
-			).setParameter(
-				"repositoryId", repositoryId
-			).buildPortletURL();
+		long searchRepositoryId = ParamUtil.getLong(request, "searchRepositoryId");
 
-			long searchRepositoryId = ParamUtil.getLong(request, "searchRepositoryId");
+		if (searchRepositoryId == 0) {
+			searchRepositoryId = repositoryId;
+		}
 
-			if (searchRepositoryId == 0) {
-				searchRepositoryId = repositoryId;
-			}
+		PortletURL searchURL = dlAdminDisplayContext.getSearchRenderURL();
 
-			searchEverywhereURL.setParameter("searchRepositoryId", String.valueOf(searchRepositoryId));
+		long searchFolderId = ParamUtil.getLong(request, "searchFolderId");
+		%>
 
-			searchEverywhereURL.setParameter("folderId", String.valueOf(folderId));
+		<div class="btn-group">
+			<c:if test="<%= (folder != null) && mountFolders.isEmpty() %>">
 
-			searchEverywhereURL.setParameter("searchFolderId", String.valueOf(dlAdminDisplayContext.getRootFolderId()));
+				<%
+				PortletURL searchEverywhereURL = PortletURLBuilder.create(
+					PortletURLUtil.clone(searchURL, liferayPortletResponse)
+				).setParameter(
+					"searchFolderId", dlAdminDisplayContext.getRootFolderId()
+				).setParameter(
+					"searchRepositoryId", searchRepositoryId
+				).buildPortletURL();
+				%>
 
-			String keywords = ParamUtil.getString(request, "keywords");
-
-			searchEverywhereURL.setParameter("keywords", keywords);
-
-			searchEverywhereURL.setParameter("showSearchInfo", Boolean.TRUE.toString());
-
-			PortletURL searchFolderURL = PortletURLBuilder.create(
-				PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse)
-			).setParameter(
-				"folderId", folderId
-			).setParameter(
-				"searchFolderId", folderId
-			).setParameter(
-				"searchRepositoryId", scopeGroupId
-			).buildPortletURL();
-
-			long searchFolderId = ParamUtil.getLong(request, "searchFolderId");
-			%>
-
-			<c:if test="<%= mountFolders.isEmpty() && (folder != null) %>">
 				<clay:link
 					cssClass='<%= (searchFolderId == dlAdminDisplayContext.getRootFolderId()) ? "active" : "" %>'
 					displayType="secondary"
@@ -93,9 +66,20 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 				/>
 			</c:if>
 
-			<c:if test="<%= folder != null %>">
+			<c:if test="<%= (folder != null) && !folder.isMountPoint() %>">
+
+				<%
+				PortletURL searchFolderURL = PortletURLBuilder.create(
+					PortletURLUtil.clone(searchURL, liferayPortletResponse)
+				).setParameter(
+					"searchFolderId", folderId
+				).setParameter(
+					"searchRepositoryId", repositoryId
+				).buildPortletURL();
+				%>
+
 				<clay:link
-					cssClass='<%= (searchFolderId == folder.getFolderId()) ? "active" : "" %>'
+					cssClass='<%= ((searchFolderId == folderId) && (searchRepositoryId == repositoryId)) ? "active" : "" %>'
 					displayType="secondary"
 					href="<%= searchFolderURL.toString() %>"
 					icon="folder"
@@ -110,16 +94,16 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 
 				<%
 				PortletURL searchRepositoryURL = PortletURLBuilder.create(
-					PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse)
+					PortletURLUtil.clone(searchURL, liferayPortletResponse)
 				).setParameter(
-					"repositoryId", scopeGroupId
+					"searchFolderId", dlAdminDisplayContext.getRootFolderId()
 				).setParameter(
 					"searchRepositoryId", scopeGroupId
 				).buildPortletURL();
 				%>
 
 				<clay:link
-					cssClass='<%= ((searchRepositoryId == scopeGroupId) && (searchFolderId == dlAdminDisplayContext.getRootFolderId())) ? "active" : "" %>'
+					cssClass='<%= ((searchFolderId == dlAdminDisplayContext.getRootFolderId()) && (searchRepositoryId == scopeGroupId)) ? "active" : "" %>'
 					displayType="secondary"
 					href="<%= searchRepositoryURL.toString() %>"
 					icon="repository"
@@ -131,13 +115,12 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 
 				<%
 				for (Folder mountFolder : mountFolders) {
-					searchRepositoryURL.setParameter("repositoryId", String.valueOf(mountFolder.getRepositoryId()));
-					searchRepositoryURL.setParameter("searchRepositoryId", String.valueOf(mountFolder.getRepositoryId()));
 					searchRepositoryURL.setParameter("searchFolderId", String.valueOf(mountFolder.getFolderId()));
+					searchRepositoryURL.setParameter("searchRepositoryId", String.valueOf(mountFolder.getRepositoryId()));
 				%>
 
 					<clay:link
-						cssClass='<%= (mountFolder.getFolderId() == searchFolderId) ? "active" : "" %>'
+						cssClass='<%= (searchFolderId == mountFolder.getFolderId()) ? "active" : "" %>'
 						displayType="secondary"
 						href="<%= searchRepositoryURL.toString() %>"
 						icon="repository"
@@ -152,6 +135,6 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 				%>
 
 			</c:if>
-		</liferay-util:whitespace-remover>
+		</div>
 	</div>
 </c:if>

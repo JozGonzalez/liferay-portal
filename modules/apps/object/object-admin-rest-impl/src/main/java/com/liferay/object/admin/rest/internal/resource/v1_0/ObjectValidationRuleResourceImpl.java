@@ -1,36 +1,46 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule;
-import com.liferay.object.admin.rest.internal.dto.v1_0.converter.ObjectValidationRuleDTOConverter;
+import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRuleSetting;
+import com.liferay.object.admin.rest.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectValidationRuleEntityModel;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectValidationRuleResource;
+import com.liferay.object.constants.ObjectValidationRuleConstants;
+import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.ObjectValidationRuleService;
+import com.liferay.object.service.ObjectValidationRuleSettingLocalService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
+
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,11 +51,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/object-validation-rule.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, ObjectValidationRuleResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ObjectValidationRuleResource.class
 )
 public class ObjectValidationRuleResourceImpl
-	extends BaseObjectValidationRuleResourceImpl implements NestedFieldSupport {
+	extends BaseObjectValidationRuleResourceImpl {
 
 	@Override
 	public void deleteObjectValidationRule(Long objectValidationRuleId)
@@ -56,10 +66,15 @@ public class ObjectValidationRuleResourceImpl
 	}
 
 	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
+		return _entityModel;
+	}
+
+	@Override
 	public Page<ObjectValidationRule>
 			getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
 				String externalReferenceCode, String search,
-				Pagination pagination)
+				Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		ObjectDefinition objectDefinition =
@@ -68,7 +83,8 @@ public class ObjectValidationRuleResourceImpl
 					externalReferenceCode, contextCompany.getCompanyId());
 
 		return getObjectDefinitionObjectValidationRulesPage(
-			objectDefinition.getObjectDefinitionId(), search, pagination);
+			objectDefinition.getObjectDefinitionId(), search, pagination,
+			sorts);
 	}
 
 	@NestedField(
@@ -78,7 +94,8 @@ public class ObjectValidationRuleResourceImpl
 	@Override
 	public Page<ObjectValidationRule>
 			getObjectDefinitionObjectValidationRulesPage(
-				Long objectDefinitionId, String search, Pagination pagination)
+				Long objectDefinitionId, String search, Pagination pagination,
+				Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
@@ -123,7 +140,7 @@ public class ObjectValidationRuleResourceImpl
 					"objectDefinitionId", objectDefinitionId);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 			},
-			null,
+			sorts,
 			document -> _toObjectValidationRule(
 				_objectValidationRuleService.getObjectValidationRule(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
@@ -160,6 +177,21 @@ public class ObjectValidationRuleResourceImpl
 			Long objectDefinitionId, ObjectValidationRule objectValidationRule)
 		throws Exception {
 
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") &&
+			(ArrayUtil.isNotEmpty(
+				objectValidationRule.getObjectValidationRuleSettings()) ||
+			 Validator.isNotNull(
+				 objectValidationRule.getOutputTypeAsString()))) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		boolean system = false;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-193355")) {
+			system = GetterUtil.getBoolean(objectValidationRule.getSystem());
+		}
+
 		return _toObjectValidationRule(
 			_objectValidationRuleService.addObjectValidationRule(
 				objectDefinitionId,
@@ -169,7 +201,14 @@ public class ObjectValidationRuleResourceImpl
 					objectValidationRule.getErrorLabel()),
 				LocalizedMapUtil.getLocalizedMap(
 					objectValidationRule.getName()),
-				objectValidationRule.getScript()));
+				GetterUtil.getString(
+					objectValidationRule.getOutputTypeAsString(),
+					ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION),
+				objectValidationRule.getScript(), system,
+				_toObjectValidationRuleSettings(
+					objectDefinitionId, _objectFieldLocalService,
+					_objectValidationRuleSettingLocalService,
+					objectValidationRule.getObjectValidationRuleSettings())));
 	}
 
 	@Override
@@ -177,6 +216,20 @@ public class ObjectValidationRuleResourceImpl
 			Long objectValidationRuleId,
 			ObjectValidationRule objectValidationRule)
 		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") &&
+			(ArrayUtil.isNotEmpty(
+				objectValidationRule.getObjectValidationRuleSettings()) ||
+			 Validator.isNotNull(
+				 objectValidationRule.getOutputTypeAsString()))) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		com.liferay.object.model.ObjectValidationRule
+			serviceBuilderObjectValidationRule =
+				_objectValidationRuleLocalService.getObjectValidationRule(
+					objectValidationRuleId);
 
 		return _toObjectValidationRule(
 			_objectValidationRuleService.updateObjectValidationRule(
@@ -186,7 +239,55 @@ public class ObjectValidationRuleResourceImpl
 					objectValidationRule.getErrorLabel()),
 				LocalizedMapUtil.getLocalizedMap(
 					objectValidationRule.getName()),
-				objectValidationRule.getScript()));
+				GetterUtil.getString(
+					objectValidationRule.getOutputTypeAsString(),
+					ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION),
+				objectValidationRule.getScript(),
+				_toObjectValidationRuleSettings(
+					serviceBuilderObjectValidationRule.getObjectDefinitionId(),
+					_objectFieldLocalService,
+					_objectValidationRuleSettingLocalService,
+					objectValidationRule.getObjectValidationRuleSettings())));
+	}
+
+	@Override
+	protected void preparePatch(
+		ObjectValidationRule objectValidationRule,
+		ObjectValidationRule existingObjectValidationRule) {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") ||
+			(objectValidationRule.getObjectValidationRuleSettings() == null)) {
+
+			return;
+		}
+
+		existingObjectValidationRule.setObjectValidationRuleSettings(
+			() -> ArrayUtil.append(
+				objectValidationRule.getObjectValidationRuleSettings(),
+				existingObjectValidationRule.
+					getObjectValidationRuleSettings()));
+	}
+
+	private com.liferay.object.model.ObjectValidationRuleSetting
+			_setObjectValidationRuleSettingProperties(
+				String nameObjectFieldId,
+				ObjectFieldLocalService objectFieldLocalService,
+				ObjectValidationRuleSetting objectValidationRuleSetting,
+				long objectDefinitionId,
+				com.liferay.object.model.ObjectValidationRuleSetting
+					serviceBuilderObjectValidationRuleSetting)
+		throws PortalException {
+
+		serviceBuilderObjectValidationRuleSetting.setName(nameObjectFieldId);
+
+		ObjectField objectField = objectFieldLocalService.getObjectField(
+			String.valueOf(objectValidationRuleSetting.getValue()),
+			objectDefinitionId);
+
+		serviceBuilderObjectValidationRuleSetting.setValue(
+			String.valueOf(objectField.getObjectFieldId()));
+
+		return serviceBuilderObjectValidationRuleSetting;
 	}
 
 	private ObjectValidationRule _toObjectValidationRule(
@@ -199,11 +300,17 @@ public class ObjectValidationRuleResourceImpl
 				false,
 				HashMapBuilder.put(
 					"delete",
-					addAction(
-						ActionKeys.DELETE, "deleteObjectValidationRule",
-						ObjectDefinition.class.getName(),
-						serviceBuilderObjectValidationRule.
-							getObjectDefinitionId())
+					() -> {
+						if (serviceBuilderObjectValidationRule.isSystem()) {
+							return null;
+						}
+
+						return addAction(
+							ActionKeys.DELETE, "deleteObjectValidationRule",
+							ObjectDefinition.class.getName(),
+							serviceBuilderObjectValidationRule.
+								getObjectDefinitionId());
+					}
 				).put(
 					"get",
 					addAction(
@@ -224,13 +331,81 @@ public class ObjectValidationRuleResourceImpl
 			serviceBuilderObjectValidationRule);
 	}
 
+	private List<com.liferay.object.model.ObjectValidationRuleSetting>
+		_toObjectValidationRuleSettings(
+			long objectDefinitionId,
+			ObjectFieldLocalService objectFieldLocalService,
+			ObjectValidationRuleSettingLocalService
+				objectValidationRuleSettingLocalService,
+			ObjectValidationRuleSetting[] objectValidationRuleSettings) {
+
+		return transformToList(
+			objectValidationRuleSettings,
+			objectValidationRuleSetting -> {
+				com.liferay.object.model.ObjectValidationRuleSetting
+					serviceBuilderObjectValidationRuleSetting =
+						objectValidationRuleSettingLocalService.
+							createObjectValidationRuleSetting(0L);
+
+				if (StringUtil.equals(
+						objectValidationRuleSetting.getName(),
+						ObjectValidationRuleSettingConstants.
+							NAME_KEY_OBJECT_FIELD_EXTERNAL_REFERENCE_CODE)) {
+
+					return _setObjectValidationRuleSettingProperties(
+						ObjectValidationRuleSettingConstants.
+							NAME_KEY_OBJECT_FIELD_ID,
+						objectFieldLocalService, objectValidationRuleSetting,
+						objectDefinitionId,
+						serviceBuilderObjectValidationRuleSetting);
+				}
+
+				if (StringUtil.equals(
+						objectValidationRuleSetting.getName(),
+						ObjectValidationRuleSettingConstants.
+							NAME_OUTPUT_OBJECT_FIELD_EXTERNAL_REFERENCE_CODE)) {
+
+					return _setObjectValidationRuleSettingProperties(
+						ObjectValidationRuleSettingConstants.
+							NAME_OUTPUT_OBJECT_FIELD_ID,
+						objectFieldLocalService, objectValidationRuleSetting,
+						objectDefinitionId,
+						serviceBuilderObjectValidationRuleSetting);
+				}
+
+				serviceBuilderObjectValidationRuleSetting.setName(
+					objectValidationRuleSetting.getName());
+				serviceBuilderObjectValidationRuleSetting.setValue(
+					String.valueOf(objectValidationRuleSetting.getValue()));
+
+				return serviceBuilderObjectValidationRuleSetting;
+			});
+	}
+
+	private static final EntityModel _entityModel =
+		new ObjectValidationRuleEntityModel();
+
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
-	private ObjectValidationRuleDTOConverter _objectValidationRuleDTOConverter;
+	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Reference(
+		target = DTOConverterConstants.OBJECT_VALIDATION_RULE_DTO_CONVERTER
+	)
+	private DTOConverter
+		<com.liferay.object.model.ObjectValidationRule, ObjectValidationRule>
+			_objectValidationRuleDTOConverter;
+
+	@Reference
+	private ObjectValidationRuleLocalService _objectValidationRuleLocalService;
 
 	@Reference
 	private ObjectValidationRuleService _objectValidationRuleService;
+
+	@Reference
+	private ObjectValidationRuleSettingLocalService
+		_objectValidationRuleSettingLocalService;
 
 }

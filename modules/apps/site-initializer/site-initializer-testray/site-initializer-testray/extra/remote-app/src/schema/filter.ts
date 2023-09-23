@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {RendererFields} from '../components/Form/Renderer';
@@ -162,7 +153,7 @@ const baseFilters: Filter = {
 	project: {
 		label: i18n.translate('project'),
 		name: 'projectId',
-		resource: '/projects?fields=id,name',
+		resource: '/projects?fields=id,name&pageSize=100',
 		transformData(item) {
 			return dataToOptions(transformData<TestrayProject>(item));
 		},
@@ -796,7 +787,6 @@ const filterSchema = {
 				label: i18n.translate('build-name'),
 				name: 'buildToTasks/name',
 				operator: 'contains',
-				removeQuoteMark: false,
 				type: 'text',
 			},
 			overrides(baseFilters.dueStatus, {
@@ -816,7 +806,7 @@ const filterSchema = {
 				],
 			}),
 			overrides(baseFilters.assignee, {
-				operator: 'contains',
+				name: 'taskToTasksUsers/r_userToTasksUsers_userId',
 				type: 'select',
 			}),
 		] as RendererFields[],

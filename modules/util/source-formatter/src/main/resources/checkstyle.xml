@@ -252,28 +252,18 @@
 			<message key="starting.uppercase.required" value="''{0}'' should start with an uppercase character for {1} ''{2}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ChainingCheck">
-			<property name="allowConcatChain" value="true" />
-			<property name="allowedClassNames" value="ActionSemantics,.*[Bb]uilder(s)?,Assertions,Awaitility,.*Consumer,CreationMenuBuilder,DSL.+FactoryUtil,EasyMock,Either,Filter,FormNavigatorEntryConfigurationRetriever,GenericUtil,InfoFieldSet,InfoForm,InfoFormValues,JSONUtil,List,MemberMatcher,Option,Optional,OSGi,Response,RestAssured,(Double|Int|Long)?Stream,.+Table,Try,Validation,WebClient" />
-			<property name="allowedMethodNames" value="bind,builder,create,getKeywordsPredicate,newBuilder,put" />
-			<property name="allowedMockitoMethodNames" value="doAnswer,doCallRealMethod,doNothing,doReturn,doThrow,field,replace,stub,verify,verifyPrivate,when" />
-			<property name="allowedVariableTypeNames" value="^(?!String).+Builder(Impl)?,Column,CompletableFuture,.*Consumer,ContactsEngineClient,Dataset,Description,ExecuteActionRequest,(FormsEventDataset)?Filter,.*Function[0-9]*,HttpSecurity,InOrder,JSONArray,JSONObject,JsonPath,.*Mapper,NestedRepresentor.*,Optional,Predicate,RequestSpecification,Response,SoyContext,.+Step,(Double|Int|Long)?Stream,Try,UpdateFieldPropertyRequest,ValidatableResponse,WebTarget" />
-			<property name="applyToTypeCast" value="true" />
 			<property name="category" value="Styling" />
-			<property name="description" value="Checks that chaining is only applied on certain types and methods." />
-			<message key="chaining.allowed" value="Chaining is allowed on ''{0}''" />
-			<message key="chaining.avoid.method" value="Avoid chaining on method ''{0}''" />
-			<message key="chaining.avoid.new.instance" value="Avoid chaining on new class instantiation" />
-			<message key="chaining.avoid.parentheses" value="Avoid chaining on expressions with parentheses" />
-			<message key="chaining.avoid.type.cast" value="Avoid chaining on Type Cast" />
+			<property name="description" value="Checks that method chaining can be used when possible." />
 			<message key="chaining.required" value="Chaining on ''{0}'' is preferred" />
-			<message key="concat.avoid.too.many" value="Avoid chaining on method 'concat'. Use StringBundler when there are more than 3 parts" />
 			<message key="response.unsorted" value="Method calls between ''Response.status'' and ''Response.build'' should be sorted" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CompanyIterationCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies" />
 			<property name="enabled" value="false" />
-			<message key="company.local.service.use" value="Use ''CompanyLocalService.{0}'' when iterating over ''{1}''" />
+			<message key="company.local.service.use.for.loop" value="Use ''CompanyLocalService.{0}'' when iterating over ''{1}''" />
+			<message key="company.local.service.use.sql" value="Use ''CompanyLocalService.forEachCompany'' instead of SQL" />
+			<message key="portal.instances.use" value="Use ''PortalInstances.getCompanyIdsBySQL'' instead to fetch company IDs" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ComponentAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
@@ -281,6 +271,12 @@
 			<message key="configuration.policy.incorrect" value="Always specify ''configurationPolicy = ConfigurationPolicy.REQUIRE'' when a class extends ''BaseAuthVerifierPipelineConfigurator''" />
 			<message key="configuration.policy.unnecessary" value="Remove ''configurationPolicy = {0}'' as it is unnecessary" />
 			<message key="osgi.jaxrs.name.incorrect" value="The value of ''osgi.jaxrs.name'' should end with ''{0}''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ComponentExposureCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Avoid exposing static component." />
+			<property name="enabled" value="false" />
+			<message key="static.component.exposed" value="Do not expose private static field ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ConcatCheck">
 			<property name="category" value="Performance" />
@@ -418,7 +414,7 @@
 			<property name="category" value="Styling" />
 			<property name="description" value="Checks the order of variable assignments and set* calls in the instance initializer." />
 			<message key="assign.incorrect.order" value="The variable assignment for ''{0}'' should come before the variable assignment for ''{1}''" />
-			<message key="assign.move.before.method.call" value="The variable assignment for ''{0}'' shoud come before the method calling ''{1}''" />
+			<message key="assign.move.before.method.call" value="The variable assignment for ''{0}'' should come before the method calling ''{1}''" />
 			<message key="method.call.incorrect.order" value="The method calling ''{0}'' should come before the method calling ''{1}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.InstanceofOrderCheck">
@@ -526,7 +522,7 @@
 			<property name="category" value="Naming Conventions" />
 			<property name="checkSearchMethodNames" value="false" />
 			<property name="description" value="Checks that method names follow naming conventions." />
-			<message key="method.incorrect.ending" value="Name of method returning type ''{0}'' should end with ''{0}''" />
+			<message key="method.incorrect.ending" value="Name of method returning type ''{0}'' should end with ''{1}''" />
 			<message key="method.rename" value="Rename method ''{0}'' to ''{1}''" />
 			<message key="search.method.incorrect" value="Incorrect name of method ''{0}''. Name should equal ''search'' or start with ''searchBy''." />
 			<property name="enforceTypeNames" value="" />
@@ -570,6 +566,12 @@
 			<message key="parentheses.missing.1" value="Missing parentheses between the ''{0}'' operator and the ''{1}'' operator" />
 			<message key="parentheses.missing.2" value="Missing parentheses around the {0} hand side argument of the ''{1}'' operator" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ModifiedMethodCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks for incorrect `modified` method with `@Modified` annotation." />
+			<property name="enabled" value="false" />
+			<message key="modified.method.incorrect" value="Remove method ''modified'' as it only calls ''deactivate'' and then ''activate''" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.MVCCommandNameCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="description" value="Checks for consistent naming for values of `mvc.command.name`." />
@@ -577,10 +579,10 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.NestedFieldAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Verifies that `NestedFieldSupport.class` is used in `service` property of `Component` annotation" />
+			<property name="description" value="Checks for `nested.field.support` in the `property` attribute of the `Component` annotation" />
 			<property name="enabled" value="false" />
-			<message key="service.needed" value="''NestedFieldSupport.class'' is needed in ''service'' property of ''Component'' annotation, because at least one of methods has ''NestedField annotation" />
-			<message key="service.unneeded" value="No need to add ''NestedFieldSupport.class'' in ''service'' property of ''Component'' annotation, because no method has ''NestedField'' annotation" />
+			<message key="nested.field.support.missing" value="Set ''nested.field.support=true'' in the ''property'' attribute of ''Component'' annotation as one of methods has a ''NestedField'' annotation" />
+			<message key="nested.field.support.unneeded" value="Remove ''nested.field.support'' in the ''property'' attribute of ''Component'' annotation as no method has a ''NestedField'' annotation" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.NestedIfStatementCheck">
 			<property name="category" value="Styling" />
@@ -715,6 +717,12 @@
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds incorrect parameter in method call." />
 			<message key="parameter.incorrect" value="Pass ''{0}'' as the second parameter when calling method ''ServiceProxyFactory.newServiceTrackedInstance''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ServiceUpdateCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks that there are no stale references in service code from service updates." />
+			<property name="enabled" value="false" />
+			<message key="update.call.reassign" value="Update call should be reassigned to variable ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SingleStatementClauseCheck">
 			<property name="category" value="Styling" />

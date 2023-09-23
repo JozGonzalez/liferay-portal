@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.persistence.test;
@@ -175,7 +166,8 @@ public class CommerceTierPriceEntryPersistenceTest {
 		newCommerceTierPriceEntry.setDiscountLevel4(
 			new BigDecimal(RandomTestUtil.nextDouble()));
 
-		newCommerceTierPriceEntry.setMinQuantity(RandomTestUtil.nextInt());
+		newCommerceTierPriceEntry.setMinQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		newCommerceTierPriceEntry.setDisplayDate(RandomTestUtil.nextDate());
 
@@ -348,18 +340,16 @@ public class CommerceTierPriceEntryPersistenceTest {
 
 	@Test
 	public void testCountByC_M() throws Exception {
-		_persistence.countByC_M(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+		_persistence.countByC_M(RandomTestUtil.nextLong(), (BigDecimal)null);
 
-		_persistence.countByC_M(0L, 0);
+		_persistence.countByC_M(0L, (BigDecimal)null);
 	}
 
 	@Test
 	public void testCountByC_LteM() throws Exception {
-		_persistence.countByC_LteM(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+		_persistence.countByC_LteM(RandomTestUtil.nextLong(), (BigDecimal)null);
 
-		_persistence.countByC_LteM(0L, 0);
+		_persistence.countByC_LteM(0L, (BigDecimal)null);
 	}
 
 	@Test
@@ -381,10 +371,10 @@ public class CommerceTierPriceEntryPersistenceTest {
 	@Test
 	public void testCountByC_LteM_S() throws Exception {
 		_persistence.countByC_LteM_S(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextInt(),
+			RandomTestUtil.nextLong(), (BigDecimal)null,
 			RandomTestUtil.nextInt());
 
-		_persistence.countByC_LteM_S(0L, 0, 0);
+		_persistence.countByC_LteM_S(0L, (BigDecimal)null, 0);
 	}
 
 	@Test
@@ -735,8 +725,8 @@ public class CommerceTierPriceEntryPersistenceTest {
 				commerceTierPriceEntry, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "commercePriceEntryId"));
 		Assert.assertEquals(
-			Integer.valueOf(commerceTierPriceEntry.getMinQuantity()),
-			ReflectionTestUtil.<Integer>invoke(
+			commerceTierPriceEntry.getMinQuantity(),
+			ReflectionTestUtil.invoke(
 				commerceTierPriceEntry, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "minQuantity"));
 
@@ -802,7 +792,8 @@ public class CommerceTierPriceEntryPersistenceTest {
 		commerceTierPriceEntry.setDiscountLevel4(
 			new BigDecimal(RandomTestUtil.nextDouble()));
 
-		commerceTierPriceEntry.setMinQuantity(RandomTestUtil.nextInt());
+		commerceTierPriceEntry.setMinQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		commerceTierPriceEntry.setDisplayDate(RandomTestUtil.nextDate());
 

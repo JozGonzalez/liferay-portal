@@ -1,0 +1,55 @@
+definition {
+
+	macro setCalendarColor {
+		var calendarId = JSONCalendarAPI.getCalendarId(calendarName = ${calendarName});
+
+		if (!(isSet(color))) {
+			var color = 14247526;
+		}
+
+		JSONCalendarAPI.updateColor(
+			calendarId = ${calendarId},
+			color = ${color});
+	}
+
+	macro tearDown {
+		JSONCalendar.tearDownBookings();
+
+		var calendarIdList = JSONCalendarAPI.getNotDefaultCalendars();
+
+		for (var calendarId : list ${calendarIdList}) {
+			JSONCalendarAPI.deleteCalendar(calendarId = ${calendarId});
+		}
+
+		for (var calendarName : list "Test Test,Liferay DXP") {
+			var calendarId = JSONCalendarAPI.getCalendarId(calendarName = ${calendarName});
+
+			JSONCalendarAPI.updateColor(
+				calendarId = ${calendarId},
+				color = 14247526);
+		}
+	}
+
+	macro tearDownBookings {
+		var calendarIdList = JSONCalendarAPI.searchAllCalendars();
+
+		for (var calendarId : list ${calendarIdList}) {
+			var calendarBookingIdList = JSONCalendarAPI.getCalendarBookings(calendarId = ${calendarId});
+
+			for (var calendarBookingId : list ${calendarBookingIdList}) {
+				JSONCalendarAPI.deleteCalendarBooking(calendarBookingId = ${calendarBookingId});
+			}
+		}
+	}
+
+	macro tearDownCalendarResources {
+		for (var active : list "true,false") {
+			var calendarResourceIdList = JSONCalendarAPI.getCalendarResources(active = ${active});
+
+			for (var calendarResourceId : list ${calendarResourceIdList}) {
+				JSONCalendarAPI.deleteCalendarResource(calendarResourceId = ${calendarResourceId});
+			}
+		}
+	}
+
+}

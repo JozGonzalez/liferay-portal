@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export async function getCommonLicenseKey(
@@ -50,27 +44,6 @@ export async function getDevelopmentLicenseKey(
 	);
 
 	return response;
-}
-
-export async function getActivationLicenseKey(
-	accountKey,
-	provisioningServerAPI,
-	filter,
-	page,
-	pageSize,
-	sessionId
-) {
-	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	const response = await fetch(
-		`${provisioningServerAPI}/accounts/${accountKey}/license-keys?filter=${filter}&page=${page}&pageSize=${pageSize}`,
-		{
-			headers: {
-				'Okta-Session-ID': sessionId,
-			},
-		}
-	);
-
-	return response.json();
 }
 
 export async function getActivationDownloadKey(
@@ -150,16 +123,37 @@ export async function getExportedLicenseKeys(
 	return response;
 }
 
-export async function associateContactRoleNameByEmailByProject(
-	accountKey,
+export async function getExportedSelectedLicenseKeys(
+	selectedKeysIDs,
 	provisioningServerAPI,
-	sessionId,
-	emailURI,
-	roleName
+	sessionId
 ) {
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
 	const response = await fetch(
-		`${provisioningServerAPI}/accounts/${accountKey}/contacts/by-email-address/${emailURI}/roles?contactRoleNames=${roleName}`,
+		`${provisioningServerAPI}/license-keys/export?${selectedKeysIDs}`,
+
+		{
+			headers: {
+				'Okta-Session-ID': sessionId,
+			},
+		}
+	);
+
+	return response;
+}
+
+export async function associateContactRoleNameByEmailByProject({
+	accountKey,
+	emailURI,
+	firstName,
+	lastName,
+	provisioningServerAPI,
+	roleName,
+	sessionId,
+}) {
+	// eslint-disable-next-line @liferay/portal/no-global-fetch
+	const response = await fetch(
+		`${provisioningServerAPI}/accounts/${accountKey}/contacts/by-email-address/${emailURI}/roles?contactRoleNames=${roleName}&firstName=${firstName}&lastName=${lastName}`,
 		{
 			headers: {
 				'Okta-Session-ID': sessionId,
@@ -168,19 +162,23 @@ export async function associateContactRoleNameByEmailByProject(
 		}
 	);
 
+	if (!response.ok) {
+		throw new Error();
+	}
+
 	return response;
 }
 
-export async function deleteContactRoleNameByEmailByProject(
+export async function deleteContactRoleNameByEmailByProject({
 	accountKey,
-	provisioningServerAPI,
-	sessionId,
 	emailURI,
-	rolesToDelete
-) {
+	provisioningServerAPI,
+	rolesToDelete,
+	sessionId,
+}) {
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
 	const response = await fetch(
-		`${provisioningServerAPI}/accounts/${accountKey}/contacts/by-email-address/${emailURI}/roles?${rolesToDelete}`,
+		`${provisioningServerAPI}/accounts/${accountKey}/contacts/by-email-address/${emailURI}/roles?contactRoleNames=${rolesToDelete}`,
 		{
 			headers: {
 				'Okta-Session-ID': sessionId,
@@ -188,6 +186,10 @@ export async function deleteContactRoleNameByEmailByProject(
 			method: 'DELETE',
 		}
 	);
+
+	if (!response.ok) {
+		throw new Error();
+	}
 
 	return response;
 }
@@ -247,6 +249,65 @@ export async function createNewGenerateKey(
 				'Okta-Session-ID': sessionId,
 			},
 			method: 'POST',
+		}
+	);
+
+	return response.json();
+}
+
+export async function putSubscriptionInKey(
+	provisioningServerAPI,
+	licenseKeyIds,
+	sessionId
+) {
+	// eslint-disable-next-line @liferay/portal/no-global-fetch
+	const response = await fetch(
+		`${provisioningServerAPI}/license-keys/subscriptions?licenseKeyIds=${licenseKeyIds}`,
+
+		{
+			headers: {
+				'Okta-Session-ID': sessionId,
+			},
+			method: 'PUT',
+		}
+	);
+
+	return response;
+}
+
+export async function deleteSubscriptionInKey(
+	provisioningServerAPI,
+	licenseKeyIds,
+	sessionId
+) {
+	// eslint-disable-next-line @liferay/portal/no-global-fetch
+	const response = await fetch(
+		`${provisioningServerAPI}/license-keys/subscriptions?licenseKeyIds=${licenseKeyIds}`,
+
+		{
+			headers: {
+				'Okta-Session-ID': sessionId,
+			},
+			method: 'DELETE',
+		}
+	);
+
+	return response;
+}
+
+export async function getSubscriptionInKey(
+	provisioningServerAPI,
+	licenseKeyIds,
+	sessionId
+) {
+	// eslint-disable-next-line @liferay/portal/no-global-fetch
+	const response = await fetch(
+		`${provisioningServerAPI}/license-keys/subscriptions?licenseKeyId=${licenseKeyIds}`,
+		{
+			headers: {
+				'Okta-Session-ID': sessionId,
+			},
+			method: 'GET',
 		}
 	);
 

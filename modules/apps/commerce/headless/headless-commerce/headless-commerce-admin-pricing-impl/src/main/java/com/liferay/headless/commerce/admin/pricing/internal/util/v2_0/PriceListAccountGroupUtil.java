@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.util.v2_0;
 
-import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupService;
+import com.liferay.account.exception.NoSuchGroupException;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupService;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel;
 import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountGroupRelService;
@@ -33,8 +24,8 @@ import com.liferay.portal.kernel.util.Validator;
 public class PriceListAccountGroupUtil {
 
 	public static CommercePriceListCommerceAccountGroupRel
-			addCommercePriceListCommerceAccountGroupRel(
-				CommerceAccountGroupService commerceAccountGroupService,
+			addCommercePriceListAccountGroupRel(
+				AccountGroupService accountGroupService,
 				CommercePriceListCommerceAccountGroupRelService
 					commercePriceListCommerceAccountGroupRelService,
 				PriceListAccountGroup priceListAccountGroup,
@@ -45,28 +36,27 @@ public class PriceListAccountGroupUtil {
 		ServiceContext serviceContext = serviceContextHelper.getServiceContext(
 			commercePriceList.getGroupId());
 
-		CommerceAccountGroup commerceAccountGroup;
+		AccountGroup accountGroup;
 
 		if (Validator.isNull(
 				priceListAccountGroup.getAccountGroupExternalReferenceCode())) {
 
-			commerceAccountGroup =
-				commerceAccountGroupService.getCommerceAccountGroup(
-					priceListAccountGroup.getAccountGroupId());
+			accountGroup = accountGroupService.getAccountGroup(
+				priceListAccountGroup.getAccountGroupId());
 		}
 		else {
-			commerceAccountGroup =
-				commerceAccountGroupService.fetchByExternalReferenceCode(
-					serviceContext.getCompanyId(),
+			accountGroup =
+				accountGroupService.fetchAccountGroupByExternalReferenceCode(
 					priceListAccountGroup.
-						getAccountGroupExternalReferenceCode());
+						getAccountGroupExternalReferenceCode(),
+					serviceContext.getCompanyId());
 
-			if (commerceAccountGroup == null) {
+			if (accountGroup == null) {
 				String accountGroupExternalReferenceCode =
 					priceListAccountGroup.
 						getAccountGroupExternalReferenceCode();
 
-				throw new NoSuchAccountGroupException(
+				throw new NoSuchGroupException(
 					"Unable to find account group with external reference " +
 						"code " + accountGroupExternalReferenceCode);
 			}
@@ -75,7 +65,7 @@ public class PriceListAccountGroupUtil {
 		return commercePriceListCommerceAccountGroupRelService.
 			addCommercePriceListCommerceAccountGroupRel(
 				commercePriceList.getCommercePriceListId(),
-				commerceAccountGroup.getCommerceAccountGroupId(),
+				accountGroup.getAccountGroupId(),
 				GetterUtil.get(priceListAccountGroup.getOrder(), 0),
 				serviceContext);
 	}

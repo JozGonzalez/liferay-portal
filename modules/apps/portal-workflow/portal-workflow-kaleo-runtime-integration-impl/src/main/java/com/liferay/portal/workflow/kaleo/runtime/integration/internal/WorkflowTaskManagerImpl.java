@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal;
@@ -122,16 +113,12 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 			Map<String, Serializable> workflowContext)
 		throws PortalException {
 
+		// TODO Temporary workaround for LPS-188796
+
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
-		List<User> assignableUsers = getAssignableUsers(workflowTaskId);
-
-		User assigneeUser = _userLocalService.getUser(assigneeUserId);
-
-		if (!assignableUsers.contains(assigneeUser) ||
-			(permissionChecker.getUserId() != userId)) {
-
+		if (permissionChecker.getUserId() != userId) {
 			throw new PrincipalException.MustHavePermission(
 				userId, WorkflowTask.class.getName(), workflowTaskId,
 				ActionKeys.VIEW);
@@ -855,21 +842,32 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 			(ServiceContext)workflowContext.get(
 				WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
 
-		return new ExecutionContext(
+		ExecutionContext executionContext = new ExecutionContext(
 			kaleoInstanceToken, workflowContext, workflowContextServiceContext);
+
+		executionContext.setKaleoTaskInstanceToken(kaleoTaskInstanceToken);
+
+		return executionContext;
 	}
 
 	private long _getAssignedUserId(long kaleoTaskInstanceTokenId) {
+		List<Long> assignedUserIds = new ArrayList<>();
+
 		for (KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance :
 				_kaleoTaskAssignmentInstanceLocalService.
 					getKaleoTaskAssignmentInstances(kaleoTaskInstanceTokenId)) {
 
-			String assigneeClassName =
-				kaleoTaskAssignmentInstance.getAssigneeClassName();
+			if (Objects.equals(
+					User.class.getName(),
+					kaleoTaskAssignmentInstance.getAssigneeClassName())) {
 
-			if (assigneeClassName.equals(User.class.getName())) {
-				return kaleoTaskAssignmentInstance.getAssigneeClassPK();
+				assignedUserIds.add(
+					kaleoTaskAssignmentInstance.getAssigneeClassPK());
 			}
+		}
+
+		if (assignedUserIds.size() == 1) {
+			return assignedUserIds.get(0);
 		}
 
 		return 0L;
@@ -915,6 +913,25 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 
 			for (KaleoTaskAssignment kaleoTaskAssignment :
 					kaleoTaskAssignments) {
+
+				_populateAllowedUsers(
+					actionType, allowedUsers, assignedUserId,
+					kaleoTaskAssignment, kaleoTaskInstanceToken);
+			}
+
+			// TODO Temporary workaround for LPS-188796
+
+			for (KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance :
+					kaleoTaskInstanceToken.getKaleoTaskAssignmentInstances()) {
+
+				KaleoTaskAssignment kaleoTaskAssignment =
+					_kaleoTaskAssignmentLocalService.createKaleoTaskAssignment(
+						0L);
+
+				kaleoTaskAssignment.setAssigneeClassName(
+					kaleoTaskAssignmentInstance.getAssigneeClassName());
+				kaleoTaskAssignment.setAssigneeClassPK(
+					kaleoTaskAssignmentInstance.getAssigneeClassPK());
 
 				_populateAllowedUsers(
 					actionType, allowedUsers, assignedUserId,

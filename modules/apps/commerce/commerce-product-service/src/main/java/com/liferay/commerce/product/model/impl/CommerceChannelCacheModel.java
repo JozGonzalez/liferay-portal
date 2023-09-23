@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -78,7 +69,7 @@ public class CommerceChannelCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(37);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -100,6 +91,8 @@ public class CommerceChannelCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", accountEntryId=");
+		sb.append(accountEntryId);
 		sb.append(", siteGroupId=");
 		sb.append(siteGroupId);
 		sb.append(", name=");
@@ -165,6 +158,7 @@ public class CommerceChannelCacheModel
 			commerceChannelImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		commerceChannelImpl.setAccountEntryId(accountEntryId);
 		commerceChannelImpl.setSiteGroupId(siteGroupId);
 
 		if (name == null) {
@@ -226,6 +220,8 @@ public class CommerceChannelCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
+		accountEntryId = objectInput.readLong();
+
 		siteGroupId = objectInput.readLong();
 		name = objectInput.readUTF();
 		type = objectInput.readUTF();
@@ -271,6 +267,8 @@ public class CommerceChannelCacheModel
 
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
+
+		objectOutput.writeLong(accountEntryId);
 
 		objectOutput.writeLong(siteGroupId);
 
@@ -322,6 +320,7 @@ public class CommerceChannelCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long accountEntryId;
 	public long siteGroupId;
 	public String name;
 	public String type;

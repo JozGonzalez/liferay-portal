@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.display.context;
@@ -31,7 +22,7 @@ import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
-import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
@@ -85,7 +76,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceShipmentDisplayContext(
 		ActionHelper actionHelper,
 		CommerceAddressFormatter commerceAddressFormatter,
-		CommerceAddressService commerceAddressService,
+		CommerceAddressLocalService commerceAddressLocalService,
 		CommerceChannelService commerceChannelService,
 		CommerceOrderItemService commerceOrderItemService,
 		CommerceOrderLocalService commerceOrderLocalService,
@@ -98,7 +89,7 @@ public class CommerceShipmentDisplayContext
 		super(actionHelper, httpServletRequest, portletResourcePermission);
 
 		_commerceAddressFormatter = commerceAddressFormatter;
-		_commerceAddressService = commerceAddressService;
+		_commerceAddressLocalService = commerceAddressLocalService;
 		_commerceChannelService = commerceChannelService;
 		_commerceOrderItemService = commerceOrderItemService;
 		_commerceOrderLocalService = commerceOrderLocalService;
@@ -195,7 +186,7 @@ public class CommerceShipmentDisplayContext
 		}
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.getCommerceAddress(
+			_commerceAddressLocalService.getCommerceAddress(
 				commerceShipment.getCommerceAddressId());
 
 		return _commerceShippingMethodService.getCommerceShippingMethods(
@@ -206,18 +197,6 @@ public class CommerceShipmentDisplayContext
 	public List<Country> getCountries() {
 		return _countryService.getCompanyCountries(
 			cpRequestHelper.getCompanyId(), true);
-	}
-
-	public String getDatasetView() throws PortalException {
-		CommerceShipment commerceShipment = getCommerceShipment();
-
-		if (commerceShipment.getStatus() >
-				CommerceShipmentConstants.SHIPMENT_STATUS_READY_TO_BE_SHIPPED) {
-
-			return CommerceShipmentFDSNames.SHIPPED_SHIPMENT_ITEMS;
-		}
-
-		return CommerceShipmentFDSNames.PROCESSING_SHIPMENT_ITEMS;
 	}
 
 	public String getDescriptiveShippingAddress() throws PortalException {
@@ -235,6 +214,18 @@ public class CommerceShipmentDisplayContext
 
 		return _commerceAddressFormatter.getDescriptiveAddress(
 			commerceAddress, true);
+	}
+
+	public String getFDSName() throws PortalException {
+		CommerceShipment commerceShipment = getCommerceShipment();
+
+		if (commerceShipment.getStatus() >
+				CommerceShipmentConstants.SHIPMENT_STATUS_READY_TO_BE_SHIPPED) {
+
+			return CommerceShipmentFDSNames.SHIPPED_SHIPMENT_ITEMS;
+		}
+
+		return CommerceShipmentFDSNames.PROCESSING_SHIPMENT_ITEMS;
 	}
 
 	public List<HeaderActionModel> getHeaderActionModels()
@@ -422,7 +413,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceAddress getShippingAddress() throws PortalException {
 		CommerceShipment commerceShipment = getCommerceShipment();
 
-		return _commerceAddressService.fetchCommerceAddress(
+		return _commerceAddressLocalService.fetchCommerceAddress(
 			commerceShipment.getCommerceAddressId());
 	}
 
@@ -497,7 +488,7 @@ public class CommerceShipmentDisplayContext
 		CommerceShipmentDisplayContext.class);
 
 	private final CommerceAddressFormatter _commerceAddressFormatter;
-	private final CommerceAddressService _commerceAddressService;
+	private final CommerceAddressLocalService _commerceAddressLocalService;
 	private final CommerceChannelService _commerceChannelService;
 	private final CommerceOrderItemService _commerceOrderItemService;
 	private final CommerceOrderLocalService _commerceOrderLocalService;

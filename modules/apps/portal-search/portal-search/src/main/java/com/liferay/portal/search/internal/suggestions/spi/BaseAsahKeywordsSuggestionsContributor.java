@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.suggestions.spi;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -22,12 +15,14 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.internal.configuration.AsahSearchKeywordsConfiguration;
-import com.liferay.portal.search.internal.util.AsahUtil;
 import com.liferay.portal.search.internal.web.cache.AsahSearchKeywordsWebCacheItem;
 import com.liferay.portal.search.rest.dto.v1_0.SuggestionsContributorConfiguration;
 import com.liferay.portal.search.suggestions.Suggestion;
@@ -54,15 +49,24 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 	}
 
 	protected SuggestionsContributorResults getSuggestionsContributorResults(
+		AnalyticsSettingsManager analyticsSettingsManager,
 		SearchContext searchContext, String sort,
 		SuggestionBuilderFactory suggestionBuilderFactory,
 		SuggestionsContributorConfiguration suggestionsContributorConfiguration,
 		SuggestionsContributorResultsBuilderFactory
 			suggestionsContributorResultsBuilderFactory) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-159643") ||
-			!AsahUtil.isAnalyticsEnabled(searchContext.getCompanyId())) {
+		if (!_isEnabled(
+				analyticsSettingsManager, searchContext.getCompanyId())) {
 
+			return null;
+		}
+
+		AnalyticsConfiguration analyticsConfiguration =
+			_getAnalyticsConfiguration(
+				analyticsSettingsManager, searchContext.getCompanyId());
+
+		if (analyticsConfiguration == null) {
 			return null;
 		}
 
@@ -78,10 +82,10 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 
 		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
 			AsahSearchKeywordsWebCacheItem.get(
-				asahSearchKeywordsConfiguration, searchContext.getCompanyId(),
-				_getCount(attributes),
+				analyticsConfiguration, asahSearchKeywordsConfiguration,
+				searchContext.getCompanyId(),
 				_getDisplayLanguageId(attributes, searchContext.getLocale()),
-				_getGroupId(searchContext),
+				_getGroupId(searchContext), _getMinCounts(attributes),
 				GetterUtil.getInteger(
 					suggestionsContributorConfiguration.getSize(), 5),
 				sort),
@@ -119,6 +123,20 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 		return false;
 	}
 
+	private AnalyticsConfiguration _getAnalyticsConfiguration(
+		AnalyticsSettingsManager analyticsSettingsManager, long companyId) {
+
+		try {
+			return analyticsSettingsManager.getAnalyticsConfiguration(
+				companyId);
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
+
+		return null;
+	}
+
 	private int _getCharacterThreshold(Map<String, Object> attributes) {
 		if (attributes == null) {
 			return _CHARACTER_THRESHOLD;
@@ -126,14 +144,6 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 
 		return MapUtil.getInteger(
 			attributes, "characterThreshold", _CHARACTER_THRESHOLD);
-	}
-
-	private int _getCount(Map<String, Object> attributes) {
-		if (attributes == null) {
-			return _COUNT;
-		}
-
-		return MapUtil.getInteger(attributes, "count", _COUNT);
 	}
 
 	private String _getDisplayLanguageId(
@@ -156,6 +166,14 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 		}
 
 		return groupIds[0];
+	}
+
+	private int _getMinCounts(Map<String, Object> attributes) {
+		if (attributes == null) {
+			return _MIN_COUNTS;
+		}
+
+		return MapUtil.getInteger(attributes, "minCounts", _MIN_COUNTS);
 	}
 
 	private List<Suggestion> _getSuggestions(
@@ -195,8 +213,28 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 		return suggestions;
 	}
 
+	private boolean _isEnabled(
+		AnalyticsSettingsManager analyticsSettingsManager, long companyId) {
+
+		try {
+			if (FeatureFlagManagerUtil.isEnabled("LPS-159643") &&
+				analyticsSettingsManager.isAnalyticsEnabled(companyId)) {
+
+				return true;
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return false;
+	}
+
 	private static final int _CHARACTER_THRESHOLD = 2;
 
-	private static final int _COUNT = 5;
+	private static final int _MIN_COUNTS = 5;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseAsahKeywordsSuggestionsContributor.class);
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action;
@@ -21,10 +12,11 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandler;
+import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandlerUtil;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -85,6 +77,10 @@ public class AddCollectionLayoutMVCActionCommand
 			MultiSessionMessages.add(
 				actionRequest, "collectionLayoutAdded", layout);
 
+			ActionUtil.addFriendlyURLWarningSessionMessages(
+				_portal.getHttpServletRequest(actionRequest), layout,
+				_layoutSetPrototypeHelper);
+
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
 				JSONUtil.put(
@@ -96,7 +92,7 @@ public class AddCollectionLayoutMVCActionCommand
 
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutExceptionRequestHandler.handleException(
+			LayoutExceptionRequestHandlerUtil.handleException(
 				actionRequest, actionResponse, exception);
 		}
 	}
@@ -247,7 +243,7 @@ public class AddCollectionLayoutMVCActionCommand
 			LayoutPageTemplateStructure layoutPageTemplateStructure =
 				_layoutPageTemplateStructureLocalService.
 					fetchLayoutPageTemplateStructure(
-						layout.getGroupId(), layout.getPlid(), true);
+						layout.getGroupId(), layout.getPlid());
 
 			LayoutStructure layoutStructure = LayoutStructure.of(
 				layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
@@ -265,9 +261,6 @@ public class AddCollectionLayoutMVCActionCommand
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
-	private LayoutExceptionRequestHandler _layoutExceptionRequestHandler;
-
-	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -276,6 +269,9 @@ public class AddCollectionLayoutMVCActionCommand
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutSetPrototypeHelper _layoutSetPrototypeHelper;
 
 	@Reference
 	private LayoutsImporter _layoutsImporter;

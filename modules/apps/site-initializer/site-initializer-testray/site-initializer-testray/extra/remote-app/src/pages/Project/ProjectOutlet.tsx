@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useCallback, useEffect} from 'react';
 import {Outlet, useLocation, useParams} from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
-import EmptyState from '../../components/EmptyState';
 import {useFetch} from '../../hooks/useFetch';
 import useHeader from '../../hooks/useHeader';
 import i18n from '../../i18n';
@@ -32,9 +23,9 @@ const ProjectOutlet = () => {
 
 	const {actions} = useProjectActions({isHeaderActions: true});
 
-	const {data: testrayProject, error, mutate} = useFetch<TestrayProject>(
-		`/projects/${projectId}`
-	);
+	const {data: testrayProject, error, loading, mutate} = useFetch<
+		TestrayProject
+	>(`/projects/${projectId}`);
 
 	const {data: dataTestrayProjects} = useFetch<APIResponse<TestrayProject>>(
 		'/projects',
@@ -66,7 +57,14 @@ const ProjectOutlet = () => {
 		if (shouldUpdate) {
 			setHeaderActions({actions, item: testrayProject, mutate});
 		}
-	}, [actions, mutate, shouldUpdate, setHeaderActions, testrayProject]);
+	}, [
+		actions,
+		mutate,
+		pathname,
+		shouldUpdate,
+		setHeaderActions,
+		testrayProject,
+	]);
 
 	useEffect(() => {
 		if (testrayProjects) {
@@ -131,23 +129,17 @@ const ProjectOutlet = () => {
 		}
 	}, [getPath, setTabs, hasOtherParams]);
 
-	if (error) {
-		return (
-			<EmptyState
-				description={error.message}
-				title={i18n.translate('error')}
-				type="EMPTY_SEARCH"
+	return (
+		<PageRenderer error={error} loading={loading}>
+			<Outlet
+				context={{
+					actions: testrayProject?.actions,
+					mutateTestrayProject: mutate,
+					testrayProject,
+				}}
 			/>
-		);
-	}
-
-	if (testrayProject) {
-		return (
-			<Outlet context={{mutateTestrayProject: mutate, testrayProject}} />
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default ProjectOutlet;

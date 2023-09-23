@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.json;
@@ -39,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 
 /**
  * @author Brian Wing Shun Chan
@@ -89,11 +79,6 @@ public class JSONUtil {
 		}
 
 		return newJSONArray;
-	}
-
-	public static Collector<Object, JSONArray, JSONArray> createCollector() {
-		return Collector.of(
-			JSONUtil::_createJSONArray, JSONArray::put, JSONUtil::concat);
 	}
 
 	public static boolean equals(JSONArray jsonArray1, JSONArray jsonArray2) {
@@ -208,7 +193,26 @@ public class JSONUtil {
 		return false;
 	}
 
-	public static boolean isValid(String json) {
+	public static boolean isJSONArray(String json) {
+		try {
+			_createJSONArray(json);
+
+			return true;
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
+			return false;
+		}
+	}
+
+	public static boolean isJSONObject(String json) {
+		if (json == null) {
+			return false;
+		}
+
 		json = json.trim();
 
 		if ((json.length() < 2) ||
@@ -230,6 +234,15 @@ public class JSONUtil {
 
 			return false;
 		}
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #isJSONObject(String)}
+	 */
+	@Deprecated
+	public static boolean isValid(String json) {
+		return isJSONObject(json);
 	}
 
 	public static JSONObject merge(
@@ -1186,6 +1199,12 @@ public class JSONUtil {
 
 	private static JSONArray _createJSONArray() {
 		return JSONFactoryUtil.createJSONArray();
+	}
+
+	private static JSONArray _createJSONArray(String json)
+		throws JSONException {
+
+		return JSONFactoryUtil.createJSONArray(json);
 	}
 
 	private static JSONObject _createJSONObject() {

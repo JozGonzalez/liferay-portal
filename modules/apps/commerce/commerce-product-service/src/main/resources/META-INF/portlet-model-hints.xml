@@ -12,6 +12,7 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="accountEntryId" type="long" />
 		<field name="name" type="String" />
 		<field name="commerceCurrencyCode" type="String" />
 		<field name="catalogDefaultLanguageId" type="String" />
@@ -28,6 +29,7 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="accountEntryId" type="long" />
 		<field name="siteGroupId" type="long" />
 		<field name="name" type="String">
 			<validator name="required" />
@@ -184,10 +186,17 @@
 		<field name="modifiedDate" type="Date" />
 		<field name="CPDefinitionId" type="long" />
 		<field name="CProductId" type="long" />
+		<field name="displayDate" type="Date" />
+		<field name="expirationDate" type="Date" />
 		<field name="priority" type="double">
 			<validator name="number" />
 		</field>
 		<field name="type" type="String" />
+		<field name="lastPublishDate" type="Date" />
+		<field name="status" type="int" />
+		<field name="statusByUserId" type="long" />
+		<field name="statusByUserName" type="String" />
+		<field name="statusDate" type="Date" />
 	</model>
 	<model name="com.liferay.commerce.product.model.CPDefinitionLocalization">
 		<field name="mvccVersion" type="long" />
@@ -233,12 +242,16 @@
 			<validator name="required" />
 		</field>
 		<field localized="true" name="description" type="String" />
-		<field name="DDMFormFieldTypeName" type="String">
+		<field name="commerceOptionTypeKey" type="String">
 			<validator name="required" />
+		</field>
+		<field name="infoItemServiceKey" type="String">
+			<hint name="max-length">255</hint>
 		</field>
 		<field name="priority" type="double">
 			<validator name="number" />
 		</field>
+		<field name="definedExternally" type="boolean" />
 		<field name="facetable" type="boolean" />
 		<field name="required" type="boolean" />
 		<field name="skuContributor" type="boolean" />
@@ -246,6 +259,9 @@
 			<validator name="required" />
 		</field>
 		<field name="priceType" type="String" />
+		<field name="typeSettings" type="String">
+			<hint-collection name="CLOB" />
+		</field>
 	</model>
 	<model name="com.liferay.commerce.product.model.CPDefinitionOptionValueRel">
 		<field name="mvccVersion" type="long" />
@@ -261,18 +277,19 @@
 		<field name="CPDefinitionOptionRelId" type="long" />
 		<field name="CPInstanceUuid" type="String" />
 		<field name="CProductId" type="long" />
-		<field localized="true" name="name" type="String">
-			<validator name="required" />
-		</field>
-		<field name="priority" type="double">
-			<validator name="number" />
-		</field>
 		<field name="key" type="String">
 			<validator name="required" />
 		</field>
-		<field name="quantity" type="int" />
+		<field localized="true" name="name" type="String">
+			<validator name="required" />
+		</field>
 		<field name="preselected" type="boolean" />
 		<field name="price" type="BigDecimal" />
+		<field name="priority" type="double">
+			<validator name="number" />
+		</field>
+		<field name="quantity" type="BigDecimal" />
+		<field name="unitOfMeasureKey" type="String" />
 	</model>
 	<model name="com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue">
 		<field name="mvccVersion" type="long" />
@@ -401,6 +418,37 @@
 		<field name="CPDefinitionOptionValueRelId" type="long" />
 		<field name="CPInstanceId" type="long" />
 	</model>
+	<model name="com.liferay.commerce.product.model.CPInstanceUnitOfMeasure">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="uuid" type="String" />
+		<field name="CPInstanceUnitOfMeasureId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="CPInstanceId" type="long" />
+		<field name="active" type="boolean" />
+		<field name="incrementalOrderQuantity" type="BigDecimal">
+			<validator name="required" />
+		</field>
+		<field name="key" type="String">
+			<validator name="required" />
+		</field>
+		<field localized="true" name="name" type="String" />
+		<field name="precision" type="int">
+			<validator name="required" />
+		</field>
+		<field name="primary" type="boolean" />
+		<field name="priority" type="double" />
+		<field name="rate" type="BigDecimal">
+			<validator name="required" />
+		</field>
+		<field name="sku" type="String">
+			<validator name="required" />
+		</field>
+	</model>
 	<model name="com.liferay.commerce.product.model.CPMeasurementUnit">
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
@@ -444,7 +492,7 @@
 		<field localized="true" name="description" type="String">
 			<hint-collection name="TEXTAREA" />
 		</field>
-		<field name="DDMFormFieldTypeName" type="String">
+		<field name="commerceOptionTypeKey" type="String">
 			<validator name="required" />
 		</field>
 		<field name="facetable" type="boolean" />

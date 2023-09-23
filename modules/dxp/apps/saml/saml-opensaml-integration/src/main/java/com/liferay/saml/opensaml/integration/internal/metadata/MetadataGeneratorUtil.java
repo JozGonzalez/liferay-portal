@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.metadata;
@@ -17,6 +8,7 @@ package com.liferay.saml.opensaml.integration.internal.metadata;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
 import com.liferay.saml.runtime.exception.CredentialException;
 import com.liferay.saml.runtime.exception.EntityIdException;
@@ -25,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.util.XMLObjectSupport;
 import org.opensaml.saml.common.xml.SAMLConstants;
@@ -283,7 +274,8 @@ public class MetadataGeneratorUtil {
 		List<String> algorithms = new ArrayList<>();
 
 		EncryptionConfiguration encryptionConfiguration =
-			ConfigurationService.get(EncryptionConfiguration.class);
+			ConfigurationServiceBootstrapUtil.get(
+				EncryptionConfiguration.class);
 
 		algorithms.addAll(
 			encryptionConfiguration.getDataEncryptionAlgorithms());
@@ -348,7 +340,8 @@ public class MetadataGeneratorUtil {
 			AlgorithmSupport.getGlobalAlgorithmRegistry();
 
 		SignatureSigningConfiguration signatureSigningConfiguration =
-			ConfigurationService.get(SignatureSigningConfiguration.class);
+			ConfigurationServiceBootstrapUtil.get(
+				SignatureSigningConfiguration.class);
 
 		Collection<String> blacklistedAlgorithms =
 			signatureSigningConfiguration.getBlacklistedAlgorithms();

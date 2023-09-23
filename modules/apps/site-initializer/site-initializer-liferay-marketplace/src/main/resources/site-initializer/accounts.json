@@ -1,0 +1,17 @@
+[
+	{
+		"externalReferenceCode": "MKT-ACCOUNT-1",
+		"name": "Acme Development",
+		"type": "business"
+	},
+	{
+		"externalReferenceCode": "MKT-ACCOUNT-2",
+		"name": "QA Development",
+		"type": "business"
+	},
+	{
+		"externalReferenceCode": "MKT-ACCOUNT-3",
+		"name": "QA Acme",
+		"type": "person"
+	}
+]

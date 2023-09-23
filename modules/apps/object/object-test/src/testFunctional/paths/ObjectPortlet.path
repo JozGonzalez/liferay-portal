@@ -51,6 +51,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>ENTRY_ID</td>
+		<td>//div[contains(@class,'dnd-tbody')]//div[contains(@class,'table-list-title')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>ENTRY_STATUS</td>
 		<td>//*[contains(text(),'${key_entry}')]/parent::div/following-sibling::div//span[contains(@class,'workflow-status')]//strong[contains(text(),'${key_status}')]</td>
 		<td></td>
@@ -58,6 +63,11 @@
 	<tr>
 		<td>ENTRY_VALUE</td>
 		<td>//div[contains(@class,'dnd-tbody')]//*[contains(text(),'${key_entry}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ENTRY_VALUE_BY_POSITION</td>
+		<td>//div[contains(@class,'dnd-tbody')]//div[contains(@class, 'dnd-tr')][${key_order}]//*[contains(text(),'${key_entry}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -196,13 +206,28 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>VIEW_WIDGET_BUTTON</td>
-		<td>//span[text()='Show Widget']/preceding-sibling::span/input</td>
+		<td>VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE</td>
+		<td>//span[text()='Show Widget in Page Builder']/preceding-sibling::span/input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ENABLE_CATEGORIZATION_BUTTON</td>
+		<td>//span[text()='Enable Categorization of Object entries']/preceding-sibling::span/input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ENABLE_ENTRY_HISTORY_IN_AUDIT_FRAMEWORK_BUTTON</td>
+		<td>//span[text()='Enable Entry History in Audit Framework']/preceding-sibling::span/input</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>VIEW_EMPTY_LABEL_IN_DATE_ENTRY</td>
-		<td>//input[contains(@placeholder,'__/__/____')]</td>
+		<td>//input[(@placeholder='__/__/____')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>VIEW_EMPTY_LABEL_IN_DATE_TIME_ENTRY</td>
+		<td>//input[(@placeholder='__/__/____ __:__ _')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -223,6 +248,11 @@
 	<tr>
 		<td>ARROW_ORDER_COLUMN</td>
 		<td>//button[contains(@class,'btn-sorting') and contains(.,'${key_orderColumn}')]//*[contains(@class,'lexicon-icon-order')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>RELATIONSHIP_ENTRY_READ_ONLY</td>
+		<td>//div[contains(@class,'ddm-field')]//input[contains(@value, '${key_entry}') and @readonly]</td>
 		<td></td>
 	</tr>
 </tbody>

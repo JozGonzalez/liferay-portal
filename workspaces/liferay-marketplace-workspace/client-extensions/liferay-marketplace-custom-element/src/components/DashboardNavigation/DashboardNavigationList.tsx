@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import classNames from 'classnames';
 
 import './DashboardNavigationList.scss';
@@ -9,7 +14,7 @@ interface DashboardNavigationListProps {
 	dashboardNavigationItems: DashboardListItems[];
 	navigationItemMock: DashboardListItems;
 	navigationItemsMock: DashboardListItems[];
-	onSelectAppChange: (value: AppProps) => void;
+	onSelectAppChange?: (value: AppProps | undefined) => void;
 	setDashboardNavigationItems: (values: DashboardListItems[]) => void;
 }
 
@@ -20,8 +25,13 @@ export function DashboardNavigationList({
 	onSelectAppChange,
 	setDashboardNavigationItems,
 }: DashboardNavigationListProps) {
-	const {itemIcon, itemName, itemSelected, itemTitle, items} =
-		navigationItemMock;
+	const {
+		itemIcon,
+		itemName,
+		itemSelected,
+		itemTitle,
+		items,
+	} = navigationItemMock;
 
 	return (
 		<>
@@ -39,12 +49,37 @@ export function DashboardNavigationList({
 								};
 							}
 
+							if (navigationItem.itemName === 'apps') {
+								const newAppNavigationItems = navigationItem.items?.map(
+									(item) => {
+										return {
+											...item,
+											selected: false,
+										};
+									}
+								);
+
+								const newNavigationItem = {
+									...navigationItem,
+									items: newAppNavigationItems,
+								};
+
+								return {
+									...newNavigationItem,
+									itemSelected: false,
+								};
+							}
+
 							return {
 								...navigationItem,
 								itemSelected: false,
 							};
 						}
 					);
+
+					if (onSelectAppChange) {
+						onSelectAppChange(undefined);
+					}
 
 					setDashboardNavigationItems(newItems);
 				}}
@@ -54,8 +89,7 @@ export function DashboardNavigationList({
 					className={classNames(
 						'dashboard-navigation-body-list-icon',
 						{
-							'dashboard-navigation-body-list-icon-selected':
-								itemSelected,
+							'dashboard-navigation-body-list-icon-selected': itemSelected,
 						}
 					)}
 					src={itemIcon}
@@ -65,8 +99,7 @@ export function DashboardNavigationList({
 					className={classNames(
 						'dashboard-navigation-body-list-text',
 						{
-							'dashboard-navigation-body-list-text-selected':
-								itemSelected,
+							'dashboard-navigation-body-list-text-selected': itemSelected,
 						}
 					)}
 				>

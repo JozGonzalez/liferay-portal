@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -434,7 +434,7 @@ definition {
 
 		Translations.viewTranslationEntry(
 			language = "es-ES",
-			modifiedDate = "Seconds Ago",
+			modifiedDate = "Second",
 			status = "Approved",
 			title = "Translation of WC WebContent Title to es-ES");
 	}
@@ -442,7 +442,7 @@ definition {
 	@description = "This test covers LPS-142411. It ensures that a translation entry is not shown after deleting translated content page with new experience."
 	@priority = 4
 	test EntryIsNotShownAfterDeletingTranslatedPage {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",

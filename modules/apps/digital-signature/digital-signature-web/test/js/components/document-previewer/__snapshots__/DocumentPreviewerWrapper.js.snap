@@ -178,9 +178,14 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
             class="c-empty-state-aspect-ratio"
           >
             <img
-              alt="c-empty-state-image"
-              class="aspect-ratio-item aspect-ratio-item-fluid"
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
               src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
             />
           </div>
         </div>
@@ -464,9 +469,14 @@ exports[`DocumentPreviewerWrapper renders with empty state 1`] = `
             class="c-empty-state-aspect-ratio"
           >
             <img
-              alt="c-empty-state-image"
-              class="aspect-ratio-item aspect-ratio-item-fluid"
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
               src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
             />
           </div>
         </div>

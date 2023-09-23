@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +36,8 @@ definition {
 	@priority = 4
 	test CanBeAddedWithoutAffectingNavigation {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "FormsParagraphField#CanBeAddedWithoutAffectingNavigation";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Training";
 
 		FormsAdmin.addForm();
@@ -96,17 +97,16 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -393,7 +393,8 @@ definition {
 	@description = "Verify that the Formatting Style can be changed using the predefined style options"
 	@priority = 4
 	test CanEditFormattingStyle {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanEditFormattingStyle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -439,8 +440,6 @@ definition {
 			value1 = "Preformatted Text");
 
 		SelectFrameTop();
-
-		DataEngine.waitForAutoSave();
 
 		Button.clickPublish();
 
@@ -512,7 +511,8 @@ definition {
 	@description = "Verify that a link to a URL can be added to the Body Text"
 	@priority = 5
 	test CanSupportALinkToAURL {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanSupportALinkToAURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -538,7 +538,8 @@ definition {
 	@description = "Verify that Bulleted Lists can be added to the Body Text"
 	@priority = 5
 	test CanSupportBulletedLists {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanSupportBulletedLists";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -549,8 +550,6 @@ definition {
 			fieldType = "Paragraph");
 
 		CKEditor.addSourceContent(content = "<p>Test A</p><p>Test B</p><p>Test C</p>");
-
-		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
@@ -659,7 +658,8 @@ definition {
 	@description = "Verify that Numbered Lists can be added to the Body Text"
 	@priority = 5
 	test CanSupportNumberedLists {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanSupportNumberedLists";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -670,8 +670,6 @@ definition {
 			fieldType = "Paragraph");
 
 		CKEditor.addSourceContent(content = "<p>Test A</p><p>Test B</p><p>Test C</p>");
-
-		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
@@ -710,7 +708,8 @@ definition {
 	@description = "Verify that a Table can be created in the Body Text"
 	@priority = 4
 	test CanSupportTables {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanSupportTables";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -746,7 +745,8 @@ definition {
 	@description = "Verify that a Video can be uploaded to the Body Text"
 	@priority = 5
 	test CanSupportVideos {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanSupportVideos";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -780,8 +780,6 @@ definition {
 
 		SelectFrameTop();
 
-		DataEngine.waitForAutoSave();
-
 		Button.clickPublish();
 
 		FormsAdminNavigator.gotoBack();
@@ -794,7 +792,8 @@ definition {
 	@description = "Verify that inputs to the Body Text can be undone and redone"
 	@priority = 5
 	test CanUndoAndRedo {
-		property test.name.skip.portal.instance = "FormsParagraphField#CanUndoAndRedo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -872,7 +871,8 @@ definition {
 	@description = "Verify that text in the Body Text can be Bolded, Italicized and Underlined"
 	@priority = 5
 	test TextCanBeBoldedItalicizedAndUnderlined {
-		property test.name.skip.portal.instance = "FormsParagraphField#TextCanBeBoldedItalicizedAndUnderlined";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 

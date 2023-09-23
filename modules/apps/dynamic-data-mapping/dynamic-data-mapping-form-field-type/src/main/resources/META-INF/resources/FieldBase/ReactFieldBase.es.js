@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -183,6 +174,7 @@ export function FieldBase({
 	nestedFields,
 	onClick,
 	overMaximumRepetitionsLimit,
+	parentInstanceId,
 	readOnly,
 	repeatable,
 	required,
@@ -246,12 +238,18 @@ export function FieldBase({
 		type === 'text' ||
 		type === 'numeric' ||
 		type === 'image' ||
+		type === 'rich_text' ||
 		type === 'search_location' ||
 		type === 'select';
 	const readFieldDetails = !showFor || type === 'select';
 	const hasFieldDetails = accessible && fieldDetails && readFieldDetails;
 
-	const accessibleProps = {
+	const accessiblePropsGroup = {
+		...(!renderLabel && {'aria-labelledby': fieldDetailsId}),
+		...(type === 'fieldset' && {role: 'group'}),
+	};
+
+	const accessiblePropsFields = {
 		...(hasFieldDetails && {'aria-labelledby': fieldDetailsId}),
 		...(showFor && {htmlFor: id ?? name}),
 		...(readFieldDetails && {tabIndex: 0}),
@@ -266,11 +264,14 @@ export function FieldBase({
 
 		const visitor = new PagesVisitor(pages);
 
-		const newFieldName = fieldName ?? fieldReference;
+		const newParentInstanceId = parentInstanceId;
 
 		visitor.mapFields(
 			(field) => {
-				if (newFieldName === field.fieldName) {
+				if (
+					fieldReference === field.fieldReference &&
+					newParentInstanceId === field.parentInstanceId
+				) {
 					repetitionsCounter++;
 				}
 			},
@@ -283,7 +284,7 @@ export function FieldBase({
 
 	return (
 		<ClayForm.Group
-			aria-labelledby={!renderLabel ? fieldDetailsId : null}
+			{...accessiblePropsGroup}
 			className={classNames({
 				'has-error': hasError,
 				'has-warning': warningMessage && !hasError,
@@ -293,7 +294,6 @@ export function FieldBase({
 			data-field-reference={fieldReference}
 			onClick={onClick}
 			style={style}
-			tabIndex={!renderLabel ? 0 : undefined}
 		>
 			{repeatable && (
 				<div className="lfr-ddm-form-field-repeatable-toolbar">
@@ -351,7 +351,7 @@ export function FieldBase({
 					{showLegend ? (
 						<fieldset>
 							<legend
-								{...accessibleProps}
+								{...accessiblePropsFields}
 								className="lfr-ddm-legend"
 							>
 								{showLabel && label}
@@ -371,7 +371,7 @@ export function FieldBase({
 					) : (
 						<>
 							<label
-								{...accessibleProps}
+								{...accessiblePropsFields}
 								className={classNames({
 									'ddm-empty': !showLabel && !required,
 									'ddm-label': showLabel || required,

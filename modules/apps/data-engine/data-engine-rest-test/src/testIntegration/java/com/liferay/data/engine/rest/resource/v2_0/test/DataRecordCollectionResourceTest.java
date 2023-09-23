@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.resource.v2_0.test;
@@ -20,25 +11,31 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
+import com.liferay.data.engine.rest.resource.v2_0.test.util.content.type.ModelResourceActionTestUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -49,6 +46,20 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class DataRecordCollectionResourceTest
 	extends BaseDataRecordCollectionResourceTestCase {
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		BaseDataRecordCollectionResourceTestCase.setUpClass();
+
+		ModelResourceActionTestUtil.populateModelResourceAction(
+			_resourceActions);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		ModelResourceActionTestUtil.deleteModelResourceAction(
+			_resourceActionLocalService, _resourceActions);
+	}
 
 	@Before
 	@Override
@@ -404,6 +415,12 @@ public class DataRecordCollectionResourceTest
 		dataRecordCollectionResource.deleteDataRecordCollection(
 			dataRecordCollection.getId());
 	}
+
+	@Inject
+	private static ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private static ResourceActions _resourceActions;
 
 	private DDMStructure _ddmStructure;
 	private DDMStructure _irrelevantDDMStructure;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.style.book.service.impl;
@@ -119,30 +110,31 @@ public class StyleBookEntryLocalServiceImpl
 
 	@Override
 	public StyleBookEntry copyStyleBookEntry(
-			long userId, long groupId, long styleBookEntryId,
+			long userId, long groupId, long sourceStyleBookEntryId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		StyleBookEntry styleBookEntry = getStyleBookEntry(styleBookEntryId);
+		StyleBookEntry sourceStyleBookEntry = getStyleBookEntry(
+			sourceStyleBookEntryId);
 
 		String name = StringBundler.concat(
-			styleBookEntry.getName(), StringPool.SPACE,
+			sourceStyleBookEntry.getName(), StringPool.SPACE,
 			StringPool.OPEN_PARENTHESIS,
 			_language.get(LocaleUtil.getMostRelevantLocale(), "copy"),
 			StringPool.CLOSE_PARENTHESIS);
 
-		StyleBookEntry copyStyleBookEntry = addStyleBookEntry(
-			userId, groupId, styleBookEntry.getFrontendTokensValues(), name,
-			StringPool.BLANK, serviceContext);
+		StyleBookEntry targetStyleBookEntry = addStyleBookEntry(
+			userId, groupId, sourceStyleBookEntry.getFrontendTokensValues(),
+			name, StringPool.BLANK, serviceContext);
 
 		long previewFileEntryId = _copyStyleBookEntryPreviewFileEntry(
-			userId, groupId, styleBookEntry, copyStyleBookEntry);
+			userId, groupId, sourceStyleBookEntry, targetStyleBookEntry);
 
-		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
+		StyleBookEntry draftStyleBookEntry = fetchDraft(sourceStyleBookEntry);
 
 		if (draftStyleBookEntry != null) {
 			StyleBookEntry copyDraftStyleBookEntry = getDraft(
-				copyStyleBookEntry);
+				targetStyleBookEntry);
 
 			copyDraftStyleBookEntry.setFrontendTokensValues(
 				draftStyleBookEntry.getFrontendTokensValues());
@@ -151,7 +143,7 @@ public class StyleBookEntryLocalServiceImpl
 		}
 
 		return updatePreviewFileEntryId(
-			copyStyleBookEntry.getStyleBookEntryId(), previewFileEntryId);
+			targetStyleBookEntry.getStyleBookEntryId(), previewFileEntryId);
 	}
 
 	@Override
@@ -447,16 +439,16 @@ public class StyleBookEntryLocalServiceImpl
 	}
 
 	private long _copyStyleBookEntryPreviewFileEntry(
-			long userId, long groupId, StyleBookEntry styleBookEntry,
+			long userId, long groupId, StyleBookEntry sourceStyleBookEntry,
 			StyleBookEntry copyStyleBookEntry)
 		throws PortalException {
 
-		if (styleBookEntry.getPreviewFileEntryId() == 0) {
+		if (sourceStyleBookEntry.getPreviewFileEntryId() == 0) {
 			return 0;
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntry(
-			styleBookEntry.getPreviewFileEntryId());
+			sourceStyleBookEntry.getPreviewFileEntryId());
 
 		Repository repository =
 			PortletFileRepositoryUtil.fetchPortletRepository(

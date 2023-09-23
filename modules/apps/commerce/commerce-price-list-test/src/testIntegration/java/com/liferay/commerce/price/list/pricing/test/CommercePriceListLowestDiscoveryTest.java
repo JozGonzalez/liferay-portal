@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.pricing.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelLocalServiceUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupCommerceAccountRelLocalServiceUtil;
-import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
@@ -28,15 +19,15 @@ import com.liferay.commerce.price.list.discovery.CommercePriceListDiscovery;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
-import com.liferay.commerce.price.list.test.util.CommercePriceEntryTestUtil;
-import com.liferay.commerce.price.list.test.util.CommercePriceListTestUtil;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.commerce.test.util.price.list.CommercePriceEntryTestUtil;
+import com.liferay.commerce.test.util.price.list.CommercePriceListTestUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -88,19 +79,24 @@ public class CommercePriceListLowestDiscoveryTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
-		_commerceAccount =
-			_commerceAccountLocalService.getPersonalCommerceAccount(
-				_user.getUserId());
+		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+			_user.getUserId());
 
-		_commerceAccountGroup =
-			_commerceAccountGroupLocalService.addCommerceAccountGroup(
-				_group.getCompanyId(), RandomTestUtil.randomString(), 0, false,
-				null, _serviceContext);
+		_accountGroup = _accountGroupLocalService.addAccountGroup(
+			_serviceContext.getUserId(), null, RandomTestUtil.randomString(),
+			_serviceContext);
 
-		CommerceAccountGroupCommerceAccountRelLocalServiceUtil.
-			addCommerceAccountGroupCommerceAccountRel(
-				_commerceAccountGroup.getCommerceAccountGroupId(),
-				_commerceAccount.getCommerceAccountId(), _serviceContext);
+		_accountGroup.setExternalReferenceCode(null);
+		_accountGroup.setDefaultAccountGroup(false);
+		_accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
+		_accountGroup.setExpandoBridgeAttributes(_serviceContext);
+
+		_accountGroup = _accountGroupLocalService.updateAccountGroup(
+			_accountGroup);
+
+		AccountGroupRelLocalServiceUtil.addAccountGroupRel(
+			_accountGroup.getAccountGroupId(), AccountEntry.class.getName(),
+			_accountEntry.getAccountEntryId());
 
 		_commerceCatalog = CommerceTestUtil.addCommerceCatalog(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId(),
@@ -152,9 +148,9 @@ public class CommercePriceListLowestDiscoveryTest {
 		CommercePriceList discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
@@ -178,17 +174,17 @@ public class CommercePriceListLowestDiscoveryTest {
 		discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
 			discoveredCommercePriceList.getCommercePriceListId());
 
 		long[] commerceAccountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_commerceAccount.getCommerceAccountId());
+			_accountGroupLocalService.getAccountGroupIds(
+				_accountEntry.getAccountEntryId());
 
 		CommercePriceList commerceAccountGroupPriceList =
 			CommercePriceListTestUtil.addAccountGroupPriceList(
@@ -207,9 +203,9 @@ public class CommercePriceListLowestDiscoveryTest {
 		discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
@@ -233,9 +229,9 @@ public class CommercePriceListLowestDiscoveryTest {
 		discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
@@ -244,7 +240,7 @@ public class CommercePriceListLowestDiscoveryTest {
 		CommercePriceList commerceAccountPriceList =
 			CommercePriceListTestUtil.addAccountPriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(), _TYPE);
+				_accountEntry.getAccountEntryId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
 			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
@@ -259,9 +255,9 @@ public class CommercePriceListLowestDiscoveryTest {
 		discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
@@ -270,7 +266,7 @@ public class CommercePriceListLowestDiscoveryTest {
 		CommercePriceList commerceAccountAndChannelPriceList =
 			CommercePriceListTestUtil.addAccountAndChannelPriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -285,9 +281,9 @@ public class CommercePriceListLowestDiscoveryTest {
 		discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), 0,
-				cpInstance.getCPInstanceUuid(), _TYPE);
+				cpInstance.getCPInstanceUuid(), _TYPE, StringPool.BLANK);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
@@ -302,17 +298,11 @@ public class CommercePriceListLowestDiscoveryTest {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
-	private CommerceAccountGroup _commerceAccountGroup;
+	private AccountEntry _accountEntry;
+	private AccountGroup _accountGroup;
 
 	@Inject
-	private CommerceAccountGroupLocalService _commerceAccountGroupLocalService;
-
-	@Inject
-	private CommerceAccountHelper _commerceAccountHelper;
-
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	private CommerceCatalog _commerceCatalog;
 	private CommerceChannel _commerceChannel;
@@ -325,9 +315,6 @@ public class CommercePriceListLowestDiscoveryTest {
 
 	@Inject
 	private CommercePriceListLocalService _commercePriceListLocalService;
-
-	@Inject
-	private CPDefinitionLocalService _cpDefinitionLocalService;
 
 	private Group _group;
 	private ServiceContext _serviceContext;

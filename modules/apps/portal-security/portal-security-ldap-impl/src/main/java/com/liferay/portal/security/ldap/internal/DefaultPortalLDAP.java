@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.ldap.internal;
@@ -82,10 +73,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author     Edward Han
  * @deprecated As of Mueller (7.2.x), replaced by {@link SafePortalLDAPImpl}
  */
-@Component(
-	configurationPid = "com.liferay.portal.security.ldap.configuration.LDAPConfiguration",
-	service = PortalLDAP.class
-)
+@Component(service = PortalLDAP.class)
 @Deprecated
 public class DefaultPortalLDAP implements PortalLDAP {
 
@@ -512,7 +500,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 	@Override
 	public Binding getUser(
 			long ldapServerId, long companyId, String screenName,
-			String emailAddress, boolean checkOriginalEmail)
+			String emailAddress, boolean checkOriginalEmailAddress)
 		throws Exception {
 
 		LdapContext ldapContext = getContext(ldapServerId, companyId);
@@ -598,7 +586,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 				return enumeration.nextElement();
 			}
 
-			if (checkOriginalEmail) {
+			if (checkOriginalEmailAddress) {
 				String originalEmailAddress =
 					UserImportTransactionThreadLocal.getOriginalEmailAddress();
 

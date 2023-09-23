@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -26,6 +17,8 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 	module="js/components/ObjectField/EditObjectField"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
+			"creationLanguageId", objectDefinition.getDefaultLanguageId()
+		).put(
 			"filterOperators", LocalizedJSONArrayUtil.getFilterOperatorsJSONObject(locale)
 		).put(
 			"forbiddenChars", PropsUtil.getArray(PropsKeys.DL_CHAR_BLACKLIST)
@@ -38,9 +31,11 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 		).put(
 			"isDefaultStorageType", objectDefinition.isDefaultStorageType()
 		).put(
+			"learnResources", LearnMessageUtil.getReactDataJSONObject("object-web")
+		).put(
 			"objectDefinitionExternalReferenceCode", objectDefinition.getExternalReferenceCode()
 		).put(
-			"objectField", objectDefinitionsFieldsDisplayContext.getObjectFieldJSONObject(objectField)
+			"objectFieldId", objectField.getObjectFieldId()
 		).put(
 			"objectFieldTypes", objectDefinitionsFieldsDisplayContext.getObjectFieldBusinessTypeMaps(Validator.isNotNull(objectField.getRelationshipType()), locale)
 		).put(
@@ -49,6 +44,10 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 			"objectRelationshipId", objectDefinitionsFieldsDisplayContext.getObjectRelationshipId(objectField)
 		).put(
 			"readOnly", !objectDefinitionsFieldsDisplayContext.hasUpdateObjectDefinitionPermission()
+		).put(
+			"readOnlySidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements()
+		).put(
+			"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements(objectField.getBusinessType())
 		).put(
 			"workflowStatusJSONArray", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
 		).build()

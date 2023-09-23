@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
@@ -84,15 +75,14 @@ public class AddSegmentsExperienceMVCActionCommand
 			actionRequest);
 
 		SegmentsExperience segmentsExperience = _addSegmentsExperience(
-			actionRequest, _portal.getClassNameId(Layout.class), plid,
-			segmentsExperiment, serviceContext);
+			actionRequest, plid, segmentsExperiment, serviceContext);
 
 		long baseSegmentsExperienceId = _getBaseSegmentsExperienceId(
 			plid, segmentsExperiment);
 
 		SegmentsExperienceUtil.copySegmentsExperienceData(
-			plid, _commentManager, groupId, _portletRegistry,
-			baseSegmentsExperienceId,
+			_commentManager, groupId, _layoutLocalService.getLayout(plid),
+			_portletRegistry, baseSegmentsExperienceId,
 			segmentsExperience.getSegmentsExperienceId(),
 			className -> serviceContext, _portal.getUserId(actionRequest));
 
@@ -139,7 +129,7 @@ public class AddSegmentsExperienceMVCActionCommand
 	}
 
 	private SegmentsExperience _addSegmentsExperience(
-			ActionRequest actionRequest, long classNameId, long classPK,
+			ActionRequest actionRequest, long classPK,
 			SegmentsExperiment segmentsExperiment,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -151,7 +141,7 @@ public class AddSegmentsExperienceMVCActionCommand
 
 			return _segmentsExperienceService.appendSegmentsExperience(
 				serviceContext.getScopeGroupId(),
-				segmentsExperience.getSegmentsEntryId(), classNameId, classPK,
+				segmentsExperience.getSegmentsEntryId(), classPK,
 				Collections.singletonMap(
 					LocaleUtil.getSiteDefault(),
 					ParamUtil.getString(actionRequest, "name")),
@@ -160,8 +150,7 @@ public class AddSegmentsExperienceMVCActionCommand
 
 		return _segmentsExperienceService.addSegmentsExperience(
 			serviceContext.getScopeGroupId(),
-			ParamUtil.getLong(actionRequest, "segmentsEntryId"), classNameId,
-			classPK,
+			ParamUtil.getLong(actionRequest, "segmentsEntryId"), classPK,
 			Collections.singletonMap(
 				LocaleUtil.getSiteDefault(),
 				ParamUtil.getString(actionRequest, "name")),
@@ -227,7 +216,7 @@ public class AddSegmentsExperienceMVCActionCommand
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
-				fetchLayoutPageTemplateStructure(groupId, classPK, true);
+				fetchLayoutPageTemplateStructure(groupId, classPK);
 
 		return _jsonFactory.createJSONObject(
 			layoutPageTemplateStructure.getData(segmentsExperienceId));
@@ -280,8 +269,8 @@ public class AddSegmentsExperienceMVCActionCommand
 
 		if (draftLayout != null) {
 			SegmentsExperienceUtil.copySegmentsExperienceData(
-				draftLayout.getPlid(), _commentManager, groupId,
-				_portletRegistry, baseSegmentsExperienceId,
+				_commentManager, groupId, draftLayout, _portletRegistry,
+				baseSegmentsExperienceId,
 				segmentsExperience.getSegmentsExperienceId(),
 				className -> serviceContext, serviceContext.getUserId());
 		}

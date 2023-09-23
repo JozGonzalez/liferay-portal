@@ -6,10 +6,56 @@ definition {
 			value1 = ${activeItem});
 	}
 
+	macro gotoClaim {
+		if (!(isSet(siteName))) {
+			var siteName = "Partner Portal";
+		}
+
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
+
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		Open(locator1 = "${baseURL}/web/${siteNameURL}/l/${claimId}");
+
+		echo("${baseURL}/web/${siteNameURL}/l/${claimId}");
+
+		WaitForVisible(
+			key_title = "MDF Claim",
+			locator1 = "Header#H1_TITLE");
+	}
+
+	macro gotoMDF {
+		if (!(isSet(siteName))) {
+			var siteName = "Partner Portal";
+		}
+
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
+
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		Open(locator1 = "${baseURL}/web/${siteNameURL}/l/${requestId}");
+
+		echo("${baseURL}/web/${siteNameURL}/l/${requestId}");
+
+		WaitForVisible(
+			key_title = "Campaign MDF Request",
+			locator1 = "Header#H1_TITLE");
+	}
+
 	macro goToNavItem {
 		Click(
 			key_navItem = ${navItem},
 			locator1 = "PRMNavigation#NAV_LINK");
+
+		WaitForPageLoad();
 	}
 
 	macro openSitePage {
@@ -30,23 +76,11 @@ definition {
 
 		var pageNameURL = StringUtil.lowerCase(${pageNameURL});
 
-		if ((${pageName} == "MDF Requests") || (${pageName} == "MDF Claim")) {
+		if ((${pageName} == "MDF Requests") || (${pageName} == "MDF Claims")) {
 			Open(locator1 = "${baseURL}/web/${siteNameURL}/marketing/${pageNameURL}");
 		}
 		else {
 			Open(locator1 = "${baseURL}/web/${siteNameURL}/${pageNameURL}");
-		}
-	}
-
-	macro viewPage {
-		for (var pageName : list ${pageList}) {
-			PRMNavigator.goToNavItem(navItem = ${pageName});
-
-			PRMNavigator.assertActiveBreadcrumb(activeItem = ${pageName});
-
-			var pageName = StringUtil.lowerCase(${pageName});
-
-			AssertLocation.assertPartialLocation(value1 = ${pageName});
 		}
 	}
 

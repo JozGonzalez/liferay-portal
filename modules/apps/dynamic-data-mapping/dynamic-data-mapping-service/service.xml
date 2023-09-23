@@ -142,6 +142,10 @@
 			<finder-column name="companyId" />
 			<finder-column name="fieldType" />
 		</finder>
+		<finder name="S_F" return-type="Collection">
+			<finder-column name="storageId" />
+			<finder-column name="fieldName" />
+		</finder>
 		<finder name="S_I" return-type="DDMField" unique="true">
 			<finder-column name="storageId" />
 			<finder-column name="instanceId" />
@@ -171,9 +175,13 @@
 		<finder name="StorageId" return-type="Collection">
 			<finder-column name="storageId" />
 		</finder>
+		<finder name="S_AN" return-type="Collection">
+			<finder-column name="storageId" />
+			<finder-column name="attributeName" />
+		</finder>
 		<finder name="S_L" return-type="Collection">
 			<finder-column name="storageId" />
-			<finder-column name="languageId" />
+			<finder-column arrayable-operator="OR" name="languageId" />
 		</finder>
 		<finder name="AN_SAV" return-type="Collection">
 			<finder-column name="attributeName" />
@@ -420,7 +428,7 @@
 			<finder-column name="structureId" />
 		</finder>
 		<finder name="StructureVersionId" return-type="Collection">
-			<finder-column arrayable-operator="OR" name="structureVersionId" />
+			<finder-column arrayable-operator="OR" arrayable-pagination="true" name="structureVersionId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="DDMStructure" remote-service="true" uuid="true">

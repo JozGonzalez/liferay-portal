@@ -14,19 +14,21 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "This is a use case for LPS-168704."
+	@priority = 3
 	test AssertBlacklistedTextEmbeddingProvidersAreUnavailable {
 		property custom.properties = "feature.flag.LPS-122920=true";
 		property osgi.module.configuration.file.names = "com.liferay.portal.component.blacklist.internal.configuration.ComponentBlacklistConfiguration.config";
 		property osgi.module.configurations = "blacklistComponentNames=[\"com.liferay.search.experiences.internal.ml.embedding.text.TXTAITextEmbeddingProvider\",\"com.liferay.search.experiences.internal.ml.embedding.text.HuggingFaceInferenceAPITextEmbeddingProvider\"]";
-		property test.name.skip.portal.instance = "SemanticSearch#AssertBlacklistedTextEmbeddingProvidersAreUnavailable";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WaitForConsoleTextPresent(value1 = "Disabling com.liferay.search.experiences.internal.ml.embedding.text.TXTAITextEmbeddingProvider");
 
@@ -87,6 +89,219 @@ definition {
 			locator1 = "Select#GENERIC_SELECT_VALUE");
 	}
 
+	@description = "This is a use case for LPS-174623."
+	@priority = 3
+	test AssertReindexWarningAppearsForCriticalChanges {
+		property custom.properties = "feature.flag.LPS-122920=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("When System Settings are using default configurations, assert the warning is not present") {
+			SystemSettings.openToConfigInSystemSettings(portletId = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration");
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When Text Embeddings Enabled is checked and the form is not saved, assert the warning appears") {
+			Check.checkNotVisible(
+				key_settingFieldName = "Text Embeddings Enabled",
+				locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When Text Embeddings Enabled is unchecked, assert the warning is removed") {
+			Uncheck.uncheckNotVisible(
+				key_settingFieldName = "Text Embeddings Enabled",
+				locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When Text Embeddings Enabled is checked again, assert the warning appears") {
+			Check.checkNotVisible(
+				key_settingFieldName = "Text Embeddings Enabled",
+				locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("Fill out required fields so that the test can save the form") {
+			PortletEntry.inputText(
+				fieldLabel = "Access Token",
+				text = "original");
+
+			PortletEntry.inputText(
+				fieldLabel = "Model",
+				text = "albert");
+
+			Click(
+				key_itemName = "albert-base-v1",
+				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
+		}
+
+		task ("When the form is saved with Text Embeddings Enabled checked, assert the warning is removed") {
+			SemanticSearch.saveAndContinue();
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When the user makes changes to any field within Text Embedding Provider Settings or the Type field and the form is not saved, assert the warning appears. When the user reverts the fields back to their previously saved values, assert the warning is removed") {
+			Select(
+				ariaLabel = "Text Embedding Provider",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "Hugging Face Inference Endpoint");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Select(
+				ariaLabel = "Text Embedding Provider",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "txtai");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Select(
+				ariaLabel = "Text Embedding Provider",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "Hugging Face Inference API");
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputText(
+				fieldLabel = "Access Token",
+				text = "change");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputText(
+				fieldLabel = "Access Token",
+				text = "original");
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputText(
+				fieldLabel = "Model",
+				text = "facebook");
+
+			Click(
+				key_itemName = "facebook/bart-base",
+				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputText(
+				fieldLabel = "Model",
+				text = "albert");
+
+			Click(
+				key_itemName = "albert-base-v1",
+				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputNumber(
+				fieldLabel = "Model Timeout",
+				number = 30);
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			PortletEntry.inputNumber(
+				fieldLabel = "Model Timeout",
+				number = 25);
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Select(
+				ariaLabel = "Embedding Vector Dimensions",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = 384);
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Select(
+				ariaLabel = "Embedding Vector Dimensions",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = 768);
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Select(
+				ariaLabel = "Types",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "Message Boards Message");
+
+			AssertElementPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When the form is saved with Text Embeddings Enabled checked and there are changes made to any field within Text Embedding Provider Settings or the Type field, assert the warning is removed") {
+			SemanticSearch.saveAndContinue();
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("When changes are made to fields that are not within Text Embedding Provider Settings or are not the Type field and the form is not saved, assert the warning does not appear") {
+			PortletEntry.inputNumber(
+				fieldLabel = "Max Character Count",
+				number = 501);
+
+			Select(
+				ariaLabel = "Text Truncation Strategy",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "End");
+
+			Select(
+				ariaLabel = "Languages",
+				locator1 = "Select#ANY_ARIA_LABEL",
+				value1 = "Finnish (Finland)");
+
+			PortletEntry.inputNumber(
+				fieldLabel = "Text Embedding Cache Timeout",
+				number = 604801);
+
+			AssertElementNotPresent(
+				key_infoMessage = "Changes to this configuration require a reindex",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+	}
+
+	@priority = 3
 	test AssertSearchUsingTxtaiWithTextEmbeddingElementHasNoError {
 		property custom.properties = "feature.flag.LPS-122920=true";
 		property txtai.enabled = "true";
@@ -117,6 +332,7 @@ definition {
 		AssertElementNotPresent(locator1 = "Message#ERROR");
 	}
 
+	@priority = 3
 	test AssertTxtaiTextEmbeddingIndexFieldAddedToAssets {
 		property custom.properties = "feature.flag.LPS-122920=true";
 		property txtai.enabled = "true";
@@ -161,6 +377,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test AssertTxtaiWithTextEmbeddingElementAffectsBlueprintPreview {
 		property custom.properties = "feature.flag.LPS-122920=true";
 		property txtai.enabled = "true";
@@ -207,6 +424,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test ViewHuggingFaceSystemSettingsRequiredFieldValidation {
 		property custom.properties = "feature.flag.LPS-122920=true";
 
@@ -254,10 +472,9 @@ definition {
 			key_itemName = "facebook/bart-base",
 			locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
-		Type(
-			key_fieldLabel = "Model Timeout",
-			locator1 = "TextInput#GENERIC_NUMBER_INPUT",
-			value1 = "");
+		PortletEntry.inputNumber(
+			fieldLabel = "Model Timeout",
+			number = "");
 
 		AssertElementPresent(
 			key_text = "Test Configuration",
@@ -269,10 +486,9 @@ definition {
 
 		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is required.");
 
-		Type(
-			key_fieldLabel = "Model Timeout",
-			locator1 = "TextInput#GENERIC_NUMBER_INPUT",
-			value1 = 25);
+		PortletEntry.inputNumber(
+			fieldLabel = "Model Timeout",
+			number = 25);
 
 		AssertElementNotPresent(
 			key_text = "Test Configuration",
@@ -286,9 +502,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-170345 and LPS-172161."
+	@priority = 3
 	test ViewSystemAndInstanceSettingsSaveUI {
 		property custom.properties = "feature.flag.LPS-122920=true";
-		property test.name.skip.portal.instance = "SemanticSearch#ViewSystemAndInstanceSettingsSaveUI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Within System Settings, fill out required fields for Hugging Face Inference API and save") {
 			SystemSettings.openToConfigInSystemSettings(portletId = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration");
@@ -309,13 +527,7 @@ definition {
 				key_itemName = "facebook/bart-base",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
-			Button.clickSave();
-
-			Click(
-				key_text = "Continue",
-				locator1 = "Modal#MODAL_FOOTER_BUTTON");
-
-			Alert.viewSuccessMessage();
+			SemanticSearch.saveAndContinue();
 		}
 
 		task ("Assert txtai field is not present after saving") {
@@ -394,13 +606,7 @@ definition {
 				key_itemName = "albert-base-v1",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
-			Button.clickSave();
-
-			Click(
-				key_text = "Continue",
-				locator1 = "Modal#MODAL_FOOTER_BUTTON");
-
-			Alert.viewSuccessMessage();
+			SemanticSearch.saveAndContinue();
 		}
 
 		task ("Assert txtai field is not present after saving") {
@@ -450,13 +656,7 @@ definition {
 				key_itemName = "facebook/bart-base",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
-			Button.clickSave();
-
-			Click(
-				key_text = "Continue",
-				locator1 = "Modal#MODAL_FOOTER_BUTTON");
-
-			Alert.viewSuccessMessage();
+			SemanticSearch.saveAndContinue();
 		}
 
 		task ("Back in Instance Settings, assert field values remain unchanged after changes were made to System Settings") {
@@ -493,23 +693,24 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-173824."
+	@priority = 3
 	test ViewSystemSettingUnsuccessfulConnectionWarning {
 		property custom.properties = "feature.flag.LPS-122920=true";
-		property test.name.skip.portal.instance = "SemanticSearch#ViewSystemSettingUnsuccessfulConnectionWarning";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property txtai.enabled = "true";
 
 		task ("Assert the warning doesn't appear when connection is successful and changes persist when configuration is saved") {
 			SystemSettings.openToConfigInSystemSettings(portletId = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration");
 
-			Type(
-				key_fieldLabel = "Max Character Count",
-				locator1 = "TextInput#GENERIC_NUMBER_INPUT",
-				value1 = 501);
+			PortletEntry.inputNumber(
+				fieldLabel = "Max Character Count",
+				number = 501);
 
 			SystemSettings.saveConfiguration();
 
 			AssertElementNotPresent(
-				key_text = "Continue",
+				key_text = "Continue to Save",
 				locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 			Navigator.openURL();
@@ -527,13 +728,7 @@ definition {
 				locator1 = "Select#ANY_ARIA_LABEL",
 				value1 = 384);
 
-			Button.clickSave();
-
-			Click(
-				key_text = "Continue",
-				locator1 = "Modal#MODAL_FOOTER_BUTTON");
-
-			Alert.viewSuccessMessage();
+			SemanticSearch.saveAndContinue();
 
 			Navigator.openURL();
 
@@ -554,7 +749,7 @@ definition {
 			Button.clickSave();
 
 			Click(
-				key_text = "Close",
+				key_text = "Cancel",
 				locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 			AssertElementPresent(
@@ -575,6 +770,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test ViewTxtaiSystemSettingsRequiredFieldValidation {
 		property custom.properties = "feature.flag.LPS-122920=true";
 
@@ -603,12 +799,14 @@ definition {
 			fieldLabel = "Host Address",
 			text = "test");
 
-		PortletEntry.save();
+		SemanticSearch.saveAndContinue();
 	}
 
+	@priority = 3
 	test ViewTxtaiSystemSettingsTestConfiguration {
 		property custom.properties = "feature.flag.LPS-122920=true";
-		property test.name.skip.portal.instance = "SemanticSearch#ViewTxtaiSystemSettingsTestConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property txtai.enabled = "true";
 
 		SystemSettings.openToConfigInSystemSettings(portletId = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration");
@@ -643,9 +841,7 @@ definition {
 
 		Alert.viewWarningSpecific(warningMessage = "Unable to connect to txtai. Connection failed with: java.lang.IllegalArgumentException: Host name may not be null.");
 
-		AntCommand(
-			locator1 = "build-test-semantic-search.xml",
-			value1 = "stop-txtai");
+		AntCommands.runCommand("build-test-semantic-search.xml", "stop-txtai");
 
 		Refresh();
 

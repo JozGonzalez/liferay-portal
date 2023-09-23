@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v5_0_0;
@@ -80,13 +71,10 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Carolina Barbosa
@@ -743,6 +731,8 @@ public class PollsToDDMUpgradeProcess extends UpgradeProcess {
 	}
 
 	private long _getActionIds(long oldActionIds) {
+		long sum = 0;
+
 		Set<String> actionsIds = new HashSet<>();
 
 		for (ResourceAction resourceAction :
@@ -760,12 +750,12 @@ public class PollsToDDMUpgradeProcess extends UpgradeProcess {
 					_resourceActionIds, resourceAction.getActionId()));
 		}
 
-		Stream<String> stream = actionsIds.stream();
+		for (String actionId : actionsIds) {
+			sum += MapUtil.getLong(
+				_getDDMFormInstanceResourceActions(), actionId);
+		}
 
-		return stream.mapToLong(
-			actionId -> MapUtil.getLong(
-				_getDDMFormInstanceResourceActions(), actionId)
-		).sum();
+		return sum;
 	}
 
 	private Map<Long, String> _getDDMFormFieldOptionsValues(
@@ -799,16 +789,17 @@ public class PollsToDDMUpgradeProcess extends UpgradeProcess {
 	}
 
 	private Map<String, Long> _getDDMFormInstanceResourceActions() {
-		List<ResourceAction> resourceActions =
-			_resourceActionLocalService.getResourceActions(
-				_CLASS_NAME_DDM_FORM_INSTANCE);
+		Map<String, Long> ddmFormInstanceResourceActions = new HashMap<>();
 
-		Stream<ResourceAction> stream = resourceActions.stream();
+		for (ResourceAction resourceAction :
+				_resourceActionLocalService.getResourceActions(
+					_CLASS_NAME_DDM_FORM_INSTANCE)) {
 
-		return stream.collect(
-			Collectors.toMap(
-				resourceAction -> resourceAction.getActionId(),
-				resourceAction -> resourceAction.getBitwiseValue()));
+			ddmFormInstanceResourceActions.put(
+				resourceAction.getActionId(), resourceAction.getBitwiseValue());
+		}
+
+		return ddmFormInstanceResourceActions;
 	}
 
 	private DDMFormLayoutPage _getDDMFormLayoutPage(DDMFormField ddmFormField) {

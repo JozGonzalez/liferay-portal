@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.display.context;
@@ -22,6 +13,7 @@ import com.liferay.content.dashboard.item.filter.provider.ContentDashboardItemFi
 import com.liferay.content.dashboard.web.internal.item.filter.ContentDashboardItemFilterProviderRegistry;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
@@ -29,6 +21,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageImpl;
@@ -39,7 +32,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -191,8 +183,9 @@ public class ContentDashboardAdminManagementToolbarDisplayContextTest {
 					contentDashboardAdminDisplayContext,
 					contentDashboardItemFilterProviderRegistry,
 					Mockito.mock(GroupLocalService.class),
-					new MockHttpServletRequest(), LanguageUtil.getLanguage(),
-					mockLiferayPortletActionRequest,
+					new MockHttpServletRequest(),
+					Mockito.mock(ItemSelector.class),
+					LanguageUtil.getLanguage(), mockLiferayPortletActionRequest,
 					new MockLiferayPortletActionResponse(), LocaleUtil.US,
 					Mockito.mock(UserLocalService.class));
 
@@ -243,8 +236,9 @@ public class ContentDashboardAdminManagementToolbarDisplayContextTest {
 					Mockito.mock(
 						ContentDashboardItemFilterProviderRegistry.class),
 					Mockito.mock(GroupLocalService.class),
-					new MockHttpServletRequest(), LanguageUtil.getLanguage(),
-					mockLiferayPortletActionRequest,
+					new MockHttpServletRequest(),
+					Mockito.mock(ItemSelector.class),
+					LanguageUtil.getLanguage(), mockLiferayPortletActionRequest,
 					new MockLiferayPortletActionResponse(), LocaleUtil.US,
 					Mockito.mock(UserLocalService.class));
 
@@ -378,28 +372,24 @@ public class ContentDashboardAdminManagementToolbarDisplayContextTest {
 					Mockito.mock(ContentDashboardAdminDisplayContext.class),
 					contentDashboardItemFilterProviderRegistry,
 					Mockito.mock(GroupLocalService.class),
-					new MockHttpServletRequest(), LanguageUtil.getLanguage(),
-					mockLiferayPortletActionRequest,
+					new MockHttpServletRequest(),
+					Mockito.mock(ItemSelector.class),
+					LanguageUtil.getLanguage(), mockLiferayPortletActionRequest,
 					new MockLiferayPortletActionResponse(), LocaleUtil.US,
 					Mockito.mock(UserLocalService.class));
 
-		List<LabelItem> labelItems =
-			contentDashboardAdminManagementToolbarDisplayContext.
-				getFilterLabelItems();
-
-		Stream<LabelItem> stream = labelItems.stream();
-
 		Assert.assertEquals(
 			2,
-			stream.filter(
+			ListUtil.count(
+				contentDashboardAdminManagementToolbarDisplayContext.
+					getFilterLabelItems(),
 				labelItem ->
 					Objects.equals(
 						labelItem.get("label"),
 						"contentDashboardItemFilterParameterLabel: value1") ||
 					Objects.equals(
 						labelItem.get("label"),
-						"contentDashboardItemFilterParameterLabel: value2")
-			).count());
+						"contentDashboardItemFilterParameterLabel: value2")));
 	}
 
 }

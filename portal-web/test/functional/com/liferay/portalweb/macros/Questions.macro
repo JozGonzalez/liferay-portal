@@ -13,6 +13,10 @@ definition {
 	}
 
 	macro addRootTopic {
+		WaitForElementPresent(
+			key_text = "New Topic",
+			locator1 = "Button#ANY");
+
 		if (IsElementPresent(key_text = "New Topic", locator1 = "Button#ANY")) {
 			Click(
 				key_text = "New Topic",
@@ -79,7 +83,21 @@ definition {
 	}
 
 	macro answerQuestion {
-		CKEditor.addContent(content = ${contentField});
+		Click(
+			key_text = "Add Answer",
+			locator1 = "Button#ANY");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = ${contentField});
+
+		SelectFrame(value1 = "relative-top");
+
+		ScrollWebElementIntoView(
+			key_text = "Post Answer",
+			locator1 = "Button#ANY");
 
 		Click(
 			key_text = "Post Answer",
@@ -335,6 +353,23 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
+	macro definePermissionsToCreatedRole {
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_message_boards_web_portlet_MBAdminPortlet",
+			roleTitle = ${roleTitle});
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.message.boards",
+			roleTitle = ${roleTitle});
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.message.boards.model.MBCategory",
+			roleTitle = ${roleTitle});
+	}
+
 	macro deleteAnswer {
 		Click(
 			key_text = "Delete",
@@ -436,6 +471,22 @@ definition {
 		AssertVisible(
 			key_answerBodyContent = ${contentField},
 			locator1 = "Questions#ANSWER_BODY");
+	}
+
+	macro editComment {
+		Click(locator1 = "Questions#EDIT_COMMENT");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = ${contentField});
+
+		SelectFrame(value1 = "relative=top");
+
+		Click(
+			key_text = "Update Your Comment",
+			locator1 = "Button#ANY");
 	}
 
 	macro editQuestion {
@@ -700,11 +751,9 @@ definition {
 	}
 
 	macro subscribeTopic {
-		AssertClick(
-			locator1 = "Button#SUBSCRIBE",
-			value1 = "Subscribe");
+		AssertElementPresent(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 
-		AssertElementPresent(locator1 = "Questions#QUESTIONS_SUBSCRIBED_BUTTON");
+		Click(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 	}
 
 	macro tearDown {
@@ -893,6 +942,12 @@ definition {
 		AssertTextEquals(
 			locator1 = "Questions#PAGINATION_RESULTS",
 			value1 = ${results});
+	}
+
+	macro viewQuestionPage {
+		var baseURL = PropsUtil.get("portal.url");
+
+		AssertLocation(value1 = "${baseURL}/web/guest/questions-page/questions/${topicName}");
 	}
 
 	macro viewQuestionViaTag {

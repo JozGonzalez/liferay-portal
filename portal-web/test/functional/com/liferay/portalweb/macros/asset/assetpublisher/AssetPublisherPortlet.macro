@@ -250,8 +250,6 @@ definition {
 
 		Panel.expandPanel(panel = "Select Collection");
 
-		Alert.closeMessage(messageType = "SUCCESS");
-
 		Button.clickSelect();
 
 		WaitForElementPresent(locator1 = "IFrame#ASSET_LIST_DIALOG");
@@ -391,8 +389,8 @@ definition {
 
 		if (isSet(fieldValue)) {
 			Type(
-				key_fieldFieldLabel = ${fieldFilter},
-				locator1 = "WCEditWebContent#TEXT_INPUT",
+				key_text = ${fieldFilter},
+				locator1 = "TextInput#ANY",
 				value1 = ${fieldValue});
 		}
 
@@ -459,6 +457,11 @@ definition {
 					key_depotName = ${depotName},
 					locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_IN_DEPOT");
 			}
+			else if (isSet(siteName)) {
+				Click(
+					key_depotName = ${siteName},
+					locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_IN_DEPOT");
+			}
 			else {
 				Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_BUTTON");
 			}
@@ -505,7 +508,7 @@ definition {
 
 			SelectFrameParent();
 
-			Button.clickAdd();
+			Button.click(button = "Add");
 
 			Alert.viewSuccessMessage();
 		}
@@ -691,11 +694,11 @@ definition {
 				key_tableEntry = ${siteName},
 				locator1 = "LexiconTable#TABLE_ENTRY_INFO");
 
-			Alert.viewSuccessMessage();
-
 			SelectFrame(value1 = "relative=top");
 
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			Alert.viewSuccessMessage();
 		}
 
 		Panel.expandPanel(panel = "Scope");
@@ -1563,7 +1566,7 @@ definition {
 		AssertTextEquals(
 			key_widgetName = "Asset Publisher",
 			locator1 = "Message#INFO_SPECIFIC_WIDGET",
-			value1 = "There are no results.");
+			value1 = "Info: There are no results.");
 	}
 
 	macro viewMultipleDDLRecordsViaAP {

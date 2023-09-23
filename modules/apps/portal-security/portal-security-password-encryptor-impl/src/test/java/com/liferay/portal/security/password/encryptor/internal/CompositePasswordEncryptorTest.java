@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.password.encryptor.internal;
@@ -84,6 +75,17 @@ public class CompositePasswordEncryptorTest {
 		bundleContext.registerService(
 			PasswordEncryptor.class, new SSHAPasswordEncryptor(),
 			MapUtil.singletonDictionary("type", PasswordEncryptor.TYPE_SSHA));
+		bundleContext.registerService(
+			PasswordEncryptor.class, new TestCustomPasswordEncryptor(),
+			MapUtil.singletonDictionary(
+				"type", _TYPE_CUSTOM_PASSWORD_ENCRYPTOR));
+	}
+
+	@Test
+	public void testCustomPasswordEncryptorWithParameters() throws Exception {
+		runTests(
+			_TYPE_CUSTOM_PASSWORD_ENCRYPTOR + "/ARGUMENT", "password",
+			"password:ARGUMENT", _TYPE_CUSTOM_PASSWORD_ENCRYPTOR);
 	}
 
 	@Test
@@ -305,6 +307,28 @@ public class CompositePasswordEncryptorTest {
 			PropsValues.PASSWORDS_ENCRYPTION_ALGORITHM_LEGACY =
 				originalLegacyAlgorithm;
 		}
+	}
+
+	private static final String _TYPE_CUSTOM_PASSWORD_ENCRYPTOR =
+		"CUSTOM_PASSWORD_ENCRYPTOR";
+
+	private static class TestCustomPasswordEncryptor
+		extends BasePasswordEncryptor {
+
+		@Override
+		public String encrypt(
+			String algorithm, String plainTextPassword,
+			String encryptedPassword, boolean upgradeHashSecurity) {
+
+			if (encryptedPassword != null) {
+				return plainTextPassword +
+					encryptedPassword.substring(encryptedPassword.indexOf(':'));
+			}
+
+			return plainTextPassword + ':' +
+				algorithm.substring(algorithm.indexOf('/') + 1);
+		}
+
 	}
 
 }

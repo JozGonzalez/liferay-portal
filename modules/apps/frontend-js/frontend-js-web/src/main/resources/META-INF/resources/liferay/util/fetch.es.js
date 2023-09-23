@@ -1,21 +1,36 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
+/**
+ * @param {!string|!Request|!URL} resource
+ * @param {!string} newLocation
+ * @return {!string|!Request|!URL}
+ */
+function setNewLocation(resource, newLocation) {
+	if (typeof resource === 'string') {
+		resource = newLocation;
+	}
+	else if (resource instanceof URL) {
+		resource = new URL(newLocation);
+	}
+	else if (resource instanceof Request) {
+		resource = new Request(newLocation, resource);
+	}
+	else {
+		console.warn(
+			'Resource passed to `fetch()` must either be a string, Request, or URL.'
+		);
+	}
+
+	return resource;
+}
 
 /**
  * Fetches a resource. A thin wrapper around ES6 Fetch API, with standardized
  * default configuration.
- * @param {!string|!Request} resource The URL to the resource, or a Resource
+ * @param {!string|!Request|!URL} resource The URL to the resource, or a Resource
  * object.
  * @param {Object=} init An optional object containing custom configuration.
  * @return {Promise} A Promise that resolves to a Response object.
@@ -34,12 +49,7 @@ export default function defaultFetch(resource, init = {}) {
 		if (pathContext && !resourceLocation.startsWith(pathContext)) {
 			resourceLocation = pathContext + resourceLocation;
 
-			if (typeof resource === 'string') {
-				resource = resourceLocation;
-			}
-			else {
-				resource = {...resource, url: resourceLocation};
-			}
+			resource = setNewLocation(resource, resourceLocation);
 		}
 
 		resourceLocation = window.location.origin + resourceLocation;
@@ -58,14 +68,10 @@ export default function defaultFetch(resource, init = {}) {
 
 		if (doAsUserIdEncoded) {
 			resourceURL.searchParams.set('doAsUserId', doAsUserIdEncoded);
+
 			resourceLocation = resourceURL.toString();
 
-			if (typeof resource === 'string') {
-				resource = resourceLocation;
-			}
-			else {
-				resource = {...resource, url: resourceLocation};
-			}
+			resource = setNewLocation(resource, resourceLocation);
 		}
 	}
 

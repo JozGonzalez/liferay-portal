@@ -1,35 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.web.internal.portlet.action;
 
 import com.liferay.notification.constants.NotificationPortletKeys;
-import com.liferay.object.definition.notification.term.util.ObjectDefinitionNotificationTermUtil;
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -55,69 +49,73 @@ public class GetObjectFieldNotificationTemplateTermsMVCResourceCommand
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		_objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
-			ParamUtil.getLong(resourceRequest, "objectDefinitionId"));
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				ParamUtil.getLong(resourceRequest, "objectDefinitionId"));
 
-		if (_objectDefinition == null) {
+		if (objectDefinition == null) {
 			return;
 		}
 
-		super.doServeResource(resourceRequest, resourceResponse);
-	}
+		JSONArray relationshipSectionsJSONArray = jsonFactory.createJSONArray();
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
-	@Override
-	protected Set<Map.Entry<String, String>> getTermNamesEntries() {
-		Map<String, String> termNames = new LinkedHashMap<>();
+		for (ObjectRelationship objectRelationship :
+				_objectRelationshipLocalService.
+					getObjectRelationshipsByObjectDefinitionId2(
+						objectDefinition.getObjectDefinitionId())) {
 
-		List<ObjectField> objectFields =
-			_objectFieldLocalService.getObjectFields(
-				_objectDefinition.getObjectDefinitionId());
+			if (!Objects.equals(
+					objectRelationship.getType(),
+					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
 
-		for (ObjectField objectField : objectFields) {
-			if (StringUtil.equals(objectField.getName(), "creator") &&
-				FeatureFlagManagerUtil.isEnabled("LPS-171625")) {
-
-				_authorObjectFieldNames.forEach(
-					(termLabel, objectFieldName) -> termNames.put(
-						termLabel, _getTermName(objectFieldName)));
+				continue;
 			}
-			else {
-				termNames.put(
-					objectField.getLabel(user.getLocale()),
-					_getTermName(objectField.getName()));
-			}
+
+			relationshipSectionsJSONArray.put(
+				JSONUtil.put(
+					"objectRelationshipId",
+					objectRelationship.getObjectRelationshipId()
+				).put(
+					"sectionLabel",
+					() -> {
+						ObjectDefinition relatedObjectDefinition =
+							_objectDefinitionLocalService.getObjectDefinition(
+								objectRelationship.getObjectDefinitionId1());
+
+						return StringBundler.concat(
+							objectRelationship.getLabel(
+								themeDisplay.getLocale()),
+							" (",
+							StringUtil.upperCase(
+								relatedObjectDefinition.getLabel(
+									themeDisplay.getLocale())),
+							StringPool.CLOSE_PARENTHESIS);
+					}
+				));
 		}
 
-		return termNames.entrySet();
+		JSONPortletResponseUtil.writeJSON(
+			resourceRequest, resourceResponse,
+			JSONUtil.put(
+				"relationshipSections", relationshipSectionsJSONArray
+			).put(
+				"terms",
+				getTermsJSONArray(
+					_objectFieldLocalService.getObjectFields(
+						objectDefinition.getObjectDefinitionId()),
+					objectDefinition.getShortName(), themeDisplay)
+			));
 	}
-
-	private String _getTermName(String objectFieldName) {
-		return ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
-			_objectDefinition.getShortName(), objectFieldName);
-	}
-
-	private final Map<String, String> _authorObjectFieldNames =
-		HashMapBuilder.put(
-			"author-email-address", "AUTHOR_EMAIL_ADDRESS"
-		).put(
-			"author-first-name", "AUTHOR_FIRST_NAME"
-		).put(
-			"author-id", "AUTHOR_ID"
-		).put(
-			"author-last-name", "AUTHOR_LAST_NAME"
-		).put(
-			"author-middle-name", "AUTHOR_MIDDLE_NAME"
-		).put(
-			"author-prefix", "AUTHOR_PREFIX"
-		).put(
-			"author-suffix", "AUTHOR_SUFFIX"
-		).build();
-	private ObjectDefinition _objectDefinition;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

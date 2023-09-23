@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.punchout.helper;
 
-import com.liferay.commerce.account.model.CommerceAccountUserRel;
-import com.liferay.commerce.account.service.CommerceAccountUserRelLocalService;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.commerce.punchout.constants.PunchOutConstants;
 import com.liferay.commerce.punchout.service.PunchOutAccountRoleHelper;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -23,6 +16,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.util.List;
@@ -38,14 +32,14 @@ public class PunchOutAccountRoleHelperImpl
 	implements PunchOutAccountRoleHelper {
 
 	@Override
-	public boolean hasPunchOutRole(long userId, long commerceAccountId)
+	public boolean hasPunchOutRole(long userId, long accountEntryId)
 		throws PortalException {
 
-		List<CommerceAccountUserRel> commerceAccountUserRels =
-			_commerceAccountUserRelLocalService.getCommerceAccountUserRels(
-				commerceAccountId);
+		List<AccountEntryUserRel> accountEntryUserRels =
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountEntryId(accountEntryId);
 
-		if (commerceAccountUserRels.isEmpty()) {
+		if (accountEntryUserRels.isEmpty()) {
 			return false;
 		}
 
@@ -62,11 +56,14 @@ public class PunchOutAccountRoleHelperImpl
 			return false;
 		}
 
-		for (CommerceAccountUserRel commerceAccountUserRel :
-				commerceAccountUserRels) {
+		for (AccountEntryUserRel accountEntryUserRel : accountEntryUserRels) {
+			AccountEntry accountEntry =
+				_accountEntryLocalService.getAccountEntry(accountEntryId);
 
 			List<UserGroupRole> userGroupRoles =
-				commerceAccountUserRel.getUserGroupRoles();
+				_userGroupRoleLocalService.getUserGroupRoles(
+					accountEntryUserRel.getAccountUserId(),
+					accountEntry.getAccountEntryGroupId());
 
 			for (UserGroupRole userGroupRole : userGroupRoles) {
 				Role role = userGroupRole.getRole();
@@ -83,11 +80,16 @@ public class PunchOutAccountRoleHelperImpl
 	}
 
 	@Reference
-	private CommerceAccountUserRelLocalService
-		_commerceAccountUserRelLocalService;
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
+	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Reference
 	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

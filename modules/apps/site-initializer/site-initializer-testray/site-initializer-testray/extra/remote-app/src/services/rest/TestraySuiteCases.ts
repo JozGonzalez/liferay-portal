@@ -1,55 +1,41 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import fetcher from '../fetcher';
+import Rest from '~/core/Rest';
+import yupSchema from '~/schema/yup';
 
-const nestedFieldsParam =
-	'nestedFields=case.component,suite&nestedFieldsDepth=2';
+import {TestraySuiteCase} from './types';
 
-const suitesCasesResource = `/suitescaseses?${nestedFieldsParam}`;
+type SuiteCase = typeof yupSchema.suiteCase.__outputType;
 
-const createSuiteCaseBatch = (suites: {caseId: number; suiteId: number}[]) => {
-	if (suites.length <= 20) {
-		return Promise.allSettled(
-			suites.map(
-				({
-					caseId: r_caseToSuitesCases_c_caseId,
-					suiteId: r_suiteToSuitesCases_c_suiteId,
-				}) =>
-					fetcher.post('/suitescaseses', {
-						name:
-							new Date().getTime() + r_caseToSuitesCases_c_caseId,
-						r_caseToSuitesCases_c_caseId,
-						r_suiteToSuitesCases_c_suiteId,
-					})
-			)
-		);
-	}
-
-	fetcher.post(
-		'/suitescaseses/batch',
-		suites.map(
-			({
+class TestraySuiteImpl extends Rest<SuiteCase, TestraySuiteCase> {
+	constructor() {
+		super({
+			adapter: ({
 				caseId: r_caseToSuitesCases_c_caseId,
+				name,
 				suiteId: r_suiteToSuitesCases_c_suiteId,
-			}: any) => ({
-				name: new Date().getTime() + r_caseToSuitesCases_c_caseId,
+			}) => ({
+				name,
 				r_caseToSuitesCases_c_caseId,
 				r_suiteToSuitesCases_c_suiteId,
-			})
-		)
-	);
-};
+			}),
+			nestedFields: 'case.component,suite',
+			uri: 'suitescaseses',
+		});
+	}
 
-export {createSuiteCaseBatch, suitesCasesResource};
+	public async createSuiteCase(casesId: number[], suiteId: number) {
+		for (const caseId of casesId) {
+			await super.create({
+				caseId,
+				name: new Date().getTime() + String(caseId),
+				suiteId,
+			});
+		}
+	}
+}
+
+export const testraySuiteCaseImpl = new TestraySuiteImpl();

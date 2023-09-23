@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.field.builder;
 
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +19,11 @@ import java.util.Map;
  * @author Feliphe Marinho
  */
 public class ObjectFieldBuilder {
+
+	public ObjectFieldBuilder() {
+		objectField.setReadOnly(ObjectFieldConstants.READ_ONLY_FALSE);
+		objectField.setObjectFieldSettings(Collections.emptyList());
+	}
 
 	public ObjectField build() {
 		return objectField;
@@ -51,12 +49,6 @@ public class ObjectFieldBuilder {
 
 	public ObjectFieldBuilder dbType(String dbType) {
 		objectField.setDBType(dbType);
-
-		return this;
-	}
-
-	public ObjectFieldBuilder defaultValue(String defaultValue) {
-		objectField.setDefaultValue(defaultValue);
 
 		return this;
 	}
@@ -99,6 +91,12 @@ public class ObjectFieldBuilder {
 		return this;
 	}
 
+	public ObjectFieldBuilder localized(boolean localized) {
+		objectField.setLocalized(localized);
+
+		return this;
+	}
+
 	public ObjectFieldBuilder name(String name) {
 		objectField.setName(name);
 
@@ -121,6 +119,20 @@ public class ObjectFieldBuilder {
 		List<ObjectFieldSetting> objectFieldSettings) {
 
 		objectField.setObjectFieldSettings(objectFieldSettings);
+
+		return this;
+	}
+
+	public ObjectFieldBuilder readOnly(String readOnly) {
+		objectField.setReadOnly(readOnly);
+
+		return this;
+	}
+
+	public ObjectFieldBuilder readOnlyConditionExpression(
+		String readOnlyConditionExpression) {
+
+		objectField.setReadOnlyConditionExpression(readOnlyConditionExpression);
 
 		return this;
 	}

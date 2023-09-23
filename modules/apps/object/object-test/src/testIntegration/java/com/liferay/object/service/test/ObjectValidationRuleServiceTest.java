@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -41,6 +32,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -63,10 +55,10 @@ public class ObjectValidationRuleServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
-			_objectDefinitionLocalService,
+			false, _objectDefinitionLocalService,
 			Arrays.asList(
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -76,10 +68,10 @@ public class ObjectValidationRuleServiceTest {
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 		_systemObjectDefinition =
-			ObjectDefinitionTestUtil.addSystemObjectDefinition(
-				TestPropsValues.getUserId(), "Test", null,
+			ObjectDefinitionTestUtil.addUnmodifiableSystemObjectDefinition(
+				null, TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				false, "Test", null, null,
+				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
 				_objectDefinitionLocalService,
@@ -102,7 +94,7 @@ public class ObjectValidationRuleServiceTest {
 	public void testAddObjectValidationRule() throws Exception {
 		try {
 			_testAddObjectValidationRule(
-				_objectDefinition.getObjectDefinitionId(), _defaultUser);
+				_objectDefinition.getObjectDefinitionId(), _guestUser);
 
 			Assert.fail();
 		}
@@ -111,7 +103,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -122,7 +114,7 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testDeleteObjectValidationRule() throws Exception {
 		try {
-			_testDeleteObjectValidationRule(_defaultUser);
+			_testDeleteObjectValidationRule(_guestUser);
 
 			Assert.fail();
 		}
@@ -131,7 +123,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -141,14 +133,14 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testGetObjectValidationRule() throws Exception {
 		try {
-			_testGetObjectValidationRule(_defaultUser);
+			_testGetObjectValidationRule(_guestUser);
 		}
 		catch (PrincipalException.MustHavePermission principalException) {
 			String message = principalException.getMessage();
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have VIEW permission for"));
 		}
 
@@ -158,7 +150,7 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testUpdateObjectValidationRule() throws Exception {
 		try {
-			_testUpdateObjectValidationRule(_defaultUser);
+			_testUpdateObjectValidationRule(_guestUser);
 
 			Assert.fail();
 		}
@@ -167,7 +159,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -182,7 +174,8 @@ public class ObjectValidationRuleServiceTest {
 			ObjectValidationRuleConstants.ENGINE_TYPE_DDM,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			"isEmailAddress(textField)");
+			ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
+			"isEmailAddress(textField)", false, Collections.emptyList());
 	}
 
 	private void _setUser(User user) {
@@ -209,7 +202,9 @@ public class ObjectValidationRuleServiceTest {
 						RandomTestUtil.randomString()),
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
-					"isEmailAddress(textField)");
+					ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
+					"isEmailAddress(textField)", false,
+					Collections.emptyList());
 		}
 		finally {
 			if (objectValidationRule != null) {
@@ -275,7 +270,8 @@ public class ObjectValidationRuleServiceTest {
 						RandomTestUtil.randomString()),
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
-					"isEmailAddress(textField)");
+					ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
+					"isEmailAddress(textField)", Collections.emptyList());
 		}
 		finally {
 			if (objectValidationRule != null) {
@@ -285,7 +281,7 @@ public class ObjectValidationRuleServiceTest {
 		}
 	}
 
-	private User _defaultUser;
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;

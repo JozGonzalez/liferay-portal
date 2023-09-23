@@ -1,21 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.learn;
 
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
+import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyCategory;
+import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyVocabulary;
+import com.liferay.headless.admin.taxonomy.client.resource.v1_0.TaxonomyCategoryResource;
+import com.liferay.headless.admin.taxonomy.client.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.headless.admin.user.client.dto.v1_0.Site;
 import com.liferay.headless.admin.user.client.resource.v1_0.SiteResource;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentField;
@@ -24,6 +19,7 @@ import com.liferay.headless.delivery.client.dto.v1_0.StructuredContent;
 import com.liferay.headless.delivery.client.dto.v1_0.StructuredContentFolder;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
+import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.StructuredContentFolderResource;
 import com.liferay.headless.delivery.client.resource.v1_0.StructuredContentResource;
 import com.liferay.petra.string.CharPool;
@@ -176,6 +172,8 @@ public class Main {
 						site.getId(), "journal", liferayDataDefinitionKey);
 
 			_liferayContentStructureId = dataDefinition.getId();
+
+			_loadTaxonomyCategories();
 		}
 	}
 
@@ -271,6 +269,8 @@ public class Main {
 						_structuredContentResource.putStructuredContent(
 							siteStructuredContent.getId(), structuredContent);
 
+					_setVisibility(fileName, siteStructuredContent);
+
 					updatedStructuredContentCount++;
 				}
 				else {
@@ -302,6 +302,8 @@ public class Main {
 								structuredContent.
 									getStructuredContentFolderId(),
 								structuredContent);
+
+					_setVisibility(fileName, structuredContent);
 
 					addedStructuredContentCount++;
 				}
@@ -784,6 +786,54 @@ public class Main {
 		return structuredContentFolderId;
 	}
 
+	private Long[] _getTaxonomyCategoryIds(String text) {
+		SnakeYamlFrontMatterVisitor snakeYamlFrontMatterVisitor =
+			new SnakeYamlFrontMatterVisitor();
+
+		snakeYamlFrontMatterVisitor.visit(_parser.parse(text));
+
+		Map<String, Object> data = snakeYamlFrontMatterVisitor.getData();
+
+		if ((data == null) || !data.containsKey("taxonomy-category-names")) {
+			return new Long[0];
+		}
+
+		Object taxonomyCategoryNames = data.get("taxonomy-category-names");
+
+		if (!(taxonomyCategoryNames instanceof ArrayList)) {
+			return new Long[0];
+		}
+
+		List<Long> taxonomyCategoryIds = new ArrayList<>();
+
+		for (Object taxonomyCategoryNameObject :
+				(ArrayList)taxonomyCategoryNames) {
+
+			if (!(taxonomyCategoryNameObject instanceof String)) {
+				continue;
+			}
+
+			String taxonomyCategoryName = (String)taxonomyCategoryNameObject;
+
+			if (!_taxonomyCategoriesJSONObject.has(taxonomyCategoryName)) {
+				_warn(
+					"No taxonomy category exists with the name: " +
+						taxonomyCategoryName);
+
+				continue;
+			}
+
+			taxonomyCategoryIds.add(
+				_taxonomyCategoriesJSONObject.getLong(taxonomyCategoryName));
+		}
+
+		if (taxonomyCategoryIds.isEmpty()) {
+			return new Long[0];
+		}
+
+		return taxonomyCategoryIds.toArray(new Long[0]);
+	}
+
 	private String _getTitle(String text) {
 		int x = text.indexOf("#");
 
@@ -910,6 +960,87 @@ public class Main {
 			_liferayURL.getHost(), _liferayURL.getPort(),
 			_liferayURL.getProtocol()
 		).build();
+
+		TaxonomyCategoryResource.Builder taxonomyCategoryResourceBuilder =
+			TaxonomyCategoryResource.builder();
+
+		_taxonomyCategoryResource = taxonomyCategoryResourceBuilder.header(
+			"Authorization", authorization
+		).endpoint(
+			_liferayURL.getHost(), _liferayURL.getPort(),
+			_liferayURL.getProtocol()
+		).build();
+
+		TaxonomyVocabularyResource.Builder taxonomyVocabularyResourceBuilder =
+			TaxonomyVocabularyResource.builder();
+
+		_taxonomyVocabularyResource = taxonomyVocabularyResourceBuilder.header(
+			"Authorization", authorization
+		).endpoint(
+			_liferayURL.getHost(), _liferayURL.getPort(),
+			_liferayURL.getProtocol()
+		).build();
+	}
+
+	private void _loadTaxonomyCategories() throws Exception {
+		_taxonomyCategoriesJSONObject = new JSONObject();
+
+		com.liferay.headless.admin.taxonomy.client.pagination.Page
+			<TaxonomyVocabulary> taxonomyVocabulariesPage =
+				_taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
+					_liferaySiteId, null, null, null,
+					com.liferay.headless.admin.taxonomy.client.pagination.
+						Pagination.of(-1, -1),
+					null);
+
+		for (TaxonomyVocabulary taxonomyVocabulary :
+				taxonomyVocabulariesPage.getItems()) {
+
+			com.liferay.headless.admin.taxonomy.client.pagination.Page
+				<TaxonomyCategory> taxonomyCategoriesPage =
+					_taxonomyCategoryResource.
+						getTaxonomyVocabularyTaxonomyCategoriesPage(
+							taxonomyVocabulary.getId(), null, null, null, null,
+							com.liferay.headless.admin.taxonomy.client.
+								pagination.Pagination.of(-1, -1),
+							null);
+
+			for (TaxonomyCategory taxonomyCategory :
+					taxonomyCategoriesPage.getItems()) {
+
+				_taxonomyCategoriesJSONObject.put(
+					taxonomyCategory.getName(), taxonomyCategory.getId());
+
+				_loadTaxonomyCategories(taxonomyCategory);
+			}
+		}
+	}
+
+	private void _loadTaxonomyCategories(
+			TaxonomyCategory parentTaxonomyCategory)
+		throws Exception {
+
+		if (parentTaxonomyCategory.getNumberOfTaxonomyCategories() == 0) {
+			return;
+		}
+
+		com.liferay.headless.admin.taxonomy.client.pagination.Page
+			<TaxonomyCategory> taxonomyCategoriesPage =
+				_taxonomyCategoryResource.
+					getTaxonomyCategoryTaxonomyCategoriesPage(
+						parentTaxonomyCategory.getId(), null, null, null,
+						com.liferay.headless.admin.taxonomy.client.pagination.
+							Pagination.of(-1, -1),
+						null);
+
+		for (TaxonomyCategory taxonomyCategory :
+				taxonomyCategoriesPage.getItems()) {
+
+			_taxonomyCategoriesJSONObject.put(
+				taxonomyCategory.getName(), taxonomyCategory.getId());
+
+			_loadTaxonomyCategories(taxonomyCategory);
+		}
 	}
 
 	private String _processAbsoluteZipURLs(String line) {
@@ -1329,6 +1460,77 @@ public class Main {
 		return line;
 	}
 
+	private void _setVisibility(
+			String fileName, StructuredContent structuredContent)
+		throws Exception {
+
+		SnakeYamlFrontMatterVisitor snakeYamlFrontMatterVisitor =
+			new SnakeYamlFrontMatterVisitor();
+
+		File file = new File(fileName);
+
+		snakeYamlFrontMatterVisitor.visit(
+			_parser.parse(
+				_processMarkdown(
+					FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+					file)));
+
+		Map<String, Object> data = snakeYamlFrontMatterVisitor.getData();
+
+		if ((data == null) || !data.containsKey("visibility")) {
+			Permission[] permissions = {
+				new Permission() {
+					{
+						actionIds = new String[] {"VIEW"};
+						roleName = "Guest";
+					}
+				}
+			};
+
+			_structuredContentResource.putStructuredContentPermissionsPage(
+				structuredContent.getId(), permissions);
+
+			return;
+		}
+
+		Object roleNames = data.get("visibility");
+
+		if (!(roleNames instanceof ArrayList)) {
+			return;
+		}
+
+		List<Permission> permissions = new ArrayList<>();
+
+		for (Object roleNamesObject : (ArrayList)roleNames) {
+			if (!(roleNamesObject instanceof String)) {
+				continue;
+			}
+
+			permissions.add(
+				new Permission() {
+					{
+						actionIds = new String[] {"ADD_DISCUSSION", "VIEW"};
+						roleName = (String)roleNamesObject;
+					}
+				});
+		}
+
+		if (permissions.isEmpty()) {
+			return;
+		}
+
+		permissions.add(
+			new Permission() {
+				{
+					actionIds = new String[0];
+					roleName = "Guest";
+				}
+			});
+
+		_structuredContentResource.putStructuredContentPermissionsPage(
+			structuredContent.getId(), permissions.toArray(new Permission[0]));
+	}
+
 	private String _toFriendlyURLPath(File file) {
 		String filePathString = file.getPath();
 
@@ -1569,6 +1771,8 @@ public class Main {
 		structuredContent.setContentStructureId(_liferayContentStructureId);
 		structuredContent.setExternalReferenceCode(_getUuid(englishText));
 		structuredContent.setFriendlyUrlPath(_toFriendlyURLPath(englishFile));
+		structuredContent.setTaxonomyCategoryIds(
+			_getTaxonomyCategoryIds(englishText));
 
 		if (!_offline) {
 			structuredContent.setStructuredContentFolderId(
@@ -1578,7 +1782,6 @@ public class Main {
 		}
 
 		structuredContent.setTitle(englishTitle);
-		structuredContent.setViewableBy(StructuredContent.ViewableBy.ANYONE);
 
 		return structuredContent;
 	}
@@ -1776,6 +1979,9 @@ public class Main {
 		new HashMap<>();
 	private StructuredContentFolderResource _structuredContentFolderResource;
 	private StructuredContentResource _structuredContentResource;
+	private JSONObject _taxonomyCategoriesJSONObject;
+	private TaxonomyCategoryResource _taxonomyCategoryResource;
+	private TaxonomyVocabularyResource _taxonomyVocabularyResource;
 	private final List<String> _warningMessages = new ArrayList<>();
 	private final Yaml _yaml = new Yaml();
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context;
@@ -22,7 +13,9 @@ import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.object.action.trigger.ObjectActionTrigger;
 import com.liferay.object.action.trigger.ObjectActionTriggerRegistry;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectActionUtil;
+import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
@@ -39,11 +32,11 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -71,8 +64,22 @@ public class ObjectDefinitionsActionsDisplayContext
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 	}
 
+	public String getEditObjectActionURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_action"
+		).setParameter(
+			"objectActionId", "{id}"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
+	}
+
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
+
+		boolean hasUpdatePermission = hasUpdateObjectDefinitionPermission();
 
 		return Arrays.asList(
 			new FDSActionDropdownItem(
@@ -85,8 +92,11 @@ public class ObjectDefinitionsActionsDisplayContext
 				).setWindowState(
 					LiferayWindowState.POP_UP
 				).buildString(),
-				"view", "view",
-				LanguageUtil.get(objectRequestHelper.getRequest(), "view"),
+				hasUpdatePermission ? "pencil" : "view",
+				hasUpdatePermission ? "edit" : "view",
+				LanguageUtil.get(
+					objectRequestHelper.getRequest(),
+					hasUpdatePermission ? "edit" : "view"),
 				"get", null, "sidePanel"),
 			new FDSActionDropdownItem(
 				"/o/object-admin/v1.0/object-actions/{id}", "trash", "delete",
@@ -104,14 +114,17 @@ public class ObjectDefinitionsActionsDisplayContext
 
 	public List<Map<String, Object>> getObjectActionCodeEditorElements() {
 		return ObjectCodeEditorUtil.getCodeEditorElements(
-			false, true, true, objectRequestHelper.getLocale(),
-			getObjectDefinitionId());
+			true, true, objectRequestHelper.getLocale(),
+			getObjectDefinitionId(),
+			objectField -> !objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION));
 	}
 
 	public ObjectActionExecutor getObjectActionExecutor() {
 		ObjectAction objectAction = getObjectAction();
 
 		return _objectActionExecutorRegistry.getObjectActionExecutor(
+			objectAction.getCompanyId(),
 			objectAction.getObjectActionExecutorKey());
 	}
 
@@ -119,8 +132,20 @@ public class ObjectDefinitionsActionsDisplayContext
 		JSONArray objectActionExecutorsJSONArray =
 			_jsonFactory.createJSONArray();
 
+		ObjectDefinition objectDefinition = getObjectDefinition();
+
 		for (ObjectActionExecutor objectActionExecutor :
-				_objectActionExecutorRegistry.getObjectActionExecutors()) {
+				_objectActionExecutorRegistry.getObjectActionExecutors(
+					objectDefinition.getCompanyId(),
+					objectDefinition.getName())) {
+
+			if (StringUtil.equals(objectDefinition.getName(), "Organization") &&
+				StringUtil.equals(
+					objectActionExecutor.getKey(),
+					ObjectActionExecutorConstants.KEY_UPDATE_OBJECT_ENTRY)) {
+
+				continue;
+			}
 
 			objectActionExecutorsJSONArray.put(
 				JSONUtil.put(
@@ -193,10 +218,14 @@ public class ObjectDefinitionsActionsDisplayContext
 				_objectActionTriggerRegistry.getObjectActionTriggers(
 					objectDefinition.getClassName())) {
 
-			if (Objects.equals(
+			if ((StringUtil.equals(
+					objectActionTrigger.getKey(),
+					ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE) &&
+				 !objectDefinition.isRootNode()) ||
+				(StringUtil.equals(
 					objectActionTrigger.getKey(),
 					ObjectActionTriggerConstants.KEY_STANDALONE) &&
-				objectDefinition.isSystem()) {
+				 objectDefinition.isUnmodifiableSystemObject())) {
 
 				continue;
 			}

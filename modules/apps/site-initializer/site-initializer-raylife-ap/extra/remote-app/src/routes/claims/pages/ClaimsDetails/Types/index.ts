@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export type ClaimType = {
 	claimAmount: number;
 	claimCreateDate: string;
 	claimStatus: {key: string; name: string};
+	dataJSON: string;
 	id: number;
+	incidentDate: string;
 	r_policyToClaims_c_raylifePolicy: {
 		r_quoteToPolicies_c_raylifeQuote: {
 			r_applicationToQuotes_c_raylifeApplication: {
@@ -27,9 +20,9 @@ export type ClaimType = {
 			};
 		};
 	};
-	r_policyToClaims_c_raylifePolicyERC: string;
-	r_policyToClaims_c_raylifePolicyId: number;
-	settledDate: string;
+	r_policyToClaims_c_raylifePolicyERC?: string;
+	r_policyToClaims_c_raylifePolicyId?: number;
+	settledDate?: string;
 };
 
 export type ClaimDetailDataType = {
@@ -44,4 +37,18 @@ export type ClaimDetailDataType = {
 
 export type ClaimStatusType = {
 	claimStatus: string;
+};
+
+export type ClaimActivitiesDataType = {
+	activity: string;
+	body?: boolean;
+	by: string;
+	date: string;
+	message: string;
+};
+
+export type ClaimComponentsType = {
+	claimData: ClaimType;
+	incidentDate?: string;
+	isClaimSettled?: boolean;
 };

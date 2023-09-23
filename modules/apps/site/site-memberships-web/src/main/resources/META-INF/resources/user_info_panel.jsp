@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -51,24 +42,26 @@ Group group = siteMembershipsDisplayContext.getGroup();
 			</h6>
 		</div>
 
-		<clay:navigation-bar
-			navigationItems="<%= siteMembershipsDisplayContext.getInfoPanelNavigationItems() %>"
-		/>
+		<div class="sheet-row">
+			<clay:tabs
+				tabsItems="<%= siteMembershipsDisplayContext.getTabsItems() %>"
+			>
+				<clay:tabs-panel>
+					<h5><liferay-ui:message key="num-of-users" /></h5>
 
-		<div class="sidebar-body">
-			<h5><liferay-ui:message key="num-of-users" /></h5>
+					<%
+					LinkedHashMap<String, Object> userParams = LinkedHashMapBuilder.<String, Object>put(
+						"inherit", Boolean.TRUE
+					).put(
+						"usersGroups", Long.valueOf(siteMembershipsDisplayContext.getGroupId())
+					).build();
+					%>
 
-			<%
-			LinkedHashMap<String, Object> userParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.TRUE
-			).put(
-				"usersGroups", Long.valueOf(siteMembershipsDisplayContext.getGroupId())
-			).build();
-			%>
-
-			<p>
-				<%= UserLocalServiceUtil.searchCount(company.getCompanyId(), StringPool.BLANK, WorkflowConstants.STATUS_APPROVED, userParams) %>
-			</p>
+					<p>
+						<%= UserLocalServiceUtil.searchCount(company.getCompanyId(), StringPool.BLANK, WorkflowConstants.STATUS_APPROVED, userParams) %>
+					</p>
+				</clay:tabs-panel>
+			</clay:tabs>
 		</div>
 	</c:when>
 	<c:when test="<%= ListUtil.isNotEmpty(users) && (users.size() == 1) %>">
@@ -87,62 +80,62 @@ Group group = siteMembershipsDisplayContext.getGroup();
 			</h6>
 		</div>
 
-		<clay:navigation-bar
-			navigationItems="<%= siteMembershipsDisplayContext.getInfoPanelNavigationItems() %>"
-		/>
+		<div class="sheet-row">
+			<clay:tabs
+				tabsItems="<%= siteMembershipsDisplayContext.getTabsItems() %>"
+			>
+				<clay:tabs-panel>
 
-		<div class="sidebar-body">
+					<%
+					List<String> names = TransformUtil.transform(OrganizationLocalServiceUtil.getGroupUserOrganizations(group.getGroupId(), curUser.getUserId()), Organization::getName);
 
-			<%
-			List<String> names = new ArrayList<String>();
+					names.addAll(TransformUtil.transform(UserGroupLocalServiceUtil.getGroupUserUserGroups(group.getGroupId(), curUser.getUserId()), UserGroup::getName));
+					%>
 
-			names.addAll(SitesUtil.getOrganizationNames(group, curUser));
+					<c:if test="<%= ListUtil.isNotEmpty(names) %>">
+						<p>
+							<c:choose>
+								<c:when test="<%= names.size() == 1 %>">
+									<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(group.getDescriptiveName(locale)), HtmlUtil.escape(names.get(0))} %>" key="this-user-is-a-member-of-x-because-he-belongs-to-x" translateArguments="<%= false %>" />
+								</c:when>
+								<c:otherwise>
+									<liferay-ui:message arguments='<%= new Object[] {HtmlUtil.escape(group.getDescriptiveName(locale)), HtmlUtil.escape(StringUtil.merge(names.subList(0, names.size() - 1).toArray(new String[names.size() - 1]), ", ")), HtmlUtil.escape(names.get(names.size() - 1))} %>' key="this-user-is-a-member-of-x-because-he-belongs-to-x-and-x" translateArguments="<%= false %>" />
+								</c:otherwise>
+							</c:choose>
+						</p>
+					</c:if>
 
-			names.addAll(SitesUtil.getUserGroupNames(group, curUser));
-			%>
+					<%
+					String portraitURL = curUser.getPortraitURL(themeDisplay);
+					%>
 
-			<c:if test="<%= ListUtil.isNotEmpty(names) %>">
-				<p>
-					<c:choose>
-						<c:when test="<%= names.size() == 1 %>">
-							<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(group.getDescriptiveName(locale)), HtmlUtil.escape(names.get(0))} %>" key="this-user-is-a-member-of-x-because-he-belongs-to-x" translateArguments="<%= false %>" />
-						</c:when>
-						<c:otherwise>
-							<liferay-ui:message arguments='<%= new Object[] {HtmlUtil.escape(group.getDescriptiveName(locale)), HtmlUtil.escape(StringUtil.merge(names.subList(0, names.size() - 1).toArray(new String[names.size() - 1]), ", ")), HtmlUtil.escape(names.get(names.size() - 1))} %>' key="this-user-is-a-member-of-x-because-he-belongs-to-x-and-x" translateArguments="<%= false %>" />
-						</c:otherwise>
-					</c:choose>
-				</p>
-			</c:if>
+					<c:if test="<%= Validator.isNotNull(portraitURL) %>">
+						<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="crop-img rounded" src="<%= portraitURL %>" />
+					</c:if>
 
-			<%
-			String portraitURL = curUser.getPortraitURL(themeDisplay);
-			%>
+					<h5><liferay-ui:message key="email" /></h5>
 
-			<c:if test="<%= Validator.isNotNull(portraitURL) %>">
-				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="crop-img rounded" src="<%= portraitURL %>" />
-			</c:if>
+					<p>
+						<%= curUser.getEmailAddress() %>
+					</p>
 
-			<h5><liferay-ui:message key="email" /></h5>
+					<%
+					List<Team> teams = TeamLocalServiceUtil.getUserOrUserGroupTeams(siteMembershipsDisplayContext.getGroupId(), curUser.getUserId());
 
-			<p>
-				<%= curUser.getEmailAddress() %>
-			</p>
+					List<String> rolesAndTeamsNames = ListUtil.toList(UserGroupRoleLocalServiceUtil.getUserGroupRoles(curUser.getUserId(), siteMembershipsDisplayContext.getGroupId()), UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR);
 
-			<%
-			List<Team> teams = TeamLocalServiceUtil.getUserOrUserGroupTeams(siteMembershipsDisplayContext.getGroupId(), curUser.getUserId());
+					rolesAndTeamsNames.addAll(ListUtil.toList(teams, Team.NAME_ACCESSOR));
+					%>
 
-			List<String> rolesAndTeamsNames = ListUtil.toList(UserGroupRoleLocalServiceUtil.getUserGroupRoles(curUser.getUserId(), siteMembershipsDisplayContext.getGroupId()), UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR);
+					<c:if test="<%= !ListUtil.isEmpty(rolesAndTeamsNames) %>">
+						<h5><liferay-ui:message key="roles-and-teams" /></h5>
 
-			rolesAndTeamsNames.addAll(ListUtil.toList(teams, Team.NAME_ACCESSOR));
-			%>
-
-			<c:if test="<%= !ListUtil.isEmpty(rolesAndTeamsNames) %>">
-				<h5><liferay-ui:message key="roles-and-teams" /></h5>
-
-				<p>
-					<%= HtmlUtil.escape(StringUtil.merge(rolesAndTeamsNames, StringPool.COMMA_AND_SPACE)) %>
-				</p>
-			</c:if>
+						<p>
+							<%= HtmlUtil.escape(StringUtil.merge(rolesAndTeamsNames, StringPool.COMMA_AND_SPACE)) %>
+						</p>
+					</c:if>
+				</clay:tabs-panel>
+			</clay:tabs>
 		</div>
 	</c:when>
 	<c:when test="<%= ListUtil.isNotEmpty(users) && (users.size() > 1) %>">
@@ -150,12 +143,14 @@ Group group = siteMembershipsDisplayContext.getGroup();
 			<h4><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></h4>
 		</div>
 
-		<clay:navigation-bar
-			navigationItems="<%= siteMembershipsDisplayContext.getInfoPanelNavigationItems() %>"
-		/>
-
-		<div class="sidebar-body">
-			<h5><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></h5>
+		<div class="sheet-row">
+			<clay:tabs
+				tabsItems="<%= siteMembershipsDisplayContext.getTabsItems() %>"
+			>
+				<clay:tabs-panel>
+					<h5><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></h5>
+				</clay:tabs-panel>
+			</clay:tabs>
 		</div>
 	</c:when>
 </c:choose>

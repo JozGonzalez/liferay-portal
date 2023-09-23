@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -60,7 +52,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -783,15 +774,15 @@ public abstract class BaseNavigationMenuResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<NavigationMenu, Exception> navigationMenuUnsafeConsumer =
-			null;
+		UnsafeFunction<NavigationMenu, NavigationMenu, Exception>
+			navigationMenuUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("siteId")) {
-				navigationMenuUnsafeConsumer =
+				navigationMenuUnsafeFunction =
 					navigationMenu -> postSiteNavigationMenu(
 						(Long)parameters.get("siteId"), navigationMenu);
 			}
@@ -801,19 +792,23 @@ public abstract class BaseNavigationMenuResourceImpl
 			}
 		}
 
-		if (navigationMenuUnsafeConsumer == null) {
+		if (navigationMenuUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for NavigationMenu");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				navigationMenus, navigationMenuUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				navigationMenus, navigationMenuUnsafeConsumer);
+				navigationMenus, navigationMenuUnsafeFunction::apply);
 		}
 		else {
 			for (NavigationMenu navigationMenu : navigationMenus) {
-				navigationMenuUnsafeConsumer.accept(navigationMenu);
+				navigationMenuUnsafeFunction.apply(navigationMenu);
 			}
 		}
 	}
@@ -900,34 +895,46 @@ public abstract class BaseNavigationMenuResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<NavigationMenu, Exception> navigationMenuUnsafeConsumer =
-			null;
+		UnsafeFunction<NavigationMenu, NavigationMenu, Exception>
+			navigationMenuUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			navigationMenuUnsafeConsumer = navigationMenu -> putNavigationMenu(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			navigationMenuUnsafeFunction = navigationMenu -> putNavigationMenu(
 				navigationMenu.getId() != null ? navigationMenu.getId() :
-					Long.parseLong((String)parameters.get("navigationMenuId")),
+					_parseLong((String)parameters.get("navigationMenuId")),
 				navigationMenu);
 		}
 
-		if (navigationMenuUnsafeConsumer == null) {
+		if (navigationMenuUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for NavigationMenu");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				navigationMenus, navigationMenuUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				navigationMenus, navigationMenuUnsafeConsumer);
+				navigationMenus, navigationMenuUnsafeFunction::apply);
 		}
 		else {
 			for (NavigationMenu navigationMenu : navigationMenus) {
-				navigationMenuUnsafeConsumer.accept(navigationMenu);
+				navigationMenuUnsafeFunction.apply(navigationMenu);
 			}
 		}
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1095,6 +1102,15 @@ public abstract class BaseNavigationMenuResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<NavigationMenu>,
+			 UnsafeFunction<NavigationMenu, NavigationMenu, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1311,6 +1327,12 @@ public abstract class BaseNavigationMenuResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1341,7 +1363,19 @@ public abstract class BaseNavigationMenuResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<NavigationMenu>,
+		 UnsafeFunction<NavigationMenu, NavigationMenu, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<NavigationMenu>, UnsafeConsumer<NavigationMenu, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

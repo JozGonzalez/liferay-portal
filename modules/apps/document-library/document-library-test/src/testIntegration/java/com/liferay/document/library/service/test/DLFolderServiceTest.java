@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
@@ -45,14 +36,18 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.view.count.ViewCountManager;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
@@ -90,12 +85,55 @@ public class DLFolderServiceTest {
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = _dlFileEntryTypeService.addFileEntryType(
-			_group.getGroupId(), StringUtil.randomString(),
-			StringUtil.randomString(),
-			new long[] {_ddmStructure.getStructureId()},
+			_group.getGroupId(), _ddmStructure.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_alternativeGroup = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testGetFoldersByRating() throws Exception {
+		DLFolder dlFolder1 = _addDLFolder();
+		DLFolder dlFolder2 = _addDLFolder();
+		DLFolder dlFolder3 = _addDLFolder();
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder1.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder2.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder3.getFolderId(), 0.5,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2, _dlFolderService.getFoldersCount(_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFolder2, dlFolder1),
+			_dlFolderService.getFolders(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder1.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2, _dlFolderService.getFoldersCount(_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFolder1, dlFolder2),
+			_dlFolderService.getFolders(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
 	}
 
 	@Test
@@ -457,6 +495,14 @@ public class DLFolderServiceTest {
 		}
 	}
 
+	private DLFolder _addDLFolder() throws Exception {
+		return _dlFolderService.addFolder(
+			null, _group.getGroupId(), _group.getGroupId(), false,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
 	@Inject
 	private static ClassNameLocalService _classNameLocalService;
 
@@ -485,5 +531,8 @@ public class DLFolderServiceTest {
 	private Group _group;
 
 	private Folder _parentFolder;
+
+	@Inject
+	private RatingsEntryLocalService _ratingsEntryLocalService;
 
 }

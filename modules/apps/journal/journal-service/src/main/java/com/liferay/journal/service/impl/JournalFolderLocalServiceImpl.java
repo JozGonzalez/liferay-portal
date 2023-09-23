@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
+import com.liferay.asset.link.constants.AssetLinkConstants;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLink;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
@@ -412,8 +403,8 @@ public class JournalFolderLocalServiceImpl
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			WorkflowConstants.STATUS_ANY);
 
-		return journalFolderFinder.findF_A_ByG_F_DDMSK(
-			groupId, folderId, StringPool.BLANK, queryDefinition);
+		return journalFolderFinder.findF_A_ByG_F_DDMSI(
+			groupId, folderId, 0, queryDefinition);
 	}
 
 	@Override
@@ -422,8 +413,8 @@ public class JournalFolderLocalServiceImpl
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(status);
 
-		return journalFolderFinder.findF_A_ByG_F_DDMSK(
-			groupId, folderId, StringPool.BLANK, queryDefinition);
+		return journalFolderFinder.findF_A_ByG_F_DDMSI(
+			groupId, folderId, 0, queryDefinition);
 	}
 
 	@Override
@@ -434,8 +425,8 @@ public class JournalFolderLocalServiceImpl
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			status, start, end, (OrderByComparator<Object>)orderByComparator);
 
-		return journalFolderFinder.findF_A_ByG_F_DDMSK(
-			groupId, folderId, StringPool.BLANK, queryDefinition);
+		return journalFolderFinder.findF_A_ByG_F_DDMSI(
+			groupId, folderId, 0, queryDefinition);
 	}
 
 	@Override
@@ -480,8 +471,8 @@ public class JournalFolderLocalServiceImpl
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			WorkflowConstants.STATUS_ANY);
 
-		return journalFolderFinder.countF_A_ByG_F_DDMSK(
-			groupId, folderId, StringPool.BLANK, queryDefinition);
+		return journalFolderFinder.countF_A_ByG_F_DDMSI(
+			groupId, folderId, 0, queryDefinition);
 	}
 
 	@Override
@@ -491,8 +482,8 @@ public class JournalFolderLocalServiceImpl
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			status, 0, false);
 
-		return journalFolderFinder.countF_A_ByG_F_DDMSK(
-			groupId, folderId, StringPool.BLANK, queryDefinition);
+		return journalFolderFinder.countF_A_ByG_F_DDMSI(
+			groupId, folderId, 0, queryDefinition);
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service.base;
@@ -29,8 +20,6 @@ import com.liferay.search.experiences.model.SXPElement;
 import com.liferay.search.experiences.service.SXPElementService;
 import com.liferay.search.experiences.service.SXPElementServiceUtil;
 import com.liferay.search.experiences.service.persistence.SXPElementPersistence;
-
-import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -59,7 +48,7 @@ public abstract class SXPElementServiceBaseImpl
 	 */
 	@Deactivate
 	protected void deactivate() {
-		_setServiceUtilService(null);
+		SXPElementServiceUtil.setService(null);
 	}
 
 	@Override
@@ -73,7 +62,7 @@ public abstract class SXPElementServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		sxpElementService = (SXPElementService)aopProxy;
 
-		_setServiceUtilService(sxpElementService);
+		SXPElementServiceUtil.setService(sxpElementService);
 	}
 
 	/**
@@ -115,20 +104,6 @@ public abstract class SXPElementServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setServiceUtilService(SXPElementService sxpElementService) {
-		try {
-			Field field = SXPElementServiceUtil.class.getDeclaredField(
-				"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, sxpElementService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

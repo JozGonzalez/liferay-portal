@@ -29,13 +29,25 @@ html#{$cadmin-selector} {
 			}
 		}
 
-		.applications-menu-header .nav-link {
-			padding-bottom: 16px;
-			padding-top: 16px;
+		.applications-menu-header {
+			flex-shrink: 0;
 
-			&.active {
-				color: $cadmin-dark;
+			.nav-tabs {
+				background-color: $cadmin-white;
+				border-width: 0;
+				margin-top: 8px;
+				padding-left: 4px;
+				padding-right: 4px;
 			}
+
+			.nav-link {
+				padding-bottom: 6px;
+				padding-top: 6px;
+			}
+		}
+
+		.applications-menu-footer {
+			flex-shrink: 0;
 		}
 
 		.applications-menu-wrapper {
@@ -63,7 +75,7 @@ html#{$cadmin-selector} {
 		}
 
 		.applications-menu-border-top {
-			border-top: 1px solid $cadmin-light;
+			border-top: 1px solid $cadmin-gray-400;
 		}
 
 		.applications-menu-content {
@@ -128,7 +140,7 @@ html#{$cadmin-selector} {
 			@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
 				bottom: 100%;
 				left: 8px;
-				padding: 22px 24px;
+				padding: 12px 24px;
 				position: absolute;
 			}
 		}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -29,6 +20,7 @@ const Modal = ({
 	bodyHTML,
 	buttons,
 	center,
+	className,
 	containerProps = {
 		className: 'cadmin',
 	},
@@ -53,12 +45,23 @@ const Modal = ({
 	zIndex,
 }) => {
 	const [loading, setLoading] = useState(true);
-	const [visible, setVisible] = useState(true);
+
+	const {observer, onOpenChange, open} = useModal({
+		onClose: () => processClose(),
+	});
+
+	useEffect(() => {
+		onOpenChange(true);
+	}, [onOpenChange]);
 
 	const eventHandlersRef = useRef([]);
 
 	const processClose = useCallback(() => {
-		setVisible(false);
+		if (!open) {
+			return;
+		}
+
+		onOpenChange(false);
 
 		document.body.classList.remove('modal-open');
 
@@ -73,11 +76,7 @@ const Modal = ({
 		if (onClose) {
 			onClose();
 		}
-	}, [eventHandlersRef, onClose]);
-
-	const {observer} = useModal({
-		onClose: () => processClose(),
-	});
+	}, [eventHandlersRef, onClose, onOpenChange, open]);
 
 	const onButtonClick = ({formId, onClick, type}) => {
 		const submitForm = (form) => {
@@ -200,10 +199,10 @@ const Modal = ({
 
 	return (
 		<>
-			{visible && (
+			{open && (
 				<ClayModal
 					center={center}
-					className="liferay-modal"
+					className={classNames('liferay-modal', className)}
 					containerProps={{...containerProps}}
 					disableAutoClose={disableAutoClose}
 					id={id}
@@ -228,6 +227,12 @@ const Modal = ({
 									) : (
 										title
 									)}
+
+									{loading && (
+										<span className="sr-only">
+											- {Liferay.Language.get('loading')}
+										</span>
+									)}
 								</ClayModal.Header>
 							)}
 
@@ -242,6 +247,8 @@ const Modal = ({
 								{url && (
 									<>
 										{loading && <ClayLoadingIndicator />}
+
+										<StatusMessage loading={loading} />
 
 										<Iframe
 											iframeBodyCssClass={
@@ -321,6 +328,22 @@ const Modal = ({
 			)}
 		</>
 	);
+};
+
+const StatusMessage = ({loading}) => {
+	const [showMessage, setShowMessage] = useState(true);
+
+	useEffect(() => {
+		if (!loading) {
+			setTimeout(() => setShowMessage(false), 1000);
+		}
+	}, [loading]);
+
+	return showMessage ? (
+		<span className="sr-only" role="status">
+			{!loading && Liferay.Language.get('loaded')}
+		</span>
+	) : null;
 };
 
 const openModal = (props) => {
@@ -716,10 +739,14 @@ Modal.propTypes = {
 		PropTypes.shape({
 			displayType: PropTypes.oneOf([
 				'danger',
+				'info',
 				'link',
+				null,
 				'primary',
 				'secondary',
+				'success',
 				'unstyled',
+				'warning',
 			]),
 			formId: PropTypes.string,
 			id: PropTypes.string,

@@ -1,25 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.servlet.taglib;
 
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
-import com.liferay.frontend.js.module.launcher.JSModuleLauncher;
 import com.liferay.frontend.js.web.internal.servlet.taglib.aui.PortletDataRendererImpl;
 import com.liferay.frontend.taglib.internal.util.ServicesProvider;
 import com.liferay.petra.lang.ClassLoaderPool;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -46,12 +37,17 @@ import java.util.Collections;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockPageContext;
@@ -82,15 +78,24 @@ public class ComponentTagTest {
 			ScriptData.class, "_portletDataRenderer");
 
 		portletDataRendererField.set(null, new PortletDataRendererImpl());
+
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+	}
+
+	@After
+	public void tearDown() {
+		_servicesProviderMockedStatic.close();
+		_frameworkUtilMockedStatic.close();
 	}
 
 	@Test
 	public void testDoEndTag() throws Exception {
-		ServicesProvider servicesProvider = new ServicesProvider();
-
-		servicesProvider.setJsModuleLauncher(
-			Mockito.mock(JSModuleLauncher.class));
-
 		ComponentTag componentTag = new ComponentTag();
 
 		HttpServletRequest httpServletRequest = _getHttpServletRequest();
@@ -167,5 +172,11 @@ public class ComponentTagTest {
 
 		return stringBuffer.toString();
 	}
+
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
+
+	private final MockedStatic<ServicesProvider> _servicesProviderMockedStatic =
+		Mockito.mockStatic(ServicesProvider.class);
 
 }

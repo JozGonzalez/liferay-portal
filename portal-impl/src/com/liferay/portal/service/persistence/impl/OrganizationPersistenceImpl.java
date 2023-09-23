@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.persistence.impl;
@@ -61,7 +52,6 @@ import com.liferay.portal.model.impl.OrganizationModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -5955,21 +5945,21 @@ public class OrganizationPersistenceImpl
 
 		name = Objects.toString(name, "");
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			Organization.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {companyId, name};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_N, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
 		if (result instanceof Organization) {
 			Organization organization = (Organization)result;
@@ -5979,6 +5969,14 @@ public class OrganizationPersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						Organization.class, organization.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -8990,21 +8988,21 @@ public class OrganizationPersistenceImpl
 
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			Organization.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {externalReferenceCode, companyId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByERC_C, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
 		if (result instanceof Organization) {
 			Organization organization = (Organization)result;
@@ -9016,6 +9014,14 @@ public class OrganizationPersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						Organization.class, organization.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -10061,17 +10067,18 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param groupPK the primary key of the group
+	 * @return <code>true</code> if an association between the organization and the group was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addGroup(long pk, long groupPK) {
+	public boolean addGroup(long pk, long groupPK) {
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToGroupTableMapper.addTableMapping(
+			return organizationToGroupTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk, groupPK);
 		}
 		else {
-			organizationToGroupTableMapper.addTableMapping(
+			return organizationToGroupTableMapper.addTableMapping(
 				organization.getCompanyId(), pk, groupPK);
 		}
 	}
@@ -10081,17 +10088,20 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param group the group
+	 * @return <code>true</code> if an association between the organization and the group was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addGroup(long pk, com.liferay.portal.kernel.model.Group group) {
+	public boolean addGroup(
+		long pk, com.liferay.portal.kernel.model.Group group) {
+
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToGroupTableMapper.addTableMapping(
+			return organizationToGroupTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk, group.getPrimaryKey());
 		}
 		else {
-			organizationToGroupTableMapper.addTableMapping(
+			return organizationToGroupTableMapper.addTableMapping(
 				organization.getCompanyId(), pk, group.getPrimaryKey());
 		}
 	}
@@ -10101,9 +10111,10 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param groupPKs the primary keys of the groups
+	 * @return <code>true</code> if at least one association between the organization and the groups was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addGroups(long pk, long[] groupPKs) {
+	public boolean addGroups(long pk, long[] groupPKs) {
 		long companyId = 0;
 
 		Organization organization = fetchByPrimaryKey(pk);
@@ -10115,8 +10126,14 @@ public class OrganizationPersistenceImpl
 			companyId = organization.getCompanyId();
 		}
 
-		organizationToGroupTableMapper.addTableMappings(
+		long[] addedKeys = organizationToGroupTableMapper.addTableMappings(
 			companyId, pk, groupPKs);
+
+		if (addedKeys.length > 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -10124,12 +10141,13 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param groups the groups
+	 * @return <code>true</code> if at least one association between the organization and the groups was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addGroups(
+	public boolean addGroups(
 		long pk, List<com.liferay.portal.kernel.model.Group> groups) {
 
-		addGroups(
+		return addGroups(
 			pk,
 			ListUtil.toLongArray(
 				groups,
@@ -10373,17 +10391,18 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param userPK the primary key of the user
+	 * @return <code>true</code> if an association between the organization and the user was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addUser(long pk, long userPK) {
+	public boolean addUser(long pk, long userPK) {
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToUserTableMapper.addTableMapping(
+			return organizationToUserTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk, userPK);
 		}
 		else {
-			organizationToUserTableMapper.addTableMapping(
+			return organizationToUserTableMapper.addTableMapping(
 				organization.getCompanyId(), pk, userPK);
 		}
 	}
@@ -10393,17 +10412,18 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param user the user
+	 * @return <code>true</code> if an association between the organization and the user was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addUser(long pk, com.liferay.portal.kernel.model.User user) {
+	public boolean addUser(long pk, com.liferay.portal.kernel.model.User user) {
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToUserTableMapper.addTableMapping(
+			return organizationToUserTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk, user.getPrimaryKey());
 		}
 		else {
-			organizationToUserTableMapper.addTableMapping(
+			return organizationToUserTableMapper.addTableMapping(
 				organization.getCompanyId(), pk, user.getPrimaryKey());
 		}
 	}
@@ -10413,9 +10433,10 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param userPKs the primary keys of the users
+	 * @return <code>true</code> if at least one association between the organization and the users was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addUsers(long pk, long[] userPKs) {
+	public boolean addUsers(long pk, long[] userPKs) {
 		long companyId = 0;
 
 		Organization organization = fetchByPrimaryKey(pk);
@@ -10427,7 +10448,14 @@ public class OrganizationPersistenceImpl
 			companyId = organization.getCompanyId();
 		}
 
-		organizationToUserTableMapper.addTableMappings(companyId, pk, userPKs);
+		long[] addedKeys = organizationToUserTableMapper.addTableMappings(
+			companyId, pk, userPKs);
+
+		if (addedKeys.length > 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -10435,12 +10463,13 @@ public class OrganizationPersistenceImpl
 	 *
 	 * @param pk the primary key of the organization
 	 * @param users the users
+	 * @return <code>true</code> if at least one association between the organization and the users was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addUsers(
+	public boolean addUsers(
 		long pk, List<com.liferay.portal.kernel.model.User> users) {
 
-		addUsers(
+		return addUsers(
 			pk,
 			ListUtil.toLongArray(
 				users, com.liferay.portal.kernel.model.User.USER_ID_ACCESSOR));
@@ -10875,32 +10904,16 @@ public class OrganizationPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setOrganizationUtilPersistence(this);
+		OrganizationUtil.setPersistence(this);
 	}
 
 	public void destroy() {
-		_setOrganizationUtilPersistence(null);
+		OrganizationUtil.setPersistence(null);
 
 		EntityCacheUtil.removeCache(OrganizationImpl.class.getName());
 
 		TableMapperFactory.removeTableMapper("Groups_Orgs");
 		TableMapperFactory.removeTableMapper("Users_Orgs");
-	}
-
-	private void _setOrganizationUtilPersistence(
-		OrganizationPersistence organizationPersistence) {
-
-		try {
-			Field field = OrganizationUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, organizationPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@BeanReference(type = GroupPersistence.class)

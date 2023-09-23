@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.resolver;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -210,6 +202,18 @@ public class DefaultUserResolver implements UserResolver {
 		return String.valueOf(values.get(0));
 	}
 
+	private String[] _getValuesAsString(
+		String key, Map<String, List<Serializable>> attributesMap) {
+
+		List<Serializable> values = attributesMap.get(key);
+
+		if (ListUtil.isEmpty(values)) {
+			return null;
+		}
+
+		return ArrayUtil.toStringArray(values);
+	}
+
 	private User _importUser(
 			long companyId, SamlSpIdpConnection samlSpIdpConnection,
 			String subjectNameIdentifier, String nameIdFormat,
@@ -326,7 +330,7 @@ public class DefaultUserResolver implements UserResolver {
 
 		for (String key : attributesMap.keySet()) {
 			userProcessor.setValueArray(
-				key, new String[] {_getValueAsString(key, attributesMap)});
+				key, _getValuesAsString(key, attributesMap));
 		}
 
 		return userProcessor.process(serviceContext);

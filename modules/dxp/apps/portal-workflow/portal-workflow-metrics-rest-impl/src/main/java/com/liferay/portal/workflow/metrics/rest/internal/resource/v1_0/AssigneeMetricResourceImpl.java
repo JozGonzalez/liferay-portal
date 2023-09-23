@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -28,6 +19,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.aggregation.AggregationResult;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.aggregation.bucket.Bucket;
 import com.liferay.portal.search.aggregation.bucket.FilterAggregation;
@@ -41,6 +33,7 @@ import com.liferay.portal.search.aggregation.pipeline.BucketSelectorPipelineAggr
 import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.TermsQuery;
@@ -56,17 +49,16 @@ import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.AssigneeU
 import com.liferay.portal.workflow.metrics.rest.internal.odata.entity.v1_0.AssigneeMetricEntityModel;
 import com.liferay.portal.workflow.metrics.rest.internal.resource.helper.ResourceHelper;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.AssigneeMetricResource;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -139,14 +131,8 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 		TermsQuery termsQuery = _queries.terms(
 			completed ? "completionUserId" : "assigneeIds");
 
-		Stream<Long> stream = userIds.stream();
-
 		termsQuery.addValues(
-			stream.map(
-				String::valueOf
-			).toArray(
-				Object[]::new
-			));
+			transformToArray(userIds, String::valueOf, Object.class));
 
 		return termsQuery;
 	}
@@ -164,8 +150,8 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 		slaTaskResultsBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT));
 		slaTaskResultsBooleanQuery.addMustQueryClauses(
 			_createSLATaskResultsBooleanQuery(
 				completed, dateEnd, dateStart, instanceIds, processId,
@@ -176,8 +162,8 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 		tasksBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
 		tasksBooleanQuery.addMustQueryClauses(
 			_createTasksBooleanQuery(
 				completed, dateEnd, dateStart, instanceIds, processId,
@@ -195,15 +181,16 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 			TermsQuery termsQuery = _queries.terms("instanceId");
 
 			termsQuery.addValues(
-				Stream.of(
-					instanceIds
-				).filter(
-					instanceId -> instanceId > 0
-				).map(
-					String::valueOf
-				).toArray(
-					Object[]::new
-				));
+				transform(
+					instanceIds,
+					instanceId -> {
+						if (instanceId <= 0) {
+							return null;
+						}
+
+						return String.valueOf(instanceId);
+					},
+					Object.class));
 
 			booleanQuery.addMustQueryClauses(termsQuery);
 		}
@@ -254,8 +241,8 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 		booleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
 
 		return booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
 	}
@@ -372,31 +359,26 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()),
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT,
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 		searchSearchRequest.setQuery(
 			_createBooleanQuery(
 				completed, dateEnd, dateStart, instanceIds, processId,
 				taskNames, userIds));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getAggregationResultsMap
-		).map(
-			aggregationResultsMap ->
-				(TermsAggregationResult)aggregationResultsMap.get("assigneeId")
-		).map(
-			TermsAggregationResult::getBuckets
-		).flatMap(
-			Collection::stream
-		).map(
-			this::_toAssigneeMetric
-		).collect(
-			Collectors.toList()
-		);
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		Map<String, AggregationResult> aggregationResultsMap =
+			searchSearchResponse.getAggregationResultsMap();
+
+		TermsAggregationResult termsAggregationResult =
+			(TermsAggregationResult)aggregationResultsMap.get("assigneeId");
+
+		return transform(
+			termsAggregationResult.getBuckets(), this::_toAssigneeMetric);
 	}
 
 	private long _getAssigneeMetricsCount(
@@ -410,27 +392,28 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 			_aggregations.cardinality(
 				"assigneeId", completed ? "completionUserId" : "assigneeIds"));
 		searchSearchRequest.setIndexNames(
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 		searchSearchRequest.setQuery(
 			_createTasksBooleanQuery(
 				completed, dateEnd, dateStart, instanceIds, processId,
 				taskNames, userIds));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getAggregationResultsMap
-		).map(
-			aggregationResultsMap ->
-				(CardinalityAggregationResult)aggregationResultsMap.get(
-					"assigneeId")
-		).map(
-			CardinalityAggregationResult::getValue
-		).findFirst(
-		).orElseGet(
-			() -> 0L
-		);
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		Map<String, AggregationResult> aggregationResultsMap =
+			searchSearchResponse.getAggregationResultsMap();
+
+		CardinalityAggregationResult cardinalityAggregationResult =
+			(CardinalityAggregationResult)aggregationResultsMap.get(
+				"assigneeId");
+
+		if (cardinalityAggregationResult == null) {
+			return 0L;
+		}
+
+		return cardinalityAggregationResult.getValue();
 	}
 
 	private long _getDurationTaskAvg(Bucket bucket) {
@@ -479,19 +462,14 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 			params.put("usersRoles", roleIds);
 		}
 
-		return Stream.of(
-			_userLocalService.search(
-				contextCompany.getCompanyId(), keywords, keywords, keywords,
-				null, null, WorkflowConstants.STATUS_ANY, params, false,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				(OrderByComparator<User>)null)
-		).flatMap(
-			List::parallelStream
-		).map(
-			User::getUserId
-		).collect(
-			Collectors.toSet()
-		);
+		return new HashSet<>(
+			transform(
+				_userLocalService.search(
+					contextCompany.getCompanyId(), keywords, keywords, keywords,
+					null, null, WorkflowConstants.STATUS_ANY, params, false,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					(OrderByComparator<User>)null),
+				User::getUserId));
 	}
 
 	private boolean _isOrderByDurationTaskAvg(String fieldName) {
@@ -590,6 +568,9 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 	private Aggregations _aggregations;
 
 	@Reference
+	private IndexNameBuilder _indexNameBuilder;
+
+	@Reference
 	private Language _language;
 
 	@Reference
@@ -607,16 +588,8 @@ public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 	@Reference
 	private SearchRequestExecutor _searchRequestExecutor;
 
-	@Reference(target = "(workflow.metrics.index.entity.name=sla-task-result)")
-	private WorkflowMetricsIndexNameBuilder
-		_slaTaskResultWorkflowMetricsIndexNameBuilder;
-
 	@Reference
 	private Sorts _sorts;
-
-	@Reference(target = "(workflow.metrics.index.entity.name=task)")
-	private WorkflowMetricsIndexNameBuilder
-		_taskWorkflowMetricsIndexNameBuilder;
 
 	@Reference
 	private UserLocalService _userLocalService;

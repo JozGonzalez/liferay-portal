@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -186,8 +177,8 @@ public class UserImpl extends UserBaseImpl {
 	/**
 	 * Returns the user's digest.
 	 *
+	 * @return     the user's digest
 	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 * @return the user's digest
 	 */
 	@Deprecated
 	@Override
@@ -204,18 +195,26 @@ public class UserImpl extends UserBaseImpl {
 	/**
 	 * Returns a digest for the user, incorporating the password.
 	 *
+	 * @param      password a password to incorporate with the digest
+	 * @return     a digest for the user, incorporating the password
 	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 * @param  password a password to incorporate with the digest
-	 * @return a digest for the user, incorporating the password
 	 */
 	@Deprecated
 	@Override
 	public String getDigest(String password) {
 		if (Validator.isNull(getScreenName())) {
-			throw new IllegalStateException("Screen name is null");
+			if (_log.isDebugEnabled()) {
+				_log.debug("Screen name is required to compute the digest");
+			}
+
+			return null;
 		}
 		else if (Validator.isNull(getEmailAddress())) {
-			throw new IllegalStateException("Email address is null");
+			if (_log.isDebugEnabled()) {
+				_log.debug("Email address is required to compute the digest");
+			}
+
+			return null;
 		}
 
 		StringBundler sb = new StringBundler(5);
@@ -331,7 +330,7 @@ public class UserImpl extends UserBaseImpl {
 			ThemeDisplay themeDisplay, boolean privateLayout)
 		throws PortalException {
 
-		if (isDefaultUser() || (themeDisplay == null)) {
+		if (isGuestUser() || (themeDisplay == null)) {
 			return StringPool.BLANK;
 		}
 
@@ -729,7 +728,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public boolean hasMySites() throws PortalException {
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			return false;
 		}
 
@@ -784,9 +783,18 @@ public class UserImpl extends UserBaseImpl {
 		return false;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #isGuestUser}
+	 */
+	@Deprecated
+	@Override
+	public boolean isDefaultUser() {
+		return isGuestUser();
+	}
+
 	@Override
 	public boolean isEmailAddressComplete() {
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			return true;
 		}
 
@@ -802,7 +810,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public boolean isEmailAddressVerificationComplete() {
-		if (isDefaultUser() || isEmailAddressVerified()) {
+		if (isGuestUser() || isEmailAddressVerified()) {
 			return true;
 		}
 
@@ -831,8 +839,26 @@ public class UserImpl extends UserBaseImpl {
 	}
 
 	@Override
+	public boolean isGuestUser() {
+		if (getType() == UserConstants.TYPE_GUEST) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isMale() throws PortalException {
 		return getMale();
+	}
+
+	@Override
+	public boolean isOnDemandUser() {
+		if (getType() == UserConstants.TYPE_ON_DEMAND_USER) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -842,7 +868,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public boolean isReminderQueryComplete() {
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			return true;
 		}
 
@@ -859,8 +885,19 @@ public class UserImpl extends UserBaseImpl {
 	}
 
 	@Override
+	public boolean isServiceAccountUser() {
+		if ((getType() == UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT) ||
+			(getType() == UserConstants.TYPE_SERVICE_ACCOUNT)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isSetupComplete() {
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			return true;
 		}
 
@@ -876,7 +913,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public boolean isTermsOfUseComplete() {
-		if (isDefaultUser() || isAgreedToTermsOfUse()) {
+		if (isGuestUser() || isAgreedToTermsOfUse()) {
 			return true;
 		}
 
@@ -909,7 +946,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public void setLanguageId(String languageId) {
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			_locale = LocaleUtil.fromLanguageId(languageId, false);
 		}
 		else {

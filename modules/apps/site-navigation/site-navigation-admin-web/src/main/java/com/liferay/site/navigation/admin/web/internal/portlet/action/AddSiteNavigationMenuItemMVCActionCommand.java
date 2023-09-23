@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.admin.web.internal.portlet.action;
@@ -70,6 +61,8 @@ public class AddSiteNavigationMenuItemMVCActionCommand
 
 		long siteNavigationMenuId = ParamUtil.getLong(
 			actionRequest, "siteNavigationMenuId");
+		long parentSiteNavigationMenuItemId = ParamUtil.getLong(
+			actionRequest, "parentSiteNavigationMenuItemId");
 
 		String type = ParamUtil.getString(actionRequest, "type");
 
@@ -85,9 +78,17 @@ public class AddSiteNavigationMenuItemMVCActionCommand
 		try {
 			SiteNavigationMenuItem siteNavigationMenuItem =
 				_siteNavigationMenuItemService.addSiteNavigationMenuItem(
-					themeDisplay.getScopeGroupId(), siteNavigationMenuId, 0,
-					type, typeSettingsUnicodeProperties.toString(),
-					serviceContext);
+					themeDisplay.getScopeGroupId(), siteNavigationMenuId,
+					parentSiteNavigationMenuItemId, type,
+					typeSettingsUnicodeProperties.toString(), serviceContext);
+
+			int order = ParamUtil.getInteger(actionRequest, "order", -1);
+
+			if (order >= 0) {
+				_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
+					siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+					parentSiteNavigationMenuItemId, order);
+			}
 
 			jsonObject.put(
 				"siteNavigationMenuItemId",

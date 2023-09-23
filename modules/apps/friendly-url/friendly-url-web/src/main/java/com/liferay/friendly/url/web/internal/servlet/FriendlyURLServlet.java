@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.friendly.url.web.internal.servlet;
@@ -18,6 +9,7 @@ import com.liferay.friendly.url.info.item.provider.InfoItemFriendlyURLProvider;
 import com.liferay.friendly.url.info.item.updater.InfoItemFriendlyURLUpdater;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
@@ -122,7 +114,7 @@ public class FriendlyURLServlet extends HttpServlet {
 		try {
 			User user = _portal.getUser(httpServletRequest);
 
-			if ((user == null) || user.isDefaultUser()) {
+			if ((user == null) || user.isGuestUser()) {
 				_writeJSON(httpServletResponse, JSONUtil.put("success", false));
 			}
 			else {
@@ -249,9 +241,11 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className);
+				InfoItemObjectProvider.class, className,
+				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
-		Object object = infoItemObjectProvider.getInfoItem(classPK);
+		Object object = infoItemObjectProvider.getInfoItem(
+			new ClassPKInfoItemIdentifier(classPK));
 
 		InfoItemFriendlyURLProvider<Object> infoItemFriendlyURLProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(

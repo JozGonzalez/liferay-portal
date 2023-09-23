@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util;
@@ -35,6 +26,7 @@ import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.RequestBody;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Response;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.ResponseCode;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Schema;
+import com.liferay.portal.vulcan.permission.Permission;
 
 import java.io.File;
 import java.io.IOException;
@@ -145,6 +137,9 @@ public class OpenAPIParserUtil {
 		}
 		else if (name.startsWith("[L") && name.endsWith(";")) {
 			return name.substring(2, name.length() - 1);
+		}
+		else if (name.startsWith("[[")) {
+			return getElementClassName(name.substring(1)) + "[]";
 		}
 
 		return name;
@@ -272,22 +267,7 @@ public class OpenAPIParserUtil {
 		}
 
 		if (schema.getItems() != null) {
-			Items items = schema.getItems();
-
-			String javaDataType = _openAPIDataTypeMap.get(
-				new AbstractMap.SimpleImmutableEntry<>(
-					items.getType(), items.getFormat()));
-
-			if (items.getAdditionalPropertySchema() != null) {
-				javaDataType = Map.class.getName();
-			}
-
-			if (items.getReference() != null) {
-				javaDataType = javaDataTypeMap.get(
-					getReferenceName(items.getReference()));
-			}
-
-			return getArrayClassName(javaDataType);
+			return _getItemsDataType(javaDataTypeMap, schema.getItems());
 		}
 
 		if (Objects.equals(schema.getType(), "object")) {
@@ -593,6 +573,34 @@ public class OpenAPIParserUtil {
 		}
 	}
 
+	private static String _getItemsDataType(
+		Map<String, String> javaDataTypeMap, Items items) {
+
+		String type = items.getType();
+
+		if (StringUtil.equals(type, "array")) {
+			Items childItems = items.getItems();
+
+			if (childItems != null) {
+				return "[" + _getItemsDataType(javaDataTypeMap, childItems);
+			}
+		}
+
+		String javaDataType = _openAPIDataTypeMap.get(
+			new AbstractMap.SimpleImmutableEntry<>(type, items.getFormat()));
+
+		if (items.getAdditionalPropertySchema() != null) {
+			javaDataType = Map.class.getName();
+		}
+
+		if (items.getReference() != null) {
+			javaDataType = javaDataTypeMap.get(
+				getReferenceName(items.getReference()));
+		}
+
+		return getArrayClassName(javaDataType);
+	}
+
 	private static String _getMapType(
 		Map<String, String> javaDataTypeMap, Schema schema) {
 
@@ -654,6 +662,9 @@ public class OpenAPIParserUtil {
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("object", null),
 					Object.class.getName());
+				put(
+					new AbstractMap.SimpleImmutableEntry<>("permission", null),
+					Permission.class.getName());
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("string", null),
 					String.class.getName());

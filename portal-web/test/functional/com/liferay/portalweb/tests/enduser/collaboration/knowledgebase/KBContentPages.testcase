@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -20,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -88,7 +88,7 @@ definition {
 
 		PortletEntry.save();
 
-		var userPortrait = selenium.getAttribute("//img[contains(@id,'avatar') and contains(@src,'image')]@src");
+		var userPortrait = selenium.getAttribute("//img[contains(@class,'logo-selector') and contains(@src,'image')]@src");
 
 		var userPortrait = StringUtil.extractLast(${userPortrait}, "image/");
 

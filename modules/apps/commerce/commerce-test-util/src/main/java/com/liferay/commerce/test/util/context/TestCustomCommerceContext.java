@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.test.util.context;
 
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.BaseCommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
@@ -23,8 +14,8 @@ import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 
 /**
  * @author Alec Sloan
@@ -33,8 +24,9 @@ public class TestCustomCommerceContext extends BaseCommerceContext {
 
 	public TestCustomCommerceContext(
 		long companyId, long commerceChannelGroupId, long orderId,
-		long commerceAccountId, CommerceAccountHelper commerceAccountHelper,
-		CommerceAccountLocalService commerceAccountLocalService,
+		long commerceAccountId,
+		AccountEntryLocalService accountEntryLocalService,
+		AccountGroupLocalService accountGroupLocalService,
 		CommerceChannelAccountEntryRelLocalService
 			commerceChannelAccountEntryRelLocalService,
 		CommerceChannelLocalService commerceChannelLocalService,
@@ -44,7 +36,7 @@ public class TestCustomCommerceContext extends BaseCommerceContext {
 
 		super(
 			companyId, commerceChannelGroupId, orderId, commerceAccountId,
-			commerceAccountHelper, commerceAccountLocalService,
+			accountEntryLocalService, accountGroupLocalService,
 			commerceChannelAccountEntryRelLocalService,
 			commerceChannelLocalService, commerceCurrencyLocalService,
 			commerceOrderService, configurationProvider);

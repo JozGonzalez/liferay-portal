@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.trash;
@@ -17,7 +8,6 @@ package com.liferay.journal.internal.trash;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.internal.util.JournalUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
@@ -284,7 +274,7 @@ public class JournalArticleTrashHandler extends BaseJournalTrashHandler {
 
 		article.setArticleId(name);
 
-		_journalArticleLocalService.updateJournalArticle(article);
+		article = _journalArticleLocalService.updateJournalArticle(article);
 
 		JournalArticleResource articleResource =
 			_journalArticleResourceLocalService.getArticleResource(
@@ -352,15 +342,6 @@ public class JournalArticleTrashHandler extends BaseJournalTrashHandler {
 		JournalArticle article = _journalArticleLocalService.getLatestArticle(
 			classPK);
 
-		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			_portal.getSiteGroupId(article.getGroupId()),
-			_portal.getClassNameId(JournalArticle.class),
-			article.getDDMStructureKey(), true);
-
-		if (ddmStructure == null) {
-			return;
-		}
-
 		if (containerModelId == TrashEntryConstants.DEFAULT_CONTAINER_ID) {
 			containerModelId = article.getFolderId();
 		}
@@ -373,7 +354,7 @@ public class JournalArticleTrashHandler extends BaseJournalTrashHandler {
 
 		for (DDMStructure folderDDMStructure : folderDDMStructures) {
 			if (folderDDMStructure.getStructureId() ==
-					ddmStructure.getStructureId()) {
+					article.getDDMStructureId()) {
 
 				return;
 			}
@@ -399,9 +380,6 @@ public class JournalArticleTrashHandler extends BaseJournalTrashHandler {
 		return _journalArticleModelResourcePermission.contains(
 			permissionChecker, classPK, actionId);
 	}
-
-	@Reference
-	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;

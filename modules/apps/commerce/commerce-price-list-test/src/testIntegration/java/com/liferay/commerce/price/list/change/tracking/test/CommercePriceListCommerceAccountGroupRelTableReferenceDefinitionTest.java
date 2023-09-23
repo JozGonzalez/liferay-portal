@@ -1,28 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.change.tracking.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.test.util.BaseTableReferenceDefinitionTestCase;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountGroupRelLocalService;
-import com.liferay.commerce.price.list.test.util.CommercePriceListTestUtil;
+import com.liferay.commerce.test.util.price.list.CommercePriceListTestUtil;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -60,11 +53,20 @@ public class
 			group.getGroupId(), false,
 			CommercePriceListConstants.TYPE_PRICE_LIST, 1.0);
 
-		_commerceAccountGroup =
-			_commerceAccountGroupLocalService.addCommerceAccountGroup(
-				group.getCompanyId(), RandomTestUtil.randomString(), 0, false,
-				null,
-				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(group.getGroupId());
+
+		_accountGroup = _accountGroupLocalService.addAccountGroup(
+			serviceContext.getUserId(), null, RandomTestUtil.randomString(),
+			serviceContext);
+
+		_accountGroup.setExternalReferenceCode(null);
+		_accountGroup.setDefaultAccountGroup(false);
+		_accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
+		_accountGroup.setExpandoBridgeAttributes(serviceContext);
+
+		_accountGroup = _accountGroupLocalService.updateAccountGroup(
+			_accountGroup);
 	}
 
 	@Override
@@ -73,19 +75,18 @@ public class
 			addCommercePriceListCommerceAccountGroupRel(
 				TestPropsValues.getUserId(),
 				_commercePriceList.getCommercePriceListId(),
-				_commerceAccountGroup.getCommerceAccountGroupId(), 0,
+				_accountGroup.getAccountGroupId(), 0,
 				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
 
 	@Inject
-	private static CommerceAccountGroupLocalService
-		_commerceAccountGroupLocalService;
+	private static AccountGroupLocalService _accountGroupLocalService;
 
 	@Inject
 	private static CommercePriceListCommerceAccountGroupRelLocalService
 		_commercePriceListCommerceAccountGroupRelLocalService;
 
-	private CommerceAccountGroup _commerceAccountGroup;
+	private AccountGroup _accountGroup;
 	private CommercePriceList _commercePriceList;
 
 }

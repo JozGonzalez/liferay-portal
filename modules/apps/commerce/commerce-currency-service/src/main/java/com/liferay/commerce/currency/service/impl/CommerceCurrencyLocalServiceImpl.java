@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.service.impl;
@@ -31,6 +22,7 @@ import com.liferay.commerce.currency.util.comparator.CommerceCurrencyPriorityCom
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -40,7 +32,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -213,7 +204,8 @@ public class CommerceCurrencyLocalServiceImpl
 	}
 
 	@Override
-	public void importDefaultValues(ServiceContext serviceContext)
+	public void importDefaultValues(
+			boolean updateExchangeRate, ServiceContext serviceContext)
 		throws Exception {
 
 		Class<?> clazz = getClass();
@@ -239,6 +231,7 @@ public class CommerceCurrencyLocalServiceImpl
 			if (commerceCurrency == null) {
 				boolean primary = jsonObject.getBoolean("primary");
 				double priority = jsonObject.getDouble("priority");
+				double rate = jsonObject.getDouble("rate");
 				String symbol = jsonObject.getString("symbol");
 
 				RoundingTypeConfiguration roundingTypeConfiguration =
@@ -263,20 +256,23 @@ public class CommerceCurrencyLocalServiceImpl
 
 				commerceCurrencyLocalService.addCommerceCurrency(
 					serviceContext.getUserId(), code, nameMap, symbol,
-					BigDecimal.ONE, formatPatternMap,
+					BigDecimal.valueOf(rate), formatPatternMap,
 					roundingTypeConfiguration.maximumFractionDigits(),
 					roundingTypeConfiguration.minimumFractionDigits(),
 					roundingMode.name(), primary, priority, true);
 			}
 		}
 
-		for (String exchangeRateProviderKey :
-				_exchangeRateProviderRegistry.getExchangeRateProviderKeys()) {
+		if (updateExchangeRate) {
+			for (String exchangeRateProviderKey :
+					_exchangeRateProviderRegistry.
+						getExchangeRateProviderKeys()) {
 
-			_updateExchangeRates(
-				serviceContext.getCompanyId(), exchangeRateProviderKey);
+				_updateExchangeRates(
+					serviceContext.getCompanyId(), exchangeRateProviderKey);
 
-			break;
+				break;
+			}
 		}
 	}
 
@@ -325,11 +321,11 @@ public class CommerceCurrencyLocalServiceImpl
 
 	@Override
 	public CommerceCurrency updateCommerceCurrency(
-			long commerceCurrencyId, String code, Map<Locale, String> nameMap,
-			String symbol, BigDecimal rate,
-			Map<Locale, String> formatPatternMap, int maxFractionDigits,
-			int minFractionDigits, String roundingMode, boolean primary,
-			double priority, boolean active, ServiceContext serviceContext)
+			long commerceCurrencyId, Map<Locale, String> nameMap, String symbol,
+			BigDecimal rate, Map<Locale, String> formatPatternMap,
+			int maxFractionDigits, int minFractionDigits, String roundingMode,
+			boolean primary, double priority, boolean active,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		CommerceCurrency commerceCurrency =
@@ -341,7 +337,8 @@ public class CommerceCurrencyLocalServiceImpl
 
 		_validate(
 			commerceCurrency.getCommerceCurrencyId(),
-			serviceContext.getCompanyId(), code, nameMap, primary);
+			serviceContext.getCompanyId(), commerceCurrency.getCode(), nameMap,
+			primary);
 
 		if (formatPatternMap.isEmpty()) {
 			formatPatternMap.put(
@@ -362,7 +359,6 @@ public class CommerceCurrencyLocalServiceImpl
 			roundingMode = roundingModeEnum.name();
 		}
 
-		commerceCurrency.setCode(code);
 		commerceCurrency.setNameMap(nameMap);
 		commerceCurrency.setSymbol(symbol);
 		commerceCurrency.setRate(rate);

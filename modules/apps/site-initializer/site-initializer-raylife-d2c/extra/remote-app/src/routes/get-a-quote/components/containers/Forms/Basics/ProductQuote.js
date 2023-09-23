@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 import classNames from 'classnames';
 import React, {useCallback, useContext, useEffect} from 'react';
 import {Controller, useFormContext} from 'react-hook-form';
@@ -78,47 +70,61 @@ export function FormBasicProductQuote({form}) {
 				</div>
 
 				<fieldset
-					className="d-flex flex-column mb-4 spacer-3"
+					className="d-flex flex-column mb-4 spacer-3 w-100"
 					id="productQuote"
 				>
-					<Controller
-						control={control}
-						defaultValue={form?.basics?.productId}
-						name="basics.productId"
-						render={({field}) =>
-							productQuotes.map((quote) => (
-								<Radio
-									{...field}
-									description={quote.description}
-									key={quote.id}
-									label={quote.title}
-									renderActions={
-										quote.template.allowed && (
-											<MoreInfoButton
-												callback={() =>
-													updateState(quote.id)
-												}
-												event={TIP_EVENT}
-												selected={isSelected(quote.id)}
-												value={{
-													inputName: field.name,
-													templateName:
-														quote.template.name,
-													value: quote.id,
-												}}
-											/>
-										)
-									}
-									selected={
-										quote.id === form?.basics?.productId
-									}
-									sideLabel={quote.period}
-									value={quote.id}
-								/>
-							))
-						}
-						rules={{required: true}}
-					/>
+					{!productQuotes.length && (
+						<div className="align-items-center d-flex justify-content-center mt-5">
+							<ClayLoadingIndicator
+								displayType="primary"
+								shape="squares"
+								size="sm"
+							/>
+						</div>
+					)}
+
+					{!!productQuotes.length && (
+						<Controller
+							control={control}
+							defaultValue={form?.basics?.productId}
+							name="basics.productId"
+							render={({field}) =>
+								productQuotes.map((quote) => (
+									<Radio
+										{...field}
+										description={quote.description}
+										key={quote.id}
+										label={quote.title}
+										renderActions={
+											quote.template.allowed && (
+												<MoreInfoButton
+													callback={() =>
+														updateState(quote.id)
+													}
+													event={TIP_EVENT}
+													selected={isSelected(
+														quote.id
+													)}
+													value={{
+														inputName: field.name,
+														templateName:
+															quote.template.name,
+														value: quote.id,
+													}}
+												/>
+											)
+										}
+										selected={
+											quote.id === form?.basics?.productId
+										}
+										sideLabel={quote.period}
+										value={quote.id}
+									/>
+								))
+							}
+							rules={{required: true}}
+						/>
+					)}
 				</fieldset>
 			</div>
 		</div>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.friendly.url.servlet.test;
@@ -19,8 +10,10 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.encryptor.Encryptor;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
@@ -34,6 +27,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -49,6 +43,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -75,6 +70,7 @@ import java.util.Objects;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -159,7 +155,7 @@ public class FriendlyURLServletTest {
 
 		layout1.setHidden(true);
 
-		_layoutLocalService.updateLayout(layout1);
+		layout1 = _layoutLocalService.updateLayout(layout1);
 
 		Role guestRole = RoleLocalServiceUtil.getRole(
 			group.getCompanyId(), RoleConstants.GUEST);
@@ -180,7 +176,7 @@ public class FriendlyURLServletTest {
 
 		layout2.setHidden(true);
 
-		_layoutLocalService.updateLayout(layout2);
+		layout2 = _layoutLocalService.updateLayout(layout2);
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
@@ -195,6 +191,47 @@ public class FriendlyURLServletTest {
 		testGetRedirect(
 			mockHttpServletRequest, group.getFriendlyURL(), Portal.PATH_MAIN,
 			_redirectConstructor1.newInstance(getURL(layout2)));
+	}
+
+	@Test
+	public void testGetRedirectOnLinkToURLLayoutWithDoAsUserId()
+		throws Throwable {
+
+		_doAsUser = UserTestUtil.addUser();
+		_user = UserTestUtil.addUser();
+
+		Layout linkToURLLayout = LayoutTestUtil.addTypeLinkToURLLayout(
+			_group.getGroupId(), _layout.getFriendlyURL());
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.USER_ID, _doAsUser.getUserId());
+
+		HttpSession httpSession = mockHttpServletRequest.getSession();
+
+		httpSession.setAttribute(WebKeys.USER_ID, _user.getUserId());
+
+		String path = getPath(_group, linkToURLLayout);
+
+		Company company = _companyLocalService.getCompany(
+			_doAsUser.getCompanyId());
+
+		String encryptedDoAsUserId = _encryptor.encrypt(
+			company.getKeyObj(), String.valueOf(_doAsUser.getUserId()));
+
+		Object expectedRedirect = _redirectConstructor1.newInstance(
+			HttpComponentsUtil.setParameter(
+				_layout.getFriendlyURL(), "doAsUserId", encryptedDoAsUserId));
+
+		testGetRedirect(
+			mockHttpServletRequest, path, Portal.PATH_MAIN, expectedRedirect);
+
+		mockHttpServletRequest.setParameter("doAsUserId", encryptedDoAsUserId);
+
+		testGetRedirect(
+			mockHttpServletRequest, path, Portal.PATH_MAIN, expectedRedirect);
 	}
 
 	@Test
@@ -486,7 +523,7 @@ public class FriendlyURLServletTest {
 
 		redirectLayout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 
-		_layoutLocalService.updateLayout(redirectLayout);
+		redirectLayout = _layoutLocalService.updateLayout(redirectLayout);
 
 		mockHttpServletRequest.setParameter("param", "true");
 		mockHttpServletRequest.setPathInfo(StringPool.SLASH);
@@ -523,7 +560,7 @@ public class FriendlyURLServletTest {
 
 		redirectLayout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 
-		_layoutLocalService.updateLayout(redirectLayout);
+		redirectLayout = _layoutLocalService.updateLayout(redirectLayout);
 
 		mockHttpServletRequest.setPathInfo(StringPool.SLASH);
 
@@ -702,7 +739,13 @@ public class FriendlyURLServletTest {
 	}
 
 	@Inject
-	private static LayoutLocalService _layoutLocalService;
+	private CompanyLocalService _companyLocalService;
+
+	@DeleteAfterTestRun
+	private User _doAsUser;
+
+	@Inject
+	private Encryptor _encryptor;
 
 	private Method _getRedirectMethod;
 
@@ -710,6 +753,10 @@ public class FriendlyURLServletTest {
 	private Group _group;
 
 	private Layout _layout;
+
+	@Inject
+	private LayoutLocalService _layoutLocalService;
+
 	private Constructor<?> _redirectConstructor1;
 	private Constructor<?> _redirectConstructor2;
 

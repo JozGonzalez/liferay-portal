@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.persistence.test;
@@ -127,6 +118,8 @@ public class AddressPersistenceTest {
 
 		newAddress.setMvccVersion(RandomTestUtil.nextLong());
 
+		newAddress.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newAddress.setUuid(RandomTestUtil.randomString());
 
 		newAddress.setExternalReferenceCode(RandomTestUtil.randomString());
@@ -184,6 +177,9 @@ public class AddressPersistenceTest {
 
 		Assert.assertEquals(
 			existingAddress.getMvccVersion(), newAddress.getMvccVersion());
+		Assert.assertEquals(
+			existingAddress.getCtCollectionId(),
+			newAddress.getCtCollectionId());
 		Assert.assertEquals(existingAddress.getUuid(), newAddress.getUuid());
 		Assert.assertEquals(
 			existingAddress.getExternalReferenceCode(),
@@ -390,9 +386,9 @@ public class AddressPersistenceTest {
 
 	protected OrderByComparator<Address> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"Address", "mvccVersion", true, "uuid", true,
-			"externalReferenceCode", true, "addressId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true,
+			"Address", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "externalReferenceCode", true, "addressId", true, "companyId",
+			true, "userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "classNameId", true, "classPK", true,
 			"countryId", true, "listTypeId", true, "regionId", true, "city",
 			true, "description", true, "latitude", true, "longitude", true,
@@ -671,6 +667,8 @@ public class AddressPersistenceTest {
 		Address address = _persistence.create(pk);
 
 		address.setMvccVersion(RandomTestUtil.nextLong());
+
+		address.setCtCollectionId(RandomTestUtil.nextLong());
 
 		address.setUuid(RandomTestUtil.randomString());
 

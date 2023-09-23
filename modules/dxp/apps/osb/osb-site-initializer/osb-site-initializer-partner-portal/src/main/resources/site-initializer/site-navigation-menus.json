@@ -17,12 +17,17 @@
 				"type": "layout"
 			},
 			{
+				"friendlyURL": "/Technical",
+				"privateLayout": false,
+				"type": "layout"
+			},
+			{
 				"friendlyURL": "/Enablement",
 				"privateLayout": false,
 				"type": "layout"
 			},
 			{
-				"friendlyURL": "/Dashboard",
+				"friendlyURL": "/Library",
 				"privateLayout": false,
 				"type": "layout"
 			}

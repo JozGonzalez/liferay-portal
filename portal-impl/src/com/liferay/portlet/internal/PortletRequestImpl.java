@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.internal;
@@ -660,14 +651,14 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 				httpServletRequest, dynamicQueryString, true);
 		}
 
-		DynamicServletRequest dynamicRequest = null;
+		DynamicServletRequest dynamicServletRequest = null;
 
 		if (portlet.isPrivateRequestAttributes()) {
-			dynamicRequest = new NamespaceServletRequest(
+			dynamicServletRequest = new NamespaceServletRequest(
 				httpServletRequest, portletNamespace, portletNamespace, false);
 		}
 		else {
-			dynamicRequest = new DynamicServletRequest(
+			dynamicServletRequest = new DynamicServletRequest(
 				httpServletRequest, false);
 		}
 
@@ -755,14 +746,14 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 				if (requestParameter.isPortletNamespaced() ||
 					!portlet.isRequiresNamespacedParameters()) {
 
-					dynamicRequest.setParameterValues(
+					dynamicServletRequest.setParameterValues(
 						requestParameter.getName(facesPortlet),
 						requestParameter.getValues());
 				}
 			}
 
-			if ((getLifecycle().equals(PortletRequest.HEADER_PHASE) ||
-				 getLifecycle().equals(PortletRequest.RENDER_PHASE)) &&
+			if ((Objects.equals(getLifecycle(), PortletRequest.HEADER_PHASE) ||
+				 Objects.equals(getLifecycle(), PortletRequest.RENDER_PHASE)) &&
 				!LiferayWindowState.isExclusive(httpServletRequest) &&
 				!LiferayWindowState.isPopUp(httpServletRequest)) {
 
@@ -805,7 +796,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 						}
 					}
 					else {
-						dynamicRequest.setParameterValues(
+						dynamicServletRequest.setParameterValues(
 							privateRenderParameter.getName(facesPortlet),
 							privateRenderParameter.getValues());
 					}
@@ -817,10 +808,10 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		}
 
 		_mergePublicRenderParameters(
-			dynamicRequest, publicRenderParametersMap, preferences,
+			dynamicServletRequest, publicRenderParametersMap, preferences,
 			getLifecycle());
 
-		_processCheckbox(dynamicRequest);
+		_processCheckbox(dynamicServletRequest);
 
 		if (!isPortletModeAllowed(portletMode)) {
 			portletMode = PortletModeFactory.getPortletMode(null, 3);
@@ -833,7 +824,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			}
 		}
 
-		_httpServletRequest = dynamicRequest;
+		_httpServletRequest = dynamicServletRequest;
 		_originalHttpServletRequest = httpServletRequest;
 		_portlet = portlet;
 		_portalContext = new PortalContextImpl();
@@ -936,18 +927,18 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 						themeDisplay.isHubPartialAction() ||
 						themeDisplay.isHubResource()) {
 
-						values = dynamicRequest.getParameterValues(
+						values = dynamicServletRequest.getParameterValues(
 							privateRenderParameterName);
 					}
 					else {
 						String[] requestValues =
-							dynamicRequest.getParameterValues(
+							dynamicServletRequest.getParameterValues(
 								privateRenderParameterName);
 
 						if ((requestValues != null) &&
 							!Arrays.equals(requestValues, values)) {
 
-							dynamicRequest.setParameterValues(
+							dynamicServletRequest.setParameterValues(
 								privateRenderParameterName,
 								ArrayUtil.append(requestValues, values));
 						}
@@ -965,14 +956,14 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 					allRenderParameters.put(
 						privateRenderParameterName,
-						dynamicRequest.getParameterValues(
+						dynamicServletRequest.getParameterValues(
 							privateRenderParameterName));
 				}
 			}
 		}
 		else {
 			Map<String, String[]> parameterMap =
-				dynamicRequest.getParameterMap();
+				dynamicServletRequest.getParameterMap();
 
 			for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
 				RequestParameter requestParameter = new RequestParameter(
@@ -1137,7 +1128,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 	}
 
 	private void _mergePublicRenderParameters(
-		DynamicServletRequest dynamicRequest,
+		DynamicServletRequest dynamicServletRequest,
 		Map<String, String[]> publicRenderParametersMap,
 		PortletPreferences preferences, String lifecycle) {
 
@@ -1168,18 +1159,18 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 				String name = publicRenderParameter.getIdentifier();
 
-				String[] requestValues = dynamicRequest.getParameterValues(
-					name);
+				String[] requestValues =
+					dynamicServletRequest.getParameterValues(name);
 
 				if ((requestValues != null) &&
 					(lifecycle.equals(PortletRequest.ACTION_PHASE) ||
 					 lifecycle.equals(PortletRequest.RESOURCE_PHASE))) {
 
-					dynamicRequest.setParameterValues(
+					dynamicServletRequest.setParameterValues(
 						name, ArrayUtil.append(requestValues, values));
 				}
 				else {
-					dynamicRequest.setParameterValues(name, values);
+					dynamicServletRequest.setParameterValues(name, values);
 				}
 			}
 
@@ -1210,7 +1201,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 					null));
 
 			HttpServletRequest httpServletRequest =
-				(HttpServletRequest)dynamicRequest.getRequest();
+				(HttpServletRequest)dynamicServletRequest.getRequest();
 
 			String[] newValues = httpServletRequest.getParameterValues(
 				mappingValue);
@@ -1229,12 +1220,12 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 					continue;
 				}
 
-				if (dynamicRequest.getParameter(name) == null) {
-					dynamicRequest.setParameterValues(name, values);
+				if (dynamicServletRequest.getParameter(name) == null) {
+					dynamicServletRequest.setParameterValues(name, values);
 				}
 			}
 			else {
-				dynamicRequest.setParameterValues(name, newValues);
+				dynamicServletRequest.setParameterValues(name, newValues);
 			}
 		}
 	}

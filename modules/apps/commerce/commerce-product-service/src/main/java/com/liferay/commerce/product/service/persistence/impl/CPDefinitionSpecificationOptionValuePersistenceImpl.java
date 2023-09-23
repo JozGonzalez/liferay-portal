@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.persistence.impl;
@@ -51,7 +42,6 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -762,21 +752,21 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CPDefinitionSpecificationOptionValue.class);
 
 		if (result instanceof CPDefinitionSpecificationOptionValue) {
 			CPDefinitionSpecificationOptionValue
@@ -790,6 +780,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CPDefinitionSpecificationOptionValue.class,
+						cpDefinitionSpecificationOptionValue.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3904,12 +3903,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		long CPDefinitionSpecificationOptionValueId, long CPDefinitionId,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {
 				CPDefinitionSpecificationOptionValueId, CPDefinitionId
 			};
@@ -3917,10 +3913,13 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByC_CSOVI, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CPDefinitionSpecificationOptionValue.class);
 
 		if (result instanceof CPDefinitionSpecificationOptionValue) {
 			CPDefinitionSpecificationOptionValue
@@ -3935,6 +3934,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CPDefinitionSpecificationOptionValue.class,
+						cpDefinitionSpecificationOptionValue.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -6399,33 +6407,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"CPDefinitionId", "CPOptionCategoryId"}, false);
 
-		_setCPDefinitionSpecificationOptionValueUtilPersistence(this);
+		CPDefinitionSpecificationOptionValueUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCPDefinitionSpecificationOptionValueUtilPersistence(null);
+		CPDefinitionSpecificationOptionValueUtil.setPersistence(null);
 
 		entityCache.removeCache(
 			CPDefinitionSpecificationOptionValueImpl.class.getName());
-	}
-
-	private void _setCPDefinitionSpecificationOptionValueUtilPersistence(
-		CPDefinitionSpecificationOptionValuePersistence
-			cpDefinitionSpecificationOptionValuePersistence) {
-
-		try {
-			Field field =
-				CPDefinitionSpecificationOptionValueUtil.class.getDeclaredField(
-					"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, cpDefinitionSpecificationOptionValuePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

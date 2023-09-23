@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.translator.azure.internal;
@@ -17,7 +8,7 @@ package com.liferay.translation.translator.azure.internal;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -38,13 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
+ * @author Roberto Díaz
  */
 @Component(
 	configurationPid = "com.liferay.translation.translator.azure.internal.configuration.AzureTranslatorConfiguration",
@@ -54,22 +44,35 @@ public class AzureTranslator implements Translator {
 
 	@Override
 	public boolean isEnabled(long companyId) throws ConfigurationException {
-		return _azureTranslatorConfiguration.enabled();
+		AzureTranslatorConfiguration azureTranslatorConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				AzureTranslatorConfiguration.class, companyId);
+
+		return azureTranslatorConfiguration.enabled();
 	}
 
 	@Override
 	public TranslatorPacket translate(TranslatorPacket translatorPacket)
 		throws PortalException {
 
+		AzureTranslatorConfiguration azureTranslatorConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				AzureTranslatorConfiguration.class,
+				translatorPacket.getCompanyId());
+
+		if (!azureTranslatorConfiguration.enabled()) {
+			return translatorPacket;
+		}
+
 		try {
 			Http.Options options = new Http.Options();
 
 			options.addHeader(
 				"Ocp-Apim-Subscription-Key",
-				_azureTranslatorConfiguration.subscriptionKey());
+				azureTranslatorConfiguration.subscriptionKey());
 			options.addHeader(
 				"Ocp-Apim-Subscription-Region",
-				_azureTranslatorConfiguration.resourceLocation());
+				azureTranslatorConfiguration.resourceLocation());
 			options.addHeader(
 				HttpHeaders.CONTENT_TYPE, ContentTypes.APPLICATION_JSON);
 			options.setBody(
@@ -115,6 +118,11 @@ public class AzureTranslator implements Translator {
 				}
 
 				@Override
+				public Map<String, Boolean> getHTMLMap() {
+					return translatorPacket.getHTMLMap();
+				}
+
+				@Override
 				public String getSourceLanguageId() {
 					return translatorPacket.getSourceLanguageId();
 				}
@@ -129,13 +137,6 @@ public class AzureTranslator implements Translator {
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
 		}
-	}
-
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_azureTranslatorConfiguration = ConfigurableUtil.createConfigurable(
-			AzureTranslatorConfiguration.class, properties);
 	}
 
 	private String _getLanguageCode(String languageId) {
@@ -182,7 +183,8 @@ public class AzureTranslator implements Translator {
 		return jsonArray.toString();
 	}
 
-	private volatile AzureTranslatorConfiguration _azureTranslatorConfiguration;
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Http _http;

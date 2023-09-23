@@ -23,13 +23,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,8 +40,13 @@ definition {
 	}
 
 	@description = "Story: LRAC-12019 | Automation ID: LRAC-12584 | Test Summary: Can paginate the list of properties"
+	@ignore = "true"
 	@priority = 3
 	test CanPaginatePropertyListInDXP {
+
+		// AC Bug: Properties are unable to be deleted
+		// AC Bug ticket: LRAC-13704
+
 		var firstPageList = "AC Property Pagination 2,AC Property Pagination 3,AC Property Pagination 4,AC Property Pagination 5,AC Property Pagination 6";
 		var secondPageList = "AC Property Pagination 1";
 
@@ -53,10 +60,10 @@ definition {
 			ACDXPSettings.createNewProperty(newPropertyNameList = "${secondPageList},${firstPageList}");
 		}
 
-		task ("Change the pagination to 5") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Change the pagination to 4") {
+			ACUtils.changePagination(itemsPerPage = 4);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 5 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 7 entries.");
 		}
 
 		task ("Check that 5 properties appear on the first page") {
@@ -66,7 +73,7 @@ definition {
 		task ("Click next page") {
 			Click(locator1 = "Pagination#NEXT_LINK");
 
-			ACUtils.viewResultsMessage(results = "Showing 6 to 7 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 5 to 7 of 7 entries.");
 		}
 
 		task ("Check that 2 property appear on the second page") {
@@ -81,10 +88,10 @@ definition {
 			ACDXPSettings.navToSyncedSitesMenu();
 		}
 
-		task ("Change the pagination to 5") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Change the pagination to 4") {
+			ACUtils.changePagination(itemsPerPage = 4);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 5 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 7 entries.");
 		}
 
 		task ("Check that 5 properties appear on the first page") {
@@ -94,7 +101,7 @@ definition {
 		task ("Click next page") {
 			Click(locator1 = "Pagination#NEXT_LINK");
 
-			ACUtils.viewResultsMessage(results = "Showing 6 to 7 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 5 to 7 of 7 entries.");
 		}
 
 		task ("Check that 2 property appear on the second page") {
@@ -355,8 +362,12 @@ definition {
 	}
 
 	@description = "Story: LRAC-10858 | Automation ID: LRAC-12572 | Test Summary: Check that a deleted property in AC will not appear in the DXP"
+	@ignore = "true"
 	@priority = 3
 	test CheckDeletedPropertyInACSideNotAppearInDXP {
+
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
 		var propertyName = "AC Deleted Property";
 
 		task ("Connect DXP to AC and get the first property name from the list") {
@@ -384,7 +395,8 @@ definition {
 		task ("Delete one property") {
 			ACUtils.searchBar(searchItem = ${autoGeneratePropertyName});
 
-			ACSettings.deletePropertyByCheckbox(propertyName = ${autoGeneratePropertyName});
+			//ACSettings.deletePropertyByCheckbox(propertyName = ${autoGeneratePropertyName});
+
 		}
 
 		task ("Go to DXP > Instance Settings > Analytics Cloud") {
@@ -418,7 +430,13 @@ definition {
 		task ("Copy the token from AC again") {
 			ACUtils.launchAC();
 
-			ACSettings.takeTokenFromAnalyticsCloud();
+			ACSettings.goToDataSources();
+
+			Click(locator1 = "ACDXPSettings#AC_GENERIC_ADD_OR_CONFIRMATION_BUTTON");
+
+			Click(locator1 = "ACSettings#DXP_DATA_SOURCE_OPTION");
+
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Go to DXP") {
@@ -426,7 +444,7 @@ definition {
 		}
 
 		task ("Connect DXP to AC again to create a new property automatically") {
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectAnalyticsCloud(acToken = ${token});
 
 			var propertyName2 = ACDXPSettings.getAssignedPropertyName();
 		}
@@ -439,8 +457,12 @@ definition {
 	}
 
 	@description = "Story: LRAC-10858 | Automation ID: LRAC-12569 | Test Summary: Assert Empty State upon property creation"
+	@ignore = "true"
 	@priority = 2
 	test CheckPropertyListEmptyStateMessage {
+
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
 		task ("Create a new workspace") {
 			ACUtils.launchAC(
 				emailList = "acworkspace@liferay.com",
@@ -448,13 +470,19 @@ definition {
 		}
 
 		task ("Copy the token from AC") {
-			ACSettings.takeTokenFromAnalyticsCloud();
+			ACSettings.goToDataSources();
+
+			Click(locator1 = "ACDXPSettings#AC_GENERIC_ADD_OR_CONFIRMATION_BUTTON");
+
+			Click(locator1 = "ACSettings#DXP_DATA_SOURCE_OPTION");
+
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Go to DXP > Connect the DXP to AC") {
 			ACUtils.launchDXP();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectAnalyticsCloud(acToken = ${token});
 		}
 
 		task ("Go to AC > Go to Settings > Go to Properties") {
@@ -465,9 +493,9 @@ definition {
 			ACSettings.goToProperties();
 		}
 
-		task ("Delete all the properties in the list") {
-			ACSettings.deleteAllProperties();
-		}
+		//task ("Delete all the properties in the list") {
+		//	ACSettings.deleteAllProperties();
+		//}
 
 		task ("Go to Instance Settings > Analytics Cloud") {
 			ACUtils.launchDXP();
@@ -560,7 +588,13 @@ definition {
 		}
 
 		task ("Copy the token from AC") {
-			ACSettings.takeTokenFromAnalyticsCloud();
+			ACSettings.goToDataSources();
+
+			Click(locator1 = "ACDXPSettings#AC_GENERIC_ADD_OR_CONFIRMATION_BUTTON");
+
+			Click(locator1 = "ACSettings#DXP_DATA_SOURCE_OPTION");
+
+			var tokenOne = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Set up instance and sign in DXP") {
@@ -574,7 +608,7 @@ definition {
 		task ("Connect the DXP to AC") {
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectAnalyticsCloud(acToken = ${tokenOne});
 
 			ACDXPSettings.viewGenericListItem(itemValueList = "Property OnlyAvailablePropertiesAppearInDXP 1");
 
@@ -592,7 +626,17 @@ definition {
 		task ("Launch AC and Connect new data source") {
 			ACUtils.launchAC();
 
-			ACSettings.takeTokenFromAnalyticsCloud();
+			if (IsElementNotPresent(locator1 = "ACSettings#SETTINGS_PAGE")) {
+				ACNavigation.goToSettings();
+			}
+
+			ACSettings.goToDataSources();
+
+			Click(locator1 = "ACDXPSettings#AC_GENERIC_ADD_OR_CONFIRMATION_BUTTON");
+
+			Click(locator1 = "ACSettings#DXP_DATA_SOURCE_OPTION");
+
+			var tokenTwo = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC") {
@@ -600,7 +644,7 @@ definition {
 
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectAnalyticsCloud(acToken = ${tokenTwo});
 		}
 
 		task ("Assert a new property is created along with old property") {

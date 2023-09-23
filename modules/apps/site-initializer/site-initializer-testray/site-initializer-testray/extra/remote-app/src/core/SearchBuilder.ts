@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {RendererFields} from '../components/Form/Renderer';
@@ -103,6 +94,10 @@ export default class SearchBuilder {
 
 	static le(key: Key, value: Value) {
 		return `${key} le ${value}`;
+	}
+
+	static group(type: 'CLOSE' | 'OPEN') {
+		return type === 'OPEN' ? '(' : ')';
 	}
 
 	static startsWith(key: Key, value: Value) {
@@ -209,8 +204,32 @@ export default class SearchBuilder {
 		return this.setContext(SearchBuilder.in(key, values));
 	}
 
+	public inEqualNumbers(key: Key, values: Value[]) {
+		if (!values.length) {
+			return this;
+		}
+
+		this.setContext(SearchBuilder.group('OPEN'));
+
+		const lastIndex = values.length - 1;
+
+		values.map((value, index) => {
+			this.setContext(SearchBuilder.eq(key, value).replaceAll("'", ''));
+
+			if (lastIndex !== index) {
+				this.or();
+			}
+		});
+
+		return this.group('CLOSE');
+	}
+
 	public ne(key: Key, value: Value) {
 		return this.setContext(SearchBuilder.ne(key, value));
+	}
+
+	public group(type: 'CLOSE' | 'OPEN') {
+		return this.setContext(SearchBuilder.group(type));
 	}
 
 	private setContext(query: string) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.wsdd.builder;
@@ -33,6 +24,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import org.xml.sax.SAXException;
+
 /**
  * @author Brian Wing Shun Chan
  */
@@ -43,7 +36,7 @@ public class WSDDMerger {
 	}
 
 	public static void merge(String source, String destination)
-		throws DocumentException, IOException {
+		throws DocumentException, IOException, SAXException {
 
 		// Source
 
@@ -116,8 +109,17 @@ public class WSDDMerger {
 		}
 	}
 
-	private static SAXReader _getSAXReader() {
-		return SAXReaderFactory.getSAXReader(null, false, false);
+	private static SAXReader _getSAXReader() throws SAXException {
+		SAXReader saxReader = SAXReaderFactory.getSAXReader(null, false, false);
+
+		saxReader.setFeature(
+			"http://apache.org/xml/features/disallow-doctype-decl", true);
+		saxReader.setFeature(
+			"http://xml.org/sax/features/external-general-entities", false);
+		saxReader.setFeature(
+			"http://xml.org/sax/features/external-parameter-entities", false);
+
+		return saxReader;
 	}
 
 }

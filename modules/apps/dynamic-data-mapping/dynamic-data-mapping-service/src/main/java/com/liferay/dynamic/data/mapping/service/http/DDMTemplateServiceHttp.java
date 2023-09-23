@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.http;
@@ -153,7 +144,7 @@ public class DDMTemplateServiceHttp {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMTemplate
 			copyTemplate(
-				HttpPrincipal httpPrincipal, long templateId,
+				HttpPrincipal httpPrincipal, long sourceTemplateId,
 				java.util.Map<java.util.Locale, String> nameMap,
 				java.util.Map<java.util.Locale, String> descriptionMap,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -165,7 +156,8 @@ public class DDMTemplateServiceHttp {
 				_copyTemplateParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, templateId, nameMap, descriptionMap, serviceContext);
+				methodKey, sourceTemplateId, nameMap, descriptionMap,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -198,7 +190,7 @@ public class DDMTemplateServiceHttp {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMTemplate
 			copyTemplate(
-				HttpPrincipal httpPrincipal, long templateId,
+				HttpPrincipal httpPrincipal, long sourceTemplateId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -208,7 +200,7 @@ public class DDMTemplateServiceHttp {
 				_copyTemplateParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, templateId, serviceContext);
+				methodKey, sourceTemplateId, serviceContext);
 
 			Object returnObj = null;
 
@@ -241,8 +233,9 @@ public class DDMTemplateServiceHttp {
 
 	public static java.util.List
 		<com.liferay.dynamic.data.mapping.model.DDMTemplate> copyTemplates(
-				HttpPrincipal httpPrincipal, long classNameId, long oldClassPK,
-				long resourceClassNameId, long newClassPK, String type,
+				HttpPrincipal httpPrincipal, long classNameId,
+				long sourceClassPK, long resourceClassNameId,
+				long targetClassPK, String type,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -252,8 +245,8 @@ public class DDMTemplateServiceHttp {
 				_copyTemplatesParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, classNameId, oldClassPK, resourceClassNameId,
-				newClassPK, type, serviceContext);
+				methodKey, classNameId, sourceClassPK, resourceClassNameId,
+				targetClassPK, type, serviceContext);
 
 			Object returnObj = null;
 

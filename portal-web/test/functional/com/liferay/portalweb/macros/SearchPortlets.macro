@@ -10,7 +10,48 @@ definition {
 			locator1 = "Search#ADD_PORTLET_LINK");
 	}
 
+	macro addSortOption {
+		Click(
+			key_text = "Add Option",
+			locator1 = "Button#ANY");
+
+		Type.type(
+			locator1 = "Search#SORT_WIDGET_CONFIGURATION_EMPTY_INDEXED_FIELD",
+			value1 = ${indexedField});
+
+		Type.type(
+			locator1 = "Search#SORT_WIDGET_CONFIGURATION_EMPTY_DISPLAY_LABEL",
+			value1 = ${displayLabel});
+
+		Select(
+			key_displayLabel = ${displayLabel},
+			locator1 = "Search#SORT_WIDGET_CONFIGURATION_ORDER_DROPDOWN",
+			value1 = ${order});
+	}
+
 	macro addWidgets {
+		if (!(isSet(column))) {
+			var column = 1;
+		}
+
+		if (!(isSet(groupName))) {
+			var groupName = "Guest";
+		}
+
+		if (!(isSet(layoutName))) {
+			var layoutName = "Search";
+		}
+
+		for (var portletName : list ${searchPortletList}) {
+			JSONLayout.addWidgetToPublicLayout(
+				column = ${column},
+				groupName = ${groupName},
+				layoutName = ${layoutName},
+				widgetName = ${portletName});
+		}
+	}
+
+	macro addWidgetsViaUI {
 		if (IsNotVisible(locator1 = "ControlMenuAddPanel#CLOSE_ADD_PANEL")) {
 			Click.clickAt(locator1 = "ControlMenu#ADD");
 		}
@@ -46,10 +87,10 @@ definition {
 	}
 
 	macro chooseSortOption {
-		Click(locator1 = "Search#SORT_PORTLET_DROPDOWN");
+		Click(locator1 = "Search#SORT_WIDGET_DROPDOWN");
 
 		Click.clickNoMouseOver(
-			locator1 = "Search#SORT_PORTLET_SORT_OPTION",
+			locator1 = "Search#SORT_WIDGET_SORT_OPTION",
 			sortOption = ${sortOption});
 	}
 
@@ -80,6 +121,8 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+
 		if (isSet(vocabularyScope)) {
 			if (${vocabularyScope} == "Select Vocabularies") {
 				Check.checkNotVisible(
@@ -87,7 +130,7 @@ definition {
 					locator1 = "Search#CATEGORY_FACET_VOCABULARY_SCOPE_RADIO");
 
 				Click(
-					key_radioName = ${vocabularyScope},
+					key_siteName = ${siteName},
 					locator1 = "Search#CATEGORY_FACET_EXPAND_VOCABULARIES");
 
 				for (var vocabularyName : list ${vocabularyName}) {
@@ -113,6 +156,7 @@ definition {
 
 	macro configureCustomFilter {
 		Portlet.gotoPortletOptions(
+			portletIndex = ${portletIndex},
 			portletName = "Custom Filter",
 			portletOption = "Configuration");
 
@@ -160,6 +204,20 @@ definition {
 				value1 = ${occur});
 		}
 
+		if (isSet(queryName)) {
+			Type(
+				key_fieldLabel = "Query Name",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${queryName});
+		}
+
+		if (isSet(parentQueryName)) {
+			Type(
+				inputFieldId = "parentQueryName",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = ${parentQueryName});
+		}
+
 		PortletEntry.save();
 
 		IFrame.closeFrame();
@@ -169,6 +227,17 @@ definition {
 		SearchPortlets.gotoEmbeddedOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+		if (${invisible} == "true") {
+			Click(
+				checkboxName = "Invisible",
+				locator1 = "Checkbox#ANY_CHECKBOX_UNCHECKED");
+		}
+		else if (${invisible} == "false") {
+			Click(
+				checkboxName = "Invisible",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+		}
 
 		if (isSet(destinationPage)) {
 			if (contains(${destinationPage}, " ")) {
@@ -182,6 +251,13 @@ definition {
 				value1 = ${destinationPage});
 		}
 
+		if (isSet(federatedSearchKey)) {
+			Type(
+				key_fieldLabel = "Federated Search Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${federatedSearchKey});
+		}
+
 		if (isSet(searchScope)) {
 			if ((${searchScope} == "Everything") || (${searchScope} == "Let the User Choose") || (${searchScope} == "This Site")) {
 				Select(
@@ -191,6 +267,12 @@ definition {
 			else {
 				fail("Invalid search scope. Must be (Everything|Let the User Choose|This Site).");
 			}
+		}
+
+		if (isSet(useAdvancedSearchSyntax)) {
+			Click(
+				checkboxName = "Use Advanced Search Syntax",
+				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
 		PortletEntry.save();
@@ -481,9 +563,13 @@ definition {
 	macro gotoConfigureSuggestionsOptions {
 		MouseOver.mouseOverNotVisible(locator1 = "Search#SUGGESTION_WIDGET_ELLIPSIS_ICON");
 
-		Click.waitForMenuToggleJSClick(locator1 = "Search#SUGGESTION_WIDGET_ELLIPSIS_ICON");
+		Click(locator1 = "Search#SUGGESTION_WIDGET_ELLIPSIS_ICON");
 
-		MenuItem.click(menuItem = "Configuration");
+		if (isSet(portletOption)) {
+			var key_menuItem = ${portletOption};
+
+			Click(locator1 = "MenuItem#ANY_MENU_ITEM");
+		}
 	}
 
 	macro gotoEmbeddedOptions {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service;
@@ -216,6 +207,14 @@ public class DDMFieldLocalServiceUtil {
 		return getService().fetchDDMField(fieldId);
 	}
 
+	public static com.liferay.dynamic.data.mapping.model.DDMFieldAttribute
+		fetchDDMFieldAttribute(
+			long fieldId, String attributeName, String languageId) {
+
+		return getService().fetchDDMFieldAttribute(
+			fieldId, attributeName, languageId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -233,6 +232,12 @@ public class DDMFieldLocalServiceUtil {
 		return getService().getDDMField(fieldId);
 	}
 
+	public static List<com.liferay.dynamic.data.mapping.model.DDMFieldAttribute>
+		getDDMFieldAttributes(long storageId, String attributeName) {
+
+		return getService().getDDMFieldAttributes(storageId, attributeName);
+	}
+
 	/**
 	 * Returns a range of all the ddm fields.
 	 *
@@ -246,6 +251,12 @@ public class DDMFieldLocalServiceUtil {
 	 */
 	public static List<DDMField> getDDMFields(int start, int end) {
 		return getService().getDDMFields(start, end);
+	}
+
+	public static List<DDMField> getDDMFields(
+		long storageId, String fieldName) {
+
+		return getService().getDDMFields(storageId, fieldName);
 	}
 
 	/**
@@ -263,6 +274,14 @@ public class DDMFieldLocalServiceUtil {
 			long storageId) {
 
 		return getService().getDDMFormValues(ddmForm, storageId);
+	}
+
+	public static com.liferay.dynamic.data.mapping.storage.DDMFormValues
+		getDDMFormValues(
+			com.liferay.dynamic.data.mapping.model.DDMForm ddmForm,
+			long storageId, String languageId) {
+
+		return getService().getDDMFormValues(ddmForm, storageId, languageId);
 	}
 
 	public static int getDDMFormValuesCount(long structureId) {
@@ -326,6 +345,10 @@ public class DDMFieldLocalServiceUtil {
 
 	public static DDMFieldLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(DDMFieldLocalService service) {
+		_service = service;
 	}
 
 	private static volatile DDMFieldLocalService _service;

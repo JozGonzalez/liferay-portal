@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,7 +19,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 	value="user-groups"
 />
 
-<liferay-ui:membership-policy-error />
+<liferay-site:membership-policy-error />
 
 <clay:content-row
 	containerElement="div"
@@ -172,11 +163,11 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				onSelect: function (selectedItem) {
 					const A = AUI();
 
-					const entityId = selectedItem.entityid;
-					const entityName = A.Escape.html(selectedItem.entityname);
+					const itemValue = JSON.parse(selectedItem.value);
+
 					const label = Liferay.Util.sub(
 						'<liferay-ui:message key="remove-x" />',
-						entityName
+						itemValue.name
 					);
 					const rowColumns = [];
 
@@ -185,19 +176,19 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 					removeButton = removeButton
 						.replace('TOKEN_ARIA_LABEL', label)
-						.replace('TOKEN_DATA_ROW_ID', entityId)
+						.replace('TOKEN_DATA_ROW_ID', itemValue.userGroupId)
 						.replace('TOKEN_TITLE', label);
 
-					rowColumns.push(entityName);
+					rowColumns.push(itemValue.name);
 					rowColumns.push(removeButton);
 
-					searchContainer.addRow(rowColumns, entityId);
+					searchContainer.addRow(rowColumns, itemValue.userGroupId);
 
 					searchContainer.updateDataStore();
 
-					A.Array.removeItem(deleteUserGroupIds, entityId);
+					A.Array.removeItem(deleteUserGroupIds, itemValue.userGroupId);
 
-					addUserGroupIds.push(entityId);
+					addUserGroupIds.push(itemValue.userGroupId);
 
 					document.<portlet:namespace />fm.<portlet:namespace />addUserGroupIds.value = addUserGroupIds.join(
 						','
@@ -209,18 +200,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				selectedData: searchContainer.getData(true),
 				selectEventName: '<portlet:namespace />selectUserGroup',
 				title: '<liferay-ui:message arguments="user-group" key="select-x" />',
-
-				<%
-				PortletURL selectUserGroupURL = PortletURLBuilder.create(
-					PortletProviderUtil.getPortletURL(request, UserGroup.class.getName(), PortletProvider.Action.BROWSE)
-				).setParameter(
-					"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildPortletURL();
-				%>
-
-				url: '<%= selectUserGroupURL.toString() %>',
+				url: '<%= userDisplayContext.getUserGroupItemSelectorURL() %>',
 			});
 		});
 	</aui:script>

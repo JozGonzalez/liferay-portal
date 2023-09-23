@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.dao.db;
@@ -25,6 +16,7 @@ import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -40,6 +32,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -140,7 +133,10 @@ public class DB2DB extends BaseDB {
 
 			String tempColumnName = "temp" + columnName;
 
-			if (newColumnType.endsWith("not null")) {
+			if (StringUtil.endsWith(newColumnType, "not null") &&
+				!StringUtil.containsIgnoreCase(
+					newColumnType, "default", StringPool.SPACE)) {
+
 				runSQL(
 					StringBundler.concat(
 						"alter table ", tableName, " add ", tempColumnName,
@@ -267,13 +263,171 @@ public class DB2DB extends BaseDB {
 	}
 
 	@Override
+	protected void createSyncDeleteTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after delete on ");
+		sb.append(sourceTableName);
+		sb.append(" referencing old as old for each row delete from ");
+		sb.append(targetTableName);
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	@Override
+	protected void createSyncInsertTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after insert on ");
+		sb.append(sourceTableName);
+		sb.append(" referencing new as new for each row insert into ");
+		sb.append(targetTableName);
+		sb.append(" (");
+		sb.append(StringUtil.merge(targetColumnNames, ", "));
+		sb.append(") values (");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(")");
+
+		runSQL(connection, sb.toString());
+	}
+
+	@Override
+	protected void createSyncUpdateTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after update on ");
+		sb.append(sourceTableName);
+		sb.append(" referencing old as old new as new for each row update ");
+		sb.append(targetTableName);
+		sb.append(" set ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(targetColumnNames[i]);
+			sb.append(" = ");
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	protected String getCopyTableStructureSQL(
+		String tableName, String newTableName) {
+
+		return StringBundler.concat(
+			"create table ", newTableName, " as (select * from ", tableName,
+			") with no data");
+	}
+
+	@Override
+	protected String getRenameTableSQL(
+		String oldTableName, String newTableName) {
+
+		return StringBundler.concat(
+			"rename table ", oldTableName, " to ", newTableName);
+	}
+
+	@Override
 	protected int[] getSQLTypes() {
 		return _SQL_TYPES;
 	}
 
 	@Override
-	protected int[] getSQLVarcharSizes() {
-		return _SQL_VARCHAR_SIZES;
+	protected Map<String, Integer> getSQLVarcharSizes() {
+		return HashMapBuilder.put(
+			"STRING", _SQL_STRING_SIZE
+		).put(
+			"TEXT", SQL_SIZE_NONE
+		).build();
 	}
 
 	@Override
@@ -305,6 +459,10 @@ public class DB2DB extends BaseDB {
 		}
 
 		return reorgTableRequired;
+	}
+
+	protected boolean isSupportsDuplicatedIndexName() {
+		return _SUPPORTS_DUPLICATED_INDEX_NAME;
 	}
 
 	protected void reorgTable(Connection connection, String tableName)
@@ -378,6 +536,23 @@ public class DB2DB extends BaseDB {
 							"data type @type@;",
 						REWORD_TEMPLATE, template);
 
+					String defaultValue = template[template.length - 2];
+
+					if (Validator.isBlank(defaultValue)) {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ drop default;",
+								REWORD_TEMPLATE, template));
+					}
+					else {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ set default @default@;",
+								REWORD_TEMPLATE, template));
+					}
+
 					String nullable = template[template.length - 1];
 
 					if (!Validator.isBlank(nullable)) {
@@ -433,21 +608,20 @@ public class DB2DB extends BaseDB {
 
 	private static final String[] _DB2 = {
 		"--", "1", "0", "'1970-01-01-00.00.00.000000'", "current timestamp",
-		" blob", " blob", " smallint", " timestamp", " double", " integer",
-		" bigint", " varchar(4000)", " clob", " varchar",
+		" blob", " blob", " decimal(30, 16)", " smallint", " timestamp",
+		" double", " integer", " bigint", " varchar(4000)", " clob", " varchar",
 		" generated always as identity", "commit"
 	};
 
 	private static final int _SQL_STRING_SIZE = 4000;
 
 	private static final int[] _SQL_TYPES = {
-		Types.BLOB, Types.BLOB, Types.SMALLINT, Types.TIMESTAMP, Types.DOUBLE,
-		Types.INTEGER, Types.BIGINT, Types.VARCHAR, Types.CLOB, Types.VARCHAR
+		Types.BLOB, Types.BLOB, Types.DECIMAL, Types.SMALLINT, Types.TIMESTAMP,
+		Types.DOUBLE, Types.INTEGER, Types.BIGINT, Types.VARCHAR, Types.CLOB,
+		Types.VARCHAR
 	};
 
-	private static final int[] _SQL_VARCHAR_SIZES = {
-		_SQL_STRING_SIZE, SQL_SIZE_NONE
-	};
+	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = false;
 
 	private static final boolean _SUPPORTS_INLINE_DISTINCT = false;
 

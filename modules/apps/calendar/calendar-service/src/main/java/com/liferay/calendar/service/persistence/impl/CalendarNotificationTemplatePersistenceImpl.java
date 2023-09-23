@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.calendar.service.persistence.impl;
@@ -52,7 +43,6 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -737,21 +727,21 @@ public class CalendarNotificationTemplatePersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CalendarNotificationTemplate.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CalendarNotificationTemplate.class);
 
 		if (result instanceof CalendarNotificationTemplate) {
 			CalendarNotificationTemplate calendarNotificationTemplate =
@@ -762,6 +752,15 @@ public class CalendarNotificationTemplatePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CalendarNotificationTemplate.class,
+						calendarNotificationTemplate.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2157,12 +2156,9 @@ public class CalendarNotificationTemplatePersistenceImpl
 		notificationTemplateType = Objects.toString(
 			notificationTemplateType, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CalendarNotificationTemplate.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {
 				calendarId, notificationType, notificationTemplateType
 			};
@@ -2170,10 +2166,13 @@ public class CalendarNotificationTemplatePersistenceImpl
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByC_NT_NTT, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CalendarNotificationTemplate.class);
 
 		if (result instanceof CalendarNotificationTemplate) {
 			CalendarNotificationTemplate calendarNotificationTemplate =
@@ -2190,6 +2189,15 @@ public class CalendarNotificationTemplatePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CalendarNotificationTemplate.class,
+						calendarNotificationTemplate.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3423,33 +3431,15 @@ public class CalendarNotificationTemplatePersistenceImpl
 			},
 			false);
 
-		_setCalendarNotificationTemplateUtilPersistence(this);
+		CalendarNotificationTemplateUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCalendarNotificationTemplateUtilPersistence(null);
+		CalendarNotificationTemplateUtil.setPersistence(null);
 
 		entityCache.removeCache(
 			CalendarNotificationTemplateImpl.class.getName());
-	}
-
-	private void _setCalendarNotificationTemplateUtilPersistence(
-		CalendarNotificationTemplatePersistence
-			calendarNotificationTemplatePersistence) {
-
-		try {
-			Field field =
-				CalendarNotificationTemplateUtil.class.getDeclaredField(
-					"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, calendarNotificationTemplatePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

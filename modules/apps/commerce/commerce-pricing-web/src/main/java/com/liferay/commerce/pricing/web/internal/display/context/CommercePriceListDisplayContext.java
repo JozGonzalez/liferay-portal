@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.web.internal.display.context;
 
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.service.CommerceCurrencyService;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.comparator.CommerceCurrencyPriorityComparator;
 import com.liferay.commerce.frontend.model.HeaderActionModel;
 import com.liferay.commerce.price.list.constants.CommercePriceListActionKeys;
@@ -67,7 +58,7 @@ public class CommercePriceListDisplayContext
 
 	public CommercePriceListDisplayContext(
 		CommerceCatalogService commerceCatalogService,
-		CommerceCurrencyService commerceCurrencyService,
+		CommerceCurrencyLocalService commerceCurrencyLocalService,
 		ModelResourcePermission<CommercePriceList>
 			commercePriceListModelResourcePermission,
 		CommercePriceListService commercePriceListService,
@@ -79,7 +70,7 @@ public class CommercePriceListDisplayContext
 			commerceCatalogService, commercePriceListModelResourcePermission,
 			commercePriceListService, httpServletRequest);
 
-		_commerceCurrencyService = commerceCurrencyService;
+		_commerceCurrencyLocalService = commerceCurrencyLocalService;
 		_commercePriceModifierService = commercePriceModifierService;
 		_commercePriceModifierTypeRegistry = commercePriceModifierTypeRegistry;
 	}
@@ -123,7 +114,7 @@ public class CommercePriceListDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		return _commerceCurrencyService.getCommerceCurrencies(
+		return _commerceCurrencyLocalService.getCommerceCurrencies(
 			themeDisplay.getCompanyId(), true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, new CommerceCurrencyPriorityComparator(true));
 	}
@@ -328,7 +319,7 @@ public class CommercePriceListDisplayContext
 		return fdsActionDropdownItems;
 	}
 
-	public String getPriceListsApiUrl(String portletName) {
+	public String getPriceListsAPIURL(String portletName) {
 		String encodedFilter = URLCodec.encodeURL(
 			StringBundler.concat(
 				"type eq '", getCommercePriceListType(portletName),
@@ -339,7 +330,7 @@ public class CommercePriceListDisplayContext
 			encodedFilter;
 	}
 
-	public String getPriceModifierCategoriesApiUrl() throws PortalException {
+	public String getPriceModifierCategoriesAPIURL() throws PortalException {
 		return "/o/headless-commerce-admin-pricing/v2.0/price-modifiers/" +
 			getCommercePriceModifierId() +
 				"/price-modifier-categories?nestedFields=category";
@@ -355,7 +346,7 @@ public class CommercePriceListDisplayContext
 				"delete", "headless"));
 	}
 
-	public String getPriceModifierCPDefinitionApiUrl() throws PortalException {
+	public String getPriceModifierCPDefinitionAPIURL() throws PortalException {
 		return "/o/headless-commerce-admin-pricing/v2.0/price-modifiers/" +
 			getCommercePriceModifierId() +
 				"/price-modifier-products?nestedFields=product";
@@ -371,7 +362,7 @@ public class CommercePriceListDisplayContext
 				"delete", "headless"));
 	}
 
-	public String getPriceModifierPricingClassesApiUrl()
+	public String getPriceModifierPricingClassesAPIURL()
 		throws PortalException {
 
 		return "/o/headless-commerce-admin-pricing/v2.0/price-modifiers/" +
@@ -456,7 +447,7 @@ public class CommercePriceListDisplayContext
 		return portletURL.toString();
 	}
 
-	private final CommerceCurrencyService _commerceCurrencyService;
+	private final CommerceCurrencyLocalService _commerceCurrencyLocalService;
 	private CommercePriceModifier _commercePriceModifier;
 	private final CommercePriceModifierService _commercePriceModifierService;
 	private final CommercePriceModifierTypeRegistry

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.events.test;
@@ -29,7 +20,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -40,7 +30,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -102,8 +91,7 @@ public class SegmentsServicePreActionTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				LifecycleAction lifecycleAction = _getLifecycleAction();
 
@@ -160,8 +148,7 @@ public class SegmentsServicePreActionTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				LifecycleAction lifecycleAction = _getLifecycleAction();
 
@@ -224,8 +211,7 @@ public class SegmentsServicePreActionTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				LifecycleAction lifecycleAction = _getLifecycleAction();
 
@@ -266,8 +252,7 @@ public class SegmentsServicePreActionTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				LifecycleAction lifecycleAction = _getLifecycleAction();
 
@@ -307,8 +292,7 @@ public class SegmentsServicePreActionTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				LifecycleAction lifecycleAction = _getLifecycleAction();
 
@@ -345,9 +329,7 @@ public class SegmentsServicePreActionTest {
 
 				List<SegmentsExperience> segmentsExperiences =
 					_segmentsExperienceLocalService.getSegmentsExperiences(
-						_group.getGroupId(),
-						_portal.getClassNameId(Layout.class.getName()),
-						layout.getPlid());
+						_group.getGroupId(), layout.getPlid());
 
 				long[] expectedSegmentsExperienceIds =
 					new long[segmentsExperiences.size()];
@@ -415,9 +397,6 @@ public class SegmentsServicePreActionTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject
-	private Portal _portal;
 
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -31,6 +22,7 @@ import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.MessageBoardSectionResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.MessageBoardSectionSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -71,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -193,6 +183,7 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		MessageBoardSection messageBoardSection = randomMessageBoardSection();
 
 		messageBoardSection.setDescription(regex);
+		messageBoardSection.setFriendlyUrlPath(regex);
 		messageBoardSection.setTitle(regex);
 
 		String json = MessageBoardSectionSerDes.toJSON(messageBoardSection);
@@ -202,6 +193,7 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		messageBoardSection = MessageBoardSectionSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, messageBoardSection.getDescription());
+		Assert.assertEquals(regex, messageBoardSection.getFriendlyUrlPath());
 		Assert.assertEquals(regex, messageBoardSection.getTitle());
 	}
 
@@ -656,46 +648,39 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 	public void testGetMessageBoardSectionMessageBoardSectionsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetMessageBoardSectionMessageBoardSectionsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetMessageBoardSectionMessageBoardSectionsPageWithFilterStringContains()
+		throws Exception {
 
-		Long parentMessageBoardSectionId =
-			testGetMessageBoardSectionMessageBoardSectionsPage_getParentMessageBoardSectionId();
-
-		MessageBoardSection messageBoardSection1 =
-			testGetMessageBoardSectionMessageBoardSectionsPage_addMessageBoardSection(
-				parentMessageBoardSectionId, randomMessageBoardSection());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		MessageBoardSection messageBoardSection2 =
-			testGetMessageBoardSectionMessageBoardSectionsPage_addMessageBoardSection(
-				parentMessageBoardSectionId, randomMessageBoardSection());
-
-		for (EntityField entityField : entityFields) {
-			Page<MessageBoardSection> page =
-				messageBoardSectionResource.
-					getMessageBoardSectionMessageBoardSectionsPage(
-						parentMessageBoardSectionId, null, null,
-						getFilterString(
-							entityField, "eq", messageBoardSection1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(messageBoardSection1),
-				(List<MessageBoardSection>)page.getItems());
-		}
+		testGetMessageBoardSectionMessageBoardSectionsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetMessageBoardSectionMessageBoardSectionsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetMessageBoardSectionMessageBoardSectionsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetMessageBoardSectionMessageBoardSectionsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetMessageBoardSectionMessageBoardSectionsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetMessageBoardSectionMessageBoardSectionsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -719,7 +704,7 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 					getMessageBoardSectionMessageBoardSectionsPage(
 						parentMessageBoardSectionId, null, null,
 						getFilterString(
-							entityField, "eq", messageBoardSection1),
+							entityField, operator, messageBoardSection1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -988,6 +973,119 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 	}
 
 	@Test
+	public void testGetSiteMessageBoardSectionByFriendlyUrlPath()
+		throws Exception {
+
+		MessageBoardSection postMessageBoardSection =
+			testGetSiteMessageBoardSectionByFriendlyUrlPath_addMessageBoardSection();
+
+		MessageBoardSection getMessageBoardSection =
+			messageBoardSectionResource.
+				getSiteMessageBoardSectionByFriendlyUrlPath(
+					testGetSiteMessageBoardSectionByFriendlyUrlPath_getSiteId(
+						postMessageBoardSection),
+					postMessageBoardSection.getFriendlyUrlPath());
+
+		assertEquals(postMessageBoardSection, getMessageBoardSection);
+		assertValid(getMessageBoardSection);
+	}
+
+	protected Long testGetSiteMessageBoardSectionByFriendlyUrlPath_getSiteId(
+			MessageBoardSection messageBoardSection)
+		throws Exception {
+
+		return messageBoardSection.getSiteId();
+	}
+
+	protected MessageBoardSection
+			testGetSiteMessageBoardSectionByFriendlyUrlPath_addMessageBoardSection()
+		throws Exception {
+
+		return messageBoardSectionResource.postSiteMessageBoardSection(
+			testGroup.getGroupId(), randomMessageBoardSection());
+	}
+
+	@Test
+	public void testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath()
+		throws Exception {
+
+		MessageBoardSection messageBoardSection =
+			testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_addMessageBoardSection();
+
+		Assert.assertTrue(
+			equals(
+				messageBoardSection,
+				MessageBoardSectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"messageBoardSectionByFriendlyUrlPath",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" +
+												testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_getSiteId(
+													messageBoardSection) +
+														"\"");
+
+										put(
+											"friendlyUrlPath",
+											"\"" +
+												messageBoardSection.
+													getFriendlyUrlPath() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/messageBoardSectionByFriendlyUrlPath"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_getSiteId(
+				MessageBoardSection messageBoardSection)
+		throws Exception {
+
+		return messageBoardSection.getSiteId();
+	}
+
+	@Test
+	public void testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPathNotFound()
+		throws Exception {
+
+		String irrelevantFriendlyUrlPath =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"messageBoardSectionByFriendlyUrlPath",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put(
+									"friendlyUrlPath",
+									irrelevantFriendlyUrlPath);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected MessageBoardSection
+			testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_addMessageBoardSection()
+		throws Exception {
+
+		return testGraphQLMessageBoardSection_addMessageBoardSection();
+	}
+
+	@Test
 	public void testGetSiteMessageBoardSectionsPage() throws Exception {
 		Long siteId = testGetSiteMessageBoardSectionsPage_getSiteId();
 		Long irrelevantSiteId =
@@ -1101,43 +1199,39 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 	public void testGetSiteMessageBoardSectionsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSiteMessageBoardSectionsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSiteMessageBoardSectionsPageWithFilterStringContains()
+		throws Exception {
 
-		Long siteId = testGetSiteMessageBoardSectionsPage_getSiteId();
-
-		MessageBoardSection messageBoardSection1 =
-			testGetSiteMessageBoardSectionsPage_addMessageBoardSection(
-				siteId, randomMessageBoardSection());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		MessageBoardSection messageBoardSection2 =
-			testGetSiteMessageBoardSectionsPage_addMessageBoardSection(
-				siteId, randomMessageBoardSection());
-
-		for (EntityField entityField : entityFields) {
-			Page<MessageBoardSection> page =
-				messageBoardSectionResource.getSiteMessageBoardSectionsPage(
-					siteId, null, null, null,
-					getFilterString(entityField, "eq", messageBoardSection1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(messageBoardSection1),
-				(List<MessageBoardSection>)page.getItems());
-		}
+		testGetSiteMessageBoardSectionsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSiteMessageBoardSectionsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSiteMessageBoardSectionsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteMessageBoardSectionsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteMessageBoardSectionsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteMessageBoardSectionsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1158,7 +1252,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 			Page<MessageBoardSection> page =
 				messageBoardSectionResource.getSiteMessageBoardSectionsPage(
 					siteId, null, null, null,
-					getFilterString(entityField, "eq", messageBoardSection1),
+					getFilterString(
+						entityField, operator, messageBoardSection1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1788,6 +1883,14 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("friendlyUrlPath", additionalAssertFieldName)) {
+				if (messageBoardSection.getFriendlyUrlPath() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"numberOfMessageBoardSections",
 					additionalAssertFieldName)) {
@@ -1881,14 +1984,19 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -2040,6 +2148,17 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("friendlyUrlPath", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardSection1.getFriendlyUrlPath(),
+						messageBoardSection2.getFriendlyUrlPath())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						messageBoardSection1.getId(),
@@ -2164,14 +2283,16 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -2201,18 +2322,18 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -2313,9 +2434,93 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(messageBoardSection.getDescription()));
-			sb.append("'");
+			Object object = messageBoardSection.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("friendlyUrlPath")) {
+			Object object = messageBoardSection.getFriendlyUrlPath();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2357,9 +2562,47 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("title")) {
-			sb.append("'");
-			sb.append(String.valueOf(messageBoardSection.getTitle()));
-			sb.append("'");
+			Object object = messageBoardSection.getTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2416,6 +2659,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				friendlyUrlPath = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				numberOfMessageBoardSections = RandomTestUtil.randomInt();

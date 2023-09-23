@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.service.impl.test;
@@ -36,6 +27,7 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -412,12 +404,16 @@ public class AMImageEntryLocalServiceTest {
 
 	@Test
 	public void testGetExpectedAMImageEntriesCount() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+
 		Company company = CompanyTestUtil.addCompany();
 
 		ServiceRegistration<AMImageCounter> amImageCounterServiceRegistration =
 			null;
 
 		try {
+			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
 			int counter = RandomTestUtil.randomInt(100, 300);
 
 			amImageCounterServiceRegistration = _registerAMImageCounter(
@@ -435,12 +431,16 @@ public class AMImageEntryLocalServiceTest {
 			_unregisterAMImageCounter(amImageCounterServiceRegistration);
 
 			_companyLocalService.deleteCompany(company);
+
+			PrincipalThreadLocal.setName(originalName);
 		}
 	}
 
 	@Test
 	public void testGetExpectedAMImageEntriesCountSumsAllAMImageCounters()
 		throws Exception {
+
+		String originalName = PrincipalThreadLocal.getName();
 
 		Company company = CompanyTestUtil.addCompany();
 
@@ -450,6 +450,8 @@ public class AMImageEntryLocalServiceTest {
 			null;
 
 		try {
+			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
 			int counter1 = RandomTestUtil.randomInt(100, 300);
 
 			amImageCounterServiceRegistration1 = _registerAMImageCounter(
@@ -473,11 +475,15 @@ public class AMImageEntryLocalServiceTest {
 			_unregisterAMImageCounter(amImageCounterServiceRegistration2);
 
 			_companyLocalService.deleteCompany(company);
+
+			PrincipalThreadLocal.setName(originalName);
 		}
 	}
 
 	@Test
 	public void testGetPercentage() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+
 		Company company = CompanyTestUtil.addCompany();
 
 		User user = UserTestUtil.getAdminUser(company.getCompanyId());
@@ -494,6 +500,8 @@ public class AMImageEntryLocalServiceTest {
 			null;
 
 		try {
+			PrincipalThreadLocal.setName(user.getUserId());
+
 			amImageCounterServiceRegistration = _registerAMImageCounter(
 				"test", 4);
 
@@ -518,11 +526,15 @@ public class AMImageEntryLocalServiceTest {
 			_unregisterAMImageCounter(amImageCounterServiceRegistration);
 
 			_companyLocalService.deleteCompany(company);
+
+			PrincipalThreadLocal.setName(originalName);
 		}
 	}
 
 	@Test
 	public void testGetPercentageMax100() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+
 		Company company = CompanyTestUtil.addCompany();
 
 		User user = UserTestUtil.getAdminUser(company.getCompanyId());
@@ -539,6 +551,8 @@ public class AMImageEntryLocalServiceTest {
 			null;
 
 		try {
+			PrincipalThreadLocal.setName(user.getUserId());
+
 			amImageCounterServiceRegistration = _registerAMImageCounter(
 				"test",
 				-AMImageEntryLocalServiceUtil.getExpectedAMImageEntriesCount(
@@ -573,11 +587,15 @@ public class AMImageEntryLocalServiceTest {
 			_unregisterAMImageCounter(amImageCounterServiceRegistration);
 
 			_companyLocalService.deleteCompany(company);
+
+			PrincipalThreadLocal.setName(originalName);
 		}
 	}
 
 	@Test
 	public void testGetPercentageWhenNoImages() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+
 		Company company = CompanyTestUtil.addCompany();
 
 		AMImageConfigurationEntry amImageConfigurationEntry1 =
@@ -585,6 +603,8 @@ public class AMImageEntryLocalServiceTest {
 				company.getCompanyId(), "uuid1", 100, 200);
 
 		try {
+			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
 			Assert.assertEquals(
 				0,
 				AMImageEntryLocalServiceUtil.getPercentage(
@@ -593,6 +613,8 @@ public class AMImageEntryLocalServiceTest {
 		}
 		finally {
 			_companyLocalService.deleteCompany(company);
+
+			PrincipalThreadLocal.setName(originalName);
 		}
 	}
 

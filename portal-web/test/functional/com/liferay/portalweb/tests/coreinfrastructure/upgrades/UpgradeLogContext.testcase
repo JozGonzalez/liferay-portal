@@ -9,6 +9,8 @@ definition {
 	property portal.upstream = "true";
 	property portal.version = "7.3.10";
 	property skip.upgrade-legacy-database = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.main.component.name = "Database Upgrade Framework";
 
 	setUp {
@@ -34,6 +36,10 @@ definition {
 
 		task ("Verify that no key-value mark is printed when it's not related with Upgrade Framework") {
 			Log.viewLogFileContentPresent(logContent = "{}");
+		}
+
+		task ("Verify upgrade report is not generated in console output") {
+			AssertConsoleTextNotPresent(value1 = "Upgrade report generated in");
 		}
 	}
 

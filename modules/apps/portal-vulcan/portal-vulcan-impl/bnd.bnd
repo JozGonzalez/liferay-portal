@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Vulcan Implementation
 Bundle-SymbolicName: com.liferay.portal.vulcan.impl
-Bundle-Version: 5.0.79
+Bundle-Version: 5.0.103
 Import-Package:\
 	!com.google.errorprone.annotations.*,\
 	!com.google.gson.*,\
@@ -23,3 +23,4 @@ Import-Package:\
 	!org.jsoup.*,\
 	\
 	*
+-fixupmessages: "^Classes found in the wrong directory: \\\\{META-INF/versions/9/";is:=warning

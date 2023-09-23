@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.test;
@@ -24,7 +15,6 @@ import com.liferay.blogs.service.BlogsEntryService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
@@ -47,10 +37,8 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -62,6 +50,7 @@ import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.Serializable;
 
@@ -97,13 +86,13 @@ public class BaseBatchEngineTaskExecutorTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
-		group = GroupTestUtil.addGroup();
-
-		user = UserTestUtil.addGroupAdminUser(group);
+		user = TestPropsValues.getUser();
 
 		baseDate = dateFormat.parse(dateFormat.format(new Date()));
 
@@ -121,7 +110,7 @@ public class BaseBatchEngineTaskExecutorTest {
 
 	@After
 	public void tearDown() throws Exception {
-		blogsEntryLocalService.deleteEntries(group.getGroupId());
+		blogsEntryLocalService.deleteEntries(TestPropsValues.getGroupId());
 
 		_batchEngineTaskItemDelegateServiceRegistration.unregister();
 	}
@@ -169,7 +158,7 @@ public class BaseBatchEngineTaskExecutorTest {
 		extends BaseBatchEngineTaskItemDelegate<BlogPosting> {
 
 		@Override
-		public void createItem(
+		public BlogPosting createItem(
 				BlogPosting blogPosting,
 				Map<String, Serializable> queryParameters)
 			throws Exception {
@@ -186,6 +175,8 @@ public class BaseBatchEngineTaskExecutorTest {
 				localDateTime.getHour(), localDateTime.getMinute(), true, true,
 				new String[0], null, new ImageSelector(), null,
 				_createServiceContext(blogPosting.getSiteId()));
+
+			return null;
 		}
 
 		@Override
@@ -410,18 +401,18 @@ public class BaseBatchEngineTaskExecutorTest {
 					null, "articleBody" + i, new Date(baseDate.getTime()),
 					false, false, null, null, null, null,
 					ServiceContextTestUtil.getServiceContext(
-						group.getCompanyId(), group.getGroupId(),
-						user.getUserId())));
+						TestPropsValues.getCompanyId(),
+						TestPropsValues.getGroupId(), user.getUserId())));
 		}
 
 		return blogsEntries;
 	}
 
-	protected void assertBlogsEntriesCount() {
+	protected void assertBlogsEntriesCount() throws Exception {
 		Assert.assertEquals(
 			ROWS_COUNT,
 			blogsEntryLocalService.getGroupEntriesCount(
-				group.getGroupId(),
+				TestPropsValues.getGroupId(),
 				new QueryDefinition<>(WorkflowConstants.STATUS_APPROVED)));
 	}
 
@@ -439,11 +430,6 @@ public class BaseBatchEngineTaskExecutorTest {
 
 	protected final DateFormat dateFormat = new SimpleDateFormat(
 		"yyyy-MM-dd'T'HH:mm:ssX");
-
-	@DeleteAfterTestRun
-	protected Group group;
-
-	@DeleteAfterTestRun
 	protected User user;
 
 	private ServiceRegistration<?>

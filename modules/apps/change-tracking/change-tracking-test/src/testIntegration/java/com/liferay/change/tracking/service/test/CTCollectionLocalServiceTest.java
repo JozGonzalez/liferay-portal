@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service.test;
@@ -77,8 +68,8 @@ public class CTCollectionLocalServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_ctCollection1 = _ctCollectionLocalService.addCTCollection(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			CTCollectionLocalServiceTest.class.getSimpleName(), null);
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, CTCollectionLocalServiceTest.class.getSimpleName(), null);
 		_group = GroupTestUtil.addGroup();
 		_journalArticleClassNameId = _classNameLocalService.getClassNameId(
 			JournalArticle.class);
@@ -313,22 +304,29 @@ public class CTCollectionLocalServiceTest {
 	}
 
 	@Test
-	public void testDeletePreDeletedLayout() throws Exception {
-		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+	public void testDeletePredeletedLayout() throws Exception {
+		Layout layout1 = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Layout layout2 = LayoutTestUtil.addTypePortletLayout(_group);
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection1.getCtCollectionId())) {
 
-			_layoutLocalService.deleteLayout(layout);
+			_layoutLocalService.deleteLayout(layout1);
 
 			Assert.assertNull(
-				_layoutLocalService.fetchLayout(layout.getPlid()));
+				_layoutLocalService.fetchLayout(layout1.getPlid()));
+
+			_layoutLocalService.deleteLayout(layout2);
+
+			Assert.assertNull(
+				_layoutLocalService.fetchLayout(layout2.getPlid()));
 		}
 
-		_layoutLocalService.deleteLayout(layout.getPlid());
+		_layoutLocalService.deleteLayout(layout1.getPlid());
 
-		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout1.getPlid()));
 
 		_ctProcessLocalService.addCTProcess(
 			_ctCollection1.getUserId(), _ctCollection1.getCtCollectionId());
@@ -340,49 +338,62 @@ public class CTCollectionLocalServiceTest {
 		_ctProcessLocalService.addCTProcess(
 			_ctCollection2.getUserId(), _ctCollection2.getCtCollectionId());
 
-		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout1.getPlid()));
+
+		Assert.assertEquals(
+			layout2, _layoutLocalService.fetchLayout(layout2.getPlid()));
 	}
 
 	@Test
-	public void testDeletePreDeletedLayoutWithTwoCollections()
+	public void testDeletePredeletedLayoutWithTwoCollections()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+		Layout layout1 = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Layout layout2 = LayoutTestUtil.addTypePortletLayout(_group);
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection1.getCtCollectionId())) {
 
-			_layoutLocalService.deleteLayout(layout);
+			_layoutLocalService.deleteLayout(layout1);
 
 			Assert.assertNull(
-				_layoutLocalService.fetchLayout(layout.getPlid()));
+				_layoutLocalService.fetchLayout(layout1.getPlid()));
+
+			_layoutLocalService.deleteLayout(layout2);
+
+			Assert.assertNull(
+				_layoutLocalService.fetchLayout(layout2.getPlid()));
 		}
 
 		Assert.assertEquals(
-			layout, _layoutLocalService.getLayout(layout.getPlid()));
+			layout1, _layoutLocalService.getLayout(layout1.getPlid()));
+		Assert.assertEquals(
+			layout2, _layoutLocalService.getLayout(layout2.getPlid()));
 
 		_ctCollection2 = _ctCollectionLocalService.addCTCollection(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			StringUtil.randomString(), StringUtil.randomString());
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, StringUtil.randomString(), StringUtil.randomString());
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection2.getCtCollectionId())) {
 
-			_layoutLocalService.deleteLayout(layout);
+			_layoutLocalService.deleteLayout(layout1);
 
 			Assert.assertNull(
-				_layoutLocalService.fetchLayout(layout.getPlid()));
+				_layoutLocalService.fetchLayout(layout1.getPlid()));
 		}
 
 		Assert.assertEquals(
-			layout, _layoutLocalService.getLayout(layout.getPlid()));
+			layout1, _layoutLocalService.getLayout(layout1.getPlid()));
 
 		_ctProcessLocalService.addCTProcess(
 			_ctCollection1.getUserId(), _ctCollection1.getCtCollectionId());
 
-		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout1.getPlid()));
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout2.getPlid()));
 
 		_ctProcessLocalService.addCTProcess(
 			_ctCollection2.getUserId(), _ctCollection2.getCtCollectionId());
@@ -396,7 +407,9 @@ public class CTCollectionLocalServiceTest {
 					_ctCollection3.getCtCollectionId())) {
 
 			Assert.assertEquals(
-				layout, _layoutLocalService.getLayout(layout.getPlid()));
+				layout1, _layoutLocalService.getLayout(layout1.getPlid()));
+			Assert.assertEquals(
+				layout2, _layoutLocalService.getLayout(layout2.getPlid()));
 		}
 
 		_ctCollection4 = _ctCollectionLocalService.undoCTCollection(
@@ -408,14 +421,18 @@ public class CTCollectionLocalServiceTest {
 					_ctCollection4.getCtCollectionId())) {
 
 			Assert.assertNull(
-				_layoutLocalService.fetchLayout(layout.getPlid()));
+				_layoutLocalService.fetchLayout(layout1.getPlid()));
+			Assert.assertNull(
+				_layoutLocalService.fetchLayout(layout2.getPlid()));
 		}
 
 		_ctProcessLocalService.addCTProcess(
 			_ctCollection3.getUserId(), _ctCollection3.getCtCollectionId());
 
 		Assert.assertEquals(
-			layout, _layoutLocalService.getLayout(layout.getPlid()));
+			layout1, _layoutLocalService.getLayout(layout1.getPlid()));
+		Assert.assertEquals(
+			layout2, _layoutLocalService.getLayout(layout2.getPlid()));
 
 		Map<Long, List<ConflictInfo>> conflictInfosMap =
 			_ctCollectionLocalService.checkConflicts(_ctCollection4);

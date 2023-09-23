@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.client.serdes.v1_0;
@@ -52,6 +43,16 @@ public class ChannelSerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		if (channel.getAccountId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"accountId\": ");
+
+			sb.append(channel.getAccountId());
+		}
 
 		if (channel.getCurrencyCode() != null) {
 			if (sb.length() > 1) {
@@ -147,6 +148,13 @@ public class ChannelSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (channel.getAccountId() == null) {
+			map.put("accountId", null);
+		}
+		else {
+			map.put("accountId", String.valueOf(channel.getAccountId()));
+		}
+
 		if (channel.getCurrencyCode() == null) {
 			map.put("currencyCode", null);
 		}
@@ -211,7 +219,13 @@ public class ChannelSerDes {
 			Channel channel, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "currencyCode")) {
+			if (Objects.equals(jsonParserFieldName, "accountId")) {
+				if (jsonParserFieldValue != null) {
+					channel.setAccountId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
 				if (jsonParserFieldValue != null) {
 					channel.setCurrencyCode((String)jsonParserFieldValue);
 				}

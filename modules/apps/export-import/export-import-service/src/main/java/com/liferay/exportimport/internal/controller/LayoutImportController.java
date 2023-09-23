@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.controller;
 
-import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
+import com.liferay.asset.link.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletImportController;
@@ -44,6 +35,7 @@ import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.exception.LayoutPrototypeException;
 import com.liferay.portal.kernel.exception.LocaleException;
@@ -61,7 +53,6 @@ import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.plugin.Version;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -72,6 +63,7 @@ import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -102,7 +94,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -124,7 +115,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "model.class.name=com.liferay.portal.kernel.model.Layout",
-	service = {ExportImportController.class, LayoutImportController.class}
+	service = ExportImportController.class
 )
 public class LayoutImportController implements ImportController {
 
@@ -401,12 +392,12 @@ public class LayoutImportController implements ImportController {
 
 	protected boolean isValidateMissingReferences() {
 		try {
-			ExportImportServiceConfiguration configuration =
+			ExportImportServiceConfiguration exportImportServiceConfiguration =
 				_configurationProvider.getCompanyConfiguration(
 					ExportImportServiceConfiguration.class,
 					CompanyThreadLocal.getCompanyId());
 
-			return configuration.validateMissingReferences();
+			return exportImportServiceConfiguration.validateMissingReferences();
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -551,9 +542,7 @@ public class LayoutImportController implements ImportController {
 			"layout-prototype", "layout-set", "layout-set-prototype"
 		};
 
-		Stream<String> stream = Stream.of(expectedLARTypes);
-
-		if (stream.noneMatch(lt -> lt.equals(larType))) {
+		if (!ArrayUtil.exists(expectedLARTypes, type -> type.equals(larType))) {
 			throw new LARTypeException(larType, expectedLARTypes);
 		}
 
@@ -695,15 +684,9 @@ public class LayoutImportController implements ImportController {
 		Element layoutsElement = rootElement.element(
 			Layout.class.getSimpleName());
 
-		List<Node> nodes = xPath.selectNodes(layoutsElement);
-
-		Stream<Node> nodesStream = nodes.stream();
-
-		nodesStream.map(
-			node -> (Element)node
-		).forEach(
-			portletElements::add
-		);
+		for (Node node : xPath.selectNodes(layoutsElement)) {
+			portletElements.add((Element)node);
+		}
 
 		return portletElements;
 	}
@@ -1095,7 +1078,6 @@ public class LayoutImportController implements ImportController {
 			}
 
 			portletDataContext.setPlid(plid);
-
 			portletDataContext.setPortletId(portletId);
 
 			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import TestrayError from '../../TestrayError';
@@ -18,6 +9,7 @@ import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
 import {State} from '../../pages/Standalone/Teams/TeamsFormModal';
 import yupSchema from '../../schema/yup';
+import {testrayCaseResultImpl} from './TestrayCaseResult';
 import {APIResponse, TestrayComponent} from './types';
 
 type Component = typeof yupSchema.component.__outputType;
@@ -38,6 +30,9 @@ class TestrayComponentImpl extends Rest<Component, TestrayComponent> {
 			nestedFields: 'project,team',
 			transformData: (testrayComponent) => ({
 				...testrayComponent,
+				...testrayCaseResultImpl.normalizeCaseResultAggregation(
+					testrayComponent
+				),
 				project: testrayComponent?.r_projectToComponents_c_project,
 				team: testrayComponent?.r_teamToComponents_c_team,
 				teamId: testrayComponent.r_teamToComponents_c_teamId,

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Widget Page Templates";
@@ -21,14 +22,16 @@ definition {
 		}
 
 		task ("Enable local staging with a new blank site") {
-			JSONStaging.enableLocalStaging(groupName = "Site Name");
+			Staging.openStagingAdmin(siteURLKey = "site-name");
+
+			Staging.activateStagingCP(siteName = "Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {

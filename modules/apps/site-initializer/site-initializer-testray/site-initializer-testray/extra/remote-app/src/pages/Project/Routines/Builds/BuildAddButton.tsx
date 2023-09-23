@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {Dropdown} from '~/atoms';
 import {BuildStatuses} from '~/util/statuses';
 
 import Form from '../../../../components/Form';
 import Tooltip from '../../../../components/Tooltip';
-import {Dropdown} from '../../../../context/HeaderContext';
 import SearchBuilder from '../../../../core/SearchBuilder';
 import useDebounce from '../../../../hooks/useDebounce';
 import {useFetch} from '../../../../hooks/useFetch';
@@ -31,6 +22,22 @@ import {testrayBuildImpl} from '../../../../services/rest/TestrayBuild';
 type BuildAddButtonProps = {
 	routineId: string;
 };
+
+const dropDownItems: Dropdown = [
+	{
+		items: [
+			{
+				label: i18n.translate('new-build'),
+				path: './create',
+			},
+			{
+				label: i18n.sub('new-x', 'template'),
+				path: './create?template=true',
+			},
+		],
+		title: i18n.translate('create'),
+	},
+];
 
 const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 	const navigate = useNavigate();
@@ -74,22 +81,6 @@ const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 
 	const buildTemplates = buildResponseWithSearch?.items || [];
 	const templatesCount = buildResponse?.totalCount || 0;
-
-	const dropDownItems: Dropdown = [
-		{
-			items: [
-				{
-					label: i18n.translate('new-build'),
-					path: './create',
-				},
-				{
-					label: i18n.sub('new-x', 'template'),
-					path: './create/template/true',
-				},
-			],
-			title: i18n.translate('create'),
-		},
-	];
 
 	return (
 		<ClayDropDown

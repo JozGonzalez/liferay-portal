@@ -1,23 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index;
 
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.index.CreateIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.DeleteIndexRequest;
+import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexRequest;
+import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexResponse;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
 
 import org.osgi.service.component.annotations.Component;
@@ -26,33 +24,64 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Wade Cao
  * @author Adam Brandizzi
+ * @author Joshua Cords
+ * @author Tibor Lipusz
  */
 @Component(service = RankingIndexCreator.class)
 public class RankingIndexCreatorImpl implements RankingIndexCreator {
 
 	@Override
 	public void create(RankingIndexName rankingIndexName) {
-		String mappingSource = StringUtil.read(
-			getClass(), _INDEX_SETTINGS_RESOURCE_NAME);
-
 		CreateIndexRequest createIndexRequest = new CreateIndexRequest(
 			rankingIndexName.getIndexName());
 
-		createIndexRequest.setSource(mappingSource);
+		createIndexRequest.setMappings(_readJSON(_INDEX_MAPPINGS_FILE_NAME));
+		createIndexRequest.setSettings(_readJSON(_INDEX_SETTINGS_FILE_NAME));
 
 		_searchEngineAdapter.execute(createIndexRequest);
 	}
 
 	@Override
 	public void delete(RankingIndexName rankingIndexName) {
-		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(
-			rankingIndexName.getIndexName());
+		IndicesExistsIndexRequest indicesExistsIndexRequest =
+			new IndicesExistsIndexRequest(rankingIndexName.getIndexName());
 
-		_searchEngineAdapter.execute(deleteIndexRequest);
+		IndicesExistsIndexResponse indicesExistsIndexResponse =
+			_searchEngineAdapter.execute(indicesExistsIndexRequest);
+
+		if (indicesExistsIndexResponse.isExists()) {
+			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(
+				rankingIndexName.getIndexName());
+
+			_searchEngineAdapter.execute(deleteIndexRequest);
+		}
 	}
 
-	private static final String _INDEX_SETTINGS_RESOURCE_NAME =
-		"/META-INF/search/liferay-search-tuning-rankings-index.json";
+	private String _readJSON(String fileName) {
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(
+				StringUtil.read(getClass(), "/META-INF/search/" + fileName));
+
+			return jsonObject.toString();
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+		}
+
+		return null;
+	}
+
+	private static final String _INDEX_MAPPINGS_FILE_NAME =
+		"liferay-search-tuning-rankings-mappings.json";
+
+	private static final String _INDEX_SETTINGS_FILE_NAME =
+		"liferay-search-tuning-rankings-settings.json";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		RankingIndexCreatorImpl.class);
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;

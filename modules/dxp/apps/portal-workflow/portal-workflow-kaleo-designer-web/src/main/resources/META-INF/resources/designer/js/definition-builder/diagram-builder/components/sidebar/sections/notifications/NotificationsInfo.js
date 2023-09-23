@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -144,9 +138,22 @@ const NotificationsInfo = ({
 		selectedItem.data.notifications?.recipients?.[notificationIndex]
 			?.length !== 0
 	) {
-		recipientTypeHolder = getRecipientType(
-			selectedItem.data.notifications?.recipients?.[notificationIndex]
-		);
+		if (
+			!selectedItem.data.notifications?.recipients?.[
+				notificationIndex
+			]?.[0]
+		) {
+			recipientTypeHolder = getRecipientType(
+				selectedItem.data.notifications?.recipients?.[notificationIndex]
+			);
+		}
+		else {
+			recipientTypeHolder = getRecipientType(
+				selectedItem.data.notifications?.recipients?.[
+					notificationIndex
+				][0]
+			);
+		}
 	}
 	else {
 		recipientTypeHolder = 'assetCreator';
@@ -216,19 +223,49 @@ const NotificationsInfo = ({
 	};
 
 	const updateSelectedItem = (values) => {
+		const initialValues = {
+			descriptionValues: [],
+			executionTypeValues: [],
+			nameValues: [],
+			notificationTypesValues: [],
+			templateLanguageValues: [],
+			templateValues: [],
+		};
+
+		values.map(
+			({
+				description,
+				executionType,
+				name,
+				notificationTypes,
+				template,
+				templateLanguage,
+			}) => {
+				initialValues.descriptionValues.push(
+					description ? description : ''
+				);
+				initialValues.executionTypeValues.push(
+					executionType ? executionType : null
+				);
+				initialValues.nameValues.push(name ? name : '');
+				initialValues.notificationTypesValues.push(
+					notificationTypes ? notificationTypes : null
+				);
+				initialValues.templateLanguageValues.push(
+					templateLanguage ? templateLanguage : null
+				);
+				initialValues.templateValues.push(template ?? null);
+			}
+		);
 		setSelectedItem((previousItem) => ({
 			...previousItem,
 			data: {
 				...previousItem.data,
 				notifications: {
-					description: values.map(({description}) => description),
-					executionType: values.map(
-						({executionType}) => executionType
-					),
-					name: values.map(({name}) => name),
-					notificationTypes: values.map(
-						({notificationTypes}) => notificationTypes
-					),
+					description: initialValues.descriptionValues,
+					executionType: initialValues.executionTypeValues,
+					name: initialValues.nameValues,
+					notificationTypes: initialValues.notificationTypesValues,
 					recipients: !previousItem.data.notifications?.recipients
 						? [
 								{
@@ -236,10 +273,8 @@ const NotificationsInfo = ({
 								},
 						  ]
 						: [...previousItem.data.notifications.recipients],
-					template: values.map(({template}) => template),
-					templateLanguage: values.map(
-						({templateLanguage}) => templateLanguage
-					),
+					template: initialValues.templateValues,
+					templateLanguage: initialValues.templateLanguageValues,
 				},
 			},
 		}));
@@ -375,7 +410,8 @@ const NotificationsInfo = ({
 
 		const recipients =
 			selectedItem.data.notifications &&
-			selectedItem.data.notifications.recipients[notificationIndex];
+			(selectedItem.data.notifications.recipients[notificationIndex][0] ||
+				selectedItem.data.notifications.recipients[notificationIndex]);
 
 		if (recipients && recipientType === 'roleType') {
 			for (let i = 0; i < recipients.roleType.length; i++) {

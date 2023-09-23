@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.test.util.context;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.model.CommerceOrder;
@@ -30,26 +21,26 @@ import com.liferay.portal.kernel.model.User;
 public class TestCommerceContext implements CommerceContext {
 
 	public TestCommerceContext(
-		CommerceCurrency commerceCurrency, CommerceChannel commerceChannel,
-		User contextUser, Group contextGroup, CommerceAccount commerceAccount,
+		AccountEntry accountEntry, CommerceCurrency commerceCurrency,
+		CommerceChannel commerceChannel, User contextUser, Group contextGroup,
 		CommerceOrder commerceOrder) {
 
+		_accountEntry = accountEntry;
 		_commerceCurrency = commerceCurrency;
 		_commerceChannel = commerceChannel;
 		_contextUser = contextUser;
 		_contextGroup = contextGroup;
-		_commerceAccount = commerceAccount;
 		_commerceOrder = commerceOrder;
+	}
+
+	@Override
+	public AccountEntry getAccountEntry() {
+		return _accountEntry;
 	}
 
 	@Override
 	public String[] getAccountEntryAllowedTypes() throws PortalException {
 		return new String[0];
-	}
-
-	@Override
-	public CommerceAccount getCommerceAccount() {
-		return _commerceAccount;
 	}
 
 	@Override
@@ -90,7 +81,7 @@ public class TestCommerceContext implements CommerceContext {
 		return 0;
 	}
 
-	private final CommerceAccount _commerceAccount;
+	private final AccountEntry _accountEntry;
 	private final CommerceChannel _commerceChannel;
 	private final CommerceCurrency _commerceCurrency;
 	private final CommerceOrder _commerceOrder;

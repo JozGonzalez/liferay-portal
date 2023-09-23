@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
@@ -19,6 +10,7 @@ import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -95,6 +87,8 @@ public class GetFragmentEntryLinkMVCResourceCommand
 		String itemClassName = ParamUtil.getString(
 			resourceRequest, "itemClassName");
 		long itemClassPK = ParamUtil.getLong(resourceRequest, "itemClassPK");
+		String itemExternalReferenceCode = ParamUtil.getString(
+			resourceRequest, "itemExternalReferenceCode");
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
@@ -103,9 +97,19 @@ public class GetFragmentEntryLinkMVCResourceCommand
 			(LayoutDisplayPageProvider<?>)httpServletRequest.getAttribute(
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER);
 
-		if (Validator.isNotNull(itemClassName) && (itemClassPK > 0)) {
-			InfoItemIdentifier infoItemIdentifier =
-				new ClassPKInfoItemIdentifier(itemClassPK);
+		if (Validator.isNotNull(itemClassName) &&
+			((itemClassPK > 0) ||
+			 Validator.isNotNull(itemExternalReferenceCode))) {
+
+			InfoItemIdentifier infoItemIdentifier = null;
+
+			if (itemClassPK > 0) {
+				infoItemIdentifier = new ClassPKInfoItemIdentifier(itemClassPK);
+			}
+			else {
+				infoItemIdentifier = new ERCInfoItemIdentifier(
+					itemExternalReferenceCode);
+			}
 
 			InfoItemObjectProvider<Object> infoItemObjectProvider =
 				_infoItemServiceRegistry.getFirstInfoItemService(

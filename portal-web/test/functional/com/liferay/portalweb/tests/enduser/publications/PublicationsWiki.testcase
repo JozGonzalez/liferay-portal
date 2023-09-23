@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Wiki";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -68,12 +68,6 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		Button.clickPublish();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
-
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
@@ -117,13 +111,13 @@ definition {
 			assetType = "Wiki Node",
 			wikiNodeName = "Wiki Node Name");
 
-		JSONRecycleBin.emptyRecycleBin();
-
 		PublicationsNavigator.gotoReviewChanges(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
 
-		PublicationsChanges.filterChangesByItem(
+		// Workaround LPS-183473
+
+		/*PublicationsChanges.filterChangesByItem(
 			checkboxName = "Guest",
 			menuItem = "Sites");
 
@@ -144,13 +138,7 @@ definition {
 			changeSite = "Guest",
 			changeTitle = "Wiki Node Name",
 			changeType = "Deleted",
-			changeUser = "Test Test");
-
-		Button.clickPublish();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
+			changeUser = "Test Test");*/
 
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
@@ -230,9 +218,54 @@ definition {
 		}
 
 		task ("Publish the publication") {
-			JSONPublications.publishPublication(publicationName = "Test Publication");
+			Publications.publishPublication(publicationName = "Test Publication");
+		}
+	}
 
-			Publications.viewPublicationPublished(publicationName = "Test Publication");
+	@description = "This is the use case for LPS-179026. Can preview changes for WikiPages"
+	@priority = 3
+	test CanPreviewChangesForWikiPages {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONWiki.addWikiPage(
+			groupName = "Site Name",
+			wikiNodeName = "Main",
+			wikiPageContent = "Wiki Page Content",
+			wikiPageName = "Wiki Page Title");
+
+		JSONPublications.addPublication(publicationName = "Publication Name 1");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name 1");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		JSONWiki.updateWikiPage(
+			groupName = "Site Name",
+			wikiNodeName = "Main",
+			wikiPageContent = "Wiki Page Content Edited",
+			wikiPageName = "Wiki Page Title");
+
+		JSONWiki.addAttachmentToWikiPage(
+			fileName = "Document_1.txt",
+			groupName = "Site Name",
+			mimeType = "text/txt",
+			wikiNodeName = "Main",
+			wikiPageName = "Wiki Page Title");
+
+		task ("View the wiki page change details on Display tab") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Wiki Page",
+				changeOrder = 2,
+				changeTitle = "Wiki Page Title (1.1)");
+
+			PublicationsChangeDetails.viewChangeDetailsInDisplay(
+				changeType = "Modified",
+				contentValueInProduction = "Wiki Page Content",
+				contentValueInPublication = "Wiki Page Content Edited",
+				diffAddedValue = "Attachments",
+				publicationName = "Publication Name 1");
 		}
 	}
 
@@ -283,17 +316,13 @@ definition {
 		}
 
 		task ("Publish publications and assert that was successful") {
-			PublicationsNavigator.gotoPublish(
+			Publications.publishPublication(
 				gotoPublicationsAdmin = "true",
 				publicationName = "Publication Name 2");
 
-			Publications.publishPublication(publicationName = "Publication Name 2");
-
-			PublicationsNavigator.gotoPublish(
+			Publications.publishPublication(
 				gotoPublicationsAdmin = "true",
 				publicationName = "Publication Name 1");
-
-			Publications.publishPublication(publicationName = "Publication Name 1");
 		}
 	}
 

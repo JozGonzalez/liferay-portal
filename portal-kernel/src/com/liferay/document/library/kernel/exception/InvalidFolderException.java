@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.exception;
@@ -31,11 +22,15 @@ import java.util.Locale;
  */
 public class InvalidFolderException extends PortalException {
 
-	public static final int CANNOT_MOVE_INTO_CHILD_FOLDER = 1;
+	public static final int CANNOT_COPY_INTO_CHILD_FOLDER = 1;
 
-	public static final int CANNOT_MOVE_INTO_ITSELF = 2;
+	public static final int CANNOT_COPY_INTO_ITSELF = 2;
 
-	public static final int INVALID_ROOT_FOLDER = 3;
+	public static final int CANNOT_MOVE_INTO_CHILD_FOLDER = 3;
+
+	public static final int CANNOT_MOVE_INTO_ITSELF = 4;
+
+	public static final int INVALID_ROOT_FOLDER = 5;
 
 	public InvalidFolderException(int type, long folderId) {
 		_type = type;
@@ -66,7 +61,13 @@ public class InvalidFolderException extends PortalException {
 	}
 
 	public String getMessageKey() {
-		if (_type == CANNOT_MOVE_INTO_CHILD_FOLDER) {
+		if (_type == CANNOT_COPY_INTO_CHILD_FOLDER) {
+			return "unable-to-copy-folder-x-into-one-of-its-children";
+		}
+		else if (_type == CANNOT_COPY_INTO_ITSELF) {
+			return "unable-to-copy-folder-x-into-itself";
+		}
+		else if (_type == CANNOT_MOVE_INTO_CHILD_FOLDER) {
 			return "unable-to-move-folder-x-into-one-of-its-children";
 		}
 		else if (_type == CANNOT_MOVE_INTO_ITSELF) {

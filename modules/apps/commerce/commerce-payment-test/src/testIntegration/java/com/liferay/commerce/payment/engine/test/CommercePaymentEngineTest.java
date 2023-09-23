@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.engine.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.context.CommerceGroupThreadLocal;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
@@ -37,6 +28,7 @@ import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -116,8 +108,8 @@ public class CommercePaymentEngineTest {
 			addCommercePaymentMethodGroupRel(
 				_user.getUserId(), _commerceChannel.getGroupId(),
 				RandomTestUtil.randomLocaleStringMap(),
-				RandomTestUtil.randomLocaleStringMap(), null,
-				TestCommercePaymentMethod.KEY, 99, true);
+				RandomTestUtil.randomLocaleStringMap(), true, null,
+				TestCommercePaymentMethod.KEY, 99, null);
 
 		_httpServletRequest = new MockHttpServletRequest("GET", "");
 
@@ -154,7 +146,8 @@ public class CommercePaymentEngineTest {
 		commerceOrder.setCommercePaymentMethodKey(
 			TestCommercePaymentMethod.KEY);
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog commerceCatalog =
 			CommerceCatalogLocalServiceUtil.addCommerceCatalog(
@@ -173,9 +166,9 @@ public class CommercePaymentEngineTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_commercePriceEntryLocalService.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-			BigDecimal.ZERO,
+			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO, false,
+			BigDecimal.ZERO, null,
 			ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -183,8 +176,8 @@ public class CommercePaymentEngineTest {
 				_serviceContext);
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
-			10);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
 
 		CommerceTestUtil.addWarehouseCommerceChannelRel(
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
@@ -192,7 +185,7 @@ public class CommercePaymentEngineTest {
 
 		CommerceTestUtil.addCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
-			1);
+			BigDecimal.ONE);
 
 		CommerceOrder checkoutOrder =
 			_commerceOrderEngine.checkoutCommerceOrder(
@@ -206,7 +199,7 @@ public class CommercePaymentEngineTest {
 				checkoutOrder.getCommerceOrderId());
 
 		Assert.assertEquals(
-			CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED,
+			CommerceOrderPaymentConstants.STATUS_AUTHORIZED,
 			paymentOrder.getPaymentStatus());
 
 		Assert.assertNotNull(paymentOrder.getTransactionId());
@@ -219,7 +212,7 @@ public class CommercePaymentEngineTest {
 			checkoutOrder.getCommerceOrderId());
 
 		Assert.assertEquals(
-			CommerceOrderConstants.PAYMENT_STATUS_PAID,
+			CommerceOrderPaymentConstants.STATUS_COMPLETED,
 			paymentOrder.getPaymentStatus());
 	}
 
@@ -245,7 +238,8 @@ public class CommercePaymentEngineTest {
 		commerceOrder.setCommercePaymentMethodKey(
 			TestCommercePaymentMethod.KEY);
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog commerceCatalog =
 			CommerceCatalogLocalServiceUtil.addCommerceCatalog(
@@ -265,9 +259,9 @@ public class CommercePaymentEngineTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_commercePriceEntryLocalService.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-			BigDecimal.ZERO,
+			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO, false,
+			BigDecimal.ZERO, null,
 			ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -275,8 +269,8 @@ public class CommercePaymentEngineTest {
 				_serviceContext);
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
-			10);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
 
 		CommerceTestUtil.addWarehouseCommerceChannelRel(
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
@@ -284,7 +278,7 @@ public class CommercePaymentEngineTest {
 
 		CommerceTestUtil.addCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
-			1);
+			BigDecimal.ONE);
 
 		CommerceOrder checkoutOrder =
 			_commerceOrderEngine.checkoutCommerceOrder(
@@ -298,7 +292,7 @@ public class CommercePaymentEngineTest {
 				checkoutOrder.getCommerceOrderId());
 
 		Assert.assertEquals(
-			CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED,
+			CommerceOrderPaymentConstants.STATUS_AUTHORIZED,
 			paymentOrder.getPaymentStatus());
 
 		Assert.assertNotNull(paymentOrder.getTransactionId());

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.selenium;
@@ -19,12 +10,13 @@ import com.deque.html.axecore.results.Rule;
 import com.deque.html.axecore.selenium.AxeBuilder;
 import com.deque.html.axecore.selenium.AxeReporter;
 
+import com.liferay.poshi.core.PoshiGetterUtil;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.util.CharPool;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.OSDetector;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringPool;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
@@ -51,6 +43,8 @@ import java.io.File;
 import java.io.StringReader;
 
 import java.nio.file.Paths;
+
+import java.time.Duration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,8 +99,10 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.WrapsDriver;
+import org.openqa.selenium.chromium.HasCdp;
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -138,6 +134,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	public BaseWebDriverImpl(String browserURL, WebDriver webDriver) {
 		System.setProperty("java.awt.headless", "false");
+
+		poshiProperties = PoshiProperties.getPoshiProperties();
 
 		_webDriver = webDriver;
 
@@ -214,8 +212,10 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
-	public void assertAccessible() throws Exception {
-		assertElementAccessible(null);
+	public void assertAccessible(List<String> ignorableImpacts)
+		throws Exception {
+
+		assertElementAccessible(null, ignorableImpacts);
 	}
 
 	@Override
@@ -343,28 +343,66 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
-	public void assertElementAccessible(String locator) throws Exception {
+	public void assertElementAccessible(
+			String locator, List<String> ignorableImpacts)
+		throws Exception {
+
 		AxeBuilder axeBuilder = new AxeBuilder();
 
 		axeBuilder.withTags(
-			Arrays.asList(PropsValues.ACCESSIBILITY_STANDARDS_TAGS.split(",")));
+			Arrays.asList(
+				poshiProperties.accessibilityStandardsTags.split(",")));
 
 		Results results = null;
 
 		if (Validator.isNotNull(locator)) {
-			results = axeBuilder.analyze(this, getWebElement(locator));
+			results = axeBuilder.analyze(_webDriver, getWebElement(locator));
 		}
 		else {
-			results = axeBuilder.analyze(this);
+			results = axeBuilder.analyze(_webDriver);
 		}
 
 		List<Rule> violations = results.getViolations();
 
-		if (!violations.isEmpty()) {
-			AxeReporter.getReadableAxeResults("analyze", this, violations);
+		if (violations.isEmpty()) {
+			System.out.println("No accessiblity violations were found");
 
-			throw new Exception(AxeReporter.getAxeResultString());
+			return;
 		}
+
+		List<Rule> rules = new ArrayList<>();
+
+		if (ignorableImpacts == null) {
+			rules.addAll(violations);
+		}
+		else {
+			for (Rule violation : violations) {
+				if (ignorableImpacts.contains(violation.getImpact())) {
+					continue;
+				}
+
+				rules.add(violation);
+			}
+		}
+
+		AxeReporter.getReadableAxeResults("analyze", this, rules);
+
+		throw new Exception(AxeReporter.getAxeResultString());
+	}
+
+	@Override
+	public void assertElementFocused(String locator) throws Exception {
+		Condition elementFocusedCondition = getElementFocusedCondition(locator);
+
+		elementFocusedCondition.assertTrue();
+	}
+
+	@Override
+	public void assertElementNotFocused(String locator) throws Exception {
+		Condition elementNotFocusedCondition = getElementNotFocusedCondition(
+			locator);
+
+		elementNotFocusedCondition.assertTrue();
 	}
 
 	@Override
@@ -425,7 +463,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertJavaScriptErrors(String ignoreJavaScriptError)
 		throws Exception {
 
-		if (!PropsValues.TEST_ASSERT_JAVASCRIPT_ERRORS) {
+		if (!poshiProperties.testAssertJavascriptErrors) {
 			return;
 		}
 
@@ -760,6 +798,18 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void assertTextMatches(String locator, String regex)
+		throws Exception {
+
+		assertElementPresent(locator);
+
+		Condition textMatchedCondition = getTextMatchesCondition(
+			locator, regex);
+
+		textMatchedCondition.assertTrue();
+	}
+
+	@Override
 	public void assertTextNotPresent(String pattern) throws Exception {
 		Condition textNotPresentCondition = getTextNotPresentCondition(pattern);
 
@@ -780,6 +830,17 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		Condition valueCondition = getValueCondition(locator, pattern);
 
 		valueCondition.assertTrue();
+	}
+
+	@Override
+	public void assertValueMatches(String locator, String regex)
+		throws Exception {
+
+		assertElementPresent(locator);
+
+		Condition valueMatchCondition = getValueMatchCondition(locator, regex);
+
+		valueMatchCondition.assertTrue();
 	}
 
 	@Override
@@ -1004,6 +1065,19 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void executeCDPCommand(
+		String commandName, Map<String, Object> commandParameters) {
+
+		Augmenter augmenter = new Augmenter();
+
+		WebDriver webDriver = augmenter.augment(getWebDriver());
+
+		HasCdp hasCdp = (HasCdp)webDriver;
+
+		hasCdp.executeCdpCommand(commandName, commandParameters);
+	}
+
+	@Override
 	public void executeJavaScript(
 		String javaScript, String argument1, String argument2) {
 
@@ -1060,7 +1134,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public String getConfirmation(String value) {
 		switchTo();
 
-		WebDriverWait webDriverWait = new WebDriverWait(this, 1);
+		WebDriverWait webDriverWait = new WebDriverWait(
+			this, Duration.ofSeconds(1));
 
 		try {
 			Alert alert = webDriverWait.until(
@@ -1284,7 +1359,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 		LocationCallable callable = new LocationCallable();
 
-		for (int i = 0; i < PropsValues.GET_LOCATION_MAX_RETRIES; i++) {
+		for (int i = 0; i < poshiProperties.getLocationMaxRetries; i++) {
 			FutureTask<String> futureTask = new FutureTask<>(
 				callable._init(this));
 
@@ -1294,7 +1369,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 			try {
 				return futureTask.get(
-					PropsValues.GET_LOCATION_TIMEOUT, TimeUnit.SECONDS);
+					poshiProperties.getLocationTimeout, TimeUnit.SECONDS);
 			}
 			catch (CancellationException cancellationException) {
 				exceptions.add(cancellationException);
@@ -1496,7 +1571,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		switchTo();
 
 		try {
-			WebDriverWait webDriverWait = new WebDriverWait(this, 1);
+			WebDriverWait webDriverWait = new WebDriverWait(
+				this, Duration.ofSeconds(1));
 
 			webDriverWait.until(ExpectedConditions.alertIsPresent());
 
@@ -1578,6 +1654,13 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public boolean isElementFocused(String locator) throws Exception {
+		Condition elementFocusedCondition = getElementFocusedCondition(locator);
+
+		return elementFocusedCondition.evaluate();
+	}
+
+	@Override
 	public boolean isElementNotPresent(String locator) throws Exception {
 		Condition elementNotPresentCondition = getElementNotPresentCondition(
 			locator);
@@ -1595,7 +1678,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	@Override
 	public boolean isElementPresentAfterWait(String locator) throws Exception {
 		for (int second = 0;; second++) {
-			if (second >= PropsValues.TIMEOUT_EXPLICIT_WAIT) {
+			if (second >= poshiProperties.timeoutExplicitWait) {
 				return isElementPresent(locator);
 			}
 
@@ -1732,16 +1815,16 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public boolean isTCatEnabled() {
-		return PropsValues.TCAT_ENABLED;
+		return poshiProperties.tcatEnabled;
 	}
 
 	@Override
 	public boolean isTestName(String testName) {
-		if (testName.equals(getTestName())) {
-			return true;
-		}
+		String expectedTestName =
+			PoshiGetterUtil.getClassCommandNameFromNamespacedClassCommandName(
+				getTestName());
 
-		return false;
+		return testName.equals(expectedTestName);
 	}
 
 	@Override
@@ -2086,7 +2169,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		throws Exception {
 
 		File baselineFile = new File(
-			PropsValues.TEST_BASE_DIR_NAME + getOcularBaselineImageDirName() +
+			poshiProperties.testBaseDirName + getOcularBaselineImageDirName() +
 				"/" + fileName);
 
 		if (!baselineFile.exists()) {
@@ -2096,7 +2179,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		}
 
 		File resultFile = new File(
-			PropsValues.TEST_BASE_DIR_NAME + getOcularResultImageDirName() +
+			poshiProperties.testBaseDirName + getOcularResultImageDirName() +
 				"/" + fileName);
 
 		File resultParentFile = resultFile.getParentFile();
@@ -2134,7 +2217,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		String targetURL = url.trim();
 
 		if (targetURL.startsWith("/")) {
-			targetURL = PropsValues.PORTAL_URL + targetURL;
+			targetURL = poshiProperties.portalURL + targetURL;
 		}
 
 		get(targetURL);
@@ -2247,7 +2330,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public void saveScreenshot(String fileName) throws Exception {
-		if (!PropsValues.SAVE_SCREENSHOT) {
+		if (!poshiProperties.saveScreenshot) {
 			return;
 		}
 
@@ -2489,7 +2572,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public void setDefaultTimeoutImplicit() {
-		int timeout = PropsValues.TIMEOUT_IMPLICIT_WAIT * 1000;
+		int timeout = poshiProperties.timeoutImplicitWait * 1000;
 
 		setTimeoutImplicit(String.valueOf(timeout));
 	}
@@ -2511,7 +2594,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void setTimeoutImplicit(String timeout) {
 		WebDriver.Options options = manage();
 
-		if (!PropsValues.BROWSER_TYPE.equals("safari")) {
+		if (!poshiProperties.browserType.equals("safari")) {
 			WebDriver.Timeouts timeouts = options.timeouts();
 
 			timeouts.implicitlyWait(
@@ -2755,7 +2838,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void sikuliUploadTCatFile(String image, String value)
 		throws Exception {
 
-		String fileName = PropsValues.TCAT_ADMIN_REPOSITORY + "/" + value;
+		String fileName = poshiProperties.tcatAdminRepository + "/" + value;
 
 		fileName = FileUtil.fixFilePath(fileName);
 
@@ -3399,6 +3482,16 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void waitForTextMatches(String locator, String regex)
+		throws Exception {
+
+		Condition textMatchesCondition = getTextMatchesCondition(
+			locator, regex);
+
+		textMatchesCondition.waitFor();
+	}
+
+	@Override
 	public void waitForTextNotPresent(String value) throws Exception {
 		Condition textNotPresentCondition = getTextNotPresentCondition(value);
 
@@ -3479,7 +3572,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		if (_alert == null) {
 			switchTo();
 
-			WebDriverWait webDriverWait = new WebDriverWait(this, 1);
+			WebDriverWait webDriverWait = new WebDriverWait(
+				this, Duration.ofSeconds(1));
 
 			_alert = webDriverWait.until(ExpectedConditions.alertIsPresent());
 		}
@@ -3490,7 +3584,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	protected String getAlertText() {
 		switchTo();
 
-		WebDriverWait webDriverWait = new WebDriverWait(this, 1);
+		WebDriverWait webDriverWait = new WebDriverWait(
+			this, Duration.ofSeconds(1));
 
 		Alert alert = webDriverWait.until(ExpectedConditions.alertIsPresent());
 
@@ -3560,8 +3655,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		for (Element element : elements) {
 			String href = element.attr("href");
 
-			if (!href.contains(PropsValues.PORTAL_URL)) {
-				href = PropsValues.PORTAL_URL + href;
+			if (!href.contains(poshiProperties.portalURL)) {
+				href = poshiProperties.portalURL + href;
 			}
 
 			Connection connection = Jsoup.connect(href);
@@ -3625,6 +3720,40 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		}
 
 		return idAttribute;
+	}
+
+	protected Condition getElementFocusedCondition(String locator) {
+		String message = "Element from locator " + locator + " is not focused";
+
+		return new Condition(message) {
+
+			@Override
+			public boolean evaluate() throws Exception {
+				WebElement webElement = getWebElement(locator);
+
+				WebDriver webDriver = getWebDriver();
+
+				TargetLocator targetLocator = webDriver.switchTo();
+
+				WebElement activeWebElement = targetLocator.activeElement();
+
+				return webElement.equals(activeWebElement);
+			}
+
+		};
+	}
+
+	protected Condition getElementNotFocusedCondition(String locator) {
+		String message = "Element from locator " + locator + " is not focused";
+
+		return new Condition(message) {
+
+			@Override
+			public boolean evaluate() throws Exception {
+				return !isElementFocused(locator);
+			}
+
+		};
 	}
 
 	protected Condition getElementNotPresentCondition(String locator) {
@@ -4140,6 +4269,31 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		};
 	}
 
+	protected Condition getTextMatchesCondition(String locator, String regex) {
+		return new Condition() {
+
+			@Override
+			public void assertTrue() throws Exception {
+				if (!evaluate()) {
+					String message = StringUtil.combine(
+						"Actual text \"", getText(locator),
+						"\" does not match pattern \"", regex, "\" at \"",
+						locator, "\"");
+
+					throw new Exception(message);
+				}
+			}
+
+			@Override
+			public boolean evaluate() throws Exception {
+				String text = getText(locator);
+
+				return text.matches(regex);
+			}
+
+		};
+	}
+
 	protected Condition getTextNotPresentCondition(String pattern) {
 		String message = "\"" + pattern + "\" is present";
 
@@ -4188,6 +4342,30 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			@Override
 			public boolean evaluate() throws Exception {
 				return value.equals(getElementValue(locator));
+			}
+
+		};
+	}
+
+	protected Condition getValueMatchCondition(String locator, String regex) {
+		return new Condition() {
+
+			@Override
+			public void assertTrue() throws Exception {
+				if (!evaluate()) {
+					String message = StringUtil.combine(
+						"Actual value \"", getElementValue(locator), "\" at \"",
+						locator, "\"", "\" does not match pattern\"", regex);
+
+					throw new Exception(message);
+				}
+			}
+
+			@Override
+			public boolean evaluate() throws Exception {
+				String value = getElementValue(locator);
+
+				return value.matches(regex);
 			}
 
 		};
@@ -4250,6 +4428,10 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			}
 
 		};
+	}
+
+	protected WebDriver getWebDriver() {
+		return _webDriver;
 	}
 
 	protected WebElement getWebElement(String locator) {
@@ -4315,7 +4497,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	protected WebDriver getWrappedWebDriver(String locator) {
-		WebDriverWait webDriverWait = new WebDriverWait(this, 5);
+		WebDriverWait webDriverWait = new WebDriverWait(
+			this, Duration.ofSeconds(5));
 
 		webDriverWait.until(
 			ExpectedConditions.presenceOfElementLocated(getBy(locator)));
@@ -4376,7 +4559,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	protected void ocularConfig() {
-		String testBaseDirName = PropsValues.TEST_BASE_DIR_NAME;
+		String testBaseDirName = poshiProperties.testBaseDirName;
 
 		OcularConfiguration ocularConfiguration = Ocular.config();
 
@@ -4397,7 +4580,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	protected void saveWebPage(String fileName, String htmlSource)
 		throws Exception {
 
-		if (!PropsValues.SAVE_WEB_PAGE) {
+		if (!poshiProperties.saveWebPage) {
 			return;
 		}
 
@@ -4483,6 +4666,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		_navigationBarHeight = navigationBarHeight;
 	}
 
+	protected PoshiProperties poshiProperties;
+
 	protected abstract class Condition {
 
 		public Condition() {
@@ -4513,7 +4698,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		}
 
 		public void waitFor(String throwException) throws Exception {
-			int timeout = PropsValues.TIMEOUT_EXPLICIT_WAIT * 1000;
+			int timeout = poshiProperties.timeoutExplicitWait * 1000;
 			int wait = 500;
 
 			for (int millisecond = 0; millisecond < timeout;
@@ -4581,7 +4766,10 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		".*?(\\t).*?", Pattern.DOTALL);
 
 	static {
-		String testDependenciesDirName = PropsValues.TEST_DEPENDENCIES_DIR_NAME;
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		String testDependenciesDirName =
+			poshiProperties.testDependenciesDirName;
 
 		String ocularResultImageDirName =
 			testDependenciesDirName + "//ocular//result";
@@ -4590,7 +4778,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		String sikuliImagesDirName =
 			testDependenciesDirName + "//sikuli//linux//";
 
-		String outputDirName = PropsValues.OUTPUT_DIR_NAME;
+		String outputDirName = poshiProperties.outputDirName;
 
 		if (OSDetector.isApple()) {
 			sikuliImagesDirName = StringUtil.replace(

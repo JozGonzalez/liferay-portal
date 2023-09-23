@@ -1,27 +1,26 @@
 /* eslint-disable no-undef */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+const ROLE = {
+	EVP_MANAGER: 'EVP Manager',
+};
+const userRoles = document.querySelector('.userRoles').value;
+
 const updateStatus = async (key, name, message) => {
-	const organizationID = fragmentElement.querySelector('.organizationID')
+	const organizationId = fragmentElement.querySelector('.organizationId')
 		.value;
 
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	await fetch(`/o/c/evporganizations/${organizationID}`, {
+	await fetch(`/o/c/evporganizations/${organizationId}`, {
 		body: `{
+		"messageEVPManager":"${message}",
 		"organizationStatus":{
 		   "key":"${key}",
 		   "name":"${name}"
-		},
-		"messageEVPManager":"${message}"
+		}
 	 }`,
 		headers: {
 			'content-type': 'application/json',
@@ -55,7 +54,20 @@ const openModal = () => {
 			'<div id="messageDanger" class="alert alert-danger" role="alert" hidden>This field is mandatory, please fill it in.</div>',
 		buttons: [
 			{
-				displayType: 'danger',
+				displayType: 'secondary',
+				label: 'Request more Info',
+				async onClick() {
+					await layerForDendingUpdateStatus(
+						getMessage(),
+						getAttributeHidden(),
+						'awaitingMoreInfoFromEmployee',
+						'Awaiting More Info From Employee'
+					);
+				},
+				type: 'submit',
+			},
+			{
+				displayType: 'secondary',
 				label: 'Reject',
 				async onClick() {
 					await layerForDendingUpdateStatus(
@@ -68,26 +80,35 @@ const openModal = () => {
 				type: 'submit',
 			},
 			{
-				displayType: 'success',
 				label: 'Approve',
 				async onClick() {
+					const status =
+						userRoles === ROLE.EVP_MANAGER
+							? {
+									key: 'awaitingFinanceApproval',
+									value: 'Awaiting Finance Approval',
+							  }
+							: {
+									key: 'verified',
+									value: 'Verified',
+							  };
 					await layerForDendingUpdateStatus(
 						getMessage(),
 						getAttributeHidden(),
-						'awaitingFinanceApproval',
-						'Awaiting Finance Approval'
+						status.key,
+						status.value
 					);
 				},
 				type: 'submit',
 			},
 		],
 		center: true,
-		headerHTML: `<p class="headerTextModal">Approve or Reject the organization ${organizationName} </p>`,
+		headerHTML: `<p class="headerTextModal">Review Organization:</p><p id="organization-name"> ${organizationName} </p>`,
 		size: 'md',
 	});
 };
 
-const btnOpenModal = fragmentElement.querySelector('.btnOpenModal');
+const btnOpenModal = fragmentElement.querySelector('.btn-open-modal');
 
 if (btnOpenModal) {
 	btnOpenModal.onclick = openModal;

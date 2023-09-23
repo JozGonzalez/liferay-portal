@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.display.context;
@@ -22,7 +13,6 @@ import com.liferay.portal.search.web.internal.modified.facet.display.context.bui
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Calendar;
-import java.util.Optional;
 import java.util.TimeZone;
 
 import org.junit.Assert;
@@ -101,30 +91,27 @@ public class ModifiedFacetCalendarDisplayContextBuilderTest {
 
 	@Test
 	public void testGetRangeFromLimitAttributesWithWestwardTimeZone() {
-		Optional<TimeZone> timeZoneOptional = _findWestwardTimeZoneOptional(
-			TimeZone.getDefault());
+		TimeZone timeZone = _getWestwardTimeZone(TimeZone.getDefault());
 
-		timeZoneOptional.ifPresent(
-			timeZone -> {
-				ModifiedFacetCalendarDisplayContextBuilder
-					modifiedFacetCalendarDisplayContextBuilder =
-						createDisplayContextBuilder(timeZone);
+		if (timeZone == null) {
+			return;
+		}
 
-				modifiedFacetCalendarDisplayContextBuilder.setFrom(
-					"2018-01-31");
-				modifiedFacetCalendarDisplayContextBuilder.setTo("2018-02-28");
+		ModifiedFacetCalendarDisplayContextBuilder
+			modifiedFacetCalendarDisplayContextBuilder =
+				createDisplayContextBuilder(timeZone);
 
-				ModifiedFacetCalendarDisplayContext
-					modifiedFacetCalendarDisplayContext =
-						modifiedFacetCalendarDisplayContextBuilder.build();
+		modifiedFacetCalendarDisplayContextBuilder.setFrom("2018-01-31");
+		modifiedFacetCalendarDisplayContextBuilder.setTo("2018-02-28");
 
-				_assertFromDateValues(
-					2018, Calendar.JANUARY, 31,
-					modifiedFacetCalendarDisplayContext);
-				_assertToDateValues(
-					2018, Calendar.FEBRUARY, 28,
-					modifiedFacetCalendarDisplayContext);
-			});
+		ModifiedFacetCalendarDisplayContext
+			modifiedFacetCalendarDisplayContext =
+				modifiedFacetCalendarDisplayContextBuilder.build();
+
+		_assertFromDateValues(
+			2018, Calendar.JANUARY, 31, modifiedFacetCalendarDisplayContext);
+		_assertToDateValues(
+			2018, Calendar.FEBRUARY, 28, modifiedFacetCalendarDisplayContext);
 	}
 
 	protected ModifiedFacetCalendarDisplayContextBuilder
@@ -173,17 +160,15 @@ public class ModifiedFacetCalendarDisplayContextBuilderTest {
 			dayOfMonth, modifiedFacetCalendarDisplayContext.getToDayValue());
 	}
 
-	private Optional<TimeZone> _findWestwardTimeZoneOptional(
-		TimeZone timeZone) {
-
+	private TimeZone _getWestwardTimeZone(TimeZone timeZone) {
 		String[] availableIDs = TimeZone.getAvailableIDs(
 			(int)(timeZone.getRawOffset() - Time.HOUR));
 
 		if (availableIDs.length == 0) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(TimeZoneUtil.getTimeZone(availableIDs[0]));
+		return TimeZoneUtil.getTimeZone(availableIDs[0]);
 	}
 
 }

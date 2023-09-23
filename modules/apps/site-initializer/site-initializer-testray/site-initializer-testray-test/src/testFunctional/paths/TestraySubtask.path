@@ -11,13 +11,18 @@
 
 <tbody>
 <tr>
-	<td>VERIFY_SUBTASK_MERGED</td>
-	<td>//th[normalize-space()='Merged With']//following::td[contains(text(),'${key_subtaskMerged}')]</td>
+	<td>SUBTASK_MERGED</td>
+	<td>//*[text()='Merged With']//following::*[contains(text(),'${key_subtaskName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SUBTASK_DETAILS</td>
 	<td>//span[contains (text(), '${key_status}')]//following::span[contains(@class,'sticker-overlay')]//following::span[contains(text(),'${key_userName}')]//preceding::td[text()='${key_updated}']//following::a[text()='${key_issues}']//following::cite[text()='${key_comment}']//following::td[text()='${key_score}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUBTASK_SIDEBAR</td>
+	<td>//div[@class='tr-sidebar__content']//*[text()='${key_subtaskName}']</td>
 	<td></td>
 </tr>
 </tbody>

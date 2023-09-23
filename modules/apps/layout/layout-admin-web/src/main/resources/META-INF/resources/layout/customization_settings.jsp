@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -65,12 +56,17 @@ if (selLayout != null) {
 
 <c:choose>
 	<c:when test="<%= prototypeGroup %>">
-		<div class="alert alert-warning">
-			<liferay-ui:message key="it-is-not-possible-to-specify-customization-settings-for-pages-in-site-templates-or-page-templates" />
-		</div>
+		<clay:alert
+			displayType="warning"
+			message="it-is-not-possible-to-specify-customization-settings-for-pages-in-site-templates-or-page-templates"
+		/>
 	</c:when>
 	<c:otherwise>
-		<aui:input checked="<%= selLayout.isCustomizable() %>" helpMessage="customizable-help" inlineLabel="right" label="customizable" labelCssClass="simple-toggle-switch" name='<%= "TypeSettingsProperties--" + LayoutConstants.CUSTOMIZABLE_LAYOUT + "--" %>' type="toggle-switch" />
+		<aui:input aria-describedby='<%= liferayPortletResponse.getNamespace() + "customizableDescription" %>' label="customizable" labelCssClass="font-weight-normal" name='<%= "TypeSettingsProperties--" + LayoutConstants.CUSTOMIZABLE_LAYOUT + "--" %>' type="checkbox" value="<%= selLayout.isCustomizable() %>" wrapperCssClass="c-mb-2" />
+
+		<p class="text-3 text-secondary" id="<portlet:namespace />customizableDescription">
+			<liferay-ui:message key="customizable-help" />
+		</p>
 
 		<div class="customization-settings" id="<portlet:namespace />customizationSettingsOptions">
 

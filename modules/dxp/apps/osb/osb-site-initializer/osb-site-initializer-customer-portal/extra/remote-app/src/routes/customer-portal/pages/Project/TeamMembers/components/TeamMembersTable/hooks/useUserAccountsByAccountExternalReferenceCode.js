@@ -1,16 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {NetworkStatus} from '@apollo/client';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import useSearchTerm from '../../../../../../../../common/hooks/useSearchTerm';
 import {useGetUserAccountsByAccountExternalReferenceCode} from '../../../../../../../../common/services/liferay/graphql/user-accounts';
 import getRaysourceContactRoleName from '../utils/getRaysourceContactRoleName';
@@ -18,14 +12,12 @@ import useDeleteUserAccount from './useDeleteUserAccount';
 import useSupportSeatsCount from './useSupportSeatsCount';
 import useUpdateUserAccount from './useUpdateUserAccount';
 
-const DEFAULT_FILTER = "not (userGroupRoleNames/any(s:s eq 'Provisioning'))";
-
 const getFilter = (searchTerm) => {
 	if (searchTerm) {
-		return `${DEFAULT_FILTER} and (contains(name, '${searchTerm}') or contains(emailAddress, '${searchTerm}') or userGroupRoleNames/any(s:contains(s, '${searchTerm}')))`;
+		return `(contains(name, '${searchTerm}') or contains(emailAddress, '${searchTerm}') or userGroupRoleNames/any(s:contains(s, '${searchTerm}')))`;
 	}
 
-	return DEFAULT_FILTER;
+	return '';
 };
 
 export default function useUserAccountsByAccountExternalReferenceCode(
@@ -35,17 +27,48 @@ export default function useUserAccountsByAccountExternalReferenceCode(
 	const [searching, setSearching] = useState(false);
 
 	const {
-		data,
+		data: userAccountData,
 		networkStatus,
 		refetch,
 	} = useGetUserAccountsByAccountExternalReferenceCode(
 		externalReferenceCode,
 		{
-			filter: DEFAULT_FILTER,
 			notifyOnNetworkStatusChange: true,
 			skip: koroneikiAccountLoading,
 		}
 	);
+
+	const data = useMemo(() => {
+		const items = (
+			userAccountData?.accountUserAccountsByExternalReferenceCode
+				?.items ?? []
+		).filter((account) => {
+			const accountBriefByExternalReferenceCode = account.accountBriefs.find(
+				(accountBrief) =>
+					accountBrief.externalReferenceCode === externalReferenceCode
+			);
+
+			if (
+				accountBriefByExternalReferenceCode &&
+				accountBriefByExternalReferenceCode.roleBriefs.some(
+					(roleBrief) => roleBrief.name === 'Provisioning'
+				)
+			) {
+				return false;
+			}
+
+			return true;
+		});
+
+		return {
+			...userAccountData,
+			accountUserAccountsByExternalReferenceCode: {
+				...userAccountData?.accountUserAccountsByExternalReferenceCode,
+				items,
+				totalCount: items.length,
+			},
+		};
+	}, [userAccountData, externalReferenceCode]);
 
 	const {
 		deleteContactRoles,
@@ -70,7 +93,7 @@ export default function useUserAccountsByAccountExternalReferenceCode(
 		searching
 	);
 
-	const search = useSearchTerm((searchTerm) => {
+	const [, onSearch] = useSearchTerm((searchTerm) => {
 		setSearching(true);
 
 		refetch({
@@ -108,9 +131,9 @@ export default function useUserAccountsByAccountExternalReferenceCode(
 			getRaysourceContactRoleName(roleBrief.name)
 		);
 
-		deleteContactRoles({
+		updateContactRoles({
 			onCompleted: () =>
-				updateContactRoles({
+				deleteContactRoles({
 					onCompleted: () =>
 						replaceAccountRole({
 							variables: {
@@ -122,13 +145,13 @@ export default function useUserAccountsByAccountExternalReferenceCode(
 						}),
 					variables: {
 						contactEmail: userAccount.emailAddress,
-						contactRoleName: newContactRoleName,
+						contactRoleNames: currentContactRolesName.join('&'),
 						externalReferenceCode,
 					},
 				}),
 			variables: {
 				contactEmail: userAccount.emailAddress,
-				contactRoleNames: currentContactRolesName.join('&'),
+				contactRoleName: newContactRoleName,
 				externalReferenceCode,
 			},
 		});
@@ -142,7 +165,7 @@ export default function useUserAccountsByAccountExternalReferenceCode(
 				koroneikiAccountLoading ||
 				networkStatus === NetworkStatus.loading,
 			remove,
-			search,
+			search: onSearch,
 			searching: networkStatus === NetworkStatus.setVariables,
 			update,
 			updating: updating || removing,

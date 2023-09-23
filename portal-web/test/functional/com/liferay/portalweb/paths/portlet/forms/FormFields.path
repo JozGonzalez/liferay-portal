@@ -197,7 +197,7 @@
 </tr>
 <tr>
 	<td>OPEN_GRAPH_LABEL</td>
-	<td>//div[contains(@class,'form-group')]/label[normalize-space(text())='${key_fieldLabel}']</td>
+	<td>//div[contains(@class,'form-group')]//*[normalize-space(text())='${key_fieldLabel}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -253,12 +253,12 @@
 
 <tr>
 	<td>CHECKBOX</td>
-	<td>//input[@type='checkbox' and contains(@id,'${key_fieldName}') or contains (@name,'${key_fieldName}')] | //li[contains(.,'${key_fieldName}')]//input[@type='checkbox'] | //label[contains(@class,'toggle-switch')]//input[contains(@type,'checkbox')]/following-sibling::span[contains(@class,'toggle-switch-bar')]//span[contains(text(),'${key_fieldName}')]/..//preceding-sibling::input[contains(@type,'checkbox')] | //input[contains(@type,'checkbox')]//following-sibling::span[contains(.,'${key_fieldName}')]/..//preceding-sibling::input[contains(@type,'checkbox')]</td>
+	<td>//input[@type='checkbox' and contains(@id,'${key_fieldName}') or contains (@name,'${key_fieldName}')] | //label[contains(@class,'toggle-switch')]//input[contains(@type,'checkbox')]/following-sibling::span[contains(@class,'toggle-switch-bar')]//span[contains(text(),'${key_fieldName}')]/..//preceding-sibling::input[contains(@type,'checkbox')] | //input[contains(@type,'checkbox')]//following-sibling::span[contains(.,'${key_fieldName}')]/..//preceding-sibling::input[contains(@type,'checkbox')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CHECKBOX_LABEL</td>
-	<td>//div[contains(@data-field-name,'${key_fieldName}')]//label | //div[contains(@data-field-name,'${key_fieldName}')]//legend | //div[contains(@class,'custom-control-input')]//div[contains(@data-field-name,'${key_fieldName}')]//label | //li[contains(.,'${key_fieldName}')]//label | //label[.//input[@type='checkbox' and contains(@id,'${key_fieldName}') or contains(@name,'${key_fieldName}')]] | //input[contains(@type,'checkbox')]//following-sibling::span[contains(.,'${key_fieldName}')]</td>
+	<td>//div[contains(@data-field-name,'${key_fieldName}')]//label | //div[contains(@data-field-name,'${key_fieldName}')]//legend | //div[contains(@class,'custom-control-input')]//div[contains(@data-field-name,'${key_fieldName}')]//label |//label[.//input[@type='checkbox' and contains(@id,'${key_fieldName}') or contains(@name,'${key_fieldName}')]] | //input[contains(@type,'checkbox')]//following-sibling::span[contains(.,'${key_fieldName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -335,6 +335,16 @@
 <tr>
 	<td>DATE_CALENDAR_FIELD</td>
 	<td>//select[@name='${key_valueName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YEAR_CALENDAR_FIELD</td>
+	<td>//div[contains(@class, 'input-date-picker-year')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YEAR_CALENDAR_OPTION</td>
+	<td>//div[contains(@class, 'dropdown-menu')]//button[contains(@class, 'dropdown-item') and contains(@id, '${key_optionYear}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -826,7 +836,7 @@
 </tr>
 <tr>
 	<td>SELECT_FIELD_DATA_PROVIDER_LIST</td>
-	<td>//div[contains(@data-field-name,'${key_fieldName}')]//div[contains(@class,'form-builder-select-field')]//li[contains(.,'${key_selectOption}')] | //div[contains(@class,'dropdown-menu')]//li[contains(.,'${key_selectOption}')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//li[contains(.,'${key_fieldName}')]//following-sibling::li//button[contains(.,'${key_selectOption}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -1061,7 +1071,7 @@
 </tr>
 <tr>
 	<td>CAPTCHA_TEXT_VERIFICATION</td>
-	<td>//div[contains(@class, 'taglib-captcha')]//input[@type='text' and contains(@id, 'captchaText')]</td>
+	<td>//div[contains(@class, 'taglib-captcha')]//input[@type='text' and contains(@name, 'captchaText')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -1199,14 +1209,6 @@
 <tr>
 	<td>IMAGE_TABLE_ENTRY</td>
 	<td>//td[contains(@class,'lfr-image-column')]</td>
-	<td></td>
-</tr>
-
-<!--TRANSLATION-->
-
-<tr>
-	<td>TRANSLATION_LIST</td>
-	<td>xpath=//ul[@class='nav nav-underline lfr-translationmanager']//li[@class='nav-item'][${key_position}]/..//span[contains(text(),'${key_language}')]</td>
 	<td></td>
 </tr>
 

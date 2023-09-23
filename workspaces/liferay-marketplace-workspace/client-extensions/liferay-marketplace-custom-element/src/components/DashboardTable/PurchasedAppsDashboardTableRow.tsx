@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
@@ -8,6 +13,7 @@ import DropDown from '@clayui/drop-down/lib/DropDown';
 import classNames from 'classnames';
 
 import {PurchasedAppProps} from '../../pages/PurchasedAppsDashboardPage/PurchasedAppsDashboardPage';
+import {showAppImage} from '../../utils/util';
 
 interface PurchasedAppsDashboardTableRowProps {
 	item: PurchasedAppProps;
@@ -17,13 +23,13 @@ export function PurchasedAppsDashboardTableRow({
 	item,
 }: PurchasedAppsDashboardTableRowProps) {
 	const {
-		image,
 		name,
 		orderId,
 		project,
 		provisioning,
 		purchasedBy,
 		purchasedDate,
+		thumbnail,
 		type,
 		version,
 	} = item;
@@ -36,7 +42,7 @@ export function PurchasedAppsDashboardTableRow({
 						<img
 							alt="App Image"
 							className="dashboard-table-row-name-logo"
-							src={image}
+							src={showAppImage(thumbnail)}
 						/>
 					</div>
 
@@ -129,7 +135,7 @@ export function PurchasedAppsDashboardTableRow({
 						<DropDown.Item
 							onClick={() => {
 								window.location.href =
-									'https://console.liferay.cloud/*';
+									'https://console.marketplacedemo.liferay.sh/projects';
 							}}
 						>
 							Access Console

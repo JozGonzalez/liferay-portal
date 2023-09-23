@@ -1,4 +1,6 @@
 {
+	"accountEntryRestricted": true,
+	"accountEntryRestrictedObjectFieldName": "r_requestRegion_accountEntryId",
 	"label": {
 		"en_US": "EVP Request"
 	},
@@ -69,6 +71,24 @@
 				"en_US": "Manager Email Address"
 			},
 			"name": "managerEmailAddress",
+			"objectFieldSettings": [
+			],
+			"required": false,
+			"state": false,
+			"system": false,
+			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Text",
+			"defaultValue": "",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "",
+			"label": {
+				"en_US": "Message EVP Manager"
+			},
+			"name": "messageEVPManager",
 			"objectFieldSettings": [
 			],
 			"required": false,
@@ -216,20 +236,6 @@
 			"required": false,
 			"state": false,
 			"system": false,
-			"type": "String"
-		},
-		{
-			"DBType": "String",
-			"businessType": "Picklist",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"label": {
-				"en_US": "EVP Request Status"
-			},
-			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:EVP Request: Request Status$]",
-			"name": "requestStatus",
-			"required": true,
-			"state": true,
 			"type": "String"
 		},
 		{

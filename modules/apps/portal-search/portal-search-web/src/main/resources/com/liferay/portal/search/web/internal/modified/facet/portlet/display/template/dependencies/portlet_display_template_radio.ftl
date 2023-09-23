@@ -12,6 +12,17 @@
 		persistState=true
 		title="last-modified"
 	>
+		<#if !modifiedFacetDisplayContext.isNothingSelected()>
+			<@clay.button
+				cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+				displayType="link"
+				id="${namespace + 'facetModifiedClear'}"
+				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+			>
+				<strong>${languageUtil.get(locale, "clear")}</strong>
+			</@clay.button>
+		</#if>
+
 		<ul class="list-unstyled modified">
 			<#if entries?has_content>
 				<#list entries as entry>
@@ -32,7 +43,11 @@
 
 								<span class="custom-control-label term-name ${(entry.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 									<span class="custom-control-label-text">
-										<@liferay_ui["message"] key="${htmlUtil.escape(entry.getBucketText())}" />
+										<#if entry.isSelected()>
+											<strong><@liferay_ui["message"] key="${htmlUtil.escape(entry.getBucketText())}" /></strong>
+										<#else>
+											<@liferay_ui["message"] key="${htmlUtil.escape(entry.getBucketText())}" />
+										</#if>
 									</span>
 								</span>
 
@@ -62,7 +77,11 @@
 
 						<span class="custom-control-label term-name ${(customRangeBucketDisplayContext.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 							<span class="custom-control-label-text">
-								<@liferay_ui["message"] key="${htmlUtil.escape(customRangeBucketDisplayContext.getBucketText())}" />
+								<#if customRangeBucketDisplayContext.isSelected()>
+									<strong><@liferay_ui["message"] key="${htmlUtil.escape(customRangeBucketDisplayContext.getBucketText())}" /></strong>
+								<#else>
+									<@liferay_ui["message"] key="${htmlUtil.escape(customRangeBucketDisplayContext.getBucketText())}" />
+								</#if>
 							</span>
 						</span>
 
@@ -110,21 +129,15 @@
 					</@>
 				</div>
 
-				<@liferay_aui.button
+				<@clay["button"]
 					cssClass="modified-facet-custom-range-filter-button"
 					disabled=modifiedFacetCalendarDisplayContext.isRangeBackwards()
-					name="searchCustomRangeButton"
-					value="search"
+					displayType="secondary"
+					id="${namespace + 'searchCustomRangeButton'}"
+					label="search"
+					name="${namespace + 'searchCustomRangeButton'}"
 				/>
 			</div>
 		</ul>
-
-		<#if !modifiedFacetDisplayContext.isNothingSelected()>
-			<@liferay_aui.button
-				cssClass="btn-link btn-unstyled facet-clear-btn"
-				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
-				value="clear"
-			/>
-		</#if>
 	</@>
 </@>

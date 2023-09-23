@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.util;
@@ -20,7 +11,9 @@ import com.liferay.info.field.InfoFieldSetEntry;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.CategoriesInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
+import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
@@ -164,74 +157,7 @@ public class InfoFormUtil {
 			"type", _getType(infoFieldType)
 		);
 
-		if (infoFieldType instanceof SelectInfoFieldType) {
-			List<SelectInfoFieldType.Option> options = new ArrayList<>();
-
-			if (infoField.getAttribute(SelectInfoFieldType.OPTIONS) != null) {
-				options.addAll(
-					(List<SelectInfoFieldType.Option>)infoField.getAttribute(
-						SelectInfoFieldType.OPTIONS));
-			}
-
-			try {
-				jsonObject.put(
-					"defaultValue",
-					() -> {
-						if (GetterUtil.getBoolean(
-								infoField.getAttribute(
-									SelectInfoFieldType.MULTIPLE))) {
-
-							JSONArray jsonArray =
-								JSONFactoryUtil.createJSONArray();
-
-							for (SelectInfoFieldType.Option option : options) {
-								if (option.isActive()) {
-									jsonArray.put(
-										String.valueOf(option.getValue()));
-								}
-							}
-
-							return jsonArray;
-						}
-
-						for (SelectInfoFieldType.Option option : options) {
-							if (option.isActive()) {
-								return String.valueOf(option.getValue());
-							}
-						}
-
-						return null;
-					}
-				).put(
-					"typeOptions",
-					JSONUtil.put(
-						"inline",
-						() -> GetterUtil.getBoolean(
-							infoField.getAttribute(SelectInfoFieldType.INLINE))
-					).put(
-						"multiSelect",
-						() -> GetterUtil.getBoolean(
-							infoField.getAttribute(
-								SelectInfoFieldType.MULTIPLE))
-					).put(
-						"validValues",
-						JSONUtil.toJSONArray(
-							options,
-							option -> JSONUtil.put(
-								"label", String.valueOf(option.getLabel(locale))
-							).put(
-								"value", String.valueOf(option.getValue())
-							))
-					)
-				);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-			}
-		}
-		else if (infoFieldType instanceof CategoriesInfoFieldType) {
+		if (infoFieldType instanceof CategoriesInfoFieldType) {
 			jsonObject.put(
 				"typeOptions",
 				JSONUtil.put(
@@ -257,6 +183,117 @@ public class InfoFormUtil {
 					"modalSize", "md"
 				));
 		}
+		else if (infoFieldType instanceof SelectInfoFieldType) {
+			List<OptionInfoFieldType> optionInfoFieldTypes = new ArrayList<>();
+
+			if (infoField.getAttribute(SelectInfoFieldType.OPTIONS) != null) {
+				optionInfoFieldTypes.addAll(
+					(List<OptionInfoFieldType>)infoField.getAttribute(
+						SelectInfoFieldType.OPTIONS));
+			}
+
+			try {
+				jsonObject.put(
+					"defaultValue",
+					() -> {
+						for (OptionInfoFieldType optionInfoFieldType :
+								optionInfoFieldTypes) {
+
+							if (optionInfoFieldType.isActive()) {
+								return String.valueOf(
+									optionInfoFieldType.getValue());
+							}
+						}
+
+						return null;
+					}
+				).put(
+					"typeOptions",
+					JSONUtil.put(
+						"inline",
+						() -> GetterUtil.getBoolean(
+							infoField.getAttribute(SelectInfoFieldType.INLINE))
+					).put(
+						"multiSelect", false
+					).put(
+						"validValues",
+						JSONUtil.toJSONArray(
+							optionInfoFieldTypes,
+							optionInfoFieldType -> JSONUtil.put(
+								"label",
+								String.valueOf(
+									optionInfoFieldType.getLabel(locale))
+							).put(
+								"value",
+								String.valueOf(optionInfoFieldType.getValue())
+							))
+					)
+				);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+		else if (infoFieldType instanceof MultiselectInfoFieldType) {
+			List<OptionInfoFieldType> optionInfoFieldTypes = new ArrayList<>();
+
+			if (infoField.getAttribute(MultiselectInfoFieldType.OPTIONS) !=
+					null) {
+
+				optionInfoFieldTypes.addAll(
+					(List<OptionInfoFieldType>)infoField.getAttribute(
+						MultiselectInfoFieldType.OPTIONS));
+			}
+
+			try {
+				jsonObject.put(
+					"defaultValue",
+					() -> {
+						JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+						for (OptionInfoFieldType optionInfoFieldType :
+								optionInfoFieldTypes) {
+
+							if (optionInfoFieldType.isActive()) {
+								jsonArray.put(
+									String.valueOf(
+										optionInfoFieldType.getValue()));
+							}
+						}
+
+						return jsonArray;
+					}
+				).put(
+					"typeOptions",
+					JSONUtil.put(
+						"inline",
+						() -> GetterUtil.getBoolean(
+							infoField.getAttribute(SelectInfoFieldType.INLINE))
+					).put(
+						"multiSelect", true
+					).put(
+						"validValues",
+						JSONUtil.toJSONArray(
+							optionInfoFieldTypes,
+							optionInfoFieldType -> JSONUtil.put(
+								"label",
+								String.valueOf(
+									optionInfoFieldType.getLabel(locale))
+							).put(
+								"value",
+								String.valueOf(optionInfoFieldType.getValue())
+							))
+					)
+				);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
 
 		return jsonObject;
 	}
@@ -268,7 +305,9 @@ public class InfoFormUtil {
 		else if (infoFieldType instanceof BooleanInfoFieldType) {
 			return "checkbox";
 		}
-		else if (infoFieldType instanceof SelectInfoFieldType) {
+		else if (infoFieldType instanceof MultiselectInfoFieldType ||
+				 infoFieldType instanceof SelectInfoFieldType) {
+
 			return "select";
 		}
 
@@ -277,6 +316,7 @@ public class InfoFormUtil {
 
 	private static boolean _isValidInfoFieldType(InfoFieldType infoFieldType) {
 		if (infoFieldType instanceof CategoriesInfoFieldType ||
+			infoFieldType instanceof MultiselectInfoFieldType ||
 			infoFieldType instanceof SelectInfoFieldType ||
 			infoFieldType instanceof TextInfoFieldType) {
 

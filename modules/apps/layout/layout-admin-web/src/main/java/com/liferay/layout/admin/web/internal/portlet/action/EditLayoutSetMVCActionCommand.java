@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action;
@@ -19,6 +10,7 @@ import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.admin.constants.LayoutScreenNavigationEntryConstants;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -67,9 +59,6 @@ public class EditLayoutSetMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		long layoutSetId = ParamUtil.getLong(actionRequest, "layoutSetId");
 
 		long liveGroupId = ParamUtil.getLong(actionRequest, "liveGroupId");
@@ -77,16 +66,27 @@ public class EditLayoutSetMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "stagingGroupId");
 		boolean privateLayout = ParamUtil.getBoolean(
 			actionRequest, "privateLayout");
+		String screenNavigationEntryKey = ParamUtil.getString(
+			actionRequest, "screenNavigationEntryKey");
 
 		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(layoutSetId);
 
-		_updateClientExtensions(actionRequest, layoutSet, themeDisplay);
+		if (screenNavigationEntryKey.equals(
+				LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN)) {
 
-		_updateLogo(actionRequest, liveGroupId, stagingGroupId, privateLayout);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
-		updateLookAndFeel(
-			actionRequest, themeDisplay.getCompanyId(), liveGroupId,
-			stagingGroupId, privateLayout, layoutSet.getSettingsProperties());
+			_updateClientExtensions(actionRequest, layoutSet, themeDisplay);
+
+			_updateLogo(
+				actionRequest, liveGroupId, stagingGroupId, privateLayout);
+
+			updateLookAndFeel(
+				actionRequest, themeDisplay.getCompanyId(), liveGroupId,
+				stagingGroupId, privateLayout,
+				layoutSet.getSettingsProperties());
+		}
 
 		_updateMergePages(actionRequest, liveGroupId);
 
@@ -273,30 +273,26 @@ public class EditLayoutSetMVCActionCommand extends BaseMVCActionCommand {
 			UnicodeProperties typeSettingsUnicodeProperties)
 		throws Exception {
 
-		String[] devices = StringUtil.split(
-			ParamUtil.getString(actionRequest, "devices"));
+		String deviceThemeId = ParamUtil.getString(
+			actionRequest, "regularThemeId");
+		String deviceColorSchemeId = ParamUtil.getString(
+			actionRequest, "regularColorSchemeId");
+		String deviceCss = ParamUtil.getString(actionRequest, "regularCss");
 
-		for (String device : devices) {
-			String deviceThemeId = ParamUtil.getString(
-				actionRequest, device + "ThemeId");
-			String deviceColorSchemeId = ParamUtil.getString(
-				actionRequest, device + "ColorSchemeId");
-			String deviceCss = ParamUtil.getString(
-				actionRequest, device + "Css");
+		if (Validator.isNotNull(deviceThemeId)) {
+			long layoutId = ParamUtil.getLong(actionRequest, "layoutId");
 
-			if (Validator.isNotNull(deviceThemeId)) {
-				deviceColorSchemeId = ActionUtil.getColorSchemeId(
-					companyId, deviceThemeId, deviceColorSchemeId);
+			deviceColorSchemeId = ActionUtil.getColorSchemeId(
+				companyId, deviceThemeId, deviceColorSchemeId);
 
-				ActionUtil.updateThemeSettingsProperties(
-					actionRequest, companyId, typeSettingsUnicodeProperties,
-					device, deviceThemeId, false);
-			}
-
-			_layoutSetService.updateLookAndFeel(
-				groupId, privateLayout, deviceThemeId, deviceColorSchemeId,
-				deviceCss);
+			ActionUtil.updateThemeSettingsProperties(
+				actionRequest, companyId, groupId, layoutId, privateLayout,
+				typeSettingsUnicodeProperties, deviceThemeId, false);
 		}
+
+		_layoutSetService.updateLookAndFeel(
+			groupId, privateLayout, deviceThemeId, deviceColorSchemeId,
+			deviceCss);
 
 		long faviconFileEntryId = ParamUtil.getLong(
 			actionRequest, "faviconFileEntryId");

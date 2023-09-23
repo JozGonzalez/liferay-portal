@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Add a basic announcement"
 	macro addAnnouncement {
 		Variables.assertDefined(parameterList = "${announcementTitle},${announcementContent}");
 
@@ -62,16 +61,16 @@ definition {
 			userPassword = ${userPassword});
 	}
 
-	@summary = "Delete a basic announcement"
 	macro deleteAnnouncement {
 		var entryId = JSONAnnouncementAPI._getEntryId(
 			groupName = ${groupName},
 			siteURLKey = ${siteURLKey});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/announcementsentry/delete-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d entryId=${entryId} \
 		''';
 

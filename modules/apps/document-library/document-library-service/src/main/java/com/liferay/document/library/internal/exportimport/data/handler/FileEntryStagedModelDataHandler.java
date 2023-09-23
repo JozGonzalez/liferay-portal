@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.exportimport.data.handler;
@@ -25,7 +16,6 @@ import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
@@ -33,6 +23,7 @@ import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.util.DLProcessorThreadLocal;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
@@ -40,9 +31,9 @@ import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
-import com.liferay.dynamic.data.mapping.storage.StorageEngine;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
@@ -538,6 +529,8 @@ public class FileEntryStagedModelDataHandler
 							if (_log.isDebugEnabled()) {
 								_log.debug(exception);
 							}
+
+							updateFileEntry = true;
 						}
 					}
 
@@ -719,7 +712,10 @@ public class FileEntryStagedModelDataHandler
 
 	@Override
 	protected String[] getSkipImportReferenceStagedModelNames() {
-		return new String[] {AssetDisplayPageEntry.class.getName()};
+		return new String[] {
+			AssetDisplayPageEntry.class.getName(),
+			FriendlyURLEntry.class.getName()
+		};
 	}
 
 	@Override
@@ -856,7 +852,7 @@ public class FileEntryStagedModelDataHandler
 		structureFields.addAttribute("structureUuid", ddmStructure.getUuid());
 
 		com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues =
-			_storageEngine.getDDMFormValues(
+			_ddmStorageEngineManager.getDDMFormValues(
 				dlFileEntryMetadata.getDDMStorageId());
 
 		ddmFormValues =
@@ -882,7 +878,7 @@ public class FileEntryStagedModelDataHandler
 				portletDataContext, friendlyURLEntry);
 
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
-				portletDataContext, friendlyURLEntry, fileEntry,
+				portletDataContext, fileEntry, friendlyURLEntry,
 				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
 		}
 	}
@@ -908,7 +904,8 @@ public class FileEntryStagedModelDataHandler
 			portletDataContext, fileEntry, dlFileEntryType,
 			PortletDataContext.REFERENCE_TYPE_STRONG);
 
-		List<DDMStructure> ddmStructures = dlFileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			dlFileEntryType);
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			_exportDDMFormValues(
@@ -928,9 +925,7 @@ public class FileEntryStagedModelDataHandler
 			ddmFormValuesPath);
 
 		com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues =
-			_deserialize(
-				serializedDDMFormValues,
-				DDMBeanTranslatorUtil.translate(ddmStructure.getDDMForm()));
+			_deserialize(serializedDDMFormValues, ddmStructure.getDDMForm());
 
 		ddmFormValues =
 			_ddmFormValuesExportImportContentProcessor.
@@ -1052,7 +1047,12 @@ public class FileEntryStagedModelDataHandler
 			}
 		}
 
-		_updateFriendlyURLEntries(fileEntry, importedFileEntry, serviceContext);
+		if (ExportImportThreadLocal.isStagingInProcess() &&
+			!ExportImportThreadLocal.isStagingInProcessOnRemoteLive()) {
+
+			_updateFriendlyURLEntries(
+				fileEntry, importedFileEntry, serviceContext);
+		}
 	}
 
 	private boolean _importMetaData(
@@ -1087,8 +1087,8 @@ public class FileEntryStagedModelDataHandler
 
 		boolean updateFileEntry = false;
 
-		List<DDMStructure> ddmStructures =
-			existingDLFileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			existingDLFileEntryType);
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			Element structureFieldsElement =
@@ -1150,8 +1150,9 @@ public class FileEntryStagedModelDataHandler
 					dlFileVersion.setStoreUUID(
 						String.valueOf(UUID.randomUUID()));
 
-					_dlFileVersionLocalService.updateDLFileVersion(
-						dlFileVersion);
+					dlFileVersion =
+						_dlFileVersionLocalService.updateDLFileVersion(
+							dlFileVersion);
 
 					dlFileEntry.setVersion(version);
 
@@ -1262,10 +1263,10 @@ public class FileEntryStagedModelDataHandler
 			_ddmFormValuesExportImportContentProcessor;
 
 	@Reference
-	private DLAppLocalService _dlAppLocalService;
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Reference
-	private DLAppService _dlAppService;
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
@@ -1299,9 +1300,6 @@ public class FileEntryStagedModelDataHandler
 
 	private ServiceTrackerList<DLPluggableContentDataHandler<?>>
 		_serviceTrackerList;
-
-	@Reference
-	private StorageEngine _storageEngine;
 
 	@Reference
 	private TrashHelper _trashHelper;

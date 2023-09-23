@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.dao.db;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -33,6 +25,8 @@ import java.sql.Types;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -145,18 +139,188 @@ public class PostgreSQLDB extends BaseDB {
 	}
 
 	@Override
+	protected void createSyncDeleteTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("delete from ");
+		sb.append(targetTableName);
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		_createTriggerFunction(connection, triggerName, sb.toString());
+
+		_createTrigger(
+			connection, sourceTableName, "after delete", triggerName);
+	}
+
+	@Override
+	protected void createSyncInsertTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("insert into ");
+		sb.append(targetTableName);
+		sb.append(" (");
+		sb.append(StringUtil.merge(targetColumnNames, ", "));
+		sb.append(") values (");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(")");
+
+		_createTriggerFunction(connection, triggerName, sb.toString());
+
+		_createTrigger(
+			connection, sourceTableName, "after insert", triggerName);
+	}
+
+	@Override
+	protected void createSyncUpdateTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("update ");
+		sb.append(targetTableName);
+		sb.append(" set ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(targetColumnNames[i]);
+			sb.append(" = ");
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		_createTriggerFunction(connection, triggerName, sb.toString());
+
+		_createTrigger(
+			connection, sourceTableName, "after update", triggerName);
+	}
+
+	@Override
+	protected void dropTrigger(
+			Connection connection, String tableName, String triggerName)
+		throws Exception {
+
+		runSQL(
+			connection,
+			StringBundler.concat(
+				"drop trigger ", triggerName, " on ", tableName));
+
+		runSQL(connection, "drop function " + triggerName);
+	}
+
+	@Override
+	protected String getCopyTableStructureSQL(
+		String tableName, String newTableName) {
+
+		return StringBundler.concat(
+			"create table ", newTableName, " (like ", tableName,
+			" including all excluding indexes)");
+	}
+
+	@Override
 	protected int[] getSQLTypes() {
 		return _SQL_TYPES;
 	}
 
 	@Override
-	protected int[] getSQLVarcharSizes() {
-		return _SQL_VARCHAR_SIZES;
+	protected Map<String, Integer> getSQLVarcharSizes() {
+		return HashMapBuilder.put(
+			"STRING", SQL_VARCHAR_MAX_SIZE
+		).put(
+			"TEXT", SQL_VARCHAR_MAX_SIZE
+		).build();
 	}
 
 	@Override
 	protected String[] getTemplate() {
 		return _POSTGRESQL;
+	}
+
+	protected boolean isSupportsDuplicatedIndexName() {
+		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+	}
+
+	@Override
+	protected String limitColumnLength(String column, int length) {
+		return StringBundler.concat("left(", column, ", ", length, ")");
 	}
 
 	@Override
@@ -187,23 +351,38 @@ public class PostgreSQLDB extends BaseDB {
 							"using @old-column@::@type@;",
 						REWORD_TEMPLATE, template);
 
+					String defaultValue = template[template.length - 2];
+
+					if (!Validator.isBlank(defaultValue)) {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ set default @default@;",
+								REWORD_TEMPLATE, template));
+					}
+					else {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ drop default;",
+								REWORD_TEMPLATE, template));
+					}
+
 					String nullable = template[template.length - 1];
 
-					if (!Validator.isBlank(nullable)) {
-						if (nullable.equals("not null")) {
-							line = line.concat(
-								StringUtil.replace(
-									"alter table @table@ alter column " +
-										"@old-column@ set not null;",
-									REWORD_TEMPLATE, template));
-						}
-						else {
-							line = line.concat(
-								StringUtil.replace(
-									"alter table @table@ alter column " +
-										"@old-column@ drop not null;",
-									REWORD_TEMPLATE, template));
-						}
+					if (Objects.equals(nullable, "not null")) {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ set not null;",
+								REWORD_TEMPLATE, template));
+					}
+					else {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ drop not null;",
+								REWORD_TEMPLATE, template));
 					}
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
@@ -259,20 +438,49 @@ public class PostgreSQLDB extends BaseDB {
 		}
 	}
 
+	private void _createTrigger(
+			Connection connection, String tableName, String triggerEvent,
+			String triggerName)
+		throws Exception {
+
+		runSQL(
+			connection,
+			StringBundler.concat(
+				"create trigger ", triggerName, " ", triggerEvent, " on ",
+				tableName, " for each row execute procedure ", triggerName,
+				"()"));
+	}
+
+	private void _createTriggerFunction(
+			Connection connection, String functionName,
+			String functionStatement)
+		throws Exception {
+
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("create function ");
+		sb.append(functionName);
+		sb.append("() returns trigger language plpgsql as $$ begin ");
+		sb.append(functionStatement);
+		sb.append("; return null; end; $$");
+
+		runSQL(connection, sb.toString());
+	}
+
 	private static final String[] _POSTGRESQL = {
 		"--", "true", "false", "'01/01/1970'", "current_timestamp", " oid",
-		" bytea", " bool", " timestamp", " double precision", " integer",
-		" bigint", " text", " text", " varchar", "", "commit"
+		" bytea", " decimal(30, 16)", " bool", " timestamp",
+		" double precision", " integer", " bigint", " text", " text",
+		" varchar", "", "commit"
 	};
 
 	private static final int[] _SQL_TYPES = {
-		Types.BIGINT, Types.BINARY, Types.BIT, Types.TIMESTAMP, Types.DOUBLE,
-		Types.INTEGER, Types.BIGINT, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+		Types.BIGINT, Types.BINARY, Types.NUMERIC, Types.BIT, Types.TIMESTAMP,
+		Types.DOUBLE, Types.INTEGER, Types.BIGINT, Types.VARCHAR, Types.VARCHAR,
+		Types.VARCHAR
 	};
 
-	private static final int[] _SQL_VARCHAR_SIZES = {
-		SQL_VARCHAR_MAX_SIZE, SQL_VARCHAR_MAX_SIZE
-	};
+	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = false;
 
 	private static final boolean _SUPPORTS_QUERYING_AFTER_EXCEPTION = false;
 

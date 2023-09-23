@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -33,15 +24,29 @@ if (selLayout != null) {
 
 <aui:model-context bean="<%= selLayout %>" model="<%= Layout.class %>" />
 
-<aui:input cssClass="propagatable-field" disabled="<%= selLayout.isLayoutPrototypeLinkActive() %>" label="paste-javascript-code-that-is-executed-at-the-bottom-of-the-page" name="TypeSettingsProperties--javascript--" placeholder="javascript" type="textarea" value='<%= layoutTypeSettingsUnicodeProperties.getProperty("javascript") %>' wrap="soft" />
-
 <%
 LayoutLookAndFeelDisplayContext layoutLookAndFeelDisplayContext = new LayoutLookAndFeelDisplayContext(request, layoutsAdminDisplayContext, liferayPortletResponse);
 %>
 
-<clay:sheet-section>
+<liferay-frontend:fieldset
+	collapsed="<%= false %>"
+	collapsible="<%= true %>"
+	label="javascript-client-extensions"
+>
 	<react:component
 		module="js/layout/look_and_feel/GlobalJSCETsConfiguration"
 		props="<%= layoutLookAndFeelDisplayContext.getGlobalJSCETsConfigurationProps(Layout.class.getName(), selLayout.getPlid()) %>"
 	/>
-</clay:sheet-section>
+</liferay-frontend:fieldset>
+
+<liferay-frontend:fieldset
+	collapsed="<%= false %>"
+	collapsible="<%= true %>"
+	label="custom-javascript"
+>
+	<aui:input cssClass="propagatable-field" disabled="<%= layoutsAdminDisplayContext.isReadOnly() || selLayout.isLayoutPrototypeLinkActive() %>" label="javascript" name="TypeSettingsProperties--javascript--" placeholder="javascript" type="textarea" value='<%= layoutTypeSettingsUnicodeProperties.getProperty("javascript") %>' wrap="soft" wrapperCssClass="c-mb-0" />
+
+	<p class="text-secondary">
+		<liferay-ui:message key="this-javascript-code-is-executed-at-the-bottom-of-the-page" />
+	</p>
+</liferay-frontend:fieldset>

@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
+import {useId} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useState} from 'react';
 
 import ItemSelector from '../../../common/components/ItemSelector';
-import {useId} from '../../../common/hooks/useId';
 import {ConfigurationFieldPropTypes} from '../../../prop_types/index';
 import {CollectionItemContext} from '../../contexts/CollectionItemContext';
 import {useDispatch} from '../../contexts/StoreContext';
@@ -34,11 +25,9 @@ export function ItemSelectorField({field, onValueSelect, value = {}}) {
 
 	const isWithinCollection = collectionItem !== null;
 
-	const className = isWithinCollection
-		? collectionItem.className
-		: value.className;
-
-	const classPK = isWithinCollection ? collectionItem.classPK : value.classPK;
+	const {className, classPK, externalReferenceCode} = isWithinCollection
+		? collectionItem
+		: value;
 
 	return (
 		<>
@@ -52,8 +41,11 @@ export function ItemSelectorField({field, onValueSelect, value = {}}) {
 				}}
 				selectedItem={
 					isWithinCollection
-						? collectionItem || {
-								title: Liferay.Language.get('collection-item'),
+						? {
+								...collectionItem,
+								title:
+									collectionItem.title ||
+									Liferay.Language.get('collection-item'),
 						  }
 						: value
 				}
@@ -66,6 +58,7 @@ export function ItemSelectorField({field, onValueSelect, value = {}}) {
 					<TemplateSelector
 						className={className}
 						classPK={classPK}
+						externalReferenceCode={externalReferenceCode}
 						onTemplateSelect={(template) => {
 							onValueSelect(field.name, {...value, template});
 						}}
@@ -91,6 +84,7 @@ ItemSelectorField.propTypes = {
 const TemplateSelector = ({
 	className,
 	classPK,
+	externalReferenceCode,
 	onTemplateSelect,
 	selectedTemplate,
 }) => {
@@ -104,12 +98,13 @@ const TemplateSelector = ({
 			InfoItemService.getAvailableTemplates({
 				className,
 				classPK,
+				externalReferenceCode,
 				onNetworkStatus: dispatch,
 			}).then((response) => {
 				setAvailableTemplates(response);
 			});
 		}
-	}, [className, classPK, dispatch, isMounted]);
+	}, [className, classPK, externalReferenceCode, dispatch, isMounted]);
 
 	return (
 		<>

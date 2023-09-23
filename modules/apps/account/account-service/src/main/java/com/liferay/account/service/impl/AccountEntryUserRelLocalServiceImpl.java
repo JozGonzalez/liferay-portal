@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service.impl;
@@ -37,6 +28,7 @@ import com.liferay.mail.kernel.template.MailTemplateFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
@@ -47,7 +39,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Ticket;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -58,7 +50,8 @@ import com.liferay.portal.kernel.service.TicketLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.EscapableObject;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -68,6 +61,7 @@ import java.time.Month;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -175,8 +169,9 @@ public class AccountEntryUserRelLocalServiceImpl
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendEmail, serviceContext);
 
 		return accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntryId, user.getUserId());
@@ -222,8 +217,8 @@ public class AccountEntryUserRelLocalServiceImpl
 				StringPool.BLANK, StringPool.BLANK, true, StringPool.BLANK,
 				emailAddress, serviceContext.getLocale(), emailAddress,
 				StringPool.BLANK, emailAddress, 0, 0, true, 1, 1, 1970,
-				StringPool.BLANK, groupIds, null, null, null, true,
-				serviceContext);
+				StringPool.BLANK, UserConstants.TYPE_REGULAR, groupIds, null,
+				null, null, true, serviceContext);
 
 			user.setExternalReferenceCode(userExternalReferenceCode);
 
@@ -412,6 +407,34 @@ public class AccountEntryUserRelLocalServiceImpl
 		return false;
 	}
 
+	public void setAccountEntryUserRels(
+			long accountEntryId, long[] accountUserIds)
+		throws PortalException {
+
+		if (accountUserIds == null) {
+			return;
+		}
+
+		Set<Long> newAccountUserIdsSet = SetUtil.fromArray(accountUserIds);
+
+		Set<Long> oldAccountUserIdsSet = SetUtil.fromCollection(
+			ListUtil.toList(
+				getAccountEntryUserRelsByAccountEntryId(accountEntryId),
+				AccountEntryUserRel::getAccountUserId));
+
+		Set<Long> removeAccountUserIdsSet = new HashSet<>(oldAccountUserIdsSet);
+
+		removeAccountUserIdsSet.removeAll(newAccountUserIdsSet);
+
+		deleteAccountEntryUserRels(
+			accountEntryId, ArrayUtil.toLongArray(removeAccountUserIdsSet));
+
+		newAccountUserIdsSet.removeAll(oldAccountUserIdsSet);
+
+		addAccountEntryUserRels(
+			accountEntryId, ArrayUtil.toLongArray(newAccountUserIdsSet));
+	}
+
 	@Override
 	public void setPersonTypeAccountEntryUser(long accountEntryId, long userId)
 		throws PortalException {
@@ -555,12 +578,13 @@ public class AccountEntryUserRelLocalServiceImpl
 				_accountEntryLocalService.getAccountEntry(accountEntryId);
 
 			mailTemplateContextBuilder.put(
-				"[$ACCOUNT_NAME$]", HtmlUtil.escape(accountEntry.getName()));
+				"[$ACCOUNT_NAME$]",
+				new EscapableObject<>(accountEntry.getName()));
 
 			mailTemplateContextBuilder.put("[$CREATE_ACCOUNT_URL$]", url);
 			mailTemplateContextBuilder.put(
 				"[$INVITE_SENDER_NAME$]",
-				HtmlUtil.escape(inviter.getFullName()));
+				new EscapableObject<>(inviter.getFullName()));
 
 			MailTemplateContext mailTemplateContext =
 				mailTemplateContextBuilder.build();

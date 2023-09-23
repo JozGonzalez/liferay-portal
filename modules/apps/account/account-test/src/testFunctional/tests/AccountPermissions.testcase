@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -27,9 +27,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,7 +38,7 @@ definition {
 	}
 
 	@description = "This test adds the Add Account Entry permission to Account Admin and assert user can add an account."
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanAddAccount {
 		property portal.acceptance = "true";
@@ -93,7 +93,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can add a billing address to an Account."
-	@priority = 5
+	@priority = 4
 	test AccountAdminCanAddBillingAddressToAccount {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
@@ -162,7 +162,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can add a new user to an account"
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanAddNewUserToAccount {
 		property portal.acceptance = "true";
@@ -218,7 +218,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can add a shipping address to an Account."
-	@priority = 5
+	@priority = 4
 	test AccountAdminCanAddShippingAddressToAccount {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
@@ -286,7 +286,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can assign roles to users."
-	@priority = 5
+	@priority = 4
 	test AccountAdminCanAssignRolesToUsers {
 		property portal.acceptance = "true";
 
@@ -412,6 +412,8 @@ definition {
 	@refactorneeded
 	test AccountAdminCanDeleteAccount {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given add an Account Administrator with delete permission assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
@@ -469,7 +471,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can edit an account he is assigned to."
-	@priority = 5
+	@priority = 4
 	test AccountAdminCanEditAccount {
 		property portal.acceptance = "true";
 
@@ -611,9 +613,88 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-189070. TC3: Verify that the user can manage and invite Users when the “Manage Users” and the new “Invite User” permission were added."
+	@priority = 4
+	test AccountAdminCanManageAndInviteUserToAccount {
+		property test.liferay.virtual.instance = "false";
+
+		task ("Given: There is an Account Administrator assigned to a Business Account") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Account Name",
+				accountEntryType = "Business");
+
+			JSONUser.addUser(
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Account Name",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONAccountRole.associateUser(
+				accountEntryName = "Account Name",
+				accountRole = "Account Administrator",
+				userEmailAddress = "userea@liferay.com");
+		}
+
+		task ("And: Update account admin role to include the new “Invite User” permission") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "INVITE_USER",
+				resourceName = "com.liferay.account.model.AccountEntry",
+				roleTitle = "Account Administrator",
+				roleType = "account");
+		}
+
+		task ("When: The Account Admin logs in") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "userea@liferay.com",
+				userLoginFullName = "userfn userln");
+		}
+
+		task ("Then: Verify that the account admin user can manage and invite users to account") {
+			Navigator.gotoPage(pageName = "2B Account Page");
+
+			Account.goToEntryMenuItem(
+				menuItem = "Edit",
+				rowEntry = "Account Name");
+
+			Account.inviteUser(
+				accountName = "Account Name",
+				userEmailAddress = "test@liferay.com");
+
+			Alert.viewSuccessMessage();
+
+			Navigator.gotoPage(pageName = "2B Account Page");
+
+			Account.goToEntryMenuItem(
+				menuItem = "Manage Users",
+				rowEntry = "Account Name");
+
+			LexiconEntry.gotoAdd();
+
+			MenuItem.click(menuItem = "Assign Users");
+
+			SelectFrame(
+				key_title = "Assign Users to Account Name",
+				locator1 = "IFrame#MODAL_ANY");
+
+			LexiconEntry.viewEntryName(rowEntry = "userfn userln");
+		}
+	}
+
 	@description = "This test asserts that an Account Admin cannot add a user wtih an email domain that is blocked."
 	@priority = 4
 	test AccountAdminCannotAddUserWithBlockedDomain {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given there is an Account Administrator assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
 				accountEntryName = "Account Name",
@@ -679,7 +760,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can set a billing address to an Account."
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanSetDefaultBillingAddress {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
@@ -753,7 +834,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can set a shipping address to an Account."
-	@priority = 5
+	@priority = 4
 	test AccountAdminCanSetDefaultShippingAddress {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
@@ -828,7 +909,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can add and unassign organization in bulk"
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanUnassignOrganizationsInBulk {
 		task ("Given add an Account Administrator with manage org permission assigned to a Business Account") {
@@ -903,9 +984,12 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can add and unassign organization to an account"
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanUnassignOrganizationToAccount {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given add an Account Administrator with manage org permission assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
 				accountEntryName = "Account Name",
@@ -976,7 +1060,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can unassign roles to users."
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AccountAdminCanUnassignRolesToUsers {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
@@ -1054,7 +1138,7 @@ definition {
 	}
 
 	@description = "This test searches for an Account within the list by Account Name and Account ID."
-	@priority = 5
+	@priority = 4
 	test AccountMemberCanSearchForAccountViaNameAndID {
 		task ("Given a user assigned to a Business Account") {
 			JSONAccountEntry.addAccountEntry(
@@ -1103,7 +1187,7 @@ definition {
 	}
 
 	@description = "This test asserts an account member can search accounts they belong to"
-	@priority = 3
+	@priority = 4
 	test AccountMemberCanSearchForAnAccount {
 		task ("Given an account user assigned to two accounts") {
 			JSONUser.addUser(
@@ -1277,7 +1361,7 @@ definition {
 	}
 
 	@description = "This test asserts Account Administrators can search for account users"
-	@priority = 5
+	@priority = 4
 	test AdminCanSearchForAccountUsers {
 		property portal.acceptance = "true";
 
@@ -1382,7 +1466,7 @@ definition {
 	}
 
 	@description = "This test asserts Account Administrators can view all account users"
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test AdminCanViewAllAccountUsers {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
@@ -1446,8 +1530,11 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-73702 and asserts that a user can see all accounts that they belong to"
-	@priority = 5
+	@priority = 4
 	test CanAccessAListOfAccountsTheUserBelongsTo {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given a user") {
 			JSONUser.addUser(
 				userEmailAddress = "userea@liferay.com",
@@ -1666,7 +1753,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin cannot view accounts not assigned to him."
-	@priority = 5
+	@priority = 4
 	test CannotViewOtherAccounts {
 		property portal.acceptance = "true";
 
@@ -1718,7 +1805,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Account Admin can remove a user from an account."
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test CanRemoveUserFromAccount {
 		property portal.acceptance = "true";
@@ -1801,7 +1888,7 @@ definition {
 	}
 
 	@description = "This test asserts that a user with Update permission for account entries can successfully update an account entry"
-	@priority = 5
+	@priority = 4
 	test CanUpdateAccountWithUpdatePermissions {
 		task ("Given a user who is a member of an account and has permissions to update account") {
 			JSONAccountEntry.addAccountEntry(
@@ -1854,8 +1941,11 @@ definition {
 	}
 
 	@description = "This test asserts that a user with View permission for account entries can view, but not be able to perform any other actions"
-	@priority = 5
+	@priority = 4
 	test CanViewAccountWithViewPermissions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given a user with View permissions for AccountEntry and a business account") {
 			JSONRole.addRegularRole(
 				roleKey = "View Account Role",
@@ -1976,7 +2066,7 @@ definition {
 	}
 
 	@description = "This test filters Accounts by Account Type."
-	@priority = 3
+	@priority = 4
 	@refactorneeded
 	test FilterByType {
 		task ("Given there is an Account Administrator assigned to a Business Account") {
@@ -2040,7 +2130,7 @@ definition {
 	}
 
 	@description = "This test asserts that multiple users can be assigned to roles simultaneously."
-	@priority = 5
+	@priority = 4
 	@refactorneeded
 	test ManyToManyRelationshipAssignmentIsPossible {
 		task ("Given there is an Account Administrator assigned to a Business Account") {

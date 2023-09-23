@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button, {ClayButtonWithIcon} from '@clayui/button';
@@ -25,7 +19,7 @@ export default function ModalContent({content, onClose}: IProps) {
 	return (
 		<ClayModal.Body>
 			<div className="align-items-center d-flex justify-content-between mb-4">
-				<h3 className="col-6 mb-0">Leads Details</h3>
+				<h3 className="col-6 mb-0">Opportunity Details</h3>
 
 				<ClayButtonWithIcon
 					displayType={null}
@@ -34,11 +28,50 @@ export default function ModalContent({content, onClose}: IProps) {
 				/>
 			</div>
 
-			<div className="d-flex">
+			<div className="d-md-flex">
 				<div className="col">
+					{content?.[
+						PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME
+					] && (
+						<ModalFormatedInformation
+							className="col mb-2"
+							information={
+								content?.[
+									PartnerOpportunitiesColumnKey
+										.PARTNER_ACCOUNT_NAME
+								]
+							}
+							label="Partner Account Name"
+						/>
+					)}
+
+					{content?.[PartnerOpportunitiesColumnKey.CURRENCY] && (
+						<ModalFormatedInformation
+							className="col mb-2"
+							information={
+								content?.[
+									PartnerOpportunitiesColumnKey.CURRENCY
+								]
+							}
+							label="Currency"
+						/>
+					)}
+
+					{content?.[PartnerOpportunitiesColumnKey.PARTNER_NAME] && (
+						<ModalFormatedInformation
+							className="col mb-2"
+							information={
+								content?.[
+									PartnerOpportunitiesColumnKey.PARTNER_NAME
+								]
+							}
+							label="Partner Name"
+						/>
+					)}
+
 					{content?.[PartnerOpportunitiesColumnKey.ACCOUNT_NAME] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey.ACCOUNT_NAME
@@ -48,21 +81,9 @@ export default function ModalContent({content, onClose}: IProps) {
 						/>
 					)}
 
-					{content?.[PartnerOpportunitiesColumnKey.DEAL_AMOUNT] && (
-						<ModalFormatedInformation
-							className="col mb-3"
-							information={
-								content?.[
-									PartnerOpportunitiesColumnKey.DEAL_AMOUNT
-								]
-							}
-							label="Deal Amount"
-						/>
-					)}
-
 					{content?.[PartnerOpportunitiesColumnKey.START_DATE] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey.START_DATE
@@ -74,7 +95,7 @@ export default function ModalContent({content, onClose}: IProps) {
 
 					{content?.[PartnerOpportunitiesColumnKey.END_DATE] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey.END_DATE
@@ -86,13 +107,25 @@ export default function ModalContent({content, onClose}: IProps) {
 
 					{content?.[PartnerOpportunitiesColumnKey.CLOSE_DATE] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey.CLOSE_DATE
 								]
 							}
 							label="Close Date"
+						/>
+					)}
+
+					{content?.[PartnerOpportunitiesColumnKey.DEAL_AMOUNT] && (
+						<ModalFormatedInformation
+							className="col mb-2"
+							information={
+								content?.[
+									PartnerOpportunitiesColumnKey.DEAL_AMOUNT
+								]
+							}
+							label="Deal Amount"
 						/>
 					)}
 				</div>
@@ -102,7 +135,7 @@ export default function ModalContent({content, onClose}: IProps) {
 						PartnerOpportunitiesColumnKey.PARTNER_REP_NAME
 					] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey
@@ -117,7 +150,7 @@ export default function ModalContent({content, onClose}: IProps) {
 						PartnerOpportunitiesColumnKey.PARTNER_REP_EMAIL
 					] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey
@@ -130,7 +163,7 @@ export default function ModalContent({content, onClose}: IProps) {
 
 					{content?.[PartnerOpportunitiesColumnKey.LIFERAY_REP] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[
 									PartnerOpportunitiesColumnKey.LIFERAY_REP
@@ -142,11 +175,21 @@ export default function ModalContent({content, onClose}: IProps) {
 
 					{content?.[PartnerOpportunitiesColumnKey.STAGE] && (
 						<ModalFormatedInformation
-							className="col mb-3"
+							className="col mb-2"
 							information={
 								content?.[PartnerOpportunitiesColumnKey.STAGE]
 							}
 							label="Stage"
+						/>
+					)}
+
+					{content?.[PartnerOpportunitiesColumnKey.TYPE] && (
+						<ModalFormatedInformation
+							className="col mb-2"
+							information={
+								content?.[PartnerOpportunitiesColumnKey.TYPE]
+							}
+							label="Type"
 						/>
 					)}
 				</div>

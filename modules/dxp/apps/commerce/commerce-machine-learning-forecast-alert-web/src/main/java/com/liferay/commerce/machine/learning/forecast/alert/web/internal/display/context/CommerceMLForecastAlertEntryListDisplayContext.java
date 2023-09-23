@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.forecast.alert.web.internal.display.context;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.machine.learning.forecast.alert.constants.CommerceMLForecastAlertActionKeys;
 import com.liferay.commerce.machine.learning.forecast.alert.constants.CommerceMLForecastAlertConstants;
 import com.liferay.commerce.machine.learning.forecast.alert.model.CommerceMLForecastAlertEntry;
@@ -38,12 +29,12 @@ import javax.portlet.RenderRequest;
 public class CommerceMLForecastAlertEntryListDisplayContext {
 
 	public CommerceMLForecastAlertEntryListDisplayContext(
-		CommerceAccountLocalService commerceAccountLocalService,
+		AccountEntryLocalService accountEntryLocalService,
 		CommerceMLForecastAlertEntryService commerceMLForecastAlertEntryService,
 		PortletResourcePermission portletResourcePermission,
 		RenderRequest renderRequest) {
 
-		_commerceAccountLocalService = commerceAccountLocalService;
+		_accountEntryLocalService = accountEntryLocalService;
 		_commerceMLForecastAlertEntryService =
 			commerceMLForecastAlertEntryService;
 		_portletResourcePermission = portletResourcePermission;
@@ -52,10 +43,9 @@ public class CommerceMLForecastAlertEntryListDisplayContext {
 			new CommerceMLForecastAlertEntryRequestHelper(renderRequest);
 	}
 
-	public CommerceAccount getCommerceAccount(long commerceAccountId) {
+	public AccountEntry getAccountEntry(long accountEntryId) {
 		try {
-			return _commerceAccountLocalService.getCommerceAccount(
-				commerceAccountId);
+			return _accountEntryLocalService.getAccountEntry(accountEntryId);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -120,7 +110,7 @@ public class CommerceMLForecastAlertEntryListDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceMLForecastAlertEntryListDisplayContext.class);
 
-	private final CommerceAccountLocalService _commerceAccountLocalService;
+	private final AccountEntryLocalService _accountEntryLocalService;
 	private final CommerceMLForecastAlertEntryRequestHelper
 		_commerceMLForecastAlertEntryRequestHelper;
 	private final CommerceMLForecastAlertEntryService

@@ -1,23 +1,31 @@
-create index IX_FEAFC68A on Address (companyId, classNameId, classPK, listTypeId);
-create index IX_923BD178 on Address (companyId, classNameId, classPK, mailing);
-create index IX_9226DBB4 on Address (companyId, classNameId, classPK, primary_);
-create unique index IX_CBAD282F on Address (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
-create index IX_5A2093E7 on Address (countryId);
-create index IX_C8E3E87D on Address (regionId);
-create index IX_5BC8B0D4 on Address (userId);
-create index IX_8FCB620E on Address (uuid_[$COLUMN_LENGTH:75$], companyId);
+create index IX_602D4181 on Address (companyId, classNameId, classPK, ctCollectionId);
+create index IX_336048E8 on Address (companyId, classNameId, classPK, listTypeId, ctCollectionId);
+create index IX_CF84B7D6 on Address (companyId, classNameId, classPK, mailing, ctCollectionId);
+create index IX_23EBCA12 on Address (companyId, classNameId, classPK, primary_, ctCollectionId);
+create index IX_D9B5311E on Address (companyId, classNameId, ctCollectionId);
+create index IX_3E0827AC on Address (companyId, ctCollectionId);
+create unique index IX_CBAD282F on Address (companyId, externalReferenceCode[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_34CBC45 on Address (countryId, ctCollectionId);
+create index IX_8C7024DB on Address (regionId, ctCollectionId);
+create index IX_F67F5F32 on Address (userId, ctCollectionId);
+create index IX_9F7C5C6C on Address (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
+create index IX_E8E63838 on Address (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
 create index IX_37B0A8A2 on AnnouncementsDelivery (companyId);
 create unique index IX_BA4413D5 on AnnouncementsDelivery (userId, type_[$COLUMN_LENGTH:75$]);
 
-create index IX_14F06A6B on AnnouncementsEntry (classNameId, classPK, alert);
-create index IX_459BE01B on AnnouncementsEntry (companyId, classNameId, classPK, alert);
-create index IX_D49C2E66 on AnnouncementsEntry (userId);
-create index IX_F2949120 on AnnouncementsEntry (uuid_[$COLUMN_LENGTH:75$], companyId);
+create index IX_D7470AC9 on AnnouncementsEntry (classNameId, classPK, alert, ctCollectionId);
+create index IX_707CBFDF on AnnouncementsEntry (classNameId, classPK, ctCollectionId);
+create index IX_69312079 on AnnouncementsEntry (companyId, classNameId, classPK, alert, ctCollectionId);
+create index IX_5362B02F on AnnouncementsEntry (companyId, classNameId, classPK, ctCollectionId);
+create index IX_964DCCDA on AnnouncementsEntry (companyId, ctCollectionId);
+create index IX_5B9978C4 on AnnouncementsEntry (userId, ctCollectionId);
+create index IX_2BF9277E on AnnouncementsEntry (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
+create index IX_2E39A466 on AnnouncementsEntry (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
-create index IX_EF1F022A on AnnouncementsFlag (companyId);
-create index IX_9C7EB9F on AnnouncementsFlag (entryId);
-create index IX_4539A99C on AnnouncementsFlag (userId, entryId, value);
+create index IX_F6244488 on AnnouncementsFlag (companyId, ctCollectionId);
+create index IX_397DA3FD on AnnouncementsFlag (entryId, ctCollectionId);
+create index IX_93B5C7FA on AnnouncementsFlag (userId, entryId, value, ctCollectionId);
 
 create index IX_AE8DFA7 on AssetCategory (companyId, externalReferenceCode[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_1757FA92 on AssetCategory (ctCollectionId);
@@ -52,14 +60,6 @@ create index IX_D5B55D40 on AssetEntry (groupId, ctCollectionId);
 create index IX_5B55565F on AssetEntry (layoutUuid[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_788964E3 on AssetEntry (publishDate, ctCollectionId);
 create index IX_5B6AC3B8 on AssetEntry (visible, ctCollectionId);
-
-create index IX_5D969E8E on AssetLink (ctCollectionId);
-create index IX_9BB95D26 on AssetLink (entryId1, ctCollectionId);
-create index IX_97B1F7F on AssetLink (entryId1, entryId2, ctCollectionId);
-create unique index IX_7FC555F2 on AssetLink (entryId1, entryId2, type_, ctCollectionId);
-create index IX_F75CBE6B on AssetLink (entryId1, type_, ctCollectionId);
-create index IX_6963BEE7 on AssetLink (entryId2, ctCollectionId);
-create index IX_F936118A on AssetLink (entryId2, type_, ctCollectionId);
 
 create index IX_E534924E on AssetTag (ctCollectionId);
 create index IX_24286918 on AssetTag (groupId, ctCollectionId);
@@ -159,6 +159,7 @@ create unique index IX_DD2033A4 on DLFileShortcut (uuid_[$COLUMN_LENGTH:75$], gr
 
 create index IX_97782D6C on DLFileVersion (companyId, ctCollectionId);
 create index IX_808EF252 on DLFileVersion (companyId, status, ctCollectionId);
+create index IX_9940AF5C on DLFileVersion (companyId, storeUUID[$COLUMN_LENGTH:255$], ctCollectionId);
 create index IX_759EF1C5 on DLFileVersion (fileEntryId, ctCollectionId);
 create index IX_C97C4DAB on DLFileVersion (fileEntryId, status, ctCollectionId);
 create unique index IX_10E504DF on DLFileVersion (fileEntryId, version[$COLUMN_LENGTH:75$], ctCollectionId);
@@ -234,6 +235,7 @@ create index IX_121A14F7 on Group_ (companyId, parentGroupId, site, ctCollection
 create index IX_162053E9 on Group_ (companyId, parentGroupId, site, inheritContent, ctCollectionId);
 create index IX_4108074A on Group_ (companyId, site, active_, ctCollectionId);
 create index IX_CFE2671B on Group_ (companyId, site, ctCollectionId);
+create unique index IX_74161B4F on Group_ (externalReferenceCode[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
 create index IX_8060F096 on Group_ (liveGroupId, ctCollectionId);
 create index IX_5263ACD8 on Group_ (type_, active_, ctCollectionId);
 create index IX_21CBD878 on Group_ (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
@@ -345,9 +347,13 @@ create index IX_CD25266E on PasswordPolicyRel (passwordPolicyId);
 
 create index IX_326F75BD on PasswordTracker (userId);
 
-create index IX_812CE07A on Phone (companyId, classNameId, classPK, primary_);
-create index IX_F202B9CE on Phone (userId);
-create index IX_B271FA88 on Phone (uuid_[$COLUMN_LENGTH:75$], companyId);
+create index IX_F5B219C7 on Phone (companyId, classNameId, classPK, ctCollectionId);
+create index IX_51CB82D8 on Phone (companyId, classNameId, classPK, primary_, ctCollectionId);
+create index IX_AA7CD218 on Phone (companyId, classNameId, ctCollectionId);
+create index IX_BC4C7872 on Phone (companyId, ctCollectionId);
+create index IX_ED8C342C on Phone (userId, ctCollectionId);
+create index IX_2E6C0E6 on Phone (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
+create index IX_AECDDBFE on Phone (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
 create unique index IX_7171B2E8 on PluginSetting (companyId, pluginId[$COLUMN_LENGTH:75$], pluginType[$COLUMN_LENGTH:75$]);
 
@@ -583,8 +589,6 @@ create index IX_14D8BCC0 on UserTrackerPath (userTrackerId);
 create index IX_51338B6A on User_ (companyId, createDate, ctCollectionId);
 create index IX_A09EEAB5 on User_ (companyId, createDate, modifiedDate, ctCollectionId);
 create index IX_53E4FDAC on User_ (companyId, ctCollectionId);
-create index IX_DBE0B8AC on User_ (companyId, defaultUser, ctCollectionId);
-create index IX_16583D92 on User_ (companyId, defaultUser, status, ctCollectionId);
 create unique index IX_6C9F41D8 on User_ (companyId, emailAddress[$COLUMN_LENGTH:254$], ctCollectionId);
 create unique index IX_210A2A8D on User_ (companyId, externalReferenceCode[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_F0BD8F61 on User_ (companyId, facebookId, ctCollectionId);
@@ -593,6 +597,8 @@ create index IX_79724177 on User_ (companyId, modifiedDate, ctCollectionId);
 create index IX_952F78E5 on User_ (companyId, openId[$COLUMN_LENGTH:1024$], ctCollectionId);
 create unique index IX_EEC1E477 on User_ (companyId, screenName[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_BC478292 on User_ (companyId, status, ctCollectionId);
+create index IX_E4BA9B25 on User_ (companyId, type_, ctCollectionId);
+create index IX_B488970B on User_ (companyId, type_, status, ctCollectionId);
 create unique index IX_C15FB5CF on User_ (contactId, ctCollectionId);
 create index IX_E1D5EE24 on User_ (emailAddress[$COLUMN_LENGTH:254$], ctCollectionId);
 create index IX_64D54302 on User_ (portraitId, ctCollectionId);

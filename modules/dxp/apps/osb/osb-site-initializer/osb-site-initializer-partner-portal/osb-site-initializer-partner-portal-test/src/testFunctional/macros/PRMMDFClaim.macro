@@ -1,6 +1,73 @@
 definition {
 
-	@summary = "Create a new claim on MDF detail page"
+	macro activityCheckbox {
+		Click.javaScriptClick(
+			key_fieldName = "activities[${activityIndex}].selected",
+			locator1 = "Checkbox#CHECKBOX_NAME");
+	}
+
+	macro activityCollapse {
+		Click(
+			key_activityName = ${activityName},
+			locator1 = "PRMMDFClaim#ACTIVITY_NAME");
+	}
+
+	macro changeClaimStatus {
+		var key_statusButton = ${statusButton};
+
+		if (${statusButton} == "Cancel") {
+			ClickNoError(
+				buttonId = "status-cancel",
+				locator1 = "Button#BUTTON_ID");
+		}
+		else {
+			ScrollWebElementIntoView(locator1 = "PRMMDFClaim#STATUS_DROPDOWN");
+
+			if (IsElementNotPresent(key_activeStatus = "true", locator1 = "PRMMDFClaim#STATE_MANAGER_DROPDOWN_STATUS")) {
+				PRMMDFClaim.clickOnStateManager();
+			}
+
+			ClickNoError(
+				key_statusButton = ${statusButton},
+				locator1 = "PRMMDFClaim#STATUS_OPTION_DROPDOWN");
+		}
+
+		if ((${statusButton} == "Request More Info") || (${statusButton} == "In Finance Review") || (${statusButton} == "Reject")) {
+			if (!(isSet(statusChangeMotivation))) {
+				var statusChangeMotivation = "Status Change Motivation";
+			}
+
+			Type(
+				key_fieldId = "descriptionTextArea",
+				locator1 = "TextArea#ANY_ID",
+				value1 = ${statusChangeMotivation});
+
+			Button.click(button = ${statusButton});
+
+			SelectFrameTop();
+		}
+
+		if (${statusButton} == "Claim Paid") {
+			Type(
+				key_placeHolder = "Amount Received",
+				locator1 = "TextInput#ANY_PLACEHOLDER",
+				value1 = ${amountReceived});
+
+			Type(
+				key_placeHolder = "Check Number",
+				locator1 = "TextInput#ANY_PLACEHOLDER",
+				value1 = ${checkNumber});
+
+			Button.click(button = "Submit");
+
+			SelectFrameTop();
+		}
+	}
+
+	macro clickOnStateManager {
+		ClickNoError(locator1 = "PRMMDFClaim#STATUS_DROPDOWN");
+	}
+
 	macro createNewClaim {
 		if (!(isSet(activityIndex))) {
 			var activityIndex = 0;
@@ -14,61 +81,151 @@ definition {
 
 		WaitForPageLoad();
 
-		for (var actvIndex : list ${activityIndex}) {
-			Click.javaScriptClick(
-				key_fieldName = "activities[${actvIndex}].selected",
-				locator1 = "Checkbox#CHECKBOX_NAME");
-
-			for (var bdgtIndex : list ${budgetIndex}) {
-				Click.javaScriptClick(
-					key_fieldName = "activities[${actvIndex}].budgets[${bdgtIndex}].selected",
-					locator1 = "Checkbox#CHECKBOX_NAME");
-
-				UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-					key_fieldName = "activities[${actvIndex}].budgets[${bdgtIndex}].invoice",
-					locator1 = "PRMMDFClaim#UPLOAD_FIELD",
-					value1 = ${thirdInvoice});
-
-				if (isSet(metrics)) {
-					var key_indexNumber = ${actvIndex} + 1;
-
-					Select(
-						key_indexNumber = ${key_indexNumber},
-						key_text = "Metrics",
-						locator1 = "TextArea#ANY_LABELED_N",
-						value1 = ${mestricsDescription});
-				}
-
-				if (isSet(selectfiles)) {
-					var key_indexNumber = ${activityIndex} + 1;
-
-					Select(
-						key_indexNumber = ${key_indexNumber},
-						key_text = "Select Files",
-						locator1 = "Button#ANY_N",
-						value1 = ${selectedFile});
-				}
-
-				UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-					key_fieldName = "activities[${actvIndex}].listQualifiedLeads",
-					locator1 = "PRMMDFClaim#UPLOAD_FIELD",
-					value1 = ${listLeads});
-			}
-		}
+		PRMMDFClaim.fillActivityFields(
+			activityIndex = ${activityIndex},
+			allContents = ${allContents},
+			budgetIndex = ${budgetIndex},
+			listLeads = ${listLeads},
+			mestricsDescription = ${mestricsDescription},
+			metrics = ${metrics},
+			selectedFile = ${selectedFile},
+			telemarketingMetrics = ${telemarketingMetrics},
+			telemarketingScript = ${telemarketingScript},
+			thirdInvoice = ${thirdInvoice},
+			typeOfActivity = ${typeOfActivity});
 
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			key_fieldName = "reimbursementInvoice",
 			locator1 = "PRMMDFClaim#UPLOAD_FIELD",
 			value1 = ${reimbursementInvoice});
 
-		Button.click(button = "Submit");
+		if (isSet(saveAsDraft)) {
+			Button.click(button = "Save as Draft");
+		}
+		else {
+			Button.click(button = "Submit");
 
-		Alert.viewSuccessMessage();
+			Alert.viewSuccessMessage();
+		}
 
 		WaitForPageLoad();
+
+		WaitForVisible(
+			key_title = "Campaign MDF Request",
+			locator1 = "Header#H1_TITLE");
 	}
 
-	@summary = "Get the claim ID by index"
+	macro editButton {
+		Click(locator1 = "PRMMDFClaim#EDIT_BUTTON");
+	}
+
+	macro fillActivityFields {
+		if (!(isSet(activityIndex))) {
+			var activityIndex = 0;
+		}
+
+		if (!(isSet(budgetIndex))) {
+			var budgetIndex = 0;
+		}
+
+		if (!(isSet(typeOfActivity))) {
+			var typeOfActivity = "Miscellaneous Marketing";
+		}
+
+		if (!(isSet(telemarketingMetrics))) {
+			var telemarketingMetrics = "Metrics Description";
+		}
+
+		if (!(isSet(telemarketingScript))) {
+			var telemarketingScript = "Document_2.png";
+		}
+
+		if (!(isSet(images))) {
+			var images = "Document_3.jpg";
+		}
+
+		if (!(isSet(allContents))) {
+			var allContents = "Document_2.jpg";
+		}
+
+		WaitForElementPresent(
+			key_title = "Reimbursement Claim",
+			locator1 = "Header#H2_TITLE");
+
+		for (var actvIndex : list ${activityIndex}) {
+			PRMMDFClaim.activityCheckbox(activityIndex = ${actvIndex});
+
+			if (${typeOfActivity} == "Miscellaneous Marketing") {
+				for (var bdgtIndex : list ${budgetIndex}) {
+					Click.javaScriptClick(
+						key_fieldName = "activities[${actvIndex}].budgets[${bdgtIndex}].selected",
+						locator1 = "Checkbox#CHECKBOX_NAME");
+
+					if (isSet(thirdInvoice)) {
+						UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+							key_fieldName = "activities[${actvIndex}].budgets[${bdgtIndex}].invoice",
+							locator1 = "PRMMDFClaim#UPLOAD_FIELD",
+							value1 = ${thirdInvoice});
+					}
+				}
+
+				if (isSet(telemarketingMetrics)) {
+					var key_indexNumber = ${actvIndex} + 1;
+
+					Type(
+						key_indexNumber = ${key_indexNumber},
+						key_label = "Telemarketing Metrics",
+						locator1 = "TextArea#ANY_LABELED_N",
+						value1 = ${telemarketingMetrics});
+				}
+
+				if (isSet(telemarketingScript)) {
+					UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+						key_fieldName = "activities[${actvIndex}].telemarketingScript",
+						locator1 = "PRMMDFClaim#UPLOAD_FIELD",
+						value1 = ${telemarketingScript});
+				}
+
+				if (isSet(images)) {
+					UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+						key_fieldName = "activities[${actvIndex}].proofOfPerformance.images",
+						locator1 = "PRMMDFClaim#UPLOAD_FIELD",
+						value1 = ${images});
+				}
+
+				if (isSet(allContents)) {
+					UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+						key_fieldName = "activities[${actvIndex}].proofOfPerformance.allContents",
+						locator1 = "PRMMDFClaim#UPLOAD_FIELD",
+						value1 = ${allContents});
+				}
+
+				if (isSet(listLeads)) {
+					UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+						key_fieldName = "activities[${actvIndex}].listOfQualifiedLeads",
+						locator1 = "PRMMDFClaim#UPLOAD_FIELD",
+						value1 = ${listLeads});
+				}
+			}
+		}
+	}
+
+	macro filterClaimID {
+		Click(
+			key_filterOption = "Filter",
+			locator1 = "AppBuilder#CHOOSE_SEARCH_FILTER_BY_OPTION");
+
+		Click(
+			key_filterOption = ${optionDropdown},
+			locator1 = "PRMMDFRequest#DROPDOWN_OPTIONS");
+
+		Click.clickAtNotVisible(
+			key_checkboxName = ${checkboxName},
+			locator1 = "PRMMDFClaim#CHECKBOX_OPTION");
+
+		Click.clickAtNotVisible(locator1 = "PRMMDFClaim#APPLY_BUTTON");
+	}
+
 	macro getClaimID {
 		var key_index = ${claimIndex};
 		var orderID = selenium.getText("PRMMDFClaim#CLAIM_ID_INDEX");
@@ -78,11 +235,116 @@ definition {
 		return ${orderID};
 	}
 
-	@summary = "View claim type on MDF Request details page"
+	macro getClaimIdOnDetailPage {
+		var key_index = ${index};
+
+		if (${index} == 1) {
+			var claimId = selenium.getText("PRMMDFClaim#CLAIM_ID_DETAIL_PAGE_INDEX");
+
+			var claimId = StringUtil.extractDigits(${claimId});
+
+			static var staticClaimId1 = ${claimId};
+
+			return ${staticClaimId1};
+		}
+
+		if (${index} == 2) {
+			var claimId = selenium.getText("PRMMDFClaim#CLAIM_ID_DETAIL_PAGE_INDEX");
+
+			var claimId = StringUtil.extractDigits(${claimId});
+
+			static var staticClaimId2 = ${claimId};
+
+			return ${staticClaimId2};
+		}
+	}
+
+	macro searchClaim {
+		Type(
+			key_placeHolder = "Search",
+			locator1 = "TextInput#ANY_PLACEHOLDER",
+			value1 = ${claimID});
+
+		KeyPress(
+			key_placeHolder = "Search",
+			locator1 = "TextInput#ANY_PLACEHOLDER",
+			value1 = "\RETURN");
+	}
+
+	macro viewActivityNotPresent {
+		AssertElementNotPresent(
+			key_activityName = ${activityName},
+			locator1 = "PRMMDFClaim#ACTIVITY_NAME");
+	}
+
+	macro viewActivityPresent {
+		AssertElementPresent(
+			key_activityName = ${activityName},
+			locator1 = "PRMMDFClaim#ACTIVITY_NAME");
+	}
+
+	macro viewAttachmentNotPresent {
+		AssertElementNotPresent(
+			key_attachmentName = ${attachmentName},
+			locator1 = "PRMMDFClaim#ATTACHMENT_NAME");
+	}
+
+	macro viewAttachmentPresent {
+		AssertElementPresent(
+			key_attachmentName = ${attachmentName},
+			locator1 = "PRMMDFClaim#ATTACHMENT_NAME");
+	}
+
+	macro viewClaimSummary {
+		if (isSet(claimType)) {
+			AssertElementPresent(
+				key_itemValue = ${claimType},
+				key_panelId = "type",
+				key_panelItem = "Type",
+				locator1 = "PRMMDFClaim#SUMMARY_PANEL");
+		}
+
+		if (isSet(amountClaimed)) {
+			AssertElementPresent(
+				key_itemValue = ${amountClaimed},
+				key_panelId = "amount-claimed",
+				key_panelItem = "Amount Claimed",
+				locator1 = "PRMMDFClaim#SUMMARY_PANEL");
+		}
+
+		if (isSet(paymentReceived)) {
+			AssertElementPresent(
+				key_itemValue = ${paymentReceived},
+				key_panelId = "payment-received",
+				key_panelItem = "Payment Received",
+				locator1 = "PRMMDFClaim#SUMMARY_PANEL");
+		}
+
+		if (isSet(checkId)) {
+			AssertElementPresent(
+				key_itemValue = ${checkId},
+				key_panelId = "check",
+				key_panelItem = "Check",
+				locator1 = "PRMMDFClaim#SUMMARY_PANEL");
+		}
+	}
+
 	macro viewClaimType {
 		AssertElementPresent(
 			key_claimType = ${claimType},
 			locator1 = "PRMMDFClaim#CLAIM_TYPE");
+	}
+
+	macro viewStatusOptionNotVisible {
+		AssertElementNotPresent(
+			key_statusButton = ${statusButton},
+			locator1 = "PRMMDFClaim#STATUS_OPTION_DROPDOWN");
+	}
+
+	macro viewStatusOptionVisible {
+		AssertElementPresent(
+			key_statusButton = ${statusButton},
+			locator1 = "PRMMDFClaim#STATUS_OPTION_DROPDOWN");
 	}
 
 }

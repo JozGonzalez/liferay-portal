@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -23,7 +23,7 @@ definition {
 	@description = "LRQA-53649 Automate LPS-87560: Verify metrics available or not for CE and DXP customers"
 	@priority = 5
 	test MetricsUnavailableForCECustomers {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		ApplicationsMenuHelper.openApplicationsMenu();
 

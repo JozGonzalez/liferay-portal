@@ -1,6 +1,6 @@
 Bundle-Name: ${manifest.bundle.name}
 Bundle-SymbolicName: ${manifest.bundle.symbolic.name}
-Bundle-Version: 14.4.1
+Bundle-Version: 22.0.2
 Export-Package:\
 	com.liferay.portal.kernel.dao.db.test,\
 	com.liferay.portal.kernel.test,\
@@ -16,8 +16,6 @@ Export-Package:\
 	com.liferay.portal.test.randomizerbumpers,\
 	com.liferay.portal.test.rule,\
 	com.liferay.portlet.asset.service.persistence.test,\
-	com.liferay.portlet.dynamicdatamapping.util.test,\
-	com.liferay.portlet.expando.util.test,\
 	com.liferay.portlet.passwordpoliciesadmin.util.test,\
 	com.liferay.portlet.test,\
 	com.liferay.portletmvc4spring.test.mock.web.portlet,\

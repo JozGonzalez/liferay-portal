@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0.test;
@@ -111,7 +102,7 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 	protected WishListItem testDeleteWishListItem_addWishListItem()
 		throws Exception {
 
-		return wishListItemResource.postChannelWishListItem(
+		return wishListItemResource.postWishlistWishListWishListItem(
 			_commerceWishList.getCommerceWishListId(),
 			_accountEntry.getAccountEntryId(), randomWishListItem());
 	}
@@ -125,22 +116,25 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 	protected WishListItem testGetWishListItem_addWishListItem()
 		throws Exception {
 
-		return wishListItemResource.postChannelWishListItem(
+		return wishListItemResource.postWishlistWishListWishListItem(
 			_commerceWishList.getCommerceWishListId(),
 			_accountEntry.getAccountEntryId(), randomWishListItem());
 	}
 
 	@Override
-	protected WishListItem testGetWishListItemsPage_addWishListItem(
-			Long wishListId, WishListItem wishListItem)
+	protected WishListItem
+			testGetWishlistWishListWishListItemsPage_addWishListItem(
+				Long wishListId, WishListItem wishListItem)
 		throws Exception {
 
-		return wishListItemResource.postChannelWishListItem(
+		return wishListItemResource.postWishlistWishListWishListItem(
 			wishListId, _accountEntry.getAccountEntryId(), wishListItem);
 	}
 
 	@Override
-	protected Long testGetWishListItemsPage_getWishListId() throws Exception {
+	protected Long testGetWishlistWishListWishListItemsPage_getWishListId()
+		throws Exception {
+
 		return _commerceWishList.getCommerceWishListId();
 	}
 
@@ -148,17 +142,17 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 	protected WishListItem testGraphQLWishListItem_addWishListItem()
 		throws Exception {
 
-		return wishListItemResource.postChannelWishListItem(
+		return wishListItemResource.postWishlistWishListWishListItem(
 			_commerceWishList.getCommerceWishListId(),
 			_accountEntry.getAccountEntryId(), randomWishListItem());
 	}
 
 	@Override
-	protected WishListItem testPostChannelWishListItem_addWishListItem(
+	protected WishListItem testPostWishlistWishListWishListItem_addWishListItem(
 			WishListItem wishListItem)
 		throws Exception {
 
-		return wishListItemResource.postChannelWishListItem(
+		return wishListItemResource.postWishlistWishListWishListItem(
 			_commerceWishList.getCommerceWishListId(),
 			_accountEntry.getAccountEntryId(), wishListItem);
 	}

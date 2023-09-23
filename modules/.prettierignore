@@ -10,9 +10,9 @@
     #
     *.soy.js
     build/**
-    tmp/**
     classes/**
     css/clay/**
+    tmp/**
     types/**/*.d.ts
 
 ##
@@ -65,3 +65,9 @@
     /**/*-min.js
     /test/jenkins-results-parser/**
     /test/poshi/**
+
+    #
+    # LRAC-12941 Temporarily ignore SF on FARO files
+    #
+    dxp/apps/osb/osb-faro/osb-faro-web
+    dxp/apps/osb/osb-faro/osb-faro-theme

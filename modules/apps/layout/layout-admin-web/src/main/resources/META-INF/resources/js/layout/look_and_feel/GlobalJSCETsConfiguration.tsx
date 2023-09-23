@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import {ClaySelectWithOption} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import {openSelectionModal, openToast} from 'frontend-js-web';
@@ -47,6 +39,7 @@ const DEFAULT_SCRIPT_LOCATION_OPTION: IScriptLocationOptions = 'bottom';
 export default function GlobalJSCETsConfiguration({
 	globalJSCETSelectorURL,
 	globalJSCETs: initialGlobalJSCETs,
+	isReadOnly,
 	portletNamespace,
 	selectGlobalJSCETsEventName,
 }: IProps) {
@@ -211,12 +204,9 @@ export default function GlobalJSCETsConfiguration({
 				)
 			)}
 
-			<h3 className="sheet-subtitle">
-				{Liferay.Language.get('javascript-client-extensions')}
-			</h3>
-
 			<AddExtensionButton
 				addGlobalJSCET={addGlobalJSCET}
+				isReadOnly={isReadOnly}
 				portletNamespace={portletNamespace}
 			/>
 
@@ -239,7 +229,7 @@ export default function GlobalJSCETsConfiguration({
 											'client-extensions-inherited-from-master-will-always-be-loaded-first'
 										),
 										Liferay.Language.get(
-											'also-head-insertions-will-be-loaded-before-body-bottom-ones'
+											'also,-head-insertions-will-be-loaded-before-body-bottom-ones'
 										),
 									].join(' ')}
 								</GlobalCETOrderHelpIcon>
@@ -271,7 +261,7 @@ export default function GlobalJSCETsConfiguration({
 								<React.Fragment key={scriptLocation}>
 									<ClayTable.Row>
 										<ClayTable.Cell
-											className="list-group-header-title py-2"
+											className="c-py-2 list-group-header-title"
 											colSpan={5}
 										>
 											{scriptLocation === 'bottom'
@@ -318,11 +308,13 @@ export default function GlobalJSCETsConfiguration({
 
 interface IAddExtensionButton {
 	addGlobalJSCET: (scriptLocation: IScriptLocationOptions) => unknown;
+	isReadOnly: boolean;
 	portletNamespace: string;
 }
 
 function AddExtensionButton({
 	addGlobalJSCET,
+	isReadOnly,
 	portletNamespace,
 }: IAddExtensionButton) {
 	const [active, setActive] = useState(false);
@@ -341,11 +333,13 @@ function AddExtensionButton({
 			onActiveChange={setActive}
 			trigger={
 				<ClayButton
-					className="mb-3"
+					className="c-mb-3"
+					disabled={isReadOnly}
 					displayType="secondary"
-					small
 					type="button"
 				>
+					<ClayIcon className="c-mr-2" symbol="plus" />
+
 					{Liferay.Language.get('add-javascript-client-extensions')}
 				</ClayButton>
 			}
@@ -445,6 +439,7 @@ interface IGlobalJSCETGroup {
 interface IProps {
 	globalJSCETSelectorURL: string;
 	globalJSCETs: IGlobalJSCET[];
+	isReadOnly: boolean;
 	portletNamespace: string;
 	selectGlobalJSCETsEventName: string;
 }

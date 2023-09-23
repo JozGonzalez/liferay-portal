@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v1_0;
@@ -26,13 +17,13 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.PriceEntry;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.TierPrice;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v1_0.converter.PriceEntryDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.TierPriceUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.PriceEntryResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -274,7 +265,7 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 				priceEntry.getPrice(),
 				(BigDecimal)GetterUtil.get(
 					priceEntry.getPromoPrice(), BigDecimal.ZERO),
-				priceEntry.getSkuExternalReferenceCode(), serviceContext);
+				priceEntry.getSkuExternalReferenceCode(), null, serviceContext);
 
 		// Update nested resources
 
@@ -328,11 +319,11 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 
 		// Commerce price entry
 
-		commercePriceEntry =
-			_commercePriceEntryService.updateCommercePriceEntry(
-				commercePriceEntry.getCommercePriceEntryId(),
-				priceEntry.getPrice(), priceEntry.getPromoPrice(),
-				_serviceContextHelper.getServiceContext());
+		commercePriceEntry = _commercePriceEntryService.updatePricingInfo(
+			commercePriceEntry.getCommercePriceEntryId(),
+			commercePriceEntry.isBulkPricing(), priceEntry.getPrice(), false,
+			priceEntry.getPromoPrice(), null,
+			_serviceContextHelper.getServiceContext());
 
 		// Update nested resources
 
@@ -355,8 +346,11 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 	@Reference
 	private CPInstanceService _cpInstanceService;
 
-	@Reference
-	private PriceEntryDTOConverter _priceEntryDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v1_0.converter.PriceEntryDTOConverter)"
+	)
+	private DTOConverter<CommercePriceEntry, PriceEntry>
+		_priceEntryDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

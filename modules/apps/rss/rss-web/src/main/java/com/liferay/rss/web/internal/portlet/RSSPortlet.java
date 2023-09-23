@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.rss.web.internal.portlet;
 
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -31,6 +23,7 @@ import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -40,7 +33,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.rss.web.internal.configuration.RSSWebCacheConfiguration",
 	property = {
-		"com.liferay.fragment.entry.processor.portlet.alias=rss",
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.application-type=full-page-application",
 		"com.liferay.portlet.application-type=widget",
@@ -82,7 +74,19 @@ public class RSSPortlet extends MVCPortlet {
 	protected void activate(Map<String, Object> properties) {
 		_rssWebCacheConfiguration = ConfigurableUtil.createConfigurable(
 			RSSWebCacheConfiguration.class, properties);
+
+		_portletRegistry.registerAlias("rss", RSSPortletKeys.RSS);
 	}
+
+	@Deactivate
+	protected void deactivate() {
+		_portletRegistry.unregisterAlias(_ALIAS);
+	}
+
+	private static final String _ALIAS = "rss";
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.rss.web)(&(release.schema.version>=3.0.0)(!(release.schema.version>=4.0.0))))"

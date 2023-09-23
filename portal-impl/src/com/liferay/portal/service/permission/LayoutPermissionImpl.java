@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.permission;
@@ -29,7 +20,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.BaseModelPermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.UserBag;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -49,7 +39,6 @@ import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,8 +53,7 @@ import java.util.Objects;
 @OSGiBeanProperties(
 	property = "model.class.name=com.liferay.portal.kernel.model.Layout"
 )
-public class LayoutPermissionImpl
-	implements BaseModelPermissionChecker, LayoutPermission {
+public class LayoutPermissionImpl implements LayoutPermission {
 
 	@Override
 	public void check(
@@ -117,15 +105,6 @@ public class LayoutPermissionImpl
 		check(
 			permissionChecker, LayoutLocalServiceUtil.getLayout(plid),
 			actionId);
-	}
-
-	@Override
-	public void checkBaseModel(
-			PermissionChecker permissionChecker, long groupId, long primaryKey,
-			String actionId)
-		throws PortalException {
-
-		check(permissionChecker, primaryKey, actionId);
 	}
 
 	@Override
@@ -307,7 +286,9 @@ public class LayoutPermissionImpl
 		}
 
 		if (actionId.equals(ActionKeys.ADD_LAYOUT)) {
-			if (!SitesUtil.isLayoutSortable(layout)) {
+			if ((layout instanceof VirtualLayout) ||
+				!layout.isLayoutSortable()) {
+
 				return false;
 			}
 
@@ -319,7 +300,8 @@ public class LayoutPermissionImpl
 		}
 
 		if (actionId.equals(ActionKeys.DELETE) &&
-			!SitesUtil.isLayoutDeleteable(layout)) {
+			((layout instanceof VirtualLayout) ||
+			 !layout.isLayoutDeleteable())) {
 
 			return false;
 		}
@@ -395,7 +377,7 @@ public class LayoutPermissionImpl
 
 		User user = permissionChecker.getUser();
 
-		if (!user.isDefaultUser() && !group.isUser()) {
+		if (!user.isGuestUser() && !group.isUser()) {
 
 			// This is new way of doing an ownership check without having to
 			// have a userId field on the model. When the instance model was
@@ -452,7 +434,8 @@ public class LayoutPermissionImpl
 
 		if ((ActionKeys.CUSTOMIZE.equals(actionId) ||
 			 ActionKeys.UPDATE.equals(actionId)) &&
-			!SitesUtil.isLayoutUpdateable(layout)) {
+			((layout instanceof VirtualLayout) ||
+			 !layout.isLayoutUpdateable())) {
 
 			return true;
 		}

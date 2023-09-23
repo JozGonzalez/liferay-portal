@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal;
 
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.search.BaseIndexWriter;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -30,7 +23,9 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.MatchAllQuery;
 import com.liferay.portal.kernel.search.suggest.SpellCheckIndexWriter;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.logging.ElasticsearchExceptionHandler;
 import com.liferay.portal.search.elasticsearch7.internal.util.DocumentTypes;
@@ -45,6 +40,8 @@ import com.liferay.portal.search.engine.adapter.index.RefreshIndexRequest;
 import com.liferay.portal.search.index.IndexNameBuilder;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,27 +57,28 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 
 	@Override
 	public void addDocument(SearchContext searchContext, Document document) {
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
+		for (String indexName : _getIndexNames(searchContext)) {
+			IndexDocumentRequest indexDocumentRequest =
+				new IndexDocumentRequest(indexName, document);
 
-		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
-			indexName, document);
+			indexDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-		indexDocumentRequest.setType(DocumentTypes.LIFERAY);
+			if (PortalRunMode.isTestMode() ||
+				searchContext.isCommitImmediately()) {
 
-		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
-			indexDocumentRequest.setRefresh(true);
-		}
-
-		try {
-			_searchEngineAdapter.execute(indexDocumentRequest);
-		}
-		catch (RuntimeException runtimeException) {
-			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
-				_log.error(runtimeException);
+				indexDocumentRequest.setRefresh(true);
 			}
-			else {
-				throw runtimeException;
+
+			try {
+				_searchEngineAdapter.execute(indexDocumentRequest);
+			}
+			catch (RuntimeException runtimeException) {
+				if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
+					_log.error(runtimeException);
+				}
+				else {
+					throw runtimeException;
+				}
 			}
 		}
 	}
@@ -89,25 +87,24 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void addDocuments(
 		SearchContext searchContext, Collection<Document> documents) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
-
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
-		documents.forEach(
-			document -> {
-				IndexDocumentRequest indexDocumentRequest =
-					new IndexDocumentRequest(indexName, document);
+		for (String indexName : _getIndexNames(searchContext)) {
+			documents.forEach(
+				document -> {
+					IndexDocumentRequest indexDocumentRequest =
+						new IndexDocumentRequest(indexName, document);
 
-				indexDocumentRequest.setType(DocumentTypes.LIFERAY);
+					indexDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					indexDocumentRequest);
-			});
+					bulkDocumentRequest.addBulkableDocumentRequest(
+						indexDocumentRequest);
+				});
+		}
 
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -124,50 +121,50 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 
 	@Override
 	public void commit(SearchContext searchContext) {
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
+		for (String indexName : _getIndexNames(searchContext)) {
+			RefreshIndexRequest refreshIndexRequest = new RefreshIndexRequest(
+				indexName);
 
-		RefreshIndexRequest refreshIndexRequest = new RefreshIndexRequest(
-			indexName);
-
-		try {
-			_searchEngineAdapter.execute(refreshIndexRequest);
-		}
-		catch (RuntimeException runtimeException) {
-			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
-				_log.error(runtimeException);
+			try {
+				_searchEngineAdapter.execute(refreshIndexRequest);
 			}
-			else {
-				throw runtimeException;
+			catch (RuntimeException runtimeException) {
+				if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
+					_log.error(runtimeException);
+				}
+				else {
+					throw runtimeException;
+				}
 			}
 		}
 	}
 
 	@Override
 	public void deleteDocument(SearchContext searchContext, String uid) {
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
+		for (String indexName : _getIndexNames(searchContext)) {
+			DeleteDocumentRequest deleteDocumentRequest =
+				new DeleteDocumentRequest(indexName, uid);
 
-		DeleteDocumentRequest deleteDocumentRequest = new DeleteDocumentRequest(
-			indexName, uid);
+			if (PortalRunMode.isTestMode() ||
+				searchContext.isCommitImmediately()) {
 
-		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
-			deleteDocumentRequest.setRefresh(true);
-		}
+				deleteDocumentRequest.setRefresh(true);
+			}
 
-		deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
+			deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-		try {
-			_searchEngineAdapter.execute(deleteDocumentRequest);
-		}
-		catch (RuntimeException runtimeException) {
-			ElasticsearchExceptionHandler elasticsearchExceptionHandler =
-				new ElasticsearchExceptionHandler(
-					_log,
-					_elasticsearchConfigurationWrapper.logExceptionsOnly());
+			try {
+				_searchEngineAdapter.execute(deleteDocumentRequest);
+			}
+			catch (RuntimeException runtimeException) {
+				ElasticsearchExceptionHandler elasticsearchExceptionHandler =
+					new ElasticsearchExceptionHandler(
+						_log,
+						_elasticsearchConfigurationWrapper.logExceptionsOnly());
 
-			elasticsearchExceptionHandler.handleDeleteDocumentException(
-				runtimeException);
+				elasticsearchExceptionHandler.handleDeleteDocumentException(
+					runtimeException);
+			}
 		}
 	}
 
@@ -175,25 +172,24 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void deleteDocuments(
 		SearchContext searchContext, Collection<String> uids) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
-
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
-		uids.forEach(
-			uid -> {
-				DeleteDocumentRequest deleteDocumentRequest =
-					new DeleteDocumentRequest(indexName, uid);
+		for (String indexName : _getIndexNames(searchContext)) {
+			uids.forEach(
+				uid -> {
+					DeleteDocumentRequest deleteDocumentRequest =
+						new DeleteDocumentRequest(indexName, uid);
 
-				deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
+					deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					deleteDocumentRequest);
-			});
+					bulkDocumentRequest.addBulkableDocumentRequest(
+						deleteDocumentRequest);
+				});
+		}
 
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -212,42 +208,41 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void deleteEntityDocuments(
 		SearchContext searchContext, String className) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
+		for (String indexName : _getIndexNames(searchContext)) {
+			try {
+				BooleanQuery booleanQuery = new BooleanQueryImpl();
 
-		try {
-			BooleanQuery booleanQuery = new BooleanQueryImpl();
+				booleanQuery.add(new MatchAllQuery(), BooleanClauseOccur.MUST);
 
-			booleanQuery.add(new MatchAllQuery(), BooleanClauseOccur.MUST);
+				BooleanFilter booleanFilter = new BooleanFilter();
 
-			BooleanFilter booleanFilter = new BooleanFilter();
+				booleanFilter.add(
+					new TermFilter(Field.ENTRY_CLASS_NAME, className),
+					BooleanClauseOccur.MUST);
 
-			booleanFilter.add(
-				new TermFilter(Field.ENTRY_CLASS_NAME, className),
-				BooleanClauseOccur.MUST);
+				booleanQuery.setPreBooleanFilter(booleanFilter);
 
-			booleanQuery.setPreBooleanFilter(booleanFilter);
+				DeleteByQueryDocumentRequest deleteByQueryDocumentRequest =
+					new DeleteByQueryDocumentRequest(booleanQuery, indexName);
 
-			DeleteByQueryDocumentRequest deleteByQueryDocumentRequest =
-				new DeleteByQueryDocumentRequest(booleanQuery, indexName);
+				if (PortalRunMode.isTestMode() ||
+					searchContext.isCommitImmediately()) {
 
-			if (PortalRunMode.isTestMode() ||
-				searchContext.isCommitImmediately()) {
+					deleteByQueryDocumentRequest.setRefresh(true);
+				}
 
-				deleteByQueryDocumentRequest.setRefresh(true);
+				_searchEngineAdapter.execute(deleteByQueryDocumentRequest);
 			}
-
-			_searchEngineAdapter.execute(deleteByQueryDocumentRequest);
-		}
-		catch (ParseException parseException) {
-			throw new SystemException(parseException);
-		}
-		catch (RuntimeException runtimeException) {
-			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
-				_log.error(runtimeException);
+			catch (ParseException parseException) {
+				throw new SystemException(parseException);
 			}
-			else {
-				throw runtimeException;
+			catch (RuntimeException runtimeException) {
+				if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
+					_log.error(runtimeException);
+				}
+				else {
+					throw runtimeException;
+				}
 			}
 		}
 	}
@@ -256,27 +251,29 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void partiallyUpdateDocument(
 		SearchContext searchContext, Document document) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
+		for (String indexName : _getIndexNames(searchContext)) {
+			UpdateDocumentRequest updateDocumentRequest =
+				new UpdateDocumentRequest(
+					indexName, document.getUID(), document);
 
-		UpdateDocumentRequest updateDocumentRequest = new UpdateDocumentRequest(
-			indexName, document.getUID(), document);
+			updateDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-		updateDocumentRequest.setType(DocumentTypes.LIFERAY);
+			if (PortalRunMode.isTestMode() ||
+				searchContext.isCommitImmediately()) {
 
-		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
-			updateDocumentRequest.setRefresh(true);
-		}
-
-		try {
-			_searchEngineAdapter.execute(updateDocumentRequest);
-		}
-		catch (RuntimeException runtimeException) {
-			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
-				_log.error(runtimeException);
+				updateDocumentRequest.setRefresh(true);
 			}
-			else {
-				throw runtimeException;
+
+			try {
+				_searchEngineAdapter.execute(updateDocumentRequest);
+			}
+			catch (RuntimeException runtimeException) {
+				if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
+					_log.error(runtimeException);
+				}
+				else {
+					throw runtimeException;
+				}
 			}
 		}
 	}
@@ -285,26 +282,25 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void partiallyUpdateDocuments(
 		SearchContext searchContext, Collection<Document> documents) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
-
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
-		documents.forEach(
-			document -> {
-				UpdateDocumentRequest updateDocumentRequest =
-					new UpdateDocumentRequest(
-						indexName, document.getUID(), document);
+		for (String indexName : _getIndexNames(searchContext)) {
+			documents.forEach(
+				document -> {
+					UpdateDocumentRequest updateDocumentRequest =
+						new UpdateDocumentRequest(
+							indexName, document.getUID(), document);
 
-				updateDocumentRequest.setType(DocumentTypes.LIFERAY);
+					updateDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					updateDocumentRequest);
-			});
+					bulkDocumentRequest.addBulkableDocumentRequest(
+						updateDocumentRequest);
+				});
+		}
 
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -321,28 +317,29 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 
 	@Override
 	public void updateDocument(SearchContext searchContext, Document document) {
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
-
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
-		DeleteDocumentRequest deleteDocumentRequest = new DeleteDocumentRequest(
-			indexName, document.getUID());
+		for (String indexName : _getIndexNames(searchContext)) {
+			DeleteDocumentRequest deleteDocumentRequest =
+				new DeleteDocumentRequest(indexName, document.getUID());
 
-		deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
+			deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-		bulkDocumentRequest.addBulkableDocumentRequest(deleteDocumentRequest);
+			bulkDocumentRequest.addBulkableDocumentRequest(
+				deleteDocumentRequest);
 
-		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
-			indexName, document);
+			IndexDocumentRequest indexDocumentRequest =
+				new IndexDocumentRequest(indexName, document);
 
-		indexDocumentRequest.setType(DocumentTypes.LIFERAY);
+			indexDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-		bulkDocumentRequest.addBulkableDocumentRequest(indexDocumentRequest);
+			bulkDocumentRequest.addBulkableDocumentRequest(
+				indexDocumentRequest);
+		}
 
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -361,33 +358,32 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	public void updateDocuments(
 		SearchContext searchContext, Collection<Document> documents) {
 
-		String indexName = _indexNameBuilder.getIndexName(
-			searchContext.getCompanyId());
-
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		if (PortalRunMode.isTestMode() || searchContext.isCommitImmediately()) {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
-		documents.forEach(
-			document -> {
-				DeleteDocumentRequest deleteDocumentRequest =
-					new DeleteDocumentRequest(indexName, document.getUID());
+		for (String indexName : _getIndexNames(searchContext)) {
+			documents.forEach(
+				document -> {
+					DeleteDocumentRequest deleteDocumentRequest =
+						new DeleteDocumentRequest(indexName, document.getUID());
 
-				deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
+					deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					deleteDocumentRequest);
+					bulkDocumentRequest.addBulkableDocumentRequest(
+						deleteDocumentRequest);
 
-				IndexDocumentRequest indexDocumentRequest =
-					new IndexDocumentRequest(indexName, document);
+					IndexDocumentRequest indexDocumentRequest =
+						new IndexDocumentRequest(indexName, document);
 
-				indexDocumentRequest.setType(DocumentTypes.LIFERAY);
+					indexDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					indexDocumentRequest);
-			});
+					bulkDocumentRequest.addBulkableDocumentRequest(
+						indexDocumentRequest);
+				});
+		}
 
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -407,8 +403,48 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		return _spellCheckIndexWriter;
 	}
 
+	private String _getIndexNameNext(long companyId) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-183661")) {
+			return null;
+		}
+
+		Company company = _companyLocalService.fetchCompany(companyId);
+
+		if (company == null) {
+			return null;
+		}
+
+		String indexNameNext = company.getIndexNameNext();
+
+		if (Validator.isBlank(indexNameNext)) {
+			return null;
+		}
+
+		return indexNameNext;
+	}
+
+	private Set<String> _getIndexNames(SearchContext searchContext) {
+		Set<String> indexNames = new HashSet<>();
+
+		String indexNameCurrent = _indexNameBuilder.getIndexName(
+			searchContext.getCompanyId());
+
+		indexNames.add(indexNameCurrent);
+
+		String indexNameNext = _getIndexNameNext(searchContext.getCompanyId());
+
+		if (indexNameNext != null) {
+			indexNames.add(indexNameNext);
+		}
+
+		return indexNames;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchIndexWriter.class);
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private volatile ElasticsearchConfigurationWrapper

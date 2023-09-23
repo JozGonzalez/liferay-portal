@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/backgroundImageFragmentEntryProcessor';
 import {COLLECTION_APPLIED_FILTERS_FRAGMENT_ENTRY_KEY} from '../../../../../app/config/constants/collectionAppliedFiltersFragmentKey';
 import {COLLECTION_FILTER_FRAGMENT_ENTRY_KEY} from '../../../../../app/config/constants/collectionFilterFragmentEntryKey';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/editableFragmentEntryProcessor';
@@ -32,6 +24,7 @@ import {CollectionFilterGeneralPanel} from '../components/item_configuration_pan
 import ContainerAdvancedPanel from '../components/item_configuration_panels/ContainerAdvancedPanel';
 import ContainerGeneralPanel from '../components/item_configuration_panels/ContainerGeneralPanel';
 import {ContainerStylesPanel} from '../components/item_configuration_panels/ContainerStylesPanel';
+import EditableActionPanel from '../components/item_configuration_panels/EditableActionPanel';
 import EditableLinkPanel from '../components/item_configuration_panels/EditableLinkPanel';
 import FormAdvancedPanel from '../components/item_configuration_panels/FormAdvancedPanel';
 import {FormGeneralPanel} from '../components/item_configuration_panels/FormGeneralPanel';
@@ -64,6 +57,7 @@ export const PANEL_IDS = {
 	containerAdvanced: 'containerAdvanced',
 	containerGeneral: 'containerGeneral',
 	containerStyles: 'containerStyles',
+	editableAction: 'editableAction',
 	editableLink: 'editableLink',
 	editableMapping: 'editableMapping',
 	formAdvancedPanel: 'formAdvancedPanel',
@@ -114,6 +108,11 @@ export const PANELS = {
 		label: Liferay.Language.get('styles'),
 		priority: 1,
 		type: PANEL_TYPES.styles,
+	},
+	[PANEL_IDS.editableAction]: {
+		component: EditableActionPanel,
+		label: Liferay.Language.get('action'),
+		priority: 0,
 	},
 	[PANEL_IDS.editableLink]: {
 		component: EditableLinkPanel,
@@ -200,9 +199,17 @@ export function selectPanels(activeItemId, activeItemType, state) {
 			activeItemId.length
 		);
 
+		const editableType =
+			state.fragmentEntryLinks[fragmentEntryLinkId].editableTypes[
+				editableId
+			];
+
 		activeItem = {
 			editableId,
-			editableValueNamespace: EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			editableValueNamespace:
+				editableType === EDITABLE_TYPES.backgroundImage
+					? BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR
+					: EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
 			fragmentEntryLinkId,
 			itemId: activeItemId,
 			parentId: getFragmentItem(state.layoutData, fragmentEntryLinkId)
@@ -233,6 +240,8 @@ export function selectPanels(activeItemId, activeItemType, state) {
 
 	if (canUpdateEditables && activeItem.editableId) {
 		panelsIds = {
+			[PANEL_IDS.editableAction]:
+				activeItem.type === EDITABLE_TYPES.action,
 			[PANEL_IDS.editableLink]:
 				[
 					EDITABLE_TYPES.text,
@@ -313,6 +322,15 @@ export function selectPanels(activeItemId, activeItemType, state) {
 				fragmentEntryType === FRAGMENT_ENTRY_TYPES.input &&
 				state.selectedViewportSize === VIEWPORT_SIZES.desktop,
 		};
+
+		if (
+			Liferay.FeatureFlags['LPS-169923'] &&
+			state.restrictedItemIds.has(activeItem.itemId)
+		) {
+			panelsIds = {
+				[PANEL_IDS.fragmentGeneral]: true,
+			};
+		}
 	}
 	else if (activeItem.type === LAYOUT_DATA_ITEM_TYPES.row) {
 		panelsIds = {

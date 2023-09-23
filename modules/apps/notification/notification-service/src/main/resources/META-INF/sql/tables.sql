@@ -28,7 +28,7 @@ create table NotificationQueueEntry (
 	classPK LONG,
 	priority DOUBLE,
 	sentDate DATE null,
-	subject VARCHAR(75) null,
+	subject TEXT null,
 	type_ VARCHAR(75) null,
 	status INTEGER
 );
@@ -72,10 +72,10 @@ create table NotificationTemplate (
 	modifiedDate DATE null,
 	objectDefinitionId LONG,
 	body TEXT null,
-	description VARCHAR(75) null,
+	description VARCHAR(255) null,
 	editorType VARCHAR(75) null,
 	name STRING null,
 	recipientType VARCHAR(75) null,
 	subject STRING null,
-	type_ VARCHAR(75) null
+	type_ VARCHAR(255) null
 );

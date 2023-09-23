@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.upgrade.registry;
@@ -29,7 +20,9 @@ import com.liferay.object.internal.upgrade.v3_24_0.ObjectFieldSettingUpgradeProc
 import com.liferay.object.internal.upgrade.v3_27_0.ObjectActionUpgradeProcess;
 import com.liferay.object.internal.upgrade.v3_3_0.util.ObjectViewFilterColumnTable;
 import com.liferay.object.internal.upgrade.v3_9_0.ObjectLayoutBoxUpgradeProcess;
-import com.liferay.object.internal.upgrade.v4_1_0.ObjectDefinitionUpgradeProcess;
+import com.liferay.object.internal.upgrade.v6_0_0.util.ObjectValidationRuleSettingTable;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
@@ -268,15 +261,99 @@ public class ObjectServiceUpgradeStepRegistrator
 				"ObjectValidationRule", "script", "TEXT null"));
 
 		registry.register(
-			"4.0.0", "4.1.0", new ObjectDefinitionUpgradeProcess());
+			"4.0.0", "4.1.0",
+			new com.liferay.object.internal.upgrade.v4_1_0.
+				ObjectDefinitionUpgradeProcess());
 
 		registry.register(
 			"4.1.0", "4.1.1",
 			new com.liferay.object.internal.upgrade.v4_1_1.
 				ObjectViewUpgradeProcess());
+
+		registry.register(
+			"4.1.1", "5.0.0",
+			new com.liferay.object.internal.upgrade.v5_0_0.
+				ObjectFieldSettingUpgradeProcess(_portalUUID));
+
+		registry.register(
+			"5.0.0", "5.1.0",
+			new com.liferay.object.internal.upgrade.v5_1_0.
+				ObjectDefinitionUpgradeProcess());
+
+		registry.register(
+			"5.1.0", "5.1.1",
+			new com.liferay.object.internal.upgrade.v5_1_1.
+				ObjectFieldUpgradeProcess());
+
+		registry.register(
+			"5.1.1", "5.2.0",
+			new com.liferay.object.internal.upgrade.v5_2_0.
+				ObjectRelationshipUpgradeProcess());
+
+		registry.register(
+			"5.2.0", "5.3.0",
+			new com.liferay.object.internal.upgrade.v5_3_0.
+				ObjectFieldUpgradeProcess());
+
+		registry.register(
+			"5.3.0", "5.3.1",
+			new com.liferay.object.internal.upgrade.v5_3_1.
+				SchemaUpgradeProcess());
+
+		registry.register(
+			"5.3.1", "6.0.0",
+			new com.liferay.object.internal.upgrade.v6_0_0.
+				ObjectValidationRuleUpgradeProcess(),
+			ObjectValidationRuleSettingTable.create());
+
+		registry.register(
+			"6.0.0", "7.0.0",
+			new com.liferay.object.internal.upgrade.v7_0_0.
+				ObjectDefinitionUpgradeProcess(
+					_companyLocalService, _portalUUID, _resourceLocalService));
+
+		registry.register(
+			"7.0.0", "7.1.0",
+			new com.liferay.object.internal.upgrade.v7_1_0.
+				SchemaUpgradeProcess());
+
+		registry.register(
+			"7.1.0", "7.1.1",
+			UpgradeProcessFactory.alterColumnType(
+				"ObjectAction", "objectActionExecutorKey", "VARCHAR(255) null"),
+			UpgradeProcessFactory.alterColumnType(
+				"ObjectDefinition", "storageType", "VARCHAR(255) null"),
+			UpgradeProcessFactory.alterColumnType(
+				"ObjectValidationRule", "engine", "VARCHAR(255) null"));
+
+		registry.register(
+			"7.1.1", "8.0.0",
+			new com.liferay.object.internal.upgrade.v8_0_0.
+				ObjectFolderItemUpgradeProcess(_portalUUID));
+
+		registry.register(
+			"8.0.0", "8.1.0",
+			UpgradeProcessFactory.addColumns(
+				"ObjectDefinition", "enableObjectEntryDraft BOOLEAN"));
+
+		registry.register(
+			"8.1.0", "8.2.0",
+			new com.liferay.object.internal.upgrade.v8_2_0.
+				ObjectValidationRuleSettingsUpgradeProcess());
+
+		registry.register(
+			"8.2.0", "8.3.0",
+			new com.liferay.object.internal.upgrade.v8_3_0.
+				ObjectValidationRuleUpgradeProcess());
 	}
 
 	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private PortalUUID _portalUUID;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
 
 }

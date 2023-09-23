@@ -2,7 +2,6 @@
 definition {
 
 	property custom.properties = "jsonws.web.service.paths.excludes=";
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Publications";
@@ -14,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -167,11 +166,9 @@ definition {
 			title = "WC WebContent Title",
 			userEmailAddress = "userea@liferay.com");
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = ${sandboxedPublicationName2});
-
-		Publications.publishPublication(publicationName = ${sandboxedPublicationName2});
 
 		var sandboxedPublicationName3 = Publications.generateSandboxedPublicationName(userScreenName = "usersn");
 

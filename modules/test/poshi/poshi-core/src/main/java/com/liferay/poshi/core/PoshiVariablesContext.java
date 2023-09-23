@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core;
@@ -59,6 +50,22 @@ public class PoshiVariablesContext {
 		return _staticMap.containsKey(replaceCommandVars(key));
 	}
 
+	public Object getObjectFromCommandMap(String key) {
+		if (containsKeyInCommandMap((String)replaceCommandVars(key))) {
+			return getValueFromCommandMap(key);
+		}
+
+		return null;
+	}
+
+	public Object getReplacedCommandVarsObject(String token) {
+		if (token == null) {
+			return null;
+		}
+
+		return replaceCommandVars(token);
+	}
+
 	public String getReplacedCommandVarsString(String token) {
 		if (token == null) {
 			return null;
@@ -71,16 +78,6 @@ public class PoshiVariablesContext {
 		}
 
 		return tokenObject.toString();
-	}
-
-	public String getStringFromCommandMap(String key) {
-		if (containsKeyInCommandMap((String)replaceCommandVars(key))) {
-			Object object = getValueFromCommandMap(key);
-
-			return object.toString();
-		}
-
-		return null;
 	}
 
 	public String getStringFromExecuteMap(String key) {
@@ -133,6 +130,12 @@ public class PoshiVariablesContext {
 		_executeMap = new HashMap<>();
 	}
 
+	public void pushStaticVarsIntoCommandMap() {
+		_commandMap.putAll(_staticMap);
+
+		_commandMapStack.push(_commandMap);
+	}
+
 	public void putIntoCommandMap(String key, Object value) {
 		if (value instanceof String) {
 			_commandMap.put(
@@ -180,9 +183,10 @@ public class PoshiVariablesContext {
 		matcher.reset();
 
 		while (matcher.find() && _commandMap.containsKey(matcher.group(1))) {
-			String varValue = getStringFromCommandMap(matcher.group(1));
+			Object varValue = getObjectFromCommandMap(matcher.group(1));
 
-			token = StringUtil.replace(token, matcher.group(), varValue);
+			token = StringUtil.replace(
+				token, matcher.group(), varValue.toString());
 		}
 
 		return token;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.dto.converter;
@@ -23,10 +14,10 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -34,6 +25,29 @@ import javax.ws.rs.core.UriInfo;
  * @author Víctor Galán
  */
 public interface DTOConverterContext {
+
+	public default boolean containsNestedFieldsValue(String key) {
+		UriInfo uriInfo = getUriInfo();
+
+		if (uriInfo == null) {
+			return false;
+		}
+
+		MultivaluedMap<String, String> parameters =
+			uriInfo.getQueryParameters();
+
+		if ((parameters == null) || parameters.isEmpty()) {
+			return false;
+		}
+
+		String fields = parameters.getFirst("nestedFields");
+
+		if (fields == null) {
+			return false;
+		}
+
+		return fields.contains(key);
+	}
 
 	public default Map<String, Map<String, String>> getActions() {
 		return Collections.emptyMap();
@@ -64,13 +78,7 @@ public interface DTOConverterContext {
 	}
 
 	public default UriInfo getUriInfo() {
-		Optional<UriInfo> uriInfoOptional = getUriInfoOptional();
-
-		return uriInfoOptional.orElse(null);
-	}
-
-	public default Optional<UriInfo> getUriInfoOptional() {
-		return Optional.empty();
+		return null;
 	}
 
 	public default User getUser() {

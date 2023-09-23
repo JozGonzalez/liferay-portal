@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Table from '../../../../../../../../common/components/Table';
@@ -17,7 +11,7 @@ interface IProps {
 }
 
 interface Item {
-	[key: string]: string | undefined;
+	[key: string]: string | undefined | string[];
 }
 const GoalsEntries = ({mdfRequest}: IProps) => (
 	<div>
@@ -39,8 +33,8 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 					value: mdfRequest.company?.name,
 				},
 				{
-					title: 'Region',
-					value: mdfRequest.country?.name,
+					title: 'Country',
+					value: mdfRequest.partnerCountry?.name,
 				},
 			]}
 		/>
@@ -55,6 +49,9 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 				{
 					columnKey: 'value',
 					label: '',
+					render: (data: string | string[] | undefined) => (
+						<p className="text-wrap">{data}</p>
+					),
 				},
 			]}
 			rows={[
@@ -69,7 +66,17 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 				},
 				{
 					title: 'Liferay business/sales goals',
-					value: mdfRequest.liferayBusinessSalesGoals?.join('; '),
+					value: mdfRequest.liferayBusinessSalesGoals?.includes(
+						'Other - Please describe'
+					)
+						? mdfRequest.liferayBusinessSalesGoalsOther +
+						  '; ' +
+						  mdfRequest.liferayBusinessSalesGoals
+								?.filter(
+									(item) => item !== 'Other - Please describe'
+								)
+								.join('; ')
+						: mdfRequest.liferayBusinessSalesGoals?.join('; '),
 				},
 			]}
 		/>
@@ -93,9 +100,7 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 				},
 				{
 					title: 'Additional Options',
-					value: mdfRequest.additionalOption?.name
-						? mdfRequest.additionalOption?.name
-						: 'N/A',
+					value: mdfRequest.additionalOption?.name,
 				},
 				{
 					title: 'Target Audience/Role',

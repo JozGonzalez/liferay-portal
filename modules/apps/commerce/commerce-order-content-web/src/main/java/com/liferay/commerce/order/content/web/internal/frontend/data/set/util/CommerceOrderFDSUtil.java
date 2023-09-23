@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.frontend.data.set.util;
@@ -25,6 +16,8 @@ import com.liferay.commerce.order.content.web.internal.importer.type.CommerceOrd
 import com.liferay.commerce.order.content.web.internal.importer.type.CommerceWishListsCommerceOrderImporterTypeImpl;
 import com.liferay.commerce.order.content.web.internal.model.Order;
 import com.liferay.commerce.order.content.web.internal.model.WishList;
+import com.liferay.commerce.order.status.CommerceOrderStatus;
+import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.service.CommerceOrderTypeService;
 import com.liferay.petra.string.StringPool;
@@ -153,6 +146,7 @@ public class CommerceOrderFDSUtil {
 
 	public static List<Order> getOrders(
 			long commerceChannelGroupId, List<CommerceOrder> commerceOrders,
+			CommerceOrderStatusRegistry commerceOrderStatusRegistry,
 			CommerceOrderTypeService commerceOrderTypeService,
 			GroupLocalService groupLocalService, String priceDisplayType,
 			boolean showCommerceOrderCreateTime, ThemeDisplay themeDisplay)
@@ -186,6 +180,15 @@ public class CommerceOrderFDSUtil {
 				resourceBundle,
 				CommerceOrderConstants.getOrderStatusLabel(
 					commerceOrder.getOrderStatus()));
+
+			if (commerceOrderStatusLabel == null) {
+				CommerceOrderStatus commerceOrderStatus =
+					commerceOrderStatusRegistry.getCommerceOrderStatus(
+						commerceOrder.getOrderStatus());
+
+				commerceOrderStatusLabel = commerceOrderStatus.getLabel(
+					themeDisplay.getLocale());
+			}
 
 			String workflowStatusLabel = LanguageUtil.get(
 				resourceBundle,

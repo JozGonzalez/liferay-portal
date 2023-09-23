@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.scope.internal.liferay;
@@ -29,8 +20,10 @@ import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMapFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.remote.jaxrs.whiteboard.lifecycle.JAXRSLifecycle;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,9 +42,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
@@ -63,6 +53,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 	@Override
 	public LiferayOAuth2Scope getLiferayOAuth2Scope(
 		long companyId, String applicationName, String scope) {
+
+		_jaxrsLifecycle.ensureReady();
 
 		ServiceReferenceServiceTuple<?, ScopeFinder>
 			serviceReferenceServiceTuple =
@@ -81,6 +73,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 	@Override
 	public Collection<LiferayOAuth2Scope> getLiferayOAuth2Scopes(
 		long companyId) {
+
+		_jaxrsLifecycle.ensureReady();
 
 		Collection<LiferayOAuth2Scope> liferayOAuth2Scopes = new ArrayList<>();
 
@@ -112,6 +106,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 	public Collection<LiferayOAuth2Scope> getLiferayOAuth2Scopes(
 		long companyId, String scopesAlias) {
 
+		_jaxrsLifecycle.ensureReady();
+
 		Set<String> names = _scopeFinderByNameServiceTrackerMap.keySet();
 
 		Collection<LiferayOAuth2Scope> liferayOAuth2Scopes = new ArrayList<>();
@@ -127,6 +123,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 	@Override
 	public Collection<LiferayOAuth2Scope> getLiferayOAuth2Scopes(
 		long companyId, String scopesAlias, String applicationName) {
+
+		_jaxrsLifecycle.ensureReady();
 
 		ScopeFinder scopeFinder =
 			_scopeFindersScopedServiceTrackerMap.getService(
@@ -235,6 +233,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 
 	@Override
 	public Collection<String> getScopeAliases(long companyId) {
+		_jaxrsLifecycle.ensureReady();
+
 		Collection<String> scopesAliases = new HashSet<>();
 
 		Set<String> applicationNames =
@@ -250,6 +250,8 @@ public class ScopeLocatorImpl implements ScopeLocator {
 	@Override
 	public Collection<String> getScopeAliases(
 		long companyId, String applicationName) {
+
+		_jaxrsLifecycle.ensureReady();
 
 		ServiceReferenceServiceTuple<?, ScopeFinder>
 			serviceReferenceServiceTuple =
@@ -307,7 +309,7 @@ public class ScopeLocatorImpl implements ScopeLocator {
 				OAuth2ProviderScopeConstants.OSGI_JAXRS_NAME,
 				() -> {
 					PrefixHandlerFactory prefixHandlerFactory =
-						_defaultPrefixHandlerFactory;
+						_defaultPrefixHandlerFactorySnapshot.get();
 
 					if (prefixHandlerFactory != null) {
 						return prefixHandlerFactory;
@@ -326,8 +328,13 @@ public class ScopeLocatorImpl implements ScopeLocator {
 				bundleContext, ScopeLocatorConfigurationProvider.class,
 				OAuth2ProviderScopeConstants.OSGI_JAXRS_NAME,
 				() -> {
-					if (_defaultScopeLocatorConfigurationProvider != null) {
-						return _defaultScopeLocatorConfigurationProvider;
+					ScopeLocatorConfigurationProvider
+						defaultScopeLocatorConfigurationProvider =
+							_defaultScopeLocatorConfigurationProviderSnapshot.
+								get();
+
+					if (defaultScopeLocatorConfigurationProvider != null) {
+						return defaultScopeLocatorConfigurationProvider;
 					}
 
 					return () -> _defaultScopeLocatorConfiguration;
@@ -337,7 +344,7 @@ public class ScopeLocatorImpl implements ScopeLocator {
 				bundleContext, ScopeMapper.class,
 				OAuth2ProviderScopeConstants.OSGI_JAXRS_NAME,
 				() -> {
-					ScopeMapper scopeMapper = _defaultScopeMapper;
+					ScopeMapper scopeMapper = _defaultScopeMapperSnapshot.get();
 
 					if (scopeMapper != null) {
 						return scopeMapper;
@@ -472,39 +479,29 @@ public class ScopeLocatorImpl implements ScopeLocator {
 		return scopeMatcher.match(scope);
 	}
 
+	private static final Snapshot<PrefixHandlerFactory>
+		_defaultPrefixHandlerFactorySnapshot = new Snapshot<>(
+			ScopeLocatorImpl.class, PrefixHandlerFactory.class,
+			"(osgi.jaxrs.name=Default)", true);
+	private static final Snapshot<ScopeLocatorConfigurationProvider>
+		_defaultScopeLocatorConfigurationProviderSnapshot = new Snapshot<>(
+			ScopeLocatorImpl.class, ScopeLocatorConfigurationProvider.class,
+			"(osgi.jaxrs.name=Default)", true);
+	private static final Snapshot<ScopeMapper> _defaultScopeMapperSnapshot =
+		new Snapshot<>(
+			ScopeLocatorImpl.class, ScopeMapper.class,
+			"(osgi.jaxrs.name=Default)", true);
+
 	private BundleContext _bundleContext;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(osgi.jaxrs.name=Default)"
-	)
-	private volatile PrefixHandlerFactory _defaultPrefixHandlerFactory;
-
 	private final ScopeLocatorConfiguration _defaultScopeLocatorConfiguration =
 		ConfigurableUtil.createConfigurable(
 			ScopeLocatorConfiguration.class, Collections.emptyMap());
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(osgi.jaxrs.name=Default)"
-	)
-	private volatile ScopeLocatorConfigurationProvider
-		_defaultScopeLocatorConfigurationProvider;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(osgi.jaxrs.name=Default)"
-	)
-	private volatile ScopeMapper _defaultScopeMapper;
-
 	@Reference(name = "default")
 	private ScopeMatcherFactory _defaultScopeMatcherFactory;
+
+	@Reference
+	private JAXRSLifecycle _jaxrsLifecycle;
 
 	private ScopedServiceTrackerMap<PrefixHandlerFactory>
 		_prefixHandlerFactoriesScopedServiceTrackerMap;

@@ -346,7 +346,7 @@ definition {
 				locator1 = "CalendarEditCalendar#NOTIFICATION_TEMPLATES_SUBJECT_FIELD",
 				value1 = "[$PORTLET_NAME$]: Edited Event Notification for [$EVENT_TITLE$]");
 
-			Type.typeCKEditorWaitForCKEditor(
+			Type.typeEditorWaitForEditor(
 				locator1 = "CKEditor#BODY_FIELD",
 				value1 = "[$TO_NAME$],      This is an edited event invite email.      Sincerely,     [$FROM_NAME$]     [$FROM_ADDRESS$]     [$PORTAL_URL$]");
 		}
@@ -356,7 +356,7 @@ definition {
 				locator1 = "CalendarEditCalendar#NOTIFICATION_TEMPLATES_SUBJECT_FIELD",
 				value1 = "[$PORTLET_NAME$]: Edited Event Reminder for [$EVENT_TITLE$]");
 
-			Type.typeCKEditorWaitForCKEditor(
+			Type.typeEditorWaitForEditor(
 				locator1 = "CKEditor#BODY_FIELD",
 				value1 = "[$TO_NAME$],      This is an edited event reminder email.      Sincerely,     [$FROM_NAME$]     [$FROM_ADDRESS$]     [$PORTAL_URL$]");
 		}
@@ -470,25 +470,11 @@ definition {
 	macro removeViewPermissions {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		if (${calendarType} == "My Calendars") {
-			var key_user = ${user};
+		var key_site = ${site};
 
-			Click(locator1 = "Calendar#MY_CALENDARS_CALENDAR_PRIMARY_MENULIST_ARROW");
+		Click(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY_MENULIST_ARROW");
 
-			Calendar._gotoMenulistOption(menuListOption = "Permissions");
-		}
-		else if (${calendarType} == "Current Site Calendars") {
-			var key_site = ${site};
-
-			Click(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY_MENULIST_ARROW");
-
-			Calendar._gotoMenulistOption(menuListOption = "Permissions");
-		}
-		else if (${calendarType} == "Other Calendars") {
-			Calendar.chooseOtherCalendarMenulistOption(
-				calendarName = ${calendarName},
-				menuListOption = "Permissions");
-		}
+		Calendar._gotoMenulistOption(menuListOption = "Permissions");
 
 		var key_roleTitle = StringUtil.replace(${roleTitle}, " ", "-");
 
@@ -653,16 +639,32 @@ definition {
 		CalendarNavigator.gotoView(viewType = "Month");
 
 		/*
-		To ensure the desired month will always be reached, click "Previous"
-		until it reaches our baseline of February 2016. Then click "Next" until
-		it reaches ${dateMonth}.
+		To ensure the desired month is always reached, scroll to the desired year and back to January until the month is called.
+		If you still haven't found the month, do the reverse with the limit up to December.
 		*/
 
-		while ((IsTextNotEqual(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = "February 2016")) && (maxIterations = "100")) {
+		var year = StringUtil.extractLast(${dateMonth}, " ");
+
+		while ((!(IsTextEqual.isPartialText(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = ${year}))) && (maxIterations = "100")) {
+			var currentYear = selenium.getText("Calendar#SCHEDULER_VIEW_MONTH_DATE");
+
+			var currentYear = StringUtil.extractLast(${currentYear}, " ");
+
+			var yearLessThan = MathUtil.isLessThan(${year}, ${currentYear});
+
+			if (${yearLessThan} == "true") {
+				Click(locator1 = "Calendar#VIEW_PREVIOUS_BUTTON");
+			}
+			else {
+				Click(locator1 = "Calendar#VIEW_NEXT_BUTTON");
+			}
+		}
+
+		while ((IsTextNotEqual(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = ${dateMonth})) && !(IsTextEqual.isPartialText(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = "January"))) {
 			Click(locator1 = "Calendar#VIEW_PREVIOUS_BUTTON");
 		}
 
-		while ((IsTextNotEqual(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = ${dateMonth})) && (maxIterations = "100")) {
+		while ((IsTextNotEqual(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = ${dateMonth})) && !(IsTextEqual.isPartialText(locator1 = "Calendar#SCHEDULER_VIEW_MONTH_DATE", value1 = "December"))) {
 			Click(locator1 = "Calendar#VIEW_NEXT_BUTTON");
 		}
 	}

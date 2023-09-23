@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect} from 'react';
@@ -31,8 +25,8 @@ export default function useGlobalNetworkIndicator(networkStatus) {
 		const {error: errorStatus, success} = networkStatus;
 
 		if (errorStatus?.networkError) {
-			const displayServerError = errorStatus.operation.getContext()
-				.displayServerError;
+			const displayServerError =
+				errorStatus.operation.getContext().displayServerError ?? true;
 
 			if (displayServerError) {
 				Liferay.Util.openToast({
@@ -42,41 +36,42 @@ export default function useGlobalNetworkIndicator(networkStatus) {
 					type: DEFAULT_ERROR.type,
 				});
 			}
-			else {
-				Liferay.Util.openToast(DEFAULT_ERROR);
-			}
 		}
 
 		if (errorStatus?.response) {
-			const displayErrors = errorStatus.operation.getContext()
-				.displayErrors;
+			const displayErrors =
+				errorStatus.operation.getContext().displayErrors ?? true;
 
-			const errors = errorStatus.response.map((error) => {
-				if (displayErrors && displayErrors[error.exception.errno]) {
-					const displayError = displayErrors[error.exception.errno];
+			if (displayErrors) {
+				errorStatus.response.forEach((error) => {
+					let errorToast = DEFAULT_ERROR;
 
-					return {
-						message: displayError.message || DEFAULT_ERROR.message,
-						title: displayError.title || DEFAULT_ERROR.title,
-						type: displayError.type || DEFAULT_ERROR.type,
-					};
-				}
+					if (displayErrors && displayErrors[error.exception.errno]) {
+						const displayError =
+							displayErrors[error.exception.errno];
 
-				return DEFAULT_ERROR;
-			});
+						errorToast = {
+							message:
+								displayError.message || DEFAULT_ERROR.message,
+							title: displayError.title || DEFAULT_ERROR.title,
+							type: displayError.type || DEFAULT_ERROR.type,
+						};
+					}
 
-			errors.forEach((error) => Liferay.Util.openToast(error));
+					Liferay.Util.openToast(errorToast);
+				});
+			}
 		}
 
 		if (success) {
-			const displaySuccess = success.operation.getContext()
-				.displaySuccess;
+			const displaySuccess =
+				success.operation.getContext().displaySuccess ?? true;
 
 			const isValidMutation =
-				isOperationType(success.operation, 'mutation') &&
-				displaySuccess !== false;
+				displaySuccess &&
+				isOperationType(success.operation, 'mutation');
 
-			if (isValidMutation || displaySuccess) {
+			if (isValidMutation) {
 				Liferay.Util.openToast({
 					message: displaySuccess?.message || DEFAULT_SUCCESS.message,
 					title: displaySuccess?.title || DEFAULT_SUCCESS.title,

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.dto.v1_0;
@@ -28,6 +19,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
+
+import java.math.BigDecimal;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -371,18 +364,19 @@ public class CartItem implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> productURLs;
 
-	@Schema
-	public Integer getQuantity() {
+	@Schema(example = "10.1")
+	@Valid
+	public BigDecimal getQuantity() {
 		return quantity;
 	}
 
-	public void setQuantity(Integer quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		this.quantity = quantity;
 	}
 
 	@JsonIgnore
 	public void setQuantity(
-		UnsafeSupplier<Integer, Exception> quantityUnsafeSupplier) {
+		UnsafeSupplier<BigDecimal, Exception> quantityUnsafeSupplier) {
 
 		try {
 			quantity = quantityUnsafeSupplier.get();
@@ -397,7 +391,63 @@ public class CartItem implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer quantity;
+	protected BigDecimal quantity;
+
+	@Schema(example = "12341234")
+	public String getReplacedSku() {
+		return replacedSku;
+	}
+
+	public void setReplacedSku(String replacedSku) {
+		this.replacedSku = replacedSku;
+	}
+
+	@JsonIgnore
+	public void setReplacedSku(
+		UnsafeSupplier<String, Exception> replacedSkuUnsafeSupplier) {
+
+		try {
+			replacedSku = replacedSkuUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String replacedSku;
+
+	@Schema
+	public Long getReplacedSkuId() {
+		return replacedSkuId;
+	}
+
+	public void setReplacedSkuId(Long replacedSkuId) {
+		this.replacedSkuId = replacedSkuId;
+	}
+
+	@JsonIgnore
+	public void setReplacedSkuId(
+		UnsafeSupplier<Long, Exception> replacedSkuIdUnsafeSupplier) {
+
+		try {
+			replacedSkuId = replacedSkuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long replacedSkuId;
 
 	@Schema
 	@Valid
@@ -480,6 +530,36 @@ public class CartItem implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotNull
 	protected Long skuId;
+
+	@Schema
+	@Valid
+	public SkuUnitOfMeasure getSkuUnitOfMeasure() {
+		return skuUnitOfMeasure;
+	}
+
+	public void setSkuUnitOfMeasure(SkuUnitOfMeasure skuUnitOfMeasure) {
+		this.skuUnitOfMeasure = skuUnitOfMeasure;
+	}
+
+	@JsonIgnore
+	public void setSkuUnitOfMeasure(
+		UnsafeSupplier<SkuUnitOfMeasure, Exception>
+			skuUnitOfMeasureUnsafeSupplier) {
+
+		try {
+			skuUnitOfMeasure = skuUnitOfMeasureUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected SkuUnitOfMeasure skuUnitOfMeasure;
 
 	@Schema(example = "true")
 	public Boolean getSubscription() {
@@ -748,6 +828,30 @@ public class CartItem implements Serializable {
 			sb.append(quantity);
 		}
 
+		if (replacedSku != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSku\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(replacedSku));
+
+			sb.append("\"");
+		}
+
+		if (replacedSkuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSkuId\": ");
+
+			sb.append(replacedSkuId);
+		}
+
 		if (settings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -780,6 +884,16 @@ public class CartItem implements Serializable {
 			sb.append("\"skuId\": ");
 
 			sb.append(skuId);
+		}
+
+		if (skuUnitOfMeasure != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuUnitOfMeasure\": ");
+
+			sb.append(String.valueOf(skuUnitOfMeasure));
 		}
 
 		if (subscription != null) {
@@ -910,5 +1024,7 @@ public class CartItem implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

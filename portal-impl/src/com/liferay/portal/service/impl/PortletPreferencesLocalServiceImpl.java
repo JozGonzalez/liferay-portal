@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -17,11 +8,13 @@ package com.liferay.portal.service.impl;
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -539,10 +532,33 @@ public class PortletPreferencesLocalServiceImpl
 			Portlet portlet = _portletLocalService.fetchPortletById(
 				companyId, portletId);
 
-			portletPreferences =
-				portletPreferencesLocalService.addPortletPreferences(
-					companyId, ownerId, ownerType, plid, portletId, portlet,
-					defaultPreferences);
+			long ctCollectionId = CTCollectionThreadLocal.getCTCollectionId();
+
+			if (ctCollectionId !=
+					CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
+
+				if (plid == PortletKeys.PREFS_PLID_SHARED) {
+					ctCollectionId =
+						CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION;
+				}
+				else {
+					Layout layout = _layoutPersistence.fetchByPrimaryKey(plid);
+
+					if (layout != null) {
+						ctCollectionId = layout.getCtCollectionId();
+					}
+				}
+			}
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollectionId)) {
+
+				portletPreferences =
+					portletPreferencesLocalService.addPortletPreferences(
+						companyId, ownerId, ownerType, plid, portletId, portlet,
+						defaultPreferences);
+			}
 		}
 
 		return _portletPreferenceValueLocalService.getPreferences(
@@ -853,7 +869,7 @@ public class PortletPreferencesLocalServiceImpl
 		User user = _userPersistence.fetchByPrimaryKey(
 			PrincipalThreadLocal.getUserId());
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return layoutRevision.getLayoutRevisionId();
 		}
 

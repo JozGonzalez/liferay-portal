@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
@@ -20,6 +11,8 @@ import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +24,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -47,7 +41,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -177,6 +170,46 @@ public abstract class BaseOrganizationResourceImpl
 			@javax.ws.rs.PathParam("organizationId")
 			String organizationId)
 		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/by-external-reference-code/{externalReferenceCode}/organizations/{organizationId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "organizationId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Organization")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/accounts/by-external-reference-code/{externalReferenceCode}/organizations/{organizationId}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Organization getAccountByExternalReferenceCodeOrganization(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("organizationId")
+			String organizationId)
+		throws Exception {
+
+		return new Organization();
 	}
 
 	/**
@@ -401,6 +434,44 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}/organizations/{organizationId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "accountId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "organizationId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Organization")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/accounts/{accountId}/organizations/{organizationId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Organization getAccountOrganization(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("accountId")
+			Long accountId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("organizationId")
+			String organizationId)
+		throws Exception {
+
+		return new Organization();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}/organizations/{organizationId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -573,7 +644,7 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "treePath": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new organization"
@@ -704,7 +775,7 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "treePath": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the organization with information sent in the request body. Only the provided fields are updated."
@@ -738,53 +809,23 @@ public abstract class BaseOrganizationResourceImpl
 		Organization existingOrganization =
 			getOrganizationByExternalReferenceCode(externalReferenceCode);
 
-		if (organization.getActions() != null) {
-			existingOrganization.setActions(organization.getActions());
-		}
-
 		if (organization.getComment() != null) {
 			existingOrganization.setComment(organization.getComment());
 		}
 
-		if (organization.getDateCreated() != null) {
-			existingOrganization.setDateCreated(organization.getDateCreated());
-		}
-
-		if (organization.getDateModified() != null) {
-			existingOrganization.setDateModified(
-				organization.getDateModified());
-		}
+		existingOrganization.setCustomFields(organization.getCustomFields());
 
 		if (organization.getExternalReferenceCode() != null) {
 			existingOrganization.setExternalReferenceCode(
 				organization.getExternalReferenceCode());
 		}
 
-		if (organization.getImage() != null) {
-			existingOrganization.setImage(organization.getImage());
-		}
-
-		if (organization.getKeywords() != null) {
-			existingOrganization.setKeywords(organization.getKeywords());
-		}
-
 		if (organization.getName() != null) {
 			existingOrganization.setName(organization.getName());
 		}
 
-		if (organization.getNumberOfAccounts() != null) {
-			existingOrganization.setNumberOfAccounts(
-				organization.getNumberOfAccounts());
-		}
-
-		if (organization.getNumberOfOrganizations() != null) {
-			existingOrganization.setNumberOfOrganizations(
-				organization.getNumberOfOrganizations());
-		}
-
-		if (organization.getNumberOfUsers() != null) {
-			existingOrganization.setNumberOfUsers(
-				organization.getNumberOfUsers());
+		if (organization.getTreePath() != null) {
+			existingOrganization.setTreePath(organization.getTreePath());
 		}
 
 		preparePatch(organization, existingOrganization);
@@ -796,7 +837,7 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "treePath": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the organization with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -941,7 +982,7 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "treePath": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the organization with the information sent in the request body. Fields not present in the request body are left unchanged."
@@ -972,53 +1013,23 @@ public abstract class BaseOrganizationResourceImpl
 
 		Organization existingOrganization = getOrganization(organizationId);
 
-		if (organization.getActions() != null) {
-			existingOrganization.setActions(organization.getActions());
-		}
-
 		if (organization.getComment() != null) {
 			existingOrganization.setComment(organization.getComment());
 		}
 
-		if (organization.getDateCreated() != null) {
-			existingOrganization.setDateCreated(organization.getDateCreated());
-		}
-
-		if (organization.getDateModified() != null) {
-			existingOrganization.setDateModified(
-				organization.getDateModified());
-		}
+		existingOrganization.setCustomFields(organization.getCustomFields());
 
 		if (organization.getExternalReferenceCode() != null) {
 			existingOrganization.setExternalReferenceCode(
 				organization.getExternalReferenceCode());
 		}
 
-		if (organization.getImage() != null) {
-			existingOrganization.setImage(organization.getImage());
-		}
-
-		if (organization.getKeywords() != null) {
-			existingOrganization.setKeywords(organization.getKeywords());
-		}
-
 		if (organization.getName() != null) {
 			existingOrganization.setName(organization.getName());
 		}
 
-		if (organization.getNumberOfAccounts() != null) {
-			existingOrganization.setNumberOfAccounts(
-				organization.getNumberOfAccounts());
-		}
-
-		if (organization.getNumberOfOrganizations() != null) {
-			existingOrganization.setNumberOfOrganizations(
-				organization.getNumberOfOrganizations());
-		}
-
-		if (organization.getNumberOfUsers() != null) {
-			existingOrganization.setNumberOfUsers(
-				organization.getNumberOfUsers());
+		if (organization.getTreePath() != null) {
+			existingOrganization.setTreePath(organization.getTreePath());
 		}
 
 		preparePatch(organization, existingOrganization);
@@ -1029,7 +1040,7 @@ public abstract class BaseOrganizationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}' -d $'{"childOrganizations": ___, "comment": ___, "customFields": ___, "externalReferenceCode": ___, "id": ___, "location": ___, "name": ___, "organizationAccounts": ___, "organizationContactInformation": ___, "parentOrganization": ___, "services": ___, "treePath": ___, "userAccounts": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the organization with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -1407,36 +1418,68 @@ public abstract class BaseOrganizationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Organization, Exception> organizationUnsafeConsumer =
-			null;
+		UnsafeFunction<Organization, Organization, Exception>
+			organizationUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			organizationUnsafeConsumer = organization -> postOrganization(
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			organizationUnsafeFunction = organization -> postOrganization(
 				organization);
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			organizationUnsafeConsumer =
-				organization -> putOrganizationByExternalReferenceCode(
-					organization.getExternalReferenceCode(), organization);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				organizationUnsafeFunction =
+					organization -> putOrganizationByExternalReferenceCode(
+						organization.getExternalReferenceCode(), organization);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				organizationUnsafeFunction = organization -> {
+					Organization persistedOrganization = null;
+
+					try {
+						Organization getOrganization =
+							getOrganizationByExternalReferenceCode(
+								organization.getExternalReferenceCode());
+
+						persistedOrganization = patchOrganization(
+							getOrganization.getId() != null ?
+								getOrganization.getId() :
+									(String)parameters.get("organizationId"),
+							organization);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						persistedOrganization = postOrganization(organization);
+					}
+
+					return persistedOrganization;
+				};
+			}
 		}
 
-		if (organizationUnsafeConsumer == null) {
+		if (organizationUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Organization");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				organizations, organizationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				organizations, organizationUnsafeConsumer);
+				organizations, organizationUnsafeFunction::apply);
 		}
 		else {
 			for (Organization organization : organizations) {
-				organizationUnsafeConsumer.accept(organization);
+				organizationUnsafeFunction.apply(organization);
 			}
 		}
 	}
@@ -1487,12 +1530,12 @@ public abstract class BaseOrganizationResourceImpl
 
 		if (parameters.containsKey("accountId")) {
 			return getAccountOrganizationsPage(
-				Long.parseLong((String)parameters.get("accountId")), search,
-				filter, pagination, sorts);
+				_parseLong((String)parameters.get("accountId")), search, filter,
+				pagination, sorts);
 		}
 		else {
 			return getOrganizationsPage(
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
+				_parseBoolean((String)parameters.get("flatten")), search,
 				filter, pagination, sorts);
 		}
 	}
@@ -1525,45 +1568,74 @@ public abstract class BaseOrganizationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Organization, Exception> organizationUnsafeConsumer =
-			null;
+		UnsafeFunction<Organization, Organization, Exception>
+			organizationUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			organizationUnsafeConsumer = organization -> patchOrganization(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			organizationUnsafeFunction = organization -> patchOrganization(
 				organization.getId() != null ? organization.getId() :
 					(String)parameters.get("organizationId"),
 				organization);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			organizationUnsafeConsumer = organization -> putOrganization(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			organizationUnsafeFunction = organization -> putOrganization(
 				organization.getId() != null ? organization.getId() :
 					(String)parameters.get("organizationId"),
 				organization);
 		}
 
-		if (organizationUnsafeConsumer == null) {
+		if (organizationUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Organization");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				organizations, organizationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				organizations, organizationUnsafeConsumer);
+				organizations, organizationUnsafeFunction::apply);
 		}
 		else {
 			for (Organization organization : organizations) {
-				organizationUnsafeConsumer.accept(organization);
+				organizationUnsafeFunction.apply(organization);
 			}
 		}
 	}
 
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Organization>,
+			 UnsafeFunction<Organization, Organization, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1783,6 +1855,12 @@ public abstract class BaseOrganizationResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1813,7 +1891,19 @@ public abstract class BaseOrganizationResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Organization>,
+		 UnsafeFunction<Organization, Organization, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Organization>, UnsafeConsumer<Organization, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

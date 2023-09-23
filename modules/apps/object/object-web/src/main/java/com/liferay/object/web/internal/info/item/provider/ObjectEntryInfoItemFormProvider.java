@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.info.item.provider;
@@ -18,9 +9,13 @@ import com.liferay.info.exception.NoSuchFormVariationException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldSetEntry;
+import com.liferay.info.field.type.ActionInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.ImageInfoFieldType;
+import com.liferay.info.field.type.LongTextInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
+import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
@@ -30,12 +25,15 @@ import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.localized.bundle.FunctionInfoLocalizedValue;
-import com.liferay.list.type.model.ListTypeEntry;
+import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
+import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
+import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -45,6 +43,7 @@ import com.liferay.object.rest.context.path.RESTContextPathResolver;
 import com.liferay.object.rest.context.path.RESTContextPathResolverRegistry;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
@@ -64,6 +63,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
@@ -71,7 +71,6 @@ import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -88,9 +87,11 @@ public class ObjectEntryInfoItemFormProvider
 	implements InfoItemFormProvider<ObjectEntry> {
 
 	public ObjectEntryInfoItemFormProvider(
+		DisplayPageInfoItemFieldSetProvider displayPageInfoItemFieldSetProvider,
 		ObjectDefinition objectDefinition,
 		InfoItemFieldReaderFieldSetProvider infoItemFieldReaderFieldSetProvider,
 		ListTypeEntryLocalService listTypeEntryLocalService,
+		ObjectActionLocalService objectActionLocalService,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
@@ -100,10 +101,13 @@ public class ObjectEntryInfoItemFormProvider
 		TemplateInfoItemFieldSetProvider templateInfoItemFieldSetProvider,
 		UserLocalService userLocalService) {
 
+		_displayPageInfoItemFieldSetProvider =
+			displayPageInfoItemFieldSetProvider;
 		_objectDefinition = objectDefinition;
 		_infoItemFieldReaderFieldSetProvider =
 			infoItemFieldReaderFieldSetProvider;
 		_listTypeEntryLocalService = listTypeEntryLocalService;
+		_objectActionLocalService = objectActionLocalService;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectFieldSettingLocalService = objectFieldSettingLocalService;
@@ -117,7 +121,11 @@ public class ObjectEntryInfoItemFormProvider
 	@Override
 	public InfoForm getInfoForm() {
 		try {
-			return _getInfoForm(0);
+			return _getInfoForm(
+				0,
+				_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+					_getModelClassName(0), StringPool.BLANK,
+					ObjectEntry.class.getSimpleName(), 0));
 		}
 		catch (NoSuchFormVariationException noSuchFormVariationException) {
 			throw new RuntimeException(noSuchFormVariationException);
@@ -126,10 +134,14 @@ public class ObjectEntryInfoItemFormProvider
 
 	@Override
 	public InfoForm getInfoForm(ObjectEntry objectEntry) {
-		long objectDefinitionId = objectEntry.getObjectDefinitionId();
+		long objectDefinitionId = _objectDefinition.getObjectDefinitionId();
 
 		try {
-			return _getInfoForm(objectDefinitionId);
+			return _getInfoForm(
+				objectDefinitionId,
+				_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+					_getModelClassName(objectDefinitionId), StringPool.BLANK,
+					ObjectEntry.class.getSimpleName(), 0));
 		}
 		catch (PortalException portalException) {
 			throw new RuntimeException(
@@ -141,7 +153,7 @@ public class ObjectEntryInfoItemFormProvider
 	}
 
 	@Override
-	public InfoForm getInfoForm(String formVariationKey)
+	public InfoForm getInfoForm(String formVariationKey, long groupId)
 		throws NoSuchFormVariationException {
 
 		long objectDefinitionId = GetterUtil.getLong(formVariationKey);
@@ -150,14 +162,11 @@ public class ObjectEntryInfoItemFormProvider
 			objectDefinitionId = _objectDefinition.getObjectDefinitionId();
 		}
 
-		return _getInfoForm(objectDefinitionId);
-	}
-
-	@Override
-	public InfoForm getInfoForm(String formVariationKey, long groupId)
-		throws NoSuchFormVariationException {
-
-		return getInfoForm(formVariationKey);
+		return _getInfoForm(
+			objectDefinitionId,
+			_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+				_getModelClassName(objectDefinitionId), StringPool.BLANK,
+				ObjectEntry.class.getSimpleName(), groupId));
 	}
 
 	private InfoField<?> _addAttributes(
@@ -181,7 +190,11 @@ public class ObjectEntryInfoItemFormProvider
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_DECIMAL)) {
 
-			finalStep.attribute(NumberInfoFieldType.DECIMAL, true);
+			finalStep.attribute(
+				NumberInfoFieldType.DECIMAL, true
+			).attribute(
+				NumberInfoFieldType.DECIMAL_PART_MAX_LENGTH, 16
+			);
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -218,10 +231,8 @@ public class ObjectEntryInfoItemFormProvider
 					ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT)) {
 
 			finalStep.attribute(
-				TextInfoFieldType.MAX_LENGTH, _getMaxLength(objectField, 65000)
-			).attribute(
-				TextInfoFieldType.MULTILINE, true
-			);
+				LongTextInfoFieldType.MAX_LENGTH,
+				_getMaxLength(objectField, 65000));
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -232,9 +243,11 @@ public class ObjectEntryInfoItemFormProvider
 				TransformUtil.transform(
 					_listTypeEntryLocalService.getListTypeEntries(
 						objectField.getListTypeDefinitionId()),
-					listTypeEntry -> new MultiselectInfoFieldType.Option(
+					listTypeEntry -> new OptionInfoFieldType(
 						Objects.equals(
-							objectField.getDefaultValue(),
+							ObjectFieldSettingUtil.getDefaultValueAsString(
+								null, objectField.getObjectFieldId(),
+								_objectFieldSettingLocalService, null),
 							listTypeEntry.getKey()),
 						new FunctionInfoLocalizedValue<>(
 							listTypeEntry::getName),
@@ -244,13 +257,18 @@ public class ObjectEntryInfoItemFormProvider
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
 
-			finalStep.attribute(
-				SelectInfoFieldType.MULTIPLE,
-				objectField.compareBusinessType(
-					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)
-			).attribute(
-				SelectInfoFieldType.OPTIONS, _getOptions(objectField)
-			);
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+
+				finalStep.attribute(
+					MultiselectInfoFieldType.OPTIONS,
+					_getOptionInfoFieldTypes(objectField));
+			}
+			else {
+				finalStep.attribute(
+					SelectInfoFieldType.OPTIONS,
+					_getOptionInfoFieldTypes(objectField));
+			}
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -312,10 +330,6 @@ public class ObjectEntryInfoItemFormProvider
 		_getAttachmentObjectDefinitionInfoFieldSetEntries(
 			long objectDefinitionId) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-176083")) {
-			return Collections.emptyList();
-		}
-
 		List<InfoFieldSetEntry> infoFieldSetEntries = new ArrayList<>();
 
 		for (ObjectField objectField :
@@ -370,6 +384,18 @@ public class ObjectEntryInfoItemFormProvider
 				).infoFieldSetEntry(
 					InfoField.builder(
 					).infoFieldType(
+						ImageInfoFieldType.INSTANCE
+					).namespace(
+						ObjectField.class.getSimpleName()
+					).name(
+						objectField.getObjectFieldId() + "#previewURL"
+					).labelInfoLocalizedValue(
+						InfoLocalizedValue.localize(
+							ObjectEntryInfoItemFields.class, "preview-url")
+					).build()
+				).infoFieldSetEntry(
+					InfoField.builder(
+					).infoFieldType(
 						TextInfoFieldType.INSTANCE
 					).namespace(
 						ObjectField.class.getSimpleName()
@@ -381,6 +407,9 @@ public class ObjectEntryInfoItemFormProvider
 					).build()
 				).labelInfoLocalizedValue(
 					InfoLocalizedValue.<String>builder(
+					).defaultLocale(
+						LocaleUtil.fromLanguageId(
+							objectField.getDefaultLanguageId())
 					).values(
 						objectField.getLabelMap()
 					).build()
@@ -473,11 +502,11 @@ public class ObjectEntryInfoItemFormProvider
 		}
 	}
 
-	private InfoForm _getInfoForm(long objectDefinitionId)
+	private InfoForm _getInfoForm(
+			long objectDefinitionId, InfoFieldSet displayPageInfoFieldSet)
 		throws NoSuchFormVariationException {
 
-		String modelClassName =
-			ObjectDefinition.class.getName() + "#" + objectDefinitionId;
+		String modelClassName = _getModelClassName(objectDefinitionId);
 
 		return InfoForm.builder(
 		).infoFieldSetEntry(
@@ -497,7 +526,7 @@ public class ObjectEntryInfoItemFormProvider
 
 					unsafeConsumer.accept(
 						_getObjectDefinitionInfoFieldSet(
-							objectDefinition.getLabelMap(),
+							true, objectDefinition.getLabelMap(),
 							objectDefinition.getName(),
 							ObjectField.class.getSimpleName(),
 							objectDefinition));
@@ -511,11 +540,26 @@ public class ObjectEntryInfoItemFormProvider
 		).infoFieldSetEntry(
 			_templateInfoItemFieldSetProvider.getInfoFieldSet(modelClassName)
 		).infoFieldSetEntry(
-			_getDisplayPageInfoFieldSet()
+			unsafeConsumer -> {
+				if (!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
+					unsafeConsumer.accept(_getDisplayPageInfoFieldSet());
+				}
+			}
+		).infoFieldSetEntry(
+			unsafeConsumer -> {
+				if (FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
+					unsafeConsumer.accept(displayPageInfoFieldSet);
+				}
+			}
 		).infoFieldSetEntry(
 			_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(modelClassName)
+		).infoFieldSetEntries(
+			_getObjectActionInfoFieldSetEntries()
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.<String>builder(
+			).defaultLocale(
+				LocaleUtil.fromLanguageId(
+					_objectDefinition.getDefaultLanguageId())
 			).values(
 				_objectDefinition.getLabelMap()
 			).build()
@@ -540,7 +584,7 @@ public class ObjectEntryInfoItemFormProvider
 			objectFieldSetting.getValue());
 
 		if ((maximumFileSizeForGuestUsers < maximumFileSize) &&
-			_isDefaultUser()) {
+			_isGuestUser()) {
 
 			maximumFileSize = maximumFileSizeForGuestUsers;
 		}
@@ -561,9 +605,46 @@ public class ObjectEntryInfoItemFormProvider
 			objectFieldSetting.getValue(), defaultMaxLength);
 	}
 
+	private String _getModelClassName(long objectDefinitionId) {
+		return ObjectDefinition.class.getName() + "#" + objectDefinitionId;
+	}
+
+	private List<InfoFieldSetEntry> _getObjectActionInfoFieldSetEntries() {
+		InfoFieldSet.Builder infoFieldSetBuilder = InfoFieldSet.builder(
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(
+				ObjectEntryInfoItemFields.class, "actions")
+		).name(
+			"actions"
+		);
+
+		return TransformUtil.transform(
+			_objectActionLocalService.getObjectActions(
+				_objectDefinition.getObjectDefinitionId(),
+				ObjectActionTriggerConstants.KEY_STANDALONE),
+			objectAction -> infoFieldSetBuilder.infoFieldSetEntry(
+				InfoField.builder(
+				).infoFieldType(
+					ActionInfoFieldType.INSTANCE
+				).namespace(
+					ObjectAction.class.getSimpleName()
+				).name(
+					objectAction.getName()
+				).labelInfoLocalizedValue(
+					InfoLocalizedValue.<String>builder(
+					).defaultLocale(
+						LocaleUtil.fromLanguageId(
+							objectAction.getDefaultLanguageId())
+					).values(
+						objectAction.getLabelMap()
+					).build()
+				).build()
+			).build());
+	}
+
 	private InfoFieldSet _getObjectDefinitionInfoFieldSet(
-		Map<Locale, String> labelMap, String name, String namespace,
-		ObjectDefinition objectDefinition) {
+		boolean editable, Map<Locale, String> labelMap, String name,
+		String namespace, ObjectDefinition objectDefinition) {
 
 		return InfoFieldSet.builder(
 		).infoFieldSetEntry(
@@ -571,6 +652,10 @@ public class ObjectEntryInfoItemFormProvider
 				for (ObjectField objectField :
 						_objectFieldLocalService.getObjectFields(
 							objectDefinition.getObjectDefinitionId(), false)) {
+
+					if (objectField.isLocalized()) {
+						continue;
+					}
 
 					if (Validator.isNotNull(
 							objectField.getRelationshipType())) {
@@ -602,9 +687,12 @@ public class ObjectEntryInfoItemFormProvider
 							).name(
 								objectField.getName()
 							).editable(
-								true
+								editable
 							).labelInfoLocalizedValue(
 								InfoLocalizedValue.<String>builder(
+								).defaultLocale(
+									LocaleUtil.fromLanguageId(
+										objectField.getDefaultLanguageId())
 								).values(
 									objectField.getLabelMap()
 								).build()
@@ -616,6 +704,9 @@ public class ObjectEntryInfoItemFormProvider
 			}
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.<String>builder(
+			).defaultLocale(
+				LocaleUtil.fromLanguageId(
+					objectDefinition.getDefaultLanguageId())
 			).values(
 				labelMap
 			).build()
@@ -624,30 +715,24 @@ public class ObjectEntryInfoItemFormProvider
 		).build();
 	}
 
-	private List<SelectInfoFieldType.Option> _getOptions(
+	private List<OptionInfoFieldType> _getOptionInfoFieldTypes(
 		ObjectField objectField) {
 
-		List<SelectInfoFieldType.Option> options = new ArrayList<>();
-
-		List<ListTypeEntry> listTypeEntries =
+		return TransformUtil.transform(
 			_listTypeEntryLocalService.getListTypeEntries(
-				objectField.getListTypeDefinitionId());
-
-		for (ListTypeEntry listTypeEntry : listTypeEntries) {
-			options.add(
-				new SelectInfoFieldType.Option(
-					Objects.equals(
-						objectField.getDefaultValue(), listTypeEntry.getKey()),
-					new FunctionInfoLocalizedValue<>(listTypeEntry::getName),
-					listTypeEntry.getKey()));
-		}
-
-		return options;
+				objectField.getListTypeDefinitionId()),
+			listTypeEntry -> new OptionInfoFieldType(
+				Objects.equals(
+					ObjectFieldSettingUtil.getDefaultValueAsString(
+						null, objectField.getObjectFieldId(),
+						_objectFieldSettingLocalService, null),
+					listTypeEntry.getKey()),
+				new FunctionInfoLocalizedValue<>(listTypeEntry::getName),
+				listTypeEntry.getKey()));
 	}
 
 	private List<InfoFieldSetEntry> _getParentsInfoFieldSets(
-			long objectDefinitionId2)
-		throws NoSuchFormVariationException {
+		long objectDefinitionId2) {
 
 		List<InfoFieldSetEntry> infoFieldSetEntries = new ArrayList<>();
 
@@ -674,7 +759,7 @@ public class ObjectEntryInfoItemFormProvider
 				continue;
 			}
 
-			if (objectDefinition1.isSystem()) {
+			if (objectDefinition1.isUnmodifiableSystemObject()) {
 				continue;
 			}
 
@@ -695,7 +780,7 @@ public class ObjectEntryInfoItemFormProvider
 
 			infoFieldSetEntries.add(
 				_getObjectDefinitionInfoFieldSet(
-					fieldSetLabelMap, objectRelationship.getName(),
+					false, fieldSetLabelMap, objectRelationship.getName(),
 					StringBundler.concat(
 						ObjectRelationship.class.getSimpleName(),
 						StringPool.POUND, objectDefinition1.getName(),
@@ -766,10 +851,10 @@ public class ObjectEntryInfoItemFormProvider
 			_getGroupId(serviceContext.getRequest(), relatedObjectDefinition));
 
 		return PortalUtil.getPortalURL(serviceContext.getRequest()) +
-			restContextPath;
+			PortalUtil.getPathContext() + restContextPath;
 	}
 
-	private boolean _isDefaultUser() {
+	private boolean _isGuestUser() {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -779,7 +864,7 @@ public class ObjectEntryInfoItemFormProvider
 
 		User user = _userLocalService.fetchUser(serviceContext.getUserId());
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return true;
 		}
 
@@ -789,9 +874,12 @@ public class ObjectEntryInfoItemFormProvider
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryInfoItemFormProvider.class);
 
+	private final DisplayPageInfoItemFieldSetProvider
+		_displayPageInfoItemFieldSetProvider;
 	private final InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
 	private final ListTypeEntryLocalService _listTypeEntryLocalService;
+	private final ObjectActionLocalService _objectActionLocalService;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;

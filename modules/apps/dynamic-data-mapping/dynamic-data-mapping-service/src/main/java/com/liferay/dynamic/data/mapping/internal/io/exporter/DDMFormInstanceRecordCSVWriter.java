@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.io.exporter;
@@ -24,8 +15,6 @@ import com.liferay.portal.kernel.util.CSVUtil;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -70,25 +59,29 @@ public class DDMFormInstanceRecordCSVWriter
 	protected String writeRecords(
 		List<Map<String, String>> ddmFormFieldValues) {
 
-		Stream<Map<String, String>> stream = ddmFormFieldValues.stream();
+		StringBundler sb = new StringBundler(ddmFormFieldValues.size() * 2);
 
-		return stream.map(
-			Map::values
-		).map(
-			this::writeValues
-		).collect(
-			Collectors.joining(StringPool.NEW_LINE)
-		);
+		for (Map<String, String> ddmFormFieldValue : ddmFormFieldValues) {
+			sb.append(writeValues(ddmFormFieldValue.values()));
+			sb.append(StringPool.NEW_LINE);
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		return sb.toString();
 	}
 
 	protected String writeValues(Collection<String> values) {
-		Stream<String> stream = values.stream();
+		StringBundler sb = new StringBundler(values.size() * 2);
 
-		return stream.map(
-			CSVUtil::encode
-		).collect(
-			Collectors.joining(StringPool.COMMA)
-		);
+		for (String value : values) {
+			sb.append(CSVUtil.encode(value));
+			sb.append(StringPool.COMMA);
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		return sb.toString();
 	}
 
 }

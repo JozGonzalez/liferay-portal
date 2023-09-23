@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter;
 
-import com.liferay.commerce.account.model.CommerceAccountOrganizationRel;
-import com.liferay.commerce.account.service.CommerceAccountOrganizationRelService;
-import com.liferay.commerce.account.service.persistence.CommerceAccountOrganizationRelPK;
+import com.liferay.account.model.AccountEntryOrganizationRel;
+import com.liferay.account.service.AccountEntryOrganizationRelService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountOrganization;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -29,12 +19,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "dto.class.name=com.liferay.commerce.account.model.CommerceAccountOrganizationRel",
+	property = "dto.class.name=com.liferay.account.model.AccountEntryOrganizationRel",
 	service = DTOConverter.class
 )
 public class AccountOrganizationDTOConverter
-	implements DTOConverter
-		<CommerceAccountOrganizationRel, AccountOrganization> {
+	implements DTOConverter<AccountEntryOrganizationRel, AccountOrganization> {
 
 	@Override
 	public String getContentType() {
@@ -45,19 +34,17 @@ public class AccountOrganizationDTOConverter
 	public AccountOrganization toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceAccountOrganizationRel commerceAccountOrganizationRel =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRel(
-					(CommerceAccountOrganizationRelPK)
-						dtoConverterContext.getId());
+		AccountEntryOrganizationRel accountEntryOrganizationRel =
+			_accountEntryOrganizationRelService.
+				fetchAccountEntryOrganizationRel(
+					(long)dtoConverterContext.getId());
 
 		Organization organization =
-			commerceAccountOrganizationRel.getOrganization();
+			accountEntryOrganizationRel.getOrganization();
 
 		return new AccountOrganization() {
 			{
-				accountId =
-					commerceAccountOrganizationRel.getCommerceAccountId();
+				accountId = accountEntryOrganizationRel.getAccountEntryId();
 				name = organization.getName();
 				organizationId = organization.getOrganizationId();
 				treePath = organization.getTreePath();
@@ -66,7 +53,7 @@ public class AccountOrganizationDTOConverter
 	}
 
 	@Reference
-	private CommerceAccountOrganizationRelService
-		_commerceAccountOrganizationRelService;
+	private AccountEntryOrganizationRelService
+		_accountEntryOrganizationRelService;
 
 }

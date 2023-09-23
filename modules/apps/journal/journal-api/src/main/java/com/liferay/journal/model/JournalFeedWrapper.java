@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.model;
@@ -58,7 +49,7 @@ public class JournalFeedWrapper
 		attributes.put("feedId", getFeedId());
 		attributes.put("name", getName());
 		attributes.put("description", getDescription());
-		attributes.put("DDMStructureKey", getDDMStructureKey());
+		attributes.put("DDMStructureId", getDDMStructureId());
 		attributes.put("DDMTemplateKey", getDDMTemplateKey());
 		attributes.put("DDMRendererTemplateKey", getDDMRendererTemplateKey());
 		attributes.put("delta", getDelta());
@@ -154,10 +145,10 @@ public class JournalFeedWrapper
 			setDescription(description);
 		}
 
-		String DDMStructureKey = (String)attributes.get("DDMStructureKey");
+		Long DDMStructureId = (Long)attributes.get("DDMStructureId");
 
-		if (DDMStructureKey != null) {
-			setDDMStructureKey(DDMStructureKey);
+		if (DDMStructureId != null) {
+			setDDMStructureId(DDMStructureId);
 		}
 
 		String DDMTemplateKey = (String)attributes.get("DDMTemplateKey");
@@ -285,13 +276,13 @@ public class JournalFeedWrapper
 	}
 
 	/**
-	 * Returns the ddm structure key of this journal feed.
+	 * Returns the ddm structure ID of this journal feed.
 	 *
-	 * @return the ddm structure key of this journal feed
+	 * @return the ddm structure ID of this journal feed
 	 */
 	@Override
-	public String getDDMStructureKey() {
-		return model.getDDMStructureKey();
+	public long getDDMStructureId() {
+		return model.getDDMStructureId();
 	}
 
 	/**
@@ -560,13 +551,13 @@ public class JournalFeedWrapper
 	}
 
 	/**
-	 * Sets the ddm structure key of this journal feed.
+	 * Sets the ddm structure ID of this journal feed.
 	 *
-	 * @param DDMStructureKey the ddm structure key of this journal feed
+	 * @param DDMStructureId the ddm structure ID of this journal feed
 	 */
 	@Override
-	public void setDDMStructureKey(String DDMStructureKey) {
-		model.setDDMStructureKey(DDMStructureKey);
+	public void setDDMStructureId(long DDMStructureId) {
+		model.setDDMStructureId(DDMStructureId);
 	}
 
 	/**

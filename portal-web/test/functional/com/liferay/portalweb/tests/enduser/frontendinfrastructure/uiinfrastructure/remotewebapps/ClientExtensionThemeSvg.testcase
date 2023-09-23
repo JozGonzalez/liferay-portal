@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +36,7 @@ definition {
 		}
 	}
 
-	@description = "LPS-178000. Verify that new SVG spritemap is applied on the page"
+	@description = "LPS-166479. Verify that new SVG spritemap is applied on the page"
 	@priority = 3
 	test CanExtendSvgFileFromDM {
 		property custom.properties = "feature.flag.LPS-166479=true";
@@ -73,13 +73,13 @@ definition {
 		}
 
 		task ("Then: new SVG spritemap is applied on the page") {
-			AssertNotVisible(locator1 = "//ul[@class='control-menu-nav']//span[@id='uvlz____']//*[contains(@href,'webdav/guest/document_library/spritemap_example.svg#pencil')]");
+			AssertNotVisible(locator1 = "ClientExtension#HIDDEN_PENCIL_ICON");
 
-			AssertNotVisible(locator1 = "//ul[@class='control-menu-nav']//span[@id='ored____']//*[contains(@href,'webdav/guest/document_library/spritemap_example.svg#cog')]");
+			AssertNotVisible(locator1 = "ClientExtension#HIDDEN_COG_ICON");
 		}
 	}
 
-	@description = "LPS-177980. Verify that new SVG spritemap file from external site is applied on the page"
+	@description = "LPS-173318. Verify that new SVG spritemap file from external site is applied on the page"
 	@priority = 3
 	test CanExtendSvgFileFromExternalSite {
 		property custom.properties = "feature.flag.LPS-166479=true";
@@ -104,9 +104,9 @@ definition {
 		}
 
 		task ("Then: new SVG spritemap is applied on the page") {
-			AssertVisible(locator1 = "//span[@title='Edit']//span[@id='uvlz____']//*[contains(@class,'pencil')]");
+			AssertVisible(locator1 = "ClientExtension#PENCIL_ICON_IN_CONFIG_ICON_POSITION");
 
-			AssertVisible(locator1 = "//a[@data-qa-id='editLayout']//span[@id='ored____']//*[contains(@class,'cog')]");
+			AssertVisible(locator1 = "ClientExtension#COG_ICON_IN_EDIT_ICON_POSITION");
 		}
 	}
 

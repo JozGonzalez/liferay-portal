@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.service.base;
@@ -56,8 +47,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -518,29 +507,31 @@ public abstract class AssetTagLocalServiceBaseImpl
 	/**
 	 */
 	@Override
-	public void addAssetEntryAssetTag(long entryId, long tagId) {
-		assetEntryPersistence.addAssetTag(entryId, tagId);
+	public boolean addAssetEntryAssetTag(long entryId, long tagId) {
+		return assetEntryPersistence.addAssetTag(entryId, tagId);
 	}
 
 	/**
 	 */
 	@Override
-	public void addAssetEntryAssetTag(long entryId, AssetTag assetTag) {
-		assetEntryPersistence.addAssetTag(entryId, assetTag);
+	public boolean addAssetEntryAssetTag(long entryId, AssetTag assetTag) {
+		return assetEntryPersistence.addAssetTag(entryId, assetTag);
 	}
 
 	/**
 	 */
 	@Override
-	public void addAssetEntryAssetTags(long entryId, long[] tagIds) {
-		assetEntryPersistence.addAssetTags(entryId, tagIds);
+	public boolean addAssetEntryAssetTags(long entryId, long[] tagIds) {
+		return assetEntryPersistence.addAssetTags(entryId, tagIds);
 	}
 
 	/**
 	 */
 	@Override
-	public void addAssetEntryAssetTags(long entryId, List<AssetTag> assetTags) {
-		assetEntryPersistence.addAssetTags(entryId, assetTags);
+	public boolean addAssetEntryAssetTags(
+		long entryId, List<AssetTag> assetTags) {
+
+		return assetEntryPersistence.addAssetTags(entryId, assetTags);
 	}
 
 	/**
@@ -731,14 +722,14 @@ public abstract class AssetTagLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.asset.kernel.model.AssetTag", assetTagLocalService);
 
-		_setLocalServiceUtilService(assetTagLocalService);
+		AssetTagLocalServiceUtil.setService(assetTagLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.asset.kernel.model.AssetTag");
 
-		_setLocalServiceUtilService(null);
+		AssetTagLocalServiceUtil.setService(null);
 	}
 
 	/**
@@ -794,22 +785,6 @@ public abstract class AssetTagLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		AssetTagLocalService assetTagLocalService) {
-
-		try {
-			Field field = AssetTagLocalServiceUtil.class.getDeclaredField(
-				"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, assetTagLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

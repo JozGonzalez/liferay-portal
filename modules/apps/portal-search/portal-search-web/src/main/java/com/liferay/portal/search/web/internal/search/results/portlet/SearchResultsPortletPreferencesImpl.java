@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.results.portlet;
@@ -17,10 +8,8 @@ package com.liferay.portal.search.web.internal.search.results.portlet;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
+import com.liferay.portal.search.web.internal.portlet.preferences.BasePortletPreferences;
 import com.liferay.portal.util.PropsUtil;
-
-import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 
@@ -28,36 +17,31 @@ import javax.portlet.PortletPreferences;
  * @author Lino Alves
  */
 public class SearchResultsPortletPreferencesImpl
-	implements SearchResultsPortletPreferences {
+	extends BasePortletPreferences implements SearchResultsPortletPreferences {
 
 	public SearchResultsPortletPreferencesImpl(
-		Optional<PortletPreferences> portletPreferencesOptional) {
+		PortletPreferences portletPreferences) {
 
-		_portletPreferencesHelper = new PortletPreferencesHelper(
-			portletPreferencesOptional);
+		super(portletPreferences);
 	}
 
 	@Override
 	public String getFederatedSearchKey() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			SearchResultsPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY,
 			StringPool.BLANK);
 	}
 
 	@Override
-	public Optional<String> getFieldsToDisplayOptional() {
-		return _portletPreferencesHelper.getString(
-			SearchResultsPortletPreferences.PREFERENCE_KEY_FIELDS_TO_DISPLAY);
-	}
-
-	@Override
-	public String getFieldsToDisplayString() {
-		return getFieldsToDisplayOptional().orElse(StringPool.BLANK);
+	public String getFieldsToDisplay() {
+		return getString(
+			SearchResultsPortletPreferences.PREFERENCE_KEY_FIELDS_TO_DISPLAY,
+			StringPool.BLANK);
 	}
 
 	@Override
 	public int getPaginationDelta() {
-		return _portletPreferencesHelper.getInteger(
+		return getInteger(
 			SearchResultsPortletPreferences.PREFERENCE_KEY_PAGINATION_DELTA,
 			GetterUtil.getInteger(
 				PropsUtil.get(PropsKeys.SEARCH_CONTAINER_PAGE_DEFAULT_DELTA),
@@ -66,7 +50,7 @@ public class SearchResultsPortletPreferencesImpl
 
 	@Override
 	public String getPaginationDeltaParameterName() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			SearchResultsPortletPreferences.
 				PREFERENCE_KEY_PAGINATION_DELTA_PARAMETER_NAME,
 			"delta");
@@ -74,7 +58,7 @@ public class SearchResultsPortletPreferencesImpl
 
 	@Override
 	public String getPaginationStartParameterName() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			SearchResultsPortletPreferences.
 				PREFERENCE_KEY_PAGINATION_START_PARAMETER_NAME,
 			"start");
@@ -82,7 +66,7 @@ public class SearchResultsPortletPreferencesImpl
 
 	@Override
 	public boolean isDisplayInDocumentForm() {
-		return _portletPreferencesHelper.getBoolean(
+		return getBoolean(
 			SearchResultsPortletPreferences.
 				PREFERENCE_KEY_DISPLAY_IN_DOCUMENT_FORM,
 			false);
@@ -90,18 +74,31 @@ public class SearchResultsPortletPreferencesImpl
 
 	@Override
 	public boolean isHighlightEnabled() {
-		return _portletPreferencesHelper.getBoolean(
+		return getBoolean(
 			SearchResultsPortletPreferences.PREFERENCE_KEY_HIGHLIGHT_ENABLED,
 			true);
 	}
 
 	@Override
-	public boolean isViewInContext() {
-		return _portletPreferencesHelper.getBoolean(
-			SearchResultsPortletPreferences.PREFERENCE_KEY_VIEW_IN_CONTEXT,
+	public boolean isShowEmptyResultMessage() {
+		return getBoolean(
+			SearchResultsPortletPreferences.
+				PREFERENCE_KEY_SHOW_EMPTY_RESULT_MESSAGE,
 			true);
 	}
 
-	private final PortletPreferencesHelper _portletPreferencesHelper;
+	@Override
+	public boolean isShowPagination() {
+		return getBoolean(
+			SearchResultsPortletPreferences.PREFERENCE_KEY_SHOW_PAGINATION,
+			true);
+	}
+
+	@Override
+	public boolean isViewInContext() {
+		return getBoolean(
+			SearchResultsPortletPreferences.PREFERENCE_KEY_VIEW_IN_CONTEXT,
+			true);
+	}
 
 }

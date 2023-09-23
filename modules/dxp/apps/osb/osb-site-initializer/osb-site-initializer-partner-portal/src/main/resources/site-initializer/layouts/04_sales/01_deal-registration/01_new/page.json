@@ -1,7 +1,5 @@
 {
-	"friendlyURL_i18n": {
-		"en_US": "/sales/deal-registrations/new"
-	},
+	"friendlyURL": "/sales/deal-registrations/new",
 	"hidden": true,
 	"name_i18n": {
 		"en_US": "Deal Registration: New"
@@ -15,16 +13,22 @@
 		},
 		{
 			"actionIds": [
-				"VIEW"
 			],
-			"roleName": "User",
+			"roleName": "Site Member",
 			"scope": 4
 		},
 		{
 			"actionIds": [
 				"VIEW"
 			],
-			"roleName": "Site Member",
+			"roleName": "Partner Manager (PM)",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Partner Sales User (PSU)",
 			"scope": 4
 		}
 	],

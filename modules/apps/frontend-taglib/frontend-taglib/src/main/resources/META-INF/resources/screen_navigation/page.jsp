@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,6 +15,7 @@ String headerContainerCssClass = (String)request.getAttribute("liferay-frontend:
 String id = (String)request.getAttribute("liferay-frontend:screen-navigation:id");
 boolean inverted = (boolean)request.getAttribute("liferay-frontend:screen-navigation:inverted");
 String menubarCssClass = (String)request.getAttribute("liferay-frontend:screen-navigation:menubarCssClass");
+Object modelContext = (Object)request.getAttribute("liferay-frontend:screen-navigation:modelContext");
 String navCssClass = (String)request.getAttribute("liferay-frontend:screen-navigation:navCssClass");
 PortletURL portletURL = (PortletURL)request.getAttribute("liferay-frontend:screen-navigation:portletURL");
 ScreenNavigationCategory selectedScreenNavigationCategory = (ScreenNavigationCategory)request.getAttribute("liferay-frontend:screen-navigation:selectedScreenNavigationCategory");
@@ -90,20 +82,33 @@ LiferayPortletResponse finalLiferayPortletResponse = liferayPortletResponse;
 
 							<%
 							for (ScreenNavigationEntry<Object> screenNavigationEntry : screenNavigationEntries) {
+								String statusLabel = screenNavigationEntry.getStatusLabel(themeDisplay.getLocale(), modelContext);
 							%>
 
 								<li class="nav-item">
 									<a
 										aria-current="<%= Objects.equals(selectedScreenNavigationEntry.getEntryKey(), screenNavigationEntry.getEntryKey()) ? "page" : "false" %>"
-										class="nav-link <%= Objects.equals(selectedScreenNavigationEntry.getEntryKey(), screenNavigationEntry.getEntryKey()) ? "active" : StringPool.BLANK %>" href="<%=
-PortletURLBuilder.create(
-									PortletURLUtil.clone(portletURL, liferayPortletResponse)
-								).setParameter(
-									"screenNavigationCategoryKey", screenNavigationEntry.getCategoryKey()
-								).setParameter(
-									"screenNavigationEntryKey", screenNavigationEntry.getEntryKey()
-								).buildPortletURL() %>"><%= screenNavigationEntry.getLabel(themeDisplay.getLocale()) %></a
+										class="nav-link <%= Objects.equals(selectedScreenNavigationEntry.getEntryKey(), screenNavigationEntry.getEntryKey()) ? "active" : StringPool.BLANK %> <%= Validator.isNotNull(statusLabel) ? "align-items-center d-flex" : StringPool.BLANK %>"
+										href="<%=
+											PortletURLBuilder.create(
+												PortletURLUtil.clone(portletURL, liferayPortletResponse)
+											).setParameter(
+												"screenNavigationCategoryKey", screenNavigationEntry.getCategoryKey()
+											).setParameter(
+												"screenNavigationEntryKey", screenNavigationEntry.getEntryKey()
+											).buildPortletURL()
+										%>"
 									>
+										<%= screenNavigationEntry.getLabel(themeDisplay.getLocale()) %>
+
+										<c:if test="<%= Validator.isNotNull(statusLabel) %>">
+											<clay:label
+												cssClass="ml-2"
+												displayType="<%= screenNavigationEntry.getStatusStyle(modelContext) %>"
+												label="<%= statusLabel %>"
+											/>
+										</c:if>
+									</a>
 								</li>
 
 							<%
@@ -119,6 +124,20 @@ PortletURLBuilder.create(
 		<div class="<%= (screenNavigationEntries.size() > 1) ? containerCssClass : fullContainerCssClass %>">
 
 			<%
+			String selectedScreenNavigationEntryLabel = selectedScreenNavigationEntry.getLabel(themeDisplay.getLocale());
+
+			if (Validator.isNotNull(selectedScreenNavigationEntryLabel)) {
+				PortalUtil.addPageSubtitle(selectedScreenNavigationEntryLabel, request);
+			}
+
+			if (selectedScreenNavigationCategory != null) {
+				String selectedScreenNavigationCategoryLabel = selectedScreenNavigationCategory.getLabel(themeDisplay.getLocale());
+
+				if (Validator.isNotNull(selectedScreenNavigationCategoryLabel)) {
+					PortalUtil.addPageSubtitle(selectedScreenNavigationCategoryLabel, request);
+				}
+			}
+
 			selectedScreenNavigationEntry.render(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 			%>
 

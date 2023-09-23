@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.display.context;
 
 import com.liferay.change.tracking.model.CTCollectionTemplate;
 import com.liferay.change.tracking.service.CTCollectionTemplateService;
+import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionTemplatePermission;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -45,12 +37,14 @@ public class ViewTemplatesDisplayContext
 
 	public ViewTemplatesDisplayContext(
 		CTCollectionTemplateService ctCollectionTemplateService,
+		CTSettingsConfigurationHelper ctSettingsConfigurationHelper,
 		HttpServletRequest httpServletRequest, Language language,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		super(httpServletRequest);
 
 		_ctCollectionTemplateService = ctCollectionTemplateService;
+		_ctSettingsConfigurationHelper = ctSettingsConfigurationHelper;
 		_httpServletRequest = httpServletRequest;
 		_language = language;
 		_renderRequest = renderRequest;
@@ -147,6 +141,25 @@ public class ViewTemplatesDisplayContext
 		return _searchContainer;
 	}
 
+	public boolean isDefaultCTCollectionTemplate(
+			CTCollectionTemplate ctCollectionTemplate)
+		throws PortalException {
+
+		return _ctSettingsConfigurationHelper.isDefaultCTCollectionTemplate(
+			ctCollectionTemplate.getCompanyId(),
+			ctCollectionTemplate.getCtCollectionTemplateId());
+	}
+
+	public boolean isDefaultSandboxCTCollectionTemplate(
+			CTCollectionTemplate ctCollectionTemplate)
+		throws PortalException {
+
+		return _ctSettingsConfigurationHelper.
+			isDefaultSandboxCTCollectionTemplate(
+				ctCollectionTemplate.getCompanyId(),
+				ctCollectionTemplate.getCtCollectionTemplateId());
+	}
+
 	@Override
 	protected String getDefaultOrderByCol() {
 		return "name";
@@ -179,6 +192,7 @@ public class ViewTemplatesDisplayContext
 	}
 
 	private final CTCollectionTemplateService _ctCollectionTemplateService;
+	private final CTSettingsConfigurationHelper _ctSettingsConfigurationHelper;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final RenderRequest _renderRequest;

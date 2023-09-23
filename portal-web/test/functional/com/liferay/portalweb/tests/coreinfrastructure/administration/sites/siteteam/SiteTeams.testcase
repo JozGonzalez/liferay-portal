@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -10,13 +10,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -149,7 +149,7 @@ definition {
 	}
 
 	@description = "Able to add multiple site teams."
-	@priority = 5
+	@priority = 4
 	test AddSiteTeamMultiple {
 		property portal.acceptance = "true";
 		property testray.component.names = "Sites Administration";
@@ -192,10 +192,13 @@ definition {
 	}
 
 	@description = "Able to remove user after assigning to site team."
-	@priority = 5
+	@priority = 4
 	@uitest
 	test AddSiteTeamRemoveUser {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
 		property testray.component.names = "Sites Administration,Users and Organizations";
 
 		task ("Add a user and assign it to the created site") {
@@ -366,7 +369,7 @@ definition {
 	}
 
 	@description = "Able to find user in site team."
-	@priority = 5
+	@priority = 4
 	test AddSiteTeamSearchUsers {
 		property portal.acceptance = "true";
 		property testray.component.names = "Sites Administration,Users and Organizations";
@@ -421,7 +424,7 @@ definition {
 	}
 
 	@description = "Able to delete site team."
-	@priority = 5
+	@priority = 4
 	@uitest
 	test DeleteSiteTeam {
 		property portal.acceptance = "true";
@@ -445,7 +448,7 @@ definition {
 	}
 
 	@description = "Able to edit site team."
-	@priority = 5
+	@priority = 4
 	@uitest
 	test EditSiteTeam {
 		property portal.acceptance = "true";
@@ -478,8 +481,6 @@ definition {
 		property testray.component.names = "Permissions,Sites Administration";
 
 		task ("Add a site team and a public page basing on Search page template") {
-			JSONGroup.addGroup(groupName = "Site Name");
-
 			PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
 			PagesAdmin.addPage(
@@ -501,6 +502,10 @@ definition {
 		}
 
 		task ("Assign user to the created site") {
+			Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.openUsersAdmin();
 
 			User.editUserSiteCP(
@@ -629,11 +634,9 @@ definition {
 	@description = "Add site team name with XSS."
 	@priority = 4
 	test SiteTeamsXSS {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Sites Administration,XSS";
-
-		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
-		}
 
 		task ("Add a site team with alert") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.container.request.filter;
@@ -22,7 +13,7 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
 import com.liferay.portal.spring.transaction.TransactionAttributeBuilder;
-import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
 
 import java.io.IOException;
@@ -70,7 +61,7 @@ public class TransactionContainerRequestFilter
 
 			containerRequestContext.setProperty(
 				_TRANSACTION_STATUS_ADAPTER,
-				_transactionHandler.start(_transactionAttributeAdapter));
+				_transactionExecutor.start(_transactionAttributeAdapter));
 		}
 	}
 
@@ -92,12 +83,12 @@ public class TransactionContainerRequestFilter
 			containerResponseContext.getStatus());
 
 		if (family == Response.Status.Family.SUCCESSFUL) {
-			_transactionHandler.commit(
+			_transactionExecutor.commit(
 				_transactionAttributeAdapter, transactionStatusAdapter);
 		}
 		else {
 			try {
-				_transactionHandler.rollback(
+				_transactionExecutor.rollback(
 					new Exception(
 						StringBundler.concat(
 							"Rollback due to ", family, ": ",
@@ -124,8 +115,9 @@ public class TransactionContainerRequestFilter
 			TransactionAttributeBuilder.build(
 				TransactionContainerRequestFilter.class.getAnnotation(
 					Transactional.class)));
-	private static final TransactionHandler _transactionHandler =
-		(TransactionHandler)PortalBeanLocatorUtil.locate("transactionExecutor");
+	private static final TransactionExecutor _transactionExecutor =
+		(TransactionExecutor)PortalBeanLocatorUtil.locate(
+			"transactionExecutor");
 	private static final Set<String> _transactionRequiredMethodNames =
 		new HashSet<>(Arrays.asList("DELETE", "PATCH", "POST", "PUT"));
 

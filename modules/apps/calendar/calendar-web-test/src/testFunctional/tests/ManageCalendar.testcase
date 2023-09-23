@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -161,6 +156,9 @@ definition {
 
 	@priority = 3
 	test ChangeColorCalendarSiteCalendarsEventRegular {
+		property ci.retries.disabled = "true";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		CalendarNavigator.gotoAddEvent();
@@ -183,39 +181,32 @@ definition {
 			calendarType = "Current Site Calendars",
 			myCalendarColor = "668CD9");
 
-		CalendarScheduler.viewEventColor(
-			eventBackgroundColorRgb = "(208, 219, 240)",
-			eventFontColorRgb = "(104, 142, 217)",
-			eventTitle = "Calendar Event Regular Title");
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT",
+			locator2 = "background-color",
+			value1 = "rgba(102, 140, 217, 0.7)");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT_CONTENT",
+			locator2 = "color",
+			value1 = "rgba(39, 40, 51, 1)");
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.assignRegularRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Administrator",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -227,10 +218,17 @@ definition {
 			calendarType = "Current Site Calendars",
 			myCalendarColor = "668CD9");
 
-		CalendarScheduler.viewEventColor(
-			eventBackgroundColorRgb = "(208, 219, 240)",
-			eventFontColorRgb = "(104, 142, 217)",
-			eventTitle = "Calendar Event Regular Title");
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT",
+			locator2 = "background-color",
+			value1 = "rgba(102, 140, 217, 0.7)");
+
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT_CONTENT",
+			locator2 = "color",
+			value1 = "rgba(39, 40, 51, 1)");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -240,7 +238,7 @@ definition {
 	@description = "LRQA-71360 - Verify that when the user change the calendar color it also changes the color column on the Manage Calendar page"
 	@priority = 3
 	test CheckTheColorColumnIsChanged {
-		Calendar.tearDownColor();
+		JSONCalendar.setCalendarColor(calendarName = "Test Test");
 
 		CalendarNavigator.gotoMyCalendarsManage();
 
@@ -423,7 +421,8 @@ definition {
 	@priority = 5
 	test SearchForOtherCalendars {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Calendar#SearchForOtherCalendars";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -508,45 +507,20 @@ definition {
 	@description = "This is a use case for LPS-51572."
 	@priority = 3
 	test SearchForOtherCalendarsAsNonPowerUser {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		User.addCP(
-			userEmailAddress = "userea1@liferay.com",
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
+		for (var userNum : list "1,2") {
+			JSONUser.addUser(
+				userEmailAddress = "userea${userNum}@liferay.com",
+				userFirstName = "userfn${userNum}",
+				userLastName = "userln${userNum}",
+				userScreenName = "usersn${userNum}");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			userEmailAddress = "userea1@liferay.com",
-			userScreenName = "usersn1");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
-			userEmailAddress = "userea2@liferay.com",
-			userFirstName = "userfn2",
-			userLastName = "userln2",
-			userScreenName = "usersn2");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			userEmailAddress = "userea2@liferay.com",
-			userScreenName = "usersn2");
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "userea${userNum}@liferay.com");
+		}
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea2@liferay.com",
@@ -567,64 +541,40 @@ definition {
 
 	@priority = 4
 	test ViewAvailableCalendars {
-		property test.name.skip.portal.instance = "ManageCalendar#ViewAvailableCalendars";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		Site.addCP(
-			siteName = "Site Name",
-			siteType = "Blank");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Calendar Site Page");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Calendar Site Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Site Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Calendar Site Page",
+			widgetName = "Calendar");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Site Page",
-			sitePageType = "Widget Page");
-
-		Navigator.openSiteURL(siteName = "Site Name");
-
-		Portlet.addPG(portletName = "Calendar");
-
-		Navigator.openSiteURL(siteName = "Site Name");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.assignRegularRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Administrator",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -637,6 +587,10 @@ definition {
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
+
+		Navigator.gotoSitePage(
+			pageName = "Calendar Site Page",
+			siteName = "Site Name");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 

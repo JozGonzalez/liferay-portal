@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.odata.retriever.test;
@@ -155,7 +146,7 @@ public class OrganizationODataRetrieverTest {
 		Region region = regions.get(0);
 
 		Organization organization1 = _organizationLocalService.addOrganization(
-			TestPropsValues.getUserId(),
+			null, TestPropsValues.getUserId(),
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			RandomTestUtil.randomString(),
 			OrganizationConstants.TYPE_ORGANIZATION, region.getRegionId(),
@@ -199,7 +190,7 @@ public class OrganizationODataRetrieverTest {
 		Region region = regions.get(0);
 
 		Organization organization = _organizationLocalService.addOrganization(
-			TestPropsValues.getUserId(),
+			null, TestPropsValues.getUserId(),
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			RandomTestUtil.randomString(),
 			OrganizationConstants.TYPE_ORGANIZATION, region.getRegionId(),
@@ -310,7 +301,8 @@ public class OrganizationODataRetrieverTest {
 
 		organization2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_organizationLocalService.updateOrganization(organization2);
+		organization2 = _organizationLocalService.updateOrganization(
+			organization2);
 
 		String filterString = String.format(
 			"(dateModified gt %s) and (parentOrganizationId eq '%s')",
@@ -356,7 +348,8 @@ public class OrganizationODataRetrieverTest {
 
 		organization2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_organizationLocalService.updateOrganization(organization2);
+		organization2 = _organizationLocalService.updateOrganization(
+			organization2);
 
 		String filterString = String.format(
 			"(dateModified ge %s) and (parentOrganizationId eq '%s')",
@@ -402,7 +395,8 @@ public class OrganizationODataRetrieverTest {
 
 		organization2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_organizationLocalService.updateOrganization(organization2);
+		organization2 = _organizationLocalService.updateOrganization(
+			organization2);
 
 		String filterString = String.format(
 			"(dateModified lt %s) and (parentOrganizationId eq '%s')",

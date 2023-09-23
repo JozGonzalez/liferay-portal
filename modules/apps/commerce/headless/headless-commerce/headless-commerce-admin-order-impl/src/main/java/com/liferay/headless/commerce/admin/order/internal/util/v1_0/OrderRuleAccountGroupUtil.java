@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.util.v1_0;
 
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountGroup;
-import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupService;
+import com.liferay.account.service.AccountGroupService;
 import com.liferay.commerce.order.rule.model.COREntry;
 import com.liferay.commerce.order.rule.model.COREntryRel;
 import com.liferay.commerce.order.rule.service.COREntryRelService;
@@ -30,42 +20,40 @@ import com.liferay.portal.kernel.util.Validator;
  */
 public class OrderRuleAccountGroupUtil {
 
-	public static COREntryRel addCOREntryCommerceAccountGroupRel(
-			CommerceAccountGroupService commerceAccountGroupService,
+	public static COREntryRel addCOREntryAccountGroupRel(
+			AccountGroupService accountGroupService,
 			COREntryRelService corEntryRelService, COREntry corEntry,
 			OrderRuleAccountGroup orderRuleAccountGroup)
 		throws PortalException {
 
-		CommerceAccountGroup commerceAccountGroup = null;
+		AccountGroup accountGroup = null;
 
 		if (Validator.isNull(
 				orderRuleAccountGroup.getAccountGroupExternalReferenceCode())) {
 
-			commerceAccountGroup =
-				commerceAccountGroupService.getCommerceAccountGroup(
-					orderRuleAccountGroup.getAccountGroupId());
+			accountGroup = accountGroupService.getAccountGroup(
+				orderRuleAccountGroup.getAccountGroupId());
 		}
 		else {
-			commerceAccountGroup =
-				commerceAccountGroupService.fetchByExternalReferenceCode(
-					corEntry.getCompanyId(),
+			accountGroup =
+				accountGroupService.fetchAccountGroupByExternalReferenceCode(
 					orderRuleAccountGroup.
-						getAccountGroupExternalReferenceCode());
+						getAccountGroupExternalReferenceCode(),
+					corEntry.getCompanyId());
 
-			if (commerceAccountGroup == null) {
+			if (accountGroup == null) {
 				String accountGroupExternalReferenceCode =
 					orderRuleAccountGroup.
 						getAccountGroupExternalReferenceCode();
 
-				throw new NoSuchAccountGroupException(
+				throw new NoSuchGroupException(
 					"Unable to find account group with external reference " +
 						"code " + accountGroupExternalReferenceCode);
 			}
 		}
 
 		return corEntryRelService.addCOREntryRel(
-			AccountGroup.class.getName(),
-			commerceAccountGroup.getCommerceAccountGroupId(),
+			AccountGroup.class.getName(), accountGroup.getAccountGroupId(),
 			corEntry.getCOREntryId());
 	}
 

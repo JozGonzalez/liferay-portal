@@ -29,7 +29,7 @@
 						"definition": {
 							"fragment": {
 								"key": "layout",
-								"siteKey": "Raylife AP 5"
+								"siteKey": "[$GROUP_KEY$]"
 							},
 							"fragmentConfig": {
 								"layoutName": "Policies"
@@ -39,6 +39,51 @@
 							"indexed": true
 						},
 						"pageElements": [
+							{
+								"definition": {
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"fragmentStyle": {
+												"borderWidth": "0"
+											},
+											"indexed": true,
+											"layout": {
+												"borderWidth": 0,
+												"marginBottom": 0,
+												"marginLeft": 0,
+												"marginRight": 0,
+												"marginTop": 0,
+												"opacity": 100,
+												"paddingBottom": 0,
+												"paddingLeft": 0,
+												"paddingRight": 0,
+												"paddingTop": 0,
+												"widthType": "Fluid"
+											}
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragment": {
+														"key": "avatar-dropdown-menu",
+														"siteKey": "[$GROUP_KEY$]"
+													},
+													"fragmentConfig": {
+													},
+													"fragmentFields": [
+													],
+													"indexed": true
+												},
+												"type": "Fragment"
+											}
+										],
+										"type": "Section"
+									}
+								],
+								"type": "FragmentDropZone"
+							},
 							{
 								"definition": {
 								},
@@ -70,6 +115,18 @@
 												"headingLevel": "h3"
 											},
 											"fragmentFields": [
+												{
+													"id": "element-text",
+													"value": {
+														"fragmentLink": {
+														},
+														"text": {
+															"value_i18n": {
+																"en_US": "Policies"
+															}
+														}
+													}
+												}
 											],
 											"indexed": true
 										},
@@ -238,7 +295,7 @@
 																				"definition": {
 																					"fragment": {
 																						"key": "section",
-																						"siteKey": "Raylife AP 5"
+																						"siteKey": "[$GROUP_KEY$]"
 																					},
 																					"fragmentConfig": {
 																						"sectionId": "primary"
@@ -256,7 +313,7 @@
 																								"definition": {
 																									"fragment": {
 																										"key": "policies-total-active",
-																										"siteKey": "Raylife AP 5"
+																										"siteKey": "[$GROUP_KEY$]"
 																									},
 																									"fragmentConfig": {
 																										"textColor": ""
@@ -311,7 +368,7 @@
 																				"definition": {
 																					"fragment": {
 																						"key": "section",
-																						"siteKey": "Raylife AP 5"
+																						"siteKey": "[$GROUP_KEY$]"
 																					},
 																					"fragmentConfig": {
 																						"sectionId": "primary"
@@ -329,7 +386,7 @@
 																								"definition": {
 																									"fragment": {
 																										"key": "policies-expiring",
-																										"siteKey": "Raylife AP 5"
+																										"siteKey": "[$GROUP_KEY$]"
 																									},
 																									"fragmentConfig": {
 																										"textColor": ""
@@ -383,7 +440,7 @@
 																"definition": {
 																	"fragment": {
 																		"key": "section",
-																		"siteKey": "Raylife AP 5"
+																		"siteKey": "[$GROUP_KEY$]"
 																	},
 																	"fragmentConfig": {
 																		"sectionId": "primary"
@@ -401,7 +458,7 @@
 																				"definition": {
 																					"fragment": {
 																						"key": "policies-total-premium-due",
-																						"siteKey": "Raylife AP 5"
+																						"siteKey": "[$GROUP_KEY$]"
 																					},
 																					"fragmentConfig": {
 																						"textColor": ""
@@ -455,7 +512,7 @@
 														"definition": {
 															"fragment": {
 																"key": "section",
-																"siteKey": "Raylife AP 5"
+																"siteKey": "[$GROUP_KEY$]"
 															},
 															"fragmentConfig": {
 																"sectionId": "primary"

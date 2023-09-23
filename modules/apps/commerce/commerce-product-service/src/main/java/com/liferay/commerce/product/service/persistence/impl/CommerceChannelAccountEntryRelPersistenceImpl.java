@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.persistence.impl;
@@ -49,7 +40,6 @@ import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -4240,12 +4230,9 @@ public class CommerceChannelAccountEntryRelPersistenceImpl
 		long accountEntryId, long classNameId, long classPK,
 		long commerceChannelId, int type, boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CommerceChannelAccountEntryRel.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {
 				accountEntryId, classNameId, classPK, commerceChannelId, type
 			};
@@ -4253,10 +4240,13 @@ public class CommerceChannelAccountEntryRelPersistenceImpl
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByA_C_C_C_T, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CommerceChannelAccountEntryRel.class);
 
 		if (result instanceof CommerceChannelAccountEntryRel) {
 			CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
@@ -4273,6 +4263,15 @@ public class CommerceChannelAccountEntryRelPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CommerceChannelAccountEntryRel.class,
+						commerceChannelAccountEntryRel.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -5534,33 +5533,15 @@ public class CommerceChannelAccountEntryRelPersistenceImpl
 			},
 			false);
 
-		_setCommerceChannelAccountEntryRelUtilPersistence(this);
+		CommerceChannelAccountEntryRelUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCommerceChannelAccountEntryRelUtilPersistence(null);
+		CommerceChannelAccountEntryRelUtil.setPersistence(null);
 
 		entityCache.removeCache(
 			CommerceChannelAccountEntryRelImpl.class.getName());
-	}
-
-	private void _setCommerceChannelAccountEntryRelUtilPersistence(
-		CommerceChannelAccountEntryRelPersistence
-			commerceChannelAccountEntryRelPersistence) {
-
-		try {
-			Field field =
-				CommerceChannelAccountEntryRelUtil.class.getDeclaredField(
-					"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, commerceChannelAccountEntryRelPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

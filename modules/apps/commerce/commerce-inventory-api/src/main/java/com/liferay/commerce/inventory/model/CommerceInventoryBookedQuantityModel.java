@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model;
@@ -19,6 +10,8 @@ import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 
@@ -189,33 +182,19 @@ public interface CommerceInventoryBookedQuantityModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
-	 * Returns the sku of this commerce inventory booked quantity.
+	 * Returns the booked note of this commerce inventory booked quantity.
 	 *
-	 * @return the sku of this commerce inventory booked quantity
+	 * @return the booked note of this commerce inventory booked quantity
 	 */
 	@AutoEscape
-	public String getSku();
+	public String getBookedNote();
 
 	/**
-	 * Sets the sku of this commerce inventory booked quantity.
+	 * Sets the booked note of this commerce inventory booked quantity.
 	 *
-	 * @param sku the sku of this commerce inventory booked quantity
+	 * @param bookedNote the booked note of this commerce inventory booked quantity
 	 */
-	public void setSku(String sku);
-
-	/**
-	 * Returns the quantity of this commerce inventory booked quantity.
-	 *
-	 * @return the quantity of this commerce inventory booked quantity
-	 */
-	public int getQuantity();
-
-	/**
-	 * Sets the quantity of this commerce inventory booked quantity.
-	 *
-	 * @param quantity the quantity of this commerce inventory booked quantity
-	 */
-	public void setQuantity(int quantity);
+	public void setBookedNote(String bookedNote);
 
 	/**
 	 * Returns the expiration date of this commerce inventory booked quantity.
@@ -232,19 +211,48 @@ public interface CommerceInventoryBookedQuantityModel
 	public void setExpirationDate(Date expirationDate);
 
 	/**
-	 * Returns the booked note of this commerce inventory booked quantity.
+	 * Returns the quantity of this commerce inventory booked quantity.
 	 *
-	 * @return the booked note of this commerce inventory booked quantity
+	 * @return the quantity of this commerce inventory booked quantity
 	 */
-	@AutoEscape
-	public String getBookedNote();
+	public BigDecimal getQuantity();
 
 	/**
-	 * Sets the booked note of this commerce inventory booked quantity.
+	 * Sets the quantity of this commerce inventory booked quantity.
 	 *
-	 * @param bookedNote the booked note of this commerce inventory booked quantity
+	 * @param quantity the quantity of this commerce inventory booked quantity
 	 */
-	public void setBookedNote(String bookedNote);
+	public void setQuantity(BigDecimal quantity);
+
+	/**
+	 * Returns the sku of this commerce inventory booked quantity.
+	 *
+	 * @return the sku of this commerce inventory booked quantity
+	 */
+	@AutoEscape
+	public String getSku();
+
+	/**
+	 * Sets the sku of this commerce inventory booked quantity.
+	 *
+	 * @param sku the sku of this commerce inventory booked quantity
+	 */
+	public void setSku(String sku);
+
+	/**
+	 * Returns the unit of measure key of this commerce inventory booked quantity.
+	 *
+	 * @return the unit of measure key of this commerce inventory booked quantity
+	 */
+	@AutoEscape
+	public String getUnitOfMeasureKey();
+
+	/**
+	 * Sets the unit of measure key of this commerce inventory booked quantity.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce inventory booked quantity
+	 */
+	public void setUnitOfMeasureKey(String unitOfMeasureKey);
 
 	@Override
 	public CommerceInventoryBookedQuantity cloneWithOriginalValues();

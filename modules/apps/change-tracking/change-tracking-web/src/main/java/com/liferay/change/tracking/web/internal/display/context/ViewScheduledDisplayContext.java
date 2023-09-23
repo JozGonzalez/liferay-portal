@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.display.context;
@@ -18,6 +9,7 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
 import com.liferay.change.tracking.web.internal.scheduler.ScheduledPublishInfo;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -26,7 +18,9 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -68,6 +62,55 @@ public class ViewScheduledDisplayContext
 
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+	}
+
+	public String getAPIURL() {
+		return "/o/change-tracking-rest/v1.0/ct-collections?status=" +
+			WorkflowConstants.STATUS_SCHEDULED;
+	}
+
+	public List<FDSActionDropdownItem> getFDSActionDropdownItems() {
+		return ListUtil.fromArray(
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/reschedule_publication"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"date-time", "reschedule",
+				_language.get(_httpServletRequest, "reschedule"), "get",
+				"schedule", null),
+			new FDSActionDropdownItem(
+				_language.get(
+					_httpServletRequest,
+					"are-you-sure-you-want-to-unschedule-this-publication"),
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/unschedule_publication"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"time", "unschedule",
+				_language.get(_httpServletRequest, "unschedule"), "get",
+				"schedule", "async"),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_changes"
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"list-ul", "review-changes",
+				_language.get(_httpServletRequest, "review-changes"), "get",
+				"get", null));
 	}
 
 	public Date getPublishingDate(long ctCollectionId) throws PortalException {

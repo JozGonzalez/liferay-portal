@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLabel from '@clayui/label';
@@ -48,9 +39,20 @@ const ResultsBar = ({
 					expand={!(filterLabelItems?.length > 0)}
 				>
 					<span
+						aria-label={sub(
+							itemsTotal === 1
+								? Liferay.Language.get('x-result-for-x')
+								: Liferay.Language.get('x-results-for-x'),
+							[
+								itemsTotal,
+								filterLabelItems
+									?.map((item) => item.label)
+									.join(', '),
+							]
+						)}
 						className="component-text text-truncate-inline"
 						ref={resultsBarRef}
-						tabIndex={0}
+						tabIndex={-1}
 					>
 						<span className="text-truncate">
 							{sub(
@@ -75,6 +77,10 @@ const ResultsBar = ({
 						<ClayLabel
 							className="component-label tbar-label"
 							closeButtonProps={{
+								['aria-label']: sub(
+									Liferay.Language.get('remove-x-filter'),
+									item.label
+								),
 								onClick: () => {
 									searchContainerRef.current?.fire(
 										'clearFilter'
@@ -98,7 +104,9 @@ const ResultsBar = ({
 								? Liferay.Language.get('clear-x-result-for-x')
 								: Liferay.Language.get('clear-x-results-for-x'),
 							itemsTotal,
-							searchValue
+							searchValue !== null
+								? searchValue
+								: filterLabelItems?.map((item) => item.label)
 						)}
 						className="component-link tbar-link"
 						onClick={(event) => {

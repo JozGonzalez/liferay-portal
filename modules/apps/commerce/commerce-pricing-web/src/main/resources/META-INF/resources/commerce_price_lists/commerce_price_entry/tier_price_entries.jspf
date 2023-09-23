@@ -1,0 +1,38 @@
+<%--
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+--%>
+
+<div class="tier-price-entries">
+	<aui:fieldset collapsible="<%= false %>" cssClass="price-entry-price-settings" label="tier-price-settings">
+		<div class="row">
+			<div class="col-12">
+				<aui:input checked="<%= commercePriceEntry.isBulkPricing() %>" disabled="<%= priceOnApplication %>" label="bulk-pricing" name="bulkPricing" type="radio" value="<%= true %>" />
+			</div>
+
+			<div class="col-12">
+				<aui:input checked="<%= !commercePriceEntry.isBulkPricing() %>" disabled="<%= priceOnApplication %>" label="tiered-pricing" name="bulkPricing" type="radio" value="<%= false %>" />
+			</div>
+		</div>
+	</aui:fieldset>
+
+	<aui:fieldset collapsible="<%= false %>" cssClass="price-entry-price-settings" label="tier-price-entries">
+		<frontend-data-set:classic-display
+			contextParams='<%=
+				HashMapBuilder.<String, String>put(
+					"commercePriceEntryId", String.valueOf(commercePriceEntryId)
+				).build()
+			%>'
+			creationMenu="<%= commercePriceEntryDisplayContext.getCreationMenu() %>"
+			dataProviderKey="<%= CommercePricingFDSNames.TIER_PRICE_ENTRIES %>"
+			formName="fm"
+			id="<%= CommercePricingFDSNames.TIER_PRICE_ENTRIES %>"
+			itemsPerPage="<%= 10 %>"
+			selectedItemsKey="tierPriceEntryId"
+			showManagementBar="<%= true %>"
+			showSearch="<%= true %>"
+		/>
+	</aui:fieldset>
+</div>

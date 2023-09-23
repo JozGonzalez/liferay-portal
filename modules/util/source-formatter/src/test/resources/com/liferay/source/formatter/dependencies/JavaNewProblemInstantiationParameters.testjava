@@ -1,0 +1,28 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies;
+
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
+
+import javax.ws.rs.core.Response;
+
+/**
+ * @author Qi Zhang
+ */
+public class JavaNewProblemInstantiationParameters {
+
+	public Problem getProblem1(Exception exception) {
+		return new Problem(
+			Response.Status.BAD_REQUEST, exception.getMessage());
+	}
+
+	public Problem getProblem2(Exception exception) {
+		return new Problem(
+			null, Response.Status.BAD_REQUEST, exception.getMessage(),
+			Exception.class.getSimpleName());
+	}
+
+}

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
-import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
+import com.liferay.account.service.AccountGroupRelLocalService;
+import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.definitions.web.internal.display.context.CPDefinitionsDisplayContext;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
@@ -23,8 +15,9 @@ import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -55,9 +48,10 @@ public class DuplicateCPDefinitionMVCRenderCommand implements MVCRenderCommand {
 		CPDefinitionsDisplayContext cpDefinitionsDisplayContext =
 			new CPDefinitionsDisplayContext(
 				_actionHelper, _portal.getHttpServletRequest(renderRequest),
-				_commerceAccountGroupRelService, _commerceCatalogService,
+				_accountGroupRelLocalService, _commerceCatalogService,
 				_commerceChannelRelService, _configurationProvider,
-				_cpDefinitionService, _cpFriendlyURL, _itemSelector);
+				_cpDefinitionService, _cpFriendlyURL, _itemSelector,
+				_portletResourcePermission);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpDefinitionsDisplayContext);
@@ -66,10 +60,10 @@ public class DuplicateCPDefinitionMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	@Reference
-	private ActionHelper _actionHelper;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
-	private CommerceAccountGroupRelService _commerceAccountGroupRelService;
+	private ActionHelper _actionHelper;
 
 	@Reference
 	private CommerceCatalogService _commerceCatalogService;
@@ -91,5 +85,10 @@ public class DuplicateCPDefinitionMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + CPConstants.RESOURCE_NAME_PRODUCT + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.impl;
@@ -50,8 +41,9 @@ public class ObjectFieldServiceImpl extends ObjectFieldServiceBaseImpl {
 	public ObjectField addCustomObjectField(
 			String externalReferenceCode, long listTypeDefinitionId,
 			long objectDefinitionId, String businessType, String dbType,
-			String defaultValue, boolean indexed, boolean indexedAsKeyword,
-			String indexedLanguageId, Map<Locale, String> labelMap, String name,
+			boolean indexed, boolean indexedAsKeyword, String indexedLanguageId,
+			Map<Locale, String> labelMap, boolean localized, String name,
+			String readOnly, String readOnlyConditionExpression,
 			boolean required, boolean state,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
@@ -59,7 +51,7 @@ public class ObjectFieldServiceImpl extends ObjectFieldServiceBaseImpl {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
 
-		if (objectDefinition.isSystem()) {
+		if (objectDefinition.isUnmodifiableSystemObject()) {
 			_portletResourcePermission.check(
 				getPermissionChecker(), null,
 				ObjectActionKeys.EXTEND_SYSTEM_OBJECT_DEFINITION);
@@ -72,9 +64,9 @@ public class ObjectFieldServiceImpl extends ObjectFieldServiceBaseImpl {
 
 		return objectFieldLocalService.addCustomObjectField(
 			externalReferenceCode, getUserId(), listTypeDefinitionId,
-			objectDefinitionId, businessType, dbType, defaultValue, indexed,
-			indexedAsKeyword, indexedLanguageId, labelMap, name, required,
-			state, objectFieldSettings);
+			objectDefinitionId, businessType, dbType, indexed, indexedAsKeyword,
+			indexedLanguageId, labelMap, localized, name, readOnly,
+			readOnlyConditionExpression, required, state, objectFieldSettings);
 	}
 
 	@Override
@@ -107,8 +99,9 @@ public class ObjectFieldServiceImpl extends ObjectFieldServiceBaseImpl {
 	public ObjectField updateObjectField(
 			String externalReferenceCode, long objectFieldId,
 			long listTypeDefinitionId, String businessType, String dbType,
-			String defaultValue, boolean indexed, boolean indexedAsKeyword,
-			String indexedLanguageId, Map<Locale, String> labelMap, String name,
+			boolean indexed, boolean indexedAsKeyword, String indexedLanguageId,
+			Map<Locale, String> labelMap, boolean localized, String name,
+			String readOnly, String readOnlyConditionExpression,
 			boolean required, boolean state,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
@@ -124,9 +117,10 @@ public class ObjectFieldServiceImpl extends ObjectFieldServiceBaseImpl {
 			externalReferenceCode, objectFieldId, getUserId(),
 			listTypeDefinitionId, objectField.getObjectDefinitionId(),
 			businessType, objectField.getDBColumnName(),
-			objectField.getDBTableName(), dbType, defaultValue, indexed,
-			indexedAsKeyword, indexedLanguageId, labelMap, name, required,
-			state, objectField.isSystem(), objectFieldSettings);
+			objectField.getDBTableName(), dbType, indexed, indexedAsKeyword,
+			indexedLanguageId, labelMap, localized, name, readOnly,
+			readOnlyConditionExpression, required, state,
+			objectField.isSystem(), objectFieldSettings);
 	}
 
 	@Reference(

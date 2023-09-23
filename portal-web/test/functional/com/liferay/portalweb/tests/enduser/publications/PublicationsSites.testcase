@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Sites Administration";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,7 +31,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Site.openSitesAdmin();
 
@@ -66,9 +66,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.openSitePage(
 			pageName = "Child Site Page",
@@ -79,16 +77,11 @@ definition {
 
 	@priority = 4
 	test PublishSiteCreatedInPublication {
-
-		// Workaround LPS-129369 and LPS-148424
-
-		property database.types = "db2,hypersonic,mariadb,mysql,postgresql,sqlserver";
-
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -107,9 +100,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.openSitePage(
 			pageName = "Site Page",

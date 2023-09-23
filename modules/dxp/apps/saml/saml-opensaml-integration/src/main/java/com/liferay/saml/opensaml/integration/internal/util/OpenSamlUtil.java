@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.util;
@@ -37,7 +28,6 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.XMLObjectBuilder;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
@@ -864,7 +854,8 @@ public class OpenSamlUtil {
 			signableObject.setSignature(signature);
 
 			XMLObjectProviderRegistry xmlObjectProviderRegistry =
-				ConfigurationService.get(XMLObjectProviderRegistry.class);
+				ConfigurationServiceBootstrapUtil.get(
+					XMLObjectProviderRegistry.class);
 
 			MarshallerFactory marshallerFactory =
 				xmlObjectProviderRegistry.getMarshallerFactory();
@@ -885,7 +876,8 @@ public class OpenSamlUtil {
 		throws UnmarshallingException, XMLParserException {
 
 		XMLObjectProviderRegistry xmlObjectProviderRegistry =
-			ConfigurationService.get(XMLObjectProviderRegistry.class);
+			ConfigurationServiceBootstrapUtil.get(
+				XMLObjectProviderRegistry.class);
 
 		return XMLObjectSupport.unmarshallFromInputStream(
 			xmlObjectProviderRegistry.getParserPool(),
@@ -912,11 +904,12 @@ public class OpenSamlUtil {
 		if (globalSignatureSigningConfiguration instanceof
 				BasicSignatureSigningConfiguration) {
 
-			BasicSignatureSigningConfiguration signatureSigningConfiguration =
-				(BasicSignatureSigningConfiguration)
-					globalSignatureSigningConfiguration;
+			BasicSignatureSigningConfiguration
+				basicSignatureSigningConfiguration =
+					(BasicSignatureSigningConfiguration)
+						globalSignatureSigningConfiguration;
 
-			signatureSigningConfiguration.setSigningCredentials(
+			basicSignatureSigningConfiguration.setSigningCredentials(
 				Collections.singletonList(credential));
 		}
 
@@ -940,7 +933,8 @@ public class OpenSamlUtil {
 
 	static {
 		XMLObjectProviderRegistry xmlObjectProviderRegistry =
-			ConfigurationService.get(XMLObjectProviderRegistry.class);
+			ConfigurationServiceBootstrapUtil.get(
+				XMLObjectProviderRegistry.class);
 
 		_xmlObjectBuilderFactory =
 			xmlObjectProviderRegistry.getBuilderFactory();

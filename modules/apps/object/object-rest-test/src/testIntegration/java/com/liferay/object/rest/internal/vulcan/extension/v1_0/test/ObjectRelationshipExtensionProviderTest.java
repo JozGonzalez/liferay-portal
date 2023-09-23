@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.extension.v1_0.test;
@@ -27,8 +18,8 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -82,13 +73,13 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectEntry = _addObjectEntry(_OBJECT_FIELD_VALUE);
 
-		_userSystemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata("User");
+		_userSystemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager("User");
 
 		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
-				_userSystemObjectDefinitionMetadata.getName());
+				_userSystemObjectDefinitionManager.getName());
 
 		_user = TestPropsValues.getUser();
 
@@ -107,6 +98,9 @@ public class ObjectRelationshipExtensionProviderTest {
 				_objectRelationship.getObjectRelationshipId(),
 				_objectEntry.getPrimaryKey(), _user.getUserId(),
 				ServiceContextTestUtil.getServiceContext());
+
+		_originalNestedFieldsContext =
+			NestedFieldsContextThreadLocal.getNestedFieldsContext();
 	}
 
 	@After
@@ -121,6 +115,9 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_originalNestedFieldsContext);
 	}
 
 	@Test
@@ -131,15 +128,26 @@ public class ObjectRelationshipExtensionProviderTest {
 			}
 		};
 
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(null);
+
 		Map<String, Serializable> extendedProperties =
 			_extensionProvider.getExtendedProperties(
 				TestPropsValues.getCompanyId(), UserAccount.class.getName(),
 				userAccount);
 
+		Assert.assertNull(extendedProperties);
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_getNestedFieldsContext(RandomTestUtil.randomString()));
+
+		extendedProperties = _extensionProvider.getExtendedProperties(
+			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
+			userAccount);
+
 		Assert.assertTrue(extendedProperties.isEmpty());
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
-			_getNestedFieldsContext());
+			_getNestedFieldsContext(_objectRelationship.getName()));
 
 		extendedProperties = _extensionProvider.getExtendedProperties(
 			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
@@ -176,9 +184,6 @@ public class ObjectRelationshipExtensionProviderTest {
 	public void testIsApplicableExtension() throws Exception {
 		Assert.assertFalse(
 			_extensionProvider.isApplicableExtension(
-				TestPropsValues.getCompanyId(), null));
-		Assert.assertFalse(
-			_extensionProvider.isApplicableExtension(
 				TestPropsValues.getCompanyId(),
 				com.liferay.object.rest.dto.v1_0.ObjectEntry.class.getName() +
 					"#" + _objectDefinition.getName()));
@@ -199,10 +204,12 @@ public class ObjectRelationshipExtensionProviderTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
-	private NestedFieldsContext _getNestedFieldsContext() {
+	private NestedFieldsContext _getNestedFieldsContext(
+		String nestedFieldName) {
+
 		return new NestedFieldsContext(
-			Collections.singletonList(_objectRelationship.getName()), null,
-			null, null, null);
+			1, Collections.singletonList(nestedFieldName), null, null, null,
+			null);
 	}
 
 	private ObjectDefinition _publishObjectDefinition(
@@ -211,11 +218,11 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -235,18 +242,21 @@ public class ObjectRelationshipExtensionProviderTest {
 	@Inject
 	private static ObjectFieldLocalService _objectFieldLocalService;
 
-	@Inject(filter = "component.name=*.ObjectRelationshipExtensionProvider")
+	@Inject(
+		filter = "component.name=com.liferay.object.rest.internal.vulcan.extension.v1_0.ObjectRelationshipExtensionProvider"
+	)
 	private ExtensionProvider _extensionProvider;
 
 	private ObjectDefinition _objectDefinition;
 	private ObjectEntry _objectEntry;
 	private ObjectRelationship _objectRelationship;
+	private NestedFieldsContext _originalNestedFieldsContext;
 
 	@Inject
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	private User _user;
-	private SystemObjectDefinitionMetadata _userSystemObjectDefinitionMetadata;
+	private SystemObjectDefinitionManager _userSystemObjectDefinitionManager;
 
 }

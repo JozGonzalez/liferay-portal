@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.asset.model.test;
@@ -113,23 +104,23 @@ public class JournalArticleAssetRendererTest {
 		ThemeDisplay themeDisplay = _getThemeDisplay(
 			layoutPageTemplateEntry.getPlid());
 
-		String urlViewInContext = assetRenderer.getURLViewInContext(
+		String viewInContextURL = assetRenderer.getURLViewInContext(
 			_getLiferayPortletRequest(themeDisplay), null, null);
 
-		Assert.assertNotNull(urlViewInContext);
+		Assert.assertNotNull(viewInContextURL);
 
-		int index = urlViewInContext.indexOf(urlSeparator);
+		int index = viewInContextURL.indexOf(urlSeparator);
 
 		Assert.assertTrue(index >= 0);
 
-		String friendlyURL = urlViewInContext.substring(
+		String friendlyURL = viewInContextURL.substring(
 			index + urlSeparator.length());
 
 		Assert.assertEquals(
 			article.getUrlTitle(), HttpComponentsUtil.getPath(friendlyURL));
 
 		String version = HttpComponentsUtil.getParameter(
-			urlViewInContext, "version");
+			viewInContextURL, "version");
 
 		Assert.assertNotNull(version);
 		Assert.assertEquals(
@@ -140,23 +131,23 @@ public class JournalArticleAssetRendererTest {
 
 		assetRenderer = assetRendererFactory.getAssetRenderer(article, 0);
 
-		urlViewInContext = assetRenderer.getURLViewInContext(
+		viewInContextURL = assetRenderer.getURLViewInContext(
 			_getLiferayPortletRequest(themeDisplay), null, null);
 
-		Assert.assertNotNull(urlViewInContext);
+		Assert.assertNotNull(viewInContextURL);
 
-		index = urlViewInContext.indexOf(urlSeparator);
+		index = viewInContextURL.indexOf(urlSeparator);
 
 		Assert.assertTrue(index >= 0);
 
-		friendlyURL = urlViewInContext.substring(index + urlSeparator.length());
+		friendlyURL = viewInContextURL.substring(index + urlSeparator.length());
 
 		Assert.assertEquals(
 			article.getUrlTitle(), HttpComponentsUtil.getPath(friendlyURL));
 
 		Assert.assertEquals(
 			StringPool.BLANK,
-			HttpComponentsUtil.getParameter(urlViewInContext, "version"));
+			HttpComponentsUtil.getParameter(viewInContextURL, "version"));
 	}
 
 	private LiferayPortletRequest _getLiferayPortletRequest(

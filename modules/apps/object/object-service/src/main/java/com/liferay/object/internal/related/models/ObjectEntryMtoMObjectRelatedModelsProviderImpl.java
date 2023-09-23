@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.related.models;
@@ -51,11 +42,11 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 	@Override
 	public void deleteRelatedModel(
 			long userId, long groupId, long objectRelationshipId,
-			long primaryKey)
+			long primaryKey, String deletionType)
 		throws PortalException {
 
 		List<ObjectEntry> relatedModels = getRelatedModels(
-			groupId, objectRelationshipId, primaryKey, QueryUtil.ALL_POS,
+			groupId, objectRelationshipId, primaryKey, null, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS);
 
 		if (relatedModels.isEmpty()) {
@@ -67,7 +58,7 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 				objectRelationshipId);
 
 		if (Objects.equals(
-				objectRelationship.getDeletionType(),
+				deletionType,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT) &&
 			!objectRelationship.isReverse()) {
 
@@ -83,7 +74,7 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 				objectRelationshipId, primaryKey);
 
 		if (Objects.equals(
-				objectRelationship.getDeletionType(),
+				deletionType,
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE) &&
 			!objectRelationship.isReverse()) {
 
@@ -121,8 +112,8 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 	}
 
 	public List<ObjectEntry> getRelatedModels(
-			long groupId, long objectRelationshipId, long primaryKey, int start,
-			int end)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search, int start, int end)
 		throws PortalException {
 
 		ObjectRelationship objectRelationship =
@@ -131,12 +122,13 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 
 		return _objectEntryService.getManyToManyObjectEntries(
 			groupId, objectRelationship.getObjectRelationshipId(), primaryKey,
-			true, objectRelationship.isReverse(), start, end);
+			true, objectRelationship.isReverse(), search, start, end);
 	}
 
 	@Override
 	public int getRelatedModelsCount(
-			long groupId, long objectRelationshipId, long primaryKey)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search)
 		throws PortalException {
 
 		ObjectRelationship objectRelationship =
@@ -145,7 +137,7 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 
 		return _objectEntryService.getManyToManyObjectEntriesCount(
 			groupId, objectRelationship.getObjectRelationshipId(), primaryKey,
-			true, objectRelationship.isReverse());
+			true, objectRelationship.isReverse(), search);
 	}
 
 	@Override
@@ -160,7 +152,7 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 
 		return _objectEntryService.getManyToManyObjectEntries(
 			groupId, objectRelationship.getObjectRelationshipId(),
-			objectEntryId, false, objectRelationship.isReverse(),
+			objectEntryId, false, objectRelationship.isReverse(), null,
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 	}
 

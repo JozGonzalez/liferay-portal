@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.jsonws.internal.security.auth.verifier;
@@ -21,7 +12,6 @@ import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenProvider;
 import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenProviderAccessor;
 import com.liferay.oauth2.provider.scope.liferay.constants.OAuth2ProviderScopeLiferayConstants;
-import com.liferay.oauth2.provider.scope.spi.scope.finder.ScopeFinder;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
@@ -37,7 +27,6 @@ import com.liferay.portal.kernel.security.auth.verifier.AuthVerifier;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
 import com.liferay.portal.kernel.security.service.access.policy.ServiceAccessPolicy;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -48,16 +37,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
@@ -98,6 +83,23 @@ public class OAuth2JSONWSAuthVerifier implements AuthVerifier {
 			BearerTokenProvider.AccessToken accessToken = _getAccessToken(
 				oAuth2Authorization);
 
+			OAuth2Application oAuth2Application = null;
+
+			if (accessToken != null) {
+				oAuth2Application = accessToken.getOAuth2Application();
+
+				BearerTokenProvider bearerTokenProvider =
+					_bearerTokenProviderAccessor.getBearerTokenProvider(
+						oAuth2Application.getCompanyId(),
+						oAuth2Application.getClientId());
+
+				if ((bearerTokenProvider == null) ||
+					!bearerTokenProvider.isValid(accessToken)) {
+
+					accessToken = null;
+				}
+			}
+
 			if (accessToken == null) {
 				HttpServletResponse httpServletResponse =
 					accessControlContext.getResponse();
@@ -111,27 +113,12 @@ public class OAuth2JSONWSAuthVerifier implements AuthVerifier {
 				return authVerifierResult;
 			}
 
-			OAuth2Application oAuth2Application =
-				accessToken.getOAuth2Application();
-
-			long companyId = oAuth2Application.getCompanyId();
-
-			BearerTokenProvider bearerTokenProvider =
-				_bearerTokenProviderAccessor.getBearerTokenProvider(
-					companyId, oAuth2Application.getClientId());
-
-			if ((bearerTokenProvider == null) ||
-				!bearerTokenProvider.isValid(accessToken)) {
-
-				return authVerifierResult;
-			}
-
 			List<String> scopes = TransformUtil.transform(
 				_oAuth2ScopeGrantLocalService.
 					getOAuth2AuthorizationOAuth2ScopeGrants(
 						oAuth2Authorization.getOAuth2AuthorizationId()),
 				oAuth2ScopeGrant -> {
-					if (!_jaxRsApplicationNames.contains(
+					if (!_sapEntryScopeDescriptorFinderRegistrator.contains(
 							oAuth2ScopeGrant.getApplicationName())) {
 
 						return null;
@@ -148,7 +135,8 @@ public class OAuth2JSONWSAuthVerifier implements AuthVerifier {
 				ServiceAccessPolicy.SERVICE_ACCESS_POLICY_NAMES,
 				TransformUtil.transform(
 					_sapEntryScopeDescriptorFinderRegistrator.
-						getRegisteredSAPEntryScopes(companyId),
+						getRegisteredSAPEntryScopes(
+							oAuth2Application.getCompanyId()),
 					sapEntryScope -> {
 						if (!scopes.contains(sapEntryScope.getScope())) {
 							return null;
@@ -169,28 +157,6 @@ public class OAuth2JSONWSAuthVerifier implements AuthVerifier {
 
 			return authVerifierResult;
 		}
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(&(osgi.jaxrs.name=*)(sap.scope.finder=true))"
-	)
-	protected void addJaxRsApplicationName(
-		ServiceReference<ScopeFinder> serviceReference) {
-
-		_jaxRsApplicationNames.add(
-			GetterUtil.getString(
-				serviceReference.getProperty("osgi.jaxrs.name")));
-	}
-
-	protected void removeJaxRsApplicationName(
-		ServiceReference<ScopeFinder> serviceReference) {
-
-		_jaxRsApplicationNames.remove(
-			GetterUtil.getString(
-				serviceReference.getProperty("osgi.jaxrs.name")));
 	}
 
 	private BearerTokenProvider.AccessToken _getAccessToken(
@@ -278,9 +244,6 @@ public class OAuth2JSONWSAuthVerifier implements AuthVerifier {
 		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private volatile BearerTokenProviderAccessor _bearerTokenProviderAccessor;
-
-	private final Set<String> _jaxRsApplicationNames =
-		Collections.newSetFromMap(new ConcurrentHashMap<>());
 
 	@Reference
 	private OAuth2ApplicationLocalService _oAuth2ApplicationLocalService;

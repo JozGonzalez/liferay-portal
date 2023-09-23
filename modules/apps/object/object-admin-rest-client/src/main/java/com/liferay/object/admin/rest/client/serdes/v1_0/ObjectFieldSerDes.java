@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.serdes.v1_0;
@@ -23,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -203,6 +193,16 @@ public class ObjectFieldSerDes {
 			sb.append(objectField.getListTypeDefinitionId());
 		}
 
+		if (objectField.getLocalized() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"localized\": ");
+
+			sb.append(objectField.getLocalized());
+		}
+
 		if (objectField.getName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -238,6 +238,34 @@ public class ObjectFieldSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (objectField.getReadOnly() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"readOnly\": ");
+
+			sb.append("\"");
+
+			sb.append(objectField.getReadOnly());
+
+			sb.append("\"");
+		}
+
+		if (objectField.getReadOnlyConditionExpression() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"readOnlyConditionExpression\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectField.getReadOnlyConditionExpression()));
+
+			sb.append("\"");
 		}
 
 		if (objectField.getRelationshipType() != null) {
@@ -414,6 +442,13 @@ public class ObjectFieldSerDes {
 				String.valueOf(objectField.getListTypeDefinitionId()));
 		}
 
+		if (objectField.getLocalized() == null) {
+			map.put("localized", null);
+		}
+		else {
+			map.put("localized", String.valueOf(objectField.getLocalized()));
+		}
+
 		if (objectField.getName() == null) {
 			map.put("name", null);
 		}
@@ -428,6 +463,22 @@ public class ObjectFieldSerDes {
 			map.put(
 				"objectFieldSettings",
 				String.valueOf(objectField.getObjectFieldSettings()));
+		}
+
+		if (objectField.getReadOnly() == null) {
+			map.put("readOnly", null);
+		}
+		else {
+			map.put("readOnly", String.valueOf(objectField.getReadOnly()));
+		}
+
+		if (objectField.getReadOnlyConditionExpression() == null) {
+			map.put("readOnlyConditionExpression", null);
+		}
+		else {
+			map.put(
+				"readOnlyConditionExpression",
+				String.valueOf(objectField.getReadOnlyConditionExpression()));
 		}
 
 		if (objectField.getRelationshipType() == null) {
@@ -569,6 +620,11 @@ public class ObjectFieldSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "localized")) {
+				if (jsonParserFieldValue != null) {
+					objectField.setLocalized((Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					objectField.setName((String)jsonParserFieldValue);
@@ -578,15 +634,35 @@ public class ObjectFieldSerDes {
 						jsonParserFieldName, "objectFieldSettings")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectFieldSetting[] objectFieldSettingsArray =
+						new ObjectFieldSetting[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectFieldSettingsArray.length; i++) {
+						objectFieldSettingsArray[i] =
+							ObjectFieldSettingSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					objectField.setObjectFieldSettings(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectFieldSettingSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ObjectFieldSetting[size]
-						));
+						objectFieldSettingsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "readOnly")) {
+				if (jsonParserFieldValue != null) {
+					objectField.setReadOnly(
+						ObjectField.ReadOnly.create(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "readOnlyConditionExpression")) {
+
+				if (jsonParserFieldValue != null) {
+					objectField.setReadOnlyConditionExpression(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "relationshipType")) {

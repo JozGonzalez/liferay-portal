@@ -1,17 +1,8 @@
 /* eslint-disable @liferay/portal/no-global-fetch */
 /* eslint-disable no-undef */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 const fetchHeadless = async (url, options) => {
@@ -33,7 +24,10 @@ const fetchHeadlessWithToken = async (url, options) => {
 		return fetchHeadless(url);
 	}
 
-	const token = sessionStorage.getItem('raylife-guest-permission-token');
+	const token = Liferay.Util.SessionStorage.getItem(
+		'raylife-guest-permission-token',
+		Liferay.Util.SessionStorage.TYPES.NECESSARY
+	);
 
 	const response = await fetch(`${window.location.origin}/${url}`, {
 		...options,
@@ -43,7 +37,7 @@ const fetchHeadlessWithToken = async (url, options) => {
 		},
 	});
 
-	return await response.json();
+	return response.json();
 };
 
 const businessEmailDeliveredContainer = fragmentElement.querySelector(
@@ -161,8 +155,13 @@ getQuoteForm.onsubmit = function (event) {
 	zipContainer.classList.remove('has-error');
 	zipErrorFeedback.innerText = '';
 
-	if (localStorage.getItem('raylife-back-to-edit')) {
-		localStorage.removeItem('raylife-back-to-edit');
+	if (
+		Liferay.Util.LocalStorage.getItem(
+			'raylife-back-to-edit',
+			Liferay.Util.LocalStorage.TYPES.NECESSARY
+		)
+	) {
+		Liferay.Util.LocalStorage.removeItem('raylife-back-to-edit');
 	}
 
 	if (!formProps.zip || formProps.zip.length !== maxCharactersZIP) {
@@ -173,7 +172,11 @@ getQuoteForm.onsubmit = function (event) {
 		}
 	}
 	else {
-		localStorage.setItem('raylife-product', JSON.stringify(formProps));
+		Liferay.Util.LocalStorage.setItem(
+			'raylife-product',
+			JSON.stringify(formProps),
+			Liferay.Util.LocalStorage.TYPES.NECESSARY
+		);
 
 		const {pathname} = new URL(Liferay.ThemeDisplay.getCanonicalURL());
 

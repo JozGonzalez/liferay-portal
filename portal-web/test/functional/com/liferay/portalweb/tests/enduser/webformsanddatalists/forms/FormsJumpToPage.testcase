@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -90,17 +90,16 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -144,7 +143,8 @@ definition {
 	test ViewFormRulesSummary {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsJumpToPage#ViewFormRulesSummary";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -274,7 +274,8 @@ definition {
 	test ViewPagesAfterJump {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsJumpToPage#ViewPagesAfterJump";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -451,7 +452,8 @@ definition {
 	@priority = 4
 	test ViewRuleAfterLabelEdit {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterLabelEdit";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -590,7 +592,8 @@ definition {
 	test ViewRuleAfterOptionValueEdit {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterOptionValueEdit";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -731,7 +734,8 @@ definition {
 	test ViewRuleAfterPageNameChange {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsJumpToPage#ViewRuleAfterPageNameChange";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 

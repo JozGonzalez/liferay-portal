@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -50,7 +41,7 @@ long commercePriceModifierId = commercePriceListDisplayContext.getCommercePriceM
 						categoryData
 					)
 						.then(() => {
-							Liferay.fire(events.UPDATE_DATASET_DISPLAY, {
+							Liferay.fire(events.FDS_UPDATE_DISPLAY, {
 								id: '<%= CommercePricingFDSNames.PRICE_MODIFIER_CATEGORIES %>',
 							});
 						})
@@ -72,7 +63,7 @@ long commercePriceModifierId = commercePriceListDisplayContext.getCommercePriceM
 						'<%= LanguageUtil.get(request, "category-selected") %>',
 					itemsKey: 'id',
 					itemCreation: false,
-					linkedDatasetsId: [
+					linkedDataSetsId: [
 						'<%= CommercePricingFDSNames.PRICE_MODIFIER_CATEGORIES %>',
 					],
 					onItemSelected: selectItem,
@@ -96,7 +87,7 @@ long commercePriceModifierId = commercePriceListDisplayContext.getCommercePriceM
 				title='<%= LanguageUtil.get(request, "categories") %>'
 			>
 				<frontend-data-set:headless-display
-					apiURL="<%= commercePriceListDisplayContext.getPriceModifierCategoriesApiUrl() %>"
+					apiURL="<%= commercePriceListDisplayContext.getPriceModifierCategoriesAPIURL() %>"
 					fdsActionDropdownItems="<%= commercePriceListDisplayContext.getPriceModifierCategoryFDSActionDropdownItems() %>"
 					formName="fm"
 					id="<%= CommercePricingFDSNames.PRICE_MODIFIER_CATEGORIES %>"

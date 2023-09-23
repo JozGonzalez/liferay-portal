@@ -2,27 +2,12 @@
 
 .portlet-asset-list-web {
 	.timeline-item {
-		&:first-child {
-			.timeline-increment {
-				margin-left: 40px;
-			}
-
-			&:before {
-				top: 30px;
-			}
-
-			.lfr-autorow-controls {
-				display: none;
-			}
-		}
-
-		&:hover > .container-trash.btn {
+		&:hover .container-trash.btn {
 			opacity: 1;
 		}
 
 		.form-group {
 			display: inline-block;
-			margin: 8px;
 
 			&:first-child {
 				margin-left: 0;
@@ -34,10 +19,6 @@
 		}
 
 		.container-trash {
-			position: absolute;
-			right: 0;
-			top: 0;
-
 			&.btn {
 				opacity: 0;
 

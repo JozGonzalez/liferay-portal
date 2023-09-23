@@ -1,146 +1,168 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {FormikHelpers} from 'formik';
 
 import {PRMPageRoute} from '../../../common/enums/prmPageRoute';
-import mdfRequestDTO from '../../../common/interfaces/dto/mdfRequestDTO';
 import LiferayPicklist from '../../../common/interfaces/liferayPicklist';
 import MDFRequest from '../../../common/interfaces/mdfRequest';
-import Role from '../../../common/interfaces/role';
 import {Liferay} from '../../../common/services/liferay';
-import createMDFRequestActivities from '../../../common/services/liferay/object/activity/createMDFRequestActivities';
-import updateMDFRequestActivities from '../../../common/services/liferay/object/activity/updateMDFRequestActivities';
-import createMDFRequestActivityBudget from '../../../common/services/liferay/object/budgets/createMDFRequestActivityBudgets';
-import updateMDFRequestActivityBudget from '../../../common/services/liferay/object/budgets/updateMDFRequestActivityBudgets';
+import deleteObjectEntryByERC from '../../../common/services/liferay/object/deleteObjectEntry/deleteObjectEntryByERC';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
-import createMDFRequest from '../../../common/services/liferay/object/mdf-requests/createMDFRequest';
-import updateMDFRequest from '../../../common/services/liferay/object/mdf-requests/updateMDFRequest';
 import {Status} from '../../../common/utils/constants/status';
-import {isLiferayManager} from '../../../common/utils/isLiferayManager';
-import createMDFRequestActivitiesProxyAPI from './createMDFRequestActivitiesProxyAPI';
-import createMDFRequestProxyAPI from './createMDFRequestProxyAPI';
+import updateStatus from '../../../common/utils/updateStatus';
+import submitMDFRequest from './submitMDFRequest';
+import submitMDFRequestActivity from './submitMDFRequestActivity';
+import submitMDFRequestActivityProxyAPI from './submitMDFRequestActivityProxyAPI';
+import submitMDFRequestBudget from './submitMDFRequestBudget';
+import submitMDFRequestProxyAPI from './submitMDFRequestProxyAPI';
 
 export default async function submitForm(
 	values: MDFRequest,
 	formikHelpers: Omit<FormikHelpers<MDFRequest>, 'setFieldValue'>,
 	siteURL: string,
 	currentRequestStatus?: LiferayPicklist,
-	roles?: Role[]
+	changeStatus?: boolean
 ) {
 	formikHelpers.setSubmitting(true);
+	formikHelpers.setStatus(true);
 
-	if (!values.id) {
-		values.mdfRequestStatus = currentRequestStatus;
-	}
+	const updatedStatus = updateStatus(
+		values.mdfRequestStatus,
+		currentRequestStatus,
+		changeStatus,
+		values.id,
+		values.totalMDFRequestAmount
+	);
 
-	if (
-		roles &&
-		!isLiferayManager(roles) &&
-		values.totalMDFRequestAmount >= 15000 &&
-		values.mdfRequestStatus !== Status.DRAFT
-	) {
-		values.mdfRequestStatus = Status.MARKETING_DIRECTOR_REVIEW;
-	}
+	values.mdfRequestStatus = updatedStatus;
 
-	let dtoMDFRequest: mdfRequestDTO | undefined = undefined;
+	try {
+		const dtoMDFRequest =
+			values.mdfRequestStatus.key === Status.DRAFT.key
+				? await submitMDFRequest(values)
+				: await submitMDFRequestProxyAPI(values);
 
-	if (
-		Liferay.FeatureFlags['LPS-164528'] &&
-		values.mdfRequestStatus !== Status.DRAFT
-	) {
-		dtoMDFRequest = await createMDFRequestProxyAPI(values);
-	}
-	else if (values.id) {
-		dtoMDFRequest = await updateMDFRequest(
-			ResourceName.MDF_REQUEST_DXP,
-			values
-		);
-	}
-	else {
-		dtoMDFRequest = await createMDFRequest(
-			ResourceName.MDF_REQUEST_DXP,
-			values
-		);
-	}
+		values.id = dtoMDFRequest?.id;
+		values.externalReferenceCode = dtoMDFRequest?.externalReferenceCode;
 
-	if (values?.activities?.length && dtoMDFRequest?.id) {
-		const dtoMDFRequestActivities = await Promise.all(
-			values?.activities?.map(async (activity) => {
+		if (
+			values?.activities?.length &&
+			dtoMDFRequest?.id &&
+			values.company?.id
+		) {
+			for (const mdfRequestActivity of values.activities) {
 				if (
-					Liferay.FeatureFlags['LPS-164528'] &&
-					values.mdfRequestStatus !== Status.DRAFT
+					mdfRequestActivity.removed &&
+					mdfRequestActivity.externalReferenceCode
 				) {
-					return await createMDFRequestActivitiesProxyAPI(
-						activity,
-						values.company,
-						dtoMDFRequest?.id,
-						dtoMDFRequest?.externalReferenceCodeSF
-					);
-				}
+					if (mdfRequestActivity.submitted) {
+						await deleteObjectEntryByERC(
+							ResourceName.ACTIVITY_SALESFORCE,
+							mdfRequestActivity.externalReferenceCode
+						);
+					}
 
-				if (activity.id) {
-					return await updateMDFRequestActivities(
+					await deleteObjectEntryByERC(
 						ResourceName.ACTIVITY_DXP,
-						activity,
-						values.company,
-						dtoMDFRequest?.id,
-						dtoMDFRequest?.externalReferenceCodeSF
+						mdfRequestActivity.externalReferenceCode
 					);
 				}
+				else {
+					const dtoMDFRequestActivity =
+						values.mdfRequestStatus.key === Status.DRAFT.key
+							? await submitMDFRequestActivity(
+									mdfRequestActivity,
+									dtoMDFRequest,
+									values
+							  )
+							: await submitMDFRequestActivityProxyAPI(
+									mdfRequestActivity,
+									dtoMDFRequest,
+									values
+							  );
 
-				return await createMDFRequestActivities(
-					ResourceName.ACTIVITY_DXP,
-					activity,
-					values.company,
-					dtoMDFRequest?.id,
-					dtoMDFRequest?.externalReferenceCodeSF
-				);
-			})
-		);
+					mdfRequestActivity.id = dtoMDFRequestActivity?.id;
+					mdfRequestActivity.externalReferenceCode =
+						dtoMDFRequestActivity?.externalReferenceCode;
 
-		if (dtoMDFRequestActivities?.length) {
-			await Promise.all(
-				values.activities.map(async (activity, index) => {
-					const dtoActivity = dtoMDFRequestActivities[index];
-
-					if (activity.budgets?.length && dtoActivity?.id) {
-						activity.budgets?.map(async (budget) => {
-							if (budget?.id) {
-								return await updateMDFRequestActivityBudget(
-									dtoActivity.id as number,
-									budget
+					if (
+						dtoMDFRequestActivity?.id &&
+						mdfRequestActivity.budgets.length
+					) {
+						for (const mdfRequestBudget of mdfRequestActivity.budgets) {
+							if (
+								mdfRequestBudget.removed &&
+								mdfRequestBudget.externalReferenceCode
+							) {
+								await deleteObjectEntryByERC(
+									ResourceName.BUDGET,
+									mdfRequestBudget.externalReferenceCode
 								);
 							}
+							else {
+								const dtoMDFRequestBudget = await submitMDFRequestBudget(
+									mdfRequestBudget,
+									dtoMDFRequestActivity,
+									values
+								);
 
-							return await createMDFRequestActivityBudget(
-								dtoActivity.id as number,
-								budget
-							);
-						});
+								mdfRequestBudget.id = dtoMDFRequestBudget.id;
+								mdfRequestBudget.externalReferenceCode =
+									dtoMDFRequestBudget.externalReferenceCode;
+							}
+						}
 					}
-				})
-			);
+				}
+			}
 		}
-	}
+		formikHelpers.setValues(values);
 
-	if (values.id) {
+		if (values.id) {
+			Liferay.Util.navigate(
+				`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}`
+			);
+
+			Liferay.Util.openToast({
+				message: 'MDF Request was successfully edited.',
+				type: 'success',
+			});
+
+			return;
+		}
+
+		if (values.mdfRequestStatus.key === Status.DRAFT.key) {
+			Liferay.Util.navigate(
+				`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}`
+			);
+
+			Liferay.Util.openToast({
+				message: 'MDF Request was successfully saved as draft.',
+				type: 'success',
+			});
+
+			return;
+		}
+
+		Liferay.Util.openToast({
+			message: 'MDF Request was successfully submitted.',
+			type: 'success',
+		});
+
 		Liferay.Util.navigate(
-			`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}?edit-success=true`
+			`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}`
 		);
-
-		return;
 	}
+	catch (error: unknown) {
+		formikHelpers.setStatus(false);
+		formikHelpers.setSubmitting(false);
 
-	Liferay.Util.navigate(
-		`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}/?new-success=true`
-	);
+		Liferay.Util.openToast({
+			message: 'MDF Request could not be submitted. Please, try again.',
+			title: 'Error',
+			type: 'danger',
+		});
+	}
 }

@@ -3,6 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Document Management";
 	property testray.main.component.name = "Lima Headless";
 
 	setUp {
@@ -26,9 +27,9 @@ definition {
 				groupName = "Guest");
 		}
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCPNoSelenium();
 		}
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
@@ -54,15 +45,12 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.net.URL;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -413,45 +401,34 @@ public class DDMDataProviderInstanceLocalServiceImpl
 			return;
 		}
 
-		List<DDMFormFieldValue> inputParameters = ddmFormFieldValuesMap.get(
-			"inputParameters");
+		Set<String> inputParameterNames = new HashSet<>();
 
-		Stream<DDMFormFieldValue> inputParametersStream =
-			inputParameters.stream();
+		for (DDMFormFieldValue inputParametersDDMFormFieldValue :
+				ddmFormFieldValuesMap.get("inputParameters")) {
 
-		List<DDMFormFieldValue> inputParameterNamesList =
-			inputParametersStream.flatMap(
-				inputParameter -> inputParameter.getNestedDDMFormFieldValuesMap(
-				).get(
-					"inputParameterName"
-				).stream()
-			).collect(
-				Collectors.toList()
-			);
+			Map<String, List<DDMFormFieldValue>> nestedDDMFormFieldValuesMap =
+				inputParametersDDMFormFieldValue.
+					getNestedDDMFormFieldValuesMap();
 
-		Stream<DDMFormFieldValue> inputParameterNamesStream =
-			inputParameterNamesList.stream();
+			for (DDMFormFieldValue inputParameterNameDDMFormFieldValue :
+					nestedDDMFormFieldValuesMap.get("inputParameterName")) {
 
-		Collection<String> inputParameterNames =
-			inputParameterNamesStream.flatMap(
-				inputParameterName -> inputParameterName.getValue(
-				).getValues(
-				).values(
-				).stream()
-			).collect(
-				Collectors.toList()
-			);
+				Value inputParameterNameValue =
+					inputParameterNameDDMFormFieldValue.getValue();
 
-		Set<String> inputParameterNamesSet = new HashSet<>();
+				Map<Locale, String> inputParameterNameValuesMap =
+					inputParameterNameValue.getValues();
 
-		for (String inputParameterName : inputParameterNames) {
-			if (inputParameterNamesSet.contains(inputParameterName)) {
-				throw new DuplicateDataProviderInstanceInputParameterNameException(
-					"Duplicate data provider input parameter name: " +
-						inputParameterName);
+				for (String inputParameterName :
+						inputParameterNameValuesMap.values()) {
+
+					if (!inputParameterNames.add(inputParameterName)) {
+						throw new DuplicateDataProviderInstanceInputParameterNameException(
+							"Duplicate data provider input parameter name: " +
+								inputParameterName);
+					}
+				}
 			}
-
-			inputParameterNamesSet.add(inputParameterName);
 		}
 	}
 
@@ -465,10 +442,9 @@ public class DDMDataProviderInstanceLocalServiceImpl
 			return;
 		}
 
-		List<DDMFormFieldValue> ddmFormFieldValues = ddmFormFieldValuesMap.get(
-			"url");
+		for (DDMFormFieldValue ddmFormFieldValue :
+				ddmFormFieldValuesMap.get("url")) {
 
-		for (DDMFormFieldValue ddmFormFieldValue : ddmFormFieldValues) {
 			Value value = ddmFormFieldValue.getValue();
 
 			for (Locale locale : value.getAvailableLocales()) {

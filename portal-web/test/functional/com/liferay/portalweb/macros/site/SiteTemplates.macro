@@ -15,21 +15,52 @@ definition {
 	}
 
 	macro addChildPageViaSiteTemplateCP {
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Manage",
-			rowEntry = ${siteTemplateName});
+		SiteTemplatesNavigator.openPagesAdmin(siteTemplateName = ${siteTemplateName});
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		MouseOver(
+			key_itemName = ${parentPageName},
+			locator1 = "PagesAdmin#LIST_GROUP_ITEM");
 
-		PagesAdmin.addChildPage(
-			childPageName = ${siteChildPageName},
-			parentPageName = ${pageName});
+		Click(
+			key_pageName = ${parentPageName},
+			locator1 = "PagesAdmin#LIST_GROUP_ITEM_PLUS_ICON");
+
+		DropdownMenuItem.click(menuItem = "Add Page");
+
+		if (!(isSet(sitePageType))) {
+			var sitePageType = "Widget Page";
+		}
+
+		var rowEntry = ${sitePageType};
+
+		if (${rowEntry} == "Content Page") {
+			ContentPages._selectCard(masterLayoutName = ${masterLayoutName});
+		}
+		else {
+			LexiconCard.clickCard(card = ${rowEntry});
+		}
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		PortletEntry.inputName(name = ${childPageName});
+
+		ClickNoError(
+			key_text = "Add",
+			locator1 = "Button#ANY");
+
+		if (isSet(conflictPage)) {
+			AssertConfirm(value1 = "The friendly URL of the site template page you are trying to save conflicts with some of the own pages of the sites created from this site template. Are you sure you want to configure the site template page with this friendly URL?");
+		}
+
+		SelectFrame.selectFrameTop();
 	}
 
 	macro addCP {
-		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		SiteTemplatesNavigator.openSiteTemplatesAdmin(baseURL = ${baseURL});
 
 		LexiconEntry.gotoAdd();
 
@@ -56,15 +87,12 @@ definition {
 	}
 
 	macro addSitePageViaSiteTemplateCP {
-		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+		SiteTemplatesNavigator.openPagesAdmin(siteTemplateName = ${siteTemplateName});
 
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Manage",
-			rowEntry = ${siteTemplateName});
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		AssertClick(
+			key_breadcrumbName = "Pages",
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_EXACT_MATCH",
+			value1 = "Pages");
 
 		LexiconEntry.gotoAddMenuItem(menuItem = "Add Site Template Page");
 
@@ -99,20 +127,24 @@ definition {
 			Uncheck(locator1 = "Checkbox#ADD_TO_NAVIGATION_MENU");
 		}
 
-		Button.click(button = "Add");
+		ClickNoError(
+			key_text = "Add",
+			locator1 = "Button#ANY");
+
+		if (isSet(conflictPage)) {
+			AssertConfirm(value1 = "The friendly URL of the site template page you are trying to save conflicts with some of the own pages of the sites created from this site template. Are you sure you want to configure the site template page with this friendly URL?");
+		}
 
 		SelectFrame.selectFrameTop();
 
 		if (isSet(inheritChanges)) {
 			PagesAdmin.togglePageTemplateInheritChanges(toggleValue = ${inheritChanges});
-		}
 
-		if (${sitePageType} != "Content Page") {
 			Button.click(button = "Save");
 		}
 	}
 
-	macro AddSiteTemplateJavaScript {
+	macro addSiteTemplateJavaScript {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");
@@ -128,9 +160,20 @@ definition {
 			MenuItem.click(menuItem = "Configuration");
 		}
 
-		Navigator.gotoNavTab(navTab = "Advanced");
+		if (isSet(pageSet)) {
+			Navigator.gotoNavTab(navTab = "Design");
 
-		Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
+
+			AssertElementPresent(
+				key_fieldLabel = "JavaScript",
+				locator1 = "FormFields#LABEL");
+		}
+		else {
+			Navigator.gotoNavTab(navTab = "SEO");
+
+			Panel.expandPanel(panel = "JavaScript");
+		}
 
 		Type(
 			key_text = "javascript",
@@ -271,6 +314,27 @@ definition {
 		Button.clickSave();
 	}
 
+	macro editSitePageViaSiteTemplateCP {
+		SiteTemplatesNavigator.openToConfigurePage(
+			layoutName = ${layoutName},
+			siteTemplateName = ${siteTemplateName});
+
+		Type(
+			inputFieldId = "friendlyURL",
+			locator1 = "TextInput#TEXT_INPUT_ID",
+			value1 = ${friendlyURLEdit});
+
+		ClickNoError(
+			key_text = "Save",
+			locator1 = "Button#ANY");
+
+		if (isSet(conflictPage)) {
+			AssertConfirm(value1 = "The friendly URL of the site template page you are trying to save conflicts with some of the own pages of the sites created from this site template. Are you sure you want to configure the site template page with this friendly URL?");
+		}
+
+		SelectFrame.selectFrameTop();
+	}
+
 	macro editTemplateStatusCP {
 		SiteTemplates.gotoSettingsCP(siteTemplateName = ${siteTemplateName});
 
@@ -409,6 +473,66 @@ definition {
 		SelectWindow(locator1 = "Home - ${siteTemplateName} - ${siteName}");
 	}
 
+	macro grantUserAccessToSite {
+		if (isSet(site)) {
+			JSONRole.addSiteRole(
+				roleKey = "Access Site",
+				roleTitle = "Access Site");
+		}
+		else {
+			JSONRole.addRegularRole(roleTitle = "Access Site");
+		}
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_site_admin_web_portlet_SiteAdminPortlet",
+			roleTitle = "Access Site");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "MANAGE_LAYOUTS",
+			resourceName = "com.liferay.portal.kernel.model.Group",
+			roleTitle = "Access Site");
+
+		if (isSet(site)) {
+			JSONUser.addUserToSite(
+				groupName = "Site Name",
+				userEmailAddress = ${userEmailAddress});
+
+			JSONRole.assignSiteRoleToUser(
+				groupName = "Site Name",
+				roleTitle = "Access Site",
+				userEmailAddress = ${userEmailAddress});
+		}
+		else {
+			JSONRole.assignRoleToUser(
+				roleTitle = "Access Site",
+				userEmailAddress = ${userEmailAddress});
+		}
+	}
+
+	macro grantUserAccessToSiteTemplates {
+		JSONRole.addRegularRole(roleTitle = "Access Site Templates");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_layout_set_prototype_web_portlet_LayoutSetPrototypePortlet",
+			roleTitle = "Access Site Templates");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "UPDATE",
+			resourceName = "com.liferay.portal.kernel.model.LayoutSetPrototype",
+			roleTitle = "Access Site Templates");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.portal.kernel.model.LayoutSetPrototype",
+			roleTitle = "Access Site Templates");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Access Site Templates",
+			userEmailAddress = ${userEmailAddress});
+	}
+
 	macro openSiteTemplateInEditMode {
 		var templateId = JSONSiteTemplate.getSiteTemplateIdByName(siteTemplateName = ${siteTemplateName});
 
@@ -421,9 +545,9 @@ definition {
 	}
 
 	macro resetPageChanges {
-		WaitForElementPresent(locator1 = "ControlMenu#INFO");
+		WaitForEditable(locator1 = "ControlMenu#INFO");
 
-		Click(locator1 = "ControlMenu#INFO");
+		Click.waitForMenuToggleJSClick(locator1 = "ControlMenu#INFO");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#CUSTOMIZED_PAGE_INFO",
@@ -494,6 +618,12 @@ definition {
 				locator1 = "SiteTemplates#SITE_TEMPLATE_TABLE_NAME",
 				value1 = ${siteTemplateNameTranslation});
 		}
+	}
+
+	macro viewNoExclamationMark {
+		AssertElementNotPresent(
+			key_pageName = ${pageName},
+			locator1 = "Icon#EXCLAMATION_MARK");
 	}
 
 	macro viewNoInfoMessage {
@@ -568,9 +698,20 @@ definition {
 			MenuItem.click(menuItem = "Configuration");
 		}
 
-		Navigator.gotoNavTab(navTab = "Advanced");
+		if (isSet(pageSet)) {
+			Navigator.gotoNavTab(navTab = "Design");
 
-		Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
+
+			AssertElementPresent(
+				key_fieldLabel = "JavaScript",
+				locator1 = "FormFields#LABEL");
+		}
+		else {
+			Navigator.gotoNavTab(navTab = "SEO");
+
+			Panel.expandPanel(panel = "JavaScript");
+		}
 
 		AssertTextEquals(
 			key_text = "javascript",
@@ -588,6 +729,16 @@ definition {
 		AssertTextEquals(
 			locator1 = "SiteTemplates#SITE_TEMPLATE_TABLE_ACTIVE",
 			value1 = ${siteTemplateActiveEdit});
+	}
+
+	macro viewTooltipOfExclamationMark {
+		MouseOver(
+			key_pageName = ${pageName},
+			locator1 = "Icon#EXCLAMATION_MARK");
+
+		VerifyElementPresent(
+			key_text = "There is a page with the same friendly URL in the site template.",
+			locator1 = "SiteTemplates#TOOLTIP_TEXT");
 	}
 
 }

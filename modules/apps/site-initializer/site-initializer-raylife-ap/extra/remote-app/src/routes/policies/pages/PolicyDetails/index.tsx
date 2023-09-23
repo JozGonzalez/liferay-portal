@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useState} from 'react';
@@ -19,10 +10,10 @@ import {
 	getPolicyByExternalReferenceCode,
 } from '../../../../common/services';
 import {getQuotesById} from '../../../../common/services/Quote';
-import Activities from '../components/Activities';
-import PolicyActiveClaims from '../components/PolicyActiveClaims';
-import PolicyDetail from '../components/PolicyDetail';
-import PolicySummary from '../components/PolicySummary';
+import PolicyActiveClaims from './policy-activeclaims-details';
+import PolicyDetailsActivities from './policy-activites-details';
+import PolicyDetail from './policy-navigator-details';
+import PolicySummary from './policy-summary-details';
 interface PolicySummary {
 	boundDate: Date;
 	commission: number;
@@ -78,35 +69,45 @@ const PolicyDetails = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	const summaryData = {
+		applicationDataJSON: application?.dataJSON,
+		boundDate: policy?.data?.boundDate,
+		commission: policy?.data?.commission,
+		email: application?.email,
+		endDate: policy?.data?.endDate,
+		phone: application?.phone,
+		policyDataJSON: policy?.data?.dataJSON,
+		termPremium: policy?.data?.termPremium,
+	};
+
 	return (
 		<div className="policy-details-container">
-			<div className="d-flex policy-detail-content">
+			<div className="policy-detail-content">
 				{policy && (
-					<>
-						<div className="mr-3 summary-policy-content">
-							<PolicySummary
-								application={application}
-								policy={policy}
-							/>
+					<div className="row">
+						<div className="col-xl-3 d-flex">
+							<div className="mb-4 summary-policy-content w-100">
+								<PolicySummary summaryData={summaryData} />
+							</div>
 						</div>
 
-						<div className="w-100">
+						<div className="col-xl-9 d-flex mb-4">
 							<PolicyDetail
 								dataJSON={application?.dataJSON}
 								email={application?.email}
 								phone={application?.phone}
 							/>
 						</div>
-					</>
+					</div>
 				)}
+
+				<PolicyActiveClaims
+					dataJSON={policy?.data?.dataJSON}
+					id={policy?.data?.id}
+				/>
+
+				<PolicyDetailsActivities />
 			</div>
-
-			<PolicyActiveClaims
-				dataJSON={policy?.data?.dataJSON}
-				id={policy?.data?.id}
-			/>
-
-			<Activities />
 		</div>
 	);
 };

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import TestrayError from '../../TestrayError';
@@ -43,16 +34,16 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 				assignedUsers,
 				dispatchTriggerId,
 				buildId: r_buildToTasks_c_buildId,
-				caseTypes: taskToTasksCaseTypes,
+				caseTypes,
 				dueStatus = TaskStatuses.OPEN,
 				name,
 			}) => ({
 				assignedUsers,
+				caseTypes,
 				dispatchTriggerId,
 				dueStatus,
 				name,
 				r_buildToTasks_c_buildId,
-				taskToTasksCaseTypes,
 			}),
 			nestedFields:
 				'build.project,build.routine,taskToTasksCaseTypes,taskToTasksUsers,r_userToTasksUsers_userId',
@@ -113,9 +104,11 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	}
 
 	public async create(data: TaskForm): Promise<TestrayTask> {
-		const task = await super.create(data);
-
 		const caseTypeIds = data.caseTypes || [];
+
+		delete (data as any).caseTypes;
+
+		const task = await super.create(data);
 
 		if (caseTypeIds.length) {
 			await testrayTaskCaseTypesImpl.createBatch(
@@ -132,15 +125,13 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 			dispatchTaskExecutorType: DISPATCH_TRIGGER_TYPE.CREATE_TASK_SUBTASK,
 			dispatchTaskSettings: {
 				testrayBuildId: data.buildId,
-				testrayCaseTypeIds: data.caseTypes,
+				testrayCaseTypeIds: caseTypeIds,
 				testrayTaskId: task.id,
 			},
 			externalReferenceCode: `T-${task.id}`,
 			name: `T-${task.id} / ${data.name}`,
 			overlapAllowed: false,
 		});
-
-		delete (data as any).taskToTasksCaseTypes;
 
 		const dispatchTriggerId = dispatchTrigger.liferayDispatchTrigger.id;
 

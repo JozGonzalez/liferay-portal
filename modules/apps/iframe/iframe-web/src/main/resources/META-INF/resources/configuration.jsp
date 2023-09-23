@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -79,7 +70,10 @@ sb.append("\n");
 			<aui:input inlineLabel="right" label="authenticate" labelCssClass="simple-toggle-switch" name="preferences--auth--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.auth() %>" />
 
 			<div id="<portlet:namespace />authenticationOptions">
-				<div class="alert alert-info" id="<portlet:namespace />currentLoginMsg">
+				<clay:alert
+					displayType="info"
+					id='<%= liferayPortletResponse.getNamespace() + "currentLoginMsg" %>'
+				>
 					<c:choose>
 						<c:when test="<%= IFrameUtil.isPasswordTokenEnabled(renderRequest) %>">
 							<liferay-ui:message key="you-may-use-the-tokens-email-address-screen-name-userid-and-password" />
@@ -88,7 +82,7 @@ sb.append("\n");
 							<liferay-ui:message key="you-may-use-the-tokens-email-address-screen-name-userid" />
 						</c:otherwise>
 					</c:choose>
-				</div>
+				</clay:alert>
 
 				<aui:select label="authentication-type" name="preferences--authType--" value="<%= iFrameDisplayContext.getAuthType() %>">
 					<aui:option label="basic" />
@@ -146,14 +140,12 @@ sb.append("\n");
 			<aui:input helpMessage="resize-automatically-help" inlineLabel="right" label="resize-automatically" labelCssClass="simple-toggle-switch" name="preferences--resizeAutomatically--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.resizeAutomatically() %>" />
 
 			<div id="<portlet:namespace />displaySettings">
-				<aui:input name="preferences--heightMaximized--" type="text" value="<%= iFramePortletInstanceConfiguration.heightMaximized() %>">
+				<aui:input name="preferences--heightMaximized--" required="<%= true %>" type="text" value="<%= iFramePortletInstanceConfiguration.heightMaximized() %>">
 					<aui:validator name="digits" />
-					<aui:validator name="required" />
 				</aui:input>
 
-				<aui:input name="preferences--heightNormal--" type="text" value="<%= iFramePortletInstanceConfiguration.heightNormal() %>">
+				<aui:input name="preferences--heightNormal--" required="<%= true %>" type="text" value="<%= iFramePortletInstanceConfiguration.heightNormal() %>">
 					<aui:validator name="digits" />
-					<aui:validator name="required" />
 				</aui:input>
 
 				<aui:input name="preferences--width--" type="text" value="<%= iFramePortletInstanceConfiguration.width() %>" />

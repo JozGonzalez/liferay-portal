@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.DDMOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -63,8 +55,18 @@ public interface SkuResource {
 		throws Exception;
 
 	public Sku postChannelProductSku(
-			Long channelId, Long productId, Long accountId, Integer quantity,
-			DDMOption[] ddmOptions)
+			Long channelId, Long productId, Long accountId,
+			java.math.BigDecimal quantity, DDMOption[] ddmOptions)
+		throws Exception;
+
+	public Sku postChannelProductSkuBySkuOption(
+			Long channelId, Long productId, Long accountId,
+			java.math.BigDecimal quantity, String skuUnitOfMeasureKey,
+			SkuOption[] skuOptions)
+		throws Exception;
+
+	public Sku getChannelProductSku(
+			Long channelId, Long productId, Long skuId, Long accountId)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -143,6 +145,8 @@ public interface SkuResource {
 			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder uriInfo(UriInfo uriInfo);
 
 		public Builder user(com.liferay.portal.kernel.model.User user);
 

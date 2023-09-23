@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.portlet.action;
@@ -21,6 +12,7 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -38,9 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -130,37 +119,14 @@ public class AnonymizeNonreviewableUADDataMVCRenderCommand
 				portletRequest,
 				UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
 				"anonymize-order-by-type", "asc"));
-
-		List<UADApplicationSummaryDisplay> uadApplicationSummaryDisplays =
-			_getUADApplicationSummaryDisplays(userId);
-
-		Supplier<Stream<UADApplicationSummaryDisplay>> streamSupplier = () -> {
-			Stream<UADApplicationSummaryDisplay> stream =
-				uadApplicationSummaryDisplays.stream();
-
-			return stream.filter(display -> display.getCount() > 0);
-		};
-
-		Stream<UADApplicationSummaryDisplay> summaryDisplayStream =
-			streamSupplier.get();
-
-		List<UADApplicationSummaryDisplay> results =
-			summaryDisplayStream.sorted(
+		searchContainer.setResultsAndTotal(
+			ListUtil.sort(
+				ListUtil.filter(
+					_getUADApplicationSummaryDisplays(userId),
+					display -> display.getCount() > 0),
 				_getComparator(
 					locale, searchContainer.getOrderByCol(),
-					searchContainer.getOrderByType())
-			).skip(
-				searchContainer.getStart()
-			).limit(
-				searchContainer.getDelta()
-			).collect(
-				Collectors.toList()
-			);
-
-		summaryDisplayStream = streamSupplier.get();
-
-		searchContainer.setResultsAndTotal(
-			() -> results, (int)summaryDisplayStream.count());
+					searchContainer.getOrderByType())));
 
 		return searchContainer;
 	}

@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.WikiNode;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.WikiNodeDTOConverter;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.WikiNodeEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.WikiNodeResource;
 import com.liferay.portal.kernel.change.tracking.CTAware;
@@ -31,6 +21,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -213,9 +204,10 @@ public class WikiNodeResourceImpl extends BaseWikiNodeResourceImpl {
 			_wikiNodeService.addNode(
 				externalReferenceCode, wikiNode.getName(),
 				wikiNode.getDescription(),
-				ServiceContextRequestUtil.createServiceContext(
+				ServiceContextBuilder.create(
 					groupId, contextHttpServletRequest,
-					wikiNode.getViewableByAsString())));
+					wikiNode.getViewableByAsString()
+				).build()));
 	}
 
 	private WikiNode _toWikiNode(com.liferay.wiki.model.WikiNode wikiNode)
@@ -257,10 +249,10 @@ public class WikiNodeResourceImpl extends BaseWikiNodeResourceImpl {
 			_wikiNodeService.updateNode(
 				serviceBuilderWikiNode.getNodeId(), wikiNode.getName(),
 				wikiNode.getDescription(),
-				ServiceContextRequestUtil.createServiceContext(
+				ServiceContextBuilder.create(
 					serviceBuilderWikiNode.getGroupId(),
-					contextHttpServletRequest,
-					wikiNode.getViewableByAsString())));
+					contextHttpServletRequest, wikiNode.getViewableByAsString()
+				).build()));
 	}
 
 	private static final EntityModel _entityModel = new WikiNodeEntityModel();
@@ -268,8 +260,11 @@ public class WikiNodeResourceImpl extends BaseWikiNodeResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private WikiNodeDTOConverter _wikiNodeDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.WikiNodeDTOConverter)"
+	)
+	private DTOConverter<com.liferay.wiki.model.WikiNode, WikiNode>
+		_wikiNodeDTOConverter;
 
 	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;

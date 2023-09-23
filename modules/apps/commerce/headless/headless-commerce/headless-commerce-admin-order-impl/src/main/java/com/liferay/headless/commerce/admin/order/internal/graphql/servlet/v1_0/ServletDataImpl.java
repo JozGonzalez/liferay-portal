@@ -1,25 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.graphql.servlet.v1_0;
 
 import com.liferay.headless.commerce.admin.order.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.headless.commerce.admin.order.internal.graphql.query.v1_0.Query;
-import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.AccountGroupResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.AccountResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.BillingAddressResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.ChannelResourceImpl;
+import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.OrderAccountGroupResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.OrderItemResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.OrderNoteResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.OrderResourceImpl;
@@ -33,10 +24,10 @@ import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.OrderTyp
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.ShippingAddressResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.TermOrderTypeResourceImpl;
 import com.liferay.headless.commerce.admin.order.internal.resource.v1_0.TermResourceImpl;
-import com.liferay.headless.commerce.admin.order.resource.v1_0.AccountGroupResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.AccountResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.BillingAddressResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderAccountGroupResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderItemResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderNoteResource;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderResource;
@@ -106,14 +97,14 @@ public class ServletDataImpl implements ServletData {
 
 		Query.setAccountResourceComponentServiceObjects(
 			_accountResourceComponentServiceObjects);
-		Query.setAccountGroupResourceComponentServiceObjects(
-			_accountGroupResourceComponentServiceObjects);
 		Query.setBillingAddressResourceComponentServiceObjects(
 			_billingAddressResourceComponentServiceObjects);
 		Query.setChannelResourceComponentServiceObjects(
 			_channelResourceComponentServiceObjects);
 		Query.setOrderResourceComponentServiceObjects(
 			_orderResourceComponentServiceObjects);
+		Query.setOrderAccountGroupResourceComponentServiceObjects(
+			_orderAccountGroupResourceComponentServiceObjects);
 		Query.setOrderItemResourceComponentServiceObjects(
 			_orderItemResourceComponentServiceObjects);
 		Query.setOrderNoteResourceComponentServiceObjects(
@@ -596,11 +587,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							AccountResourceImpl.class, "getOrderIdAccount"));
 					put(
-						"query#orderRuleAccountGroupAccountGroup",
-						new ObjectValuePair<>(
-							AccountGroupResourceImpl.class,
-							"getOrderRuleAccountGroupAccountGroup"));
-					put(
 						"query#orderByExternalReferenceCodeBillingAddress",
 						new ObjectValuePair<>(
 							BillingAddressResourceImpl.class,
@@ -642,6 +628,11 @@ public class ServletDataImpl implements ServletData {
 						"query#order",
 						new ObjectValuePair<>(
 							OrderResourceImpl.class, "getOrder"));
+					put(
+						"query#orderRuleAccountGroupAccountGroup",
+						new ObjectValuePair<>(
+							OrderAccountGroupResourceImpl.class,
+							"getOrderRuleAccountGroupAccountGroup"));
 					put(
 						"query#orderItems",
 						new ObjectValuePair<>(
@@ -808,6 +799,97 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TermOrderTypeResourceImpl.class,
 							"getTermIdTermOrderTypesPage"));
+
+					put(
+						"query#Order.itemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OrderItemResourceImpl.class,
+							"getOrderItemByExternalReferenceCode"));
+					put(
+						"query#Order.byExternalReferenceCodeChannel",
+						new ObjectValuePair<>(
+							ChannelResourceImpl.class,
+							"getOrderByExternalReferenceCodeChannel"));
+					put(
+						"query#Order.ruleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OrderRuleResourceImpl.class,
+							"getOrderRuleByExternalReferenceCode"));
+					put(
+						"query#Order.byExternalReferenceCodeAccount",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getOrderByExternalReferenceCodeAccount"));
+					put(
+						"query#OrderItem.orderByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OrderResourceImpl.class,
+							"getOrderByExternalReferenceCode"));
+					put(
+						"query#Order.ruleByExternalReferenceCodeOrderRuleAccountGroups",
+						new ObjectValuePair<>(
+							OrderRuleAccountGroupResourceImpl.class,
+							"getOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage"));
+					put(
+						"query#Order.noteByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OrderNoteResourceImpl.class,
+							"getOrderNoteByExternalReferenceCode"));
+					put(
+						"query#Order.byExternalReferenceCodeBillingAddress",
+						new ObjectValuePair<>(
+							BillingAddressResourceImpl.class,
+							"getOrderByExternalReferenceCodeBillingAddress"));
+					put(
+						"query#Order.typeByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OrderTypeResourceImpl.class,
+							"getOrderTypeByExternalReferenceCode"));
+					put(
+						"query#Order.ruleByExternalReferenceCodeOrderRuleChannels",
+						new ObjectValuePair<>(
+							OrderRuleChannelResourceImpl.class,
+							"getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage"));
+					put(
+						"query#Order.byExternalReferenceCodeOrderNotes",
+						new ObjectValuePair<>(
+							OrderNoteResourceImpl.class,
+							"getOrderByExternalReferenceCodeOrderNotesPage"));
+					put(
+						"query#Order.byExternalReferenceCodeShippingAddress",
+						new ObjectValuePair<>(
+							ShippingAddressResourceImpl.class,
+							"getOrderByExternalReferenceCodeShippingAddress"));
+					put(
+						"query#Order.ruleByExternalReferenceCodeOrderRuleAccounts",
+						new ObjectValuePair<>(
+							OrderRuleAccountResourceImpl.class,
+							"getOrderRuleByExternalReferenceCodeOrderRuleAccountsPage"));
+					put(
+						"query#Order.termByExternalReferenceCode",
+						new ObjectValuePair<>(
+							TermResourceImpl.class,
+							"getTermByExternalReferenceCode"));
+					put(
+						"query#Order.termByExternalReferenceCodeTermOrderTypes",
+						new ObjectValuePair<>(
+							TermOrderTypeResourceImpl.class,
+							"getTermByExternalReferenceCodeTermOrderTypesPage"));
+					put(
+						"query#Order.typeByExternalReferenceCodeOrderTypeChannels",
+						new ObjectValuePair<>(
+							OrderTypeChannelResourceImpl.class,
+							"getOrderTypeByExternalReferenceCodeOrderTypeChannelsPage"));
+					put(
+						"query#Order.ruleByExternalReferenceCodeOrderRuleOrderTypes",
+						new ObjectValuePair<>(
+							OrderRuleOrderTypeResourceImpl.class,
+							"getOrderRuleByExternalReferenceCodeOrderRuleOrderTypesPage"));
+					put(
+						"query#Order.byExternalReferenceCodeOrderItems",
+						new ObjectValuePair<>(
+							OrderItemResourceImpl.class,
+							"getOrderByExternalReferenceCodeOrderItemsPage"));
 				}
 			};
 
@@ -872,11 +954,11 @@ public class ServletDataImpl implements ServletData {
 		_accountResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<AccountGroupResource>
-		_accountGroupResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ChannelResource>
 		_channelResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<OrderAccountGroupResource>
+		_orderAccountGroupResourceComponentServiceObjects;
 
 }

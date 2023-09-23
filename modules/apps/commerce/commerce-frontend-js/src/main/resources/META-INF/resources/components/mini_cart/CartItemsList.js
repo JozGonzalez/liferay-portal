@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
 import React, {useContext} from 'react';
 
@@ -19,23 +11,53 @@ import CartQuickAdd from './CartQuickAdd';
 import MiniCartContext from './MiniCartContext';
 import {ADD_PRODUCT} from './util/constants';
 
-export default function CartItemsList() {
+export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 	const {
 		CartViews,
 		cartState,
 		isUpdating,
 		labels,
+		replacementSKUList,
 		setCartState,
 		summaryDataMapper,
 	} = useContext(MiniCartContext);
 
-	const {cartItems = [], id, summary = {}} = cartState;
+	const {accountId, cartItems = [], summary = {}} = cartState;
+
+	const showReplacementAlert = Boolean(replacementSKUList.length);
 
 	return (
 		<div className="mini-cart-items-list">
 			<CartViews.ItemsListActions />
 
-			{cartState.accountId && !!id && <CartQuickAdd />}
+			{accountId ? <CartQuickAdd /> : null}
+
+			{showReplacementAlert ? (
+				<div className="info-wrapper">
+					<ClayAlert
+						displayType="info"
+						hideCloseIcon
+						title={Liferay.Language.get('info')}
+					>
+						{Liferay.Language.get(
+							'there-are-replacement-products-in-your-cart'
+						)}
+					</ClayAlert>
+				</div>
+			) : null}
+
+			{showPriceOnApplicationInfo && (
+				<div className="info-wrapper">
+					<ClayAlert
+						displayType="info"
+						title={Liferay.Language.get('info')}
+					>
+						{Liferay.Language.get(
+							'your-cart-has-products-that-require-a-quote-to-complete-the-checkout'
+						)}
+					</ClayAlert>
+				</div>
+			)}
 
 			{cartItems.length ? (
 				<>

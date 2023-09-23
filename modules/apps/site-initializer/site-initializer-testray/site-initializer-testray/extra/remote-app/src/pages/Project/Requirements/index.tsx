@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import {useNavigate, useParams} from 'react-router-dom';
+import {testrayRequirementsImpl} from '~/services/rest';
 
 import Button from '../../../components/Button';
 import Container from '../../../components/Layout/Container';
@@ -23,10 +15,6 @@ import {TableProps} from '../../../components/Table';
 import {ListViewContextProviderProps} from '../../../context/ListViewContext';
 import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
-import {
-	getRequirementsTransformData,
-	requirementsResource,
-} from '../../../services/rest';
 import {Action} from '../../../types';
 import useRequirementActions from './useRequirementActions';
 
@@ -53,23 +41,28 @@ const RequirementListView: React.FC<RequirementListViewProps> = ({
 		<ListView
 			managementToolbarProps={{
 				addButton: () => navigate('create'),
-				buttons: (
-					<>
-						<Button displayType="secondary" symbol="redo" toolbar>
-							{i18n.translate('import-jira-issues')}
-						</Button>
-
-						<ClayManagementToolbar.Item className="ml-2">
-							<Button displayType="secondary" symbol="upload">
-								{i18n.translate('upload-csv')}
+				buttons: (actions) =>
+					actions?.create && (
+						<>
+							<Button
+								displayType="secondary"
+								symbol="redo"
+								toolbar
+							>
+								{i18n.translate('import-jira-issues')}
 							</Button>
-						</ClayManagementToolbar.Item>
-					</>
-				),
+
+							<ClayManagementToolbar.Item className="ml-2">
+								<Button displayType="secondary" symbol="upload">
+									{i18n.translate('upload-csv')}
+								</Button>
+							</ClayManagementToolbar.Item>
+						</>
+					),
 				filterSchema: 'requirements',
 				title: i18n.translate('requirements'),
 			}}
-			resource={requirementsResource}
+			resource={testrayRequirementsImpl.resource}
 			tableProps={{
 				actions,
 				columns: [
@@ -123,7 +116,9 @@ const RequirementListView: React.FC<RequirementListViewProps> = ({
 				navigateTo: ({id}) => id?.toString(),
 				...tableProps,
 			}}
-			transformData={getRequirementsTransformData}
+			transformData={(response) =>
+				testrayRequirementsImpl.transformDataFromList(response)
+			}
 			variables={variables}
 			{...listViewProps}
 		/>

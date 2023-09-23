@@ -1,14 +1,14 @@
 definition {
 
-	@summary = "Helper function to add a site navigation menu via JSON"
 	macro _addSiteNavigationMenu {
 		Variables.assertDefined(parameterList = "${auto},${groupId},${siteNavigationMenuName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/sitenavigation.sitenavigationmenu/add-site-navigation-menu \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d name=${siteNavigationMenuName} \
 				-d type=0 \
@@ -18,15 +18,15 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a site navigation menu item via JSON"
 	macro _addSiteNavigationMenuItem {
 		Variables.assertDefined(parameterList = "${groupId},${parentSiteNavigationMenuItemId},${siteNavigationMenuId},${type},${typeSettings}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/sitenavigation.sitenavigationmenuitem/add-site-navigation-menu-item \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d siteNavigationMenuId=${siteNavigationMenuId} \
 				-d parentSiteNavigationMenuItemId=${parentSiteNavigationMenuItemId} \
@@ -37,30 +37,30 @@ definition {
 		JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to delete a site navigation menu via JSON"
 	macro _deleteSiteNavigationMenu {
 		Variables.assertDefined(parameterList = ${siteNavigationMenuId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/sitenavigation.sitenavigationmenu/delete-site-navigation-menu \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d siteNavigationMenuId=${siteNavigationMenuId}
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to get a siteNavigationMenuId via JSON"
 	macro _getSiteNavigationMenuIdByName {
 		Variables.assertDefined(parameterList = "${groupId},${siteNavigationMenuName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/sitenavigation.sitenavigationmenu/get-site-navigation-menus \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 
@@ -69,15 +69,15 @@ definition {
 		return ${siteNavigationMenuId};
 	}
 
-	@summary = "Helper function to get a siteNavigationMenuItemId via JSON"
 	macro _getSiteNavigationMenuItemIdByName {
 		Variables.assertDefined(parameterList = "${siteNavigationMenuId},${siteNavigationMenuItemName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/sitenavigation.sitenavigationmenuitem/get-site-navigation-menu-items \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d siteNavigationMenuId=${siteNavigationMenuId}
 		''';
 

@@ -23,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -293,7 +293,7 @@ definition {
 		property custom.properties = "trash.entry.check.interval=1${line.separator}trash.entries.max.age=1";
 		property portal.acceptance = "false";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONMBMessage.addMessage(
 			groupName = "Site Name",
@@ -381,6 +381,8 @@ definition {
 			larFileName = "message-boards-thread.lar",
 			uploadFrom = "dependencies");
 
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+
 		MessageboardsThread.viewCP(
 			replyCount = 0,
 			threadBody = "MB Thread Message Body",
@@ -390,7 +392,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanLimitThreadAttachmentSize {
-		property test.name.skip.portal.instance = "MBThread#CanLimitThreadAttachmentSize";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SystemSettings.openSystemSettingsAdmin();
 
@@ -718,9 +721,9 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 

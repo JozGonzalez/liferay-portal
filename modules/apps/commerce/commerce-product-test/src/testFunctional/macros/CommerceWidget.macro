@@ -73,7 +73,7 @@ definition {
 		var optionName = ${optionName};
 
 		var javaScriptCountElement = '''
-		
+
 		const stringToMatch = "${optionName}";
 
 		return document.querySelectorAll(`[data-qa-id='${stringToMatch}'] li`).length.toString();
@@ -171,6 +171,36 @@ definition {
 		Refresh();
 	}
 
+	macro deleteFilterEntry {
+		Portlet.gotoPortletOptions(
+			portletName = ${portletName},
+			portletOption = "Configuration");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+		Navigator.gotoNavTab(navTab = "Product Selection");
+
+		AssertChecked(
+			locator1 = "Radio#ANY",
+			radioLabel = "Dynamic");
+
+		CommerceUtilities.expandField(accordionTitle = "filter");
+
+		Click.mouseOverClick(
+			key_button = "delete",
+			locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
+
+		Button.click(button = "Save");
+
+		Alert.viewSuccessMessage();
+
+		IFrame.closeFrame();
+	}
+
 	macro gotoSVGNode {
 		Click(locator1 = "Button#EXPAND");
 
@@ -193,6 +223,52 @@ definition {
 		Click(locator1 = "Button#EXPAND");
 	}
 
+	macro productPublisherAddFilter {
+		CommerceUtilities.expandField(accordionTitle = "filter");
+
+		Click(
+			key_button = "add",
+			locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
+
+		if (isSet(optionQuery)) {
+			Select(
+				key_title = "Query Contains",
+				locator1 = "CalendarLookAndFeelConfiguration#SELECT_BORDER_WIDTH_COLUMN",
+				value1 = ${optionQuery});
+		}
+
+		if (isSet(optionAndOperator)) {
+			Select(
+				key_title = "And Operator",
+				locator1 = "CalendarLookAndFeelConfiguration#SELECT_BORDER_WIDTH_COLUMN",
+				value1 = ${optionAndOperator});
+		}
+
+		if (isSet(filterType)) {
+			Select(
+				key_fieldName = "queryName0",
+				locator1 = "PRMMDFRequest#SELECT",
+				value1 = ${filterType});
+
+			Click(
+				key_button = "Select",
+				locator1 = "CommerceWidget#PRODUCT_PUBLISHER_FILTER_ADD_SELECT_BUTTON");
+
+			SelectFrameTop();
+
+			CommerceWidget.setFilterItems(
+				categories = ${categories},
+				filterTitle = ${filterType},
+				tags = ${filterEntries});
+		}
+
+		Button.click(button = "Save");
+
+		Alert.viewSuccessMessage();
+
+		IFrame.closeFrame();
+	}
+
 	macro removeChildOrganization {
 		Click(locator1 = "Button#EXPAND");
 
@@ -213,6 +289,40 @@ definition {
 		Refresh();
 
 		Click(locator1 = "Button#EXPAND");
+	}
+
+	macro setFilterItems {
+		SelectFrame.selectFrameNoLoading(
+			key_title = ${filterTitle},
+			locator1 = "IFrame#MODAL_ANY");
+
+		if (${filterTitle} == "Tags") {
+			for (var tag : list ${tags}) {
+				Click(
+					key_columnName = "name",
+					key_tableEntry = ${tag},
+					locator1 = "LexiconTable#TABLE_ENTRY_INFO_CHECKBOX");
+			}
+
+			SelectFrameTop();
+
+			Button.click(button = "Done");
+		}
+		else if (${filterTitle} == "Categories") {
+			for (var category : list ${categories}) {
+				Click(
+					key_nodeName = ${key_card},
+					locator1 = "Treeview#NODE_ITEM");
+			}
+
+			SelectFrameTop();
+
+			Button.click(button = "Add");
+		}
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
 	}
 
 	macro updateFacetConfiguration {
@@ -251,6 +361,12 @@ definition {
 				fieldValue = ${frequencyThreshold});
 		}
 
+		if (isSet(rangesArray)) {
+			FormFields.editTextMultiline(
+				fieldName = "rangesJSONArray",
+				fieldValue = ${rangesArray});
+		}
+
 		if (${displayFrequencies} == "disable") {
 			FormFields.disableCheckbox(fieldName = "frequenciesVisible");
 		}
@@ -269,86 +385,69 @@ definition {
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
 
-		if (isSet(addFilter) && (${addFilter} == "true")) {
-			Click(
-				key_entry = "Filter",
-				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+		if (isSet(productSelection)) {
+			var key_content = ${productSelection};
 
-			Click(
-				key_button = "add",
-				locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
+			Navigator.gotoNavTab(navTab = "Product Selection");
 
-			Click(
-				key_button = "Select",
-				locator1 = "CommerceWidget#PRODUCT_PUBLISHER_FILTER_ADD_SELECT_BUTTON");
+			AssertChecked(
+				locator1 = "Radio#ANY",
+				radioLabel = ${productSelection});
 
-			SelectFrameTop();
-
-			SelectFrame.selectFrameNoLoading(
-				key_title = "Tags",
-				locator1 = "IFrame#MODAL_ANY");
-
-			Click(
-				key_columnName = "name",
-				key_tableEntry = ${tag},
-				locator1 = "LexiconTable#TABLE_ENTRY_INFO_CHECKBOX");
-
-			SelectFrameTop();
-
-			Button.click(button = "Done");
-
-			SelectFrameTop();
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
-
-			Click(
-				key_entry = "Filter",
-				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
-
-			Button.click(button = "Save");
-
-			Alert.viewSuccessMessage();
-
-			IFrame.closeFrame();
-
-			for (var productName : list ${addFilterResultsList}) {
+			if (${productSelection} == "Dynamic") {
 				AssertElementPresent(
-					key_productName = ${productName},
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+					key_entry = "Filter",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+				if (isSet(filterType)) {
+					CommerceWidget.productPublisherAddFilter(
+						filterEntries = ${filterEntries},
+						filterType = ${filterType});
+				}
+			}
+			else if (${productSelection} == "Manual") {
+				AssertElementPresent(
+					key_entry = "Product Entries",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${productSelection} == "Data Source") {
+				AssertElementPresent(
+					key_entry = "Data Source",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
 			}
 		}
 
-		if (isSet(deleteFilter) && (${deleteFilter} == "true")) {
-			Portlet.gotoPortletOptions(
-				portletName = ${portletName},
-				portletOption = "Configuration");
+		if (isSet(renderSelection)) {
+			var key_content = ${renderSelection};
 
-			WaitForLiferayEvent.initializeLiferayEventLog();
+			Navigator.gotoNavTab(navTab = "Render Selection");
 
-			SelectFrameTop();
+			AssertChecked(
+				locator1 = "Radio#ANY",
+				radioLabel = ${renderSelection});
 
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
-
-			Click(
-				key_entry = "Filter",
-				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
-
-			Click.mouseOverClick(
-				key_button = "delete",
-				locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
-
-			Button.click(button = "Save");
-
-			Alert.viewSuccessMessage();
-
-			IFrame.closeFrame();
-
-			for (var productName : list ${deleteFilterResultsList}) {
+			if (${renderSelection} == "Use Application Display Template") {
 				AssertElementPresent(
-					key_productName = ${productName},
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+					key_entry = "Display Template",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${renderSelection} == "Use Custom Renderer") {
+				AssertElementPresent(
+					key_entry = "Product List Renderer",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
 			}
 		}
+
+		if (isSet(itemsPerPage)) {
+			Navigator.gotoNavTab(navTab = "Pagination");
+
+			Type(
+				key_text = "Number of Items to Display",
+				locator1 = "TextInput#ANY",
+				value1 = ${itemsPerPage});
+		}
+
+		SelectFrameTop();
 	}
 
 }

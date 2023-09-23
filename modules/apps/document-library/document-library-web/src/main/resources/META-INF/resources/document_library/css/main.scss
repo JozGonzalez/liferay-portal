@@ -3,8 +3,6 @@
 
 @import 'image_editor_modal';
 
-@import 'data_engine_info_panel';
-
 @mixin file-icon($colorIndex, $color) {
 	[data-file-icon-color='#{$colorIndex}'] .lexicon-icon {
 		color: $color;
@@ -161,17 +159,8 @@ $productMenuWidth: 320px;
 		}
 
 		.contextual-sidebar-content {
-			margin-top: $toolbarHeight;
-
-			@include media-breakpoint-up(lg) {
-				margin-top: $toolbarDesktopHeight;
-			}
-
 			@include media-breakpoint-down(md) {
 				> .container-fluid {
-					margin: 0;
-					padding: 0;
-
 					> .sheet {
 						border: none;
 						border-radius: 0;
@@ -283,20 +272,6 @@ $productMenuWidth: 320px;
 			.container-fluid {
 				padding-left: 0;
 				padding-right: 0;
-			}
-		}
-	}
-
-	.modal .edit-categories {
-		.modal-content {
-			height: 445px;
-		}
-
-		&.modal-dialog-expanded .modal-content {
-			height: 575px;
-
-			.modal-body.inline-scroller {
-				max-height: 445px;
 			}
 		}
 	}
@@ -827,5 +802,23 @@ html#{$cadmin-selector} .cadmin {
 	.overlaymask-content {
 		background-color: #fff;
 		border-radius: 5px;
+	}
+}
+
+.modal.portlet-document-library-edit-categories {
+	.modal-content {
+		height: 500px;
+
+		.modal-body.inline-scroller {
+			max-height: 360px;
+		}
+	}
+
+	&.modal-dialog-expanded .modal-content {
+		height: 575px;
+
+		.modal-body.inline-scroller {
+			max-height: 445px;
+		}
 	}
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.exportimport.data.handler.test;
@@ -17,21 +8,22 @@ package com.liferay.document.library.internal.exportimport.data.handler.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
-import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +57,7 @@ public class DLFileEntryTypeStagedModelDataHandlerTest
 			group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		addDependentStagedModel(
-			dependentStagedModelsMap,
-			DDMStructureManagerUtil.getDDMStructureModelClass(), ddmStructure);
+			dependentStagedModelsMap, DDMStructure.class, ddmStructure);
 
 		return dependentStagedModelsMap;
 	}
@@ -77,27 +68,19 @@ public class DLFileEntryTypeStagedModelDataHandlerTest
 			Map<String, List<StagedModel>> dependentStagedModelsMap)
 		throws Exception {
 
-		Class<?> ddmStructureClass =
-			DDMStructureManagerUtil.getDDMStructureModelClass();
-
 		List<StagedModel> dependentStagedModels = dependentStagedModelsMap.get(
-			ddmStructureClass.getSimpleName());
+			DDMStructure.class.getSimpleName());
 
 		DDMStructure ddmStructure = (DDMStructure)dependentStagedModels.get(0);
 
-		DLFileEntryType dlFileEntryType =
-			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-				TestPropsValues.getUserId(), group.getGroupId(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				new long[] {ddmStructure.getStructureId()},
-				ServiceContextTestUtil.getServiceContext(
-					group.getGroupId(), TestPropsValues.getUserId()));
-
-		DDMStructureManagerUtil.updateStructureKey(
-			ddmStructure.getStructureId(),
-			DLUtil.getDDMStructureKey(dlFileEntryType));
-
-		return dlFileEntryType;
+		return DLFileEntryTypeLocalServiceUtil.addFileEntryType(
+			TestPropsValues.getUserId(), group.getGroupId(),
+			ddmStructure.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	@Override
@@ -119,18 +102,15 @@ public class DLFileEntryTypeStagedModelDataHandlerTest
 			Group group)
 		throws Exception {
 
-		Class<?> ddmStructureClass =
-			DDMStructureManagerUtil.getDDMStructureModelClass();
-
 		List<StagedModel> dependentStagedModels = dependentStagedModelsMap.get(
-			ddmStructureClass.getSimpleName());
+			DDMStructure.class.getSimpleName());
 
 		Assert.assertEquals(
 			dependentStagedModels.toString(), 1, dependentStagedModels.size());
 
 		DDMStructure ddmStructure = (DDMStructure)dependentStagedModels.get(0);
 
-		DDMStructureManagerUtil.getStructureByUuidAndGroupId(
+		DDMStructureLocalServiceUtil.getDDMStructureByUuidAndGroupId(
 			ddmStructure.getUuid(), group.getGroupId());
 	}
 

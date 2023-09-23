@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
@@ -27,15 +18,14 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductConfiguration;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -84,7 +74,11 @@ public class ProductDTOConverter
 				productType = cpDefinition.getProductTypeName();
 				shortDescription = cpDefinition.getShortDescription(languageId);
 				slug = cpDefinition.getURL(languageId);
-				tags = _getTags(cpDefinition);
+				tags = TransformUtil.transformToArray(
+					_assetTagLocalService.getTags(
+						cpDefinition.getModelClassName(),
+						cpDefinition.getCPDefinitionId()),
+					AssetTag::getName, String.class);
 				urls = LanguageUtils.getLanguageIdMap(
 					_cpDefinitionLocalService.getUrlTitleMap(
 						cpDefinition.getCPDefinitionId()));
@@ -100,6 +94,10 @@ public class ProductDTOConverter
 						Company company = _companyLocalService.getCompany(
 							cpDefinition.getCompanyId());
 
+						String portalURL = _portal.getPortalURL(
+							company.getVirtualHostname(),
+							_portal.getPortalServerPort(false), true);
+
 						String defaultImageFileURL =
 							_cpDefinitionHelper.getDefaultImageFileURL(
 								CommerceUtil.getCommerceAccountId(
@@ -107,7 +105,7 @@ public class ProductDTOConverter
 										getCommerceContext()),
 								cpDefinition.getCPDefinitionId());
 
-						return company.getPortalURL(0) + defaultImageFileURL;
+						return portalURL + defaultImageFileURL;
 					});
 			}
 		};
@@ -122,18 +120,20 @@ public class ProductDTOConverter
 				new ProductConfiguration() {
 					{
 						allowBackOrder = cpDefinitionInventory.isBackOrders();
-						allowedOrderQuantities = ArrayUtil.toArray(
+						allowedOrderQuantities =
 							cpDefinitionInventory.
-								getAllowedOrderQuantitiesArray());
+								getAllowedOrderQuantitiesArray();
 						inventoryEngine =
 							cpDefinitionInventory.
 								getCPDefinitionInventoryEngine();
-						maxOrderQuantity =
-							cpDefinitionInventory.getMaxOrderQuantity();
-						minOrderQuantity =
-							cpDefinitionInventory.getMinOrderQuantity();
+						maxOrderQuantity = BigDecimalUtil.stripTrailingZeros(
+							cpDefinitionInventory.getMaxOrderQuantity());
+						minOrderQuantity = BigDecimalUtil.stripTrailingZeros(
+							cpDefinitionInventory.getMinOrderQuantity());
 						multipleOrderQuantity =
-							cpDefinitionInventory.getMultipleOrderQuantity();
+							BigDecimalUtil.stripTrailingZeros(
+								cpDefinitionInventory.
+									getMultipleOrderQuantity());
 					}
 				};
 
@@ -141,19 +141,6 @@ public class ProductDTOConverter
 		}
 
 		return product;
-	}
-
-	private String[] _getTags(CPDefinition cpDefinition) {
-		List<AssetTag> assetEntryAssetTags = _assetTagLocalService.getTags(
-			cpDefinition.getModelClassName(), cpDefinition.getCPDefinitionId());
-
-		Stream<AssetTag> stream = assetEntryAssetTags.stream();
-
-		return stream.map(
-			AssetTag::getName
-		).toArray(
-			String[]::new
-		);
 	}
 
 	@Reference
@@ -174,5 +161,8 @@ public class ProductDTOConverter
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Portal _portal;
 
 }

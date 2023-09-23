@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tika.test;
@@ -252,19 +243,32 @@ public class TextExtractorTest {
 			expectedText.trim(), extractText("test-encoding-Shift_JIS.txt"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testWrongTikaConfigXml() throws Exception {
-		Map<String, Object> properties =
-			new HashMapBuilder<>().<String, Object>put(
-				"tikaConfigXml", "wrong/tika.xml"
-			).build();
-
+	@Test
+	public void testWrongTikaConfigXml() {
 		Object tikaConfigurationHelper = ReflectionTestUtil.getFieldValue(
 			_textExtractor, "_tikaConfigurationHelper");
 
-		ReflectionTestUtil.invoke(
-			tikaConfigurationHelper, "activate", new Class<?>[] {Map.class},
-			properties);
+		Object originalConfiguration = ReflectionTestUtil.getFieldValue(
+			tikaConfigurationHelper, "_tikaConfiguration");
+
+		try {
+			ReflectionTestUtil.invoke(
+				tikaConfigurationHelper, "activate", new Class<?>[] {Map.class},
+				HashMapBuilder.<String, Object>put(
+					"tikaConfigXml", "wrong/tika.xml"
+				).build());
+		}
+		catch (Exception exception) {
+			Assert.assertSame(
+				IllegalArgumentException.class, exception.getClass());
+			Assert.assertEquals(
+				"Unable to read tika configuration wrong/tika.xml",
+				exception.getMessage());
+			Assert.assertSame(
+				originalConfiguration,
+				ReflectionTestUtil.getFieldValue(
+					tikaConfigurationHelper, "_tikaConfiguration"));
+		}
 	}
 
 	@Test
@@ -286,6 +290,12 @@ public class TextExtractorTest {
 		String text = extractText("test.xml");
 
 		Assert.assertEquals("<test>Extract test.</test>", text);
+	}
+
+	@Test
+	public void testZipWithPNGzTXt() {
+		Assert.assertEquals(
+			StringPool.BLANK, extractText("test-LPS-112649.zip"));
 	}
 
 	protected String extractText(String fileName) {

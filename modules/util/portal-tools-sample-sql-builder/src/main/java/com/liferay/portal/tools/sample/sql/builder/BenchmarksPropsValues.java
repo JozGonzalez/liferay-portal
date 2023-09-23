@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.sample.sql.builder;
@@ -40,6 +31,14 @@ public class BenchmarksPropsValues {
 	public static final DBType DB_TYPE = DBType.valueOf(
 		StringUtil.toUpperCase(
 			PropertiesHolder._get(BenchmarksPropsKeys.DB_TYPE)));
+
+	public static final int MAX_ACCOUNT_ENTRY_COMMERCE_ORDER_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_ACCOUNT_ENTRY_COMMERCE_ORDER_COUNT));
+
+	public static final int MAX_ACCOUNT_ENTRY_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_ACCOUNT_ENTRY_COUNT));
 
 	public static final int MAX_ASSET_CATEGORY_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_ASSET_CATEGORY_COUNT));
@@ -72,11 +71,6 @@ public class BenchmarksPropsValues {
 
 	public static final int MAX_BLOGS_ENTRY_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COUNT));
-
-	public static final int MAX_COMMERCE_ACCOUNT_ENTRY_COUNT =
-		GetterUtil.getInteger(
-			PropertiesHolder._get(
-				BenchmarksPropsKeys.MAX_COMMERCE_ACCOUNT_ENTRY_COUNT));
 
 	public static final int MAX_COMMERCE_CATALOG_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMMERCE_CATALOG_COUNT));

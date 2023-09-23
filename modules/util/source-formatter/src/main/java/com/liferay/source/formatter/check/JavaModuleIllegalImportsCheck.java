@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -40,8 +31,6 @@ public class JavaModuleIllegalImportsCheck extends BaseFileCheck {
 			return content;
 		}
 
-		// LPS-62989
-
 		if (!absolutePath.contains("/modules/core/jaxws-osgi-bridge") &&
 			!absolutePath.contains("/modules/core/portal-bootstrap") &&
 			!absolutePath.contains("/modules/core/registry-") &&
@@ -61,7 +50,14 @@ public class JavaModuleIllegalImportsCheck extends BaseFileCheck {
 			}
 		}
 
-		// LPS-64238
+		if (isAttributeValue(_ENFORCE_PETRA_STRING_BUNDLER_KEY, absolutePath) &&
+			content.contains("com.liferay.portal.kernel.util.StringBundler")) {
+
+			addMessage(
+				fileName,
+				"Use com.liferay.petra.string.StringBundler instead of " +
+					"com.liferay.portal.kernel.util.StringBundler");
+		}
 
 		if (content.contains("import com.liferay.util.dao.orm.CustomSQLUtil")) {
 			addMessage(
@@ -69,8 +65,6 @@ public class JavaModuleIllegalImportsCheck extends BaseFileCheck {
 				"Do not use com.liferay.util.dao.orm.CustomSQLUtil in " +
 					"modules, see LPS-77361");
 		}
-
-		// LPS-64335
 
 		if (content.contains("import com.liferay.util.ContentUtil")) {
 			addMessage(
@@ -100,6 +94,9 @@ public class JavaModuleIllegalImportsCheck extends BaseFileCheck {
 
 	private static final String _CHECK_REGISTRY_IN_TEST_CLASSES_KEY =
 		"checkRegistryInTestClasses";
+
+	private static final String _ENFORCE_PETRA_STRING_BUNDLER_KEY =
+		"enforcePetraStringBundler";
 
 	private static final Pattern _registryImportPattern = Pattern.compile(
 		"\nimport (com\\.liferay\\.registry\\..+);");

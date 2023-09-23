@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.graphql.servlet.v2_0;
 
 import com.liferay.headless.commerce.admin.pricing.internal.graphql.mutation.v2_0.Mutation;
 import com.liferay.headless.commerce.admin.pricing.internal.graphql.query.v2_0.Query;
-import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.AccountGroupResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.AccountResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.CategoryResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.ChannelResourceImpl;
@@ -42,11 +32,11 @@ import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.PriceM
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.PriceModifierProductGroupResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.PriceModifierProductResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.PriceModifierResourceImpl;
+import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.PricingAccountGroupResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.ProductGroupResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.ProductResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.SkuResourceImpl;
 import com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0.TierPriceResourceImpl;
-import com.liferay.headless.commerce.admin.pricing.resource.v2_0.AccountGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.AccountResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.CategoryResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ChannelResource;
@@ -72,6 +62,7 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierCa
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierProductGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierProductResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierResource;
+import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PricingAccountGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.SkuResource;
@@ -148,8 +139,6 @@ public class ServletDataImpl implements ServletData {
 
 		Query.setAccountResourceComponentServiceObjects(
 			_accountResourceComponentServiceObjects);
-		Query.setAccountGroupResourceComponentServiceObjects(
-			_accountGroupResourceComponentServiceObjects);
 		Query.setCategoryResourceComponentServiceObjects(
 			_categoryResourceComponentServiceObjects);
 		Query.setChannelResourceComponentServiceObjects(
@@ -198,6 +187,8 @@ public class ServletDataImpl implements ServletData {
 			_priceModifierProductResourceComponentServiceObjects);
 		Query.setPriceModifierProductGroupResourceComponentServiceObjects(
 			_priceModifierProductGroupResourceComponentServiceObjects);
+		Query.setPricingAccountGroupResourceComponentServiceObjects(
+			_pricingAccountGroupResourceComponentServiceObjects);
 		Query.setProductResourceComponentServiceObjects(
 			_productResourceComponentServiceObjects);
 		Query.setProductGroupResourceComponentServiceObjects(
@@ -871,16 +862,6 @@ public class ServletDataImpl implements ServletData {
 							AccountResourceImpl.class,
 							"getPriceListAccountAccount"));
 					put(
-						"query#discountAccountGroupAccountGroup",
-						new ObjectValuePair<>(
-							AccountGroupResourceImpl.class,
-							"getDiscountAccountGroupAccountGroup"));
-					put(
-						"query#priceListAccountGroupAccountGroup",
-						new ObjectValuePair<>(
-							AccountGroupResourceImpl.class,
-							"getPriceListAccountGroupAccountGroup"));
-					put(
 						"query#discountCategoryCategory",
 						new ObjectValuePair<>(
 							CategoryResourceImpl.class,
@@ -1150,6 +1131,16 @@ public class ServletDataImpl implements ServletData {
 							PriceModifierProductGroupResourceImpl.class,
 							"getPriceModifierIdPriceModifierProductGroupsPage"));
 					put(
+						"query#discountAccountGroupAccountGroup",
+						new ObjectValuePair<>(
+							PricingAccountGroupResourceImpl.class,
+							"getDiscountAccountGroupAccountGroup"));
+					put(
+						"query#priceListAccountGroupAccountGroup",
+						new ObjectValuePair<>(
+							PricingAccountGroupResourceImpl.class,
+							"getPriceListAccountGroupAccountGroup"));
+					put(
 						"query#discountProductProduct",
 						new ObjectValuePair<>(
 							ProductResourceImpl.class,
@@ -1201,6 +1192,150 @@ public class ServletDataImpl implements ServletData {
 						"query#tierPrice",
 						new ObjectValuePair<>(
 							TierPriceResourceImpl.class, "getTierPrice"));
+
+					put(
+						"query#PriceEntry.idProduct",
+						new ObjectValuePair<>(
+							ProductResourceImpl.class,
+							"getPriceEntryIdProduct"));
+					put(
+						"query#PriceEntry.idTierPrices",
+						new ObjectValuePair<>(
+							TierPriceResourceImpl.class,
+							"getPriceEntryIdTierPricesPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountCategories",
+						new ObjectValuePair<>(
+							DiscountCategoryResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountCategoriesPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountProductGroups",
+						new ObjectValuePair<>(
+							DiscountProductGroupResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountProductGroupsPage"));
+					put(
+						"query#TierPrice.priceEntry",
+						new ObjectValuePair<>(
+							PriceEntryResourceImpl.class, "getPriceEntry"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountProducts",
+						new ObjectValuePair<>(
+							DiscountProductResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountProductsPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceListAccounts",
+						new ObjectValuePair<>(
+							PriceListAccountResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceListAccountsPage"));
+					put(
+						"query#PriceEntry.discountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DiscountResourceImpl.class,
+							"getDiscountByExternalReferenceCode"));
+					put(
+						"query#Discount.priceListByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PriceListResourceImpl.class,
+							"getPriceListByExternalReferenceCode"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceListOrderTypes",
+						new ObjectValuePair<>(
+							PriceListOrderTypeResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceListOrderTypesPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountOrderTypes",
+						new ObjectValuePair<>(
+							DiscountOrderTypeResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountOrderTypesPage"));
+					put(
+						"query#Discount.tierPriceByExternalReferenceCode",
+						new ObjectValuePair<>(
+							TierPriceResourceImpl.class,
+							"getTierPriceByExternalReferenceCode"));
+					put(
+						"query#Discount.priceModifierByExternalReferenceCodePriceModifierProducts",
+						new ObjectValuePair<>(
+							PriceModifierProductResourceImpl.class,
+							"getPriceModifierByExternalReferenceCodePriceModifierProductsPage"));
+					put(
+						"query#Discount.priceEntryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PriceEntryResourceImpl.class,
+							"getPriceEntryByExternalReferenceCode"));
+					put(
+						"query#PriceEntry.idSku",
+						new ObjectValuePair<>(
+							SkuResourceImpl.class, "getPriceEntryIdSku"));
+					put(
+						"query#Discount.priceModifierByExternalReferenceCodePriceModifierProductGroups",
+						new ObjectValuePair<>(
+							PriceModifierProductGroupResourceImpl.class,
+							"getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountAccountGroups",
+						new ObjectValuePair<>(
+							DiscountAccountGroupResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountAccountGroupsPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceListAccountGroups",
+						new ObjectValuePair<>(
+							PriceListAccountGroupResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceListAccountGroupsPage"));
+					put(
+						"query#Discount.priceEntryByExternalReferenceCodeTierPrices",
+						new ObjectValuePair<>(
+							TierPriceResourceImpl.class,
+							"getPriceEntryByExternalReferenceCodeTierPricesPage"));
+					put(
+						"query#Discount.priceModifierByExternalReferenceCodePriceModifierCategories",
+						new ObjectValuePair<>(
+							PriceModifierCategoryResourceImpl.class,
+							"getPriceModifierByExternalReferenceCodePriceModifierCategoriesPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceModifiers",
+						new ObjectValuePair<>(
+							PriceModifierResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceModifiersPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountChannels",
+						new ObjectValuePair<>(
+							DiscountChannelResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountChannelsPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceListDiscounts",
+						new ObjectValuePair<>(
+							PriceListDiscountResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceListDiscountsPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceListChannels",
+						new ObjectValuePair<>(
+							PriceListChannelResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceListChannelsPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountSkus",
+						new ObjectValuePair<>(
+							DiscountSkuResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountSkusPage"));
+					put(
+						"query#Discount.priceListByExternalReferenceCodePriceEntries",
+						new ObjectValuePair<>(
+							PriceEntryResourceImpl.class,
+							"getPriceListByExternalReferenceCodePriceEntriesPage"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountRules",
+						new ObjectValuePair<>(
+							DiscountRuleResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountRulesPage"));
+					put(
+						"query#Discount.priceModifierByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PriceModifierResourceImpl.class,
+							"getPriceModifierByExternalReferenceCode"));
+					put(
+						"query#Discount.byExternalReferenceCodeDiscountAccounts",
+						new ObjectValuePair<>(
+							DiscountAccountResourceImpl.class,
+							"getDiscountByExternalReferenceCodeDiscountAccountsPage"));
 				}
 			};
 
@@ -1297,10 +1432,6 @@ public class ServletDataImpl implements ServletData {
 		_accountResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<AccountGroupResource>
-		_accountGroupResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<CategoryResource>
 		_categoryResourceComponentServiceObjects;
 
@@ -1311,6 +1442,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<OrderTypeResource>
 		_orderTypeResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<PricingAccountGroupResource>
+		_pricingAccountGroupResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ProductResource>

@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerceAccount();
+AccountEntry accountEntry = commerceOrderContentDisplayContext.getAccountEntry();
 %>
 
 <liferay-ui:error exception="<%= CommerceOrderAccountLimitException.class %>" message="unable-to-create-a-new-order-as-the-open-order-limit-has-been-reached" />
@@ -43,7 +34,7 @@ CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerce
 	<portlet:actionURL name="/commerce_open_order_content/edit_commerce_order" var="editCommerceOrderURL" />
 
 	<div class="commerce-cta is-visible">
-		<c:if test="<%= commerceOrderContentDisplayContext.hasPermission(commerceAccount, CommerceOrderActionKeys.ADD_COMMERCE_ORDER) %>">
+		<c:if test="<%= commerceOrderContentDisplayContext.hasPermission(accountEntry, CommerceOrderActionKeys.ADD_COMMERCE_ORDER) %>">
 			<aui:form action="<%= editCommerceOrderURL %>" method="post" name="fm">
 				<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD %>" />
 				<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -51,7 +42,7 @@ CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerce
 
 				<clay:button
 					cssClass="btn-fixed btn-lg btn-primary"
-					disabled="<%= commerceAccount == null %>"
+					disabled="<%= accountEntry == null %>"
 					displayType="primary"
 					id="add-order"
 					label='<%= LanguageUtil.get(request, "add-order") %>'

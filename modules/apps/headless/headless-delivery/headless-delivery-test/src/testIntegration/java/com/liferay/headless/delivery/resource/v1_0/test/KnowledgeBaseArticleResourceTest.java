@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -24,6 +15,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,12 +39,40 @@ public class KnowledgeBaseArticleResourceTest
 		serviceContext.setScopeGroupId(testGroup.getGroupId());
 
 		_kbFolder = KBFolderLocalServiceUtil.addKBFolder(
-			null,
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			null, UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
 			testGroup.getGroupId(),
 			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
+	}
+
+	@Override
+	@Test
+	public void testDeleteKnowledgeBaseArticleMyRating() throws Exception {
+		super.testDeleteKnowledgeBaseArticleMyRating();
+
+		KnowledgeBaseArticle knowledgeBaseArticle =
+			testDeleteKnowledgeBaseArticleMyRating_addKnowledgeBaseArticle();
+
+		assertHttpResponseStatusCode(
+			204,
+			knowledgeBaseArticleResource.
+				deleteKnowledgeBaseArticleMyRatingHttpResponse(
+					knowledgeBaseArticle.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseArticleResource.
+				deleteKnowledgeBaseArticleMyRatingHttpResponse(
+					knowledgeBaseArticle.getId()));
+
+		KnowledgeBaseArticle irrelevantKnowledgeBaseArticle =
+			randomIrrelevantKnowledgeBaseArticle();
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseArticleResource.
+				deleteKnowledgeBaseArticleMyRatingHttpResponse(
+					irrelevantKnowledgeBaseArticle.getId()));
 	}
 
 	@Override
@@ -99,6 +120,21 @@ public class KnowledgeBaseArticleResourceTest
 	}
 
 	@Override
+	protected KnowledgeBaseArticle
+			testDeleteKnowledgeBaseArticleMyRating_addKnowledgeBaseArticle()
+		throws Exception {
+
+		KnowledgeBaseArticle knowledgeBaseArticle =
+			super.
+				testDeleteKnowledgeBaseArticleMyRating_addKnowledgeBaseArticle();
+
+		knowledgeBaseArticleResource.putKnowledgeBaseArticleMyRating(
+			knowledgeBaseArticle.getId(), randomRating());
+
+		return knowledgeBaseArticle;
+	}
+
+	@Override
 	protected Long
 			testGetKnowledgeBaseArticleKnowledgeBaseArticlesPage_getParentKnowledgeBaseArticleId()
 		throws Exception {
@@ -108,12 +144,11 @@ public class KnowledgeBaseArticleResourceTest
 		serviceContext.setScopeGroupId(testGroup.getGroupId());
 
 		KBArticle kbArticle = KBArticleLocalServiceUtil.addKBArticle(
-			null,
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			null, UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
 			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, null, null, null, serviceContext);
+			null, new Date(), null, null, null, serviceContext);
 
 		return kbArticle.getResourcePrimKey();
 	}

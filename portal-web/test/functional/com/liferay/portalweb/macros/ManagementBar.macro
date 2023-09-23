@@ -1,13 +1,19 @@
 definition {
 
 	macro changeDisplayStyle {
-		WaitForPageLoad();
+		if (IsElementNotPresent(locator1 = "//body[contains(@class,'dialog-iframe-popup')]")) {
+			WaitForPageLoad();
+		}
 
 		Click(locator1 = "Icon#CURRENT_DISPLAY_STYLE");
 
 		MenuItem.click(menuItem = ${displayStyle});
 
 		ManagementBar.viewDisplayStyle(displayStyle = ${displayStyle});
+	}
+
+	macro clearFilter {
+		Click(locator1 = "ManagementBar#CLEAR_FILTER");
 	}
 
 	macro clickInfo {
@@ -35,9 +41,43 @@ definition {
 
 		Click.pauseClickAt(locator1 = "ManagementBar#FILTER_AND_ORDER");
 
+		if (isSet(active)) {
+			AssertElementPresent(
+				key_item = ${filterBy},
+				locator1 = "ManagementBar#ACTIVE_DROPDOWN_ITEM");
+		}
+
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		MenuItem.click(menuItem = ${menuItem});
+	}
+
+	macro sortAssets {
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		WaitForVisible(
+			key_text = "order-list",
+			locator1 = "ManagementBar#ANY_ICON");
+
+		if (${sortDirection} == "Ascending") {
+			Click(
+				key_text = "order-list-down",
+				locator1 = "ManagementBar#ANY_ICON");
+
+			VerifyVisible(
+				key_text = "order-list-up",
+				locator1 = "ManagementBar#ANY_ICON");
+		}
+
+		if (${sortDirection} == "Descending") {
+			Click(
+				key_text = "order-list-up",
+				locator1 = "ManagementBar#ANY_ICON");
+
+			VerifyVisible(
+				key_text = "order-list-down",
+				locator1 = "ManagementBar#ANY_ICON");
+		}
 	}
 
 	macro toggleViewOrder {

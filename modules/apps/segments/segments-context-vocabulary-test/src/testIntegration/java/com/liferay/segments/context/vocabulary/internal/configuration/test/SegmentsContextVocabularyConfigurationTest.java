@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.context.vocabulary.internal.configuration.test;
@@ -27,7 +18,9 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.Dictionary;
 import java.util.Locale;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,70 +40,122 @@ public class SegmentsContextVocabularyConfigurationTest {
 	@Rule
 	public static final TestRule testRule = new LiferayIntegrationTestRule();
 
+	@Before
+	public void setUp() throws Exception {
+		_themeDisplayLocale = LocaleThreadLocal.getThemeDisplayLocale();
+
+		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		LocaleThreadLocal.setThemeDisplayLocale(_themeDisplayLocale);
+
+		if (_configuration != null) {
+			_configuration.delete();
+		}
+	}
+
 	@Test
-	public void testUpdate() throws Exception {
-		Locale themeDisplayLocale = LocaleThreadLocal.getThemeDisplayLocale();
+	public void testAddDuplicatedCompanySegmentsContextVocabularyConfiguration()
+		throws Exception {
+
+		_configuration = _createFactoryConfiguration(_PROPERTIES_1);
+
+		Configuration configuration = null;
 
 		try {
-			LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
+			configuration = _createFactoryConfiguration(_PROPERTIES_2);
 
-			_configuration = _configurationAdmin.createFactoryConfiguration(
+			Assert.fail();
+		}
+		catch (ConfigurationModelListenerException
+					configurationModelListenerException) {
+
+			Assert.assertEquals(
+				StringBundler.concat(
+					"This session property is already linked to one ",
+					"vocabulary. Remove the linked vocabulary before linking ",
+					"it to a new one, or choose another session property ",
+					"name."),
+				configurationModelListenerException.causeMessage);
+		}
+		finally {
+			if (configuration != null) {
+				configuration.delete();
+			}
+		}
+
+		_assertProperties(_configuration, _PROPERTIES_1);
+	}
+
+	@Test
+	public void testUpdateCompanySegmentsContextVocabularyConfiguration()
+		throws Exception {
+
+		_configuration = _createFactoryConfiguration(_PROPERTIES_1);
+
+		_configuration.update(_PROPERTIES_2);
+
+		_assertProperties(_configuration, _PROPERTIES_2);
+	}
+
+	private void _assertProperties(
+		Configuration configuration,
+		Dictionary<String, Object> expectedProperties) {
+
+		Dictionary<String, Object> properties = configuration.getProperties();
+
+		Assert.assertEquals(
+			expectedProperties.get("assetVocabularyName"),
+			properties.get("assetVocabularyName"));
+		Assert.assertEquals(
+			expectedProperties.get("entityFieldName"),
+			properties.get("entityFieldName"));
+		Assert.assertEquals(
+			expectedProperties.get("companyId"), properties.get("companyId"));
+	}
+
+	private Configuration _createFactoryConfiguration(
+			Dictionary<String, Object> properties)
+		throws Exception {
+
+		Configuration configuration =
+			_configurationAdmin.createFactoryConfiguration(
 				"com.liferay.segments.context.vocabulary.internal." +
 					"configuration.SegmentsContextVocabularyConfiguration",
 				StringPool.QUESTION);
 
-			Dictionary<String, Object> properties =
-				HashMapDictionaryBuilder.<String, Object>put(
-					"assetVocabularyName", "assetVocabularyName"
-				).put(
-					"companyId", "987"
-				).put(
-					"entityFieldName", "entityFieldName"
-				).build();
+		configuration.update(properties);
 
-			_configuration.update(properties);
+		_assertProperties(configuration, properties);
 
-			Assert.assertEquals(
-				"assetVocabularyName", properties.get("assetVocabularyName"));
-			Assert.assertEquals(
-				"entityFieldName", properties.get("entityFieldName"));
-			Assert.assertEquals("987", properties.get("companyId"));
-
-			properties = HashMapDictionaryBuilder.<String, Object>put(
-				"assetVocabularyName", "differentAssetVocabularyName"
-			).put(
-				"companyId", "987"
-			).put(
-				"entityFieldName", "entityFieldName"
-			).build();
-
-			try {
-				_configuration.update(properties);
-
-				Assert.fail();
-			}
-			catch (ConfigurationModelListenerException
-						configurationModelListenerException) {
-
-				Assert.assertEquals(
-					StringBundler.concat(
-						"This session property is already linked to one ",
-						"vocabulary. Remove the linked vocabulary before ",
-						"linking it to a new one, or choose another session ",
-						"property name."),
-					configurationModelListenerException.causeMessage);
-			}
-
-			_configuration.delete();
-		}
-		finally {
-			LocaleThreadLocal.setThemeDisplayLocale(themeDisplayLocale);
-		}
+		return configuration;
 	}
+
+	private static final Dictionary<String, Object> _PROPERTIES_1 =
+		HashMapDictionaryBuilder.<String, Object>put(
+			"assetVocabularyName", "assetVocabularyName"
+		).put(
+			"companyId", "987"
+		).put(
+			"entityFieldName", "entityFieldName"
+		).build();
+
+	private static final Dictionary<String, Object> _PROPERTIES_2 =
+		HashMapDictionaryBuilder.<String, Object>put(
+			"assetVocabularyName", "differentAssetVocabularyName"
+		).put(
+			"companyId", "987"
+		).put(
+			"entityFieldName", "entityFieldName"
+		).build();
 
 	private Configuration _configuration;
 
 	@Inject
 	private ConfigurationAdmin _configurationAdmin;
+
+	private Locale _themeDisplayLocale;
 
 }

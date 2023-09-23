@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.notifications.test;
@@ -31,7 +22,6 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.notifications.test.util.BaseUserNotificationTestCase;
-import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -63,46 +53,36 @@ public class JournalUserNotificationTest extends BaseUserNotificationTestCase {
 	public void testUserNotificationWhenJournalArticleExpiredAutomatically()
 		throws Exception {
 
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					"feature.flag.LPS-179142", Boolean.TRUE.toString())) {
+		JournalArticle expiredArticle = (JournalArticle)addBaseModel();
 
-			JournalArticle expiredArticle = (JournalArticle)addBaseModel();
+		expiredArticle.setExpirationDate(
+			new Date(System.currentTimeMillis() - (Time.HOUR * 2)));
 
-			expiredArticle.setExpirationDate(
-				new Date(System.currentTimeMillis() - (Time.HOUR * 2)));
+		expiredArticle = _journalArticleLocalService.updateJournalArticle(
+			expiredArticle);
 
-			expiredArticle = _journalArticleLocalService.updateJournalArticle(
-				expiredArticle);
+		subscribeToContainer();
 
-			subscribeToContainer();
+		_journalArticleLocalService.checkArticles(group.getCompanyId());
 
-			_journalArticleLocalService.checkArticles();
-
-			_assertExpiredJournalArticleNotifications(expiredArticle);
-		}
+		_assertExpiredJournalArticleNotifications(expiredArticle);
 	}
 
 	@Test
 	public void testUserNotificationWhenJournalArticleExpiredManually()
 		throws Exception {
 
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					"feature.flag.LPS-179142", Boolean.TRUE.toString())) {
+		JournalArticle expiredArticle = (JournalArticle)addBaseModel();
 
-			JournalArticle expiredArticle = (JournalArticle)addBaseModel();
+		subscribeToContainer();
 
-			subscribeToContainer();
+		expiredArticle = JournalArticleLocalServiceUtil.expireArticle(
+			TestPropsValues.getUserId(), group.getGroupId(),
+			expiredArticle.getArticleId(), expiredArticle.getVersion(),
+			expiredArticle.getUrlTitle(),
+			ServiceContextTestUtil.getServiceContext());
 
-			expiredArticle = JournalArticleLocalServiceUtil.expireArticle(
-				TestPropsValues.getUserId(), group.getGroupId(),
-				expiredArticle.getArticleId(), expiredArticle.getVersion(),
-				expiredArticle.getUrlTitle(),
-				ServiceContextTestUtil.getServiceContext());
-
-			_assertExpiredJournalArticleNotifications(expiredArticle);
-		}
+		_assertExpiredJournalArticleNotifications(expiredArticle);
 	}
 
 	@Override

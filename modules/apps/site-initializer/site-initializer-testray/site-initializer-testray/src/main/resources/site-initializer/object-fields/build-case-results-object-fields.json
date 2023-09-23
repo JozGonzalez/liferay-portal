@@ -175,7 +175,7 @@
 							"filterType": "includes",
 							"json": {
 								"in": [
-									"INCOMPLETE",
+									"INPROGRESS",
 									"UNTESTED"
 								]
 							}
@@ -253,6 +253,44 @@
 							"json": {
 								"in": [
 									"TESTFIX"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "function",
+					"value": "COUNT"
+				}
+			],
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "String",
+			"businessType": "Aggregation",
+			"externalReferenceCode": "CASE-RESULTS-UNTESTED",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Untested"
+			},
+			"name": "caseResultUntested",
+			"objectFieldSettings": [
+				{
+					"name": "objectRelationshipName",
+					"value": "buildToCaseResult"
+				},
+				{
+					"name": "filters",
+					"value": [
+						{
+							"filterBy": "dueStatus",
+							"filterType": "includes",
+							"json": {
+								"in": [
+									"UNTESTED"
 								]
 							}
 						}

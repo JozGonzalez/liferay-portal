@@ -1,32 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.web.internal.info.item.renderer;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.constants.CPContentContributorConstants;
-import com.liferay.commerce.product.content.util.CPContentHelper;
+import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -51,9 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alec Sloan
  */
-@Component(
-	service = {AvailabilityLabelInfoItemRenderer.class, InfoItemRenderer.class}
-)
+@Component(service = InfoItemRenderer.class)
 public class AvailabilityLabelInfoItemRenderer
 	implements InfoItemRenderer<CPDefinition> {
 
@@ -77,6 +66,10 @@ public class AvailabilityLabelInfoItemRenderer
 		}
 
 		try {
+			RequestDispatcher requestDispatcher =
+				_servletContext.getRequestDispatcher(
+					"/info/item/renderer/availability_label/page.jsp");
+
 			CPDefinitionInventory cpDefinitionInventory =
 				_cpDefinitionInventoryLocalService.
 					fetchCPDefinitionInventoryByCPDefinitionId(
@@ -103,6 +96,9 @@ public class AvailabilityLabelInfoItemRenderer
 			httpServletRequest.setAttribute(
 				"liferay-commerce:availability-label:namespace", namespace);
 
+			String availabilityLabel = StringPool.BLANK;
+			String labelType = "default";
+
 			long groupId = _portal.getScopeGroupId(httpServletRequest);
 
 			CPCatalogEntry cpCatalogEntry =
@@ -113,11 +109,7 @@ public class AvailabilityLabelInfoItemRenderer
 
 			CPSku cpSku = _cpContentHelper.getDefaultCPSku(cpCatalogEntry);
 
-			boolean hasChildCPDefinitions =
-				_cpContentHelper.hasChildCPDefinitions(
-					cpCatalogEntry.getCPDefinitionId());
-
-			if ((cpSku != null) && !hasChildCPDefinitions) {
+			if (cpSku != null) {
 				ProductSettingsModel productSettingsModel =
 					_productHelper.getProductSettingsModel(
 						cpDefinition.getCPDefinitionId());
@@ -128,23 +120,22 @@ public class AvailabilityLabelInfoItemRenderer
 							getAvailabilityContentContributorValueJSONObject(
 								cpCatalogEntry, httpServletRequest);
 
-					httpServletRequest.setAttribute(
-						"liferay-commerce:availability-label:label",
+					availabilityLabel =
 						availabilityContentContributorValueJSONObject.getString(
 							CPContentContributorConstants.AVAILABILITY_NAME,
-							StringPool.BLANK));
-					httpServletRequest.setAttribute(
-						"liferay-commerce:availability-label:labelType",
+							availabilityLabel);
+					labelType =
 						availabilityContentContributorValueJSONObject.getString(
 							CPContentContributorConstants.
 								AVAILABILITY_DISPLAY_TYPE,
-							"default"));
+							labelType);
 				}
 			}
 
-			RequestDispatcher requestDispatcher =
-				_servletContext.getRequestDispatcher(
-					"/info/item/renderer/availability_label/page.jsp");
+			httpServletRequest.setAttribute(
+				"liferay-commerce:availability-label:label", availabilityLabel);
+			httpServletRequest.setAttribute(
+				"liferay-commerce:availability-label:labelType", labelType);
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
@@ -157,16 +148,16 @@ public class AvailabilityLabelInfoItemRenderer
 			long groupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountHelper.getCurrentCommerceAccount(
+		AccountEntry accountEntry =
+			_commerceAccountHelper.getCurrentAccountEntry(
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				httpServletRequest);
 
 		long commerceAccountId = 0;
 
-		if (commerceAccount != null) {
-			commerceAccountId = commerceAccount.getCommerceAccountId();
+		if (accountEntry != null) {
+			commerceAccountId = accountEntry.getAccountEntryId();
 		}
 
 		return commerceAccountId;

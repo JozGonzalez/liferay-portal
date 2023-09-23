@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.kernel.service;
@@ -17,6 +8,7 @@ package com.liferay.asset.kernel.service;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -40,25 +32,25 @@ public class AssetTagLocalServiceWrapper
 	}
 
 	@Override
-	public void addAssetEntryAssetTag(long entryId, AssetTag assetTag) {
-		_assetTagLocalService.addAssetEntryAssetTag(entryId, assetTag);
+	public boolean addAssetEntryAssetTag(long entryId, AssetTag assetTag) {
+		return _assetTagLocalService.addAssetEntryAssetTag(entryId, assetTag);
 	}
 
 	@Override
-	public void addAssetEntryAssetTag(long entryId, long tagId) {
-		_assetTagLocalService.addAssetEntryAssetTag(entryId, tagId);
+	public boolean addAssetEntryAssetTag(long entryId, long tagId) {
+		return _assetTagLocalService.addAssetEntryAssetTag(entryId, tagId);
 	}
 
 	@Override
-	public void addAssetEntryAssetTags(
+	public boolean addAssetEntryAssetTags(
 		long entryId, java.util.List<AssetTag> assetTags) {
 
-		_assetTagLocalService.addAssetEntryAssetTags(entryId, assetTags);
+		return _assetTagLocalService.addAssetEntryAssetTags(entryId, assetTags);
 	}
 
 	@Override
-	public void addAssetEntryAssetTags(long entryId, long[] tagIds) {
-		_assetTagLocalService.addAssetEntryAssetTags(entryId, tagIds);
+	public boolean addAssetEntryAssetTags(long entryId, long[] tagIds) {
+		return _assetTagLocalService.addAssetEntryAssetTags(entryId, tagIds);
 	}
 
 	/**
@@ -612,6 +604,26 @@ public class AssetTagLocalServiceWrapper
 	}
 
 	/**
+	 * Returns a range of all the asset tags in the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param start the lower bound of the range of asset tags
+	 * @param end the upper bound of the range of asset tags (not inclusive)
+	 * @param orderByComparator the comparator to order the asset tags
+	 (optionally <code>null</code>)
+	 * @return the range of matching asset tags
+	 */
+	@Override
+	public java.util.List<AssetTag> getGroupTags(
+		long groupId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<AssetTag>
+			orderByComparator) {
+
+		return _assetTagLocalService.getGroupTags(
+			groupId, start, end, orderByComparator);
+	}
+
+	/**
 	 * Returns the number of asset tags in the group.
 	 *
 	 * @param groupId the primary key of the group
@@ -974,6 +986,11 @@ public class AssetTagLocalServiceWrapper
 
 		return _assetTagLocalService.updateTag(
 			userId, tagId, name, serviceContext);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _assetTagLocalService.getBasePersistence();
 	}
 
 	@Override

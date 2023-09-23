@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.persistence.test;
@@ -163,6 +154,10 @@ public class CompanyPersistenceTest {
 
 		newCompany.setSize(RandomTestUtil.randomString());
 
+		newCompany.setIndexNameCurrent(RandomTestUtil.randomString());
+
+		newCompany.setIndexNameNext(RandomTestUtil.randomString());
+
 		_companies.add(_persistence.update(newCompany));
 
 		Company existingCompany = _persistence.findByPrimaryKey(
@@ -206,6 +201,11 @@ public class CompanyPersistenceTest {
 			existingCompany.getIndustry(), newCompany.getIndustry());
 		Assert.assertEquals(existingCompany.getType(), newCompany.getType());
 		Assert.assertEquals(existingCompany.getSize(), newCompany.getSize());
+		Assert.assertEquals(
+			existingCompany.getIndexNameCurrent(),
+			newCompany.getIndexNameCurrent());
+		Assert.assertEquals(
+			existingCompany.getIndexNameNext(), newCompany.getIndexNameNext());
 	}
 
 	@Test
@@ -263,7 +263,8 @@ public class CompanyPersistenceTest {
 			true, "mx", true, "homeURL", true, "logoId", true, "maxUsers", true,
 			"active", true, "name", true, "legalName", true, "legalId", true,
 			"legalType", true, "sicCode", true, "tickerSymbol", true,
-			"industry", true, "type", true, "size", true);
+			"industry", true, "type", true, "size", true, "indexNameCurrent",
+			true, "indexNameNext", true);
 	}
 
 	@Test
@@ -581,6 +582,10 @@ public class CompanyPersistenceTest {
 		company.setType(RandomTestUtil.randomString());
 
 		company.setSize(RandomTestUtil.randomString());
+
+		company.setIndexNameCurrent(RandomTestUtil.randomString());
+
+		company.setIndexNameNext(RandomTestUtil.randomString());
 
 		_companies.add(_persistence.update(company));
 

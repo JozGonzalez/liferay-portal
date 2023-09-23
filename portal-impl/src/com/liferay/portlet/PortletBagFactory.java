@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet;
@@ -18,11 +9,14 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.expando.kernel.model.CustomAttributesDisplay;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
@@ -40,8 +34,8 @@ import com.liferay.portal.kernel.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletLayoutListener;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEntry;
-import com.liferay.portal.kernel.scheduler.messaging.SchedulerEventMessageListener;
-import com.liferay.portal.kernel.scheduler.messaging.SchedulerEventMessageListenerWrapper;
+import com.liferay.portal.kernel.scheduler.SchedulerJobConfiguration;
+import com.liferay.portal.kernel.scheduler.TriggerConfiguration;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.OpenSearch;
 import com.liferay.portal.kernel.security.permission.propagator.PermissionPropagator;
@@ -133,7 +127,7 @@ public class PortletBagFactory {
 		_registerOpenSearches(
 			bundleContext, portlet, properties, serviceRegistrations);
 
-		_registerSchedulerEventMessageListeners(
+		_registerSchedulerJobConfigurations(
 			bundleContext, portlet, properties, serviceRegistrations);
 
 		FriendlyURLMapperTracker friendlyURLMapperTracker =
@@ -612,34 +606,19 @@ public class PortletBagFactory {
 		serviceRegistrations.add(serviceRegistration);
 	}
 
-	private void _registerSchedulerEventMessageListeners(
+	private void _registerSchedulerJobConfigurations(
 			BundleContext bundleContext, Portlet portlet,
 			Dictionary<String, Object> properties,
 			List<ServiceRegistration<?>> serviceRegistrations)
 		throws Exception {
 
 		for (SchedulerEntry schedulerEntry : portlet.getSchedulerEntries()) {
-			SchedulerEventMessageListenerWrapper
-				schedulerEventMessageListenerWrapper =
-					new SchedulerEventMessageListenerWrapper();
-
-			com.liferay.portal.kernel.messaging.MessageListener
-				messageListener =
-					(com.liferay.portal.kernel.messaging.MessageListener)
-						InstanceFactory.newInstance(
-							_classLoader,
-							schedulerEntry.getEventListenerClass());
-
-			schedulerEventMessageListenerWrapper.setMessageListener(
-				messageListener);
-
-			schedulerEventMessageListenerWrapper.setSchedulerEntry(
-				schedulerEntry);
-
 			ServiceRegistration<?> serviceRegistration =
 				bundleContext.registerService(
-					SchedulerEventMessageListener.class,
-					schedulerEventMessageListenerWrapper, properties);
+					SchedulerJobConfiguration.class,
+					new SchedulerEntrySchedulerJobConfiguration(
+						schedulerEntry, _classLoader),
+					properties);
 
 			serviceRegistrations.add(serviceRegistration);
 		}
@@ -937,5 +916,47 @@ public class PortletBagFactory {
 	private Configuration _configuration;
 	private ServletContext _servletContext;
 	private Boolean _warFile;
+
+	private static class SchedulerEntrySchedulerJobConfiguration
+		implements SchedulerJobConfiguration {
+
+		@Override
+		public UnsafeConsumer<Message, Exception>
+			getJobExecutorUnsafeConsumer() {
+
+			return _messageListener::receive;
+		}
+
+		@Override
+		public UnsafeRunnable<Exception> getJobExecutorUnsafeRunnable() {
+			throw new UnsupportedOperationException();
+		}
+
+		public String getName() {
+			return _schedulerEntry.getEventListenerClass();
+		}
+
+		@Override
+		public TriggerConfiguration getTriggerConfiguration() {
+			return _schedulerEntry.getTriggerConfiguration();
+		}
+
+		private SchedulerEntrySchedulerJobConfiguration(
+				SchedulerEntry schedulerEntry, ClassLoader classLoader)
+			throws Exception {
+
+			_schedulerEntry = schedulerEntry;
+
+			_messageListener =
+				(com.liferay.portal.kernel.messaging.MessageListener)
+					InstanceFactory.newInstance(
+						classLoader, schedulerEntry.getEventListenerClass());
+		}
+
+		private final com.liferay.portal.kernel.messaging.MessageListener
+			_messageListener;
+		private final SchedulerEntry _schedulerEntry;
+
+	}
 
 }

@@ -1,19 +1,23 @@
 definition {
 
-	@summary = "Helper function to get the 'DM folderId' for the folder '${folderName}'"
 	macro _getFolderIdByFolderName {
-		Variables.assertDefined(parameterList = "${groupName},${name}");
+		Variables.assertDefined(parameterList = ${name});
 
 		var portalURL = JSONCompany.getPortalURL();
-		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
+
+		if (!(isSet(repositoryId))) {
+			var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
+		}
 
 		if (!(isSet(parentFolderId))) {
 			var parentFolderId = 0;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/dlapp/get-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d repositoryId=${repositoryId} \
 				-d parentFolderId=${parentFolderId} \
 				-d name=${name}
@@ -29,7 +33,6 @@ definition {
 		}
 	}
 
-	@summary = "Helper function to get the 'DM typeId' for the document type '${documentTypeName}'"
 	macro _getTypeIdByTypeName {
 		Variables.assertDefined(parameterList = "${groupName},${documentTypeName}");
 
@@ -41,10 +44,11 @@ definition {
 		var groupId = JSONGroupAPI._getGroupIdByName(
 			groupName = ${groupName},
 			site = ${site});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupIds=${groupId}
 		''';
 

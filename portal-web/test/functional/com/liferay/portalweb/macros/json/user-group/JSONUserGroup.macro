@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Add a public/private site page to an existing user group via userGroupName, privateLayout is false by default"
 	macro addLayout {
 		Variables.assertDefined(parameterList = "${userGroupName},${layoutName}");
 
@@ -9,10 +8,11 @@ definition {
 		var userGroupId = JSONUserGroupAPI._getUserGroupIdByName(userGroupName = ${userGroupName});
 		var companyId = JSONCompany.getCompanyId();
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/0/site/false \
-				-u test@liferay.com:test
+				-u ${userLoginInfo}
 		''';
 
 		var groupId = JSONCurlUtil.get(${curl}, "$.[?(@['groupKey'] == '${userGroupId}')]['groupId']");
@@ -33,7 +33,6 @@ definition {
 			type = ${type});
 	}
 
-	@summary = "Add a user group"
 	macro addUserGroup {
 		Variables.assertDefined(parameterList = ${userGroupName});
 
@@ -42,11 +41,13 @@ definition {
 			userGroupName = ${userGroupName});
 	}
 
-	@summary = "Add user group with a group role"
 	macro assignGroupRoleToUserGroup {
-		Variables.assertDefined(parameterList = "${groupName},${roleTitle},${userGroupName}");
+		Variables.assertDefined(parameterList = "${roleTitle},${userGroupName}");
 
-		var groupId = JSONGroupSetter.setGroupId(groupName = ${groupName});
+		if (!(isSet(groupId))) {
+			var groupId = JSONGroupSetter.setGroupId(groupName = ${groupName});
+		}
+
 		var roleId = JSONRoleAPI._getRoleIdByName(name = ${roleTitle});
 		var userGroupId = JSONUserGroupAPI._getUserGroupIdByName(userGroupName = ${userGroupName});
 

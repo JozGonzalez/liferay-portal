@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.model;
@@ -20,6 +11,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -42,6 +35,8 @@ public class AMImageEntryWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
 		attributes.put("amImageEntryId", getAmImageEntryId());
 		attributes.put("groupId", getGroupId());
@@ -59,6 +54,18 @@ public class AMImageEntryWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -172,6 +179,16 @@ public class AMImageEntryWrapper
 	}
 
 	/**
+	 * Returns the ct collection ID of this am image entry.
+	 *
+	 * @return the ct collection ID of this am image entry
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
+	/**
 	 * Returns the file version ID of this am image entry.
 	 *
 	 * @return the file version ID of this am image entry
@@ -209,6 +226,16 @@ public class AMImageEntryWrapper
 	@Override
 	public String getMimeType() {
 		return model.getMimeType();
+	}
+
+	/**
+	 * Returns the mvcc version of this am image entry.
+	 *
+	 * @return the mvcc version of this am image entry
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -297,6 +324,16 @@ public class AMImageEntryWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this am image entry.
+	 *
+	 * @param ctCollectionId the ct collection ID of this am image entry
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
 	 * Sets the file version ID of this am image entry.
 	 *
 	 * @param fileVersionId the file version ID of this am image entry
@@ -334,6 +371,16 @@ public class AMImageEntryWrapper
 	@Override
 	public void setMimeType(String mimeType) {
 		model.setMimeType(mimeType);
+	}
+
+	/**
+	 * Sets the mvcc version of this am image entry.
+	 *
+	 * @param mvccVersion the mvcc version of this am image entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
@@ -379,6 +426,20 @@ public class AMImageEntryWrapper
 	@Override
 	public String toXmlString() {
 		return model.toXmlString();
+	}
+
+	@Override
+	public Map<String, Function<AMImageEntry, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<AMImageEntry, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

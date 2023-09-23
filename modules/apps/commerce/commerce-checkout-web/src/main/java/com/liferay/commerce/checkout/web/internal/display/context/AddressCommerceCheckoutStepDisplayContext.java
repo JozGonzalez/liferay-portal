@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.checkout.web.internal.display.context;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderActionKeys;
@@ -38,6 +28,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Objects;
 
@@ -49,14 +40,14 @@ import javax.portlet.ActionRequest;
 public class AddressCommerceCheckoutStepDisplayContext {
 
 	public AddressCommerceCheckoutStepDisplayContext(
-		CommerceAccountLocalService commerceAccountLocalService,
+		AccountEntryLocalService accountEntryLocalService,
 		int commerceAddressType, CommerceOrderService commerceOrderService,
 		CommerceAddressService commerceAddressService,
 		CountryLocalService countryLocalService,
 		ModelResourcePermission<CommerceOrder>
 			commerceOrderModelResourcePermission) {
 
-		_commerceAccountLocalService = commerceAccountLocalService;
+		_accountEntryLocalService = accountEntryLocalService;
 		_commerceAddressType = commerceAddressType;
 		_commerceOrderService = commerceOrderService;
 		_commerceAddressService = commerceAddressService;
@@ -246,14 +237,16 @@ public class AddressCommerceCheckoutStepDisplayContext {
 		if (commerceOrder.isGuestOrder()) {
 			String email = ParamUtil.getString(actionRequest, "email");
 
-			CommerceAccount commerceAccount =
-				_commerceAccountLocalService.addCommerceAccount(
-					name, CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID,
-					email, null, CommerceAccountConstants.ACCOUNT_TYPE_GUEST,
-					true, null, serviceContext);
+			AccountEntry accountEntry =
+				_accountEntryLocalService.addAccountEntry(
+					serviceContext.getUserId(),
+					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, name,
+					null, null, email, null, null,
+					AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST,
+					WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 			commerceOrder.setCommerceAccountId(
-				commerceAccount.getCommerceAccountId());
+				accountEntry.getAccountEntryId());
 
 			commerceOrder = _commerceOrderService.updateCommerceOrder(
 				commerceOrder);
@@ -265,7 +258,7 @@ public class AddressCommerceCheckoutStepDisplayContext {
 			countryId, phoneNumber, _commerceAddressType, serviceContext);
 	}
 
-	private final CommerceAccountLocalService _commerceAccountLocalService;
+	private final AccountEntryLocalService _accountEntryLocalService;
 	private final CommerceAddressService _commerceAddressService;
 	private int _commerceAddressType;
 	private final ModelResourcePermission<CommerceOrder>

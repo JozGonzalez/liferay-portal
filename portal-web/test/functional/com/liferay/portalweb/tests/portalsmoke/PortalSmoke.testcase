@@ -1,6 +1,7 @@
 @component-name = "portal-smoke"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.smoke = "true";
@@ -13,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -44,6 +45,16 @@ definition {
 
 		Smoke.runSmoke();
 
+		// LPS-178114 Assert Toggle Controls (eye icon) is in the correct location and can be toggled
+
+		Navigator.gotoSitePage(
+			pageName = "Test Page2",
+			siteName = "Site Name");
+
+		WidgetPages.switchToggleControls(status = "view");
+
+		WidgetPages.viewToggleControls(status = "hidden");
+
 		// Assert all bundles installed
 
 		AssertConsoleTextNotPresent(value1 = "The portal instance needs to be restarted to complete the installation");
@@ -60,6 +71,7 @@ definition {
 	@priority = 5
 	test SmokeWithDeveloperProperties {
 		property custom.properties = "include-and-override=portal-developer.properties";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property osgi.module.configuration.file.names = "com.liferay.document.library.document.conversion.configuration.OpenOfficeConfiguration";
 		property osgi.module.configurations = "cacheEnabled=\"false\"";
 		property portal.smoke = "false";
@@ -69,12 +81,21 @@ definition {
 		Smoke.viewWelcomeContentPage();
 
 		Smoke.runSmoke();
+
+		var databaseType = PropsUtil.get("database.type");
+
+		if (${databaseType} == "hypersonic") {
+			AssertConsoleTextNotPresent(value1 = "upgrade finished with result");
+
+			AssertConsoleTextNotPresent(value1 = "Upgrade process failed or upgrade dependencies are");
+
+			AssertConsoleTextNotPresent(value1 = "No pending upgrades to run");
+		}
 	}
 
 	@priority = 4
 	test SmokeWithEmbeddedHypersonic {
 		property app.server.types = "jboss,tomcat,weblogic,websphere,wildfly";
-		property ci.retries.disabled = "true";
 		property custom.properties = "passwords.default.policy.change.required=true";
 		property database.hypersonic.embedded = "true";
 		property database.types = "hypersonic";
@@ -95,9 +116,8 @@ definition {
 	@priority = 4
 	test SmokeWithJNDI {
 		property app.server.types = "tomcat,wildfly,weblogic,websphere";
-		property ci.retries.disabled = "true";
 		property database.jndi.enabled = "true";
-		property database.types = "mariadb,mysql";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.smoke = "false";
 
 		SignIn.signInTestSetup();
@@ -108,19 +128,18 @@ definition {
 
 		Portlet.shutdownServer();
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "wait-for-server-shutdown -Dapp.server.port.number=8080");
+		AntCommands.runCommand("build-test.xml", "wait-for-server-shutdown -Dapp.server.port.number=8080");
 	}
 
 	@priority = 5
 	test SmokeWithRewriteBatchedStatements {
-		property ci.retries.disabled = "true";
 		property database.types = "mariadb,mysql,postgresql,sqlserver";
 		property portal.smoke = "false";
 		property rewrite.batch.statements = "true";
 
 		SignIn.signInTestSetup();
+
+		Navigator.openURL();
 
 		Smoke.viewWelcomeContentPage();
 
@@ -129,7 +148,6 @@ definition {
 
 	@priority = 5
 	test SmokeWithRuntimeJSPCompile {
-		property ci.retries.disabled = "true";
 		property delete.precompiled.jsps = "true";
 		property portal.smoke = "false";
 
@@ -142,7 +160,6 @@ definition {
 
 	@priority = 5
 	test SmokeWithSPADisabled {
-		property ci.retries.disabled = "true";
 		property custom.properties = "javascript.single.page.application.enabled=false";
 		property portal.smoke = "false";
 

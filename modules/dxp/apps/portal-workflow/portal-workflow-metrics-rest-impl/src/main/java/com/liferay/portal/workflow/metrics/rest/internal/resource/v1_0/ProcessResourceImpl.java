@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -18,11 +9,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -34,12 +27,11 @@ import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.ProcessUt
 import com.liferay.portal.workflow.metrics.rest.internal.resource.exception.NoSuchProcessException;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessResource;
 import com.liferay.portal.workflow.metrics.search.index.ProcessWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,28 +66,27 @@ public class ProcessResourceImpl extends BaseProcessResourceImpl {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_processWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 		searchSearchRequest.setQuery(_createBooleanQuery(processId));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> ProcessUtil.toProcess(
-				document, contextAcceptLanguage.getPreferredLocale())
-		).orElseThrow(
-			() -> new NoSuchProcessException(
-				"No process exists with the process ID " + processId)
-		);
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
+
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			throw new NoSuchProcessException(
+				"No process exists with the process ID " + processId);
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		return ProcessUtil.toProcess(
+			searchHit.getDocument(),
+			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	@Override
@@ -103,42 +94,38 @@ public class ProcessResourceImpl extends BaseProcessResourceImpl {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_processWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 		searchSearchRequest.setQuery(_createBooleanQuery(processId));
 		searchSearchRequest.setSelectedFieldNames(
 			"processId",
 			_getTitleFieldName(contextAcceptLanguage.getPreferredLocale()),
 			_getTitleFieldName(LocaleThreadLocal.getDefaultLocale()));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> {
-				String title = document.getString(
-					_getTitleFieldName(
-						contextAcceptLanguage.getPreferredLocale()));
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
 
-				if (Validator.isNull(title)) {
-					title = document.getString(
-						_getTitleFieldName(
-							LocaleThreadLocal.getDefaultLocale()));
-				}
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-				return title;
-			}
-		).orElseGet(
-			() -> StringPool.BLANK
-		);
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			return StringPool.BLANK;
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		Document document = searchHit.getDocument();
+
+		String title = document.getString(
+			_getTitleFieldName(contextAcceptLanguage.getPreferredLocale()));
+
+		if (Validator.isNull(title)) {
+			title = document.getString(
+				_getTitleFieldName(LocaleThreadLocal.getDefaultLocale()));
+		}
+
+		return title;
 	}
 
 	@Override
@@ -218,11 +205,10 @@ public class ProcessResourceImpl extends BaseProcessResourceImpl {
 	}
 
 	@Reference
-	private ProcessWorkflowMetricsIndexer _processWorkflowMetricsIndexer;
+	private IndexNameBuilder _indexNameBuilder;
 
-	@Reference(target = "(workflow.metrics.index.entity.name=process)")
-	private WorkflowMetricsIndexNameBuilder
-		_processWorkflowMetricsIndexNameBuilder;
+	@Reference
+	private ProcessWorkflowMetricsIndexer _processWorkflowMetricsIndexer;
 
 	@Reference
 	private Queries _queries;

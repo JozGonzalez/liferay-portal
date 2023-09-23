@@ -1,22 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.petra.reflect.ReflectionUtil;
-import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -24,10 +13,7 @@ import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
-import com.liferay.portal.util.PropsValues;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import com.liferay.portal.util.PropsUtil;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -55,33 +41,16 @@ public class UpgradeRegistryTest {
 
 	@Before
 	public void setUp() throws Exception {
-		if (!PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-			_upgradeDatabaseAutoRunField = ReflectionUtil.getDeclaredField(
-				PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN");
+		_originalUpgradeDatabaseAutoRun = PropsUtil.get(
+			"upgrade.database.auto.run");
 
-			_upgradeDatabaseAutoRunField.setAccessible(true);
-
-			_modifiersField = Field.class.getDeclaredField("modifiers");
-
-			_modifiersField.setAccessible(true);
-			_modifiersField.setInt(
-				_upgradeDatabaseAutoRunField,
-				_upgradeDatabaseAutoRunField.getModifiers() & ~Modifier.FINAL);
-
-			_upgradeDatabaseAutoRunField.set(null, true);
-		}
+		PropsUtil.set("upgrade.database.auto.run", "true");
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		if (!_PREVIOUS_UPGRADE_DATABASE_AUTO_RUN) {
-			_upgradeDatabaseAutoRunField.set(
-				null, _PREVIOUS_UPGRADE_DATABASE_AUTO_RUN);
-
-			_modifiersField.setAccessible(false);
-
-			_upgradeDatabaseAutoRunField.setAccessible(false);
-		}
+		PropsUtil.set(
+			"upgrade.database.auto.run", _originalUpgradeDatabaseAutoRun);
 
 		if (_serviceRegistration != null) {
 			_serviceRegistration.unregister();
@@ -125,22 +94,17 @@ public class UpgradeRegistryTest {
 		Assert.assertTrue(testUpgradeSteps[3]._upgradeCalled);
 	}
 
-	private static final boolean _PREVIOUS_UPGRADE_DATABASE_AUTO_RUN =
-		PropsValues.UPGRADE_DATABASE_AUTO_RUN;
-
-	private static Field _modifiersField;
+	private static String _originalUpgradeDatabaseAutoRun;
 
 	@Inject
 	private static ReleaseLocalService _releaseLocalService;
-
-	private static Field _upgradeDatabaseAutoRunField;
 
 	private ServiceRegistration<UpgradeStepRegistrator> _serviceRegistration;
 
 	private static class TestUpgradeStep implements UpgradeStep {
 
 		@Override
-		public void upgrade(DBProcessContext dbProcessContext) {
+		public void upgrade() {
 			_upgradeCalled = true;
 		}
 

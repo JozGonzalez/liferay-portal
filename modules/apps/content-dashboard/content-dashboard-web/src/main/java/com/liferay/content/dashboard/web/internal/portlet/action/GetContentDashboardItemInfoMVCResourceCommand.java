@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.portlet.action;
@@ -24,9 +15,11 @@ import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
 import com.liferay.content.dashboard.item.VersionableContentDashboardItem;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
-import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,6 +30,8 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
@@ -65,7 +60,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -216,14 +210,18 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 						contentDashboardItem, httpServletRequest)
 				).put(
 					"subType",
-					Optional.ofNullable(
-						contentDashboardItem.getContentDashboardItemSubtype()
-					).map(
-						contentDashboardItemSubtype ->
-							contentDashboardItemSubtype.getLabel(locale)
-					).orElse(
-						StringPool.BLANK
-					)
+					() -> {
+						ContentDashboardItemSubtype<?>
+							contentDashboardItemSubtype =
+								contentDashboardItem.
+									getContentDashboardItemSubtype();
+
+						if (contentDashboardItemSubtype == null) {
+							return StringPool.BLANK;
+						}
+
+						return contentDashboardItemSubtype.getLabel(locale);
+					}
 				).put(
 					"tags", _getAssetTagsJSONArray(contentDashboardItem)
 				).put(
@@ -307,13 +305,23 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			"categories", ListUtil.fromArray()
 		).put(
 			"groupName",
-			Optional.ofNullable(
-				_groupLocalService.fetchGroup(assetVocabulary.getGroupId())
-			).map(
-				group -> ContentDashboardGroupUtil.getGroupName(group, locale)
-			).orElse(
-				StringPool.BLANK
-			)
+			() -> {
+				Group group = _groupLocalService.fetchGroup(
+					assetVocabulary.getGroupId());
+
+				if (group == null) {
+					return StringPool.BLANK;
+				}
+
+				try {
+					return group.getDescriptiveName(locale);
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException);
+
+					return group.getName(locale);
+				}
+			}
 		).put(
 			"isPublic",
 			assetVocabulary.getVisibilityType() ==
@@ -334,7 +342,18 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		InfoItemReference infoItemReference =
 			contentDashboardItem.getInfoItemReference();
 
-		return infoItemReference.getClassPK();
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+			return 0;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)
+				infoItemReference.getInfoItemIdentifier();
+
+		return classPKInfoItemIdentifier.getClassPK();
 	}
 
 	private String _getDownloadURL(
@@ -511,13 +530,16 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		ContentDashboardItem contentDashboardItem,
 		HttpServletRequest httpServletRequest) {
 
-		return Optional.ofNullable(
+		JSONObject jsonObject =
 			_getSubscribeContentDashboardItemActionJSONObject(
-				contentDashboardItem, httpServletRequest)
-		).orElseGet(
-			() -> _getUnSubscribeContentDashboardItemActionJSONObject(
-				contentDashboardItem, httpServletRequest)
-		);
+				contentDashboardItem, httpServletRequest);
+
+		if (jsonObject != null) {
+			return jsonObject;
+		}
+
+		return _getUnSubscribeContentDashboardItemActionJSONObject(
+			contentDashboardItem, httpServletRequest);
 	}
 
 	private JSONObject _getUnSubscribeContentDashboardItemActionJSONObject(
@@ -556,24 +578,23 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			"name", contentDashboardItem.getUserName()
 		).put(
 			"url",
-			Optional.ofNullable(
-				_userLocalService.fetchUser(contentDashboardItem.getUserId())
-			).filter(
-				user -> user.getPortraitId() > 0
-			).map(
-				user -> {
-					try {
-						return user.getPortraitURL(themeDisplay);
-					}
-					catch (PortalException portalException) {
-						_log.error(portalException);
+			() -> {
+				User user = _userLocalService.fetchUser(
+					contentDashboardItem.getUserId());
 
-						return null;
-					}
+				if ((user == null) || (user.getPortraitId() <= 0)) {
+					return null;
 				}
-			).orElse(
-				null
-			)
+
+				try {
+					return user.getPortraitURL(themeDisplay);
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException);
+				}
+
+				return null;
+			}
 		).put(
 			"userId", contentDashboardItem.getUserId()
 		);

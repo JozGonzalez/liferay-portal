@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
@@ -19,6 +10,7 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectRelationshipResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -30,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -46,7 +39,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -104,6 +96,10 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			)
 		}
 	)
@@ -128,7 +124,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 				@javax.ws.rs.QueryParam("search")
 				String search,
 				@javax.ws.rs.core.Context Filter filter,
-				@javax.ws.rs.core.Context Pagination pagination)
+				@javax.ws.rs.core.Context Pagination pagination,
+				@javax.ws.rs.core.Context Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -137,7 +134,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships' -d $'{"deletionType": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionName2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -197,6 +194,10 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			)
 		}
 	)
@@ -220,7 +221,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@javax.ws.rs.QueryParam("search")
 			String search,
 			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination)
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -244,6 +246,10 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -280,6 +286,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@javax.ws.rs.QueryParam("search")
 			String search,
 			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context Sort[] sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -314,7 +321,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships' -d $'{"deletionType": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionName2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -514,7 +521,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}' -d $'{"deletionType": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionName2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}' -d $'{"deletionType": ___, "edge": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -598,18 +605,18 @@ public abstract class BaseObjectRelationshipResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectRelationship, Exception>
-			objectRelationshipUnsafeConsumer = null;
+		UnsafeFunction<ObjectRelationship, ObjectRelationship, Exception>
+			objectRelationshipUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("objectDefinitionId")) {
-				objectRelationshipUnsafeConsumer =
+				objectRelationshipUnsafeFunction =
 					objectRelationship ->
 						postObjectDefinitionObjectRelationship(
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get("objectDefinitionId")),
 							objectRelationship);
 			}
@@ -619,19 +626,23 @@ public abstract class BaseObjectRelationshipResourceImpl
 			}
 		}
 
-		if (objectRelationshipUnsafeConsumer == null) {
+		if (objectRelationshipUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for ObjectRelationship");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectRelationships, objectRelationshipUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectRelationships, objectRelationshipUnsafeConsumer);
+				objectRelationships, objectRelationshipUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectRelationship objectRelationship : objectRelationships) {
-				objectRelationshipUnsafeConsumer.accept(objectRelationship);
+				objectRelationshipUnsafeFunction.apply(objectRelationship);
 			}
 		}
 	}
@@ -682,8 +693,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 
 		if (parameters.containsKey("objectDefinitionId")) {
 			return getObjectDefinitionObjectRelationshipsPage(
-				Long.parseLong((String)parameters.get("objectDefinitionId")),
-				search, filter, pagination);
+				_parseLong((String)parameters.get("objectDefinitionId")),
+				search, filter, pagination, sorts);
 		}
 		else {
 			throw new NotSupportedException(
@@ -719,41 +730,62 @@ public abstract class BaseObjectRelationshipResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectRelationship, Exception>
-			objectRelationshipUnsafeConsumer = null;
+		UnsafeFunction<ObjectRelationship, ObjectRelationship, Exception>
+			objectRelationshipUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			objectRelationshipUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			objectRelationshipUnsafeFunction =
 				objectRelationship -> putObjectRelationship(
 					objectRelationship.getId() != null ?
 						objectRelationship.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get("objectRelationshipId")),
 					objectRelationship);
 		}
 
-		if (objectRelationshipUnsafeConsumer == null) {
+		if (objectRelationshipUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for ObjectRelationship");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectRelationships, objectRelationshipUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectRelationships, objectRelationshipUnsafeConsumer);
+				objectRelationships, objectRelationshipUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectRelationship objectRelationship : objectRelationships) {
-				objectRelationshipUnsafeConsumer.accept(objectRelationship);
+				objectRelationshipUnsafeFunction.apply(objectRelationship);
 			}
 		}
 	}
 
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<ObjectRelationship>,
+			 UnsafeFunction<ObjectRelationship, ObjectRelationship, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -970,6 +1002,12 @@ public abstract class BaseObjectRelationshipResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1000,7 +1038,19 @@ public abstract class BaseObjectRelationshipResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<ObjectRelationship>,
+		 UnsafeFunction<ObjectRelationship, ObjectRelationship, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<ObjectRelationship>,
 		 UnsafeConsumer<ObjectRelationship, Exception>, Exception>

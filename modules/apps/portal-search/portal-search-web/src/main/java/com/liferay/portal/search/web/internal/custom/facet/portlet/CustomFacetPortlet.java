@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.custom.facet.portlet;
@@ -19,6 +10,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -29,11 +21,6 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
 import java.io.IOException;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -117,18 +104,14 @@ public class CustomFacetPortlet extends MVCPortlet {
 
 		String parameterName = _getParameterName(customFacetPortletPreferences);
 
-		Optional<List<String>> parameterValuesOptional =
-			_getParameterValuesOptional(
-				parameterName, portletSharedSearchResponse, renderRequest);
-
 		return customFacetDisplayContextBuilder.setCustomDisplayCaption(
-			customFacetPortletPreferences.getCustomHeadingOptional()
+			customFacetPortletPreferences.getCustomHeading()
 		).setFacet(
 			_getFacet(
 				portletSharedSearchResponse, customFacetPortletPreferences,
 				renderRequest)
 		).setFieldToAggregate(
-			customFacetPortletPreferences.getAggregationFieldString()
+			customFacetPortletPreferences.getAggregationField()
 		).setFrequenciesVisible(
 			customFacetPortletPreferences.isFrequenciesVisible()
 		).setFrequencyThreshold(
@@ -142,7 +125,8 @@ public class CustomFacetPortlet extends MVCPortlet {
 		).setParameterName(
 			parameterName
 		).setParameterValues(
-			parameterValuesOptional
+			portletSharedSearchResponse.getParameterValues(
+				parameterName, renderRequest)
 		).build();
 	}
 
@@ -196,28 +180,20 @@ public class CustomFacetPortlet extends MVCPortlet {
 	private String _getParameterName(
 		CustomFacetPortletPreferences customFacetPortletPreferences) {
 
-		Optional<String> optional = Stream.of(
-			customFacetPortletPreferences.getParameterNameOptional(),
-			customFacetPortletPreferences.getAggregationFieldOptional()
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).findFirst();
+		String parameterName = customFacetPortletPreferences.getParameterName();
 
-		return optional.orElse("customfield");
-	}
+		if (Validator.isNotNull(parameterName)) {
+			return parameterName;
+		}
 
-	private Optional<List<String>> _getParameterValuesOptional(
-		String parameterName,
-		PortletSharedSearchResponse portletSharedSearchResponse,
-		RenderRequest renderRequest) {
+		String aggregationField =
+			customFacetPortletPreferences.getAggregationField();
 
-		Optional<String[]> optional =
-			portletSharedSearchResponse.getParameterValues(
-				parameterName, renderRequest);
+		if (Validator.isNotNull(aggregationField)) {
+			return aggregationField;
+		}
 
-		return optional.map(Arrays::asList);
+		return "customfield";
 	}
 
 	private String _getPortletId(RenderRequest renderRequest) {

@@ -1,6 +1,10 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {useState} from 'react';
 
-import {Footer} from '../../components/Footer/Footer';
 import {AppFlowList} from '../../components/NewAppFlowList/AppFlowList';
 import {NewAppToolBar} from '../../components/NewAppToolBar/NewAppToolBar';
 import {ChoosePricingModelPage} from '../ChoosePricingModelPage/ChoosePricingModelPage';
@@ -15,6 +19,7 @@ import {CustomizeAppStorefrontPage} from '../StorefrontPage/CustomizeAppStorefro
 import {initialFLowListItems} from './AppCreationFlowUtil';
 
 import './AppCreationFlow.scss';
+import {Liferay} from '../../liferay/liferay';
 import {useAppContext} from '../../manage-app-state/AppManageState';
 import {DefineAppProfilePage} from '../DefineAppProfilePage/DefineAppProfilePage';
 
@@ -24,9 +29,10 @@ type SetAppFlowListStateProps = {
 };
 
 export function AppCreationFlow() {
-	const [{priceModel}] = useAppContext();
-	const [appFlowListItems, setAppFlowListItems] =
-		useState(initialFLowListItems);
+	const [{appERC, appProductId, priceModel}] = useAppContext();
+	const [appFlowListItems, setAppFlowListItems] = useState(
+		initialFLowListItems
+	);
 	const [currentFlow, setCurrentFlow] = useState('create');
 
 	const setAppFlowListState = ({
@@ -226,7 +232,7 @@ export function AppCreationFlow() {
 							setCurrentFlow('pricing');
 						}}
 						onClickContinue={() => {
-							if (priceModel !== 'free') {
+							if (priceModel.value !== 'Free') {
 								setAppFlowListState({
 									checkedItems: [
 										'create',
@@ -300,7 +306,7 @@ export function AppCreationFlow() {
 				{currentFlow === 'support' && (
 					<ProvideAppSupportAndHelpPage
 						onClickBack={() => {
-							if (priceModel !== 'free') {
+							if (priceModel.value !== 'Free') {
 								setAppFlowListState({
 									checkedItems: [
 										'create',
@@ -386,13 +392,16 @@ export function AppCreationFlow() {
 								selectedItem: '',
 							});
 
-							location.href = '/';
+							location.href = `${Liferay.ThemeDisplay.getCanonicalURL().replace(
+								'/create-new-app',
+								'/publisher-dashboard'
+							)}`;
 						}}
+						productERC={appERC}
+						productId={appProductId}
 					/>
 				)}
 			</div>
-
-			<Footer />
 		</div>
 	);
 }

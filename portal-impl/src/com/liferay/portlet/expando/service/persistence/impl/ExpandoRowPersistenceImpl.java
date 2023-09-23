@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.expando.service.persistence.impl;
@@ -48,7 +39,6 @@ import com.liferay.portlet.expando.model.impl.ExpandoRowModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -1168,21 +1158,21 @@ public class ExpandoRowPersistenceImpl
 	public ExpandoRow fetchByT_C(
 		long tableId, long classPK, boolean useFinderCache) {
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			ExpandoRow.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {tableId, classPK};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByT_C, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			ExpandoRow.class);
 
 		if (result instanceof ExpandoRow) {
 			ExpandoRow expandoRow = (ExpandoRow)result;
@@ -1192,6 +1182,14 @@ public class ExpandoRowPersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						ExpandoRow.class, expandoRow.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2159,28 +2157,13 @@ public class ExpandoRowPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"tableId", "classPK"}, false);
 
-		_setExpandoRowUtilPersistence(this);
+		ExpandoRowUtil.setPersistence(this);
 	}
 
 	public void destroy() {
-		_setExpandoRowUtilPersistence(null);
+		ExpandoRowUtil.setPersistence(null);
 
 		EntityCacheUtil.removeCache(ExpandoRowImpl.class.getName());
-	}
-
-	private void _setExpandoRowUtilPersistence(
-		ExpandoRowPersistence expandoRowPersistence) {
-
-		try {
-			Field field = ExpandoRowUtil.class.getDeclaredField("_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, expandoRowPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	private static final String _SQL_SELECT_EXPANDOROW =

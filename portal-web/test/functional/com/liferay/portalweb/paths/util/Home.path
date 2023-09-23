@@ -132,17 +132,7 @@
 </tr>
 <tr>
 	<td>ERROR_MESSAGE_ALERT_ERROR</td>
-	<td>//section[@id='content']//h3[contains(@class, 'alert-danger')] | //div[@class='portlet-content']/h3[contains(@class, 'alert-danger')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ERROR_MESSAGE_RESOURCE_NOT_FOUND</td>
-	<td>//div[@id='wrapper']/section[@id='content']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>URL_ERROR_MESSAGE</td>
-	<td>//code[@class='lfr-url-error']</td>
+	<td>//section[@id='content']//*[contains(@class, 'alert-danger')] | //div[@class='portlet-content']/h3[contains(@class, 'alert-danger')]</td>
 	<td></td>
 </tr>
 <tr>

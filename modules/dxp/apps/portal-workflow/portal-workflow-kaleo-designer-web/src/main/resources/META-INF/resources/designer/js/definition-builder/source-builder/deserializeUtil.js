@@ -1,16 +1,7 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
-
-import {isEdge} from 'react-flow-renderer';
 
 import {defaultLanguageId} from '../constants';
 import {removeNewLine, replaceTabSpaces} from '../util/utils';
@@ -37,13 +28,18 @@ DeserializeUtil.prototype = {
 
 		const elements = [];
 
-		const transitionsIDs = [];
+		const transitionsNames = [];
 
-		const nodesIDs = [];
+		const nodesNames = [];
 
 		instance.definition.forEachField((_, fieldData) => {
 			fieldData.results.forEach((node) => {
-				nodesIDs.push(node.name);
+				if (node.name) {
+					nodesNames.push(node.name);
+				}
+				else if (node.id) {
+					nodesNames.push(node.id);
+				}
 			});
 		});
 
@@ -107,16 +103,6 @@ DeserializeUtil.prototype = {
 				}
 
 				if (type === 'task') {
-					node.assignments?.forEach((assignment) => {
-						const roleTypes = assignment['role-type'];
-
-						roleTypes?.forEach((type, index) => {
-							if (type === 'depot') {
-								roleTypes[index] = 'asset library';
-							}
-						});
-					});
-
 					if (node.assignments) {
 						data.assignments = parseAssignments(node);
 					}
@@ -133,23 +119,13 @@ DeserializeUtil.prototype = {
 				data.notifications =
 					node.notifications?.length && parseNotifications(node);
 
-				node.notifications?.forEach((notification) => {
-					const roleTypes = notification['role-type'];
-
-					roleTypes?.forEach((type, index) => {
-						if (type === 'depot') {
-							roleTypes[index] = 'asset library';
-						}
-					});
-				});
-
-				let nodeId;
+				let nodeName;
 
 				if (node.id) {
-					nodeId = node.id;
+					nodeName = node.id;
 				}
 				else if (node.name) {
-					nodeId = node.name;
+					nodeName = node.name;
 				}
 				else {
 					return;
@@ -157,13 +133,19 @@ DeserializeUtil.prototype = {
 
 				elements.push({
 					data,
-					id: nodeId,
+					id: nodeName,
 					position,
 					type,
 				});
 
-				if (node.transitions) {
-					node.transitions.forEach((transition) => {
+				const transitions = node.transitions;
+
+				if (transitions) {
+					let hasDefaultEdge = transitions?.find(
+						(transition) => transition?.default === 'true'
+					);
+
+					transitions.forEach((transition) => {
 						let label = {};
 
 						if (Array.isArray(transition.labels)) {
@@ -181,50 +163,47 @@ DeserializeUtil.prototype = {
 							label = {[defaultLanguageId]: transition.name};
 						}
 
-						let transitionId;
+						let transitionName;
 
 						if (transition.id) {
-							transitionId = transition.id;
+							transitionName = transition.id;
 						}
 						else if (transition.name) {
-							transitionId = transition.name;
+							transitionName = transition.name;
 						}
 						else {
 							return;
 						}
 
 						if (
-							transitionsIDs.includes(transitionId) ||
-							nodesIDs.includes(transitionId)
+							transitionsNames.includes(transitionName) ||
+							nodesNames.includes(transitionName)
 						) {
-							transitionId = `${nodeId}_${transitionId}_${transition.target}`;
+							transitionName = `${nodeName}_${transitionName}_${transition.target}`;
 						}
 						else {
-							transitionsIDs.push(transitionId);
+							transitionsNames.push(transitionName);
 						}
-
-						const hasDefaultEdge = elements.find(
-							(element) =>
-								isEdge(element) &&
-								element.source === nodeId &&
-								element.data.defaultEdge
-						);
+						const defaultEdge =
+							transition?.default === 'true' || !hasDefaultEdge
+								? true
+								: false;
 
 						elements.push({
 							arrowHeadType: 'arrowclosed',
 							data: {
-								defaultEdge:
-									transition?.default === 'true' ||
-									!hasDefaultEdge
-										? true
-										: false,
+								defaultEdge,
 								label,
 							},
-							id: transitionId,
-							source: nodeId,
+							id: transitionName,
+							source: nodeName,
 							target: transition.target,
 							type: 'transition',
 						});
+
+						if (defaultEdge && !hasDefaultEdge) {
+							hasDefaultEdge = true;
+						}
 					});
 				}
 			});

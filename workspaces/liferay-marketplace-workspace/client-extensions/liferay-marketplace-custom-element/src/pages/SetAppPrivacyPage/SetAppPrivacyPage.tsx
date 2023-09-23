@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {Header} from '../../components/Header/Header';
 import {Section} from '../../components/Section/Section';
 
@@ -21,7 +26,9 @@ export function SetAppPrivacyPage({
 	onClickBack,
 	onClickContinue,
 }: SetAppPrivacyPageProps) {
-	const [collectUsersData, setCollectUsersData] = useState(false);
+
+	// const [collectUsersData, setCollectUsersData] = useState(false);
+
 	const [checkboxDataCardsValues, setCheckboxDataCardsValues] = useState(
 		initialCheckboxDataCardsValues
 	);
@@ -89,8 +96,8 @@ export function SetAppPrivacyPage({
                 </span> */}
 			</Section>
 
-			{collectUsersData && (
-				<Section
+			{
+				/* collectUsersData && */ <Section
 					label="Select all data this publisher will collect from this app"
 					required
 					tooltip="More Info"
@@ -118,7 +125,7 @@ export function SetAppPrivacyPage({
 						)
 					)}
 				</Section>
-			)}
+			}
 
 			<NewAppPageFooterButtons
 				onClickBack={() => onClickBack()}

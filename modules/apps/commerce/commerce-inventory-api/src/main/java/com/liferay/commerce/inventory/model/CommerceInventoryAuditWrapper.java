@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model;
 
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -52,10 +45,11 @@ public class CommerceInventoryAuditWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
-		attributes.put("sku", getSku());
 		attributes.put("logType", getLogType());
 		attributes.put("logTypeSettings", getLogTypeSettings());
 		attributes.put("quantity", getQuantity());
+		attributes.put("sku", getSku());
+		attributes.put("unitOfMeasureKey", getUnitOfMeasureKey());
 
 		return attributes;
 	}
@@ -105,12 +99,6 @@ public class CommerceInventoryAuditWrapper
 			setModifiedDate(modifiedDate);
 		}
 
-		String sku = (String)attributes.get("sku");
-
-		if (sku != null) {
-			setSku(sku);
-		}
-
 		String logType = (String)attributes.get("logType");
 
 		if (logType != null) {
@@ -123,10 +111,22 @@ public class CommerceInventoryAuditWrapper
 			setLogTypeSettings(logTypeSettings);
 		}
 
-		Integer quantity = (Integer)attributes.get("quantity");
+		BigDecimal quantity = (BigDecimal)attributes.get("quantity");
 
 		if (quantity != null) {
 			setQuantity(quantity);
+		}
+
+		String sku = (String)attributes.get("sku");
+
+		if (sku != null) {
+			setSku(sku);
+		}
+
+		String unitOfMeasureKey = (String)attributes.get("unitOfMeasureKey");
+
+		if (unitOfMeasureKey != null) {
+			setUnitOfMeasureKey(unitOfMeasureKey);
 		}
 	}
 
@@ -221,7 +221,7 @@ public class CommerceInventoryAuditWrapper
 	 * @return the quantity of this commerce inventory audit
 	 */
 	@Override
-	public int getQuantity() {
+	public BigDecimal getQuantity() {
 		return model.getQuantity();
 	}
 
@@ -233,6 +233,16 @@ public class CommerceInventoryAuditWrapper
 	@Override
 	public String getSku() {
 		return model.getSku();
+	}
+
+	/**
+	 * Returns the unit of measure key of this commerce inventory audit.
+	 *
+	 * @return the unit of measure key of this commerce inventory audit
+	 */
+	@Override
+	public String getUnitOfMeasureKey() {
+		return model.getUnitOfMeasureKey();
 	}
 
 	/**
@@ -356,7 +366,7 @@ public class CommerceInventoryAuditWrapper
 	 * @param quantity the quantity of this commerce inventory audit
 	 */
 	@Override
-	public void setQuantity(int quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		model.setQuantity(quantity);
 	}
 
@@ -368,6 +378,16 @@ public class CommerceInventoryAuditWrapper
 	@Override
 	public void setSku(String sku) {
 		model.setSku(sku);
+	}
+
+	/**
+	 * Sets the unit of measure key of this commerce inventory audit.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce inventory audit
+	 */
+	@Override
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		model.setUnitOfMeasureKey(unitOfMeasureKey);
 	}
 
 	/**

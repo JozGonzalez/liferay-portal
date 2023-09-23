@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.definition;
@@ -36,8 +27,7 @@ public class ScriptingLanguageTest {
 	public void testParseScriptingLanguages() throws Exception {
 		for (String value :
 				new String[] {
-					"beanshell", "drl", "groovy", "java", "javascript",
-					"python", "ruby", "function#foo", "function#foo-bar"
+					"drl", "groovy", "java", "function#foo", "function#foo-bar"
 				}) {
 
 			ScriptLanguage scriptLanguage = ScriptLanguage.parse(value);
@@ -47,8 +37,9 @@ public class ScriptingLanguageTest {
 
 		for (String value :
 				new String[] {
-					"beanshellV", "something", "function#-foo",
-					"function#Foo-bar", "function#foo-bar-"
+					"beanshell", "beanshellV", "javascript", "python", "ruby",
+					"something", "function#-foo", "function#Foo-bar",
+					"function#foo-bar-"
 				}) {
 
 			try {

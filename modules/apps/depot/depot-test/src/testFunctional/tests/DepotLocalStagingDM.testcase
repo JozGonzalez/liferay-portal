@@ -14,7 +14,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -36,9 +36,9 @@ definition {
 
 		Depot.disableStagingDepot(depotName = "Test Depot Name");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -296,12 +296,14 @@ definition {
 		BlogsEntry.viewSmallImage(uploadFileName = "Document_1.jpg");
 	}
 
-	@description = "This ensures that image in depot can be removed and republished in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that image in depot can be removed and republished in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@e2e
 	@priority = 5
 	@refactordone
 	test CanDeleteDMImage {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -372,10 +374,13 @@ definition {
 		Navigator.gotoStagedView();
 	}
 
-	@description = "This ensures that a document in depot can be removed and republished in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that a document in depot can be removed and republished in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanDeleteDocument {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_1.doc",
@@ -453,10 +458,13 @@ definition {
 		AssetPublisherPortlet.viewAssetNotPresentPG(assetTitle = "Document_1.doc");
 	}
 
-	@description = "This ensures that custom field in document from depot can be deleted and republished in the site when enabling local staging."
+	@description = "This ensures that custom field in document from depot can be deleted and republished in the site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanDeleteDocumentWithCustomField {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -713,6 +721,8 @@ definition {
 
 		Staging.publishToLive();
 
+		Refresh();
+
 		BlogsNavigator.openToBlogEntry(
 			entryTitle = "Blogs Entry Title",
 			layoutName = "Test Page",
@@ -827,10 +837,13 @@ definition {
 			locator1 = "WCD#WEB_CONTENT_IMAGE");
 	}
 
-	@description = "This ensures that the blog image from a depot can be edited and republished when enabling local staging."
+	@description = "This ensures that the blog image from a depot can be edited and republished when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditBlogCoverImage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		for (var num : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
@@ -885,6 +898,14 @@ definition {
 		Blogs.clickEllipsisItemPG(
 			entryTitle = "Blogs Entry Title",
 			item = "Edit");
+
+		MouseOver(
+			key_text = "picture",
+			locator1 = "Icon#ANY");
+
+		AssertVisible(
+			key_content = "Change Image",
+			locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 
 		BlogsNavigator.gotoBrowseImage();
 
@@ -1090,10 +1111,13 @@ definition {
 		BlogsEntry.viewSmallImage(uploadFileName = "Document_2.jpg");
 	}
 
-	@description = "This ensures that an image in depot can be replaced and republished in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that an image in depot can be replaced and republished in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditDMImage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_2.jpg",
@@ -1170,11 +1194,13 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "Document_1.jpg");
 	}
 
-	@description = "This ensures that document in depot can be replaced and republished in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that document in depot can be replaced and republished in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditDocument {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -1252,10 +1278,13 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "Document_3.doc");
 	}
 
-	@description = "This ensures that the custom field in document from depot can be edited and republished in the site when enabling local staging."
+	@description = "This ensures that the custom field in document from depot can be edited and republished in the site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditDocumentWithCustomField {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -1347,7 +1376,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanEditInternalVideo {
-		property test.name.skip.portal.instance = "DepotLocalStagingDM#CanEditInternalVideo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMNavigator.openToConfigInSystemSettings(portlet = "FFMPEG Video Converter");
 
@@ -1529,10 +1559,13 @@ definition {
 		OpenGraph.viewPreviewImage(imageName = "Document_2.jpg");
 	}
 
-	@description = "This ensures that the image in depot can be replaced and republished in web content when enabling local staging."
+	@description = "This ensures that the image in depot can be replaced and republished in web content when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditWCImage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		for (var num : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
@@ -1652,7 +1685,7 @@ definition {
 
 		DMDocument.addWithWorkflowCP(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.doc",
+			dmDocumentFile = "Document_1.jpg",
 			dmDocumentTitle = "DM Document Title");
 
 		DepotNavigator.switchStagingStatus(stagingItem = "Publish to Live");
@@ -1663,7 +1696,7 @@ definition {
 			pageName = "Test Page",
 			siteName = "Site Name");
 
-		SearchPortlets.addWidgets(searchPortletList = "Search Results,Search Bar");
+		SearchPortlets.addWidgetsViaUI(searchPortletList = "Search Results,Search Bar");
 
 		SearchPortlets.searchWidget(searchTerm = "DM Document Title");
 
@@ -2174,7 +2207,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanPublishDMWithDocumentType {
-		property test.name.skip.portal.instance = "DepotLocalStagingDM#CanPublishDMWithDocumentType";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
@@ -2248,10 +2282,13 @@ definition {
 			dmDocumentType = "DM Document Type Depot");
 	}
 
-	@description = "This ensures that a folder with a document in depot can be published in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that a folder with a document in depot can be published in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishDocumentFolder {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
@@ -2425,9 +2462,12 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "DM Document Title");
 	}
 
-	@description = "This ensures that a document stored in a DM folder of asset library can be edited and republished in DM widget when local staging is enabled."
+	@description = "This ensures that a document stored in a DM folder of asset library can be edited and republished in DM widget when local staging is enabled. Skip the instance for performance improvement."
 	@priority = 4
 	test CanPublishEditedDocumentFromFolderViaWidget {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "Depot Folder Name",
@@ -2507,9 +2547,12 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "Document_2.doc");
 	}
 
-	@description = "This ensures that a document stored in an asset library can be edited and republished in DM widget when local staging is enabled."
+	@description = "This ensures that a document stored in an asset library can be edited and republished in DM widget when local staging is enabled. Skip the instance for performance improvement."
 	@priority = 4
 	test CanPublishEditedDocumentViaWidget {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Description",
 			dmDocumentTitle = "Document_1.doc",
@@ -2578,9 +2621,12 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "Document_2.doc");
 	}
 
-	@description = "This ensures that an image stored in a DM folder of asset library can be edited and republished in DM widget when local staging is enabled."
+	@description = "This ensures that an image stored in a DM folder of asset library can be edited and republished in DM widget when local staging is enabled. Skip the instance for performance improvement."
 	@priority = 4
 	test CanPublishEditedImageFromFolderViaWidget {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "Depot Folder Name",
@@ -2731,9 +2777,12 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "Document_1.png");
 	}
 
-	@description = "This ensures that the folders stored in different asset libraries can be changed and republished in DM widget when local staging is enabled."
+	@description = "This ensures that the folders stored in different asset libraries can be changed and republished in DM widget when local staging is enabled. Skip the instance for performance improvement."
 	@priority = 4
 	test CanPublishImageAfterChangingDepot {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name 2");
@@ -3007,10 +3056,13 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "DM Document Title");
 	}
 
-	@description = "This ensures that an image with custom field in depot can be published in staging site when enabling local staging."
+	@description = "This ensures that an image with custom field in depot can be published in staging site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishImageWithCustomField {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -3068,10 +3120,13 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "Document_2.jpg");
 	}
 
-	@description = "This ensures that the latest version of an image in a depot can be published in local staging site."
+	@description = "This ensures that the latest version of an image in a depot can be published in local staging site. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishImageWithLatestVersion {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_2.jpg",
@@ -3220,10 +3275,13 @@ definition {
 		BlogsEntry.viewCoverImage(uploadFileName = "Document_2.jpg");
 	}
 
-	@description = "This ensures that the thumbnail of a video shortcut in depot can be published through AP when enabling local staging."
+	@description = "This ensures that the thumbnail of a video shortcut in depot can be published through AP when enabling local staging. Skip the instance for performance improvement."
 	@priority = 3
 	@refactordone
 	test CanPublishVideoShortcutThumbnail {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name");
 
 		VideoShortcut.addCP(
@@ -3623,6 +3681,8 @@ definition {
 		DepotNavigator.switchStagingStatus(stagingItem = "Publish to Live");
 
 		Staging.publishToLive();
+
+		Refresh();
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Test Page",

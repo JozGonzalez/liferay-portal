@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.file.install.deploy.test;
@@ -18,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -222,7 +214,8 @@ public class FileInstallDeployTest {
 
 			installCountDownLatch.await();
 
-			bundle = _getBundle(_TEST_JAR_SYMBOLIC_NAME);
+			bundle = BundleUtil.getBundle(
+				_bundleContext, _TEST_JAR_SYMBOLIC_NAME);
 
 			Assert.assertNotNull(bundle);
 
@@ -316,7 +309,8 @@ public class FileInstallDeployTest {
 
 			installCountDownLatch.await();
 
-			Bundle bundle = _getBundle(_TEST_JAR_SYMBOLIC_NAME);
+			Bundle bundle = BundleUtil.getBundle(
+				_bundleContext, _TEST_JAR_SYMBOLIC_NAME);
 
 			Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
 
@@ -330,7 +324,8 @@ public class FileInstallDeployTest {
 
 			fragmentInstallCountDownLatch.await();
 
-			Bundle fragmentBundle = _getBundle(testFragmentSymbolicName);
+			Bundle fragmentBundle = BundleUtil.getBundle(
+				_bundleContext, testFragmentSymbolicName);
 
 			Assert.assertEquals(Bundle.RESOLVED, fragmentBundle.getState());
 
@@ -418,7 +413,8 @@ public class FileInstallDeployTest {
 
 			installCountDownLatch.await();
 
-			Bundle bundle = _getBundle(_TEST_JAR_SYMBOLIC_NAME);
+			Bundle bundle = BundleUtil.getBundle(
+				_bundleContext, _TEST_JAR_SYMBOLIC_NAME);
 
 			Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
 
@@ -439,8 +435,8 @@ public class FileInstallDeployTest {
 
 			optionalProviderInstallCountDownLatch.await();
 
-			Bundle optionalProviderBundle = _getBundle(
-				testOptionalProviderSymbolicName);
+			Bundle optionalProviderBundle = BundleUtil.getBundle(
+				_bundleContext, testOptionalProviderSymbolicName);
 
 			Assert.assertEquals(
 				Bundle.ACTIVE, optionalProviderBundle.getState());
@@ -469,16 +465,6 @@ public class FileInstallDeployTest {
 
 			_uninstall(testOptionalProviderSymbolicName, optionalProviderPath);
 		}
-	}
-
-	private Bundle _getBundle(String symbolicName) {
-		for (Bundle currentBundle : _bundleContext.getBundles()) {
-			if (Objects.equals(currentBundle.getSymbolicName(), symbolicName)) {
-				return currentBundle;
-			}
-		}
-
-		return null;
 	}
 
 	private void _uninstall(String symbolicName, Path path) throws Exception {

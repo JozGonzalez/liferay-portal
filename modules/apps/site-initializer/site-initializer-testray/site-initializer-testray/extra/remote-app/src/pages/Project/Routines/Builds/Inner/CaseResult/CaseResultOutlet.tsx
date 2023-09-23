@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect} from 'react';
@@ -19,6 +10,7 @@ import {
 	useOutletContext,
 	useParams,
 } from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import {useFetch} from '../../../../../../hooks/useFetch';
 import useHeader from '../../../../../../hooks/useHeader';
@@ -49,12 +41,20 @@ const CaseResultOutlet = () => {
 		testrayRoutine,
 	}: OutletContext = useOutletContext();
 
-	const {data: testrayCaseResult, mutate: mutateCaseResult} = useFetch<
-		TestrayCaseResult
-	>(testrayCaseResultImpl.getResource(caseResultId as string), {
-		transformData: (response) =>
-			testrayCaseResultImpl.transformData(response),
-	});
+	const isEditCase = pathname.includes('edit');
+
+	const {
+		data: testrayCaseResult,
+		error,
+		loading,
+		mutate: mutateCaseResult,
+	} = useFetch<TestrayCaseResult>(
+		testrayCaseResultImpl.getResource(caseResultId as string),
+		{
+			transformData: (response) =>
+				testrayCaseResultImpl.transformData(response),
+		}
+	);
 
 	const {data: mbMessage} = useFetch(
 		testrayCaseResult?.mbMessageId
@@ -67,7 +67,7 @@ const CaseResultOutlet = () => {
 	const basePath = `/project/${projectId}/routines/${routineId}/build/${buildId}/case-result/${caseResultId}`;
 
 	const {setHeaderActions, setHeading, setTabs} = useHeader({
-		timeout: 300,
+		timeout: 100,
 	});
 
 	useEffect(() => {
@@ -111,34 +111,37 @@ const CaseResultOutlet = () => {
 	]);
 
 	useEffect(() => {
-		setTabs([
-			{
-				active: pathname === basePath,
-				path: basePath,
-				title: i18n.translate('result'),
-			},
-			{
-				active: pathname !== basePath,
-				path: `${basePath}/history`,
-				title: i18n.translate('history'),
-			},
-		]);
-	}, [basePath, pathname, setTabs]);
+		setTabs(
+			isEditCase
+				? []
+				: [
+						{
+							active: pathname === basePath,
+							path: basePath,
+							title: i18n.translate('result'),
+						},
+						{
+							active: pathname !== basePath,
+							path: `${basePath}/history`,
+							title: i18n.translate('history'),
+						},
+				  ]
+		);
+	}, [basePath, isEditCase, pathname, setTabs]);
 
-	if (testrayCaseResult) {
-		return (
+	return (
+		<PageRenderer error={error} loading={loading}>
 			<Outlet
 				context={{
+					actions: testrayCaseResult?.actions,
 					caseResult: testrayCaseResult,
 					mbMessage,
 					mutateCaseResult,
 					projectId,
 				}}
 			/>
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default CaseResultOutlet;

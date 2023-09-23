@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -20,10 +14,13 @@ import PRMFormik from '../../../../common/components/PRMFormik';
 import PRMFormikPageProps from '../../../../common/components/PRMFormik/interfaces/prmFormikPageProps';
 import ResumeCard from '../../../../common/components/ResumeCard';
 import MDFRequestDTO from '../../../../common/interfaces/dto/mdfRequestDTO';
+import LiferayFile from '../../../../common/interfaces/liferayFile';
 import MDFClaim from '../../../../common/interfaces/mdfClaim';
 import MDFClaimProps from '../../../../common/interfaces/mdfClaimProps';
+import deleteDocument from '../../../../common/services/liferay/headless-delivery/deleteDocument';
 import {Status} from '../../../../common/utils/constants/status';
 import getIntlNumberFormat from '../../../../common/utils/getIntlNumberFormat';
+import useDynamicFieldEntries from '../../../MDFClaimList/hooks/useDynamicFieldEntries';
 import ActivityClaimPanel from './components/ActivityClaimPanel';
 import useActivitiesAmount from './hooks/useActivitiesAmount';
 
@@ -40,6 +37,7 @@ const MDFClaimPage = ({
 		isSubmitting,
 		isValid,
 		setFieldValue,
+		status: submitted,
 		values,
 		...formikHelpers
 	} = useFormikContext<MDFClaim>();
@@ -48,10 +46,15 @@ const MDFClaimPage = ({
 		values.activities,
 		useCallback(
 			(amountValue) =>
-				setFieldValue('totalClaimAmount', amountValue * 0.5),
-			[setFieldValue]
+				setFieldValue(
+					'totalClaimAmount',
+					amountValue * mdfRequest.claimPercent
+				),
+			[mdfRequest.claimPercent, setFieldValue]
 		)
 	);
+
+	const {companiesEntries, fieldEntries} = useDynamicFieldEntries();
 
 	const claimsFiltered = mdfRequest.mdfReqToMDFClms?.filter(
 		(mdfRequestToMdfClaim) => {
@@ -68,7 +71,11 @@ const MDFClaimPage = ({
 	).length;
 
 	const getClaimPage = () => {
-		if (claimsFiltered && claimsFiltered >= 2) {
+		if (!fieldEntries || !companiesEntries) {
+			return <ClayLoadingIndicator />;
+		}
+
+		if (claimsFiltered && claimsFiltered >= 2 && !values.id) {
 			return (
 				<PRMForm name="New" title="Reimbursement Claim">
 					<div className="d-flex justify-content-center mt-4">
@@ -158,19 +165,26 @@ const MDFClaimPage = ({
 						displayType="secondary"
 						label="Reimbursement Invoice"
 						name="reimbursementInvoice"
-						onAccept={(value: File) =>
-							setFieldValue('reimbursementInvoice', value)
-						}
+						onAccept={(liferayFile: LiferayFile) => {
+							if (values.reimbursementInvoice?.documentId) {
+								deleteDocument(
+									values.reimbursementInvoice.documentId
+								);
+							}
+
+							setFieldValue(`reimbursementInvoice`, liferayFile);
+						}}
 						outline
+						required
 						small
 					/>
 
 					<ResumeCard
 						className="mb-4"
-						leftContent="Total MDF Requested Amount"
+						leftContent="Total Activity Cost"
 						rightContent={getIntlNumberFormat(
 							values.currency
-						).format(values.totalrequestedAmount || 0)}
+						).format(values.totalMDFRequestedAmount || 0)}
 					/>
 
 					<PRMFormik.Field
@@ -189,21 +203,21 @@ const MDFClaimPage = ({
 					<div className="d-flex mr-auto">
 						<ClayButton
 							className="inline-item inline-item-after pl-0"
-							disabled={isSubmitting}
+							disabled={isSubmitting || submitted}
 							displayType={null}
 							onClick={() => onSaveAsDraft(values, formikHelpers)}
 						>
 							Save as Draft
-							{isSubmitting &&
-								values.mdfClaimStatus === Status.DRAFT && (
-									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-								)}
+							{isSubmitting && (
+								<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+							)}
 						</ClayButton>
 					</div>
 
 					<div>
 						<ClayButton
 							className="mr-4"
+							disabled={isSubmitting || submitted}
 							displayType="secondary"
 							onClick={() => onCancel()}
 						>
@@ -212,14 +226,13 @@ const MDFClaimPage = ({
 
 						<ClayButton
 							className="inline-item inline-item-after"
-							disabled={!isValid || isSubmitting}
+							disabled={!isValid || isSubmitting || submitted}
 							type="submit"
 						>
 							Submit
-							{isSubmitting &&
-								values.mdfClaimStatus === Status.PENDING && (
-									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-								)}
+							{isSubmitting && (
+								<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+							)}
 						</ClayButton>
 					</div>
 				</PRMForm.Footer>

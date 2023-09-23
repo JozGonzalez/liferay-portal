@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fetch} from 'frontend-js-web';
 
 import {HEADLESS_BATCH_ENGINE_URL} from './constants';
 
-const getEndpoint = (type, externalReferenceCode) => {
+export function getEndpoint(type, externalReferenceCode) {
 	externalReferenceCode = encodeURIComponent(externalReferenceCode);
 	const endpoints = {
 		batchPlannerTemplate: `/o/batch-planner/v1.0/plans/${externalReferenceCode}/template`,
@@ -26,7 +17,31 @@ const getEndpoint = (type, externalReferenceCode) => {
 	};
 
 	return endpoints[type];
-};
+}
+
+export function downloadFile({externalReferenceCode, fileName, fileType}) {
+	fetch(getEndpoint(fileType, externalReferenceCode)).then((response) => {
+		response.blob().then((blob) => {
+			const LinkElement = document.createElement('a');
+
+			LinkElement.href = URL.createObjectURL(blob);
+
+			if (fileName === undefined) {
+				fileName = response.headers
+					.get('Content-Disposition')
+					.match(/filename=(.*)/)[1];
+			}
+
+			LinkElement.download = fileName;
+
+			document.body.appendChild(LinkElement);
+
+			LinkElement.click();
+
+			LinkElement.remove();
+		});
+	});
+}
 
 export default function ({
 	HTMLElementId,
@@ -41,7 +56,7 @@ export default function ({
 
 			if (type === 'batchPlannerTemplate') {
 				const valueElement = document.getElementById(
-					`${namespace}internalClassName`
+					`${namespace}internalClassNameKey`
 				);
 
 				externalReferenceCode =
@@ -49,24 +64,6 @@ export default function ({
 						.value;
 			}
 
-			fetch(getEndpoint(type, externalReferenceCode)).then((response) => {
-				response.blob().then((blob) => {
-					const LinkElement = document.createElement('a');
-
-					LinkElement.href = URL.createObjectURL(blob);
-
-					const fileName = response.headers
-						.get('Content-Disposition')
-						.match(/filename=(.*)/)[1];
-
-					LinkElement.download = fileName;
-
-					document.body.appendChild(LinkElement);
-
-					LinkElement.click();
-
-					LinkElement.remove();
-				});
-			});
+			downloadFile({externalReferenceCode, fileType: type});
 		});
 }

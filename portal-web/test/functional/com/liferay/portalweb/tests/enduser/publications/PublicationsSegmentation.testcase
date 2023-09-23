@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Segmentation";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,7 +28,7 @@ definition {
 	@description = "Assert we can publish a publication with an edited Segment."
 	@priority = 4
 	test CanPublishEditedSegment {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Segmentation.openSegmentsAdmin(siteURLKey = "site-name");
 
@@ -54,9 +54,9 @@ definition {
 
 		Button.clickSave();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		Segmentation.openSegmentsAdmin(siteURLKey = "site-name");
 
@@ -89,7 +89,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -137,9 +137,9 @@ definition {
 
 		PageEditor.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -155,7 +155,7 @@ definition {
 	@description = "Assert we can resolve conflicting Segment changes by discarding."
 	@priority = 4
 	test CanResolveConflictingPublicationsByDiscarding {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Segmentation.openSegmentsAdmin(siteURLKey = "site-name");
 
@@ -187,9 +187,9 @@ definition {
 
 		Segmentation.deleteSegment(entry = "Segment Title");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name 2");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name 2");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name 2");
 
 		Publications.selectPublication(publicationName = "Publication Name 1");
 
@@ -197,7 +197,7 @@ definition {
 
 		Publications.viewNeedsManualResolution(
 			entryTitle = "Segments Entry",
-			warningMessage = "Deletion Modification Conflict: Modification conflicts with a deletion.");
+			warningMessage = "Missing Entity");
 
 		PublicationsNavigator.gotoViewConflictingChangeDetails(entryTitle = "Edited Segment Title");
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service;
@@ -17,6 +8,7 @@ package com.liferay.journal.service;
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -43,7 +35,7 @@ public class JournalFeedLocalServiceWrapper
 	@Override
 	public JournalFeed addFeed(
 			long userId, long groupId, String feedId, boolean autoFeedId,
-			String name, String description, String ddmStructureKey,
+			String name, String description, long ddmStructureId,
 			String ddmTemplateKey, String ddmRendererTemplateKey, int delta,
 			String orderByCol, String orderByType,
 			String targetLayoutFriendlyUrl, String targetPortletId,
@@ -53,7 +45,7 @@ public class JournalFeedLocalServiceWrapper
 
 		return _journalFeedLocalService.addFeed(
 			userId, groupId, feedId, autoFeedId, name, description,
-			ddmStructureKey, ddmTemplateKey, ddmRendererTemplateKey, delta,
+			ddmStructureId, ddmTemplateKey, ddmRendererTemplateKey, delta,
 			orderByCol, orderByType, targetLayoutFriendlyUrl, targetPortletId,
 			contentField, feedFormat, feedVersion, serviceContext);
 	}
@@ -500,36 +492,15 @@ public class JournalFeedLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<JournalFeed> search(
-		long companyId, long groupId, String feedId, String name,
-		String description, boolean andOperator, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<JournalFeed>
-			orderByComparator) {
-
-		return _journalFeedLocalService.search(
-			companyId, groupId, feedId, name, description, andOperator, start,
-			end, orderByComparator);
-	}
-
-	@Override
 	public int searchCount(long companyId, long groupId, String keywords) {
 		return _journalFeedLocalService.searchCount(
 			companyId, groupId, keywords);
 	}
 
 	@Override
-	public int searchCount(
-		long companyId, long groupId, String feedId, String name,
-		String description, boolean andOperator) {
-
-		return _journalFeedLocalService.searchCount(
-			companyId, groupId, feedId, name, description, andOperator);
-	}
-
-	@Override
 	public JournalFeed updateFeed(
 			long groupId, String feedId, String name, String description,
-			String ddmStructureKey, String ddmTemplateKey,
+			long ddmStructureId, String ddmTemplateKey,
 			String ddmRendererTemplateKey, int delta, String orderByCol,
 			String orderByType, String targetLayoutFriendlyUrl,
 			String targetPortletId, String contentField, String feedFormat,
@@ -538,7 +509,7 @@ public class JournalFeedLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _journalFeedLocalService.updateFeed(
-			groupId, feedId, name, description, ddmStructureKey, ddmTemplateKey,
+			groupId, feedId, name, description, ddmStructureId, ddmTemplateKey,
 			ddmRendererTemplateKey, delta, orderByCol, orderByType,
 			targetLayoutFriendlyUrl, targetPortletId, contentField, feedFormat,
 			feedVersion, serviceContext);
@@ -557,6 +528,11 @@ public class JournalFeedLocalServiceWrapper
 	@Override
 	public JournalFeed updateJournalFeed(JournalFeed journalFeed) {
 		return _journalFeedLocalService.updateJournalFeed(journalFeed);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _journalFeedLocalService.getBasePersistence();
 	}
 
 	@Override

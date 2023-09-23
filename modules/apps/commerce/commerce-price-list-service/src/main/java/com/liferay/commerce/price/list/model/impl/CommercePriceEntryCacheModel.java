@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.model.impl;
@@ -80,7 +71,7 @@ public class CommercePriceEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(59);
+		StringBundler sb = new StringBundler(65);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -108,10 +99,8 @@ public class CommercePriceEntryCacheModel
 		sb.append(CPInstanceUuid);
 		sb.append(", CProductId=");
 		sb.append(CProductId);
-		sb.append(", price=");
-		sb.append(price);
-		sb.append(", promoPrice=");
-		sb.append(promoPrice);
+		sb.append(", bulkPricing=");
+		sb.append(bulkPricing);
 		sb.append(", discountDiscovery=");
 		sb.append(discountDiscovery);
 		sb.append(", discountLevel1=");
@@ -122,14 +111,22 @@ public class CommercePriceEntryCacheModel
 		sb.append(discountLevel3);
 		sb.append(", discountLevel4=");
 		sb.append(discountLevel4);
-		sb.append(", hasTierPrice=");
-		sb.append(hasTierPrice);
-		sb.append(", bulkPricing=");
-		sb.append(bulkPricing);
 		sb.append(", displayDate=");
 		sb.append(displayDate);
 		sb.append(", expirationDate=");
 		sb.append(expirationDate);
+		sb.append(", hasTierPrice=");
+		sb.append(hasTierPrice);
+		sb.append(", price=");
+		sb.append(price);
+		sb.append(", priceOnApplication=");
+		sb.append(priceOnApplication);
+		sb.append(", promoPrice=");
+		sb.append(promoPrice);
+		sb.append(", quantity=");
+		sb.append(quantity);
+		sb.append(", unitOfMeasureKey=");
+		sb.append(unitOfMeasureKey);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append(", status=");
@@ -203,15 +200,12 @@ public class CommercePriceEntryCacheModel
 		}
 
 		commercePriceEntryImpl.setCProductId(CProductId);
-		commercePriceEntryImpl.setPrice(price);
-		commercePriceEntryImpl.setPromoPrice(promoPrice);
+		commercePriceEntryImpl.setBulkPricing(bulkPricing);
 		commercePriceEntryImpl.setDiscountDiscovery(discountDiscovery);
 		commercePriceEntryImpl.setDiscountLevel1(discountLevel1);
 		commercePriceEntryImpl.setDiscountLevel2(discountLevel2);
 		commercePriceEntryImpl.setDiscountLevel3(discountLevel3);
 		commercePriceEntryImpl.setDiscountLevel4(discountLevel4);
-		commercePriceEntryImpl.setHasTierPrice(hasTierPrice);
-		commercePriceEntryImpl.setBulkPricing(bulkPricing);
 
 		if (displayDate == Long.MIN_VALUE) {
 			commercePriceEntryImpl.setDisplayDate(null);
@@ -225,6 +219,19 @@ public class CommercePriceEntryCacheModel
 		}
 		else {
 			commercePriceEntryImpl.setExpirationDate(new Date(expirationDate));
+		}
+
+		commercePriceEntryImpl.setHasTierPrice(hasTierPrice);
+		commercePriceEntryImpl.setPrice(price);
+		commercePriceEntryImpl.setPriceOnApplication(priceOnApplication);
+		commercePriceEntryImpl.setPromoPrice(promoPrice);
+		commercePriceEntryImpl.setQuantity(quantity);
+
+		if (unitOfMeasureKey == null) {
+			commercePriceEntryImpl.setUnitOfMeasureKey("");
+		}
+		else {
+			commercePriceEntryImpl.setUnitOfMeasureKey(unitOfMeasureKey);
 		}
 
 		if (lastPublishDate == Long.MIN_VALUE) {
@@ -280,20 +287,24 @@ public class CommercePriceEntryCacheModel
 		CPInstanceUuid = objectInput.readUTF();
 
 		CProductId = objectInput.readLong();
-		price = (BigDecimal)objectInput.readObject();
-		promoPrice = (BigDecimal)objectInput.readObject();
+
+		bulkPricing = objectInput.readBoolean();
 
 		discountDiscovery = objectInput.readBoolean();
 		discountLevel1 = (BigDecimal)objectInput.readObject();
 		discountLevel2 = (BigDecimal)objectInput.readObject();
 		discountLevel3 = (BigDecimal)objectInput.readObject();
 		discountLevel4 = (BigDecimal)objectInput.readObject();
-
-		hasTierPrice = objectInput.readBoolean();
-
-		bulkPricing = objectInput.readBoolean();
 		displayDate = objectInput.readLong();
 		expirationDate = objectInput.readLong();
+
+		hasTierPrice = objectInput.readBoolean();
+		price = (BigDecimal)objectInput.readObject();
+
+		priceOnApplication = objectInput.readBoolean();
+		promoPrice = (BigDecimal)objectInput.readObject();
+		quantity = (BigDecimal)objectInput.readObject();
+		unitOfMeasureKey = objectInput.readUTF();
 		lastPublishDate = objectInput.readLong();
 
 		status = objectInput.readInt();
@@ -349,20 +360,31 @@ public class CommercePriceEntryCacheModel
 		}
 
 		objectOutput.writeLong(CProductId);
-		objectOutput.writeObject(price);
-		objectOutput.writeObject(promoPrice);
+
+		objectOutput.writeBoolean(bulkPricing);
 
 		objectOutput.writeBoolean(discountDiscovery);
 		objectOutput.writeObject(discountLevel1);
 		objectOutput.writeObject(discountLevel2);
 		objectOutput.writeObject(discountLevel3);
 		objectOutput.writeObject(discountLevel4);
-
-		objectOutput.writeBoolean(hasTierPrice);
-
-		objectOutput.writeBoolean(bulkPricing);
 		objectOutput.writeLong(displayDate);
 		objectOutput.writeLong(expirationDate);
+
+		objectOutput.writeBoolean(hasTierPrice);
+		objectOutput.writeObject(price);
+
+		objectOutput.writeBoolean(priceOnApplication);
+		objectOutput.writeObject(promoPrice);
+		objectOutput.writeObject(quantity);
+
+		if (unitOfMeasureKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(unitOfMeasureKey);
+		}
+
 		objectOutput.writeLong(lastPublishDate);
 
 		objectOutput.writeInt(status);
@@ -392,17 +414,20 @@ public class CommercePriceEntryCacheModel
 	public long commercePriceListId;
 	public String CPInstanceUuid;
 	public long CProductId;
-	public BigDecimal price;
-	public BigDecimal promoPrice;
+	public boolean bulkPricing;
 	public boolean discountDiscovery;
 	public BigDecimal discountLevel1;
 	public BigDecimal discountLevel2;
 	public BigDecimal discountLevel3;
 	public BigDecimal discountLevel4;
-	public boolean hasTierPrice;
-	public boolean bulkPricing;
 	public long displayDate;
 	public long expirationDate;
+	public boolean hasTierPrice;
+	public BigDecimal price;
+	public boolean priceOnApplication;
+	public BigDecimal promoPrice;
+	public BigDecimal quantity;
+	public String unitOfMeasureKey;
 	public long lastPublishDate;
 	public int status;
 	public long statusByUserId;

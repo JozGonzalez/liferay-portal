@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -18,6 +9,10 @@
 
 <%
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_ui_input_time_page") + StringPool.UNDERLINE;
+
+if (!GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-time:useNamespace"), true)) {
+	namespace = StringPool.BLANK;
+}
 
 String amPmParam = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-time:amPmParam"));
 int amPmValue = GetterUtil.getInteger((String)request.getAttribute("liferay-ui:input-time:amPmValue"));
@@ -61,33 +56,17 @@ String nameId = namespace + HtmlUtil.getAUICompatibleId(name);
 
 Calendar calendar = CalendarFactoryUtil.getCalendar(1970, 0, 1, hourOfDayValue, minuteValue, 0, 0, timeZone);
 
-String simpleDateFormatPattern = _SIMPLE_DATE_FORMAT_PATTERN_ISO;
-
-if (BrowserSnifferUtil.isMobile(request)) {
-	simpleDateFormatPattern = _SIMPLE_DATE_FORMAT_PATTERN_HTML5;
-}
-else if (amPm) {
-	simpleDateFormatPattern = _SIMPLE_DATE_FORMAT_PATTERN;
-}
-
 String placeholder = _PLACEHOLDER_DEFAULT;
 
 if (!amPm) {
 	placeholder = _PLACEHOLDER_ISO;
 }
 
-Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPattern, locale, timeZone);
+Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(_SIMPLE_DATE_FORMAT_PATTERN_HTML5, locale, timeZone);
 %>
 
 <span class="lfr-input-time" id="<%= randomNamespace %>displayTime">
-	<c:choose>
-		<c:when test="<%= BrowserSnifferUtil.isMobile(request) %>">
-			<input <%= Validator.isNotNull(autoComplete) ? "autocomplete=\"" + autoComplete + "\"" : StringPool.BLANK %> class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= nameId %>" name="<%= namespace + HtmlUtil.escapeAttribute(name) %>" type="time" value="<%= format.format(calendar.getTime()) %>" />
-		</c:when>
-		<c:otherwise>
-			<input <%= Validator.isNotNull(autoComplete) ? "autocomplete=\"" + autoComplete + "\"" : StringPool.BLANK %> class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= nameId %>" name="<%= namespace + HtmlUtil.escapeAttribute(name) %>" placeholder="<%= placeholder %>" type="text" value="<%= format.format(calendar.getTime()) %>" />
-		</c:otherwise>
-	</c:choose>
+	<input <%= Validator.isNotNull(autoComplete) ? "autocomplete=\"" + autoComplete + "\"" : StringPool.BLANK %> class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= nameId %>" name="<%= namespace + HtmlUtil.escapeAttribute(name) %>" type="time" value="<%= format.format(calendar.getTime()) %>" />
 
 	<input <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= hourParamId %>" name="<%= namespace + HtmlUtil.escapeAttribute(hourParam) %>" type="hidden" value="<%= hourValue %>" />
 	<input <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= minuteParamId %>" name="<%= namespace + HtmlUtil.escapeAttribute(minuteParam) %>" type="hidden" value="<%= minuteValue %>" />
@@ -95,14 +74,13 @@ Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPa
 	<input <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= dateParamId %>" name="<%= namespace + HtmlUtil.escapeAttribute(dateParam) %>" type="hidden" value="<%= dateValue %>" />
 </span>
 
-<aui:script use='<%= "aui-timepicker" + (BrowserSnifferUtil.isMobile(request) ? "-native" : StringPool.BLANK) %>'>
+<aui:script use="aui-timepicker-native">
 	Liferay.component(
 		'<%= nameId %>TimePicker',
 		function() {
-			var timePicker = new A.TimePicker<%= BrowserSnifferUtil.isMobile(request) ? "Native" : StringPool.BLANK %>(
+			var timePicker = new A.TimePickerNative(
 				{
 					container: '#<%= randomNamespace %>displayTime',
-					mask: '<%= amPm ? "%l:%M %p" : "%H:%M" %>',
 					on: {
 						enterKey: function(event) {
 							var instance = this;
@@ -121,11 +99,7 @@ Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPa
 							instance.updateTime(date);
 						}
 					},
-					popover: {
-						zIndex: Liferay.zIndex.POPOVER
-					},
 					trigger: '#<%= nameId %>',
-					values: <%= _getHoursJSONArray(minuteInterval, locale) %>
 				}
 			);
 
@@ -179,33 +153,7 @@ Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPa
 </aui:script>
 
 <%!
-private JSONArray _getHoursJSONArray(int minuteInterval, Locale locale) throws Exception {
-	NumberFormat numberFormat = NumberFormat.getInstance(locale);
-
-	numberFormat.setMinimumIntegerDigits(2);
-
-	JSONArray hoursJSONArray = JSONFactoryUtil.createJSONArray();
-
-	for (int h = 0; h < 24; h++) {
-		for (int m = 0; m < 60; m += minuteInterval) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(numberFormat.format(h));
-			sb.append(StringPool.COLON);
-			sb.append(numberFormat.format(m));
-
-			hoursJSONArray.put(sb.toString());
-		}
-	}
-
-	return hoursJSONArray;
-}
-
-private static final String _SIMPLE_DATE_FORMAT_PATTERN = "hh:mm a";
-
 private static final String _SIMPLE_DATE_FORMAT_PATTERN_HTML5 = "HH:mm";
-
-private static final String _SIMPLE_DATE_FORMAT_PATTERN_ISO = "HH:mm";
 
 private static final String _PLACEHOLDER_DEFAULT = "h:mm am/pm";
 

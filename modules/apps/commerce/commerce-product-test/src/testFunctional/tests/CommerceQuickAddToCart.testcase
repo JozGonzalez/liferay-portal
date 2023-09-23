@@ -4,7 +4,6 @@ definition {
 	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
@@ -35,32 +34,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects a SKU on the minicart") {
@@ -126,32 +108,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN93016A from the quick add-to-cart search bar") {
@@ -285,32 +250,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects 'MIN55860' on the quick add-to-cart search bar") {
@@ -407,32 +355,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects 'MIN55860' on the quick add-to-cart search bar") {
@@ -507,32 +438,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN93016A using quick add to cart") {
@@ -617,32 +531,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN55860 using quick add to cart") {
@@ -742,32 +639,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects a product with a price list on the quick add to cart (e.g. MIN55861)") {
@@ -818,32 +698,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects a product with a promotion on the quick add to cart (e.g. MIN93017)") {
@@ -897,32 +760,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And searches for a sku on the quick add-to-cart") {
@@ -965,6 +811,308 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-12005. Discontinued SKUs are replaced correctly using quick add to cart."
+	@priority = 5
+	test CanDiscontinuedSKUBeReplaced {
+		property portal.acceptance = "true";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And disables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the replacement SKU is added to the cart") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+		}
+
+		task ("And the UI should highlight that some products have been replaced") {
+			AssertElementPresent(
+				key_text = "There are replacement products in your cart.",
+				locator1 = "CommerceDiagrams#DIAGRAM_PRODUCT_TOOLTIP_REPLACEMENT_ALERT");
+		}
+
+		task ("And the UI should highlight the replacement SKU with a label") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+
+		task ("And when the user hovers over the information icon, it should inform the user which SKU has been replaced") {
+			MouseOver(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_INFO_ICON");
+
+			AssertElementPresent(
+				key_title = "Replacement Product for MIN55861.",
+				locator1 = "StagingPublishToLive#PAGES_TO_PUBLISH_PAGE_NAME_SPAN_TITLE");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12037. Discontinued SKU is replaced successfully on quick add to cart using Classic theme."
+	@priority = 3
+	test CanDiscontinuedSKUBeReplacedCorrectlyUsingClassicTheme {
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the current site theme is changed into Classic Theme") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "minium");
+
+			PagesAdmin.changeSiteCurrentTheme(themeName = "Classic");
+		}
+
+		task ("And a new content page is created for Minium containing Mini Cart fragment") {
+			JSONLayout.addPublicLayout(
+				groupName = "Minium",
+				layoutName = "Mini Cart",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Mini Cart",
+				siteName = "Minium");
+
+			PageEditor.addFragment(
+				collectionName = "Cart",
+				fragmentName = "Mini Cart");
+
+			PageEditor.publish();
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And disables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Mini Cart");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the replacement SKU is added to the cart") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+		}
+
+		task ("And the UI should highlight that some products have been replaced") {
+			AssertElementPresent(
+				key_text = "There are replacement products in your cart.",
+				locator1 = "CommerceDiagrams#DIAGRAM_PRODUCT_TOOLTIP_REPLACEMENT_ALERT");
+		}
+
+		task ("And the UI should highlight the replacement SKU with a label") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+
+		task ("And when the user hovers over the information icon, it should inform the user which SKU has been replaced") {
+			MouseOver(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_INFO_ICON");
+
+			AssertElementPresent(
+				key_title = "Replacement Product for MIN55861.",
+				locator1 = "StagingPublishToLive#PAGES_TO_PUBLISH_PAGE_NAME_SPAN_TITLE");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12035. Discontinued SKU is replaced successfully when the replacement has a discount."
+	@priority = 3
+	test CanDiscountBeAppliedCorrectlyOnReplacementSKU {
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And disables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("And creates a new active percentage discount of 50% applied to ABS Sensor") {
+			CommerceJSONDiscountsAPI._addDiscount(
+				active = "true",
+				level = "L1",
+				percentageLevel1 = 50,
+				target = "products",
+				title = "Discount 50% off",
+				usePercentage = "true");
+
+			CommerceJSONDiscountsAPI._addDiscountProduct(
+				discountTitle = "Discount 50% off",
+				productName = "ABS Sensor");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the replacement SKU is added to the cart, showing a 50% discount") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_NET_PRICE",
+				value1 = "$ 25.00");
+		}
+
+		task ("And “Replacement” label is present") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10538. Buyer user cannot add non purchasable SKUs"
 	@priority = 5
 	test CannotAddNonPurchasableSKUs {
@@ -992,32 +1140,15 @@ definition {
 				purchasable = "false");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And searches for MIN93015 on the quick add-to-cart") {
@@ -1048,32 +1179,15 @@ definition {
 				purchasable = "true");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And searches for MIN93015 on the quick add-to-cart") {
@@ -1116,32 +1230,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN55860 using quick add to cart") {
@@ -1250,32 +1347,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN55860 using quick add to cart") {
@@ -1369,32 +1449,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN55860 using quick add to cart") {
@@ -1463,32 +1526,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects MIN55860 using quick add to cart") {
@@ -1570,6 +1616,83 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-12006. Discontinued SKU is not replaced if it has active back order."
+	@priority = 4
+	test CannotDiscontinuedSKUBeReplacedWithBackOrderActive {
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And enables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "true",
+				productName = "U-Joint");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the discontinued SKU is added to the cart instead of the replacement") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN55861",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+		}
+
+		task ("And no “Replacement” label is present") {
+			AssertElementNotPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10389. Buyer user cannot select invalid SKUs on quick add to cart"
 	@priority = 5
 	test CannotSelectInvalidSkusOnQuickAddToCart {
@@ -1590,32 +1713,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And searches for an invalid sku on the quick add-to-cart") {
@@ -1631,9 +1737,9 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-10474. Buyer user can press enter on quick add to cart search bar and the text doesn't disappear"
-	@priority = 4
-	test CanPressEnterOnQuickAddToCartSearchBar {
+	@description = "This is a test for COMMERCE-10475. Buyer user can paste text on quick add to cart search bar"
+	@priority = 3
+	test CanPasteTextOnQuickAddToCartSearchBar {
 		property portal.acceptance = "false";
 
 		task ("Given an account with a buyer user is created") {
@@ -1660,23 +1766,76 @@ definition {
 				userEmailAddress = "buyer@liferay.com");
 		}
 
-		task ("When the buyer opens the mini-cart") {
+		task ("When the buyer user adds a product 'U-Joint' to cart and copies its SKU 'MIN55861'") {
+			Type(
+				locator1 = "Search#SEARCH_BAR_WIDGET",
+				value1 = "MIN55861");
+
+			Type.sendKeys(
+				locator1 = "Search#SEARCH_BAR_WIDGET",
+				value1 = "keys=CONTROL,a");
+
+			Type.sendKeys(
+				locator1 = "Search#SEARCH_BAR_WIDGET",
+				value1 = "keys=CONTROL,c");
+
+			Button.clickSubmitButton();
+
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
 				productQuantity = 1);
+		}
 
-			// To be removed when COMMERCE-10472 is fixed
-
+		task ("And pastes 'MIN55861' on the quick add-to-cart search bar") {
 			CommerceNavigator.gotoMiniCart();
 
-			Button.click(button = "Remove All Items");
+			Type.sendKeys(
+				locator1 = "Publications#KEYWORD_TEXTFIELD",
+				value1 = "keys=CONTROL,v");
+		}
 
-			// To be removed when COMMERCE-10472 is fixed
+		task ("Then the pasted text is shown") {
+			AssertElementPresent(
+				locator1 = "Publications#KEYWORD_TEXTFIELD",
+				value1 = "MIN55861");
+		}
 
-			Button.click(button = "Yes");
+		task ("And the matching SKU suggestion is shown") {
+			AssertElementPresent(
+				key_productSku = "MIN55861",
+				locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_SEARCH_RESULT");
+		}
+	}
 
-			// To be removed when COMMERCE-10472 is fixed
+	@description = "This is a test for COMMERCE-10474. Buyer user can press enter on quick add to cart search bar and the text doesn't disappear"
+	@priority = 4
+	test CanPressEnterOnQuickAddToCartSearchBar {
+		property portal.acceptance = "false";
 
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
 		}
 
 		task ("And types some characters on the quick add-to-cart search bar") {
@@ -1699,6 +1858,217 @@ definition {
 			AssertElementPresent(
 				key_entryValue = "abc123",
 				locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_VALUE");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12036. Discontinued SKU is replaced successfully when the replacement SKU is price on application."
+	@priority = 3
+	test CanPriceOnApplicationBeAppliedCorrectlyOnReplacementSKU {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true";
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And disables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("And the admin navigates to ABS Sensor's SKU") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "MIN93015");
+		}
+
+		task ("And the admin marks the sku as 'Price on Application'") {
+			CommerceSKUs.editSkuPricing(priceOnApplication = "true");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the replacement SKU is added to the cart") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+		}
+
+		task ("And “Replacement” label is present") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+
+		task ("And both info messages are present (one referring to the replacement, the other one referring to price on application)") {
+			AssertElementPresent(
+				key_text = "There are replacement products in your cart.",
+				locator1 = "CommerceDiagrams#DIAGRAM_PRODUCT_TOOLTIP_REPLACEMENT_ALERT");
+
+			AssertElementPresent(
+				key_infoMessage = "Your cart has products that require a quote to complete the checkout.",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
+
+		task ("And Submit button is not clickable, instead “Request a Quote” button is clickable") {
+			AssertElementPresent(
+				key_text = "Submit",
+				locator1 = "Button#ANY_DISABLED");
+
+			AssertElementPresent(
+				key_text = "Request a Quote",
+				locator1 = "Button#ANY_ENABLED");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12034. Discontinued SKU is replaced successfully when the replacement has a promotion."
+	@priority = 3
+	test CanPromotionBeAppliedCorrectlyOnReplacementSKU {
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And the admin sets the MIN55861 Available Quantity to 0") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And disables 'Allow Back Order' in the Configuration tab") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("And a new promotion is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPromotion(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				promotionName = "Test Promotion");
+		}
+
+		task ("And a promotion entry is created for the replacement sku") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPromotionEntry(
+				entryPrice = 2,
+				productSKU = "MIN93015",
+				promotionName = "Test Promotion");
+		}
+
+		task ("When buyer user opens the minicart after signing in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("And selects the discontinued SKU MIN55861 using quick add to cart") {
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then the replacement SKU is added to the cart, showing 2 USD as promo price") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE",
+				value1 = "50.00");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_PROMO",
+				value1 = "2.00");
+		}
+
+		task ("And “Replacement” label is present") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
 		}
 	}
 
@@ -1744,22 +2114,7 @@ definition {
 		}
 
 		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
-
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And the buyer selects multiple skus on the quick add-to-cart") {
@@ -1826,32 +2181,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And the buyer selects multiple skus on the quick add-to-cart") {
@@ -1901,32 +2239,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And searches for all Minium skus on the quick add-to-cart") {
@@ -1964,32 +2285,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And types 'ABS' on the quick add-to-cart search bar") {
@@ -2041,32 +2345,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And types 5586 on the quick add-to-cart search bar") {
@@ -2118,32 +2405,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects multiple option SKUs on the minicart") {
@@ -2193,32 +2463,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("Then the user can select the sku by searching it") {
@@ -2266,32 +2519,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And types some characters along with a comma on the quick add-to-cart search bar") {
@@ -2331,32 +2567,15 @@ definition {
 				userSiteMembership = "Minium");
 		}
 
-		task ("And buyer user logs in") {
+		task ("And buyer user opens the minicart after signing in") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
 				password = "test",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("When the buyer opens the mini-cart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
 
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And types special characters on the quick add-to-cart search bar") {
@@ -2367,6 +2586,138 @@ definition {
 
 		task ("Then the minicart doesn't disappear") {
 			AssertElementPresent(locator1 = "CommerceAccelerators#MINI_CART_EMPTY");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11289. Quick add-to-cart works properly when a product has only expired SKUs"
+	@priority = 5
+	test CanUseQuickAddToCartWhenOneProductHasExpiredSKU {
+		property portal.acceptance = "true";
+
+		task ("Given a product has only expired SKUs") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "Calipers");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceSKUs.addSKU(
+				noOption = "true",
+				optionValuesList = "BLACK:10.0");
+
+			Click(
+				key_value = "BLACKSKU",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Delete");
+
+			AssertElementPresent(
+				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
+				tagName = "Expired");
+
+			AssertElementNotPresent(
+				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
+				tagName = "Approved");
+		}
+
+		task ("And an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And buyer user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And the buyer user opens the minicart") {
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("When the user searches for a SKU on the quick add-to-cart") {
+			Type(
+				locator1 = "Publications#KEYWORD_TEXTFIELD",
+				value1 = "MIN93015");
+		}
+
+		task ("Then results are shown") {
+			AssertElementPresent(
+				key_productSku = "MIN93015",
+				locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_SEARCH_RESULT");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11289. Quick add-to-cart works properly when one product is without SKUs"
+	@priority = 5
+	test CanUseQuickAddToCartWhenOneProductHasNoSKU {
+		property portal.acceptance = "true";
+
+		task ("Given a product has no SKU") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "Calipers");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			Click(
+				key_value = "MIN93021",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Delete");
+		}
+
+		task ("And an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And buyer user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And the buyer user opens the minicart") {
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("When the user searches for a SKU on the quick add-to-cart") {
+			Type(
+				locator1 = "Publications#KEYWORD_TEXTFIELD",
+				value1 = "MIN93015");
+		}
+
+		task ("Then results are shown") {
+			AssertElementPresent(
+				key_productSku = "MIN93015",
+				locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_SEARCH_RESULT");
 		}
 	}
 
@@ -2436,22 +2787,7 @@ definition {
 		}
 
 		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
-
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects 'ABS Sensor' on the quick add to cart") {
@@ -2476,22 +2812,7 @@ definition {
 		}
 
 		task ("And the buyer user opens the minicart") {
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			// To be removed when COMMERCE-10472 is fixed
-
 			CommerceNavigator.gotoMiniCart();
-
-			Button.click(button = "Remove All Items");
-
-			// To be removed when COMMERCE-10472 is fixed
-
-			Button.click(button = "Yes");
-
-			// To be removed when COMMERCE-10472 is fixed
-
 		}
 
 		task ("And selects 'ABS Sensor' on the quick add to cart") {

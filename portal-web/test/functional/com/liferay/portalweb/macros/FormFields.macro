@@ -243,10 +243,11 @@ definition {
 	macro editDateCalendar {
 		Click(locator1 = "FormFields#DATE_CALENDAR");
 
-		Select(
-			key_valueName = "year",
-			locator1 = "FormFields#DATE_CALENDAR_FIELD",
-			value1 = ${valueYear});
+		Click(locator1 = "FormFields#YEAR_CALENDAR_FIELD");
+
+		Click(
+			key_optionYear = ${valueYear},
+			locator1 = "FormFields#YEAR_CALENDAR_OPTION");
 
 		Select(
 			key_valueName = "month",
@@ -2148,18 +2149,6 @@ definition {
 			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD_DESCRIPTION",
 			value1 = ${fieldValue});
-	}
-
-	macro viewTransltaionNotDuplicated {
-		AssertElementPresent(
-			key_language = ${key_language1},
-			key_position = ${key_position1},
-			locator1 = "FormFields#TRANSLATION_LIST");
-
-		AssertElementNotPresent(
-			key_language = ${key_language2},
-			key_position = ${key_position2},
-			locator1 = "FormFields#TRANSLATION_LIST");
 	}
 
 	macro viewUploadField {

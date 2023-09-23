@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service.base;
@@ -33,8 +24,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -57,8 +46,6 @@ import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -386,30 +373,6 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 				public void addCriteria(DynamicQuery dynamicQuery) {
 					portletDataContext.addDateRangeCriteria(
 						dynamicQuery, "modifiedDate");
-
-					StagedModelType stagedModelType =
-						exportActionableDynamicQuery.getStagedModelType();
-
-					long referrerClassNameId =
-						stagedModelType.getReferrerClassNameId();
-
-					Property classNameIdProperty = PropertyFactoryUtil.forName(
-						"classNameId");
-
-					if ((referrerClassNameId !=
-							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-						(referrerClassNameId !=
-							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-
-						dynamicQuery.add(
-							classNameIdProperty.eq(
-								stagedModelType.getReferrerClassNameId()));
-					}
-					else if (referrerClassNameId ==
-								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
-
-						dynamicQuery.add(classNameIdProperty.isNotNull());
-					}
 				}
 
 			});
@@ -435,8 +398,7 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 			});
 		exportActionableDynamicQuery.setStagedModelType(
 			new StagedModelType(
-				PortalUtil.getClassNameId(SegmentsExperience.class.getName()),
-				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
+				PortalUtil.getClassNameId(SegmentsExperience.class.getName())));
 
 		return exportActionableDynamicQuery;
 	}
@@ -578,7 +540,7 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		SegmentsExperienceLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -594,7 +556,8 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		segmentsExperienceLocalService =
 			(SegmentsExperienceLocalService)aopProxy;
 
-		_setLocalServiceUtilService(segmentsExperienceLocalService);
+		SegmentsExperienceLocalServiceUtil.setService(
+			segmentsExperienceLocalService);
 	}
 
 	/**
@@ -652,23 +615,6 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		SegmentsExperienceLocalService segmentsExperienceLocalService) {
-
-		try {
-			Field field =
-				SegmentsExperienceLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, segmentsExperienceLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

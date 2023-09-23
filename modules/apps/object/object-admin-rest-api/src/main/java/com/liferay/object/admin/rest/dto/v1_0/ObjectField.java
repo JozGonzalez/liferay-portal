@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.dto.v1_0;
@@ -166,7 +157,7 @@ public class ObjectField implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BusinessType businessType;
 
-	@Schema
+	@Schema(deprecated = true)
 	public String getDefaultValue() {
 		return defaultValue;
 	}
@@ -190,6 +181,7 @@ public class ObjectField implements Serializable {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String defaultValue;
@@ -423,6 +415,34 @@ public class ObjectField implements Serializable {
 	protected Long listTypeDefinitionId;
 
 	@Schema
+	public Boolean getLocalized() {
+		return localized;
+	}
+
+	public void setLocalized(Boolean localized) {
+		this.localized = localized;
+	}
+
+	@JsonIgnore
+	public void setLocalized(
+		UnsafeSupplier<Boolean, Exception> localizedUnsafeSupplier) {
+
+		try {
+			localized = localizedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean localized;
+
+	@Schema
 	public String getName() {
 		return name;
 	}
@@ -479,6 +499,76 @@ public class ObjectField implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ObjectFieldSetting[] objectFieldSettings;
+
+	@Schema
+	@Valid
+	public ReadOnly getReadOnly() {
+		return readOnly;
+	}
+
+	@JsonIgnore
+	public String getReadOnlyAsString() {
+		if (readOnly == null) {
+			return null;
+		}
+
+		return readOnly.toString();
+	}
+
+	public void setReadOnly(ReadOnly readOnly) {
+		this.readOnly = readOnly;
+	}
+
+	@JsonIgnore
+	public void setReadOnly(
+		UnsafeSupplier<ReadOnly, Exception> readOnlyUnsafeSupplier) {
+
+		try {
+			readOnly = readOnlyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ReadOnly readOnly;
+
+	@Schema
+	public String getReadOnlyConditionExpression() {
+		return readOnlyConditionExpression;
+	}
+
+	public void setReadOnlyConditionExpression(
+		String readOnlyConditionExpression) {
+
+		this.readOnlyConditionExpression = readOnlyConditionExpression;
+	}
+
+	@JsonIgnore
+	public void setReadOnlyConditionExpression(
+		UnsafeSupplier<String, Exception>
+			readOnlyConditionExpressionUnsafeSupplier) {
+
+		try {
+			readOnlyConditionExpression =
+				readOnlyConditionExpressionUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String readOnlyConditionExpression;
 
 	@Schema
 	@Valid
@@ -811,6 +901,16 @@ public class ObjectField implements Serializable {
 			sb.append(listTypeDefinitionId);
 		}
 
+		if (localized != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"localized\": ");
+
+			sb.append(localized);
+		}
+
 		if (name != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -843,6 +943,34 @@ public class ObjectField implements Serializable {
 			}
 
 			sb.append("]");
+		}
+
+		if (readOnly != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"readOnly\": ");
+
+			sb.append("\"");
+
+			sb.append(readOnly);
+
+			sb.append("\"");
+		}
+
+		if (readOnlyConditionExpression != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"readOnlyConditionExpression\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(readOnlyConditionExpression));
+
+			sb.append("\"");
 		}
 
 		if (relationshipType != null) {
@@ -919,11 +1047,12 @@ public class ObjectField implements Serializable {
 	public static enum BusinessType {
 
 		AGGREGATION("Aggregation"), ATTACHMENT("Attachment"),
-		BOOLEAN("Boolean"), DATE("Date"), DECIMAL("Decimal"),
-		FORMULA("Formula"), INTEGER("Integer"), LONG_INTEGER("LongInteger"),
-		LONG_TEXT("LongText"), MULTISELECT_PICKLIST("MultiselectPicklist"),
-		PICKLIST("Picklist"), PRECISION_DECIMAL("PrecisionDecimal"),
-		RELATIONSHIP("Relationship"), RICH_TEXT("RichText"), TEXT("Text");
+		BOOLEAN("Boolean"), DATE("Date"), DATE_TIME("DateTime"),
+		DECIMAL("Decimal"), ENCRYPTED("Encrypted"), FORMULA("Formula"),
+		INTEGER("Integer"), LONG_INTEGER("LongInteger"), LONG_TEXT("LongText"),
+		MULTISELECT_PICKLIST("MultiselectPicklist"), PICKLIST("Picklist"),
+		PRECISION_DECIMAL("PrecisionDecimal"), RELATIONSHIP("Relationship"),
+		RICH_TEXT("RichText"), TEXT("Text");
 
 		@JsonCreator
 		public static BusinessType create(String value) {
@@ -962,8 +1091,8 @@ public class ObjectField implements Serializable {
 	public static enum DBType {
 
 		BIG_DECIMAL("BigDecimal"), BOOLEAN("Boolean"), CLOB("Clob"),
-		DATE("Date"), DOUBLE("Double"), INTEGER("Integer"), LONG("Long"),
-		STRING("String");
+		DATE("Date"), DATE_TIME("DateTime"), DOUBLE("Double"),
+		INTEGER("Integer"), LONG("Long"), STRING("String");
 
 		@JsonCreator
 		public static DBType create(String value) {
@@ -991,6 +1120,44 @@ public class ObjectField implements Serializable {
 		}
 
 		private DBType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
+	@GraphQLName("ReadOnly")
+	public static enum ReadOnly {
+
+		CONDITIONAL("conditional"), FALSE("false"), TRUE("true");
+
+		@JsonCreator
+		public static ReadOnly create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (ReadOnly readOnly : values()) {
+				if (Objects.equals(readOnly.getValue(), value)) {
+					return readOnly;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private ReadOnly(String value) {
 			_value = value;
 		}
 
@@ -1040,8 +1207,8 @@ public class ObjectField implements Serializable {
 	public static enum Type {
 
 		BIG_DECIMAL("BigDecimal"), BOOLEAN("Boolean"), CLOB("Clob"),
-		DATE("Date"), DOUBLE("Double"), INTEGER("Integer"), LONG("Long"),
-		STRING("String");
+		DATE("Date"), DATE_TIME("DateTime"), DOUBLE("Double"),
+		INTEGER("Integer"), LONG("Long"), STRING("String");
 
 		@JsonCreator
 		public static Type create(String value) {
@@ -1158,5 +1325,7 @@ public class ObjectField implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

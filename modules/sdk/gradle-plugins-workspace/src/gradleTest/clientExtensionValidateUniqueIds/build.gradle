@@ -1,0 +1,72 @@
+import com.liferay.gradle.plugins.workspace.configurator.ClientExtensionProjectConfigurator
+import com.liferay.gradle.util.OSDetector
+
+task runGradleTest
+
+runGradleTest {
+	doLast {
+		String validateTaskName = ClientExtensionProjectConfigurator.VALIDATE_CLIENT_EXTENSION_IDS_TASK_NAME
+
+		["duplicate1", "duplicate2", "unique"].forEach {
+			projectName ->
+
+			Project curProject = project(":client-extension:${projectName}")
+
+			Task validateTask = curProject.tasks[validateTaskName]
+
+			[
+				LifecycleBasePlugin.CHECK_TASK_NAME,
+				ClientExtensionProjectConfigurator.CREATE_CLIENT_EXTENSION_CONFIG_TASK_NAME
+			].each {
+				taskName ->
+
+				Provider<Task> curTaskProvider = curProject.tasks.named taskName
+
+				Task curTask = curTaskProvider.get()
+
+				assert curTask.dependsOn.contains(validateTaskName) : "${curTask.path} should depend on ${validateTask.path}"
+			}
+		}
+
+		["duplicate1", "duplicate2"].forEach {
+			projectName ->
+
+			Project curProject = project(":client-extension:${projectName}")
+
+			Task validateTask = curProject.tasks[validateTaskName]
+
+			try {
+				validateTask.actions.forEach {
+					it.execute(validateTask)
+				}
+
+				assert false : "${validateTask.path} should have failed"
+			}
+			catch (Exception exception) {
+				assert exception.message.contains("Duplicate client extension ID \"duplicate-key\" found in these projects:")
+
+				if (OSDetector.windows) {
+					assert exception.message.contains("client-extension\\duplicate1")
+					assert exception.message.contains("client-extension\\duplicate2")
+				}
+				else {
+					assert exception.message.contains("client-extension/duplicate1")
+					assert exception.message.contains("client-extension/duplicate2")
+				}
+			}
+		}
+
+		Project curProject = project(":client-extension:unique")
+
+		Task validateTask = curProject.tasks[validateTaskName]
+
+		try {
+			validateTask.actions.forEach {
+				it.execute(validateTask)
+			}
+		}
+		catch (Exception exception) {
+			assert false : "${validateTask.path} should not have failed"
+		}
+	}
+}

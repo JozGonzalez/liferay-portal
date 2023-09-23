@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.suggest;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.search.query.QueryTranslator;
 import com.liferay.portal.kernel.search.suggest.PhraseSuggester;
 import com.liferay.portal.kernel.util.Validator;
@@ -27,10 +19,6 @@ import org.elasticsearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -107,6 +95,9 @@ public class PhraseSuggesterTranslatorImpl
 	protected void translate(
 		PhraseSuggester.Collate collate,
 		PhraseSuggestionBuilder phraseSuggestionBuilder) {
+
+		QueryTranslator<QueryBuilder> queryTranslator =
+			_queryTranslatorSnapshot.get();
 
 		if ((collate != null) && (queryTranslator != null)) {
 			QueryBuilder queryBuilder = queryTranslator.translate(
@@ -206,12 +197,10 @@ public class PhraseSuggesterTranslatorImpl
 		}
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(search.engine.impl=Elasticsearch)"
-	)
-	protected volatile QueryTranslator<QueryBuilder> queryTranslator;
+	private static final Snapshot<QueryTranslator<QueryBuilder>>
+		_queryTranslatorSnapshot = new Snapshot<>(
+			PhraseSuggesterTranslatorImpl.class,
+			Snapshot.cast(QueryTranslator.class),
+			"(search.engine.impl=Elasticsearch)", true);
 
 }

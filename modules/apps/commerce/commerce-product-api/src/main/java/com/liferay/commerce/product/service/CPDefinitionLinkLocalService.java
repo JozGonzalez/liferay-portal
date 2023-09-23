@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -44,6 +35,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -88,9 +80,16 @@ public interface CPDefinitionLinkLocalService
 		CPDefinitionLink cpDefinitionLink);
 
 	public CPDefinitionLink addCPDefinitionLinkByCProductId(
-			long cpDefinitionId, long cProductId, double priority, String type,
+			long cpDefinitionId, long cProductId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority, String type,
 			ServiceContext serviceContext)
 		throws PortalException;
+
+	public void checkCPDefinitionLinks() throws PortalException;
 
 	/**
 	 * Creates a new cp definition link with the primary key. Does not add the cp definition link to the database.
@@ -288,11 +287,28 @@ public interface CPDefinitionLinkLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, String type);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status, int start, int end,
+		OrderByComparator<CPDefinitionLink> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionLink> getCPDefinitionLinks(
@@ -337,7 +353,14 @@ public interface CPDefinitionLinkLocalService
 	public int getCPDefinitionLinksCount(long cpDefinitionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCPDefinitionLinksCount(long cpDefinitionId, int status);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCPDefinitionLinksCount(long cpDefinitionId, String type);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCPDefinitionLinksCount(
+		long cpDefinitionId, String type, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
@@ -365,6 +388,10 @@ public interface CPDefinitionLinkLocalService
 	public List<CPDefinitionLink> getReverseCPDefinitionLinks(
 		long cProductId, String type);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionLink> getReverseCPDefinitionLinks(
+		long cProductId, String type, int status);
+
 	/**
 	 * Updates the cp definition link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -380,13 +407,23 @@ public interface CPDefinitionLinkLocalService
 		CPDefinitionLink cpDefinitionLink);
 
 	public CPDefinitionLink updateCPDefinitionLink(
-			long cpDefinitionLinkId, double priority,
-			ServiceContext serviceContext)
+			long userId, long cpDefinitionLinkId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void updateCPDefinitionLinkCProductIds(
 			long cpDefinitionId, long[] cProductIds, String type,
 			ServiceContext serviceContext)
+		throws PortalException;
+
+	public CPDefinitionLink updateStatus(
+			long userId, long cpDefinitionLinkId, int status,
+			ServiceContext serviceContext,
+			Map<String, Serializable> workflowContext)
 		throws PortalException;
 
 	@Override

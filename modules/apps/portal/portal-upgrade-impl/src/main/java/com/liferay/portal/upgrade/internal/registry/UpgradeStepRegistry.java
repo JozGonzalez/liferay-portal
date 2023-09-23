@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.registry;
@@ -41,8 +32,8 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 		return _releaseCreationUpgradeSteps;
 	}
 
-	public List<UpgradeInfo> getUpgradeInfos() {
-		if (_initialization) {
+	public List<UpgradeInfo> getUpgradeInfos(boolean portalUpgraded) {
+		if (_initialization && portalUpgraded) {
 			if (_upgradeInfos.isEmpty()) {
 				return Arrays.asList(
 					new UpgradeInfo(
@@ -91,8 +82,6 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 			return;
 		}
 
-		String upgradeInfoFromSchemaVersionString = fromSchemaVersionString;
-
 		List<UpgradeStep> upgradeStepsList = new ArrayList<>();
 
 		for (UpgradeStep upgradeStep : upgradeSteps) {
@@ -110,38 +99,30 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 			}
 		}
 
-		for (int i = 0; i < (upgradeStepsList.size() - 1); i++) {
-			UpgradeStep upgradeStep = upgradeStepsList.get(i);
-
-			String upgradeInfoToSchemaVersionString =
-				toSchemaVersionString + ".step" +
-					(i - upgradeStepsList.size() + 1);
-
-			UpgradeInfo upgradeInfo = new UpgradeInfo(
-				upgradeInfoFromSchemaVersionString,
-				upgradeInfoToSchemaVersionString, buildNumber, upgradeStep);
-
-			_upgradeInfos.add(upgradeInfo);
-
-			upgradeInfoFromSchemaVersionString =
-				upgradeInfoToSchemaVersionString;
+		if (upgradeStepsList.size() == 1) {
+			_upgradeInfos.add(
+				new UpgradeInfo(
+					fromSchemaVersionString, toSchemaVersionString, buildNumber,
+					upgradeStepsList.get(0)));
 		}
-
-		UpgradeInfo upgradeInfo = new UpgradeInfo(
-			upgradeInfoFromSchemaVersionString, toSchemaVersionString,
-			buildNumber, upgradeStepsList.get(upgradeStepsList.size() - 1));
-
-		_upgradeInfos.add(upgradeInfo);
+		else {
+			_upgradeInfos.add(
+				new UpgradeInfo(
+					fromSchemaVersionString, toSchemaVersionString, buildNumber,
+					() -> {
+						for (UpgradeStep upgradeStep : upgradeStepsList) {
+							upgradeStep.upgrade();
+						}
+					}));
+		}
 	}
 
 	private String _getFinalSchemaVersion(List<UpgradeInfo> upgradeInfos) {
 		Version finalSchemaVersion = null;
 
 		for (UpgradeInfo upgradeInfo : upgradeInfos) {
-			String toSchemaVersion = upgradeInfo.getToSchemaVersionString();
-
 			Version schemaVersion = Version.parseVersion(
-				toSchemaVersion.substring(0, 5));
+				upgradeInfo.getToSchemaVersionString());
 
 			if (finalSchemaVersion == null) {
 				finalSchemaVersion = schemaVersion;

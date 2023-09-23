@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -32,7 +32,7 @@ definition {
 	}
 
 	@description = "This test automates LPS-144566 and asserts that revoke the User's View permission on Administrator role, you still can assign new roles."
-	@priority = 3
+	@priority = 4
 	test RevokeUserViewPermissionONAdminroleCanStillAssignNewRoles {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 

@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.document.library.web.internal.counter;
 
 import com.liferay.adaptive.media.image.counter.AMImageCounter;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
-import com.liferay.adaptive.media.image.size.AMImageSizeProvider;
 import com.liferay.adaptive.media.image.validator.AMImageValidator;
+import com.liferay.document.library.configuration.DLFileEntryConfiguration;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -27,13 +19,18 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
  */
 @Component(
+	configurationPid = "com.liferay.document.library.configuration.DLFileEntryConfiguration",
 	property = "adaptive.media.key=document-library",
 	service = AMImageCounter.class
 )
@@ -43,6 +40,13 @@ public class DLAMImageCounter implements AMImageCounter {
 	public int countExpectedAMImageEntries(long companyId) {
 		return _getFileEntriesCount(companyId) -
 			_getTrashedFileEntriesCount(companyId);
+	}
+
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_dlFileEntryConfiguration = ConfigurableUtil.createConfigurable(
+			DLFileEntryConfiguration.class, properties);
 	}
 
 	private int _getFileEntriesCount(long companyId) {
@@ -71,7 +75,8 @@ public class DLAMImageCounter implements AMImageCounter {
 		Property sizeProperty = PropertyFactoryUtil.forName("size");
 
 		dlFileEntryEntryDynamicQuery.add(
-			sizeProperty.le(_amImageSizeProvider.getImageMaxSize()));
+			sizeProperty.le(
+				_dlFileEntryConfiguration.previewableProcessorMaxSize()));
 
 		return (int)_dlFileEntryLocalService.dynamicQueryCount(
 			dlFileEntryEntryDynamicQuery);
@@ -114,10 +119,9 @@ public class DLAMImageCounter implements AMImageCounter {
 	private AMImageMimeTypeProvider _amImageMimeTypeProvider;
 
 	@Reference
-	private AMImageSizeProvider _amImageSizeProvider;
-
-	@Reference
 	private AMImageValidator _amImageValidator;
+
+	private volatile DLFileEntryConfiguration _dlFileEntryConfiguration;
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;

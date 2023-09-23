@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.extension.validation;
@@ -17,13 +8,15 @@ package com.liferay.portal.vulcan.extension.validation;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,17 +40,17 @@ public class DefaultPropertyValidator implements PropertyValidator {
 
 		if (propertyType == PropertyDefinition.PropertyType.DATE_TIME) {
 			if (propertyValue instanceof String) {
-				DateFormat dateFormat = new SimpleDateFormat(
-					"yyyy-MM-dd'T'HH:mm:ss'Z'");
-
 				try {
-					dateFormat.parse((String)propertyValue);
+					LocalDateTime.parse(
+						(String)propertyValue,
+						DateTimeFormatter.ofPattern(
+							_getDateTimePattern((String)propertyValue)));
 
 					valid = true;
 				}
-				catch (ParseException parseException) {
+				catch (DateTimeParseException dateTimeParseException) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(parseException);
+						_log.debug(dateTimeParseException);
 					}
 				}
 			}
@@ -71,6 +64,21 @@ public class DefaultPropertyValidator implements PropertyValidator {
 				valid = true;
 
 				for (Object object : (Object[])propertyValue) {
+					if (!_isReadable(classes, object)) {
+						valid = false;
+
+						break;
+					}
+				}
+			}
+			else if ((classes != null) &&
+					 (propertyValue instanceof Collection)) {
+
+				valid = true;
+
+				Collection<?> collection = (Collection<?>)propertyValue;
+
+				for (Object object : collection.toArray()) {
 					if (!_isReadable(classes, object)) {
 						valid = false;
 
@@ -105,6 +113,26 @@ public class DefaultPropertyValidator implements PropertyValidator {
 					propertyDefinition.getPropertyName(),
 					"\" is invalid for property type ", propertyType));
 		}
+	}
+
+	private String _getDateTimePattern(String value) {
+		if (value.length() == 16) {
+			return "yyyy-MM-dd HH:mm";
+		}
+		else if (value.length() == 20) {
+			return "yyyy-MM-dd'T'HH:mm:ss'Z'";
+		}
+		else if (value.length() == 21) {
+			return "yyyy-MM-dd HH:mm:ss.S";
+		}
+		else if ((value.length() == 23) && (value.charAt(10) == 'T')) {
+			return "yyyy-MM-dd'T'HH:mm:ss.SSS";
+		}
+		else if ((value.length() == 24) && (value.charAt(10) == 'T')) {
+			return "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+		}
+
+		return DateUtil.ISO_8601_PATTERN;
 	}
 
 	private boolean _isReadable(Set<Class<?>> classes, Object object) {

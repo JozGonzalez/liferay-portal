@@ -12,7 +12,8 @@ definition {
 	@priority = 3
 	test MySQLtoEmptyMySQL {
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoEmptyMySQL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -33,7 +34,8 @@ definition {
 	@priority = 3
 	test MySQLtoHSQL {
 		property database.types = "hypersonic";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoHSQL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -53,7 +55,8 @@ definition {
 	@priority = 3
 	test MySQLtoHSQLDeleteLiferayHome {
 		property database.types = "hypersonic";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoHSQLDeleteLiferayHome";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Portlet.shutdownServer();
 
@@ -78,7 +81,8 @@ definition {
 
 	@priority = 4
 	test MySQLtoMySQLEditedAdministratorUser {
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoMySQLEditAdministratorUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.viewDefaultPortalNamePG();
 

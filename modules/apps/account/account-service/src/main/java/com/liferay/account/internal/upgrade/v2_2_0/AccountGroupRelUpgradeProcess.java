@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.internal.upgrade.v2_2_0;
@@ -60,15 +51,15 @@ public class AccountGroupRelUpgradeProcess extends UpgradeProcess {
 	}
 
 	private void _updateDefaultValues(Company company) throws Exception {
-		User defaultUser = company.getDefaultUser();
+		User guestUser = company.getGuestUser();
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update AccountGroupRel set userId = ?, userName = ?, " +
 					"createDate = ?, modifiedDate = ? where companyId = ? " +
 						"and userId = 0")) {
 
-			preparedStatement.setLong(1, defaultUser.getUserId());
-			preparedStatement.setString(2, defaultUser.getFullName());
+			preparedStatement.setLong(1, guestUser.getUserId());
+			preparedStatement.setString(2, guestUser.getFullName());
 
 			Date date = new Date(System.currentTimeMillis());
 

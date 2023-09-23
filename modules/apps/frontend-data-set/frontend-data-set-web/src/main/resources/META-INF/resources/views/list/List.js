@@ -1,44 +1,47 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayEmptyState from '@clayui/empty-state';
 import {ClayCheckbox, ClayRadio} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayList from '@clayui/list';
 import ClaySticker from '@clayui/sticker';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 
 import FrontendDataSetContext from '../../FrontendDataSetContext';
 import Actions from '../../actions/Actions';
-import ImageRenderer from '../../data_renderers/ImageRenderer';
+import ImageRenderer from '../../cell_renderers/ImageRenderer';
 
-const List = ({items, schema}) => {
+const List = ({header, items, schema}) => {
 	const {selectedItemsKey} = useContext(FrontendDataSetContext);
 
 	return items?.length ? (
-		<ClayList>
-			{items.map((item, index) => {
-				return (
+		<ClayLayout.Sheet
+			className={classNames('list-sheet', {
+				'no-header': !header?.title,
+			})}
+		>
+			{header?.title && (
+				<ClayLayout.SheetHeader className="mb-4">
+					<h2 className="sheet-title">{header?.title}</h2>
+				</ClayLayout.SheetHeader>
+			)}
+
+			<ClayList>
+				{items.map((item, index) => (
 					<ListItem
 						item={item}
 						key={item[selectedItemsKey] || index}
 						schema={schema}
 					/>
-				);
-			})}
-		</ClayList>
+				))}
+			</ClayList>
+		</ClayLayout.Sheet>
 	) : (
 		<ClayEmptyState
 			description={Liferay.Language.get('sorry,-no-results-were-found')}
@@ -48,9 +51,24 @@ const List = ({items, schema}) => {
 	);
 };
 
+const Title = ({item, title, titleRenderer}) => {
+	const TitleRendererComponent = titleRenderer?.component;
+
+	if (TitleRendererComponent) {
+		return <TitleRendererComponent itemData={item} />;
+	}
+
+	if (title) {
+		return <ClayList.ItemTitle>{item[title]}</ClayList.ItemTitle>;
+	}
+
+	return null;
+};
+
 const ListItem = ({item, schema}) => {
 	const {
 		itemsActions,
+		onSelect,
 		selectItems,
 		selectable,
 		selectedItemsKey,
@@ -58,10 +76,25 @@ const ListItem = ({item, schema}) => {
 		selectionType,
 	} = useContext(FrontendDataSetContext);
 
-	const {description, image, sticker, symbol, title} = schema;
+	const [menuActive, setMenuActive] = useState(false);
+
+	const {description, image, sticker, symbol, title, titleRenderer} = schema;
 
 	return (
-		<ClayList.Item flex>
+		<ClayList.Item
+			className={classNames({
+				'menu-active': menuActive,
+				selectable,
+			})}
+			flex
+			onClick={() => {
+				if (selectable) {
+					selectItems(item[selectedItemsKey]);
+
+					onSelect?.({selectedItems: [item]});
+				}
+			}}
+		>
 			{selectable && (
 				<ClayList.ItemField className="justify-content-center">
 					{selectionType === 'single' ? (
@@ -69,14 +102,12 @@ const ListItem = ({item, schema}) => {
 							checked={selectedItemsValue
 								.map((element) => String(element))
 								.includes(String(item[selectedItemsKey]))}
-							onChange={() => selectItems(item[selectedItemsKey])}
 						/>
 					) : (
 						<ClayCheckbox
 							checked={selectedItemsValue
 								.map((element) => String(element))
 								.includes(String(item[selectedItemsKey]))}
-							onChange={() => selectItems(item[selectedItemsKey])}
 						/>
 					)}
 				</ClayList.ItemField>
@@ -101,9 +132,11 @@ const ListItem = ({item, schema}) => {
 			)}
 
 			<ClayList.ItemField className="justify-content-center" expand>
-				{title && (
-					<ClayList.ItemTitle>{item[title]}</ClayList.ItemTitle>
-				)}
+				<Title
+					item={item}
+					title={title}
+					titleRenderer={titleRenderer}
+				/>
 
 				{description && (
 					<ClayList.ItemText>{item[description]}</ClayList.ItemText>
@@ -116,6 +149,8 @@ const ListItem = ({item, schema}) => {
 						actions={itemsActions || item.actionDropdownItems}
 						itemData={item}
 						itemId={item[selectedItemsKey]}
+						menuActive={menuActive}
+						onMenuActiveChange={setMenuActive}
 					/>
 				)}
 			</ClayList.ItemField>

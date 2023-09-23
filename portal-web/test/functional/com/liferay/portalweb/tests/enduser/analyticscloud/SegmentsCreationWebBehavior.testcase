@@ -21,13 +21,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,8 +40,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9220 | Test Summary: Create a segment with behavior of commenting on a blog"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentCommentingBlog {
-		property analytics.cloud.upstream = "false";
-
 		ACUtils.createBlogsAndAddToPage();
 
 		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -122,7 +122,7 @@ definition {
 		// AC Quarantine Reason: The membership list takes a long time to update
 		// AC Refactor ticket: LRAC-10769
 
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentCriteriaLeastMostTimes";
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -209,8 +209,7 @@ definition {
 	@description = "Create a segment with behavior of downloading a document"
 	@priority = 5
 	test CanCreateWebBehaviorSegmentDownloadingDocument {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentDownloadingDocument";
+		property test.run.type = "single";
 
 		ACUtils.createDMAndAddToPage();
 
@@ -284,8 +283,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9222 | Test Summary: Create a Web Behavior since X days"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentSinceXdays {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentSinceXdays";
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -362,7 +360,7 @@ definition {
 		// AC Quarantine Reason: The membership list takes a long time to update
 		// AC Refactor ticket: LRAC-10769
 
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentSubmittingForm";
+		property test.run.type = "single";
 
 		ACUtils.createFormAndAddToPage();
 
@@ -444,7 +442,7 @@ definition {
 		// AC Quarantine Reason: The membership list takes a long time to update
 		// AC Refactor ticket: LRAC-10769
 
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingAfter";
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -525,7 +523,7 @@ definition {
 		// AC Quarantine Reason: The membership list takes a long time to update
 		// AC Refactor ticket: LRAC-10769
 
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingBefore";
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -599,10 +597,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9218 | Test Summary: Add segment using a web behavior 'between' some time"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentUsingBetween {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingBetween";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -681,10 +683,14 @@ definition {
 	}
 
 	@description = "Add segment using a web behavior 'ever' done"
+	@ignore = "true"
 	@priority = 5
 	test CanCreateWebBehaviorSegmentUsingEver {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingEver";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -756,7 +762,7 @@ definition {
 	@priority = 5
 	test CanCreateWebBehaviorSegmentUsingHasNot {
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingHasNot";
+		property test.run.type = "single";
 
 		// AC Quarantine Reason: Segment membership takes too long to update membership list
 
@@ -834,10 +840,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9219 | Test Summary: Add segment using a web behavior 'on' some time"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentUsingOn {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingOn";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -912,10 +922,14 @@ definition {
 	}
 
 	@description = "Add segment using a web behavior 'since' some time"
+	@ignore = "true"
 	@priority = 5
 	test CanCreateWebBehaviorSegmentUsingSince {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentUsingSince";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createBlogsAndAddToPage();
 
@@ -994,10 +1008,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9223 | Test Summary: Create a Web Behavior Segment of Viewing a Blog"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentViewingBlog {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentViewingBlog";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createBlogsAndAddToPage();
 
@@ -1068,10 +1086,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9224 | Test Summary: Create a Web Behavior Segment of Viewing Document & Media in a Topic"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentViewingDM {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentViewingDM";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		var username = "ac";
 
@@ -1145,10 +1167,14 @@ definition {
 	}
 
 	@description = "Create a segment with behavior of viewing a form"
+	@ignore = "true"
 	@priority = 5
 	test CanCreateWebBehaviorSegmentViewingForm {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentViewingForm";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		var username = "ac";
 
@@ -1224,10 +1250,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9225 | Test Summary: Create a Web Behavior Segment of Viewing a Page"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentViewingPage {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentViewingPage";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		var username = "ac";
 
@@ -1300,10 +1330,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9226 | Test Summary: Create a Web Behavior Segment of Viewing a Web Content"
+	@ignore = "true"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentViewingWC {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationWebBehavior#CanCreateWebBehaviorSegmentViewingWC";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		ACUtils.createWCAndAddToPage();
 
@@ -1379,10 +1413,6 @@ definition {
 
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
-
 			JSONUser.addUser(
 				userEmailAddress = "ac@liferay.com",
 				userFirstName = "ac",
@@ -1425,9 +1455,9 @@ definition {
 
 			Click(locator1 = "ACSegments#SELECT_BUTTON");
 
-			ACSegments.searchSegment(findSegment = "Blogs AC Title - Site Name - ${dataSourceName}");
+			ACSegments.searchSegment(findSegment = "Blogs AC Title - Site Name");
 
-			ACUtils.viewGenericText(textValueList = ${dataSourceName});
+			ACUtils.viewGenericText(textValueList = ${assignedPropertyName});
 		}
 	}
 

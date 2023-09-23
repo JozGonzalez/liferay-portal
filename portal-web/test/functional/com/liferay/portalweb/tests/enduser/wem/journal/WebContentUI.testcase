@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Administration";
@@ -14,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -205,13 +206,15 @@ definition {
 		task ("Then the site designer could filter search results by status in Versions panel") {
 			Navigator.gotoNavTab(navTab = "Versions (1)");
 
+			WaitForPageLoad();
+
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
 			MenuItem.viewVisible(menuItem = "Filter by Status");
 		}
 	}
 
-	@description = "This is a test for LPS-153323. View kebab icon of web content visible."
+	@description = "This is a test for LPS-153323 and LPS-155805. View kebab icon of web content visible and retainable."
 	@priority = 4
 	test ViewKebabIconOfWebContentVisible {
 		property testray.component.names = "Web Content Administration";
@@ -223,8 +226,12 @@ definition {
 				title = "Web Content Title");
 		}
 
-		task ("Check kebab icon of the web content visible") {
+		task ("Check kebab icon of the web content visible and retainable") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			// We need this pause to view if kebab icon of the web content exists to test LPS-155805
+
+			Pause(locator1 = 3000);
 
 			AssertCssValue(
 				locator1 = "//dd//button[contains(@class, 'dropdown-toggle')]",
@@ -315,6 +322,8 @@ definition {
 		task ("View the available status filters of Web Content admin") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
+			WaitForPageLoad();
+
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
 			for (var filterName : list "Draft,With Scheduled Versions,With Approved Versions,With Expired Versions") {
@@ -336,6 +345,8 @@ definition {
 
 		task ("View the available status filters of Web Content admin") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WaitForPageLoad();
 
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 

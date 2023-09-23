@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.data.set.view.table;
@@ -48,8 +39,8 @@ public class FDSTableSchemaField {
 		return _sortingOrder;
 	}
 
-	public boolean isExpand() {
-		return _expand;
+	public boolean isContentRendererClientExtension() {
+		return _contentRendererClientExtension;
 	}
 
 	public boolean isLocalizeLabel() {
@@ -72,16 +63,18 @@ public class FDSTableSchemaField {
 		return this;
 	}
 
-	public FDSTableSchemaField setContentRendererModuleURL(
-		String contentRendererModuleURL) {
+	public FDSTableSchemaField setContentRendererClientExtension(
+		boolean contentRendererClientExtension) {
 
-		_contentRendererModuleURL = contentRendererModuleURL;
+		_contentRendererClientExtension = contentRendererClientExtension;
 
 		return this;
 	}
 
-	public FDSTableSchemaField setExpand(boolean expand) {
-		_expand = expand;
+	public FDSTableSchemaField setContentRendererModuleURL(
+		String contentRendererModuleURL) {
+
+		_contentRendererModuleURL = contentRendererModuleURL;
 
 		return this;
 	}
@@ -122,9 +115,9 @@ public class FDSTableSchemaField {
 		).put(
 			"contentRenderer", getContentRenderer()
 		).put(
-			"contentRendererModuleURL", getContentRendererModuleURL()
+			"contentRendererClientExtension", isContentRendererClientExtension()
 		).put(
-			"expand", isExpand()
+			"contentRendererModuleURL", getContentRendererModuleURL()
 		).put(
 			"fieldName",
 			() -> {
@@ -163,8 +156,8 @@ public class FDSTableSchemaField {
 
 	private String _actionId;
 	private String _contentRenderer;
+	private boolean _contentRendererClientExtension;
 	private String _contentRendererModuleURL;
-	private boolean _expand;
 	private String _fieldName;
 	private String _label;
 	private boolean _localizeLabel = true;

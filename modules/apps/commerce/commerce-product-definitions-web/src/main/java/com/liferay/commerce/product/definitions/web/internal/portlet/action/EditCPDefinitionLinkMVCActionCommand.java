@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.CPDefinitionLinkExpirationDateException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionLinkException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -32,6 +24,10 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -58,6 +54,8 @@ public class EditCPDefinitionLinkMVCActionCommand extends BaseMVCActionCommand {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
+		String redirect = ParamUtil.getString(actionRequest, "redirect");
+
 		try {
 			if (cmd.equals(Constants.ADD)) {
 				_addCPDefinitionLinks(actionRequest);
@@ -69,8 +67,6 @@ public class EditCPDefinitionLinkMVCActionCommand extends BaseMVCActionCommand {
 				_updateCPDefinitionLink(actionRequest);
 			}
 
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
 			sendRedirect(actionRequest, actionResponse, redirect);
 		}
 		catch (Exception exception) {
@@ -80,6 +76,16 @@ public class EditCPDefinitionLinkMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
+			}
+			else if (exception instanceof
+						CPDefinitionLinkExpirationDateException) {
+
+				hideDefaultErrorMessage(actionRequest);
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				sendRedirect(actionRequest, actionResponse, redirect);
 			}
 			else {
 				throw exception;
@@ -123,8 +129,17 @@ public class EditCPDefinitionLinkMVCActionCommand extends BaseMVCActionCommand {
 			long cProductId = cpDefinition.getCProductId();
 
 			if (!ArrayUtil.contains(cProductIds, cProductId)) {
+				Calendar calendar = new GregorianCalendar();
+
+				calendar.setTime(new Date());
+
 				_cpDefinitionLinkService.addCPDefinitionLink(
-					cpDefinitionId, cProductId, 0.0, type, serviceContext);
+					cpDefinitionId, cProductId, calendar.get(Calendar.MONTH),
+					calendar.get(Calendar.DAY_OF_MONTH),
+					calendar.get(Calendar.YEAR),
+					calendar.get(Calendar.HOUR_OF_DAY),
+					calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true, 0.0,
+					type, serviceContext);
 
 				successMessage = true;
 			}
@@ -168,10 +183,50 @@ public class EditCPDefinitionLinkMVCActionCommand extends BaseMVCActionCommand {
 		long cpDefinitionLinkId = ParamUtil.getLong(
 			actionRequest, "cpDefinitionLinkId");
 
+		int displayDateMonth = ParamUtil.getInteger(
+			actionRequest, "displayDateMonth");
+		int displayDateDay = ParamUtil.getInteger(
+			actionRequest, "displayDateDay");
+		int displayDateYear = ParamUtil.getInteger(
+			actionRequest, "displayDateYear");
+		int displayDateHour = ParamUtil.getInteger(
+			actionRequest, "displayDateHour");
+		int displayDateMinute = ParamUtil.getInteger(
+			actionRequest, "displayDateMinute");
+		int displayDateAmPm = ParamUtil.getInteger(
+			actionRequest, "displayDateAmPm");
+
+		if (displayDateAmPm == Calendar.PM) {
+			displayDateHour += 12;
+		}
+
+		int expirationDateMonth = ParamUtil.getInteger(
+			actionRequest, "expirationDateMonth");
+		int expirationDateDay = ParamUtil.getInteger(
+			actionRequest, "expirationDateDay");
+		int expirationDateYear = ParamUtil.getInteger(
+			actionRequest, "expirationDateYear");
+		int expirationDateHour = ParamUtil.getInteger(
+			actionRequest, "expirationDateHour");
+		int expirationDateMinute = ParamUtil.getInteger(
+			actionRequest, "expirationDateMinute");
+		int expirationDateAmPm = ParamUtil.getInteger(
+			actionRequest, "expirationDateAmPm");
+
+		if (expirationDateAmPm == Calendar.PM) {
+			expirationDateHour += 12;
+		}
+
+		boolean neverExpire = ParamUtil.getBoolean(
+			actionRequest, "neverExpire");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
 
 		return _cpDefinitionLinkService.updateCPDefinitionLink(
-			cpDefinitionLinkId, priority, serviceContext);
+			cpDefinitionLinkId, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire, priority,
+			serviceContext);
 	}
 
 	@Reference

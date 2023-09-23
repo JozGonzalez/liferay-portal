@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.servlet.taglib;
@@ -88,6 +79,10 @@ public class EditFormTag extends IncludeTag {
 		return _validateOnBlur;
 	}
 
+	public boolean isWrappedFormContent() {
+		return _wrappedFormContent;
+	}
+
 	public void setAction(PortletURL portletURL) {
 		if (portletURL != null) {
 			setAction(portletURL.toString());
@@ -145,6 +140,10 @@ public class EditFormTag extends IncludeTag {
 		_validateOnBlur = validateOnBlur;
 	}
 
+	public void setWrappedFormContent(boolean wrappedFormContent) {
+		_wrappedFormContent = wrappedFormContent;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -161,6 +160,7 @@ public class EditFormTag extends IncludeTag {
 		_portletNamespace = null;
 		_useNamespace = true;
 		_validateOnBlur = true;
+		_wrappedFormContent = true;
 
 		if (_validatorTagsMap != null) {
 			for (List<ValidatorTag> validatorTags :
@@ -219,6 +219,9 @@ public class EditFormTag extends IncludeTag {
 			"liferay-frontend:edit-form:validateOnBlur",
 			String.valueOf(_validateOnBlur));
 		httpServletRequest.setAttribute(
+			"liferay-frontend:edit-form:wrappedFormContent",
+			String.valueOf(_isWrappedFormContent(httpServletRequest)));
+		httpServletRequest.setAttribute(
 			"LIFERAY_SHARED_aui:form:checkboxNames", _checkboxNames);
 		httpServletRequest.setAttribute(
 			"LIFERAY_SHARED_aui:form:validatorTagsMap", _validatorTagsMap);
@@ -235,6 +238,20 @@ public class EditFormTag extends IncludeTag {
 		}
 
 		return _action;
+	}
+
+	private boolean _isWrappedFormContent(
+		HttpServletRequest httpServletRequest) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay.isStatePopUp()) {
+			return false;
+		}
+
+		return _wrappedFormContent;
 	}
 
 	private static final String _ATTRIBUTE_NAMESPACE =
@@ -260,5 +277,6 @@ public class EditFormTag extends IncludeTag {
 	private boolean _validateOnBlur = true;
 	private final Map<String, List<ValidatorTag>> _validatorTagsMap =
 		new HashMap<>();
+	private boolean _wrappedFormContent = true;
 
 }

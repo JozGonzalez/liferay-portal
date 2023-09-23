@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.model.impl;
@@ -30,7 +21,7 @@ public class JournalArticleDisplayImpl implements JournalArticleDisplay {
 		long companyId, long id, long resourcePrimKey, long groupId,
 		long userId, String articleId, double version, String title,
 		String urlTitle, String description, String[] availableLocales,
-		String content, String ddmStructureKey, String ddmTemplateKey,
+		String content, long ddmStructureId, String ddmTemplateKey,
 		boolean smallImage, long smallImageId, String smallImageURL,
 		int numberOfPages, int currentPage, boolean paginate,
 		boolean cacheable) {
@@ -47,7 +38,7 @@ public class JournalArticleDisplayImpl implements JournalArticleDisplay {
 		_description = description;
 		_availableLocales = availableLocales;
 		_content = content;
-		_ddmStructureKey = ddmStructureKey;
+		_ddmStructureId = ddmStructureId;
 		_ddmTemplateKey = ddmTemplateKey;
 		_smallImage = smallImage;
 		_smallImageId = smallImageId;
@@ -100,8 +91,8 @@ public class JournalArticleDisplayImpl implements JournalArticleDisplay {
 	}
 
 	@Override
-	public String getDDMStructureKey() {
-		return _ddmStructureKey;
+	public long getDDMStructureId() {
+		return _ddmStructureId;
 	}
 
 	@Override
@@ -195,8 +186,8 @@ public class JournalArticleDisplayImpl implements JournalArticleDisplay {
 	}
 
 	@Override
-	public void setDDMStructureKey(String ddmStructureKey) {
-		_ddmStructureKey = ddmStructureKey;
+	public void setDDMStructureId(long ddmStructureId) {
+		_ddmStructureId = ddmStructureId;
 	}
 
 	@Override
@@ -235,7 +226,7 @@ public class JournalArticleDisplayImpl implements JournalArticleDisplay {
 	private final long _companyId;
 	private String _content;
 	private int _currentPage;
-	private String _ddmStructureKey;
+	private long _ddmStructureId;
 	private String _ddmTemplateKey;
 	private final String _description;
 	private final long _groupId;

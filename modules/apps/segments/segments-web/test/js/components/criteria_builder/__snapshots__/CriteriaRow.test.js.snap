@@ -1,0 +1,214 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CriteriaRow renders 1`] = `
+<DocumentFragment>
+  <div
+    class="criterion-row-root"
+  >
+    <div
+      class="edit-container"
+    >
+      <div
+        class="drag-icon"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-drag"
+          role="presentation"
+        >
+          <use
+            xlink:href="#drag"
+          />
+        </svg>
+      </div>
+      <span
+        class="c-ml-2 criterion-string"
+      >
+        <b
+          class="font-weight-bold"
+        >
+          Test Property
+        </b>
+      </span>
+      <select
+        aria-label="Test Property: select-property-operator-option"
+        class="form-control criterion-input operator-input"
+      >
+        <option
+          value="eq"
+        >
+          equals
+        </option>
+        <option
+          value="not-eq"
+        >
+          not-equals
+        </option>
+        <option
+          value="contains"
+        >
+          contains
+        </option>
+        <option
+          value="not-contains"
+        >
+          not-contains
+        </option>
+      </select>
+      <input
+        aria-label="Test Property: input-a-value"
+        class="form-control criterion-input"
+        data-testid="simple-string"
+        type="text"
+        value="test_val"
+      />
+      <button
+        aria-label="duplicate-segment-property"
+        class="btn-outline-borderless btn-sm c-mr-1 btn btn-monospaced btn-secondary"
+        title="duplicate-segment-property"
+        type="button"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-paste"
+          role="presentation"
+        >
+          <use
+            xlink:href="#paste"
+          />
+        </svg>
+      </button>
+      <button
+        aria-label="delete-segment-property"
+        class="btn-outline-borderless btn-sm btn btn-monospaced btn-secondary"
+        title="delete-segment-property"
+        type="button"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-times-circle"
+          role="presentation"
+        >
+          <use
+            xlink:href="#times-circle"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CriteriaRow renders and inform there is an unknown property 1`] = `
+<DocumentFragment>
+  <div
+    class="criterion-row-root criterion-row-root-error"
+  >
+    <div
+      class="edit-container"
+    >
+      <div
+        class="drag-icon"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-drag"
+          role="presentation"
+        >
+          <use
+            xlink:href="#drag"
+          />
+        </svg>
+      </div>
+      <span
+        class="c-ml-2 criterion-string"
+      >
+        <b
+          class="font-weight-bold"
+        >
+          unknown_prop
+        </b>
+      </span>
+      <select
+        aria-label="unknown_prop: select-property-operator-option"
+        class="form-control criterion-input operator-input"
+        disabled=""
+      >
+        <option
+          value="eq"
+        >
+          equals
+        </option>
+        <option
+          value="not-eq"
+        >
+          not-equals
+        </option>
+        <option
+          value="contains"
+        >
+          contains
+        </option>
+        <option
+          value="not-contains"
+        >
+          not-contains
+        </option>
+      </select>
+      <input
+        aria-label="unknown_prop: input-a-value"
+        class="form-control criterion-input"
+        data-testid="simple-string"
+        disabled=""
+        type="text"
+        value="test_val"
+      />
+      <button
+        class="btn-outline-danger btn-sm btn"
+        type="button"
+      >
+        delete-segment-property
+      </button>
+    </div>
+  </div>
+  <div
+    class="bg-transparent border-0 mt-1 p-1 alert alert-danger"
+  >
+    <div
+      class="alert-autofit-row autofit-row"
+      role="alert"
+    >
+      <div
+        class="autofit-col"
+      >
+        <div
+          class="autofit-section"
+        >
+          <span
+            class="alert-indicator"
+          >
+            <svg
+              class="lexicon-icon lexicon-icon-exclamation-full"
+              role="presentation"
+            >
+              <use
+                xlink:href="#exclamation-full"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div
+        class="autofit-col autofit-col-expand"
+      >
+        <div
+          class="autofit-section"
+        >
+          <strong
+            class="lead"
+          >
+            error
+          </strong>
+          criteria-error-message-edit
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

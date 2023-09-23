@@ -1,6 +1,7 @@
 @component-name = "portal-segmentation"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -11,7 +12,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		task ("Add segment in Test Site Name") {
 			JSONSegmentsentry.addSegment(
@@ -24,11 +25,11 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Navigator.openURL();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -49,9 +50,9 @@ definition {
 		task ("Edit the segment with a select input") {
 			Segmentation.editSegment(entry = "EditSegment Test");
 
-			AssertChecked.assertCheckedNotVisible(
-				checkboxName = "",
-				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+			AssertVisible(
+				ariaLabel = "Enter View Mode",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			Segmentation.deleteProperty();
 
@@ -79,9 +80,9 @@ definition {
 
 			Segmentation.editSegment(entry = "EditSegmentIfHaveASelectInput Test");
 
-			AssertChecked.assertCheckedNotVisible(
-				checkboxName = "",
-				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+			AssertVisible(
+				ariaLabel = "Enter View Mode",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			AssertValue(
 				locator1 = "Segmentation#CRITERION_INPUT_ANY",
@@ -89,13 +90,13 @@ definition {
 		}
 
 		task ("Assert the segment cannot be edited with the toggle off") {
-			Uncheck.uncheckNotVisible(
-				checkboxName = "",
-				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+			Click(
+				key_text = "cog",
+				locator1 = "Icon#ANY");
 
-			AssertNotChecked.assertNotCheckedNotVisible(
-				checkboxName = "",
-				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+			AssertVisible(
+				ariaLabel = "Enter Edit Mode",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			AssertElementNotPresent(locator1 = "Button#SELECT");
 		}
@@ -236,7 +237,7 @@ definition {
 
 			Segmentation.addProperties(propertyOption = "Tag");
 
-			Segmentation.fillProperty(selectLink = "tagname");
+			Segmentation.fillProperty(selectEntry = "tagname");
 
 			Segmentation.fillTitle(titleField = "EditSegmentUserByUserTag Test");
 
@@ -280,6 +281,24 @@ definition {
 			AssertValue(
 				locator1 = "Segmentation#CRITERION_OPERATOR",
 				value1 = "eq");
+		}
+	}
+
+	@description = "This is a test for LPS-149468. The kebab menu next to a segment must have icons next to the menu items."
+	@priority = 3
+	test ViewIconsOfSegmentsActions {
+		task ("When the user opens the dropdown menu of a segment") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+
+			LexiconEntry.openEntryMenu(rowEntry = "EditSegment Test");
+		}
+
+		task ("Then there should be icons next to the menu items") {
+			for (var icon : list "pencil,users,password-policies,trash") {
+				AssertVisible(
+					key_text = ${icon},
+					locator1 = "Icon#ANY");
+			}
 		}
 	}
 

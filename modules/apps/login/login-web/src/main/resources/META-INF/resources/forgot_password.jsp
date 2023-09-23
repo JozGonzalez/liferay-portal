@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -52,28 +43,6 @@ renderResponse.setTitle(LanguageUtil.get(request, "forgot-password"));
 		<liferay-ui:error exception="<%= UserEmailAddressException.MustNotBeNull.class %>" message="please-enter-an-email-address" />
 		<liferay-ui:error exception="<%= UserEmailAddressException.MustValidate.class %>" message="please-enter-a-valid-email-address" />
 		<liferay-ui:error exception="<%= UserLockoutException.LDAPLockout.class %>" message="this-account-is-locked" />
-
-		<liferay-ui:error exception="<%= UserLockoutException.PasswordPolicyLockout.class %>">
-
-			<%
-			UserLockoutException.PasswordPolicyLockout ule = (UserLockoutException.PasswordPolicyLockout)errorException;
-			%>
-
-			<c:choose>
-				<c:when test="<%= ule.passwordPolicy.isRequireUnlock() %>">
-					<liferay-ui:message key="this-account-is-locked" />
-				</c:when>
-				<c:otherwise>
-
-					<%
-					Format dateFormat = FastDateFormatFactoryUtil.getDateTime(FastDateFormatConstants.SHORT, FastDateFormatConstants.LONG, locale, TimeZone.getTimeZone(ule.user.getTimeZoneId()));
-					%>
-
-					<liferay-ui:message arguments="<%= dateFormat.format(ule.user.getUnlockDate()) %>" key="this-account-is-locked-until-x" translateArguments="<%= false %>" />
-				</c:otherwise>
-			</c:choose>
-		</liferay-ui:error>
-
 		<liferay-ui:error exception="<%= UserReminderQueryException.class %>" message="your-answer-does-not-match-what-is-in-our-database" />
 
 		<aui:fieldset>
@@ -104,9 +73,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "forgot-password"));
 						<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
 					</c:if>
 
-					<aui:input label="<%= loginLabel %>" name="login" size="30" type="text" value="<%= login %>">
-						<aui:validator name="required" />
-					</aui:input>
+					<aui:input label="<%= loginLabel %>" name="login" required="<%= true %>" size="30" type="text" value="<%= login %>" />
 
 					<c:if test="<%= captchaConfiguration.sendPasswordCaptchaEnabled() %>">
 						<liferay-captcha:captcha />

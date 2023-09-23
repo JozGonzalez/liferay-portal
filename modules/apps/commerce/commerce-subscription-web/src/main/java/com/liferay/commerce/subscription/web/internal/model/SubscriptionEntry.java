@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.subscription.web.internal.model;
@@ -20,22 +11,22 @@ package com.liferay.commerce.subscription.web.internal.model;
 public class SubscriptionEntry {
 
 	public SubscriptionEntry(
-		long subscriptionId, Link orderId, Link commerceAccountId,
-		Label subscriptionStatus, String commerceAccountName) {
+		long subscriptionId, Link orderId, Link accountEntryId,
+		Label subscriptionStatus, String accountEntryName) {
 
 		_subscriptionId = subscriptionId;
 		_orderId = orderId;
-		_commerceAccountId = commerceAccountId;
+		_accountEntryId = accountEntryId;
 		_subscriptionStatus = subscriptionStatus;
-		_commerceAccountName = commerceAccountName;
+		_accountEntryName = accountEntryName;
 	}
 
-	public Link getCommerceAccountId() {
-		return _commerceAccountId;
+	public Link getAccountEntryId() {
+		return _accountEntryId;
 	}
 
-	public String getCommerceAccountName() {
-		return _commerceAccountName;
+	public String getAccountEntryName() {
+		return _accountEntryName;
 	}
 
 	public Link getOrderId() {
@@ -50,8 +41,8 @@ public class SubscriptionEntry {
 		return _subscriptionStatus;
 	}
 
-	private final Link _commerceAccountId;
-	private final String _commerceAccountName;
+	private final Link _accountEntryId;
+	private final String _accountEntryName;
 	private final Link _orderId;
 	private final long _subscriptionId;
 	private final Label _subscriptionStatus;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.serdes.v1_0;
@@ -31,7 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -183,6 +173,26 @@ public class ObjectDefinitionSerDes {
 			sb.append(objectDefinition.getEnableComments());
 		}
 
+		if (objectDefinition.getEnableLocalization() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableLocalization\": ");
+
+			sb.append(objectDefinition.getEnableLocalization());
+		}
+
+		if (objectDefinition.getEnableObjectEntryDraft() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableObjectEntryDraft\": ");
+
+			sb.append(objectDefinition.getEnableObjectEntryDraft());
+		}
+
 		if (objectDefinition.getEnableObjectEntryHistory() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -295,6 +305,22 @@ public class ObjectDefinitionSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (objectDefinition.getObjectFolderExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectFolderExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					objectDefinition.getObjectFolderExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (objectDefinition.getObjectLayouts() != null) {
@@ -460,6 +486,25 @@ public class ObjectDefinitionSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(objectDefinition.getRestContextPath()));
+
+			sb.append("\"");
+		}
+
+		if (objectDefinition.getRootObjectDefinitionExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rootObjectDefinitionExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					objectDefinition.
+						getRootObjectDefinitionExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -631,6 +676,24 @@ public class ObjectDefinitionSerDes {
 				String.valueOf(objectDefinition.getEnableComments()));
 		}
 
+		if (objectDefinition.getEnableLocalization() == null) {
+			map.put("enableLocalization", null);
+		}
+		else {
+			map.put(
+				"enableLocalization",
+				String.valueOf(objectDefinition.getEnableLocalization()));
+		}
+
+		if (objectDefinition.getEnableObjectEntryDraft() == null) {
+			map.put("enableObjectEntryDraft", null);
+		}
+		else {
+			map.put(
+				"enableObjectEntryDraft",
+				String.valueOf(objectDefinition.getEnableObjectEntryDraft()));
+		}
+
 		if (objectDefinition.getEnableObjectEntryHistory() == null) {
 			map.put("enableObjectEntryHistory", null);
 		}
@@ -694,6 +757,16 @@ public class ObjectDefinitionSerDes {
 			map.put(
 				"objectFields",
 				String.valueOf(objectDefinition.getObjectFields()));
+		}
+
+		if (objectDefinition.getObjectFolderExternalReferenceCode() == null) {
+			map.put("objectFolderExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"objectFolderExternalReferenceCode",
+				String.valueOf(
+					objectDefinition.getObjectFolderExternalReferenceCode()));
 		}
 
 		if (objectDefinition.getObjectLayouts() == null) {
@@ -782,6 +855,19 @@ public class ObjectDefinitionSerDes {
 			map.put(
 				"restContextPath",
 				String.valueOf(objectDefinition.getRestContextPath()));
+		}
+
+		if (objectDefinition.getRootObjectDefinitionExternalReferenceCode() ==
+				null) {
+
+			map.put("rootObjectDefinitionExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"rootObjectDefinitionExternalReferenceCode",
+				String.valueOf(
+					objectDefinition.
+						getRootObjectDefinitionExternalReferenceCode()));
 		}
 
 		if (objectDefinition.getScope() == null) {
@@ -904,6 +990,22 @@ public class ObjectDefinitionSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "enableLocalization")) {
+
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setEnableLocalization(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "enableObjectEntryDraft")) {
+
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setEnableObjectEntryDraft(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "enableObjectEntryHistory")) {
 
 				if (jsonParserFieldValue != null) {
@@ -945,80 +1047,117 @@ public class ObjectDefinitionSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectActions")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectActions(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectActionSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectAction[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectAction[] objectActionsArray =
+						new ObjectAction[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectActionsArray.length; i++) {
+						objectActionsArray[i] = ObjectActionSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectActions(objectActionsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectFields")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectFields(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectFieldSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectField[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectField[] objectFieldsArray =
+						new ObjectField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectFieldsArray.length; i++) {
+						objectFieldsArray[i] = ObjectFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectFields(objectFieldsArray);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"objectFolderExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setObjectFolderExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectLayouts")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectLayouts(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectLayoutSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectLayout[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectLayout[] objectLayoutsArray =
+						new ObjectLayout[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectLayoutsArray.length; i++) {
+						objectLayoutsArray[i] = ObjectLayoutSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectLayouts(objectLayoutsArray);
 				}
 			}
 			else if (Objects.equals(
 						jsonParserFieldName, "objectRelationships")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectRelationship[] objectRelationshipsArray =
+						new ObjectRelationship[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectRelationshipsArray.length; i++) {
+						objectRelationshipsArray[i] =
+							ObjectRelationshipSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					objectDefinition.setObjectRelationships(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectRelationshipSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ObjectRelationship[size]
-						));
+						objectRelationshipsArray);
 				}
 			}
 			else if (Objects.equals(
 						jsonParserFieldName, "objectValidationRules")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectValidationRule[] objectValidationRulesArray =
+						new ObjectValidationRule[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectValidationRulesArray.length;
+						 i++) {
+
+						objectValidationRulesArray[i] =
+							ObjectValidationRuleSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					objectDefinition.setObjectValidationRules(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectValidationRuleSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ObjectValidationRule[size]
-						));
+						objectValidationRulesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectViews")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectViews(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectViewSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectView[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectView[] objectViewsArray =
+						new ObjectView[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectViewsArray.length; i++) {
+						objectViewsArray[i] = ObjectViewSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectViews(objectViewsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "panelAppOrder")) {
@@ -1055,6 +1194,16 @@ public class ObjectDefinitionSerDes {
 				if (jsonParserFieldValue != null) {
 					objectDefinition.setRestContextPath(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"rootObjectDefinitionExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					objectDefinition.
+						setRootObjectDefinitionExternalReferenceCode(
+							(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "scope")) {

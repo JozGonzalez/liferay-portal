@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DMNavigator.openToConfigInSystemSettings(portlet = "Google Cloud Translator");
 
@@ -37,7 +37,8 @@ definition {
 	@priority = 5
 	test CannotSaveWhenConfigurationIsInvalid {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CannotSaveWhenConfigurationIsBlank";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMNavigator.openToConfigInSystemSettings(portlet = "Google Cloud Translator");
 
@@ -53,7 +54,8 @@ definition {
 	@description = "This ensures that the web content content can be translated independently"
 	@priority = 5
 	test CanTranslateContentFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateContentFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Translations.openToTranslateEntry(
 			groupName = "Site Name",
@@ -87,14 +89,15 @@ definition {
 				webContentTitle = "This is the title of a web article");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Content", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that google translation can be used to auto-translate a content page."
 	@priority = 5
 	test CanTranslateContentPage {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateContentPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -154,14 +157,15 @@ definition {
 			Page.viewCurrentPage(pageName = "内容页面名称");
 		}
 		else if (IsTextEqual.isPartialText(locator1 = "Toolbar#FEEDBACK", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that the fragment filed on content page can be translated independently."
 	@priority = 5
 	test CanTranslateContentPageFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateContentPageFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -229,14 +233,15 @@ definition {
 				text = "Überschrift");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "element-text", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that the web content description can be translated independently"
 	@priority = 5
 	test CanTranslateDescriptionFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateDescriptionFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Translations.openToTranslateEntry(
 			groupName = "Site Name",
@@ -270,14 +275,15 @@ definition {
 				webContentTitle = "This is the title of a web article");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Description", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that the numeric and decimal fields of a customized web content can be translated independently"
 	@priority = 5
 	test CanTranslateNumericAndDecimalFieldsIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateNumericAndDecimalFieldsIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -354,14 +360,15 @@ definition {
 				webContentNumber = 10);
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Decimal", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that the rich text field of a customized web content can be translated independently"
 	@priority = 5
 	test CanTranslateRichTextFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateRichTextFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -401,13 +408,13 @@ definition {
 		if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "Field Translated")) {
 			Translations.viewTargetFields(
 				webContentSourceHtml = "This is the content of the rich text field",
-				webContentTitle = "これはリッチ テキスト フィールドのタイトルです");
+				webContentTitle = "これはリッチテキストフィールドのタイトルです");
 
 			Translations.translateSpecificField(fieldName = "Rich Text");
 
 			Translations.viewTargetFields(
 				webContentSourceHtml = "これはリッチ テキスト フィールドの内容です",
-				webContentTitle = "これはリッチ テキスト フィールドのタイトルです");
+				webContentTitle = "これはリッチテキストフィールドのタイトルです");
 
 			PortletEntry.publish();
 
@@ -420,17 +427,18 @@ definition {
 
 			Translations.viewTargetFields(
 				webContentSourceHtml = "これはリッチ テキスト フィールドの内容です",
-				webContentTitle = "これはリッチ テキスト フィールドのタイトルです");
+				webContentTitle = "これはリッチテキストフィールドのタイトルです");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
-			echo("There is a Google network issue. Ending test.");
+			fail("There is a Google network issue. Ending test.");
 		}
 	}
 
 	@description = "This ensures that the text box field of a customized web content can be translated independently"
 	@priority = 5
 	test CanTranslateTextBoxFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateTextBoxFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -455,7 +463,7 @@ definition {
 			fieldType = "Multiple Lines",
 			webContentText = "This is the content of the text box field",
 			webContentTextFieldLabel = "Text Box",
-			webContentTitle = "WC title");
+			webContentTitle = "Web content title");
 
 		PortletEntry.publish();
 
@@ -464,7 +472,7 @@ definition {
 			siteURLKey = "site-name",
 			sourceLanguageId = "en_US",
 			targetLanguageId = "ja_JP",
-			webContentTitle = "WC title");
+			webContentTitle = "Web content title");
 
 		// End the test if the Google refresh token limit is exceeded.
 
@@ -473,13 +481,13 @@ definition {
 		if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "Field Translated")) {
 			Translations.viewTargetFields(
 				webContentTextBox = "This is the content of the text box field",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 
 			Translations.translateSpecificField(fieldName = "Text Box");
 
 			Translations.viewTargetFields(
 				webContentTextBox = "これはテキストボックスフィールドの内容です",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 
 			PortletEntry.publish();
 
@@ -488,11 +496,11 @@ definition {
 				siteURLKey = "site-name",
 				sourceLanguageId = "en_US",
 				targetLanguageId = "ja_JP",
-				webContentTitle = "WC title");
+				webContentTitle = "Web content title");
 
 			Translations.viewTargetFields(
 				webContentTextBox = "これはテキストボックスフィールドの内容です",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
 			echo("There is a Google network issue. Ending test.");
@@ -502,7 +510,8 @@ definition {
 	@description = "This ensures that the text field of a customized web content can be translated independently"
 	@priority = 5
 	test CanTranslateTextFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateTextFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -524,7 +533,7 @@ definition {
 
 		WebContent.addWithStructureCP(
 			webContentText = "Test text",
-			webContentTitle = "WC title");
+			webContentTitle = "Web content title");
 
 		PortletEntry.publish();
 
@@ -533,7 +542,7 @@ definition {
 			siteURLKey = "site-name",
 			sourceLanguageId = "en_US",
 			targetLanguageId = "ja_JP",
-			webContentTitle = "WC title");
+			webContentTitle = "Web content title");
 
 		// End the test if the Google refresh token limit is exceeded.
 
@@ -542,13 +551,13 @@ definition {
 		if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "Field Translated")) {
 			Translations.viewTargetFields(
 				webContentText = "Test text",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 
 			Translations.translateSpecificField(fieldName = "Text");
 
 			Translations.viewTargetFields(
 				webContentText = "テストテキスト",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 
 			PortletEntry.publish();
 
@@ -557,11 +566,11 @@ definition {
 				siteURLKey = "site-name",
 				sourceLanguageId = "en_US",
 				targetLanguageId = "ja_JP",
-				webContentTitle = "WC title");
+				webContentTitle = "Web content title");
 
 			Translations.viewTargetFields(
 				webContentText = "テストテキスト",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
 			echo("There is a Google network issue. Ending test.");
@@ -571,20 +580,21 @@ definition {
 	@description = "This ensures that the web content title can be translated independently"
 	@priority = 5
 	test CanTranslateTitleFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateTitleFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "This is the content of a web article",
 			description = "This is the description of a web article",
 			groupName = "Site Name",
-			title = "WC title");
+			title = "Web content title");
 
 		Translations.openToTranslateEntry(
 			groupName = "Site Name",
 			siteURLKey = "site-name",
 			sourceLanguageId = "en_US",
 			targetLanguageId = "ja_JP",
-			webContentTitle = "WC title");
+			webContentTitle = "Web content title");
 
 		// End the test if the Google refresh token limit is exceeded.
 
@@ -594,7 +604,7 @@ definition {
 			Translations.viewTargetFields(
 				webContentContent = "This is the content of a web article",
 				webContentDescription = "This is the description of a web article",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 
 			PortletEntry.publish();
 
@@ -603,12 +613,12 @@ definition {
 				siteURLKey = "site-name",
 				sourceLanguageId = "en_US",
 				targetLanguageId = "ja_JP",
-				webContentTitle = "WC title");
+				webContentTitle = "Web content title");
 
 			Translations.viewTargetFields(
 				webContentContent = "This is the content of a web article",
 				webContentDescription = "This is the description of a web article",
-				webContentTitle = "WCタイトル");
+				webContentTitle = "ウェブコンテンツのタイトル");
 		}
 		else if (IsTextEqual.isPartialText(key_fieldName = "Title", locator1 = "Message#SUCCESS_SPECIFIC_FORM_FIELD_REQUIRED", value1 = "There is a problem with the translation service. Please contact your administrator.")) {
 			echo("There is a Google network issue. Ending test.");
@@ -619,7 +629,8 @@ definition {
 	@priority = 5
 	test CanTranslateWCToJapaneseWithGoogle {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanTranslateWCToJapaneseWithGoogle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -656,7 +667,8 @@ definition {
 	@description = "The Auto Translate button should not appear in the side-by-side view after Google Translations are enabled then disabled"
 	@priority = 5
 	test CanViewTranslationAfterDisablingGoogleConfiguration {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#CanViewTranslationAfterDisablingGoogleConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -706,7 +718,8 @@ definition {
 	@description = "The Auto Translate button should be disabled when the fields are null."
 	@priority = 4
 	test TranslateButtonIsDisabledWhenFieldIsNull {
-		property test.name.skip.portal.instance = "AutoTranslationGoogle#TranslateButtonIsDisabledWhenFieldIsNull";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "This is the content of a web article",

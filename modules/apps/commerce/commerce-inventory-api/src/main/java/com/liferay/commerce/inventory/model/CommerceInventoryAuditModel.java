@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model;
@@ -19,6 +10,8 @@ import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 
@@ -188,21 +181,6 @@ public interface CommerceInventoryAuditModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
-	 * Returns the sku of this commerce inventory audit.
-	 *
-	 * @return the sku of this commerce inventory audit
-	 */
-	@AutoEscape
-	public String getSku();
-
-	/**
-	 * Sets the sku of this commerce inventory audit.
-	 *
-	 * @param sku the sku of this commerce inventory audit
-	 */
-	public void setSku(String sku);
-
-	/**
 	 * Returns the log type of this commerce inventory audit.
 	 *
 	 * @return the log type of this commerce inventory audit
@@ -237,14 +215,44 @@ public interface CommerceInventoryAuditModel
 	 *
 	 * @return the quantity of this commerce inventory audit
 	 */
-	public int getQuantity();
+	public BigDecimal getQuantity();
 
 	/**
 	 * Sets the quantity of this commerce inventory audit.
 	 *
 	 * @param quantity the quantity of this commerce inventory audit
 	 */
-	public void setQuantity(int quantity);
+	public void setQuantity(BigDecimal quantity);
+
+	/**
+	 * Returns the sku of this commerce inventory audit.
+	 *
+	 * @return the sku of this commerce inventory audit
+	 */
+	@AutoEscape
+	public String getSku();
+
+	/**
+	 * Sets the sku of this commerce inventory audit.
+	 *
+	 * @param sku the sku of this commerce inventory audit
+	 */
+	public void setSku(String sku);
+
+	/**
+	 * Returns the unit of measure key of this commerce inventory audit.
+	 *
+	 * @return the unit of measure key of this commerce inventory audit
+	 */
+	@AutoEscape
+	public String getUnitOfMeasureKey();
+
+	/**
+	 * Sets the unit of measure key of this commerce inventory audit.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce inventory audit
+	 */
+	public void setUnitOfMeasureKey(String unitOfMeasureKey);
 
 	@Override
 	public CommerceInventoryAudit cloneWithOriginalValues();

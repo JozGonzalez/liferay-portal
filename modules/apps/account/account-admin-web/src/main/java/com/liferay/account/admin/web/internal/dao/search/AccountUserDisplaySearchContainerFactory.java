@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.admin.web.internal.dao.search;
@@ -20,6 +11,7 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.retriever.AccountUserRetriever;
 import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -42,13 +34,9 @@ import com.liferay.users.admin.kernel.util.UsersAdmin;
 import java.util.List;
 import java.util.Objects;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Pei-Jung Lan
  */
-@Component(service = {})
 public class AccountUserDisplaySearchContainerFactory {
 
 	public static SearchContainer<AccountUserDisplay> create(
@@ -87,7 +75,10 @@ public class AccountUserDisplaySearchContainerFactory {
 		String emptyResultsMessage =
 			"there-are-no-users-associated-with-this-account";
 
-		if (_accountUserRetriever.getAccountUsersCount(accountEntryId) > 0) {
+		AccountUserRetriever accountUserRetriever =
+			_accountUserRetrieverSnapshot.get();
+
+		if (accountUserRetriever.getAccountUsersCount(accountEntryId) > 0) {
 			emptyResultsMessage = "no-users-were-found";
 		}
 
@@ -115,11 +106,17 @@ public class AccountUserDisplaySearchContainerFactory {
 		String emptyResultsMessage =
 			"there-are-no-users-associated-with-this-role";
 
-		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+		AccountEntryLocalService accountEntryLocalService =
+			_accountEntryLocalServiceSnapshot.get();
+
+		AccountEntry accountEntry = accountEntryLocalService.getAccountEntry(
 			accountEntryId);
 
+		UserGroupRoleLocalService userGroupRoleLocalService =
+			_userGroupRoleLocalServiceSnapshot.get();
+
 		List<UserGroupRole> userGroupRoles =
-			_userGroupRoleLocalService.getUserGroupRolesByGroupAndRole(
+			userGroupRoleLocalService.getUserGroupRolesByGroupAndRole(
 				accountEntry.getAccountEntryGroupId(), roleId);
 
 		if (ListUtil.isNotEmpty(userGroupRoles)) {
@@ -129,32 +126,6 @@ public class AccountUserDisplaySearchContainerFactory {
 		return _create(
 			new long[] {accountEntryId}, emptyResultsMessage,
 			liferayPortletRequest, liferayPortletResponse);
-	}
-
-	@Reference(unbind = "-")
-	protected void setAccountEntryLocalService(
-		AccountEntryLocalService accountEntryLocalService) {
-
-		_accountEntryLocalService = accountEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAccountUserRetriever(
-		AccountUserRetriever accountUserRetriever) {
-
-		_accountUserRetriever = accountUserRetriever;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserGroupRoleLocalService(
-		UserGroupRoleLocalService userGroupRoleLocalService) {
-
-		_userGroupRoleLocalService = userGroupRoleLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUsersAdmin(UsersAdmin usersAdmin) {
-		_usersAdmin = usersAdmin;
 	}
 
 	private static SearchContainer<AccountUserDisplay> _create(
@@ -223,9 +194,14 @@ public class AccountUserDisplaySearchContainerFactory {
 			int end, String orderByCol, String orderByType)
 		throws PortalException {
 
-		return _accountUserRetriever.searchAccountRoleUsers(
+		AccountUserRetriever accountUserRetriever =
+			_accountUserRetrieverSnapshot.get();
+
+		UsersAdmin usersAdmin = _usersAdminSnapshot.get();
+
+		return accountUserRetriever.searchAccountRoleUsers(
 			accountEntryId, accountRoleId, keywords, start, end,
-			_usersAdmin.getUserOrderByComparator(orderByCol, orderByType));
+			usersAdmin.getUserOrderByComparator(orderByCol, orderByType));
 	}
 
 	private static BaseModelSearchResult<User> _getBaseModelSearchResult(
@@ -233,7 +209,10 @@ public class AccountUserDisplaySearchContainerFactory {
 			int delta, String orderByCol, String orderByType)
 		throws PortalException {
 
-		return _accountUserRetriever.searchAccountUsers(
+		AccountUserRetriever accountUserRetriever =
+			_accountUserRetrieverSnapshot.get();
+
+		return accountUserRetriever.searchAccountUsers(
 			accountEntryIds, keywords, null, status, start, delta, orderByCol,
 			_isReverseOrder(orderByType));
 	}
@@ -254,9 +233,20 @@ public class AccountUserDisplaySearchContainerFactory {
 		return false;
 	}
 
-	private static AccountEntryLocalService _accountEntryLocalService;
-	private static AccountUserRetriever _accountUserRetriever;
-	private static UserGroupRoleLocalService _userGroupRoleLocalService;
-	private static UsersAdmin _usersAdmin;
+	private static final Snapshot<AccountEntryLocalService>
+		_accountEntryLocalServiceSnapshot = new Snapshot<>(
+			AccountUserDisplaySearchContainerFactory.class,
+			AccountEntryLocalService.class);
+	private static final Snapshot<AccountUserRetriever>
+		_accountUserRetrieverSnapshot = new Snapshot<>(
+			AccountUserDisplaySearchContainerFactory.class,
+			AccountUserRetriever.class);
+	private static final Snapshot<UserGroupRoleLocalService>
+		_userGroupRoleLocalServiceSnapshot = new Snapshot<>(
+			AccountUserDisplaySearchContainerFactory.class,
+			UserGroupRoleLocalService.class);
+	private static final Snapshot<UsersAdmin> _usersAdminSnapshot =
+		new Snapshot<>(
+			AccountUserDisplaySearchContainerFactory.class, UsersAdmin.class);
 
 }

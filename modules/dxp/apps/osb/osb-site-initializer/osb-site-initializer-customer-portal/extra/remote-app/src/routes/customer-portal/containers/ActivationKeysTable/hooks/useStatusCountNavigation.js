@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useMemo, useState} from 'react';
@@ -22,42 +16,30 @@ export default function useStatusCountNavigation(activationKeys) {
 
 	useEffect(() => {
 		if (activationKeys) {
-			const statusCount = activationKeys.reduce(
-				(statusCountAccumulator, activationKey) => {
-					const isActivate = FILTER_TYPES.activated(activationKey);
-					if (isActivate) {
-						statusCountAccumulator.activatedTotalCount = ++statusCountAccumulator.activatedTotalCount;
+			const statusCountMap = {
+				activatedTotalCount: 0,
+				allTotalCount: activationKeys.length,
+				expiredTotalCount: 0,
+				notActiveTotalCount: 0,
+			};
 
-						return statusCountAccumulator;
-					}
+			for (const activationKey of activationKeys) {
+				const isNotActivate = FILTER_TYPES.notActivated(activationKey);
+				const isActivate = FILTER_TYPES.activated(activationKey);
+				const isExpired = FILTER_TYPES.expired(activationKey);
 
-					const isExpired = FILTER_TYPES.expired(activationKey);
-					if (isExpired) {
-						statusCountAccumulator.expiredTotalCount = ++statusCountAccumulator.expiredTotalCount;
-
-						return statusCountAccumulator;
-					}
-
-					const isNotActivate = FILTER_TYPES.notActivated(
-						activationKey
-					);
-					if (isNotActivate) {
-						statusCountAccumulator.notActiveTotalCount = ++statusCountAccumulator.notActiveTotalCount;
-
-						return statusCountAccumulator;
-					}
-				},
-				{
-					activatedTotalCount: 0,
-					allTotalCount: 0,
-					expiredTotalCount: 0,
-					notActiveTotalCount: 0,
+				if (isNotActivate) {
+					statusCountMap.notActiveTotalCount = ++statusCountMap.notActiveTotalCount;
 				}
-			);
+				else if (isActivate) {
+					statusCountMap.activatedTotalCount = ++statusCountMap.activatedTotalCount;
+				}
+				else if (isExpired) {
+					statusCountMap.expiredTotalCount = ++statusCountMap.expiredTotalCount;
+				}
+			}
 
-			statusCount.allTotalCount = activationKeys.length;
-
-			setStatusCountNavigation(statusCount);
+			setStatusCountNavigation(statusCountMap);
 		}
 	}, [activationKeys]);
 

@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -23,9 +23,12 @@ definition {
 		}
 	}
 
-	@description = "This ensures that the translator can select which target language she wants to translate into numeric fields."
+	@description = "This ensures that the translator can select which target language she wants to translate into numeric fields. Skip the instance for performance improvement."
 	@priority = 5
 	test CanTranslateCustomizedWCWithNumericFields {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		NavItem.gotoStructures();
@@ -212,9 +215,12 @@ definition {
 			webContentTitleTranslated = "WC WebContent Título");
 	}
 
-	@description = "This ensures that the translator can select which target language she wants to translate into custom text fields."
+	@description = "This ensures that the translator can select which target language she wants to translate into custom text fields. Skip the instance for performance improvement."
 	@priority = 5
 	test CanTranslateCustomizedWCWithTextFields {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		NavItem.gotoStructures();

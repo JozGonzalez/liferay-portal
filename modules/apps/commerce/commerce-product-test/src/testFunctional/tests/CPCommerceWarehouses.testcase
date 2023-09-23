@@ -430,7 +430,7 @@ definition {
 		}
 
 		task ("Then an error message shows up") {
-			Alert.viewErrorMessage(errorMessage = "Duplicate channel relation");
+			Alert.viewErrorMessage(errorMessage = "The channel relation already exists.");
 		}
 	}
 
@@ -1099,7 +1099,7 @@ definition {
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		Type(
-			locator1 = "Search#EMBEDDED_SEARCH_BAR",
+			locator1 = "Search#SEARCH_BAR_WIDGET",
 			value1 = "ABS Sensor");
 
 		Button.clickSubmitButton();
@@ -1396,7 +1396,9 @@ definition {
 
 		Button.clickSave();
 
-		Alert.viewErrorMessage(errorMessage = "This item is no longer valid. Please try again.");
+		AssertTextEquals.assertText(
+			locator1 = "Message#ERROR",
+			value1 = "Close Error:This item is no longer valid. Please try again.");
 	}
 
 	@description = "This is a test for COMMERCE-5708. As a product specialist i want to update the quantity of a product inside a warehouse"

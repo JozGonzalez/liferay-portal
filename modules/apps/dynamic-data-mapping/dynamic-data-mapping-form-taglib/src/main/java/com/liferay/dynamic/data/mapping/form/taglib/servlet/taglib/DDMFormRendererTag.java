@@ -1,24 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib;
 
 import com.liferay.dynamic.data.mapping.constants.DDMActionKeys;
+import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.taglib.internal.security.permission.DDMFormInstancePermission;
-import com.liferay.dynamic.data.mapping.form.taglib.internal.servlet.taglib.util.DDMFormTaglibUtil;
 import com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib.base.BaseDDMFormRendererTag;
+import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
@@ -27,7 +19,13 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -37,6 +35,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -139,9 +139,10 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			}
 
 			DDMFormInstanceVersion latestDDMFormInstanceVersion =
-				DDMFormTaglibUtil.getLatestDDMFormInstanceVersion(
-					ddmFormInstance.getFormInstanceId(),
-					WorkflowConstants.STATUS_APPROVED);
+				DDMFormInstanceVersionLocalServiceUtil.
+					getLatestFormInstanceVersion(
+						ddmFormInstance.getFormInstanceId(),
+						WorkflowConstants.STATUS_APPROVED);
 
 			DDMStructureVersion ddmStructureVersion =
 				latestDDMFormInstanceVersion.getStructureVersion();
@@ -168,7 +169,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 		}
 
 		try {
-			ddmFormHTML = DDMFormTaglibUtil.renderForm(
+			DDMFormRenderer ddmFormRenderer = _ddmFormRendererSnapshot.get();
+
+			ddmFormHTML = ddmFormRenderer.render(
 				ddmForm, ddmFormLayout, createDDMFormRenderingContext(ddmForm));
 		}
 		catch (PortalException portalException) {
@@ -185,23 +188,24 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 
 		if (getDdmFormInstanceRecordVersionId() != null) {
 			DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
-				DDMFormTaglibUtil.getDDMFormInstanceRecordVersion(
-					getDdmFormInstanceRecordVersionId());
+				DDMFormInstanceRecordVersionLocalServiceUtil.
+					fetchDDMFormInstanceRecordVersion(
+						getDdmFormInstanceRecordVersionId());
 
 			ddmFormInstanceId =
 				ddmFormInstanceRecordVersion.getFormInstanceId();
 		}
 		else if (getDdmFormInstanceRecordId() != null) {
 			DDMFormInstanceRecord ddmFormInstanceRecord =
-				DDMFormTaglibUtil.getDDMFormInstanceRecord(
-					getDdmFormInstanceRecordId());
+				DDMFormInstanceRecordLocalServiceUtil.
+					fetchDDMFormInstanceRecord(getDdmFormInstanceRecordId());
 
 			ddmFormInstanceId = ddmFormInstanceRecord.getFormInstanceId();
 		}
 		else if (getDdmFormInstanceVersionId() != null) {
 			DDMFormInstanceVersion ddmFormInstanceVersion =
-				DDMFormTaglibUtil.getDDMFormInstanceVersion(
-					getDdmFormInstanceVersionId());
+				DDMFormInstanceVersionLocalServiceUtil.
+					fetchDDMFormInstanceVersion(getDdmFormInstanceVersionId());
 
 			ddmFormInstanceId = ddmFormInstanceVersion.getFormInstanceId();
 		}
@@ -209,7 +213,8 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			ddmFormInstanceId = getDdmFormInstanceId();
 		}
 
-		return DDMFormTaglibUtil.getDDMFormInstance(ddmFormInstanceId);
+		return DDMFormInstanceLocalServiceUtil.fetchFormInstance(
+			ddmFormInstanceId);
 	}
 
 	protected DDMFormLayout getDDMFormLayout() {
@@ -223,9 +228,10 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			}
 
 			DDMFormInstanceVersion latestDDMFormInstanceVersion =
-				DDMFormTaglibUtil.getLatestDDMFormInstanceVersion(
-					ddmFormInstance.getFormInstanceId(),
-					WorkflowConstants.STATUS_APPROVED);
+				DDMFormInstanceVersionLocalServiceUtil.
+					getLatestFormInstanceVersion(
+						ddmFormInstance.getFormInstanceId(),
+						WorkflowConstants.STATUS_APPROVED);
 
 			DDMStructureVersion ddmStructureVersion =
 				latestDDMFormInstanceVersion.getStructureVersion();
@@ -376,7 +382,7 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 	protected boolean hasWorkflowEnabled(
 		DDMFormInstance ddmFormInstance, ThemeDisplay themeDisplay) {
 
-		return DDMFormTaglibUtil.hasWorkflowDefinitionLink(
+		return WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(
 			themeDisplay.getCompanyId(), ddmFormInstance.getGroupId(),
 			DDMFormInstance.class.getName(),
 			ddmFormInstance.getFormInstanceId());
@@ -386,7 +392,7 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 		DDMFormInstance ddmFormInstance = getDDMFormInstance();
 
 		if (ddmFormInstance != null) {
-			Group group = DDMFormTaglibUtil.getGroup(
+			Group group = GroupLocalServiceUtil.fetchGroup(
 				ddmFormInstance.getGroupId());
 
 			if (((group != null) && group.isStagingGroup()) ||
@@ -404,28 +410,39 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 	protected void setDDMFormValues(
 		DDMFormRenderingContext ddmFormRenderingContext, DDMForm ddmForm) {
 
-		DDMFormValues ddmFormValues = DDMFormTaglibUtil.createDDMFormValues(
+		DDMFormValuesFactory ddmFormValuesFactory =
+			_ddmFormValuesFactorySnapshot.get();
+
+		DDMFormValues ddmFormValues = ddmFormValuesFactory.create(
 			getRequest(), ddmForm);
 
 		try {
 			if (getDdmFormInstanceRecordVersionId() != null) {
 				DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
-					DDMFormTaglibUtil.getDDMFormInstanceRecordVersion(
-						getDdmFormInstanceRecordVersionId());
+					DDMFormInstanceRecordVersionLocalServiceUtil.
+						fetchDDMFormInstanceRecordVersion(
+							getDdmFormInstanceRecordVersionId());
 
 				if (ddmFormInstanceRecordVersion != null) {
-					ddmFormValues = DDMFormTaglibUtil.mergeDDMFormValues(
+					DDMFormValuesMerger ddmFormValuesMerger =
+						_ddmFormValuesMergerSnapshot.get();
+
+					ddmFormValues = ddmFormValuesMerger.merge(
 						ddmFormInstanceRecordVersion.getDDMFormValues(),
 						ddmFormValues);
 				}
 			}
 			else if (getDdmFormInstanceRecordId() != null) {
 				DDMFormInstanceRecord ddmFormInstanceRecord =
-					DDMFormTaglibUtil.getDDMFormInstanceRecord(
-						getDdmFormInstanceRecordId());
+					DDMFormInstanceRecordLocalServiceUtil.
+						fetchDDMFormInstanceRecord(
+							getDdmFormInstanceRecordId());
 
 				if (ddmFormInstanceRecord != null) {
-					ddmFormValues = DDMFormTaglibUtil.mergeDDMFormValues(
+					DDMFormValuesMerger ddmFormValuesMerger =
+						_ddmFormValuesMergerSnapshot.get();
+
+					ddmFormValues = ddmFormValuesMerger.merge(
 						ddmFormInstanceRecord.getDDMFormValues(),
 						ddmFormValues);
 				}
@@ -478,5 +495,14 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormRendererTag.class);
+
+	private static final Snapshot<DDMFormRenderer> _ddmFormRendererSnapshot =
+		new Snapshot<>(DDMFormRendererTag.class, DDMFormRenderer.class);
+	private static final Snapshot<DDMFormValuesFactory>
+		_ddmFormValuesFactorySnapshot = new Snapshot<>(
+			DDMFormRendererTag.class, DDMFormValuesFactory.class);
+	private static final Snapshot<DDMFormValuesMerger>
+		_ddmFormValuesMergerSnapshot = new Snapshot<>(
+			DDMFormRendererTag.class, DDMFormValuesMerger.class);
 
 }

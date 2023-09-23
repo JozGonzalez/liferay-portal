@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
@@ -26,6 +18,8 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.Elasticsearc
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIdIndexNameBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIndexFactory;
+import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIndexFactoryHelper;
+import com.liferay.portal.search.elasticsearch7.internal.index.IndexConfigurationDynamicUpdatesExecutor;
 import com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.ElasticsearchEngineAdapterFixture;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
@@ -33,6 +27,12 @@ import com.liferay.portal.search.test.util.search.engine.SearchEngineFixture;
 
 import java.util.Map;
 import java.util.Objects;
+
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * @author Adam Brandizzi
@@ -70,6 +70,8 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 
 		CompanyIdIndexNameBuilder indexNameBuilder = _createIndexNameBuilder();
 
+		_frameworkUtilMockedStatic = _createFrameworkUtil();
+
 		ElasticsearchConnectionManager elasticsearchConnectionManager =
 			_createElasticsearchConnectionManager(
 				elasticsearchConnectionFixture);
@@ -77,6 +79,7 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 		_elasticsearchConnectionManager = elasticsearchConnectionManager;
 		_elasticsearchSearchEngine = _createElasticsearchSearchEngine(
 			elasticsearchConnectionFixture, elasticsearchConnectionManager,
+			Mockito.mock(IndexConfigurationDynamicUpdatesExecutor.class),
 			indexNameBuilder,
 			elasticsearchConnectionFixture.
 				getElasticsearchConfigurationProperties());
@@ -87,6 +90,28 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	@Override
 	public void tearDown() throws Exception {
 		_elasticsearchConnectionFixture.destroyNode();
+
+		_elasticsearchEngineAdapterFixture.tearDown();
+
+		if (_companyIndexFactory != null) {
+			ReflectionTestUtil.invoke(
+				_companyIndexFactory, "deactivate", new Class<?>[0]);
+
+			_companyIndexFactory = null;
+		}
+
+		if (_companyIndexFactoryHelper != null) {
+			ReflectionTestUtil.invoke(
+				_companyIndexFactoryHelper, "deactivate", new Class<?>[0]);
+
+			_companyIndexFactoryHelper = null;
+		}
+
+		if (_frameworkUtilMockedStatic != null) {
+			_frameworkUtilMockedStatic.close();
+
+			_frameworkUtilMockedStatic = null;
+		}
 	}
 
 	protected static ElasticsearchConfigurationWrapper
@@ -105,14 +130,37 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	private CompanyIndexFactory _createCompanyIndexFactory(
 		IndexNameBuilder indexNameBuilder, Map<String, Object> properites) {
 
-		return new CompanyIndexFactory() {
-			{
-				setElasticsearchConfigurationWrapper(
-					createElasticsearchConfigurationWrapper(properites));
-				setIndexNameBuilder(indexNameBuilder);
-				setJsonFactory(new JSONFactoryImpl());
-			}
-		};
+		_companyIndexFactory = new CompanyIndexFactory();
+
+		_companyIndexFactoryHelper = new CompanyIndexFactoryHelper();
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_elasticsearchConfigurationWrapper",
+			createElasticsearchConfigurationWrapper(properites));
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_indexNameBuilder", indexNameBuilder);
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_jsonFactory", new JSONFactoryImpl());
+
+		ReflectionTestUtil.invoke(
+			_companyIndexFactoryHelper, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_companyIndexFactoryHelper",
+			_companyIndexFactoryHelper);
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_elasticsearchConfigurationWrapper",
+			createElasticsearchConfigurationWrapper(properites));
+
+		ReflectionTestUtil.invoke(
+			_companyIndexFactory, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
+
+		return _companyIndexFactory;
 	}
 
 	private ElasticsearchConnectionManager
@@ -139,6 +187,8 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	private ElasticsearchSearchEngine _createElasticsearchSearchEngine(
 		ElasticsearchClientResolver elasticsearchClientResolver,
 		ElasticsearchConnectionManager elasticsearchConnectionManager,
+		IndexConfigurationDynamicUpdatesExecutor
+			indexConfigurationDynamicUpdatesExecutor,
 		IndexNameBuilder indexNameBuilder, Map<String, Object> properites) {
 
 		ElasticsearchSearchEngine elasticsearchSearchEngine =
@@ -147,6 +197,10 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 		ReflectionTestUtil.setFieldValue(
 			elasticsearchSearchEngine, "_elasticsearchConnectionManager",
 			elasticsearchConnectionManager);
+		ReflectionTestUtil.setFieldValue(
+			elasticsearchSearchEngine,
+			"_indexConfigurationDynamicUpdatesExecutor",
+			indexConfigurationDynamicUpdatesExecutor);
 		ReflectionTestUtil.setFieldValue(
 			elasticsearchSearchEngine, "_indexFactory",
 			_createCompanyIndexFactory(indexNameBuilder, properites));
@@ -158,6 +212,21 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 			_createSearchEngineAdapter(elasticsearchClientResolver));
 
 		return elasticsearchSearchEngine;
+	}
+
+	private MockedStatic<FrameworkUtil> _createFrameworkUtil() {
+		MockedStatic<FrameworkUtil> frameworkUtilMockedStatic =
+			Mockito.mockStatic(FrameworkUtil.class);
+
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		frameworkUtilMockedStatic.when(
+			() -> FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+
+		return frameworkUtilMockedStatic;
 	}
 
 	private CompanyIdIndexNameBuilder _createIndexNameBuilder() {
@@ -182,22 +251,27 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	private SearchEngineAdapter _createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-		ElasticsearchEngineAdapterFixture elasticsearchEngineAdapterFixture =
+		_elasticsearchEngineAdapterFixture =
 			new ElasticsearchEngineAdapterFixture() {
 				{
 					setElasticsearchClientResolver(elasticsearchClientResolver);
 				}
 			};
 
-		elasticsearchEngineAdapterFixture.setUp();
+		_elasticsearchEngineAdapterFixture.setUp();
 
-		return elasticsearchEngineAdapterFixture.getSearchEngineAdapter();
+		return _elasticsearchEngineAdapterFixture.getSearchEngineAdapter();
 	}
 
+	private CompanyIndexFactory _companyIndexFactory;
+	private CompanyIndexFactoryHelper _companyIndexFactoryHelper;
 	private final ElasticsearchConnectionFixture
 		_elasticsearchConnectionFixture;
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
+	private ElasticsearchEngineAdapterFixture
+		_elasticsearchEngineAdapterFixture;
 	private ElasticsearchSearchEngine _elasticsearchSearchEngine;
+	private MockedStatic<FrameworkUtil> _frameworkUtilMockedStatic;
 	private IndexNameBuilder _indexNameBuilder;
 
 }

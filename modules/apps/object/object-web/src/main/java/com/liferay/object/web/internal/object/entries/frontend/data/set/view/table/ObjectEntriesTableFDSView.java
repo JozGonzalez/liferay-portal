@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.entries.frontend.data.set.view.table;
 
 import com.liferay.frontend.data.set.view.table.BaseTableFDSView;
 import com.liferay.frontend.data.set.view.table.DateFDSTableSchemaField;
+import com.liferay.frontend.data.set.view.table.DateTimeFDSTableSchemaField;
 import com.liferay.frontend.data.set.view.table.FDSTableSchema;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilder;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
@@ -23,8 +15,10 @@ import com.liferay.frontend.data.set.view.table.FDSTableSchemaField;
 import com.liferay.frontend.data.set.view.table.StringFDSTableSchemaField;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.model.ObjectView;
 import com.liferay.object.model.ObjectViewColumn;
@@ -35,12 +29,21 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -57,7 +60,8 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
-		ObjectViewLocalService objectViewLocalService) {
+		ObjectViewLocalService objectViewLocalService,
+		UserLocalService userLocalService) {
 
 		_fdsTableSchemaBuilderFactory = fdsTableSchemaBuilderFactory;
 		_objectDefinition = objectDefinition;
@@ -65,6 +69,7 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_objectViewLocalService = objectViewLocalService;
+		_userLocalService = userLocalService;
 	}
 
 	@Override
@@ -88,16 +93,25 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 					Comparator.comparingInt(
 						ObjectViewColumnModel::getPriority))) {
 
-			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
-				_objectDefinition.getObjectDefinitionId(),
-				objectViewColumn.getObjectFieldName());
+			ObjectField objectField = null;
+
+			try {
+				objectField = _objectFieldLocalService.getObjectField(
+					_objectDefinition.getObjectDefinitionId(),
+					objectViewColumn.getObjectFieldName());
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+			}
 
 			String label = _getLabel(
 				objectViewColumn.getLabel(locale, false),
 				objectField.getLabel(locale, false));
 
-			if ((objectField == null) || objectField.isSystem()) {
-				_addSystemObjectField(
+			if ((objectField == null) || objectField.isMetadata()) {
+				_addMetadataObjectField(
 					fdsTableSchemaBuilder, label,
 					objectViewColumn.getObjectFieldName());
 			}
@@ -110,8 +124,7 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 							objectField.getDefaultLanguageId()));
 				}
 
-				_addCustomObjectField(
-					fdsTableSchemaBuilder, label, objectField);
+				_addObjectField(fdsTableSchemaBuilder, label, objectField);
 			}
 		}
 
@@ -133,92 +146,38 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		}
 
 		if (_objectDefinition.isDefaultStorageType()) {
-			_addSystemObjectField(
+			_addMetadataObjectField(
 				fdsTableSchemaBuilder, systemObjectFieldLabels.get("id"), "id");
 		}
 		else {
-			_addSystemObjectField(
+			_addMetadataObjectField(
 				fdsTableSchemaBuilder,
 				systemObjectFieldLabels.get("externalReferenceCode"),
 				"externalReferenceCode");
 		}
 
-		for (ObjectField customObjectField :
+		for (ObjectField objectField :
 				_objectFieldLocalService.getObjectFields(
-					_objectDefinition.getObjectDefinitionId(), false)) {
+					_objectDefinition.getObjectDefinitionId())) {
 
-			_addCustomObjectField(
-				fdsTableSchemaBuilder, customObjectField.getLabel(locale, true),
-				customObjectField);
+			_addObjectField(
+				fdsTableSchemaBuilder, objectField.getLabel(locale, true),
+				objectField);
 		}
 
-		_addSystemObjectField(
+		_addMetadataObjectField(
 			fdsTableSchemaBuilder, systemObjectFieldLabels.get("status"),
 			"status");
-		_addSystemObjectField(
+		_addMetadataObjectField(
 			fdsTableSchemaBuilder, systemObjectFieldLabels.get("creator"),
 			"creator");
-	}
-
-	private void _addCustomObjectField(
-		FDSTableSchemaBuilder fdsTableSchemaBuilder, String label,
-		ObjectField objectField) {
-
-		if (objectField.isSystem()) {
-			return;
-		}
-
-		if (Validator.isNull(objectField.getRelationshipType())) {
-			_addFDSTableSchemaField(
-				objectField.getBusinessType(), null, objectField.getDBType(),
-				fdsTableSchemaBuilder,
-				_getFieldName(
-					objectField.getBusinessType(), objectField.getName()),
-				label, false, objectField.isIndexed());
-		}
-		else if (Objects.equals(
-					objectField.getRelationshipType(),
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
-
-			ObjectRelationship objectRelationship =
-				_objectRelationshipLocalService.
-					fetchObjectRelationshipByObjectFieldId2(
-						objectField.getObjectFieldId());
-
-			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					objectRelationship.getObjectDefinitionId1());
-
-			ObjectField titleObjectField =
-				_objectFieldLocalService.fetchObjectField(
-					objectDefinition.getTitleObjectFieldId());
-
-			if (titleObjectField == null) {
-				_addFDSTableSchemaField(
-					objectField.getBusinessType(), null,
-					objectField.getDBType(), fdsTableSchemaBuilder,
-					objectField.getName(), label, false, false);
-			}
-			else {
-				_addFDSTableSchemaField(
-					titleObjectField.getBusinessType(),
-					_getContentRenderer(titleObjectField.getName()),
-					titleObjectField.getDBType(), fdsTableSchemaBuilder,
-					_getFieldName(
-						titleObjectField.getBusinessType(),
-						StringBundler.concat(
-							StringUtil.replaceLast(
-								objectField.getName(), "Id", ""),
-							StringPool.PERIOD, titleObjectField.getName())),
-					label, false, false);
-			}
-		}
 	}
 
 	private void _addFDSTableSchemaField(
 		String businessType, String contentRenderer, String dbType,
 		FDSTableSchemaBuilder fdsTableSchemaBuilder, String fieldName,
-		String label, boolean localizeLabel, boolean sortable) {
+		String label, boolean localizeLabel,
+		List<ObjectFieldSetting> objectFieldSettings, boolean sortable) {
 
 		FDSTableSchemaField fdsTableSchemaField = new FDSTableSchemaField();
 
@@ -256,18 +215,54 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 
 			fdsTableSchemaField = stringFDSTableSchemaField;
 		}
-		else if (Objects.equals(dbType, ObjectFieldConstants.DB_TYPE_DATE)) {
+		else if (Objects.equals(
+					businessType, ObjectFieldConstants.BUSINESS_TYPE_DATE)) {
+
 			DateFDSTableSchemaField dateFDSTableSchemaField =
 				new DateFDSTableSchemaField();
 
 			dateFDSTableSchemaField.setFieldName(fieldName);
-			dateFDSTableSchemaField.setFormat("short");
+			dateFDSTableSchemaField.setFormat(
+				_getFormatJSONObject(businessType, null));
 			dateFDSTableSchemaField.setLabel(label);
 			dateFDSTableSchemaField.setLocalizeLabel(localizeLabel);
 
 			fdsTableSchemaBuilder.add(dateFDSTableSchemaField);
 
 			fdsTableSchemaField = dateFDSTableSchemaField;
+		}
+		else if (Objects.equals(
+					businessType,
+					ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
+
+			DateTimeFDSTableSchemaField dateTimeFDSTableSchemaField =
+				new DateTimeFDSTableSchemaField();
+
+			dateTimeFDSTableSchemaField.setFieldName(fieldName);
+
+			User user = null;
+
+			try {
+				user = _userLocalService.getUser(
+					PrincipalThreadLocal.getUserId());
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
+				}
+			}
+
+			dateTimeFDSTableSchemaField.setFormat(
+				_getFormatJSONObject(
+					businessType,
+					ObjectFieldSettingUtil.getTimeZoneId(
+						objectFieldSettings, user)));
+			dateTimeFDSTableSchemaField.setLabel(label);
+			dateTimeFDSTableSchemaField.setLocalizeLabel(localizeLabel);
+
+			fdsTableSchemaBuilder.add(dateTimeFDSTableSchemaField);
+
+			fdsTableSchemaField = dateTimeFDSTableSchemaField;
 		}
 		else {
 			fdsTableSchemaField.setFieldName(fieldName);
@@ -299,39 +294,98 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		fdsTableSchemaBuilder.add(fdsTableSchemaField);
 	}
 
-	private void _addSystemObjectField(
+	private void _addMetadataObjectField(
 		FDSTableSchemaBuilder fdsTableSchemaBuilder, String fieldLabel,
 		String fieldName) {
 
 		if (Objects.equals(fieldName, "createDate")) {
 			_addFDSTableSchemaField(
-				null, null, "Date", fdsTableSchemaBuilder, "dateCreated",
-				_getLabel(fieldLabel, "create-date"), true, true);
+				"DateTime", null, "Date", fdsTableSchemaBuilder, "dateCreated",
+				_getLabel(fieldLabel, "create-date"), true, null, true);
 		}
 		else if (Objects.equals(fieldName, "creator")) {
 			_addFDSTableSchemaField(
 				null, null, null, fdsTableSchemaBuilder, fieldName + ".name",
-				_getLabel(fieldLabel, "author"), true, true);
+				_getLabel(fieldLabel, "author"), true, null, true);
 		}
 		else if (Objects.equals(fieldName, "externalReferenceCode")) {
 			_addFDSTableSchemaField(
 				null, "actionLink", null, fdsTableSchemaBuilder, fieldName,
-				_getLabel(fieldLabel, "external-reference-code"), true, true);
+				_getLabel(fieldLabel, "external-reference-code"), true, null,
+				true);
 		}
 		else if (Objects.equals(fieldName, "id")) {
 			_addFDSTableSchemaField(
 				null, "actionLink", null, fdsTableSchemaBuilder, "id",
-				_getLabel(fieldLabel, "id"), true, true);
+				_getLabel(fieldLabel, "id"), true, null, true);
 		}
 		else if (Objects.equals(fieldName, "modifiedDate")) {
 			_addFDSTableSchemaField(
-				null, null, "Date", fdsTableSchemaBuilder, "dateModified",
-				_getLabel(fieldLabel, "modified-date"), true, true);
+				"DateTime", null, "Date", fdsTableSchemaBuilder, "dateModified",
+				_getLabel(fieldLabel, "modified-date"), true, null, true);
 		}
 		else if (Objects.equals(fieldName, "status")) {
 			_addFDSTableSchemaField(
 				null, "status", null, fdsTableSchemaBuilder, fieldName,
-				_getLabel(fieldLabel, "status"), true, true);
+				_getLabel(fieldLabel, "status"), true, null, true);
+		}
+	}
+
+	private void _addObjectField(
+		FDSTableSchemaBuilder fdsTableSchemaBuilder, String label,
+		ObjectField objectField) {
+
+		if (objectField.isMetadata()) {
+			return;
+		}
+
+		if (Validator.isNull(objectField.getRelationshipType())) {
+			_addFDSTableSchemaField(
+				objectField.getBusinessType(), null, objectField.getDBType(),
+				fdsTableSchemaBuilder,
+				_getFieldName(
+					objectField.getBusinessType(), objectField.getName()),
+				label, false, objectField.getObjectFieldSettings(),
+				objectField.isIndexed());
+		}
+		else if (Objects.equals(
+					objectField.getRelationshipType(),
+					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.
+					fetchObjectRelationshipByObjectFieldId2(
+						objectField.getObjectFieldId());
+
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectRelationship.getObjectDefinitionId1());
+
+			ObjectField titleObjectField =
+				_objectFieldLocalService.fetchObjectField(
+					objectDefinition.getTitleObjectFieldId());
+
+			if (titleObjectField == null) {
+				_addFDSTableSchemaField(
+					objectField.getBusinessType(), null,
+					objectField.getDBType(), fdsTableSchemaBuilder,
+					objectField.getName(), label, false,
+					objectField.getObjectFieldSettings(), false);
+			}
+			else {
+				_addFDSTableSchemaField(
+					titleObjectField.getBusinessType(),
+					_getContentRenderer(titleObjectField.getName()),
+					titleObjectField.getDBType(), fdsTableSchemaBuilder,
+					_getFieldName(
+						titleObjectField.getBusinessType(),
+						StringBundler.concat(
+							StringUtil.replaceLast(
+								objectField.getName(), "Id", ""),
+							StringPool.PERIOD, titleObjectField.getName())),
+					label, false, titleObjectField.getObjectFieldSettings(),
+					false);
+			}
 		}
 	}
 
@@ -346,16 +400,6 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 	private String _getFieldName(String businessType, String fieldName) {
 		if (fieldName.contains(".creator")) {
 			return StringUtil.replaceLast(fieldName, "creator", "creator.name");
-		}
-
-		if (fieldName.contains(".createDate")) {
-			return StringUtil.replaceLast(
-				fieldName, "createDate", "dateCreated");
-		}
-
-		if (fieldName.contains(".modifiedDate")) {
-			return StringUtil.replace(
-				fieldName, "modifiedDate", "dateModified");
 		}
 
 		if (Objects.equals(
@@ -379,6 +423,32 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		return fieldName;
 	}
 
+	private JSONObject _getFormatJSONObject(
+		String businessType, String timeZone) {
+
+		JSONObject formatJSONObject = JSONUtil.put(
+			"day", "numeric"
+		).put(
+			"month", "short"
+		).put(
+			"year", "numeric"
+		);
+
+		if (StringUtil.equals(
+				businessType, ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
+
+			formatJSONObject.put(
+				"hour", "numeric"
+			).put(
+				"minute", "numeric"
+			).put(
+				"timeZone", timeZone
+			);
+		}
+
+		return formatJSONObject;
+	}
+
 	private String _getLabel(String label, String defaultLabel) {
 		if (Validator.isNotNull(label)) {
 			return label;
@@ -387,6 +457,9 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 		return defaultLabel;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ObjectEntriesTableFDSView.class);
+
 	private final FDSTableSchemaBuilderFactory _fdsTableSchemaBuilderFactory;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
@@ -394,5 +467,6 @@ public class ObjectEntriesTableFDSView extends BaseTableFDSView {
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 	private final ObjectViewLocalService _objectViewLocalService;
+	private final UserLocalService _userLocalService;
 
 }

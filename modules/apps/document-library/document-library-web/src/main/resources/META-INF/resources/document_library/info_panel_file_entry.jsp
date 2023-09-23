@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -115,7 +106,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 					%>
 
 					<clay:content-col>
-						<liferay-ui:user-portrait
+						<liferay-user:user-portrait
 							user="<%= owner %>"
 						/>
 					</clay:content-col>
@@ -125,7 +116,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 					>
 						<div class="component-title username">
 							<c:if test="<%= owner != null %>">
-								<a href="<%= owner.isDefaultUser() ? StringPool.BLANK : owner.getDisplayURL(themeDisplay) %>"><%= HtmlUtil.escape(owner.getFullName()) %></a>
+								<a href="<%= owner.isGuestUser() ? StringPool.BLANK : owner.getDisplayURL(themeDisplay) %>"><%= HtmlUtil.escape(owner.getFullName()) %></a>
 							</c:if>
 						</div>
 
@@ -460,12 +451,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 				/>
 			</c:if>
 
-			<liferay-ui:panel-container
-				cssClass="metadata-panel-container panel-group-flush panel-group-sm"
-				extended="<%= true %>"
-				markupView="lexicon"
-				persistState="<%= true %>"
-			>
+			<clay:panel-group>
 				<c:if test="<%= dlViewFileVersionDisplayContext.getDDMStructuresCount() > 0 %>">
 
 					<%
@@ -481,24 +467,19 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 					%>
 
 							<c:if test="<%= ddmFormValues != null %>">
-								<liferay-ui:panel
-									collapsible="<%= true %>"
-									cssClass="metadata"
-									defaultState="closed"
-									extended="<%= true %>"
-									id='<%= "documentLibraryMetadataPanel_" + ddmStructure.getStructureId() + StringPool.UNDERLINE + fileEntry.getFileEntryId() %>'
-									markupView="lexicon"
-									persistState="<%= true %>"
-									title="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
+								<clay:panel
+									displayTitle="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
 								>
-									<liferay-data-engine:data-layout-renderer
-										containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
-										dataDefinitionId="<%= ddmStructure.getStructureId() %>"
-										dataRecordValues="<%= DataRecordValuesUtil.getDataRecordValues(ddmFormValues, ddmStructure) %>"
-										namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() + StringPool.UNDERLINE %>"
-										readOnly="<%= true %>"
-									/>
-								</liferay-ui:panel>
+									<div class="panel-body">
+										<liferay-data-engine:data-layout-renderer
+											containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
+											dataDefinitionId="<%= ddmStructure.getStructureId() %>"
+											dataRecordValues="<%= DataRecordValuesUtil.getDataRecordValues(ddmFormValues, ddmStructure) %>"
+											namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() + StringPool.UNDERLINE %>"
+											readOnly="<%= true %>"
+										/>
+									</div>
+								</clay:panel>
 							</c:if>
 
 					<%
@@ -515,27 +496,23 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 					classPK="<%= fileVersion.getFileVersionId() %>"
 					editable="<%= false %>"
 				>
-					<liferay-ui:panel
-						collapsible="<%= true %>"
-						cssClass="lfr-custom-fields"
-						defaultState="closed"
-						id="documentLibraryCustomFieldsPanel"
-						markupView="lexicon"
-						persistState="<%= true %>"
-						title="custom-fields"
+					<clay:panel
+						displayTitle='<%= LanguageUtil.get(request, "custom-fields") %>'
 					>
-						<liferay-expando:custom-attribute-list
-							className="<%= DLFileEntryConstants.getClassName() %>"
-							classPK="<%= fileVersion.getFileVersionId() %>"
-							editable="<%= false %>"
-							label="<%= true %>"
-						/>
-					</liferay-ui:panel>
+						<div class="panel-body">
+							<liferay-expando:custom-attribute-list
+								className="<%= DLFileEntryConstants.getClassName() %>"
+								classPK="<%= fileVersion.getFileVersionId() %>"
+								editable="<%= false %>"
+								label="<%= true %>"
+							/>
+						</div>
+					</clay:panel>
 				</liferay-expando:custom-attributes-available>
 
 				<%
 				try {
-					List<DDMStructure> ddmStructures = DDMStructureManagerUtil.getClassStructures(company.getCompanyId(), PortalUtil.getClassNameId(RawMetadataProcessor.class), DDMStructureManager.STRUCTURE_COMPARATOR_STRUCTURE_KEY);
+					List<DDMStructure> ddmStructures = DDMStructureLocalServiceUtil.getClassStructures(company.getCompanyId(), PortalUtil.getClassNameId(RawMetadataProcessor.class), StructureStructureKeyComparator.INSTANCE_DESCENDING);
 
 					for (DDMStructure ddmStructure : ddmStructures) {
 						DDMFormValues ddmFormValues = null;
@@ -548,26 +525,22 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 				%>
 
 						<c:if test="<%= ddmFormValues != null %>">
-							<liferay-ui:panel
-								collapsible="<%= true %>"
-								cssClass="lfr-asset-metadata panel-unstyled"
-								defaultState="closed"
-								id='<%= "documentLibraryMetadataPanel_" + ddmStructure.getStructureId() + StringPool.UNDERLINE + fileEntry.getFileEntryId() %>'
-								markupView="lexicon"
-								persistState="<%= true %>"
-								title='<%= "metadata." + ddmStructure.getStructureKey() %>'
+							<clay:panel
+								displayTitle='<%= LanguageUtil.get(request, "metadata." + ddmStructure.getStructureKey()) %>'
 							>
-								<liferay-ddm:html
-									classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
-									classPK="<%= ddmStructure.getPrimaryKey() %>"
-									ddmFormValues="<%= ddmFormValues %>"
-									fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
-									groupId="<%= fileVersion.getGroupId() %>"
-									readOnly="<%= true %>"
-									requestedLocale="<%= ddmFormValues.getDefaultLocale() %>"
-									showEmptyFieldLabel="<%= false %>"
-								/>
-							</liferay-ui:panel>
+								<div class="panel-body">
+									<liferay-ddm:html
+										classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
+										classPK="<%= ddmStructure.getPrimaryKey() %>"
+										ddmFormValues="<%= ddmFormValues %>"
+										fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
+										groupId="<%= fileVersion.getGroupId() %>"
+										readOnly="<%= true %>"
+										requestedLocale="<%= ddmFormValues.getDefaultLocale() %>"
+										showEmptyFieldLabel="<%= false %>"
+									/>
+								</div>
+							</clay:panel>
 						</c:if>
 
 				<%
@@ -577,7 +550,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 				}
 				%>
 
-			</liferay-ui:panel-container>
+			</clay:panel-group>
 		</liferay-ui:section>
 
 		<c:if test="<%= dlViewFileVersionDisplayContext.isVersionInfoVisible() %>">

@@ -1,16 +1,21 @@
-import accountCircleIcon from '../../assets/icons/account-circle-icon.svg';
-import creditCardIcon from '../../assets/icons/credit-card.svg';
-import documentIcon from '../../assets/icons/document-icon.svg';
-import circleInfoIcon from '../../assets/icons/info-circle-icon.svg';
-import locationIcon from '../../assets/icons/location-on-icon.svg';
-import manageSearchIcon from '../../assets/icons/manage-search-icon.svg';
-import monitoringIcon from '../../assets/icons/monitoring-icon.svg';
-import personIcon from '../../assets/icons/person-fill.svg';
-import personGroupIcon from '../../assets/icons/person-group-icon.svg';
-import scheduleIcon from '../../assets/icons/schedule-icon.svg';
-import settingsIcon from '../../assets/icons/settings-icon.svg';
-import shoppingCartIcon from '../../assets/icons/shopping-cart-icon.svg';
-import visibilityIcon from '../../assets/icons/visibility-icon.svg';
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import accountCircleIcon from '../../assets/icons/account_circle_icon.svg';
+import creditCardIcon from '../../assets/icons/credit_card_icon.svg';
+import documentIcon from '../../assets/icons/document_icon.svg';
+import circleInfoIcon from '../../assets/icons/info_circle_icon.svg';
+import locationIcon from '../../assets/icons/location_icon.svg';
+import manageSearchIcon from '../../assets/icons/manage_search_icon.svg';
+import monitoringIcon from '../../assets/icons/monitoring_icon.svg';
+import personIcon from '../../assets/icons/person_fill_icon.svg';
+import personGroupIcon from '../../assets/icons/person_group_icon.svg';
+import scheduleIcon from '../../assets/icons/schedule_icon.svg';
+import settingsIcon from '../../assets/icons/settings_icon.svg';
+import shoppingCartIcon from '../../assets/icons/shopping_cart_icon.svg';
+import visibilityIcon from '../../assets/icons/visibility_icon.svg';
 import {BaseCheckboxDataCard} from '../../components/CheckboxDataCard/CheckboxDataCard';
 
 export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
@@ -68,7 +73,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 			},
 			{
 				checked: false,
-				description: 'Such as credit scrore',
+				description: 'Such as credit score',
 				label: 'Credit info',
 				name: 'creditInfo',
 			},
@@ -98,7 +103,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 			{
 				checked: false,
 				description:
-					'Information that describes the location of a user or device with lower resolution than a latituted and longitude with three or more decimal places, such as location services',
+					'Information that describes the location of a user or device with lower resolution than a latitude and longitude with three or more decimal places, such as location services',
 				label: 'Coarse location',
 				name: 'coarseLocation',
 			},
@@ -146,7 +151,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 			{
 				checked: false,
 				description:
-					'Including subject line, sender, recipients, and contentsof the email or message',
+					'Including subject line, sender, recipients, and contents of the email or message',
 				label: 'Emails or text messages',
 				name: 'emailsOrTextMessages',
 			},
@@ -208,7 +213,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 		checkboxItems: [
 			{
 				checked: false,
-				description: 'Information about searches perfomed in the app',
+				description: 'Information about searches performed in the app',
 				label: 'Search history',
 				name: 'searchHistory',
 			},
@@ -224,7 +229,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 			{
 				checked: false,
 				description:
-					'Such as screen name handle, account ID, assigned user ID, customer number, probalistic identifier, or other user-or account-level ID that can be used to identify a particular user or account',
+					'Such as screen name handle, account ID, assigned user ID, customer number, probabilistic identifier, or other user-or account-level ID that can be used to identify a particular user or account',
 				label: 'User ID',
 				name: 'userID',
 			},
@@ -270,7 +275,7 @@ export const initialCheckboxDataCardsValues: BaseCheckboxDataCard[] = [
 			{
 				checked: false,
 				description:
-					'Sucha as information about the advertisements the user has seen',
+					'Such as information about the advertisements the user has seen',
 				label: 'Advertising Data',
 				name: 'advertisingData',
 			},

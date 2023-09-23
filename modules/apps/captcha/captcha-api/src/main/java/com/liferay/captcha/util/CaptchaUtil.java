@@ -1,57 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.captcha.util;
 
-import com.liferay.captcha.configuration.CaptchaConfiguration;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.captcha.provider.CaptchaProvider;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.captcha.Captcha;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 
 import java.io.IOException;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-
 import javax.portlet.PortletRequest;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Pei-Jung Lan
  */
-@Component(
-	configurationPid = "com.liferay.captcha.configuration.CaptchaConfiguration",
-	service = {}
-)
 public class CaptchaUtil {
 
 	public static void check(HttpServletRequest httpServletRequest)
@@ -67,9 +36,9 @@ public class CaptchaUtil {
 	}
 
 	public static Captcha getCaptcha() {
-		String captchaClassName = _captchaConfiguration.captchaEngine();
+		CaptchaProvider captchaProvider = _captchaProviderSnapshot.get();
 
-		return _serviceTrackerMap.getService(captchaClassName);
+		return captchaProvider.getCaptcha();
 	}
 
 	public static String getTaglibPath() {
@@ -92,62 +61,7 @@ public class CaptchaUtil {
 		getCaptcha().serveImage(httpServletRequest, httpServletResponse);
 	}
 
-	public static void serveImage(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
-		throws IOException {
-
-		getCaptcha().serveImage(resourceRequest, resourceResponse);
-	}
-
-	public static void setCaptcha(Captcha captcha) throws Exception {
-		Configuration configuration = _configurationAdmin.getConfiguration(
-			CaptchaConfiguration.class.getName(), StringPool.QUESTION);
-
-		Dictionary<String, Object> properties = configuration.getProperties();
-
-		if (properties == null) {
-			properties = new Hashtable<>();
-		}
-
-		Class<?> clazz = captcha.getClass();
-
-		properties.put("captchaEngine", clazz.getName());
-
-		configuration.update(properties);
-	}
-
-	@Activate
-	protected void activate(
-		BundleContext bundleContext, Map<String, Object> properties) {
-
-		modified(properties);
-
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, Captcha.class, "captcha.engine.impl");
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_serviceTrackerMap.close();
-
-		_serviceTrackerMap = null;
-	}
-
-	@Modified
-	protected void modified(Map<String, Object> properties) {
-		_captchaConfiguration = ConfigurableUtil.createConfigurable(
-			CaptchaConfiguration.class, properties);
-	}
-
-	@Reference(unbind = "-")
-	protected void setConfigurationAdmin(
-		ConfigurationAdmin configurationAdmin) {
-
-		_configurationAdmin = configurationAdmin;
-	}
-
-	private static volatile CaptchaConfiguration _captchaConfiguration;
-	private static ConfigurationAdmin _configurationAdmin;
-	private static ServiceTrackerMap<String, Captcha> _serviceTrackerMap;
+	private static final Snapshot<CaptchaProvider> _captchaProviderSnapshot =
+		new Snapshot<>(CaptchaUtil.class, CaptchaProvider.class);
 
 }

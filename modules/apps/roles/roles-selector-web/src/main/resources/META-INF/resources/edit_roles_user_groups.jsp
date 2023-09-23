@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -40,6 +31,15 @@ String keywords = ParamUtil.getString(request, "keywords");
 if (Validator.isNotNull(keywords)) {
 	userGroupParams.put("expandoAttributes", keywords);
 }
+
+SearchContainer<UserGroup> userGroupSearchContainer = new SearchContainer<>(renderRequest, portletURL, null, "no-user-groups-were-found");
+
+String orderByCol = SearchOrderByUtil.getOrderByCol(renderRequest, RolesSelectorPortletKeys.ROLES_SELECTOR, "name");
+String orderByType = SearchOrderByUtil.getOrderByType(renderRequest, RolesSelectorPortletKeys.ROLES_SELECTOR, "asc");
+
+userGroupSearchContainer.setOrderByCol(orderByCol);
+userGroupSearchContainer.setOrderByComparator(UsersAdminUtil.getUserGroupOrderByComparator(orderByCol, orderByType));
+userGroupSearchContainer.setOrderByType(orderByType);
 %>
 
 <aui:input name="addUserGroupIds" type="hidden" />
@@ -47,7 +47,7 @@ if (Validator.isNotNull(keywords)) {
 
 <liferay-ui:search-container
 	rowChecker="<%= new UserGroupGroupRoleUserGroupChecker(renderResponse, group, role) %>"
-	searchContainer="<%= new UserGroupSearch(renderRequest, portletURL) %>"
+	searchContainer="<%= userGroupSearchContainer %>"
 	total="<%= UserGroupServiceUtil.searchCount(company.getCompanyId(), keywords, userGroupParams) %>"
 >
 	<liferay-ui:search-container-results

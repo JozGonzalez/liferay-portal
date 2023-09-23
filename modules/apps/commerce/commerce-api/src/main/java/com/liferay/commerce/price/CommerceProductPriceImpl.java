@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price;
@@ -50,13 +41,23 @@ public class CommerceProductPriceImpl implements CommerceProductPrice {
 	}
 
 	@Override
-	public int getQuantity() {
+	public BigDecimal getQuantity() {
 		return _quantity;
 	}
 
 	@Override
 	public BigDecimal getTaxValue() {
 		return _taxValue;
+	}
+
+	@Override
+	public BigDecimal getUnitOfMeasureIncrementalOrderQuantity() {
+		return _unitOfMeasureIncrementalOrderQuantity;
+	}
+
+	@Override
+	public String getUnitOfMeasureKey() {
+		return _unitOfMeasureKey;
 	}
 
 	@Override
@@ -77,6 +78,10 @@ public class CommerceProductPriceImpl implements CommerceProductPrice {
 	@Override
 	public CommerceMoney getUnitPromoPriceWithTaxAmount() {
 		return _unitPromoPriceWithTaxAmount;
+	}
+
+	public boolean isPriceOnApplication() {
+		return _priceOnApplication;
 	}
 
 	public void setCommerceDiscountValue(
@@ -106,12 +111,27 @@ public class CommerceProductPriceImpl implements CommerceProductPrice {
 		_finalPriceWithTaxAmount = finalPriceWithTaxAmount;
 	}
 
-	public void setQuantity(int quantity) {
+	public void setPriceOnApplication(boolean priceOnApplication) {
+		_priceOnApplication = priceOnApplication;
+	}
+
+	public void setQuantity(BigDecimal quantity) {
 		_quantity = quantity;
 	}
 
 	public void setTaxValue(BigDecimal taxValue) {
 		_taxValue = taxValue;
+	}
+
+	public void setUnitOfMeasureIncrementalOrderQuantity(
+		BigDecimal unitOfMeasureIncrementalOrderQuantity) {
+
+		_unitOfMeasureIncrementalOrderQuantity =
+			unitOfMeasureIncrementalOrderQuantity;
+	}
+
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		_unitOfMeasureKey = unitOfMeasureKey;
 	}
 
 	public void setUnitPrice(CommerceMoney unitPrice) {
@@ -139,8 +159,11 @@ public class CommerceProductPriceImpl implements CommerceProductPrice {
 	private long _commercePriceListId;
 	private CommerceMoney _finalPrice;
 	private CommerceMoney _finalPriceWithTaxAmount;
-	private int _quantity;
+	private boolean _priceOnApplication;
+	private BigDecimal _quantity;
 	private BigDecimal _taxValue;
+	private BigDecimal _unitOfMeasureIncrementalOrderQuantity;
+	private String _unitOfMeasureKey;
 	private CommerceMoney _unitPrice;
 	private CommerceMoney _unitPriceWithTaxAmount;
 	private CommerceMoney _unitPromoPrice;

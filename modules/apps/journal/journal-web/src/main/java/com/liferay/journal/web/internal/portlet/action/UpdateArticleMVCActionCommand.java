@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.portlet.action;
@@ -24,6 +15,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.ArticleContentSizeException;
 import com.liferay.journal.model.JournalArticle;
@@ -52,6 +44,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
@@ -182,14 +175,14 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		String layoutUuid = ParamUtil.getString(
 			uploadPortletRequest, "layoutUuid");
 
+		JournalArticle latestArticle = _journalArticleService.fetchArticle(
+			groupId, articleId);
+
 		if ((displayPageType == AssetDisplayPageConstants.TYPE_DEFAULT) ||
 			(displayPageType == AssetDisplayPageConstants.TYPE_SPECIFIC)) {
 
 			Layout targetLayout = _journalHelper.getArticleLayout(
 				layoutUuid, groupId);
-
-			JournalArticle latestArticle = _journalArticleService.fetchArticle(
-				groupId, articleId);
 
 			if ((displayPageType == AssetDisplayPageConstants.TYPE_SPECIFIC) &&
 				(targetLayout == null) && (latestArticle != null) &&
@@ -281,20 +274,45 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		boolean indexable = ParamUtil.getBoolean(
 			uploadPortletRequest, "indexable");
 
-		String smallImageSource = ParamUtil.getString(
-			uploadPortletRequest, "smallImageSource", "none");
+		int smallImageSource = ParamUtil.getInteger(
+			uploadPortletRequest, "smallImageSource",
+			JournalArticleConstants.SMALL_IMAGE_SOURCE_NONE);
 
-		boolean smallImage = !Objects.equals(smallImageSource, "none");
+		boolean smallImage = false;
 
+		if (smallImageSource !=
+				JournalArticleConstants.SMALL_IMAGE_SOURCE_NONE) {
+
+			smallImage = true;
+		}
+
+		long smallImageId = 0;
 		String smallImageURL = StringPool.BLANK;
 		File smallFile = null;
 
-		if (Objects.equals(smallImageSource, "url")) {
+		if (smallImageSource ==
+				JournalArticleConstants.
+					SMALL_IMAGE_SOURCE_DOCUMENTS_AND_MEDIA) {
+
+			smallImageId = ParamUtil.getLong(
+				uploadPortletRequest, "smallImageId");
+		}
+		else if (smallImageSource ==
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_URL) {
+
 			smallImageURL = ParamUtil.getString(
 				uploadPortletRequest, "smallImageURL");
 		}
-		else if (Objects.equals(smallImageSource, "file")) {
+		else if (smallImageSource ==
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER) {
+
 			smallFile = uploadPortletRequest.getFile("smallFile");
+
+			if (((smallFile == null) || (smallFile.length() == 0)) &&
+				(latestArticle != null)) {
+
+				smallImageId = latestArticle.getSmallImageId();
+			}
 		}
 
 		String articleURL = ParamUtil.getString(
@@ -326,8 +344,9 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				expirationDateDay, expirationDateYear, expirationDateHour,
 				expirationDateMinute, neverExpire, reviewDateMonth,
 				reviewDateDay, reviewDateYear, reviewDateHour, reviewDateMinute,
-				neverReview, indexable, smallImage, smallImageURL, smallFile,
-				null, articleURL, serviceContext);
+				neverReview, indexable, smallImage, smallImageId,
+				smallImageSource, smallImageURL, smallFile, null, articleURL,
+				serviceContext);
 		}
 		else {
 
@@ -351,8 +370,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 					expirationDateHour, expirationDateMinute, neverExpire,
 					reviewDateMonth, reviewDateDay, reviewDateYear,
 					reviewDateHour, reviewDateMinute, neverReview, indexable,
-					smallImage, smallImageURL, smallFile, null, articleURL,
-					serviceContext);
+					smallImage, smallImageId, smallImageSource, smallImageURL,
+					smallFile, null, articleURL, serviceContext);
 			}
 
 			if (!tempOldUrlTitle.equals(article.getUrlTitle())) {
@@ -424,6 +443,9 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			actionRequest);
+
 		Map<String, String> friendlyURLWarningMessages =
 			_getFriendlyURLWarningMessages(
 				actionRequest, article.getFriendlyURLMap(), friendlyURLMap);
@@ -431,8 +453,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		for (Map.Entry<String, String> entry :
 				friendlyURLWarningMessages.entrySet()) {
 
-			MultiSessionMessages.add(
-				actionRequest, entry.getKey(), entry.getValue());
+			SessionMessages.add(
+				httpServletRequest, entry.getKey(), entry.getValue());
 		}
 
 		_sendEditArticleRedirect(actionRequest, article, oldUrlTitle);
@@ -442,6 +464,12 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 		if (hideDefaultSuccessMessage) {
 			hideDefaultSuccessMessage(actionRequest);
+		}
+		else {
+			SessionMessages.remove(
+				httpServletRequest,
+				_portal.getPortletId(actionRequest) +
+					SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
 		}
 	}
 
@@ -523,7 +551,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		return HashMapBuilder.put(
-			"friendlyURLChanged",
+			"friendlyURLChanged_requestProcessedWarning",
 			() -> {
 				if (friendlyURLChangedMessages.isEmpty()) {
 					return null;
@@ -539,7 +567,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				return StringUtil.merge(friendlyURLChangedMessages, "<br />");
 			}
 		).put(
-			"friendlyURLDuplicated",
+			"friendlyURLDuplicated_requestProcessedWarning",
 			() -> {
 				if (friendlyURLDuplicatedLocales.isEmpty()) {
 					return null;
@@ -744,7 +772,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 		LayoutClassedModelUsage layoutClassedModelUsage =
 			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
-				classNameId, classPK, portletResource,
+				classNameId, classPK, StringPool.BLANK, portletResource,
 				_portal.getClassNameId(Portlet.class), plid);
 
 		if (layoutClassedModelUsage != null) {
@@ -752,7 +780,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			groupId, classNameId, classPK, portletResource,
+			groupId, classNameId, classPK, StringPool.BLANK, portletResource,
 			_portal.getClassNameId(Portlet.class), plid, serviceContext);
 	}
 

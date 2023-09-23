@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {Header} from '../../components/Header/Header';
 import {LicensePriceCard} from '../../components/LicensePriceCard/LicensePriceCard';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
@@ -5,7 +10,7 @@ import {Section} from '../../components/Section/Section';
 import {useAppContext} from '../../manage-app-state/AppManageState';
 
 import './InformLicensingTermsPage.scss';
-import {createAppLicensePrice} from '../../utils/api';
+import {getSKUById, patchSKUById} from '../../utils/api';
 
 interface InformLicensingTermsPricePageProps {
 	onClickBack: () => void;
@@ -16,7 +21,7 @@ export function InformLicensingTermsPricePage({
 	onClickBack,
 	onClickContinue,
 }: InformLicensingTermsPricePageProps) {
-	const [{appLicensePrice, appProductId}, _] = useAppContext();
+	const [{appLicensePrice, skuVersionId}, _] = useAppContext();
 
 	return (
 		<div className="informing-licensing-terms-page-container">
@@ -38,16 +43,18 @@ export function InformLicensingTermsPricePage({
 				disableContinueButton={!appLicensePrice}
 				onClickBack={() => onClickBack()}
 				onClickContinue={() => {
-					createAppLicensePrice({
-						appProductId,
-						body: {
-							neverExpire: true,
+					const submitLicensePrice = async () => {
+						const skuJSON = await getSKUById(skuVersionId);
+
+						const skuBody = {
+							...skuJSON,
 							price: parseFloat(appLicensePrice),
-							published: true,
-							purchasable: true,
-							sku: 'default',
-						},
-					});
+						};
+
+						await patchSKUById(skuVersionId, skuBody);
+					};
+
+					submitLicensePrice();
 
 					onClickContinue();
 				}}

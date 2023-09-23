@@ -1,20 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,12 +23,15 @@ import java.util.Set;
 
 /**
  * @author Raymond Augé
+ * @author Drew Brokke
  */
 public class SourceFormatterArgs {
 
 	public static final boolean AUTO_FIX = true;
 
 	public static final String BASE_DIR_NAME = "./";
+
+	public static final boolean CHECK_VULNERABILITIES = false;
 
 	public static final int COMMIT_COUNT = 0;
 
@@ -66,18 +68,33 @@ public class SourceFormatterArgs {
 
 	public static final boolean SHOW_DEBUG_INFORMATION = false;
 
+	public static final boolean USE_CI_GITHUB_ACCESS_TOKEN = false;
+
 	public static final boolean VALIDATE_COMMIT_MESSAGES = false;
 
 	public void addRecentChangesFileNames(
-		Collection<String> fileNames, String baseDirName) {
+			Collection<String> fileNames, String baseDirName)
+		throws IOException {
 
 		for (String fileName : fileNames) {
+			Path path = null;
+
 			if (baseDirName != null) {
-				_recentChangesFileNames.add(_baseDirName.concat(fileName));
+				path = Paths.get(baseDirName, fileName);
 			}
 			else {
-				_recentChangesFileNames.add(fileName);
+				path = Paths.get(fileName);
 			}
+
+			File file = path.toFile();
+
+			File canonicalFile = file.getCanonicalFile();
+
+			String canonicalPath = canonicalFile.getPath();
+
+			_recentChangesFileNames.add(
+				StringUtil.replace(
+					canonicalPath, CharPool.BACK_SLASH, CharPool.SLASH));
 		}
 	}
 
@@ -141,6 +158,10 @@ public class SourceFormatterArgs {
 		return _autoFix;
 	}
 
+	public boolean isCheckVulnerabilities() {
+		return _checkVulnerabilities;
+	}
+
 	public boolean isFailOnAutoFix() {
 		return _failOnAutoFix;
 	}
@@ -181,6 +202,10 @@ public class SourceFormatterArgs {
 		return _showDebugInformation;
 	}
 
+	public boolean isUseCiGithubAccessToken() {
+		return _useCiGithubAccessToken;
+	}
+
 	public boolean isValidateCommitMessages() {
 		return _validateCommitMessages;
 	}
@@ -207,6 +232,10 @@ public class SourceFormatterArgs {
 
 	public void setCheckNames(List<String> checkNames) {
 		_checkNames = checkNames;
+	}
+
+	public void setCheckVulnerabilities(boolean checkVulnerabilities) {
+		_checkVulnerabilities = checkVulnerabilities;
 	}
 
 	public void setCommitCount(int commitCount) {
@@ -300,6 +329,10 @@ public class SourceFormatterArgs {
 		_sourceFormatterProperties = sourceFormatterProperties;
 	}
 
+	public void setUseCiGithubAccessToken(boolean useCiGithubAccessToken) {
+		_useCiGithubAccessToken = useCiGithubAccessToken;
+	}
+
 	public void setValidateCommitMessages(boolean validateCommitMessages) {
 		_validateCommitMessages = validateCommitMessages;
 	}
@@ -308,6 +341,7 @@ public class SourceFormatterArgs {
 	private String _baseDirName = BASE_DIR_NAME;
 	private List<String> _checkCategoryNames = new ArrayList<>();
 	private List<String> _checkNames = new ArrayList<>();
+	private boolean _checkVulnerabilities = CHECK_VULNERABILITIES;
 	private int _commitCount = COMMIT_COUNT;
 	private boolean _failOnAutoFix = FAIL_ON_AUTO_FIX;
 	private boolean _failOnHasWarning = FAIL_ON_HAS_WARNING;
@@ -329,6 +363,7 @@ public class SourceFormatterArgs {
 	private boolean _showDebugInformation = SHOW_DEBUG_INFORMATION;
 	private List<String> _skipCheckNames = new ArrayList<>();
 	private List<String> _sourceFormatterProperties = new ArrayList<>();
+	private boolean _useCiGithubAccessToken = USE_CI_GITHUB_ACCESS_TOKEN;
 	private boolean _validateCommitMessages = VALIDATE_COMMIT_MESSAGES;
 
 }

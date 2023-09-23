@@ -31,7 +31,7 @@ definition {
 			value1 = ${password});
 
 		Type(
-			labelTitle = "Enter Again",
+			labelTitle = "Reenter Password",
 			locator1 = "Masterclass#SIGN_IN_FORM",
 			value1 = ${password});
 
@@ -43,7 +43,7 @@ definition {
 	}
 
 	macro goBackUsingBrowserHistory {
-		RunScript(locator1 = "window.history.go(-1)");
+		ExecuteJavaScript(value1 = "window.history.go(-1)");
 	}
 
 	macro goToLink {

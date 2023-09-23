@@ -1,20 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.js.internal.servlet.taglib;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.Portal;
@@ -43,14 +43,23 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		PrintWriter printWriter = httpServletResponse.getWriter();
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		printWriter.print(
-			StringBundler.concat(
-				"<link href=\"",
-				_portal.getPathProxy() + httpServletRequest.getContextPath(),
-				"/o/commerce-frontend-js/styles/main.css\" rel=\"stylesheet\" ",
-				"type=\"text/css\" />"));
+		if (commerceContext == null) {
+			return;
+		}
+
+		try {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			printWriter.println(
+				_getContent(commerceContext, httpServletRequest));
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
 	}
 
 	@Override
@@ -58,6 +67,82 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 		dynamicIncludeRegistry.register(
 			"/html/common/themes/top_head.jsp#post");
 	}
+
+	private String _getContent(
+			CommerceContext commerceContext,
+			HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		return StringBundler.concat(
+			"<script data-senna-track=\"temporary\">var Liferay = ",
+			"window.Liferay || {}; Liferay.CommerceContext = ",
+			JSONUtil.put(
+				"account",
+				() -> {
+					AccountEntry accountEntry =
+						commerceContext.getAccountEntry();
+
+					if (accountEntry == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"accountId", accountEntry.getAccountEntryId()
+					).put(
+						"accountName", accountEntry.getName()
+					);
+				}
+			).put(
+				"accountEntryAllowedTypes",
+				commerceContext.getAccountEntryAllowedTypes()
+			).put(
+				"commerceAccountGroupIds",
+				commerceContext.getCommerceAccountGroupIds()
+			).put(
+				"commerceChannelId", commerceContext.getCommerceChannelId()
+			).put(
+				"commerceSiteType", commerceContext.getCommerceSiteType()
+			).put(
+				"currency",
+				() -> {
+					CommerceCurrency commerceCurrency =
+						commerceContext.getCommerceCurrency();
+
+					if (commerceCurrency == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"currencyCode", commerceCurrency.getCode()
+					).put(
+						"currencyId", commerceCurrency.getCommerceCurrencyId()
+					);
+				}
+			).put(
+				"order",
+				() -> {
+					CommerceOrder commerceOrder =
+						commerceContext.getCommerceOrder();
+
+					if (commerceOrder == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"orderId", commerceOrder.getCommerceOrderId()
+					).put(
+						"orderType", commerceOrder.getCommerceOrderTypeId()
+					);
+				}
+			),
+			";</script><link href=\"",
+			_portal.getPathProxy() + httpServletRequest.getContextPath(),
+			"/o/commerce-frontend-js/styles/main.css\" rel=\"stylesheet\" ",
+			"type=\"text/css\" />");
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommerceFrontendJsDynamicInclude.class);
 
 	@Reference
 	private Portal _portal;

@@ -1,34 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.index;
 
 import com.liferay.portal.db.DBResourceUtil;
-import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.module.util.BundleUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import java.util.concurrent.FutureTask;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -44,7 +36,7 @@ public class IndexUpdaterUtil {
 		updatePortalIndexes();
 
 		BundleTracker<Void> bundleTracker = new BundleTracker<>(
-			SystemBundleUtil.getBundleContext(), ~Bundle.UNINSTALLED,
+			SystemBundleUtil.getBundleContext(), Bundle.ACTIVE,
 			new BundleTrackerCustomizer<Void>() {
 
 				@Override
@@ -75,21 +67,21 @@ public class IndexUpdaterUtil {
 
 			});
 
-		DefaultNoticeableFuture<Void> defaultNoticeableFuture =
-			new DefaultNoticeableFuture<>(bundleTracker::open, null);
+		DependencyManagerSyncUtil.registerSyncFutureTask(
+			new FutureTask<>(
+				() -> {
+					bundleTracker.open();
 
-		defaultNoticeableFuture.addFutureListener(
-			future -> bundleTracker.close());
+					DependencyManagerSyncUtil.registerSyncCallable(
+						() -> {
+							bundleTracker.close();
 
-		Thread bundleTrackerOpenerThread = new Thread(
-			defaultNoticeableFuture,
+							return null;
+						});
+
+					return null;
+				}),
 			IndexUpdaterUtil.class.getName() + "-BundleTrackerOpener");
-
-		bundleTrackerOpenerThread.setDaemon(true);
-
-		bundleTrackerOpenerThread.start();
-
-		DependencyManagerSyncUtil.registerSyncFuture(defaultNoticeableFuture);
 	}
 
 	public static void updateIndexes(Bundle bundle) throws Exception {

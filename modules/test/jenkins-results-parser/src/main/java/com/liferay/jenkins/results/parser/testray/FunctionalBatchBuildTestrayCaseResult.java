@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.testray;
@@ -167,6 +158,7 @@ public class FunctionalBatchBuildTestrayCaseResult
 		testrayAttachments.addAll(getLiferayLogTestrayAttachments());
 		testrayAttachments.addAll(getLiferayOSGiLogTestrayAttachments());
 
+		testrayAttachments.add(_getPoshiConsoleTestrayAttachment());
 		testrayAttachments.add(_getPoshiReportTestrayAttachment());
 		testrayAttachments.add(_getPoshiSummaryTestrayAttachment());
 
@@ -184,6 +176,11 @@ public class FunctionalBatchBuildTestrayCaseResult
 
 		TestClassResult testClassResult = build.getTestClassResult(
 			"com.liferay.poshi.runner.PoshiRunner");
+
+		if (testClassResult == null) {
+			testClassResult = build.getTestClassResult(
+				"com.liferay.poshi.runner.ParallelPoshiRunner");
+		}
 
 		if (testClassResult == null) {
 			return null;
@@ -208,6 +205,22 @@ public class FunctionalBatchBuildTestrayCaseResult
 		}
 
 		return super.getLiferayOSGiLogTestrayAttachments();
+	}
+
+	private TestrayAttachment _getPoshiConsoleTestrayAttachment() {
+		if (getTestResult() == null) {
+			return null;
+		}
+
+		String name = getName();
+
+		name = name.replace("#", "_");
+
+		return getTestrayAttachment(
+			getBuild(), "Poshi Console",
+			JenkinsResultsParserUtil.combine(
+				getAxisBuildURLPath(), "/",
+				JenkinsResultsParserUtil.fixURL(name), "/console.txt.gz"));
 	}
 
 	private TestrayAttachment _getPoshiReportTestrayAttachment() {

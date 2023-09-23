@@ -1,37 +1,33 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			HeadlessSite.addSite(siteName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
 
@@ -43,7 +39,7 @@ definition {
 		task ("Add a Container element to the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -96,8 +92,8 @@ definition {
 
 		task ("Move the Asset Publisher up to the Container via the Selection panel") {
 			DragAndDrop.javaScriptDragAndDropToUp(
-				locator1 = "//div[contains(@class,'list-item__node')][contains(.,'Asset Publisher')]//div[@role='button'][@draggable='true']",
-				locator2 = "//div[contains(@class,'list-item__node')][contains(.,'Container')]//div[@role='button'][@draggable='true']");
+				locator1 = "//div[contains(@class,'__tree-node')][contains(.,'Asset Publisher')]//div[@role='button'][@draggable='true']",
+				locator2 = "//div[contains(@class,'__tree-node')][contains(.,'Container')]//div[@role='button'][@draggable='true']");
 
 			PageEditor.waitForAutoSave();
 		}
@@ -129,8 +125,8 @@ definition {
 
 		task ("Move the Container down to the Heading via the Selection panel") {
 			DragAndDrop.javaScriptDragAndDropToBottom(
-				locator1 = "//div[contains(@class,'list-item__node')][contains(.,'Container')]//div[@role='button'][@draggable='true']",
-				locator2 = "//div[contains(@class,'list-item__node')][contains(.,'Heading')]//div[@role='button'][@draggable='true']");
+				locator1 = "//div[contains(@class,'__tree-node')][contains(.,'Container')]//div[@role='button'][@draggable='true']",
+				locator2 = "//div[contains(@class,'__tree-node')][contains(.,'Heading')]//div[@role='button'][@draggable='true']");
 
 			PageEditor.waitForAutoSave();
 		}
@@ -169,7 +165,7 @@ definition {
 		task ("Add a Container element to the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -216,8 +212,8 @@ definition {
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 
 			DragAndDrop.javaScriptDragAndDropToObject(
-				locator1 = "//div[contains(@class,'list-item__node')][contains(.,'Button')]//div[@role='button'][@draggable='true']",
-				locator2 = "//div[contains(@class,'list-item__node')][contains(.,'Container')]//div[@role='button'][@draggable='true']");
+				locator1 = "//div[contains(@class,'__tree-node')][contains(.,'Button')]//div[@role='button'][@draggable='true']",
+				locator2 = "//div[contains(@class,'__tree-node')][contains(.,'Container')]//div[@role='button'][@draggable='true']");
 
 			PageEditor.waitForAutoSave();
 
@@ -233,8 +229,8 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_COLLAPSED");
 
 			DragAndDrop.javaScriptDragAndDropToObject(
-				locator1 = "//div[contains(@class,'list-item__node')][contains(.,'Asset Publisher')]//div[@role='button'][@draggable='true']",
-				locator2 = "//div[contains(@class,'treeview-node-list')][@role='group']/div[contains(@role,'treeitem')][1]//div[@role='button'][contains(@aria-label,'Module')]");
+				locator1 = "//div[contains(@class,'__tree-node')][contains(.,'Asset Publisher')]//div[@role='button'][@draggable='true']",
+				locator2 = "//ul[contains(@class,'treeview')][@role='group']/li/div[contains(@role,'treeitem')][1]//div[@role='button'][contains(@aria-label,'Module')]");
 
 			PageEditor.waitForAutoSave();
 
@@ -255,7 +251,7 @@ definition {
 			for (var i : list "1,2,3") {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content ${i}",
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					title = "Web Content Title ${i}");
 			}
 		}
@@ -263,7 +259,7 @@ definition {
 		task ("Add a Collection Display to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Content Display",
@@ -285,8 +281,8 @@ definition {
 
 		task ("Move the Heading fragment to the cell of Collection Display via Selection panel") {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				locator1 = "//div[contains(@class,'list-item__node')][contains(.,'Heading')]//div[@role='button'][@draggable='true']",
-				locator2 = "//div[contains(@class,'treeview-node-list')][@role='group']/div[contains(@role,'treeitem')]//div[@role='button'][contains(@aria-label,'Collection Item')]");
+				locator1 = "//div[contains(@class,'__tree-node')][contains(.,'Heading')]//div[@role='button'][@draggable='true']",
+				locator2 = "//ul[contains(@class,'treeview')][@role='group']/li/div[contains(@role,'treeitem')]//div[@role='button'][contains(@aria-label,'Collection Item')]");
 
 			PageEditor.waitForAutoSave();
 
@@ -306,12 +302,12 @@ definition {
 	test OrderElementInfoOfFragmentWithDropZoneInSelectionPanel {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Add a fragment with drop zone and data-lfr-priority attribute") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -350,7 +346,7 @@ definition {
 		task ("Add a new fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -382,12 +378,12 @@ definition {
 	test OrderElementInfoOfFragmentWithEditableFieldInSelectionPanel {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Add a fragment with editable fields and data-lfr-priority attribute") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -428,7 +424,7 @@ definition {
 		task ("Add a new fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -463,14 +459,14 @@ definition {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Content Display to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Content Display",
@@ -597,13 +593,13 @@ definition {
 
 		task ("Add a vocabulary") {
 			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Vocabulary Name");
 		}
 
 		task ("Add a category in vocabulary") {
 			var categoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name",
 				vocabularyName = "Vocabulary Name");
 		}
@@ -612,14 +608,14 @@ definition {
 			JSONWebcontent.addWebContent(
 				assetCategoryIds = ${categoryId},
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a blogs entry") {
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
@@ -627,14 +623,14 @@ definition {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
 
 		task ("Add a dynamic collection for All Types") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemType = "All Types",
 				title = "Dynamic Collection");
 		}
@@ -642,7 +638,7 @@ definition {
 		task ("Add a Collection Display to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Content Display",
@@ -819,14 +815,14 @@ definition {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -976,7 +972,7 @@ definition {
 		task ("Add a Container element to the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -1010,7 +1006,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Container')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Container')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1021,7 +1017,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Container')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Container')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1032,7 +1028,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Grid')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Grid')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1043,7 +1039,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Grid')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Grid')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1056,7 +1052,7 @@ definition {
 					locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_POSITION");
 
 				AssertCssValue(
-					locator1 = "xpath=(//div[contains(@role,'treeitem')])[${position}]//div[contains(@class,'list-item__node')][contains(.,'Module')]/div[contains(@class,'tree-node')]",
+					locator1 = "xpath=(//div[contains(@role,'treeitem')])[${position}]",
 					locator2 = "background-color",
 					value1 = "rgba(240, 245, 255, 1)");
 			}
@@ -1068,7 +1064,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Heading')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Heading')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1079,7 +1075,7 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'Heading')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'clay-tree-node') and contains(.,'Heading')][contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1090,18 +1086,18 @@ definition {
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'element-text')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'element-text')]/div[@role='button']/ancestor::div[contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
 
-		task ("Assert the background color of Heading node when it is selected") {
+		task ("Assert the background color of element-text node when it is selected") {
 			Click(
 				key_nodeName = "element-text",
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'element-text')]/div[@role='button']/parent::div[contains(@class,'tree-node')]",
+				locator1 = "//div[contains(@class,'page-structure__tree-node') and contains(.,'element-text')]/div[@role='button']/ancestor::div[contains(@class,'treeview-link')]",
 				locator2 = "background-color",
 				value1 = "rgba(240, 245, 255, 1)");
 		}
@@ -1116,14 +1112,14 @@ definition {
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1197,7 +1193,7 @@ definition {
 		task ("Add a Slider fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1232,7 +1228,7 @@ definition {
 		task ("Add a Tabs fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1317,14 +1313,14 @@ definition {
 		task ("Add a web content with basic web content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service.impl;
@@ -26,14 +17,29 @@ import com.liferay.commerce.product.type.grouped.exception.DuplicateCPDefinition
 import com.liferay.commerce.product.type.grouped.model.CPDefinitionGroupedEntry;
 import com.liferay.commerce.product.type.grouped.service.base.CPDefinitionGroupedEntryLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistry;
+import com.liferay.portal.kernel.search.QueryConfig;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -61,6 +67,7 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 		}
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPDefinitionGroupedEntry addCPDefinitionGroupedEntry(
 			long cpDefinitionId, long entryCProductId, double priority,
@@ -177,6 +184,22 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 	}
 
 	@Override
+	public List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+			long companyId, long cpDefinitionId, String keywords, int start,
+			int end, Sort sort)
+		throws PortalException {
+
+		SearchContext searchContext = _buildSearchContext(
+			companyId, cpDefinitionId, keywords, start, end, sort);
+
+		BaseModelSearchResult<CPDefinitionGroupedEntry> baseModelSearchResult =
+			cpDefinitionGroupedEntryLocalService.
+				searchCPDefinitionGroupedEntries(searchContext);
+
+		return baseModelSearchResult.getBaseModels();
+	}
+
+	@Override
 	public List<CPDefinitionGroupedEntry>
 		getCPDefinitionGroupedEntriesByCPDefinitionId(long cpDefinitionId) {
 
@@ -191,6 +214,19 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 	}
 
 	@Override
+	public int getCPDefinitionGroupedEntriesCount(
+			long companyId, long cpDefinitionId, String keywords)
+		throws PortalException {
+
+		SearchContext searchContext = _buildSearchContext(
+			companyId, cpDefinitionId, keywords, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+
+		return cpDefinitionGroupedEntryLocalService.
+			searchCPDefinitionGroupedEntriesCount(searchContext);
+	}
+
+	@Override
 	public List<CPDefinitionGroupedEntry>
 			getEntryCProductCPDefinitionGroupedEntries(
 				long entryCProductId, int start, int end,
@@ -201,6 +237,41 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 			entryCProductId, start, end, orderByComparator);
 	}
 
+	public BaseModelSearchResult<CPDefinitionGroupedEntry>
+			searchCPDefinitionGroupedEntries(SearchContext searchContext)
+		throws PortalException {
+
+		Indexer<CPDefinitionGroupedEntry> indexer =
+			_indexerRegistry.nullSafeGetIndexer(CPDefinitionGroupedEntry.class);
+
+		for (int i = 0; i < 10; i++) {
+			Hits hits = indexer.search(searchContext);
+
+			List<CPDefinitionGroupedEntry> cpDefinitionGroupedEntries =
+				_getCPDefinitionGroupedEntries(hits);
+
+			if (cpDefinitionGroupedEntries != null) {
+				return new BaseModelSearchResult<>(
+					cpDefinitionGroupedEntries, hits.getLength());
+			}
+		}
+
+		throw new SearchException(
+			"Unable to fix the search index after 10 attempts");
+	}
+
+	@Override
+	public int searchCPDefinitionGroupedEntriesCount(
+			SearchContext searchContext)
+		throws PortalException {
+
+		Indexer<CPDefinitionGroupedEntry> indexer =
+			_indexerRegistry.nullSafeGetIndexer(CPDefinitionGroupedEntry.class);
+
+		return GetterUtil.getInteger(indexer.searchCount(searchContext));
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPDefinitionGroupedEntry updateCPDefinitionGroupedEntry(
 			long cpDefinitionGroupedEntryId, double priority, int quantity)
@@ -232,6 +303,68 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 
 		return cpDefinitionGroupedEntryPersistence.update(
 			cpDefinitionGroupedEntry);
+	}
+
+	private SearchContext _buildSearchContext(
+		long companyId, long cpDefinitionId, String keywords, int start,
+		int end, Sort sort) {
+
+		SearchContext searchContext = new SearchContext();
+
+		if (cpDefinitionId > 0) {
+			searchContext.setAttribute("cpDefinitionId", cpDefinitionId);
+		}
+
+		searchContext.setCompanyId(companyId);
+		searchContext.setEnd(end);
+		searchContext.setKeywords(keywords);
+		searchContext.setStart(start);
+
+		QueryConfig queryConfig = searchContext.getQueryConfig();
+
+		queryConfig.setHighlightEnabled(false);
+		queryConfig.setScoreEnabled(false);
+
+		if (sort != null) {
+			searchContext.setSorts(sort);
+		}
+
+		return searchContext;
+	}
+
+	private List<CPDefinitionGroupedEntry> _getCPDefinitionGroupedEntries(
+			Hits hits)
+		throws PortalException {
+
+		List<Document> documents = hits.toList();
+
+		List<CPDefinitionGroupedEntry> cpDefinitionGroupedEntries =
+			new ArrayList<>(documents.size());
+
+		for (Document document : documents) {
+			long cpDefinitionGroupedEntryId = GetterUtil.getLong(
+				document.get(Field.ENTRY_CLASS_PK));
+
+			CPDefinitionGroupedEntry cpDefinitionGroupedEntry =
+				fetchCPDefinitionGroupedEntry(cpDefinitionGroupedEntryId);
+
+			if (cpDefinitionGroupedEntry == null) {
+				cpDefinitionGroupedEntries = null;
+
+				Indexer<CPDefinitionGroupedEntry> indexer =
+					_indexerRegistry.getIndexer(CPDefinitionGroupedEntry.class);
+
+				long companyId = GetterUtil.getLong(
+					document.get(Field.COMPANY_ID));
+
+				indexer.delete(companyId, document.getUID());
+			}
+			else if (cpDefinitionGroupedEntries != null) {
+				cpDefinitionGroupedEntries.add(cpDefinitionGroupedEntry);
+			}
+		}
+
+		return cpDefinitionGroupedEntries;
 	}
 
 	private void _validate(
@@ -271,6 +404,9 @@ public class CPDefinitionGroupedEntryLocalServiceImpl
 
 	@Reference
 	private CProductLocalService _cProductLocalService;
+
+	@Reference
+	private IndexerRegistry _indexerRegistry;
 
 	@Reference
 	private PortalUUID _portalUUID;

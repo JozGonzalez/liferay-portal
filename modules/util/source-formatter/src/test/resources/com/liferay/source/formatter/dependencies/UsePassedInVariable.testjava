@@ -1,0 +1,29 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies;
+
+/**
+ * @author Qi Zhang
+ */
+public class UsePassedInVariable {
+
+	public UsePassedInVariable(String testA) {
+		_testA = testA;
+
+		_testBytes = _testA.getBytes();
+
+		_testB = _getMethod(_testA);
+	}
+
+	private String _getMethod(String a) {
+		return a.subString(1);
+	}
+
+	private final String _testA;
+	private final String _testB;
+	private final byte[] _testBytes;
+
+}

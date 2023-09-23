@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {DocumentFileItem} from './DocumentFileItem';
 
 import './FileList.scss';
@@ -48,7 +53,7 @@ export function FileList({onDelete, type, uploadedFiles}: FileListProps) {
 						<ImageFileItem
 							key={uploadedFile.id}
 							onDelete={onDelete}
-							tooltip="More Info"
+							tooltip="Use the image description to provide more context about the screenshot, such as what is the user trying to accomplish, what are the business requirements met by this screen or anything else you feel would be helpful to guide your potential customer.  This content will be provided in the form of a mouse over of the image."
 							uploadedFile={uploadedFile}
 						/>
 					);

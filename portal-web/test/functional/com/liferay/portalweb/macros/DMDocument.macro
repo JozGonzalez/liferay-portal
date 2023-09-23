@@ -838,6 +838,17 @@ definition {
 		}
 	}
 
+	macro assertDownloadedFileContentNotExist {
+		var fileContent = TestCase.getTempFileContent(fileName = ${fileName});
+
+		if (!(contains(${fileContent}, ${downloadedContent}))) {
+			echo("The downloaded file content doesn't contain the specific file content.");
+		}
+		else {
+			fail("The downloaded file content matches the specific file content.");
+		}
+	}
+
 	macro assertFileExtensionFromTempFolder {
 		var downloadedFile = TestCase.getDownloadedTempFileName(fileNamePattern = ${downloadedFile});
 
@@ -1140,7 +1151,7 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#CHECKOUT_SUCCESS",
 			value1 = "You now have a lock on this document. No one else can edit this document until you unlock it. This lock will automatically expire in 1 day.");
 	}
@@ -1279,6 +1290,86 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro copy {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Copy To",
+			rowEntry = ${dmDocumentTitle});
+
+		if (isSet(viewInfo)) {
+			Alert.viewWarningSpecific(warningMessage = "The copying process may take some time. Only categories, tags, ratings, and document types in the global scope or asset libraries connected to both sites will be copied. Document type fields will be displayed empty.");
+		}
+
+		AssertElementPresent(
+			key_fieldLabel = "Copy From",
+			locator1 = "FormFields#FIELD_DISABLED");
+
+		AssertElementPresent(
+			key_fieldLabel = "Copy To",
+			locator1 = "FormFields#FIELD_DISABLED");
+
+		AssertVisible(
+			key_text = "Copy",
+			locator1 = "Button#ANY_DISABLED");
+
+		Button.clickSelect();
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		WaitForVisible(
+			key_breadcrumbName = "Sites and Libraries",
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
+
+		if (isSet(siteName) || isSet(depotName)) {
+			AssertClick(
+				key_breadcrumbName = "Sites and Libraries",
+				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
+				value1 = "Sites and Libraries");
+		}
+
+		if (isSet(siteName)) {
+			LexiconCard.clickCard(card = ${siteName});
+		}
+
+		if (isSet(depotName)) {
+			AssertClick(
+				key_groupTab = "Asset Library",
+				locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
+				value1 = "Asset Library");
+
+			LexiconCard.clickCard(card = ${depotName});
+		}
+
+		if (isSet(homeFolder)) {
+			AssertClick(
+				key_text = "Select This Folder",
+				locator1 = "Button#ANY",
+				value1 = "Select This Folder");
+		}
+		else {
+			AssertClick(
+				key_dmFolderName = ${targetFolderName},
+				locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON",
+				value1 = "Select");
+		}
+
+		SelectFrame(locator1 = "relative=top");
+
+		Button.click(button = "Copy");
+
+		if (isSet(copyDuplicatedDocument)) {
+			Alert.viewErrorMessage(errorMessage = "A file entry already exists with title ${dmDocumentTitle}");
+		}
+		else if (isSet(copyToUnconnectedSite)) {
+			Alert.viewErrorMessage(errorMessage = "The item is not copied because the site and asset library are not connected.");
+		}
+		else if (isSet(copyToStagingSite)) {
+			Alert.viewErrorMessage(errorMessage = "Cannot copy file entries to the live version of a site. Make your changes in staging and publish them to Live afterwards to make them public.");
+		}
+		else {
+			Alert.viewSuccessMessage();
+		}
+	}
+
 	macro deleteCP {
 		if (isSet(recycleBinDisabled)) {
 			LexiconEntry.delete(rowEntry = ${dmDocumentTitle});
@@ -1326,7 +1417,11 @@ definition {
 	}
 
 	macro deletePGViaMG {
-		Click(
+		WaitForVisible(
+			key_rowEntry = ${mgDocumentTitle},
+			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+
+		Click.waitForPersonalMenuJSClick(
 			key_rowEntry = ${mgDocumentTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
@@ -1417,6 +1512,35 @@ definition {
 			value1 = "Download");
 	}
 
+	macro downloadVersion {
+		DMNavigator.gotoDocumentVersion();
+
+		var key_dmDocumentVersionNumber = "Version ${dmDocumentVersionNumber}";
+
+		Click(locator1 = "DocumentsAndMedia#DOCUMENT_VERSION_VERTICAL_ELLIPSIS");
+
+		if (isSet(menuItem)) {
+			DMDocument.viewActionDetailsInKebabMenu(menuItem = ${menuItem});
+		}
+
+		MenuItem.clickNoError(menuItem = "Download (${dmDocumentSize})");
+
+		DownloadTempFile();
+	}
+
+	macro downloadViaURL {
+		var portalURL = PropsUtil.get("portal.url");
+
+		if (isSet(siteURLKey)) {
+			var key_siteURLKey = ${siteURLKey};
+		}
+		else {
+			var key_siteURLKey = "guest";
+		}
+
+		Navigator.openSpecificURL(url = "${portalURL}/documents/d/${key_siteURLKey}/${dmDocumentTitle}?download=true");
+	}
+
 	macro downloadWithDirectoryIndexing {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1480,9 +1604,7 @@ definition {
 
 	macro editCmd {
 		if (isSet(dmDocumentFileEdit)) {
-			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-				locator1 = "TextInput#FILE",
-				value1 = ${dmDocumentFileEdit});
+			UploadDependencyFile.uploadFile(fileName = ${dmDocumentFileEdit});
 		}
 
 		if (isSet(dmDocumentTitleEdit)) {
@@ -1940,6 +2062,8 @@ definition {
 			KeyPress(
 				locator1 = "DocumentsAndMedia#EDIT_TAGS_FIELD",
 				value1 = ",");
+
+			Click(locator1 = "Modal#BODY");
 		}
 
 		Button.clickSave();
@@ -2223,7 +2347,7 @@ definition {
 		var key_dmFolderName = ${dmSubFolderName};
 
 		AssertTextEquals(
-			locator1 = "DocumentsAndMediaSelectFolder#FOLDER",
+			locator1 = "DocumentsAndMediaSelectFolder#FOLDER_LINK",
 			value1 = ${dmSubFolderName});
 
 		AssertClick(
@@ -2307,6 +2431,12 @@ definition {
 			locator1 = "DocumentsAndMediaDocument#FRIENDLY_URL_HISTORY_ITEM");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
+	}
+
+	macro removeSearchFilter {
+		Click(
+			key_filter = ${filter},
+			locator1 = "ManagementBar#SEARCH_FILTER_LABEL_X");
 	}
 
 	macro removeTag {
@@ -2432,6 +2562,64 @@ definition {
 		}
 	}
 
+	macro selectFilterItems {
+		if (${clearAll} == "true") {
+			SelectFrameTop();
+
+			if (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Filter by Extension")) {
+				IFrame.selectModalFrame();
+
+				Click(
+					key_text = "Clear All",
+					locator1 = "Link#ANY");
+			}
+			else if (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Filter by Categories")) {
+				IFrame.selectModalFrame();
+
+				Click(
+					key_text = "Clear All",
+					locator1 = "Button#ANY");
+			}
+		}
+		else {
+			IFrame.selectModalFrame();
+		}
+
+		for (var category : list ${categories}) {
+			while (IsElementPresent(locator1 = "Treeview#NODE_COLLAPSED")) {
+				Click(locator1 = "Treeview#NODE_COLLAPSED");
+			}
+
+			Check.checkNotVisible(
+				key_nodeName = ${category},
+				locator1 = "Treeview#NODE_CHECKBOX");
+		}
+
+		SelectFrameTop();
+
+		Button.clickApply();
+	}
+
+	macro selectTags {
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		if (!(isSet(tagNameList))) {
+			var tagNameList = ${tagName};
+		}
+
+		for (var tableEntry : list ${tagNameList}) {
+			LexiconTable.checkTableCheckbox(tableEntry = ${tableEntry});
+		}
+
+		SelectFrame(value1 = "relative=top");
+
+		AssertClickNoError(
+			locator1 = "Button#SELECT",
+			value1 = "Select");
+	}
+
 	macro setExpirationDate {
 		Panel.expandPanel(panel = "Expiration Date");
 
@@ -2457,7 +2645,9 @@ definition {
 			locator1 = "TextInput#EXPIRATION_DATE",
 			value1 = ${expirationDate});
 
-		Type(
+		var expirationDateTime = StringUtil.removeSpaces(${expirationDateTime});
+
+		Type.sendKeys(
 			locator1 = "TextInput#EXPIRATION_DATE_TIME",
 			value1 = ${expirationDateTime});
 
@@ -2499,7 +2689,9 @@ definition {
 			locator1 = "TextInput#REVIEW_DATE",
 			value1 = ${reviewDate});
 
-		Type(
+		var reviewDateTime = StringUtil.removeSpaces(${reviewDateTime});
+
+		Type.sendKeys(
 			locator1 = "TextInput#REVIEW_DATE_TIME",
 			value1 = ${reviewDateTime});
 
@@ -2733,6 +2925,32 @@ definition {
 		SystemSettings.saveConfiguration();
 	}
 
+	macro updateFileOrder {
+		if (isSet(instanceSettings)) {
+			DMNavigator.openToConfigInInstanceSettings(portlet = "File Order");
+		}
+		else if (isSet(siteSettings)) {
+			DMNavigator.openToConfigInSiteSettings(
+				portlet = "File Order",
+				siteURLKey = ${siteURLKey});
+		}
+		else {
+			DMNavigator.openToConfigInSystemSettings(portlet = "File Order");
+		}
+
+		Click(locator1 = "Dropdown#TRIGGER");
+
+		DropdownMenuItem.click(menuItem = ${orderBy});
+
+		if (isSet(sortDirection)) {
+			Click(locator1 = "Dropdown#TRIGGER_2");
+
+			DropdownMenuItem.click(menuItem = ${sortDirection});
+		}
+
+		SystemSettings.saveConfiguration();
+	}
+
 	macro updateMaximumFileSize {
 		if (isSet(instanceSettings)) {
 			DMNavigator.openToConfigInInstanceSettings(portlet = "Documents and Media Size Limits");
@@ -2779,6 +2997,13 @@ definition {
 		}
 		else {
 			DMNavigator.openToConfigInSystemSettings(portlet = "Documents and Media Size Limits");
+		}
+
+		if (isSet(checkPortletTitle)) {
+			AssertTextEquals(
+				key_portletTitle = "File Upload Limits",
+				locator1 = "DocumentsAndMedia#PORTLET_TITLE",
+				value1 = "File Upload Limits");
 		}
 
 		if (${indexNumber} == 2) {
@@ -2860,6 +3085,12 @@ definition {
 		}
 	}
 
+	macro viewActionDetailsInKebabMenu {
+		for (var menuItem : list ${menuItem}) {
+			MenuItem.verifyVisible(menuItem = ${menuItem});
+		}
+	}
+
 	macro viewActiveURL {
 		AssertVisible(
 			key_activeURL = ${activeURL},
@@ -2922,7 +3153,7 @@ definition {
 				value1 = "No preview available");
 		}
 		else {
-			while (IsElementPresent(locator1 = "Message#INFO")) {
+			while ((IsElementPresent(locator1 = "Message#INFO")) && (maxIterations = "20")) {
 				AssertTextEquals.assertPartialText(
 					locator1 = "Message#INFO",
 					value1 = "Generating preview will take a few minutes.");
@@ -2946,7 +3177,7 @@ definition {
 			}
 		}
 		else {
-			var cacheControlAttribute = "Cache-Control: ${cacheControl}, max-age= ${maxAge}";
+			var cacheControlAttribute = "Cache-Control: ${cacheControl}, max-age=${maxAge}";
 
 			if (contains(${responseHeader}, ${cacheControlAttribute})) {
 				echo("The cache control setting is correct");
@@ -3215,6 +3446,32 @@ definition {
 		Panel.expandPanel(panel = "Automatically Extracted Metadata");
 	}
 
+	macro viewDocumentDetailsInListView {
+		var key_dmDocumentTitle = ${dmDocumentTitle};
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE_SPECIFIC",
+			value1 = ${dmDocumentTitle});
+
+		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_ICON_SPECIFIC");
+
+		var key_authorName = ${authorName};
+
+		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_AUTHOR_AND_DATE");
+
+		var key_contextualBreadcrumb = ${contextualBreadcrumb};
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_BREADCRUMB",
+			value1 = ${contextualBreadcrumb});
+
+		var key_workflowStatus = ${workflowStatus};
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_STATUS",
+			value1 = ${workflowStatus});
+	}
+
 	macro viewDocumentInfoTitleCmdPG {
 		var key_dmDocumentTitle = ${dmDocumentTitle};
 
@@ -3261,6 +3518,13 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "DocumentsAndMediaDocument#DOCUMENT_TITLE",
+			value1 = ${dmDocumentTitle});
+	}
+
+	macro viewDocumentTitleInListView {
+		AssertTextEquals(
+			key_dmDocumentTitle = ${dmDocumentTitle},
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
 			value1 = ${dmDocumentTitle});
 	}
 
@@ -3413,6 +3677,32 @@ definition {
 		}
 	}
 
+	macro viewDocumentVersionInfoFromVersionsPage {
+		AssertVisible(
+			index = ${orderIndex},
+			key_tableEntry = ${dmDocumentTitle},
+			locator1 = "LexiconTable#TABLE_ENTRY_TITLE_INDEXED");
+
+		var list1 = ListUtil.newListFromString("id,title,version,status,modified-date,author");
+		var list2 = ListUtil.newListFromString(${dmDocumentVersionInfo});
+		var size = ListUtil.size(${list1});
+		var i = 0;
+
+		while (${i} != ${size}) {
+			var tableTitle = ListUtil.get(${list1}, ${i});
+			var dmDocumentVersionInfo = ListUtil.get(${list2}, ${i});
+
+			AssertVisible(
+				key_columnName = ${tableTitle},
+				key_tableEntry = ${dmDocumentVersionInfo},
+				locator1 = "LexiconTable#TABLE_ENTRY_INFO");
+
+			var i = ${i} + 1;
+
+			var i = StringUtil.valueOf(${i});
+		}
+	}
+
 	macro viewDocumentVersionNumberCmdPG {
 		DMDocument.expandInfo();
 
@@ -3518,6 +3808,75 @@ definition {
 		AssertVisible(
 			key_dmDocumentSize = ${dmDocumentSize},
 			locator1 = "DocumentsAndMediaDocument#DOCUMENT_DETAILS_SIZE");
+	}
+
+	macro viewFilterByDetails {
+		IFrame.selectModalFrame();
+
+		if (isSet(tagNames)) {
+			for (var tagName : list ${tagNames}) {
+				AssertTextEquals.assertPartialText(
+					key_tableEntry = ${tagName},
+					locator1 = "LexiconTable#TABLE_ENTRY",
+					value1 = ${tagName});
+			}
+		}
+		else {
+			while (IsElementPresent(locator1 = "Treeview#NODE_COLLAPSED")) {
+				Click(locator1 = "Treeview#NODE_COLLAPSED");
+			}
+
+			for (var category : list ${category}) {
+				AssertTextEquals(
+					key_nodeName = ${category},
+					locator1 = "Treeview#NODE_ITEM",
+					value1 = ${category});
+			}
+		}
+
+		if (isSet(subcategory)) {
+			while (IsElementPresent(locator1 = "Treeview#NODE_COLLAPSED")) {
+				Click(locator1 = "Treeview#NODE_COLLAPSED");
+			}
+
+			for (var subcategory : list ${subcategory}) {
+				AssertTextEquals(
+					key_nodeName = ${subcategory},
+					locator1 = "Treeview#SUBNODE_ITEM",
+					value1 = ${subcategory});
+			}
+		}
+
+		if (isSet(noTagNames)) {
+			for (var noTagName : list ${noTagNames}) {
+				AssertElementNotPresent(
+					key_tableEntry = ${noTagName},
+					locator1 = "LexiconTable#TABLE_ENTRY");
+			}
+		}
+
+		if (isSet(noCategory)) {
+			for (var noCategory : list ${noCategory}) {
+				AssertElementNotPresent(
+					key_nodeName = ${noCategory},
+					locator1 = "Treeview#NODE_ITEM");
+			}
+		}
+
+		SelectFrame.selectFrameTop();
+	}
+
+	macro viewFilterSummaryResults {
+		AssertTextEquals.assertPartialText(
+			locator1 = "ManagementBar#SEARCH_RESULT_SUMMARY",
+			value1 = ${searchResults});
+
+		for (var filterScope : list ${filterScope}) {
+			AssertTextEquals(
+				key_filterScope = ${filterScope},
+				locator1 = "ManagementBar#FILTER_RESULTS_SCOPE",
+				value1 = ${filterScope});
+		}
 	}
 
 	macro viewIconLockedCP {
@@ -3703,7 +4062,18 @@ definition {
 
 		DMDocument.expandInfo();
 
-		DMDocument.viewDocumentInfoTitleCmdPG(dmDocumentTitle = ${dmDocumentTitle});
+		if (isSet(noDownloadPermissions)) {
+			AssertElementNotPresent(
+				locator1 = "Button#DOWNLOAD_SIDEBAR",
+				value1 = "Download");
+
+			AssertElementNotPresent(
+				locator1 = "MenuItem#DOWNLOAD",
+				value1 = "Download");
+		}
+		else {
+			DMDocument.viewDocumentInfoTitleCmdPG(dmDocumentTitle = ${dmDocumentTitle});
+		}
 
 		if (isSet(dmDocumentDescription)) {
 			var key_dmDocumentDescription = ${dmDocumentDescription};
@@ -4036,6 +4406,24 @@ definition {
 			value1 = ${dmDocumentTitle});
 	}
 
+	macro ViewSelectedTags {
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		if (!(isSet(tagNameList))) {
+			var tagNameList = ${tagName};
+		}
+
+		for (var tableEntry : list ${tagNameList}) {
+			AssertChecked.assertCheckedNotVisible(
+				key_tableEntry = ${tableEntry},
+				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+		}
+
+		SelectFrame(value1 = "relative=top");
+	}
+
 	macro viewStagingDetailsManagementBar {
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -4054,6 +4442,8 @@ definition {
 		MenuItem.viewPresent(menuItem = "Checkout");
 
 		MenuItem.viewPresent(menuItem = "Delete");
+
+		MenuItem.viewPresent(menuItem = "Permissions");
 	}
 
 	macro viewStagingDetailsPG {
@@ -4151,7 +4541,7 @@ definition {
 		DMDocument.expandInfo();
 
 		for (var tagName : list ${tagName}) {
-			ScrollWebElementIntoView(locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_TAGS_HEADER");
+			ScrollWebElementIntoView(locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RATING");
 
 			var tagName = StringUtil.lowerCase(${tagName});
 

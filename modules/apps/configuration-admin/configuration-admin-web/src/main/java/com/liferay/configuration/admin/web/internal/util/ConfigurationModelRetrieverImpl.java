@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.configuration.admin.web.internal.util;
 
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -33,9 +25,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -93,17 +87,31 @@ public class ConfigurationModelRetrieverImpl
 		Serializable scopePK) {
 
 		try {
-			String pidFilter = _getPidFilterString(pid, scope, scopePK);
+			String pidFilter = _getPidFilterString(pid, scope);
 
 			Configuration[] configurations =
 				_configurationAdmin.listConfigurations(pidFilter);
 
 			if (configurations != null) {
-				return configurations[0];
-			}
-			else if (scope.equals(
-						ExtendedObjectClassDefinition.Scope.COMPANY)) {
+				for (Configuration configuration : configurations) {
+					if (scope.equals(
+							ExtendedObjectClassDefinition.Scope.SYSTEM)) {
 
+						return configuration;
+					}
+
+					Dictionary<String, Object> properties =
+						configuration.getProcessedProperties(null);
+
+					if (Objects.equals(
+							properties.get(scope.getPropertyKey()), scopePK)) {
+
+						return configuration;
+					}
+				}
+			}
+
+			if (scope.equals(ExtendedObjectClassDefinition.Scope.COMPANY)) {
 				return getConfiguration(
 					pid, ExtendedObjectClassDefinition.Scope.SYSTEM, null);
 			}
@@ -206,12 +214,16 @@ public class ConfigurationModelRetrieverImpl
 
 		List<ConfigurationModel> factoryInstances = new ArrayList<>();
 
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			new ConfigurationScopeDisplayContext(scope, scopePK);
+
 		for (Configuration configuration : configurations) {
 			ConfigurationModel curConfigurationModel = new ConfigurationModel(
 				configuration.getBundleLocation(),
 				factoryConfigurationModel.getBundleSymbolicName(),
 				factoryConfigurationModel.getClassLoader(), configuration,
-				factoryConfigurationModel, false);
+				configurationScopeDisplayContext, factoryConfigurationModel,
+				false);
 
 			factoryInstances.add(curConfigurationModel);
 		}
@@ -272,11 +284,14 @@ public class ConfigurationModelRetrieverImpl
 		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
 
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			new ConfigurationScopeDisplayContext(scope, scopePK);
 
 		ConfigurationModel configurationModel = new ConfigurationModel(
 			StringPool.QUESTION, bundle.getSymbolicName(),
 			bundleWiring.getClassLoader(),
 			getConfiguration(pid, scope, scopePK),
+			configurationScopeDisplayContext,
 			extendedMetaTypeInformation.getObjectClassDefinition(pid, locale),
 			factory);
 
@@ -374,19 +389,15 @@ public class ConfigurationModelRetrieverImpl
 	}
 
 	private String _getPidFilterString(
-		String pid, ExtendedObjectClassDefinition.Scope scope,
-		Serializable scopePK) {
+		String pid, ExtendedObjectClassDefinition.Scope scope) {
 
 		if (scope.equals(ExtendedObjectClassDefinition.Scope.SYSTEM)) {
 			return _getPropertyFilterString(Constants.SERVICE_PID, pid);
 		}
 
-		return _getAndFilterString(
-			_getPropertyFilterString(
-				ConfigurationAdmin.SERVICE_FACTORYPID,
-				_getUnscopedPid(pid) + ".scoped"),
-			_getPropertyFilterString(
-				scope.getPropertyKey(), String.valueOf(scopePK)));
+		return _getPropertyFilterString(
+			ConfigurationAdmin.SERVICE_FACTORYPID,
+			_getUnscopedPid(pid) + ".scoped");
 	}
 
 	private String _getPropertyFilterString(String key, String value) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
@@ -43,6 +35,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
+@FeatureFlags({"LPS-170122", "LPS-172017"})
 @RunWith(Arquillian.class)
 public class ObjectFieldResourceTest extends BaseObjectFieldResourceTestCase {
 
@@ -55,9 +48,9 @@ public class ObjectFieldResourceTest extends BaseObjectFieldResourceTestCase {
 
 		_objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), 0, false, true, false,
 				LocalizedMapUtil.getLocalizedMap(value), value, null, null,
-				LocalizedMapUtil.getLocalizedMap(value),
+				LocalizedMapUtil.getLocalizedMap(value), true,
 				ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Collections.<com.liferay.object.model.ObjectField>emptyList());
@@ -321,7 +314,12 @@ public class ObjectFieldResourceTest extends BaseObjectFieldResourceTestCase {
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
-		return new String[] {"defaultValue", "label", "state"};
+		return new String[] {"label", "state"};
+	}
+
+	@Override
+	protected String[] getIgnoredEntityFieldNames() {
+		return new String[] {"label"};
 	}
 
 	@Override
@@ -336,6 +334,9 @@ public class ObjectFieldResourceTest extends BaseObjectFieldResourceTestCase {
 			Collections.singletonMap(
 				LocaleUtil.US.toString(), "a" + objectField.getName()));
 		objectField.setName("a" + objectField.getName());
+		objectField.setReadOnly(ObjectField.ReadOnly.FALSE);
+		objectField.setRequired(
+			!objectField.getLocalized() && objectField.getRequired());
 		objectField.setState(false);
 
 		return objectField;

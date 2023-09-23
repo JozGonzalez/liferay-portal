@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.order.client.serdes.v1_0;
@@ -18,12 +9,13 @@ import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderI
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderItemShipment;
 import com.liferay.headless.commerce.delivery.order.client.json.BaseJSONParser;
 
+import java.math.BigDecimal;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -245,6 +237,20 @@ public class PlacedOrderItemSerDes {
 			sb.append(placedOrderItem.getQuantity());
 		}
 
+		if (placedOrderItem.getReplacedSku() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSku\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrderItem.getReplacedSku()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrderItem.getSettings() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -299,6 +305,20 @@ public class PlacedOrderItemSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(placedOrderItem.getThumbnail()));
+
+			sb.append("\"");
+		}
+
+		if (placedOrderItem.getUnitOfMeasureKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"unitOfMeasureKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrderItem.getUnitOfMeasureKey()));
 
 			sb.append("\"");
 		}
@@ -464,6 +484,15 @@ public class PlacedOrderItemSerDes {
 			map.put("quantity", String.valueOf(placedOrderItem.getQuantity()));
 		}
 
+		if (placedOrderItem.getReplacedSku() == null) {
+			map.put("replacedSku", null);
+		}
+		else {
+			map.put(
+				"replacedSku",
+				String.valueOf(placedOrderItem.getReplacedSku()));
+		}
+
 		if (placedOrderItem.getSettings() == null) {
 			map.put("settings", null);
 		}
@@ -500,6 +529,15 @@ public class PlacedOrderItemSerDes {
 		else {
 			map.put(
 				"thumbnail", String.valueOf(placedOrderItem.getThumbnail()));
+		}
+
+		if (placedOrderItem.getUnitOfMeasureKey() == null) {
+			map.put("unitOfMeasureKey", null);
+		}
+		else {
+			map.put(
+				"unitOfMeasureKey",
+				String.valueOf(placedOrderItem.getUnitOfMeasureKey()));
 		}
 
 		if (placedOrderItem.getValid() == null) {
@@ -586,28 +624,39 @@ public class PlacedOrderItemSerDes {
 						jsonParserFieldName, "placedOrderItemShipments")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PlacedOrderItemShipment[] placedOrderItemShipmentsArray =
+						new PlacedOrderItemShipment
+							[jsonParserFieldValues.length];
+
+					for (int i = 0; i < placedOrderItemShipmentsArray.length;
+						 i++) {
+
+						placedOrderItemShipmentsArray[i] =
+							PlacedOrderItemShipmentSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					placedOrderItem.setPlacedOrderItemShipments(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PlacedOrderItemShipmentSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new PlacedOrderItemShipment[size]
-						));
+						placedOrderItemShipmentsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "placedOrderItems")) {
 				if (jsonParserFieldValue != null) {
-					placedOrderItem.setPlacedOrderItems(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PlacedOrderItemSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new PlacedOrderItem[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PlacedOrderItem[] placedOrderItemsArray =
+						new PlacedOrderItem[jsonParserFieldValues.length];
+
+					for (int i = 0; i < placedOrderItemsArray.length; i++) {
+						placedOrderItemsArray[i] = PlacedOrderItemSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrderItem.setPlacedOrderItems(placedOrderItemsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "price")) {
@@ -632,7 +681,13 @@ public class PlacedOrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				if (jsonParserFieldValue != null) {
 					placedOrderItem.setQuantity(
-						Integer.valueOf((String)jsonParserFieldValue));
+						new BigDecimal((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "replacedSku")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItem.setReplacedSku(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
@@ -661,6 +716,12 @@ public class PlacedOrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "thumbnail")) {
 				if (jsonParserFieldValue != null) {
 					placedOrderItem.setThumbnail((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItem.setUnitOfMeasureKey(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "valid")) {

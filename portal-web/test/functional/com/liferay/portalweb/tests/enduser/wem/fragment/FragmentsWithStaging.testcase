@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -17,17 +18,16 @@ definition {
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -297,7 +297,8 @@ definition {
 	@description = "This is a test for LPS-129852. View the changes of fragment on content page still persist in staging and live site after overwrite the fragment."
 	@priority = 4
 	test ViewChangesOfFragmentOnContentPagePersistInStagingAndLiveSiteAfterOverwriteTheFragment {
-		property test.name.skip.portal.instance = "FragmentsWithStaging#ViewChangesOfFragmentOnContentPagePersistInStagingAndLiveSiteAfterOverwriteTheFragment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable Propagate Fragment Changes Automatically in System Settings") {
 			ApplicationsMenu.gotoPortlet(

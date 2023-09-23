@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.impl;
@@ -19,6 +10,7 @@ import com.liferay.commerce.configuration.CommerceOrderConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -44,11 +36,11 @@ import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
 import com.liferay.commerce.model.attributes.provider.CommerceModelAttributesProvider;
+import com.liferay.commerce.order.CommerceOrderThreadLocal;
 import com.liferay.commerce.price.CommerceOrderPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.JsonHelper;
 import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderNoteLocalService;
@@ -65,6 +57,8 @@ import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -78,7 +72,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -129,6 +122,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -138,6 +132,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
+	configurationPid = "com.liferay.commerce.configuration.CommerceOrderConfiguration",
 	property = "model.class.name=com.liferay.commerce.model.CommerceOrder",
 	service = AopService.class
 )
@@ -168,9 +163,9 @@ public class CommerceOrderLocalServiceImpl
 			userId, groupId, 0, commerceAccountId, commerceCurrencyId,
 			commerceOrderTypeId, 0, 0, null, 0, 0, 0, 0, 0,
 			CommerceOrderConstants.ORDER_STATUS_OPEN,
-			CommerceOrderConstants.PAYMENT_STATUS_PENDING, null,
-			BigDecimal.ZERO, null, BigDecimal.ZERO, BigDecimal.ZERO,
-			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+			CommerceOrderPaymentConstants.STATUS_PENDING, null, BigDecimal.ZERO,
+			null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
 			new ServiceContext());
 	}
 
@@ -196,10 +191,10 @@ public class CommerceOrderLocalServiceImpl
 		if (userId == 0) {
 			Group group = _groupLocalService.getGroup(groupId);
 
-			User defaultUser = _userLocalService.getDefaultUser(
+			User guestUser = _userLocalService.getGuestUser(
 				group.getCompanyId());
 
-			userId = defaultUser.getUserId();
+			userId = guestUser.getUserId();
 		}
 
 		serviceContext.setUserId(userId);
@@ -473,42 +468,53 @@ public class CommerceOrderLocalServiceImpl
 	public CommerceOrder deleteCommerceOrder(CommerceOrder commerceOrder)
 		throws PortalException {
 
-		// Commerce order items
+		boolean deleteInProcess = CommerceOrderThreadLocal.isDeleteInProcess();
 
-		_commerceOrderItemLocalService.deleteCommerceOrderItems(
-			commerceOrder.getCommerceOrderId());
+		try {
+			CommerceOrderThreadLocal.setDeleteInProcess(true);
 
-		// Commerce order notes
+			// Commerce order items
 
-		_commerceOrderNoteLocalService.deleteCommerceOrderNotes(
-			commerceOrder.getCommerceOrderId());
+			_commerceOrderItemLocalService.deleteCommerceOrderItems(
+				commerceOrder.getUserId(), commerceOrder.getCommerceOrderId());
 
-		// Commerce order payments
+			// Commerce order notes
 
-		_commerceOrderPaymentLocalService.deleteCommerceOrderPayments(
-			commerceOrder.getCommerceOrderId());
+			_commerceOrderNoteLocalService.deleteCommerceOrderNotes(
+				commerceOrder.getCommerceOrderId());
 
-		// Commerce addresses
+			// Commerce order payments
 
-		_commerceAddressLocalService.deleteCommerceAddresses(
-			commerceOrder.getModelClassName(),
-			commerceOrder.getCommerceOrderId());
+			_commerceOrderPaymentLocalService.deleteCommerceOrderPayments(
+				commerceOrder.getCommerceOrderId());
 
-		// Commerce order
+			// Commerce addresses
 
-		commerceOrderPersistence.remove(commerceOrder);
+			_commerceAddressLocalService.deleteCommerceAddresses(
+				commerceOrder.getModelClassName(),
+				commerceOrder.getCommerceOrderId());
 
-		// Expando
+			// Commerce order
 
-		_expandoRowLocalService.deleteRows(commerceOrder.getCommerceOrderId());
+			commerceOrderPersistence.remove(commerceOrder);
 
-		// Workflow
+			// Expando
 
-		_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
-			commerceOrder.getCompanyId(), commerceOrder.getScopeGroupId(),
-			CommerceOrder.class.getName(), commerceOrder.getCommerceOrderId());
+			_expandoRowLocalService.deleteRows(
+				commerceOrder.getCommerceOrderId());
 
-		return commerceOrder;
+			// Workflow
+
+			_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
+				commerceOrder.getCompanyId(), commerceOrder.getScopeGroupId(),
+				CommerceOrder.class.getName(),
+				commerceOrder.getCommerceOrderId());
+
+			return commerceOrder;
+		}
+		finally {
+			CommerceOrderThreadLocal.setDeleteInProcess(deleteInProcess);
+		}
 	}
 
 	@Override
@@ -799,7 +805,7 @@ public class CommerceOrderLocalServiceImpl
 
 	@Override
 	public void mergeGuestCommerceOrder(
-			long guestCommerceOrderId, long userCommerceOrderId,
+			long userId, long guestCommerceOrderId, long userCommerceOrderId,
 			CommerceContext commerceContext, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -837,10 +843,13 @@ public class CommerceOrderLocalServiceImpl
 			}
 
 			_commerceOrderItemLocalService.addCommerceOrderItem(
-				userCommerceOrderId, guestCommerceOrderItem.getCPInstanceId(),
+				userId, userCommerceOrderId,
+				guestCommerceOrderItem.getCPInstanceId(),
 				guestCommerceOrderItem.getJson(),
 				guestCommerceOrderItem.getQuantity(),
-				guestCommerceOrderItem.getShippedQuantity(), commerceContext,
+				guestCommerceOrderItem.getReplacedCPInstanceId(),
+				guestCommerceOrderItem.getShippedQuantity(),
+				guestCommerceOrderItem.getUnitOfMeasureKey(), commerceContext,
 				serviceContext);
 		}
 
@@ -978,7 +987,7 @@ public class CommerceOrderLocalServiceImpl
 				commerceOrder.getCommerceShippingMethodId(), shippingAddressId,
 				commerceOrder.getCommercePaymentMethodKey(), 0, 0, 0, 0, 0,
 				CommerceOrderConstants.ORDER_STATUS_OPEN,
-				CommerceOrderConstants.PAYMENT_STATUS_PENDING, StringPool.BLANK,
+				CommerceOrderPaymentConstants.STATUS_PENDING, StringPool.BLANK,
 				commerceOrder.getShippingAmount(),
 				commerceOrder.getShippingOptionName(),
 				commerceOrder.getShippingWithTaxAmount(),
@@ -1000,10 +1009,12 @@ public class CommerceOrderLocalServiceImpl
 			}
 
 			_commerceOrderItemLocalService.addCommerceOrderItem(
-				newCommerceOrder.getCommerceOrderId(),
+				userId, newCommerceOrder.getCommerceOrderId(),
 				commerceOrderItem.getCPInstanceId(),
-				commerceOrderItem.getJson(), commerceOrderItem.getQuantity(), 0,
-				commerceContext, serviceContext);
+				commerceOrderItem.getJson(), commerceOrderItem.getQuantity(),
+				commerceOrderItem.getReplacedCPInstanceId(), BigDecimal.ZERO,
+				commerceOrderItem.getUnitOfMeasureKey(), commerceContext,
+				serviceContext);
 		}
 
 		return newCommerceOrder;
@@ -1645,16 +1656,10 @@ public class CommerceOrderLocalServiceImpl
 	@Override
 	public CommerceOrder updateStatus(
 			long userId, long commerceOrderId, int status,
-			ServiceContext serviceContext,
 			Map<String, Serializable> workflowContext)
 		throws PortalException {
 
-		if (userId == 0) {
-			userId = serviceContext.getUserId();
-		}
-
 		User user = _userLocalService.getUser(userId);
-		Date date = new Date();
 
 		CommerceOrder commerceOrder = commerceOrderPersistence.findByPrimaryKey(
 			commerceOrderId);
@@ -1662,7 +1667,7 @@ public class CommerceOrderLocalServiceImpl
 		commerceOrder.setStatus(status);
 		commerceOrder.setStatusByUserId(user.getUserId());
 		commerceOrder.setStatusByUserName(user.getFullName());
-		commerceOrder.setStatusDate(serviceContext.getModifiedDate(date));
+		commerceOrder.setStatusDate(new Date());
 
 		return commerceOrderPersistence.update(commerceOrder);
 	}
@@ -1769,6 +1774,12 @@ public class CommerceOrderLocalServiceImpl
 		commerceOrder.setExternalReferenceCode(externalReferenceCode);
 
 		return commerceOrderPersistence.update(commerceOrder);
+	}
+
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		_commerceOrderConfiguration = ConfigurableUtil.createConfigurable(
+			CommerceOrderConfiguration.class, properties);
 	}
 
 	private SearchContext _buildSearchContext(
@@ -2299,7 +2310,6 @@ public class CommerceOrderLocalServiceImpl
 	@Reference
 	private CommerceModelAttributesProvider _commerceModelAttributesProvider;
 
-	@Reference
 	private CommerceOrderConfiguration _commerceOrderConfiguration;
 
 	@Reference
@@ -2350,9 +2360,6 @@ public class CommerceOrderLocalServiceImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 	@Reference
 	private Portal _portal;

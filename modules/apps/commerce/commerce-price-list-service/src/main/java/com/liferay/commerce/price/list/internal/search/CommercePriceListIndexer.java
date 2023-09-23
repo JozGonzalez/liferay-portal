@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.internal.search;
@@ -219,38 +210,35 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing price list " + commercePriceList);
+			_log.debug("Indexing commerce price list " + commercePriceList);
 		}
 
 		Document document = getBaseModelDocument(CLASS_NAME, commercePriceList);
 
-		document.addKeyword(
-			FIELD_EXTERNAL_REFERENCE_CODE,
-			commercePriceList.getExternalReferenceCode());
 		document.addNumber(
 			Field.ENTRY_CLASS_PK, commercePriceList.getCommercePriceListId());
 		document.addText(Field.NAME, commercePriceList.getName());
-		document.addText(Field.USER_NAME, commercePriceList.getUserName());
 		document.addNumberSortable(
 			Field.PRIORITY, commercePriceList.getPriority());
-		document.addNumber("catalogId", _getCatalogId(commercePriceList));
+		document.addText(Field.USER_NAME, commercePriceList.getUserName());
+		document.addKeyword(
+			FIELD_EXTERNAL_REFERENCE_CODE,
+			commercePriceList.getExternalReferenceCode());
+
+		long commerceCatalogId = _getCatalogId(commercePriceList);
+
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogLocalService.fetchCommerceCatalog(
+				commerceCatalogId);
+
+		if (commerceCatalog != null) {
+			document.addKeyword(
+				"accountEntryId", commerceCatalog.getAccountEntryId());
+		}
+
 		document.addKeyword(
 			"catalogBasePriceList", commercePriceList.isCatalogBasePriceList());
-		document.addText("type", commercePriceList.getType());
-		document.addNumber(
-			"commerceAccountId",
-			TransformUtil.transformToLongArray(
-				_commercePriceListAccountRelLocalService.
-					getCommercePriceListAccountRels(
-						commercePriceList.getCommercePriceListId()),
-				CommercePriceListAccountRel::getCommerceAccountId));
-		document.addNumber(
-			"commerceChannelId",
-			TransformUtil.transformToLongArray(
-				_commercePriceListChannelRelLocalService.
-					getCommercePriceListChannelRels(
-						commercePriceList.getCommercePriceListId()),
-				CommercePriceListChannelRel::getCommerceChannelId));
+		document.addNumber("catalogId", commerceCatalogId);
 
 		long[] commerceAccountGroupIds = TransformUtil.transformToLongArray(
 			_commercePriceListCommerceAccountGroupRelLocalService.
@@ -265,16 +253,32 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 			commerceAccountGroupIds.length);
 
 		document.addNumber(
+			"commerceAccountId",
+			TransformUtil.transformToLongArray(
+				_commercePriceListAccountRelLocalService.
+					getCommercePriceListAccountRels(
+						commercePriceList.getCommercePriceListId()),
+				CommercePriceListAccountRel::getCommerceAccountId));
+		document.addNumber(
+			"commerceChannelId",
+			TransformUtil.transformToLongArray(
+				_commercePriceListChannelRelLocalService.
+					getCommercePriceListChannelRels(
+						commercePriceList.getCommercePriceListId()),
+				CommercePriceListChannelRel::getCommerceChannelId));
+		document.addNumber(
 			"commerceOrderTypeId",
 			TransformUtil.transformToLongArray(
 				_commercePriceListOrderTypeRelLocalService.
 					getCommercePriceListOrderTypeRels(
 						commercePriceList.getCommercePriceListId()),
 				CommercePriceListOrderTypeRel::getCommerceOrderTypeId));
+		document.addText("type", commercePriceList.getType());
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Document " + commercePriceList + " indexed successfully");
+				"Commerce price list " + commercePriceList +
+					" indexed successfully");
 		}
 
 		return document;
@@ -346,7 +350,7 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index commerce price list " +
-								commercePriceList.getCommercePriceListId(),
+								commercePriceList,
 							portalException);
 					}
 				}

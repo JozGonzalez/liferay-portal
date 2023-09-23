@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.address.internal.resource.v1_0;
 
 import com.liferay.headless.admin.address.dto.v1_0.Country;
-import com.liferay.headless.admin.address.internal.dto.v1_0.converter.CountryResourceDTOConverter;
 import com.liferay.headless.admin.address.resource.v1_0.CountryResource;
 import com.liferay.portal.kernel.model.CountryTable;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -30,6 +20,7 @@ import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.odata.entity.DoubleEntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.StringEntityField;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -127,6 +118,9 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 				ServiceContextFactory.getInstance(
 					Country.class.getName(), contextHttpServletRequest));
 
+		_countryLocalService.updateCountryLocalizations(
+			serviceBuilderCountry, country.getTitle_i18n());
+
 		return _toCountry(
 			_countryLocalService.updateGroupFilterEnabled(
 				serviceBuilderCountry.getCountryId(),
@@ -146,6 +140,9 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 				GetterUtil.getDouble(country.getPosition()),
 				GetterUtil.getBoolean(country.getShippingAllowed(), true),
 				GetterUtil.getBoolean(country.getSubjectToVAT()));
+
+		_countryLocalService.updateCountryLocalizations(
+			serviceBuilderCountry, country.getTitle_i18n());
 
 		return _toCountry(
 			_countryService.updateGroupFilterEnabled(
@@ -187,8 +184,11 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 	@Reference
 	private CountryLocalService _countryLocalService;
 
-	@Reference
-	private CountryResourceDTOConverter _countryResourceDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.admin.address.internal.dto.v1_0.converter.CountryResourceDTOConverter)"
+	)
+	private DTOConverter<com.liferay.portal.kernel.model.Country, Country>
+		_countryResourceDTOConverter;
 
 	@Reference
 	private CountryService _countryService;

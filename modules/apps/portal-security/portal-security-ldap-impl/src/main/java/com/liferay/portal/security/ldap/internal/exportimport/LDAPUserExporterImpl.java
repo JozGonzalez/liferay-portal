@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.ldap.internal.exportimport;
@@ -95,7 +86,7 @@ public class LDAPUserExporterImpl implements UserExporter {
 		User user = _userLocalService.getUserByContactId(
 			contact.getContactId());
 
-		if (user.isDefaultUser() ||
+		if (user.isGuestUser() ||
 			((user.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
 			 (user.getStatus() != WorkflowConstants.STATUS_INACTIVE)) ||
 			_isAnonymousUser(user)) {
@@ -122,7 +113,7 @@ public class LDAPUserExporterImpl implements UserExporter {
 
 			Binding userBinding = _safePortalLDAP.getUser(
 				ldapServerId, contact.getCompanyId(), user.getScreenName(),
-				user.getEmailAddress());
+				user.getEmailAddress(), false, false);
 
 			if (userBinding == null) {
 				Properties userMappings = _ldapSettings.getUserMappings(
@@ -274,7 +265,7 @@ public class LDAPUserExporterImpl implements UserExporter {
 			User user, Map<String, Serializable> userExpandoAttributes)
 		throws Exception {
 
-		if (user.isDefaultUser() ||
+		if (user.isGuestUser() ||
 			((user.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
 			 (user.getStatus() != WorkflowConstants.STATUS_INACTIVE)) ||
 			_isAnonymousUser(user)) {
@@ -306,7 +297,7 @@ public class LDAPUserExporterImpl implements UserExporter {
 
 			Binding userBinding = _safePortalLDAP.getUser(
 				ldapServerId, user.getCompanyId(), user.getScreenName(),
-				user.getEmailAddress(), true);
+				user.getEmailAddress(), true, false);
 
 			if (userBinding == null) {
 				userBinding = addUser(
@@ -345,6 +336,12 @@ public class LDAPUserExporterImpl implements UserExporter {
 			}
 
 			ModificationItem[] modificationItems = modifications.getItems();
+
+			if (userBinding == null) {
+				userBinding = _safePortalLDAP.getUser(
+					ldapServerId, companyId, user.getScreenName(),
+					user.getEmailAddress(), false, false);
+			}
 
 			SafeLdapName userSafeLdapName = SafeLdapNameFactory.from(
 				userBinding);

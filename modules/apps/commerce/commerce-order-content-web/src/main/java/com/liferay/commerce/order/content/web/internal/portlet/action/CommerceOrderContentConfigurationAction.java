@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.portlet.action;
@@ -31,10 +22,10 @@ import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderNoteService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
-import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.term.service.CommerceTermEntryService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
@@ -50,7 +41,6 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletPreferences;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -90,7 +80,7 @@ public class CommerceOrderContentConfigurationAction
 						_commerceOrderStatusRegistry, _commerceOrderTypeService,
 						_commercePaymentMethodGroupRelServiceService,
 						_commercePaymentMethodRegistry,
-						_commerceShipmentItemService, _commerceTermEntryService,
+						_commerceTermEntryService, _configurationProvider,
 						_dlAppLocalService, httpServletRequest, _itemSelector,
 						_modelResourcePermission, _percentageFormatter,
 						_portletResourcePermission);
@@ -115,23 +105,17 @@ public class CommerceOrderContentConfigurationAction
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		if (cmd.equals(Constants.UPDATE)) {
-			PortletPreferences preferences = actionRequest.getPreferences();
+			PortletPreferences portletPreferences =
+				actionRequest.getPreferences();
 
-			preferences.setValue(
+			portletPreferences.setValue(
+				"displayStyle", getParameter(actionRequest, "displayStyle"));
+			portletPreferences.setValue(
 				"showCommerceOrderCreateTime",
 				getParameter(actionRequest, "showCommerceOrderCreateTime"));
 
-			preferences.store();
+			portletPreferences.store();
 		}
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.commerce.order.content.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -176,10 +160,10 @@ public class CommerceOrderContentConfigurationAction
 	private CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
 
 	@Reference
-	private CommerceShipmentItemService _commerceShipmentItemService;
+	private CommerceTermEntryService _commerceTermEntryService;
 
 	@Reference
-	private CommerceTermEntryService _commerceTermEntryService;
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

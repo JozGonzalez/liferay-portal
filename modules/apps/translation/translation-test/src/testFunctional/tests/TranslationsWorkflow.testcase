@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -248,11 +248,13 @@ definition {
 
 		AssertTextEquals(
 			key_localizedLanguage = "es-ES",
+			key_portlet = "JournalPortlet",
 			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
 			value1 = "Translated");
 
 		AssertTextEquals(
 			key_localizedLanguage = "de-DE",
+			key_portlet = "JournalPortlet",
 			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
 			value1 = "Not Translated");
 	}
@@ -762,10 +764,13 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@description = "This ensures that only the valid translation files can be uploaded and resubmitted from a zip file when enabling Workflow."
+	@description = "This ensures that only the valid translation files can be uploaded and resubmitted from a zip file when enabling Workflow. Skip the instance for performance improvement."
 	@priority = 4
 	@refactordone
 	test CanResubmitImportedEntryFromZipFile {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONWebcontent.addWebContent(
 			content = "WebContent",
 			description = "Description",
@@ -871,11 +876,9 @@ definition {
 				title = "Translation of WebContentTitle to ${language}");
 		}
 
-		WebContentNavigator.openToEditWCInSite(
-			groupName = "Guest",
-			siteURLKey = "guest",
-			version = "1.1",
-			webContentTitle = "WebContentTitle");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WebContentTitle");
 
 		PortletEntry.changeLocale(locale = "de-DE");
 

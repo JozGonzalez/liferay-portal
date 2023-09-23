@@ -1,13 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useMemo} from 'react';
@@ -31,6 +25,7 @@ import useTacticsOptions from './hooks/useTacticsOptions';
 import useTypeActivityOptions from './hooks/useTypeActivityOptions';
 
 interface IProps {
+	claimPercent: number;
 	currency: LiferayPicklist;
 	currentActivity: MDFRequestActivity;
 	currentActivityIndex: number;
@@ -46,6 +41,7 @@ type TypeActivityComponent = {
 };
 
 const Form = ({
+	claimPercent,
 	currency,
 	currentActivity,
 	currentActivityIndex,
@@ -56,19 +52,24 @@ const Form = ({
 	const handleClearForm = () => {
 		setFieldValue(
 			`activities[${currentActivityIndex}].activityDescription`,
-			getNewActivity(currency).activityDescription
+			getNewActivity(claimPercent, currency).activityDescription
 		);
+	};
+
+	useEffect(() => {
+		const hasLeadGenerated =
+			currentActivity?.activityDescription?.leadGenerated;
+		const isEventActivity =
+			currentActivity?.typeActivity?.key === TypeActivityKey.EVENT;
 
 		const displaySection =
-			currentActivity?.typeActivity?.key === TypeActivityKey.EVENT
-				? 'true'
-				: '';
+			hasLeadGenerated || (isEventActivity ? 'true' : '');
 
 		setFieldValue(
 			`activities[${currentActivityIndex}].activityDescription.leadGenerated`,
 			displaySection
 		);
-	};
+	}, [currentActivity.tactic, currentActivity?.typeActivity?.key]);
 
 	const {
 		onTypeActivitySelected,
@@ -196,6 +197,7 @@ const Form = ({
 			</PRMForm.Section>
 			<PRMFormik.Array
 				budgets={currentActivity.budgets}
+				claimPercent={claimPercent}
 				component={BudgetBreakdownSection}
 				currency={currency}
 				currentActivityIndex={currentActivityIndex}

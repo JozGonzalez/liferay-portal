@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
@@ -27,7 +18,6 @@ import com.liferay.commerce.price.CommerceProductPrice;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
-import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
@@ -36,7 +26,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryLocalService;
 import com.liferay.commerce.util.CommerceUtil;
@@ -46,12 +36,13 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Price;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductConfiguration;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption;
-import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.headless.commerce.delivery.catalog.internal.util.v1_0.SkuOptionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
@@ -63,7 +54,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -139,10 +129,10 @@ public class MappedProductDTOConverter
 				id = csDiagramEntry.getCSDiagramEntryId();
 				price = _getPrice(
 					commerceContext, cpInstance,
-					mappedProductDTOConverterContext.getLocale(), 1);
+					mappedProductDTOConverterContext.getLocale(),
+					BigDecimal.ONE, StringPool.BLANK);
 				quantity = csDiagramEntry.getQuantity();
 				sequence = csDiagramEntry.getSequence();
-				skuOptions = _getSkuOptions(cpInstance);
 
 				setAvailability(
 					() -> {
@@ -155,7 +145,7 @@ public class MappedProductDTOConverter
 							mappedProductDTOConverterContext.getCompanyId(),
 							cpInstance,
 							mappedProductDTOConverterContext.getLocale(),
-							cpInstance.getSku());
+							cpInstance.getSku(), StringPool.BLANK);
 					});
 				setFirstAvailableReplacementMappedProduct(
 					() -> {
@@ -342,6 +332,23 @@ public class MappedProductDTOConverter
 
 						return cpInstance.getCPInstanceId();
 					});
+				setSkuOptions(
+					() -> {
+						if (cpInstance == null) {
+							return null;
+						}
+
+						JSONArray jsonArray = CPJSONUtil.toJSONArray(
+							_cpDefinitionOptionRelLocalService.
+								getCPDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys(
+									cpInstance.getCPInstanceId()));
+
+						return SkuOptionUtil.getSkuOptions(
+							_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
+								cpInstance.getCPDefinitionId(),
+								jsonArray.toString()),
+							_cpInstanceLocalService);
+					});
 				setThumbnail(
 					() -> {
 						if (cpDefinition == null) {
@@ -382,7 +389,7 @@ public class MappedProductDTOConverter
 
 	private Availability _getAvailability(
 			long commerceChannelGroupId, long companyId, CPInstance cpInstance,
-			Locale locale, String sku)
+			Locale locale, String sku, String unitOfMeasureKey)
 		throws Exception {
 
 		Availability availability = new Availability();
@@ -394,7 +401,7 @@ public class MappedProductDTOConverter
 						commerceChannelGroupId,
 						_cpDefinitionInventoryEngine.getMinStockQuantity(
 							cpInstance),
-						cpInstance.getSku()),
+						cpInstance.getSku(), unitOfMeasureKey),
 					CommerceInventoryAvailabilityConstants.AVAILABLE)) {
 
 				availability.setLabel_i18n(_language.get(locale, "available"));
@@ -409,9 +416,10 @@ public class MappedProductDTOConverter
 
 		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance)) {
 			availability.setStockQuantity(
-				_commerceInventoryEngine.getStockQuantity(
-					companyId, cpInstance.getGroupId(), commerceChannelGroupId,
-					sku));
+				BigDecimalUtil.stripTrailingZeros(
+					_commerceInventoryEngine.getStockQuantity(
+						companyId, cpInstance.getGroupId(),
+						commerceChannelGroupId, sku, unitOfMeasureKey)));
 		}
 
 		return availability;
@@ -433,7 +441,7 @@ public class MappedProductDTOConverter
 
 	private Price _getPrice(
 			CommerceContext commerceContext, CPInstance cpInstance,
-			Locale locale, int quantity)
+			Locale locale, BigDecimal quantity, String unitOfMeasureKey)
 		throws Exception {
 
 		if (cpInstance == null) {
@@ -442,7 +450,8 @@ public class MappedProductDTOConverter
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, true, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, true, unitOfMeasureKey,
+				commerceContext);
 
 		if (commerceProductPrice == null) {
 			return new Price();
@@ -508,52 +517,6 @@ public class MappedProductDTOConverter
 		return price;
 	}
 
-	private SkuOption[] _getSkuOptions(CPInstance cpInstance) throws Exception {
-		if (cpInstance == null) {
-			return null;
-		}
-
-		List<SkuOption> skuOptions = new ArrayList<>();
-
-		JSONArray keyValuesJSONArray = _jsonHelper.toJSONArray(
-			_cpDefinitionOptionRelLocalService.
-				getCPDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys(
-					cpInstance.getCPInstanceId()));
-
-		Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
-			cpDefinitionOptionValueRelsMap =
-				_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
-					cpInstance.getCPDefinitionId(),
-					keyValuesJSONArray.toString());
-
-		for (Map.Entry<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
-				entry : cpDefinitionOptionValueRelsMap.entrySet()) {
-
-			CPDefinitionOptionRel cpDefinitionOptionRel = entry.getKey();
-
-			List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels =
-				entry.getValue();
-
-			for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
-					cpDefinitionOptionValueRels) {
-
-				SkuOption skuOption = new SkuOption() {
-					{
-						key =
-							cpDefinitionOptionRel.getCPDefinitionOptionRelId();
-						value =
-							cpDefinitionOptionValueRel.
-								getCPDefinitionOptionValueRelId();
-					}
-				};
-
-				skuOptions.add(skuOption);
-			}
-		}
-
-		return skuOptions.toArray(new SkuOption[0]);
-	}
-
 	@Reference
 	private CommerceInventoryEngine _commerceInventoryEngine;
 
@@ -590,9 +553,6 @@ public class MappedProductDTOConverter
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 	@Reference
 	private Language _language;

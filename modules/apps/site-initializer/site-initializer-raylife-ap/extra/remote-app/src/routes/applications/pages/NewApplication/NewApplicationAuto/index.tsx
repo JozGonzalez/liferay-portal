@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
-import {ReactNode, useContext, useState} from 'react';
+import {ReactNode, useCallback, useContext, useState} from 'react';
 
 import MultiSteps from '../../../../../common/components/multi-steps';
 import ClayIconProvider from '../../../../../common/context/ClayIconProvider';
@@ -38,15 +29,15 @@ type DriverInfoProps = {
 	children: ReactNode;
 };
 
+const tooltipTitle =
+	'You must enter first name, last name, phone number and email address to save this quote.';
+
 const NewApplicationAuto = ({children}: DriverInfoProps) => {
 	const [state, dispatch] = useContext(NewApplicationAutoContext);
 
 	const [saveChanges, setSaveChanges] = useState<boolean>(false);
 
 	const {form} = state?.steps?.driverInfo;
-
-	const tooltipTitle =
-		'You must enter first name, last name, phone number and email address to save this quote.';
 
 	const steps = [
 		{
@@ -81,6 +72,25 @@ const NewApplicationAuto = ({children}: DriverInfoProps) => {
 		},
 	];
 
+	const handleSave = useCallback(
+		async (applicationStatus: string) => {
+			const response = await createOrUpdateRaylifeApplication(
+				state,
+				applicationStatus
+			);
+
+			const {
+				data: {externalReferenceCode, id},
+			} = response;
+
+			dispatch({
+				payload: {externalReferenceCode, id},
+				type: ACTIONS.SET_APPLICATION,
+			});
+		},
+		[dispatch, state]
+	);
+
 	const handleNextClick = async (event: any) => {
 		setSaveChanges(true);
 
@@ -112,15 +122,7 @@ const NewApplicationAuto = ({children}: DriverInfoProps) => {
 			form[0]?.accidentCitation[0]?.value ===
 				'Citation - Driving under the influence'
 		) {
-			createOrUpdateRaylifeApplication(
-				state,
-				CONSTANTS.APPLICATION_STATUS['rejected'].NAME
-			).then((response) => {
-				const {
-					data: {id},
-				} = response;
-				dispatch({payload: {id}, type: ACTIONS.SET_APPLICATION_ID});
-			});
+			handleSave(CONSTANTS.APPLICATION_STATUS['rejected'].NAME);
 
 			return dispatch({
 				payload: 5,
@@ -128,14 +130,7 @@ const NewApplicationAuto = ({children}: DriverInfoProps) => {
 			});
 		}
 
-		createOrUpdateRaylifeApplication(state, applicationStatus).then(
-			(response) => {
-				const {
-					data: {id},
-				} = response;
-				dispatch({payload: {id}, type: ACTIONS.SET_APPLICATION_ID});
-			}
-		);
+		await handleSave(applicationStatus);
 
 		if (state.currentStep === 4) {
 			const quote = await createRaylifeAutoQuote(state);
@@ -171,20 +166,11 @@ const NewApplicationAuto = ({children}: DriverInfoProps) => {
 		});
 	};
 
-	const handleSaveChanges = () => {
+	const handleSaveChanges = async () => {
 		setSaveChanges(true);
 		dispatch({payload: false, type: ACTIONS.SET_HAS_FORM_CHANGE});
-		createOrUpdateRaylifeApplication(
-			state,
-			CONSTANTS.APPLICATION_STATUS['open'].NAME
-		).then((response) => {
-			const {
-				data: {id},
-			} = response;
-			dispatch({payload: {id}, type: ACTIONS.SET_APPLICATION_ID});
-		});
 
-		return saveChanges;
+		await handleSave(CONSTANTS.APPLICATION_STATUS['open'].NAME);
 	};
 
 	const handleExitClick = () => {
@@ -193,9 +179,12 @@ const NewApplicationAuto = ({children}: DriverInfoProps) => {
 			CONSTANTS.APPLICATION_STATUS['incomplete'].NAME
 		).then((response) => {
 			const {
-				data: {id},
+				data: {externalReferenceCode, id},
 			} = response;
-			dispatch({payload: {id}, type: ACTIONS.SET_APPLICATION_ID});
+			dispatch({
+				payload: {externalReferenceCode, id},
+				type: ACTIONS.SET_APPLICATION,
+			});
 		});
 
 		redirectTo('dashboard');

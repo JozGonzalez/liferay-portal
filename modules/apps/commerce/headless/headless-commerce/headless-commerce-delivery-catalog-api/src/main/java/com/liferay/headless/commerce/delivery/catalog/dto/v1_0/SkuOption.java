@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.dto.v1_0;
@@ -85,6 +76,228 @@ public class SkuOption implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long key;
 
+	@Schema
+	public String getPrice() {
+		return price;
+	}
+
+	public void setPrice(String price) {
+		this.price = price;
+	}
+
+	@JsonIgnore
+	public void setPrice(
+		UnsafeSupplier<String, Exception> priceUnsafeSupplier) {
+
+		try {
+			price = priceUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String price;
+
+	@Schema(example = "static")
+	public String getPriceType() {
+		return priceType;
+	}
+
+	public void setPriceType(String priceType) {
+		this.priceType = priceType;
+	}
+
+	@JsonIgnore
+	public void setPriceType(
+		UnsafeSupplier<String, Exception> priceTypeUnsafeSupplier) {
+
+		try {
+			priceType = priceTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String priceType;
+
+	@Schema
+	public String getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(String quantity) {
+		this.quantity = quantity;
+	}
+
+	@JsonIgnore
+	public void setQuantity(
+		UnsafeSupplier<String, Exception> quantityUnsafeSupplier) {
+
+		try {
+			quantity = quantityUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String quantity;
+
+	@Schema(example = "30130")
+	public Long getSkuId() {
+		return skuId;
+	}
+
+	public void setSkuId(Long skuId) {
+		this.skuId = skuId;
+	}
+
+	@JsonIgnore
+	public void setSkuId(UnsafeSupplier<Long, Exception> skuIdUnsafeSupplier) {
+		try {
+			skuId = skuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long skuId;
+
+	@Schema(example = "30130")
+	public Long getSkuOptionId() {
+		return skuOptionId;
+	}
+
+	public void setSkuOptionId(Long skuOptionId) {
+		this.skuOptionId = skuOptionId;
+	}
+
+	@JsonIgnore
+	public void setSkuOptionId(
+		UnsafeSupplier<Long, Exception> skuOptionIdUnsafeSupplier) {
+
+		try {
+			skuOptionId = skuOptionIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long skuOptionId;
+
+	@Schema(example = "Sku Option Key")
+	public String getSkuOptionKey() {
+		return skuOptionKey;
+	}
+
+	public void setSkuOptionKey(String skuOptionKey) {
+		this.skuOptionKey = skuOptionKey;
+	}
+
+	@JsonIgnore
+	public void setSkuOptionKey(
+		UnsafeSupplier<String, Exception> skuOptionKeyUnsafeSupplier) {
+
+		try {
+			skuOptionKey = skuOptionKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String skuOptionKey;
+
+	@Schema(example = "30130")
+	public Long getSkuOptionValueId() {
+		return skuOptionValueId;
+	}
+
+	public void setSkuOptionValueId(Long skuOptionValueId) {
+		this.skuOptionValueId = skuOptionValueId;
+	}
+
+	@JsonIgnore
+	public void setSkuOptionValueId(
+		UnsafeSupplier<Long, Exception> skuOptionValueIdUnsafeSupplier) {
+
+		try {
+			skuOptionValueId = skuOptionValueIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long skuOptionValueId;
+
+	@Schema(example = "Sku Option Value Key")
+	public String getSkuOptionValueKey() {
+		return skuOptionValueKey;
+	}
+
+	public void setSkuOptionValueKey(String skuOptionValueKey) {
+		this.skuOptionValueKey = skuOptionValueKey;
+	}
+
+	@JsonIgnore
+	public void setSkuOptionValueKey(
+		UnsafeSupplier<String, Exception> skuOptionValueKeyUnsafeSupplier) {
+
+		try {
+			skuOptionValueKey = skuOptionValueKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String skuOptionValueKey;
+
 	@DecimalMin("0")
 	@Schema(example = "31130")
 	public Long getValue() {
@@ -147,6 +360,106 @@ public class SkuOption implements Serializable {
 			sb.append("\"key\": ");
 
 			sb.append(key);
+		}
+
+		if (price != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"price\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(price));
+
+			sb.append("\"");
+		}
+
+		if (priceType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(priceType));
+
+			sb.append("\"");
+		}
+
+		if (quantity != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"quantity\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(quantity));
+
+			sb.append("\"");
+		}
+
+		if (skuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuId\": ");
+
+			sb.append(skuId);
+		}
+
+		if (skuOptionId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionId\": ");
+
+			sb.append(skuOptionId);
+		}
+
+		if (skuOptionKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOptionKey));
+
+			sb.append("\"");
+		}
+
+		if (skuOptionValueId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionValueId\": ");
+
+			sb.append(skuOptionValueId);
+		}
+
+		if (skuOptionValueKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionValueKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOptionValueKey));
+
+			sb.append("\"");
 		}
 
 		if (value != null) {
@@ -253,5 +566,7 @@ public class SkuOption implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

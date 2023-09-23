@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provides the local service utility for CPDefinitionLink. This utility wraps
@@ -62,12 +54,25 @@ public class CPDefinitionLinkLocalServiceUtil {
 	}
 
 	public static CPDefinitionLink addCPDefinitionLinkByCProductId(
-			long cpDefinitionId, long cProductId, double priority, String type,
+			long cpDefinitionId, long cProductId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority, String type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addCPDefinitionLinkByCProductId(
-			cpDefinitionId, cProductId, priority, type, serviceContext);
+			cpDefinitionId, cProductId, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire, priority,
+			type, serviceContext);
+	}
+
+	public static void checkCPDefinitionLinks() throws PortalException {
+		getService().checkCPDefinitionLinks();
 	}
 
 	/**
@@ -321,15 +326,42 @@ public class CPDefinitionLinkLocalServiceUtil {
 	}
 
 	public static List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status) {
+
+		return getService().getCPDefinitionLinks(cpDefinitionId, status);
+	}
+
+	public static List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, int start, int end) {
 
 		return getService().getCPDefinitionLinks(cpDefinitionId, start, end);
 	}
 
 	public static List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status, int start, int end) {
+
+		return getService().getCPDefinitionLinks(
+			cpDefinitionId, status, start, end);
+	}
+
+	public static List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, String type) {
 
 		return getService().getCPDefinitionLinks(cpDefinitionId, type);
+	}
+
+	public static List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status) {
+
+		return getService().getCPDefinitionLinks(cpDefinitionId, type, status);
+	}
+
+	public static List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status, int start, int end,
+		OrderByComparator<CPDefinitionLink> orderByComparator) {
+
+		return getService().getCPDefinitionLinks(
+			cpDefinitionId, type, status, start, end, orderByComparator);
 	}
 
 	public static List<CPDefinitionLink> getCPDefinitionLinks(
@@ -386,9 +418,22 @@ public class CPDefinitionLinkLocalServiceUtil {
 	}
 
 	public static int getCPDefinitionLinksCount(
+		long cpDefinitionId, int status) {
+
+		return getService().getCPDefinitionLinksCount(cpDefinitionId, status);
+	}
+
+	public static int getCPDefinitionLinksCount(
 		long cpDefinitionId, String type) {
 
 		return getService().getCPDefinitionLinksCount(cpDefinitionId, type);
+	}
+
+	public static int getCPDefinitionLinksCount(
+		long cpDefinitionId, String type, int status) {
+
+		return getService().getCPDefinitionLinksCount(
+			cpDefinitionId, type, status);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -430,6 +475,13 @@ public class CPDefinitionLinkLocalServiceUtil {
 		return getService().getReverseCPDefinitionLinks(cProductId, type);
 	}
 
+	public static List<CPDefinitionLink> getReverseCPDefinitionLinks(
+		long cProductId, String type, int status) {
+
+		return getService().getReverseCPDefinitionLinks(
+			cProductId, type, status);
+	}
+
 	/**
 	 * Updates the cp definition link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -447,12 +499,21 @@ public class CPDefinitionLinkLocalServiceUtil {
 	}
 
 	public static CPDefinitionLink updateCPDefinitionLink(
-			long cpDefinitionLinkId, double priority,
+			long userId, long cpDefinitionLinkId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateCPDefinitionLink(
-			cpDefinitionLinkId, priority, serviceContext);
+			userId, cpDefinitionLinkId, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire, priority,
+			serviceContext);
 	}
 
 	public static void updateCPDefinitionLinkCProductIds(
@@ -464,8 +525,23 @@ public class CPDefinitionLinkLocalServiceUtil {
 			cpDefinitionId, cProductIds, type, serviceContext);
 	}
 
+	public static CPDefinitionLink updateStatus(
+			long userId, long cpDefinitionLinkId, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext,
+			Map<String, Serializable> workflowContext)
+		throws PortalException {
+
+		return getService().updateStatus(
+			userId, cpDefinitionLinkId, status, serviceContext,
+			workflowContext);
+	}
+
 	public static CPDefinitionLinkLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(CPDefinitionLinkLocalService service) {
+		_service = service;
 	}
 
 	private static volatile CPDefinitionLinkLocalService _service;

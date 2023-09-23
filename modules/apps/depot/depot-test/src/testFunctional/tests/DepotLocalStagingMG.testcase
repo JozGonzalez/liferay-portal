@@ -14,7 +14,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -36,9 +36,9 @@ definition {
 
 		Depot.disableStagingDepot(depotName = "Test Depot Name");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -659,9 +659,12 @@ definition {
 			staging = "true");
 	}
 
-	@description = "This test covers LPS-154424. It ensures that an external video with a custom friendlyURL can be displayed properly in the Media Gallery Display widget after its friendlyURL is edited and published from an asset library."
+	@description = "This test covers LPS-154424. It ensures that an external video with a custom friendlyURL can be displayed properly in the Media Gallery Display widget after its friendlyURL is edited and published from an asset library. Skip the instance for performance improvement."
 	@priority = 4
 	test CanViewExternalVideoAfterFriendlyURLIsUpdated {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name");
 
 		VideoShortcut.addCP(

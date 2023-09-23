@@ -24,14 +24,14 @@
 					<span class="autofit-row">
 						<#if termDisplayContexts?has_content>
 							<span class="autofit-col">
-								<button
-									aria-controls="${namespace}treeItem${id}"
-									aria-expanded="true"
-									class="btn btn-monospaced component-expander"
-									data-target="#${namespace}treeItem${id}"
-									data-toggle="collapse"
+								<@clay.button
+									aria\-controls="${namespace}treeItem${id}"
+									aria\-expanded="true"
+									cssClass="btn btn-monospaced component-expander"
+									data\-target="#${namespace}treeItem${id}"
+									data\-toggle="collapse"
+									displayType="link"
 									tabindex="-1"
-									type="button"
 								>
 									<span class="c-inner" tabindex="-2">
 										<@clay["icon"] symbol="angle-down" />
@@ -41,7 +41,7 @@
 											symbol="angle-right"
 										/>
 									</span>
-								</button>
+								</@clay.button>
 							</span>
 						</#if>
 
@@ -130,6 +130,17 @@
 		persistState=true
 		title="${(vocabularyNames?size == 1)?then(vocabularyNames[0]!'', 'category')}"
 	>
+		<#if !assetCategoriesSearchFacetDisplayContext.isNothingSelected()>
+			<@clay.button
+				cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+				displayType="link"
+				id="${namespace + 'facetAssetCategoriesClear'}"
+				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+			>
+				<strong>${languageUtil.get(locale, "clear")}</strong>
+			</@clay.button>
+		</#if>
+
 		<#if vocabularyNames?has_content>
 			<ul class="treeview treeview-light treeview-nested treeview-vocabulary-display" role="tree">
 				<#list vocabularyNames as vocabularyName>
@@ -142,14 +153,6 @@
 					/>
 				</#list>
 			</ul>
-		</#if>
-
-		<#if !assetCategoriesSearchFacetDisplayContext.isNothingSelected()>
-			<@liferay_aui.button
-				cssClass="btn-link btn-unstyled facet-clear-btn"
-				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
-				value="clear"
-			/>
 		</#if>
 	</@>
 </@>

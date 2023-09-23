@@ -53,11 +53,16 @@ definition {
 
 		CP2ActivationKeys.clickAtDropdownItem(dropdownItem = ${dropdownItem});
 
-		Type(
-			locator1 = "CustomerPortalSite#ID_CONFIRMATION",
-			value1 = ${value});
+		if (isSet(value)) {
+			Type(
+				locator1 = "CustomerPortalSite#ID_CONFIRMATION",
+				value1 = ${value});
 
-		CustomerPortal.clickAtButton(text = "Confirm");
+			CustomerPortal.clickAtButton(text = "Confirm");
+		}
+		else {
+			CustomerPortal.clickAtButton(text = "Cancel");
+		}
 	}
 
 	macro addCPObject {
@@ -78,11 +83,10 @@ definition {
 	}
 
 	macro addCustomerPortalSite {
-		Site.openSitesAdmin();
-
-		Site.addSiteTemplateCP(
+		HeadlessSite.addSite(
 			siteName = ${siteName},
-			siteTemplateName = "Liferay OSB Site Initializer Customer Portal");
+			templateName = "Liferay OSB Site Initializer Customer Portal",
+			templateType = "Site Initializer");
 	}
 
 	macro addIdPCForCustomerPortal {
@@ -215,6 +219,14 @@ definition {
 			typeCard = ${typeCard});
 	}
 
+	macro assertTextAtObjectTable {
+		var key_text = ${text};
+
+		AssertTextEquals(
+			locator1 = "CustomerPortalSite#TABLE_ELEMENT_BY_TEXT",
+			value1 = ${text});
+	}
+
 	macro assertThatLinkIsVisible {
 		var key_text = ${text};
 
@@ -286,12 +298,20 @@ definition {
 	}
 
 	macro clearStatus {
+		if (!(isSet(status))) {
+			var status = "Active";
+		}
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",
 			portlet = "Account Subscription Groups");
 
 		var key_status = ${status};
+
+		// Refresh added due to portal instability
+
+		Refresh();
 
 		Search.searchCP(searchTerm = ${key_status});
 
@@ -301,6 +321,10 @@ definition {
 				locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON");
 
 			MenuItem.click(menuItem = "View");
+
+			// Refresh added due to portal instability
+
+			Refresh();
 
 			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
 				label = "activationStatus",
@@ -338,6 +362,12 @@ definition {
 		var key_text = ${text};
 
 		Click(locator1 = "CustomerPortalSite#MODAL_INFO");
+	}
+
+	macro clickOnModalPage {
+		var key_text = ${text};
+
+		Click(locator1 = "CustomerPortalSite#PAGE_INFO");
 	}
 
 	macro clickOnSkipForNowButton {
@@ -405,6 +435,23 @@ definition {
 		else {
 			CustomerPortal.customerPortalApisTearDown();
 		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites");
+
+		Refresh();
+
+		PortletEntry.selectAll();
+
+		Click(locator1 = "Icon#SITES_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		Click(locator1 = "Button#MODAL_DELETE");
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro deactivateKoroneikiAccount {
@@ -483,7 +530,7 @@ definition {
 
 	macro loginOktaToUpdateCP {
 		var userEmailAddress = "dbace26d5dadb9eed597@uat.com.broken";
-		var userPassword = "q4F63ZEH3njnnA34S761";
+		var oktaUserPassword = "q4F63ZEH3njnnA34S761";
 
 		Open.openInTheNewTab(locator1 = "https://login-dev.liferay.com/");
 
@@ -493,7 +540,7 @@ definition {
 
 		Type(
 			locator1 = "CustomerPortalSite#OKTA_PASSWORD",
-			value1 = ${userPassword});
+			value1 = ${oktaUserPassword});
 
 		Click(locator1 = "CustomerPortalSite#OKTA_SUBMIT");
 
@@ -598,9 +645,9 @@ definition {
 	}
 
 	macro search {
-		if (IsElementPresent(locator1 = "CustomerPortalSite#SEARCH_BAR")) {
+		if (IsElementPresent(locator1 = "CustomerPortalSite#SEARCH")) {
 			Type(
-				locator1 = "CustomerPortalSite#SEARCH_BAR",
+				locator1 = "CustomerPortalSite#SEARCH",
 				value1 = ${searchItem});
 		}
 	}
@@ -747,6 +794,10 @@ definition {
 	}
 
 	macro viewActivationStatusCardChange {
+		if (!(isSet(subtitle))) {
+			var subtitle = "";
+		}
+
 		AssertElementPresent(
 			key_text = ${subtitle},
 			locator1 = "CustomerPortalSite#CARD_SUBSCRIPTION");
@@ -801,9 +852,7 @@ definition {
 	}
 
 	macro viewCardValue {
-		AssertElementPresent(
-			locator1 = "CustomerPortalSite#PROJECT_LOGO",
-			logo = ${logo});
+		AssertElementPresent(locator1 = "CustomerPortalSite#PROJECT_LOGO");
 
 		AssertElementPresent(
 			cardName = ${cardName},
@@ -823,7 +872,15 @@ definition {
 	macro viewConfirmationModal {
 		var key_text = ${modalText};
 
-		AssertElementPresent(locator1 = "CustomerPortalSite#MODAL_INFO");
+		AssertVisible(locator1 = "CustomerPortalSite#MODAL_INFO");
+	}
+
+	macro viewConfirmationTextInTheModalPage {
+		var key_text = ${pageText};
+
+		AssertVisible(locator1 = "CustomerPortalSite#PAGE_INFO");
+
+		CustomerPortal.clickAtButton(text = "Done");
 	}
 
 	macro viewCPObjectCustomInfo {
@@ -954,6 +1011,8 @@ definition {
 		WaitForVisible(
 			key_userFirstName = ${userFirstName},
 			locator1 = "CustomerPortalSite#WELCOME_PAGE_USER_NAME");
+
+		WaitForPageLoad();
 	}
 
 	macro waitToLiferayPage {

@@ -9,7 +9,7 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		User.firstLoginPG();
 
@@ -22,9 +22,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -152,7 +152,9 @@ definition {
 			isNotPresent = "INST_DAY,INST_WEEK,INST_MONTH,INST_YEAR",
 			isPresent = "INST_HOUR");
 
-		WorkflowMetrics.assertChartTotalValueNotEquals(velocityValueTotal = 0);
+		AssertTextNotEquals(
+			locator1 = "WorkflowMetrics#METRICS_COMPLETION_VELOCITY_ITEMS_VALUE",
+			value1 = 0);
 
 		WorkflowMetrics.verifyDefaultUnitsForEachDateRange(
 			completionVelocityDateRange = "Yesterday",

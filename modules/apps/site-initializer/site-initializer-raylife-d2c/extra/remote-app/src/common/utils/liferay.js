@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const pagePreviewEnabled = false;
+const TYPES = {};
 
 export const Liferay = window.Liferay || {
 	BREAKPOINTS: {
@@ -26,22 +17,30 @@ export const Liferay = window.Liferay || {
 		getScopeGroupId: () => 0,
 		getSiteGroupId: () => 0,
 	},
+	Util: {
+		LocalStorage: Object.assign(localStorage, {TYPES}),
+		SessionStorage: Object.assign(sessionStorage, {TYPES}),
+	},
 	authToken: '',
 };
 
 export function getLiferaySiteName() {
-	let siteName = '/web/raylife';
+	const path = Liferay.ThemeDisplay.getPathContext();
 
 	const {pathname} = new URL(Liferay.ThemeDisplay.getCanonicalURL());
 	const pathSplit = pathname.split('/').filter(Boolean);
 
-	siteName = `/${pathSplit.slice(0, pathSplit.length - 1).join('/')}`;
+	if (path) {
+		return `/${pathSplit.slice(1, pathSplit.length - 1).join('/')}`;
+	}
 
-	return siteName;
+	return `/${pathSplit.slice(0, pathSplit.length - 1).join('/')}`;
 }
 
 export function redirectTo(url = '', currentSiteName = getLiferaySiteName()) {
+	const pagePreviewEnabled = false;
+
 	const queryParams = pagePreviewEnabled ? '?p_l_mode=preview' : '';
 
-	window.location.href = `${currentSiteName}/${url}${queryParams}`;
+	window.location.href = `${Liferay.ThemeDisplay.getPathContext()}${currentSiteName}/${url}${queryParams}`;
 }

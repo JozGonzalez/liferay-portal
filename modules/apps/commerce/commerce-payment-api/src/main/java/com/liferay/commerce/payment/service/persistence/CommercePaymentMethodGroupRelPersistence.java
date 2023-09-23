@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.service.persistence;
@@ -251,59 +242,6 @@ public interface CommercePaymentMethodGroupRelPersistence
 	public int filterCountByGroupId(long groupId);
 
 	/**
-	 * Returns the commerce payment method group rel where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchPaymentMethodGroupRelException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce payment method group rel
-	 * @throws NoSuchPaymentMethodGroupRelException if a matching commerce payment method group rel could not be found
-	 */
-	public CommercePaymentMethodGroupRel findByG_E(
-			long groupId, String engineKey)
-		throws NoSuchPaymentMethodGroupRelException;
-
-	/**
-	 * Returns the commerce payment method group rel where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce payment method group rel, or <code>null</code> if a matching commerce payment method group rel could not be found
-	 */
-	public CommercePaymentMethodGroupRel fetchByG_E(
-		long groupId, String engineKey);
-
-	/**
-	 * Returns the commerce payment method group rel where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching commerce payment method group rel, or <code>null</code> if a matching commerce payment method group rel could not be found
-	 */
-	public CommercePaymentMethodGroupRel fetchByG_E(
-		long groupId, String engineKey, boolean useFinderCache);
-
-	/**
-	 * Removes the commerce payment method group rel where groupId = &#63; and engineKey = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the commerce payment method group rel that was removed
-	 */
-	public CommercePaymentMethodGroupRel removeByG_E(
-			long groupId, String engineKey)
-		throws NoSuchPaymentMethodGroupRelException;
-
-	/**
-	 * Returns the number of commerce payment method group rels where groupId = &#63; and engineKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the number of matching commerce payment method group rels
-	 */
-	public int countByG_E(long groupId, String engineKey);
-
-	/**
 	 * Returns all the commerce payment method group rels where groupId = &#63; and active = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -527,6 +465,59 @@ public interface CommercePaymentMethodGroupRelPersistence
 	 * @return the number of matching commerce payment method group rels that the user has permission to view
 	 */
 	public int filterCountByG_A(long groupId, boolean active);
+
+	/**
+	 * Returns the commerce payment method group rel where groupId = &#63; and paymentIntegrationKey = &#63; or throws a <code>NoSuchPaymentMethodGroupRelException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param paymentIntegrationKey the payment integration key
+	 * @return the matching commerce payment method group rel
+	 * @throws NoSuchPaymentMethodGroupRelException if a matching commerce payment method group rel could not be found
+	 */
+	public CommercePaymentMethodGroupRel findByG_P(
+			long groupId, String paymentIntegrationKey)
+		throws NoSuchPaymentMethodGroupRelException;
+
+	/**
+	 * Returns the commerce payment method group rel where groupId = &#63; and paymentIntegrationKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param paymentIntegrationKey the payment integration key
+	 * @return the matching commerce payment method group rel, or <code>null</code> if a matching commerce payment method group rel could not be found
+	 */
+	public CommercePaymentMethodGroupRel fetchByG_P(
+		long groupId, String paymentIntegrationKey);
+
+	/**
+	 * Returns the commerce payment method group rel where groupId = &#63; and paymentIntegrationKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param paymentIntegrationKey the payment integration key
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce payment method group rel, or <code>null</code> if a matching commerce payment method group rel could not be found
+	 */
+	public CommercePaymentMethodGroupRel fetchByG_P(
+		long groupId, String paymentIntegrationKey, boolean useFinderCache);
+
+	/**
+	 * Removes the commerce payment method group rel where groupId = &#63; and paymentIntegrationKey = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param paymentIntegrationKey the payment integration key
+	 * @return the commerce payment method group rel that was removed
+	 */
+	public CommercePaymentMethodGroupRel removeByG_P(
+			long groupId, String paymentIntegrationKey)
+		throws NoSuchPaymentMethodGroupRelException;
+
+	/**
+	 * Returns the number of commerce payment method group rels where groupId = &#63; and paymentIntegrationKey = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param paymentIntegrationKey the payment integration key
+	 * @return the number of matching commerce payment method group rels
+	 */
+	public int countByG_P(long groupId, String paymentIntegrationKey);
 
 	/**
 	 * Caches the commerce payment method group rel in the entity cache if it is enabled.

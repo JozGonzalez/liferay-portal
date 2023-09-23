@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.list.type.portlet.action;
@@ -18,6 +9,7 @@ import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionResource;
 import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.web.internal.util.JSONObjectSanitizerUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -27,7 +19,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -86,8 +77,8 @@ public class ExportListTypeDefinitionMVCResourceCommand
 			resourceRequest, resourceResponse,
 			StringBundler.concat(
 				"ListType_", listTypeDefinition.getName(), StringPool.UNDERLINE,
-				String.valueOf(listTypeDefinitionId), StringPool.UNDERLINE,
-				Time.getTimestamp(), ".json"),
+				listTypeDefinitionId, StringPool.UNDERLINE, Time.getTimestamp(),
+				".json"),
 			listTypeDefinitionJSON.getBytes(), ContentTypes.APPLICATION_JSON);
 	}
 

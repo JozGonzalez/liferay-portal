@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDatePicker from '@clayui/date-picker';
 import {format, isValid, parse} from 'date-fns';
 import {default as React, useEffect, useRef, useState} from 'react';
 
-import {DateValue} from '../../../types/Date';
 import {PROPERTY_TYPES} from '../../utils/constants';
 
 const INTERNAL_DATE_FORMAT = 'yyyy-MM-dd';
@@ -24,11 +14,10 @@ const DISPLAY_DATE_FORMAT = 'yyyy/MM/dd';
 
 interface Props {
 	disabled?: boolean;
-	onChange: (payload: {type: string; value: DateValue}) => void;
+	onChange: (payload: {type: string; value: string}) => void;
 	propertyLabel: string;
 	propertyType: string;
-	range?: boolean;
-	value?: DateValue;
+	value?: string;
 }
 
 function DateTimeInput({
@@ -36,21 +25,19 @@ function DateTimeInput({
 	onChange,
 	propertyLabel,
 	propertyType,
-	range,
 	value,
 }: Props) {
 	const [expanded, setExpanded] = useState(false);
 
-	const [displayDate, setDisplayDate] = useState<DateValue>(() =>
-		transformDate(value || new Date().toISOString(), toDisplayDate)
+	const [displayDate, setDisplayDate] = useState<string>(() =>
+		toDisplayDate(value || new Date().toISOString())
 	);
 
 	const previousDisplayDateRef = useRef(displayDate);
 
 	useEffect(() => {
-		const nextDisplayDate = transformDate(
-			value || new Date().toISOString(),
-			toDisplayDate
+		const nextDisplayDate = toDisplayDate(
+			value || new Date().toISOString()
 		);
 
 		previousDisplayDateRef.current = nextDisplayDate;
@@ -58,33 +45,27 @@ function DateTimeInput({
 	}, [value]);
 
 	const saveDateTimeValue = () => {
-		const internalDate = transformDate(
+		const validDate = toDisplayDate(
 			displayDate,
-			propertyType === PROPERTY_TYPES.DATE_TIME
-				? toInternalDateTime
-				: toInternalDate
+			previousDisplayDateRef.current
 		);
+
+		setDisplayDate(validDate);
+
+		const internalDate =
+			propertyType === PROPERTY_TYPES.DATE_TIME
+				? toInternalDateTime(validDate)
+				: toInternalDate(validDate);
 
 		const previousDisplayDate = previousDisplayDateRef.current;
 
-		if (!datesAreEqual(previousDisplayDate, displayDate)) {
-			previousDisplayDateRef.current = displayDate;
+		if (!datesAreEqual(previousDisplayDate, validDate)) {
+			previousDisplayDateRef.current = validDate;
 
 			onChange({
 				type: propertyType,
 				value: internalDate,
 			});
-		}
-	};
-
-	const onDisplayDateChange = (nextDisplayDate: string) => {
-		if (range) {
-			const [start, end] = nextDisplayDate.split(' - ');
-
-			setDisplayDate(transformDate({end, start}, toDisplayDate));
-		}
-		else {
-			setDisplayDate(transformDate(nextDisplayDate, toDisplayDate));
 		}
 	};
 
@@ -134,14 +115,9 @@ function DateTimeInput({
 					`${Liferay.Language.get('december')}`,
 				]}
 				onBlur={saveDateTimeValue}
-				onChange={onDisplayDateChange}
+				onChange={setDisplayDate}
 				onExpandedChange={onExpandedChange}
-				range={range}
-				value={
-					typeof displayDate === 'object'
-						? `${displayDate.start} - ${displayDate.end}`
-						: displayDate
-				}
+				value={displayDate}
 				years={{
 					end: new Date().getFullYear(),
 					start: 1900,
@@ -151,26 +127,21 @@ function DateTimeInput({
 	);
 }
 
-function datesAreEqual(dateA: DateValue, dateB: DateValue) {
-	if (typeof dateA === 'object' && typeof dateB === 'object') {
-		return dateA.start === dateB.start && dateA.end === dateB.end;
-	}
-	else if (typeof dateA === 'string' && typeof dateB === 'string') {
-		return dateA === dateB;
-	}
-
-	return false;
+function datesAreEqual(dateA: string, dateB: string) {
+	return dateA === dateB;
 }
 
-function toDisplayDate(internalOrIsoDate: string) {
+function toDisplayDate(internalOrIsoDate: string, previousDate?: string) {
 	let dateObject = new Date(internalOrIsoDate);
 
+	const resetDate = previousDate ? new Date(previousDate) : new Date();
+
 	if (!isValid(dateObject)) {
-		dateObject = parse(internalOrIsoDate, INTERNAL_DATE_FORMAT, new Date());
+		dateObject = parse(internalOrIsoDate, INTERNAL_DATE_FORMAT, resetDate);
 	}
 
 	if (!isValid(dateObject)) {
-		dateObject = new Date();
+		dateObject = resetDate;
 	}
 
 	return format(dateObject, DISPLAY_DATE_FORMAT);
@@ -192,17 +163,6 @@ function toInternalDate(displayOrIsoDate: string) {
 
 function toInternalDateTime(displayOrIsoDate: string) {
 	return new Date(toInternalDate(displayOrIsoDate)).toISOString();
-}
-
-function transformDate(date: DateValue, transform: (date: string) => string) {
-	if (typeof date === 'object') {
-		const end = transform(date.end);
-		const start = transform(date.start);
-
-		return start && end ? {end, start} : '';
-	}
-
-	return transform(date);
 }
 
 export default DateTimeInput;

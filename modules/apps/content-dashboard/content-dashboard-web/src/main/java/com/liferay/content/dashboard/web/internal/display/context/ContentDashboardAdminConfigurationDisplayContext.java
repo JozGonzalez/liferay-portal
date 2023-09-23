@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -30,15 +21,14 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionURL;
 import javax.portlet.RenderResponse;
@@ -79,51 +69,42 @@ public class ContentDashboardAdminConfigurationDisplayContext {
 
 		Arrays.sort(assetVocabularyIds);
 
-		List<AssetVocabulary> availableAssetVocabularies =
-			_getAvailableAssetVocabularies();
-
-		Stream<AssetVocabulary> stream = availableAssetVocabularies.stream();
-
-		return stream.filter(
+		List<AssetVocabulary> filteredAssetVocabularies = ListUtil.filter(
+			_getAvailableAssetVocabularies(),
 			assetVocabulary -> {
 				int pos = Arrays.binarySearch(
 					assetVocabularyIds, assetVocabulary.getVocabularyId());
 
 				return pos < 0;
-			}
-		).sorted(
+			});
+
+		filteredAssetVocabularies.sort(
 			Comparator.comparing(
-				this::_getAssetVocabularyLabel, String.CASE_INSENSITIVE_ORDER)
-		).map(
-			this::_toJSONObject
-		).collect(
-			JSONUtil.createCollector()
-		);
+				this::_getAssetVocabularyLabel, String.CASE_INSENSITIVE_ORDER));
+
+		return JSONUtil.toJSONArray(
+			filteredAssetVocabularies, this::_toJSONObject, _log);
 	}
 
 	public JSONArray getCurrentVocabularyJSONArray() {
-		return Arrays.stream(
-			_assetVocabularyIds
-		).boxed(
-		).map(
-			assetVocabularyId -> {
-				try {
-					return _assetVocabularyLocalService.getAssetVocabulary(
-						assetVocabularyId);
-				}
-				catch (PortalException portalException) {
-					_log.error(portalException);
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-					return null;
+		for (long assetVocabularyId : _assetVocabularyIds) {
+			try {
+				AssetVocabulary assetVocabulary =
+					_assetVocabularyLocalService.getAssetVocabulary(
+						assetVocabularyId);
+
+				if (assetVocabulary != null) {
+					jsonArray.put(_toJSONObject(assetVocabulary));
 				}
 			}
-		).filter(
-			Objects::nonNull
-		).map(
-			this::_toJSONObject
-		).collect(
-			JSONUtil.createCollector()
-		);
+			catch (PortalException portalException) {
+				_log.error(portalException);
+			}
+		}
+
+		return jsonArray;
 	}
 
 	public String getRedirect() {
@@ -157,13 +138,24 @@ public class ContentDashboardAdminConfigurationDisplayContext {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			_themeDisplay.getLocale(), getClass());
 
-		return LanguageUtil.format(
-			resourceBundle, "x-group-x",
-			new String[] {
-				assetVocabularyTitle,
-				ContentDashboardGroupUtil.getGroupName(
-					group, resourceBundle.getLocale())
-			});
+		try {
+			return LanguageUtil.format(
+				resourceBundle, "x-group-x",
+				new String[] {
+					assetVocabularyTitle,
+					group.getDescriptiveName(resourceBundle.getLocale())
+				});
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return LanguageUtil.format(
+				resourceBundle, "x-group-x",
+				new String[] {
+					assetVocabularyTitle,
+					group.getName(resourceBundle.getLocale())
+				});
+		}
 	}
 
 	private List<AssetVocabulary> _getAvailableAssetVocabularies() {

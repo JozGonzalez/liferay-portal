@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.service.impl;
@@ -24,6 +15,7 @@ import com.liferay.commerce.discount.exception.CommerceDiscountDisplayDateExcept
 import com.liferay.commerce.discount.exception.CommerceDiscountExpirationDateException;
 import com.liferay.commerce.discount.exception.CommerceDiscountLimitationTypeException;
 import com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException;
+import com.liferay.commerce.discount.exception.CommerceDiscountRuleTypeSettingsException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTargetException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTitleException;
 import com.liferay.commerce.discount.exception.DuplicateCommerceDiscountException;
@@ -34,7 +26,10 @@ import com.liferay.commerce.discount.model.CommerceDiscountAccountRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountOrderTypeRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountRelTable;
+import com.liferay.commerce.discount.model.CommerceDiscountRule;
 import com.liferay.commerce.discount.model.CommerceDiscountTable;
+import com.liferay.commerce.discount.rule.type.CommerceDiscountRuleType;
+import com.liferay.commerce.discount.rule.type.CommerceDiscountRuleTypeRegistry;
 import com.liferay.commerce.discount.service.CommerceDiscountCommerceAccountGroupRelLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountOrderTypeRelLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountRelLocalService;
@@ -60,6 +55,7 @@ import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -1548,7 +1544,6 @@ public class CommerceDiscountLocalServiceImpl
 			).put(
 				"skipCommerceAccountGroupValidation", true
 			).build());
-
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -1698,6 +1693,9 @@ public class CommerceDiscountLocalServiceImpl
 					commerceChannelAccountEntryRelId
 				).and(
 					CommerceDiscountTable.INSTANCE.active.eq(true)
+				).and(
+					CommerceDiscountTable.INSTANCE.status.eq(
+						WorkflowConstants.STATUS_APPROVED)
 				);
 
 		return joinStep.where(
@@ -1723,6 +1721,9 @@ public class CommerceDiscountLocalServiceImpl
 
 				return null;
 			}
+		).and(
+			CommerceDiscountTable.INSTANCE.status.eq(
+				WorkflowConstants.STATUS_APPROVED)
 		);
 
 		if (commerceAccountId != null) {
@@ -1981,6 +1982,29 @@ public class CommerceDiscountLocalServiceImpl
 
 			throw new CommerceDiscountMaxPriceValueException();
 		}
+
+		if (commerceDiscountId > 0) {
+			List<CommerceDiscountRule> commerceDiscountRules =
+				_commerceDiscountRuleLocalService.getCommerceDiscountRules(
+					commerceDiscountId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null);
+
+			for (CommerceDiscountRule commerceDiscountRule :
+					commerceDiscountRules) {
+
+				CommerceDiscountRuleType commerceDiscountRuleType =
+					_commerceDiscountRuleTypeRegistry.
+						getCommerceDiscountRuleType(
+							commerceDiscountRule.getType());
+
+				if (!commerceDiscountRuleType.validate(
+						commerceDiscountRule.getSettingsProperty(
+							commerceDiscountRule.getType()))) {
+
+					throw new CommerceDiscountRuleTypeSettingsException();
+				}
+			}
+		}
 	}
 
 	private static final String[] _SELECTED_FIELD_NAMES = {
@@ -2013,6 +2037,9 @@ public class CommerceDiscountLocalServiceImpl
 
 	@Reference
 	private CommerceDiscountRuleLocalService _commerceDiscountRuleLocalService;
+
+	@Reference
+	private CommerceDiscountRuleTypeRegistry _commerceDiscountRuleTypeRegistry;
 
 	@Reference
 	private CommerceDiscountTargetRegistry _commerceDiscountTargetRegistry;

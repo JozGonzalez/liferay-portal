@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {ClayInput} from '@clayui/form';
 
 import {FieldBase} from '../FieldBase';
@@ -12,8 +17,10 @@ interface InputProps
 	hideFeedback?: boolean;
 	label?: string;
 	localized?: boolean;
+	localizedTooltipText?: string;
 	required?: boolean;
 	tooltip?: string;
+	tooltipText?: string;
 	type?: 'number' | 'textarea' | 'text' | 'date';
 	value?: string;
 }
@@ -25,10 +32,12 @@ export function Input({
 	hideFeedback,
 	label,
 	localized = false,
+	localizedTooltipText,
 	onChange,
 	placeholder,
 	required,
 	tooltip,
+	tooltipText,
 	type,
 	value,
 	...otherProps
@@ -40,8 +49,10 @@ export function Input({
 			hideFeedback={hideFeedback}
 			label={label}
 			localized={localized}
+			localizedTooltipText={localizedTooltipText}
 			required={required}
 			tooltip={tooltip}
+			tooltipText={tooltipText}
 		>
 			<ClayInput
 				className="custom-input"

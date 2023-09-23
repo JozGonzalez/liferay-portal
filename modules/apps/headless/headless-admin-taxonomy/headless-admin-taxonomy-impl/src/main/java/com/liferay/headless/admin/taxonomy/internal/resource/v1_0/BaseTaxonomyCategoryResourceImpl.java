@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.resource.v1_0;
@@ -19,6 +10,8 @@ import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyCategoryResourc
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -59,7 +52,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -416,25 +408,6 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		TaxonomyCategory existingTaxonomyCategory = getTaxonomyCategory(
 			taxonomyCategoryId);
 
-		if (taxonomyCategory.getActions() != null) {
-			existingTaxonomyCategory.setActions(taxonomyCategory.getActions());
-		}
-
-		if (taxonomyCategory.getAvailableLanguages() != null) {
-			existingTaxonomyCategory.setAvailableLanguages(
-				taxonomyCategory.getAvailableLanguages());
-		}
-
-		if (taxonomyCategory.getDateCreated() != null) {
-			existingTaxonomyCategory.setDateCreated(
-				taxonomyCategory.getDateCreated());
-		}
-
-		if (taxonomyCategory.getDateModified() != null) {
-			existingTaxonomyCategory.setDateModified(
-				taxonomyCategory.getDateModified());
-		}
-
 		if (taxonomyCategory.getDescription() != null) {
 			existingTaxonomyCategory.setDescription(
 				taxonomyCategory.getDescription());
@@ -457,20 +430,6 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		if (taxonomyCategory.getName_i18n() != null) {
 			existingTaxonomyCategory.setName_i18n(
 				taxonomyCategory.getName_i18n());
-		}
-
-		if (taxonomyCategory.getNumberOfTaxonomyCategories() != null) {
-			existingTaxonomyCategory.setNumberOfTaxonomyCategories(
-				taxonomyCategory.getNumberOfTaxonomyCategories());
-		}
-
-		if (taxonomyCategory.getSiteId() != null) {
-			existingTaxonomyCategory.setSiteId(taxonomyCategory.getSiteId());
-		}
-
-		if (taxonomyCategory.getTaxonomyCategoryUsageCount() != null) {
-			existingTaxonomyCategory.setTaxonomyCategoryUsageCount(
-				taxonomyCategory.getTaxonomyCategoryUsageCount());
 		}
 
 		if (taxonomyCategory.getTaxonomyVocabularyId() != null) {
@@ -792,6 +751,96 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "taxonomyVocabularyId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "TaxonomyCategory")
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path(
+		"/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories/export-batch"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response postTaxonomyVocabularyTaxonomyCategoriesPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("taxonomyVocabularyId")
+			Long taxonomyVocabularyId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context Sort[] sorts,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				TaxonomyCategory.class.getName(), callbackURL, contentType,
+				fieldNames)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
@@ -1036,17 +1085,17 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<TaxonomyCategory, Exception>
-			taxonomyCategoryUnsafeConsumer = null;
+		UnsafeFunction<TaxonomyCategory, TaxonomyCategory, Exception>
+			taxonomyCategoryUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("taxonomyVocabularyId")) {
-				taxonomyCategoryUnsafeConsumer =
+				taxonomyCategoryUnsafeFunction =
 					taxonomyCategory -> postTaxonomyVocabularyTaxonomyCategory(
-						Long.parseLong(
+						_parseLong(
 							(String)parameters.get("taxonomyVocabularyId")),
 						taxonomyCategory);
 			}
@@ -1056,30 +1105,82 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			}
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			taxonomyCategoryUnsafeConsumer = taxonomyCategory ->
-				putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
-					taxonomyCategory.getTaxonomyVocabularyId() != null ?
-						taxonomyCategory.getTaxonomyVocabularyId() :
-							Long.parseLong(
-								(String)parameters.get("taxonomyVocabularyId")),
-					taxonomyCategory.getExternalReferenceCode(),
-					taxonomyCategory);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				taxonomyCategoryUnsafeFunction = taxonomyCategory ->
+					putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+						taxonomyCategory.getTaxonomyVocabularyId() != null ?
+							taxonomyCategory.getTaxonomyVocabularyId() :
+								_parseLong(
+									(String)parameters.get(
+										"taxonomyVocabularyId")),
+						taxonomyCategory.getExternalReferenceCode(),
+						taxonomyCategory);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				taxonomyCategoryUnsafeFunction = taxonomyCategory -> {
+					TaxonomyCategory persistedTaxonomyCategory = null;
+
+					try {
+						TaxonomyCategory getTaxonomyCategory =
+							getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+								taxonomyCategory.getTaxonomyVocabularyId() !=
+									null ?
+										taxonomyCategory.
+											getTaxonomyVocabularyId() :
+												_parseLong(
+													(String)parameters.get(
+														"taxonomyVocabularyId")),
+								taxonomyCategory.getExternalReferenceCode());
+
+						persistedTaxonomyCategory = patchTaxonomyCategory(
+							getTaxonomyCategory.getId() != null ?
+								getTaxonomyCategory.getId() :
+									(String)parameters.get(
+										"taxonomyCategoryId"),
+							taxonomyCategory);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						if (parameters.containsKey("taxonomyVocabularyId")) {
+							persistedTaxonomyCategory =
+								postTaxonomyVocabularyTaxonomyCategory(
+									_parseLong(
+										(String)parameters.get(
+											"taxonomyVocabularyId")),
+									taxonomyCategory);
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [taxonomyVocabularyId, taxonomyVocabularyId]");
+						}
+					}
+
+					return persistedTaxonomyCategory;
+				};
+			}
 		}
 
-		if (taxonomyCategoryUnsafeConsumer == null) {
+		if (taxonomyCategoryUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for TaxonomyCategory");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				taxonomyCategories, taxonomyCategoryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				taxonomyCategories, taxonomyCategoryUnsafeConsumer);
+				taxonomyCategories, taxonomyCategoryUnsafeFunction::apply);
 		}
 		else {
 			for (TaxonomyCategory taxonomyCategory : taxonomyCategories) {
-				taxonomyCategoryUnsafeConsumer.accept(taxonomyCategory);
+				taxonomyCategoryUnsafeFunction.apply(taxonomyCategory);
 			}
 		}
 	}
@@ -1128,8 +1229,16 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		if (parameters.containsKey("taxonomyVocabularyId")) {
+			return getTaxonomyVocabularyTaxonomyCategoriesPage(
+				_parseLong((String)parameters.get("taxonomyVocabularyId")),
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
+		}
+		else {
+			throw new NotSupportedException(
+				"One of the following parameters must be specified: [taxonomyVocabularyId]");
+		}
 	}
 
 	@Override
@@ -1160,14 +1269,14 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<TaxonomyCategory, Exception>
-			taxonomyCategoryUnsafeConsumer = null;
+		UnsafeFunction<TaxonomyCategory, TaxonomyCategory, Exception>
+			taxonomyCategoryUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			taxonomyCategoryUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			taxonomyCategoryUnsafeFunction =
 				taxonomyCategory -> patchTaxonomyCategory(
 					taxonomyCategory.getId() != null ?
 						taxonomyCategory.getId() :
@@ -1175,8 +1284,8 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 					taxonomyCategory);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			taxonomyCategoryUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			taxonomyCategoryUnsafeFunction =
 				taxonomyCategory -> putTaxonomyCategory(
 					taxonomyCategory.getId() != null ?
 						taxonomyCategory.getId() :
@@ -1184,21 +1293,41 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 					taxonomyCategory);
 		}
 
-		if (taxonomyCategoryUnsafeConsumer == null) {
+		if (taxonomyCategoryUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for TaxonomyCategory");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				taxonomyCategories, taxonomyCategoryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				taxonomyCategories, taxonomyCategoryUnsafeConsumer);
+				taxonomyCategories, taxonomyCategoryUnsafeFunction::apply);
 		}
 		else {
 			for (TaxonomyCategory taxonomyCategory : taxonomyCategories) {
-				taxonomyCategoryUnsafeConsumer.accept(taxonomyCategory);
+				taxonomyCategoryUnsafeFunction.apply(taxonomyCategory);
 			}
 		}
+	}
+
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1366,6 +1495,15 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<TaxonomyCategory>,
+			 UnsafeFunction<TaxonomyCategory, TaxonomyCategory, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1587,6 +1725,12 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1617,7 +1761,19 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<TaxonomyCategory>,
+		 UnsafeFunction<TaxonomyCategory, TaxonomyCategory, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<TaxonomyCategory>,
 		 UnsafeConsumer<TaxonomyCategory, Exception>, Exception>

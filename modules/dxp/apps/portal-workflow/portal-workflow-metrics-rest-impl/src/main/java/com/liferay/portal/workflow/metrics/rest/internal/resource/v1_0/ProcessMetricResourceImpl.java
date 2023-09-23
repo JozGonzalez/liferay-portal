@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -37,6 +28,7 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.StringQuery;
@@ -53,7 +45,7 @@ import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.ProcessUt
 import com.liferay.portal.workflow.metrics.rest.internal.odata.entity.v1_0.ProcessMetricEntityModel;
 import com.liferay.portal.workflow.metrics.rest.internal.resource.helper.ResourceHelper;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessMetricResource;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -63,7 +55,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -92,35 +83,31 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 			Long processId, Boolean completed, Date dateEnd, Date dateStart)
 		throws Exception {
 
-		return Stream.of(
-			_getProcessMetricsSearchSearchResponse(null, null, processId, null)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> {
-				ProcessMetric processMetric = _createProcessMetric(document);
+		SearchSearchResponse searchSearchResponse =
+			_getProcessMetricsSearchSearchResponse(null, null, processId, null);
 
-				Bucket bucket = _getProcessBucket(
-					GetterUtil.getBoolean(completed), dateEnd, dateStart,
-					processId);
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-				_populateProcessWithSLAMetrics(bucket, processMetric);
-				_setInstanceCount(bucket, processMetric);
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
 
-				_setUntrackedInstanceCount(processMetric);
+		if (searchHitsList.isEmpty()) {
+			return new ProcessMetric();
+		}
 
-				return processMetric;
-			}
-		).orElseGet(
-			ProcessMetric::new
-		);
+		SearchHit searchHit = searchHitsList.get(0);
+
+		ProcessMetric processMetric = _createProcessMetric(
+			searchHit.getDocument());
+
+		Bucket bucket = _getProcessBucket(
+			GetterUtil.getBoolean(completed), dateEnd, dateStart, processId);
+
+		_populateProcessWithSLAMetrics(bucket, processMetric);
+		_setInstanceCount(bucket, processMetric);
+
+		_setUntrackedInstanceCount(processMetric);
+
+		return processMetric;
 	}
 
 	@Override
@@ -167,8 +154,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		instancesBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE));
 		instancesBooleanQuery.addMustNotQueryClauses(
 			_queries.term("instanceId", 0));
 		instancesBooleanQuery.addMustQueryClauses(
@@ -180,8 +167,9 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		slaInstanceResultsBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.
+						SUFFIX_SLA_INSTANCE_RESULT));
 		slaInstanceResultsBooleanQuery.addMustNotQueryClauses(
 			_queries.term("slaDefinitionId", 0));
 		slaInstanceResultsBooleanQuery.addMustQueryClauses(
@@ -261,14 +249,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 	private TermsQuery _createProcessIdTermsQuery(Set<Long> processIds) {
 		TermsQuery termsQuery = _queries.terms("processId");
 
-		Stream<Long> stream = processIds.stream();
-
 		termsQuery.addValues(
-			stream.map(
-				String::valueOf
-			).toArray(
-				Object[]::new
-			));
+			transformToArray(processIds, String::valueOf, Object.class));
 
 		return termsQuery;
 	}
@@ -362,8 +344,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE);
 		searchSearchRequest.setQuery(
 			_createInstanceBooleanQuery(completed, null, null, processIds));
 
@@ -408,10 +390,10 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()),
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT);
 
 		searchSearchRequest.setQuery(
 			_createBooleanQuery(
@@ -436,23 +418,16 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 
 		List<ProcessMetric> processMetrics = new LinkedList<>();
 
-		Map<Long, ProcessMetric> processMetricsMap = Stream.of(
-			searchHits.getSearchHits()
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).map(
-			this::_createProcessMetric
-		).collect(
-			LinkedHashMap::new,
-			(map, processMetric) -> {
-				Process process = processMetric.getProcess();
+		Map<Long, ProcessMetric> processMetricsMap = new LinkedHashMap<>();
 
-				map.put(process.getId(), processMetric);
-			},
-			Map::putAll
-		);
+		for (SearchHit searchHit : searchHits.getSearchHits()) {
+			ProcessMetric processMetric = _createProcessMetric(
+				searchHit.getDocument());
+
+			Process process = processMetric.getProcess();
+
+			processMetricsMap.put(process.getId(), processMetric);
+		}
 
 		TermsAggregationResult instanceTermsAggregationResult =
 			_getInstanceTermsAggregationResult(
@@ -518,8 +493,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_processWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 		searchSearchRequest.setQuery(
 			_createProcessBooleanQuery(processId, title));
 
@@ -574,8 +549,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT);
 		searchSearchRequest.setQuery(
 			_createSLAInstanceResultsBooleanQuery(
 				completed, null, null, processIds));
@@ -708,13 +683,8 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 	@Reference
 	private Aggregations _aggregations;
 
-	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
-	private WorkflowMetricsIndexNameBuilder
-		_instanceWorkflowMetricsIndexNameBuilder;
-
-	@Reference(target = "(workflow.metrics.index.entity.name=process)")
-	private WorkflowMetricsIndexNameBuilder
-		_processWorkflowMetricsIndexNameBuilder;
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Queries _queries;
@@ -727,12 +697,6 @@ public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 
 	@Reference
 	private SearchRequestExecutor _searchRequestExecutor;
-
-	@Reference(
-		target = "(workflow.metrics.index.entity.name=sla-instance-result)"
-	)
-	private WorkflowMetricsIndexNameBuilder
-		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
 
 	@Reference
 	private Sorts _sorts;

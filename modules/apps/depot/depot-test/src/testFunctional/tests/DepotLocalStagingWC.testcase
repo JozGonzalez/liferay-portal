@@ -14,7 +14,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -36,9 +36,9 @@ definition {
 
 		Depot.disableStagingDepot(depotName = "Test Depot Name");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -149,10 +149,13 @@ definition {
 			locator1 = "WCPreview#PREVIEW_IMAGE");
 	}
 
-	@description = "This ensures that friendly URL in basic article in depot can be edited and republished in staging site when enabling local staging."
+	@description = "This ensures that friendly URL in basic article in depot can be edited and republished in staging site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditFriendlyURL {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotWebContentAdminStaging(depotName = "Test Depot Name");
 
 		WebContentNavigator.gotoAddCP();
@@ -351,10 +354,13 @@ definition {
 			locator1 = "WCPreview#PREVIEW_IMAGE");
 	}
 
-	@description = "This ensures that an article using a structure stored in depot can be deleted and republished in staging site when enabling local staging."
+	@description = "This ensures that an article using a structure stored in depot can be deleted and republished in staging site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishDeletedWCCustomization {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotAdmin();
 
 		Depot.configureDDMStructures(
@@ -432,10 +438,13 @@ definition {
 		WebContent.viewNotPresentCP(webContentTitle = "Web Content Title");
 	}
 
-	@description = "This ensures that an article using a structure stored in depot can be edited and republished in staging site when enabling local staging."
+	@description = "This ensures that an article using a structure stored in depot can be edited and republished in staging site when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishEditedWCCustomization {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotAdmin();
 
 		Depot.configureDDMStructures(
@@ -524,10 +533,13 @@ definition {
 			webContentTitle = "Web Content Title Edit");
 	}
 
-	@description = "This ensures that a web content folder with an article in depot can be published in AP through widget config manual selection when enabling local staging."
+	@description = "This ensures that a web content folder with an article in depot can be published in AP through widget config manual selection when enabling local staging. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanPublishWCFolder {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotWebContentAdminStaging(depotName = "Test Depot Name");
 
 		WebContentFolder.addCP(
@@ -616,10 +628,13 @@ definition {
 		Depot.deactivateStaging(depotName = "Test Depot Name");
 	}
 
-	@description = "This ensures that web content with a category in depot can be published in local staging site."
+	@description = "This ensures that web content with a category in depot can be published in local staging site. Skip the instance for performance improvement."
 	@priority = 4
 	@refactordone
 	test CanPublishWCWithCategory {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotCategoriesAdminStaging(depotName = "Test Depot Name");
 
 		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
@@ -676,15 +691,18 @@ definition {
 			value1 = "Depot web content with a category");
 	}
 
-	@description = "This test ensures that a depot WC with an embedded video added from the item selector can be published on a connected local staging site."
+	@description = "This test ensures that a depot WC with an embedded video added from the item selector can be published on a connected local staging site. Skip the instance for performance improvement."
 	@priority = 4
 	@refactordone
 	test CanPublishWCWithEmbeddedVideo {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Embedded Video Depot Name");
 
-		JSONGroup.addGroup(groupName = "Test Embedded Video Site Name");
+		HeadlessSite.addSite(siteName = "Test Embedded Video Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Embedded Video Site Name",

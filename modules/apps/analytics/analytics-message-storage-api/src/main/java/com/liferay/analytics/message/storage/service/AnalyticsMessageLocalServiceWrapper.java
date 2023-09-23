@@ -1,20 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.service;
 
+import com.liferay.analytics.message.storage.model.AnalyticsMessage;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link AnalyticsMessageLocalService}.
@@ -48,18 +43,16 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @return the analytics message that was added
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-		addAnalyticsMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsMessage
-				analyticsMessage) {
+	public AnalyticsMessage addAnalyticsMessage(
+		AnalyticsMessage analyticsMessage) {
 
 		return _analyticsMessageLocalService.addAnalyticsMessage(
 			analyticsMessage);
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-			addAnalyticsMessage(long companyId, long userId, byte[] body)
+	public AnalyticsMessage addAnalyticsMessage(
+			long companyId, long userId, byte[] body)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsMessageLocalService.addAnalyticsMessage(
@@ -73,9 +66,7 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @return the new analytics message
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-		createAnalyticsMessage(long analyticsMessageId) {
-
+	public AnalyticsMessage createAnalyticsMessage(long analyticsMessageId) {
 		return _analyticsMessageLocalService.createAnalyticsMessage(
 			analyticsMessageId);
 	}
@@ -103,10 +94,8 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @return the analytics message that was removed
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-		deleteAnalyticsMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsMessage
-				analyticsMessage) {
+	public AnalyticsMessage deleteAnalyticsMessage(
+		AnalyticsMessage analyticsMessage) {
 
 		return _analyticsMessageLocalService.deleteAnalyticsMessage(
 			analyticsMessage);
@@ -124,8 +113,7 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @throws PortalException if a analytics message with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-			deleteAnalyticsMessage(long analyticsMessageId)
+	public AnalyticsMessage deleteAnalyticsMessage(long analyticsMessageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsMessageLocalService.deleteAnalyticsMessage(
@@ -134,9 +122,7 @@ public class AnalyticsMessageLocalServiceWrapper
 
 	@Override
 	public void deleteAnalyticsMessages(
-		java.util.List
-			<com.liferay.analytics.message.storage.model.AnalyticsMessage>
-				analyticsMessages) {
+		java.util.List<AnalyticsMessage> analyticsMessages) {
 
 		_analyticsMessageLocalService.deleteAnalyticsMessages(
 			analyticsMessages);
@@ -263,9 +249,7 @@ public class AnalyticsMessageLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-		fetchAnalyticsMessage(long analyticsMessageId) {
-
+	public AnalyticsMessage fetchAnalyticsMessage(long analyticsMessageId) {
 		return _analyticsMessageLocalService.fetchAnalyticsMessage(
 			analyticsMessageId);
 	}
@@ -285,8 +269,7 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @throws PortalException if a analytics message with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-			getAnalyticsMessage(long analyticsMessageId)
+	public AnalyticsMessage getAnalyticsMessage(long analyticsMessageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsMessageLocalService.getAnalyticsMessage(
@@ -305,17 +288,15 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @return the range of analytics messages
 	 */
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsMessage>
-			getAnalyticsMessages(int start, int end) {
+	public java.util.List<AnalyticsMessage> getAnalyticsMessages(
+		int start, int end) {
 
 		return _analyticsMessageLocalService.getAnalyticsMessages(start, end);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsMessage>
-			getAnalyticsMessages(long companyId, int start, int end) {
+	public java.util.List<AnalyticsMessage> getAnalyticsMessages(
+		long companyId, int start, int end) {
 
 		return _analyticsMessageLocalService.getAnalyticsMessages(
 			companyId, start, end);
@@ -391,13 +372,36 @@ public class AnalyticsMessageLocalServiceWrapper
 	 * @return the analytics message that was updated
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsMessage
-		updateAnalyticsMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsMessage
-				analyticsMessage) {
+	public AnalyticsMessage updateAnalyticsMessage(
+		AnalyticsMessage analyticsMessage) {
 
 		return _analyticsMessageLocalService.updateAnalyticsMessage(
 			analyticsMessage);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _analyticsMessageLocalService.getBasePersistence();
+	}
+
+	@Override
+	public CTPersistence<AnalyticsMessage> getCTPersistence() {
+		return _analyticsMessageLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<AnalyticsMessage> getModelClass() {
+		return _analyticsMessageLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<AnalyticsMessage>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return _analyticsMessageLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

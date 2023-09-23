@@ -1,26 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.application.list.deploy.hot.test;
 
 import com.liferay.application.list.deploy.hot.LegacyPortletPanelAppHotDeployListener;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.deploy.hot.DependencyManagementThreadLocal;
 import com.liferay.portal.kernel.deploy.hot.HotDeployEvent;
 import com.liferay.portal.kernel.deploy.hot.HotDeployListener;
+import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletConstants;
+import com.liferay.portal.kernel.portlet.PortletInstanceFactory;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.model.impl.PortletAppImpl;
+import com.liferay.portal.model.impl.PortletImpl;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -67,17 +67,45 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 
 	@Test
 	public void testLegacyPortletWithControlPanelEntry() throws Exception {
-		int initialServiceRegistrationsSize =
-			_hotDeployListener.getServiceRegistrationsSize();
+		HotDeployEvent hotDeployEvent = getHotDeployEvent(
+			"classpath:/com/liferay/application/list/deploy/hot/test" +
+				"/dependencies/control-panel-entry-liferay-portlet.xml");
 
-		_hotDeployListener.invokeDeploy(
-			getHotDeployEvent(
-				"classpath:/com/liferay/application/list/deploy/hot/test" +
-					"/dependencies/control-panel-entry-liferay-portlet.xml"));
+		Portlet testPortlet = new PortletImpl() {
+			{
+				setPortletApp(
+					new PortletAppImpl(StringPool.BLANK) {
+						{
+							setServletContext(
+								hotDeployEvent.getServletContext());
+						}
+					});
+				setPortletClass(MVCPortlet.class.getName());
+				setPortletId(
+					"1" + PortletConstants.WAR_SEPARATOR +
+						hotDeployEvent.getServletContextName());
+			}
+		};
 
-		Assert.assertEquals(
-			initialServiceRegistrationsSize + 1,
-			_hotDeployListener.getServiceRegistrationsSize());
+		ServletContextClassLoaderPool.register(
+			hotDeployEvent.getServletContextName(),
+			hotDeployEvent.getContextClassLoader());
+
+		try {
+			_portletLocalService.deployPortlet(testPortlet);
+
+			int initialServiceRegistrationsSize =
+				_hotDeployListener.getServiceRegistrationsSize();
+
+			_hotDeployListener.invokeDeploy(hotDeployEvent);
+
+			Assert.assertEquals(
+				initialServiceRegistrationsSize + 1,
+				_hotDeployListener.getServiceRegistrationsSize());
+		}
+		finally {
+			_portletLocalService.destroyPortlet(testPortlet);
+		}
 	}
 
 	@Test
@@ -124,6 +152,9 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 		return new HotDeployEvent(servletContext, classLoader);
 	}
 
+	@Inject
+	private static PortletInstanceFactory _portletInstanceFactory;
+
 	private boolean _dependencyManagementEnabled;
 
 	@Inject(
@@ -131,6 +162,9 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 		type = HotDeployListener.class
 	)
 	private LegacyPortletPanelAppHotDeployListener _hotDeployListener;
+
+	@Inject
+	private PortletLocalService _portletLocalService;
 
 	private static class TestResourceLoader extends DefaultResourceLoader {
 

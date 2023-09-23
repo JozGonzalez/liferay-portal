@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -24,11 +15,9 @@ import com.liferay.source.formatter.check.util.JavaSourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.JavaTerm;
-import com.liferay.source.formatter.parser.ParseException;
 import com.liferay.source.formatter.util.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +43,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws IOException, ParseException {
+		throws Exception {
 
 		if (!content.contains("@Component")) {
 			return content;
@@ -108,7 +97,9 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 		while (matcher.find()) {
 			String serviceUtilClassName = matcher.group(2);
 
-			if (serviceUtilClassName.equals("IdentifiableOSGiServiceUtil")) {
+			if (serviceUtilClassName.equals("IdentifiableOSGiServiceUtil") ||
+				serviceUtilClassName.equals("SystemExecutorServiceUtil")) {
+
 				continue;
 			}
 
@@ -136,7 +127,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 	private void _checkUnnecessaryVariableInjection(
 			String fileName, String absolutePath, String content)
-		throws IOException, ParseException {
+		throws Exception {
 
 		if (!absolutePath.contains("-service/") ||
 			!absolutePath.contains("/service/impl/") ||
@@ -214,7 +205,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 			String fileName, String content,
 			String serviceReferenceUtilClassName,
 			String moduleSuperClassContent)
-		throws IOException, ParseException {
+		throws Exception {
 
 		if (!content.contains(serviceReferenceUtilClassName) ||
 			(Validator.isNotNull(moduleSuperClassContent) &&
@@ -254,7 +245,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 	private String _formatDuplicateReferenceMethods(
 			String fileName, String content, String moduleSuperClassContent)
-		throws IOException {
+		throws Exception {
 
 		if (Validator.isNull(moduleSuperClassContent) ||
 			!moduleSuperClassContent.contains("@Component") ||
@@ -386,7 +377,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 	}
 
 	private String _getModuleClassContent(String fullClassName)
-		throws IOException {
+		throws Exception {
 
 		String classContent = _moduleFileContentsMap.get(fullClassName);
 
@@ -416,7 +407,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 	}
 
 	private synchronized Map<String, String> _getModuleFileNamesMap()
-		throws IOException {
+		throws Exception {
 
 		if (_moduleFileNamesMap != null) {
 			return _moduleFileNamesMap;
@@ -443,9 +434,6 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 		}
 
 		for (String fileName : fileNames) {
-			fileName = StringUtil.replace(
-				fileName, CharPool.BACK_SLASH, CharPool.SLASH);
-
 			String className = StringUtil.replace(
 				fileName, CharPool.SLASH, CharPool.PERIOD);
 
@@ -499,7 +487,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 	private String _getModuleSuperClassContent(
 			String content, String className, String packageName)
-		throws IOException {
+		throws Exception {
 
 		Pattern pattern = Pattern.compile(
 			" class " + className + "\\s+extends\\s+([\\w.]+) ");
@@ -541,7 +529,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 	}
 
 	private synchronized List<String> _getServiceProxyFactoryUtilClassNames()
-		throws IOException {
+		throws Exception {
 
 		if (_serviceProxyFactoryUtilClassNames != null) {
 			return _serviceProxyFactoryUtilClassNames;
@@ -571,9 +559,6 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 				new String[] {"**/*Util.java"});
 
 			for (String fileName : utilFileNames) {
-				fileName = StringUtil.replace(
-					fileName, CharPool.BACK_SLASH, CharPool.SLASH);
-
 				String content = FileUtil.read(new File(fileName));
 
 				if (content.contains(

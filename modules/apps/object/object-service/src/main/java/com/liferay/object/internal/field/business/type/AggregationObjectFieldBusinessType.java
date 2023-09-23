@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
@@ -29,7 +20,6 @@ import com.liferay.object.model.ObjectFilter;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -60,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = ObjectFieldBusinessType.class
 )
 public class AggregationObjectFieldBusinessType
-	implements ObjectFieldBusinessType {
+	extends BaseObjectFieldBusinessType {
 
 	@Override
 	public Set<String> getAllowedObjectFieldSettingsNames() {
@@ -98,17 +88,11 @@ public class AggregationObjectFieldBusinessType
 		ObjectField objectField,
 		ObjectFieldRenderingContext objectFieldRenderingContext) {
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+		return HashMapBuilder.<String, Object>put(
 			"readOnly", true
+		).putAll(
+			super.getProperties(objectField, objectFieldRenderingContext)
 		).build();
-
-		ListUtil.isNotEmptyForEach(
-			_objectFieldSettingLocalService.getObjectFieldObjectFieldSettings(
-				objectField.getObjectFieldId()),
-			objectFieldSetting -> properties.put(
-				objectFieldSetting.getName(), objectFieldSetting.getValue()));
-
-		return properties;
 	}
 
 	@Override
@@ -117,14 +101,21 @@ public class AggregationObjectFieldBusinessType
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray(
 			"function", "objectFieldName", "objectRelationshipName");
 	}
 
 	@Override
+	public boolean isVisible(ObjectDefinition objectDefinition) {
+		return objectDefinition.isDefaultStorageType();
+	}
+
+	@Override
 	public void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
@@ -148,11 +139,11 @@ public class AggregationObjectFieldBusinessType
 			objectFieldSettingsValuesMap.get("function"));
 
 		Set<String> requiredObjectFieldSettingsNames =
-			getRequiredObjectFieldSettingsNames();
+			getRequiredObjectFieldSettingsNames(objectField);
 
 		if (!ArrayUtil.contains(_FUNCTION, function)) {
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "function", function);
+				objectField.getName(), "function", function);
 		}
 		else if (Objects.equals(function, "COUNT")) {
 			requiredObjectFieldSettingsNames.remove("objectFieldName");
@@ -174,7 +165,7 @@ public class AggregationObjectFieldBusinessType
 
 		if (!missingRequiredObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingValueException.MissingRequiredValues(
-				objectFieldName, missingRequiredObjectFieldSettingsNames);
+				objectField.getName(), missingRequiredObjectFieldSettingsNames);
 		}
 
 		Set<String> notAllowedObjectFieldSettingsNames = new HashSet<>(
@@ -187,13 +178,13 @@ public class AggregationObjectFieldBusinessType
 
 		if (!notAllowedObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingNameException.NotAllowedNames(
-				objectFieldName, notAllowedObjectFieldSettingsNames);
+				objectField.getName(), notAllowedObjectFieldSettingsNames);
 		}
 
 		try {
 			ObjectRelationship objectRelationship =
 				_objectRelationshipLocalService.getObjectRelationship(
-					objectDefinitionId,
+					objectField.getObjectDefinitionId(),
 					GetterUtil.getString(
 						objectFieldSettingsValuesMap.get(
 							"objectRelationshipName")));
@@ -203,7 +194,7 @@ public class AggregationObjectFieldBusinessType
 					objectRelationship.getObjectDefinitionId2());
 
 			if (!Objects.equals(function, "COUNT")) {
-				ObjectField objectField =
+				ObjectField objectField1 =
 					_objectFieldLocalService.getObjectField(
 						objectDefinition.getObjectDefinitionId(),
 						GetterUtil.getString(
@@ -212,10 +203,10 @@ public class AggregationObjectFieldBusinessType
 
 				if (!ArrayUtil.contains(
 						_NUMERIC_BUSINESS_TYPES,
-						objectField.getBusinessType())) {
+						objectField1.getBusinessType())) {
 
 					throw new ObjectFieldSettingValueException.InvalidValue(
-						objectFieldName, "objectFieldName",
+						objectField.getName(), "objectFieldName",
 						GetterUtil.getString(
 							objectFieldSettingsValuesMap.get(
 								"objectFieldName")));
@@ -223,13 +214,13 @@ public class AggregationObjectFieldBusinessType
 			}
 
 			_validateObjectFilters(
-				objectDefinition, objectFieldName,
+				objectDefinition, objectField.getName(),
 				(List<ObjectFilter>)objectFieldSettingsValuesMap.get(
 					"filters"));
 		}
 		catch (NoSuchObjectFieldException noSuchObjectFieldException) {
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "objectFieldName",
+				objectField.getName(), "objectFieldName",
 				GetterUtil.getString(
 					objectFieldSettingsValuesMap.get("objectFieldName")),
 				noSuchObjectFieldException);
@@ -238,7 +229,7 @@ public class AggregationObjectFieldBusinessType
 					noSuchObjectRelationshipException) {
 
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "objectRelationshipName",
+				objectField.getName(), "objectRelationshipName",
 				GetterUtil.getString(
 					objectFieldSettingsValuesMap.get("objectRelationshipName")),
 				noSuchObjectRelationshipException);
@@ -320,9 +311,6 @@ public class AggregationObjectFieldBusinessType
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;
-
-	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.upgrade.v3_2_6.test;
@@ -21,8 +12,9 @@ import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.store.DLStoreRequest;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.document.library.kernel.store.Store;
+import com.liferay.document.library.kernel.store.StoreArea;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -135,14 +127,26 @@ public class DeleteStalePWCVersionsUpgradeProcessTest {
 
 		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
-		DLStoreUtil.addFile(
-			DLStoreRequest.builder(
-				dlFileEntry.getCompanyId(), dlFileEntry.getRepositoryId(),
-				dlFileEntry.getName()
-			).versionLabel(
-				DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION
-			).build(),
-			new byte[0]);
+		_store.addFile(
+			dlFileEntry.getCompanyId(), dlFileEntry.getRepositoryId(),
+			dlFileEntry.getName(),
+			DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION,
+			new UnsyncByteArrayInputStream(new byte[0]));
+	}
+
+	private String _getStoreFileName(DLFileEntry dlFileEntry)
+		throws PortalException {
+
+		DLFileVersion dlFileVersion = dlFileEntry.getLatestFileVersion(true);
+
+		if (Objects.equals(
+				dlFileVersion.getVersion(),
+				DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
+
+			return dlFileVersion.getStoreFileName();
+		}
+
+		return DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION;
 	}
 
 	private UpgradeProcess _getUpgradeProcess() {
@@ -167,21 +171,11 @@ public class DeleteStalePWCVersionsUpgradeProcessTest {
 	private boolean _hasPWCVersion(FileEntry fileEntry) throws PortalException {
 		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
-		DLFileVersion dlFileVersion = dlFileEntry.getLatestFileVersion(true);
-
-		if (Objects.equals(
-				dlFileVersion.getVersion(),
-				DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
-
-			return DLStoreUtil.hasFile(
+		return StoreArea.tryGetWithStoreAreas(
+			() -> _store.hasFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getRepositoryId(),
-				dlFileEntry.getName(), dlFileVersion.getStoreFileName());
-		}
-
-		return DLStoreUtil.hasFile(
-			dlFileEntry.getCompanyId(), dlFileEntry.getRepositoryId(),
-			dlFileEntry.getName(),
-			DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION);
+				dlFileEntry.getName(), _getStoreFileName(dlFileEntry)),
+			Boolean.TRUE::equals, false, StoreArea.LIVE, StoreArea.NEW);
 	}
 
 	private void _runUpgrade() throws UpgradeException {
@@ -208,5 +202,10 @@ public class DeleteStalePWCVersionsUpgradeProcessTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject(
+		filter = "(&(objectClass=com.liferay.document.library.kernel.store.Store)(default=true))"
+	)
+	private Store _store;
 
 }

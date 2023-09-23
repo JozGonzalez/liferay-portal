@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.provider;
@@ -18,21 +9,12 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.messaging.Destination;
-import com.liferay.portal.kernel.messaging.DestinationConfiguration;
-import com.liferay.portal.kernel.messaging.DestinationFactory;
-import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBus;
-import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.asah.connector.internal.cache.AsahSegmentsEntryCache;
-import com.liferay.segments.asah.connector.internal.constants.SegmentsAsahDestinationNames;
 import com.liferay.segments.asah.connector.internal.context.contributor.SegmentsAsahRequestContextContributor;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.context.Context;
@@ -46,11 +28,7 @@ import com.liferay.segments.service.SegmentsEntryRelLocalService;
 import java.util.Date;
 import java.util.List;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -155,47 +133,10 @@ public class AsahSegmentsEntryProvider implements SegmentsEntryProvider {
 					"Asah segments cache not found for user ID " + userId);
 			}
 
-			Group group = _groupLocalService.fetchGroup(groupId);
-
-			if (group != null) {
-				_sendMessage(group.getCompanyId(), userId);
-			}
-
 			return new long[0];
 		}
 
 		return cachedSegmentsEntryIds;
-	}
-
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		DestinationConfiguration destinationConfiguration =
-			new DestinationConfiguration(
-				DestinationConfiguration.DESTINATION_TYPE_PARALLEL,
-				SegmentsAsahDestinationNames.INDIVIDUAL_SEGMENTS);
-
-		Destination destination = _destinationFactory.createDestination(
-			destinationConfiguration);
-
-		_destinationServiceRegistration = bundleContext.registerService(
-			Destination.class, destination,
-			MapUtil.singletonDictionary(
-				"destination.name", destination.getName()));
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_destinationServiceRegistration.unregister();
-	}
-
-	private void _sendMessage(long companyId, String userId) {
-		Message message = new Message();
-
-		message.put("companyId", companyId);
-		message.put("userId", userId);
-
-		_messageBus.sendMessage(
-			SegmentsAsahDestinationNames.INDIVIDUAL_SEGMENTS, message);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -203,17 +144,6 @@ public class AsahSegmentsEntryProvider implements SegmentsEntryProvider {
 
 	@Reference
 	private AsahSegmentsEntryCache _asahSegmentsEntryCache;
-
-	@Reference
-	private DestinationFactory _destinationFactory;
-
-	private ServiceRegistration<Destination> _destinationServiceRegistration;
-
-	@Reference
-	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private MessageBus _messageBus;
 
 	@Reference
 	private Portal _portal;

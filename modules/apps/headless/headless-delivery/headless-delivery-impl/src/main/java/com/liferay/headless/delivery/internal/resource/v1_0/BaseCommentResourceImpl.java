@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.headless.delivery.resource.v1_0.CommentResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -47,7 +40,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -1819,26 +1811,25 @@ public abstract class BaseCommentResourceImpl
 			Collection<Comment> comments, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Comment, Exception> commentUnsafeConsumer = null;
+		UnsafeFunction<Comment, Comment, Exception> commentUnsafeFunction =
+			null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("blogPostingId")) {
-				commentUnsafeConsumer = comment -> postBlogPostingComment(
-					Long.parseLong((String)parameters.get("blogPostingId")),
+				commentUnsafeFunction = comment -> postBlogPostingComment(
+					_parseLong((String)parameters.get("blogPostingId")),
 					comment);
 			}
 			else if (parameters.containsKey("documentId")) {
-				commentUnsafeConsumer = comment -> postDocumentComment(
-					Long.parseLong((String)parameters.get("documentId")),
-					comment);
+				commentUnsafeFunction = comment -> postDocumentComment(
+					_parseLong((String)parameters.get("documentId")), comment);
 			}
 			else if (parameters.containsKey("structuredContentId")) {
-				commentUnsafeConsumer = comment -> postStructuredContentComment(
-					Long.parseLong(
-						(String)parameters.get("structuredContentId")),
+				commentUnsafeFunction = comment -> postStructuredContentComment(
+					_parseLong((String)parameters.get("structuredContentId")),
 					comment);
 			}
 			else {
@@ -1847,18 +1838,23 @@ public abstract class BaseCommentResourceImpl
 			}
 		}
 
-		if (commentUnsafeConsumer == null) {
+		if (commentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Comment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(comments, commentUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				comments, commentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				comments, commentUnsafeFunction::apply);
 		}
 		else {
 			for (Comment comment : comments) {
-				commentUnsafeConsumer.accept(comment);
+				commentUnsafeFunction.apply(comment);
 			}
 		}
 	}
@@ -1908,17 +1904,17 @@ public abstract class BaseCommentResourceImpl
 
 		if (parameters.containsKey("blogPostingId")) {
 			return getBlogPostingCommentsPage(
-				Long.parseLong((String)parameters.get("blogPostingId")), search,
+				_parseLong((String)parameters.get("blogPostingId")), search,
 				null, filter, pagination, sorts);
 		}
 		else if (parameters.containsKey("documentId")) {
 			return getDocumentCommentsPage(
-				Long.parseLong((String)parameters.get("documentId")), search,
-				null, filter, pagination, sorts);
+				_parseLong((String)parameters.get("documentId")), search, null,
+				filter, pagination, sorts);
 		}
 		else if (parameters.containsKey("structuredContentId")) {
 			return getStructuredContentCommentsPage(
-				Long.parseLong((String)parameters.get("structuredContentId")),
+				_parseLong((String)parameters.get("structuredContentId")),
 				search, null, filter, pagination, sorts);
 		}
 		else {
@@ -1954,36 +1950,58 @@ public abstract class BaseCommentResourceImpl
 			Collection<Comment> comments, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Comment, Exception> commentUnsafeConsumer = null;
+		UnsafeFunction<Comment, Comment, Exception> commentUnsafeFunction =
+			null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			commentUnsafeConsumer = comment -> putComment(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			commentUnsafeFunction = comment -> putComment(
 				comment.getId() != null ? comment.getId() :
-					Long.parseLong((String)parameters.get("commentId")),
+					_parseLong((String)parameters.get("commentId")),
 				comment);
 		}
 
-		if (commentUnsafeConsumer == null) {
+		if (commentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Comment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(comments, commentUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				comments, commentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				comments, commentUnsafeFunction::apply);
 		}
 		else {
 			for (Comment comment : comments) {
-				commentUnsafeConsumer.accept(comment);
+				commentUnsafeFunction.apply(comment);
 			}
 		}
 	}
 
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Comment>, UnsafeFunction<Comment, Comment, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2199,6 +2217,12 @@ public abstract class BaseCommentResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -2229,7 +2253,18 @@ public abstract class BaseCommentResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Comment>, UnsafeFunction<Comment, Comment, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Comment>, UnsafeConsumer<Comment, Exception>, Exception>
 			contextBatchUnsafeConsumer;

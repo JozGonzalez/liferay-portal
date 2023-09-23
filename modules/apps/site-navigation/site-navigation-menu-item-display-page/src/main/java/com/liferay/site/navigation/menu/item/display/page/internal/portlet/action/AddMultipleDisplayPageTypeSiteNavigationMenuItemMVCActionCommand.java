@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.menu.item.display.page.internal.portlet.action;
@@ -129,10 +120,18 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 							infoItemReferences);
 				}
 
-				for (InfoItemReference infoItemReference : infoItemReferences) {
+				int order = ParamUtil.getInteger(actionRequest, "order", -1);
+				long parentSiteNavigationMenuItemId = ParamUtil.getLong(
+					actionRequest, "parentSiteNavigationMenuItemId");
+
+				for (int i = 0; i < infoItemReferences.size(); i++) {
+					InfoItemReference infoItemReference =
+						infoItemReferences.get(i);
+
 					_addSiteNavigationMenuItem(
 						themeDisplay.getScopeGroupId(), infoItemReference,
-						jsonObjects, 0, serviceContext, siteNavigationMenuId,
+						jsonObjects, order + i, parentSiteNavigationMenuItemId,
+						serviceContext, siteNavigationMenuId,
 						siteNavigationMenuItemTypeString);
 				}
 
@@ -196,7 +195,7 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 
 	private void _addSiteNavigationMenuItem(
 			long groupId, InfoItemReference infoItemReference,
-			Map<Long, JSONObject> jsonObjects,
+			Map<Long, JSONObject> jsonObjects, int order,
 			long parentSiteNavigationMenuItemId, ServiceContext serviceContext,
 			long siteNavigationMenuId, String siteNavigationMenuItemType)
 		throws PortalException {
@@ -228,6 +227,12 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 				).buildString(),
 				serviceContext);
 
+		if (order >= 0) {
+			_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
+				siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+				parentSiteNavigationMenuItemId, order);
+		}
+
 		if (!(infoItemReference instanceof HierarchicalInfoItemReference)) {
 			return;
 		}
@@ -240,7 +245,7 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 					getChildrenHierarchicalInfoItemReferences()) {
 
 			_addSiteNavigationMenuItem(
-				groupId, childHierarchicalInfoItemReference, jsonObjects,
+				groupId, childHierarchicalInfoItemReference, jsonObjects, -1,
 				siteNavigationMenuItem.getSiteNavigationMenuItemId(),
 				serviceContext, siteNavigationMenuId,
 				siteNavigationMenuItemType);

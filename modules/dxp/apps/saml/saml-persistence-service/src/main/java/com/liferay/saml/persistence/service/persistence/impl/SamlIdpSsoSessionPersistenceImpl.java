@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.service.persistence.impl;
@@ -47,7 +38,6 @@ import com.liferay.saml.persistence.service.persistence.impl.constants.SamlPersi
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
@@ -1488,30 +1478,14 @@ public class SamlIdpSsoSessionPersistenceImpl
 			new String[] {String.class.getName()},
 			new String[] {"samlIdpSsoSessionKey"}, false);
 
-		_setSamlIdpSsoSessionUtilPersistence(this);
+		SamlIdpSsoSessionUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setSamlIdpSsoSessionUtilPersistence(null);
+		SamlIdpSsoSessionUtil.setPersistence(null);
 
 		entityCache.removeCache(SamlIdpSsoSessionImpl.class.getName());
-	}
-
-	private void _setSamlIdpSsoSessionUtilPersistence(
-		SamlIdpSsoSessionPersistence samlIdpSsoSessionPersistence) {
-
-		try {
-			Field field = SamlIdpSsoSessionUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, samlIdpSsoSessionPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

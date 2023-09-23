@@ -24,6 +24,19 @@ definition {
 
 		if (!(isSet(discontinued))) {
 			var discontinued = "false";
+			var endOfLife = "";
+		}
+		else {
+			if (${discontinued} == "true") {
+				if (!(isSet(endOfLife))) {
+					var endOfLife = DateUtil.getFormattedCurrentDate("yyyy-MM-dd", "UTC");
+
+					echo("Current Date is: ${endOfLife}");
+				}
+			}
+			else {
+				var endOfLife = "";
+			}
 		}
 
 		if (!(isSet(displayAvailability))) {
@@ -143,6 +156,10 @@ definition {
 			var sku = "${productName}_default";
 		}
 
+		if (!(isSet(externalReferenceCode))) {
+			var externalReferenceCode = "";
+		}
+
 		var productSpecifications = "";
 
 		if (isSet(specifications)) {
@@ -178,6 +195,14 @@ definition {
 			var unspc = "";
 		}
 
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
 		if (!(isSet(weight))) {
 			var weight = 0;
 		}
@@ -186,17 +211,43 @@ definition {
 			var width = 0;
 		}
 
-		var catalogId = CommerceJSONCatalogsAPI._getCommerceCatalogIdByName(catalogName = ${catalogName});
+		if (isSet(categoryName)) {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProductCategoryUsingProductERC(productERC = ${externalReferenceCode});
+
+			var categoryERC = JSONUtil.getWithJSONPath(${responseBody}, "$..categories..externalReferenceCode");
+			var categoryId = JSONUtil.getWithJSONPath(${responseBody}, "$..categories..id");
+			var categoryName = JSONUtil.getWithJSONPath(${responseBody}, "$..categories..name");
+			var categoryVocabulary = JSONUtil.getWithJSONPath(${responseBody}, "$..categories..vocabulary");
+
+			var categories = '''
+				[
+					{
+						"externalReferenceCode": "${categoryERC}",
+						"id": "${categoryId}",
+						"name": "${categoryName}",
+						"vocabulary": "${categoryVocabulary}"
+					}
+				]
+			''';
+		}
+		else {
+			var categories = "[]";
+		}
+
+		var catalogId = CommerceJSONCatalogsAPI._getCommerceCatalogIdByName(
+			baseURL = ${baseURL},
+			catalogName = ${catalogName},
+			userEmailAddress = ${userEmailAddress});
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products \
-				-u test@liferay.com:test \
+				-u ${userEmailAddress}:${userPassword} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
 					"active": true,
 					"catalogId": "${catalogId}",
-					"categories": [],
+					"categories": ${categories},
 					"customFields": [],
 					"description": {
 						"en_US": "${productDescription}"
@@ -204,7 +255,7 @@ definition {
 					"displayDate": "${displayDate}",
 					"expando": {},
 					"expirationDate": "${expirationDate}",
-					"externalReferenceCode": "",
+					"externalReferenceCode": "${externalReferenceCode}",
 					"metaDescription": {
 						"en_US": "${metaDescription}"
 					},
@@ -246,6 +297,7 @@ definition {
 							"cost": "${cost}",
 							"depth": "${depth}",
 							"discontinued": "${discontinued}",
+							"discontinuedDate": "${endOfLife}",
 							"gtin": "${gtin}",
 							"height": "${height}",
 							"manufacturerPartNumber": "${manufacturerPartNumber}",
@@ -271,16 +323,6 @@ definition {
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
-
-		if (isSet(price)) {
-			var price = ${price};
-			var priceListName = "${catalogName} Base Price List";
-
-			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = ${price},
-				priceListName = ${priceListName},
-				productSKU = ${sku});
-		}
 	}
 
 	macro _addCommerceProductImage {
@@ -311,10 +353,11 @@ definition {
 		}
 
 		var catalogId = CommerceJSONCatalogsAPI._getCommerceCatalogIdByName(catalogName = ${catalogName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -350,9 +393,11 @@ definition {
 			var src = "${baseURL}/documents/d/guest/tree-png";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${productERC}/images \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -369,6 +414,93 @@ definition {
 		var responseBody = JSONCurlUtil.post(${curl});
 
 		return ${responseBody};
+	}
+
+	macro _addCommerceProductSku {
+		Variables.assertDefined(parameterList = "${productName},${skuName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(cost))) {
+			var cost = 0;
+		}
+
+		if (!(isSet(price))) {
+			var price = 0;
+		}
+
+		if (!(isSet(promoPrice))) {
+			var promoPrice = 0;
+		}
+
+		if (!(isSet(published))) {
+			var published = "true";
+		}
+
+		if (!(isSet(purchasable))) {
+			var purchasable = "true";
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/skus \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"cost": ${cost},
+					"price": ${price},
+					"promoPrice": ${promoPrice},
+					"published": ${published},
+					"purchasable": ${purchasable},
+					"sku": "${skuName}"
+				}'
+		''';
+
+		var responseBody = JSONCurlUtil.post(${curl});
+
+		return ${responseBody};
+	}
+
+	macro _addCommerceProductSpecifications {
+		Variables.assertDefined(parameterList = "${productName},${specificationKey},${value}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+
+		var productId = ${productId} - 1;
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/productSpecifications \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"priority": ${priority},
+					"specificationKey": "${specificationKey}",
+					"value": {
+						"en_US": "${value}"
+					}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
 	}
 
 	macro _addDiagramPin {
@@ -408,9 +540,11 @@ definition {
 			var skuId = 0;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${diagramProductId}/pins \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -447,9 +581,11 @@ definition {
 			for (var productId : list ${productIds}) {
 				echo("Deleting Commerce product with productId: ${productId}");
 
+				var userLoginInfo = JSONUtil2.formatJSONUser();
+
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId} \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-H 'accept: application/json' \
 				''';
 
@@ -461,14 +597,41 @@ definition {
 		}
 	}
 
+	macro _deleteCommerceProductAttachment {
+		Variables.assertDefined(parameterList = "${attachmentName},${productName},${type}");
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var attachmentId = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
+			jsonPath = "$.items[?(@['title']['en_US'] == '${attachmentName}')].['id']",
+			productName = ${productName},
+			type = ${type});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/attachment/${attachmentId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		JSONCurlUtil.delete(${curl});
+
+		echo("Deleting Commerce Product Attachment with id: ${attachmentId}");
+	}
+
 	macro _getCommerceFieldValue {
 		var portalURL = JSONCompany.getPortalURL();
 		var title = StringUtil.replace(${title}, " ", "%20");
 		var siteId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/site-pages?fields=${field}\&search=${title} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H accept: application/json
 		''';
 
@@ -477,6 +640,53 @@ definition {
 		echo(${curl});
 
 		return ${curl};
+	}
+
+	macro _getCommerceProductAttachments {
+		Variables.assertDefined(parameterList = ${productName});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/attachments \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
+	macro _getCommerceProductCategoryUsingProductERC {
+		Variables.assertDefined(parameterList = ${productERC});
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${productERC} \
+				-u ${userEmailAddress}:${userPassword} \
+				-H 'accept: application/json' \
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
 	}
 
 	macro _getCommerceProductIds {
@@ -493,9 +703,11 @@ definition {
 			var productsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products?pageSize=${productsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -514,10 +726,11 @@ definition {
 		}
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/images \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -530,6 +743,29 @@ definition {
 		return ${productImageIds};
 	}
 
+	macro _getCommerceProductImages {
+		Variables.assertDefined(parameterList = ${productName});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/images \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
 	macro _getCommerceProductImageURL {
 		Variables.assertDefined(parameterList = "${channelId},${productId}");
 
@@ -539,9 +775,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-delivery-catalog/v1.0/channels/${channelId}/products/${productId} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -560,10 +798,11 @@ definition {
 		}
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/productOptions \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -582,10 +821,11 @@ definition {
 		}
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/productOptions \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -603,15 +843,44 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/productOptions/${productOptionId}/productOptionValues \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
 		var productOptionValues = JSONCurlUtil.get(${curl}, "$..['key']");
 
 		return ${productOptionValues};
+	}
+
+	macro _getCommerceProducts {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (isSet(prodCount)) {
+			var productsCount = ${prodCount};
+		}
+		else {
+			var productsCount = 100;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products?pageSize=${productsCount} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
 	}
 
 	macro _getCommerceProductsCount {
@@ -621,9 +890,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -644,10 +915,11 @@ definition {
 		}
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/productSpecifications \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -697,10 +969,11 @@ definition {
 		}
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/api/jsonws/commerce.cpdefinition/fetch-cp-definition-by-c-product-id \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d cProductId=${productId}
 		''';
 
@@ -709,23 +982,27 @@ definition {
 		return ${cpDefinitionId};
 	}
 
-	macro _getProductCreateDate {
+	macro _getProductById {
+		Variables.assertDefined(parameterList = ${productName});
+
 		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
-		var productCreateDate = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
-			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products?search=%22${search}%22 \
-				-u test@liferay.com:test \
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId} \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
-		var productCreateDate = JSONCurlUtil.get(${curl}, "$.items[?(@['name'].['en_US'] == '${productName}')].['productCreateDate']");
+		var responseBody = JSONCurlUtil.get(${curl});
 
-		return ${productCreateDate};
+		return ${responseBody};
 	}
 
 	macro _getProductId {
@@ -744,9 +1021,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products?search=%22${search}%22 \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -770,9 +1049,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/skus?search=${productSKU} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -783,6 +1064,55 @@ definition {
 		echo("The SKU ID is: ${skuId}");
 
 		return ${skuId};
+	}
+
+	macro _patchCommerceProductAttachmentUsingERC {
+		Variables.assertDefined(parameterList = ${productERC});
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		if (!(isSet(attachment))) {
+			var attachment = "";
+		}
+
+		if (!(isSet(attachmentTitle))) {
+			var attachmentTitle = "Simple Attachment Title API";
+		}
+
+		if (isSet(customFieldName)) {
+			var customFields = '''
+				{
+					"customValue": {
+						"data": "${customFieldContent}"
+					},
+					"dataType": "${customFieldType}",
+					"name": "${customFieldName}"
+				}
+			''';
+		}
+		else {
+			var customFields = "";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${productERC}/attachments \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"attachment": "${attachment}",
+					"customFields": [${customFields}],
+					"title": {
+						"en_US": "${attachmentTitle}"
+					}
+				}'
+		''';
+
+		var responseBody = JSONCurlUtil.post(${curl});
+
+		return ${responseBody};
 	}
 
 	macro _patchCommerceProductConfiguration {
@@ -861,10 +1191,11 @@ definition {
 		var fieldsList = ListUtil.toString(${fieldsList});
 
 		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/configuration \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{${payload}}'
@@ -917,9 +1248,11 @@ definition {
 			var externalReferenceCode = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${productERC} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -944,6 +1277,64 @@ definition {
 		var responseBody = JSONCurlUtil.patch(${curl});
 
 		return ${responseBody};
+	}
+
+	macro _patchCommerceProductRelations {
+		Variables.assertDefined(parameterList = "${baseProductName},${productRelations}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var payload = "";
+		var productsJSON = CommerceJSONProductsAPI._getCommerceProducts();
+
+		var baseProductId = CommerceJSONProductsAPI.getProductIdsByName(
+			productNames = ${baseProductName},
+			responseBody = ${productsJSON});
+
+		for (var productRelation : list ${productRelations}) {
+			var productNames = StringUtil.extractFirst(${productRelation}, ":");
+			var productType = StringUtil.extractLast(${productRelation}, ":");
+			var productNames = StringUtil.replace(${productNames}, "/", ",");
+
+			var productIds = CommerceJSONProductsAPI.getProductIdsByName(
+				productNames = ${productNames},
+				responseBody = ${productsJSON});
+
+			for (var productId : list ${productIds}) {
+				if (${payload} != "") {
+					var comma = ",";
+				}
+				else {
+					var comma = "";
+				}
+
+				var payload = '''
+						${payload}${comma}
+						{
+							"productId": ${productId},
+            				"type": "${productType}" 
+						}
+					''';
+			}
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${baseProductId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"relatedProducts": [${payload}]
+				}'
+		''';
+
+		JSONCurlUtil.patch(${curl});
 	}
 
 	macro _patchCommerceSku {
@@ -1006,6 +1397,10 @@ definition {
 			ListUtil.add(${fieldsList}, ${replacementSkuId});
 		}
 
+		if (!(isSet(externalReferenceCode))) {
+			var externalReferenceCode = "";
+		}
+
 		var sku = '''"sku": "${productSku}"''';
 
 		ListUtil.add(${fieldsList}, ${sku});
@@ -1014,13 +1409,57 @@ definition {
 
 		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
 		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSku});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/skus/${skuId} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
-				-d '{${payload}}'
+				-d '{
+					${payload},
+					"externalReferenceCode": "${externalReferenceCode}"
+				}'
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.patch(${curl});
+	}
+
+	macro _patchCommerceVirtualProductSku {
+		Variables.assertDefined(parameterList = ${productSku});
+
+		var baseURL = ${baseURL};
+		var fieldsList = ListUtil.newList();
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(override))) {
+			var override = "true";
+		}
+
+		var sku = '''"sku": "${productSku}"''';
+
+		ListUtil.add(${fieldsList}, ${sku});
+
+		var fieldsList = ListUtil.toString(${fieldsList});
+
+		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSku});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/skus/${skuId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					${payload},
+					"skuVirtualSettings": {
+						"override": ${override}
+					}
+				}'
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.patch(${curl});
@@ -1089,9 +1528,11 @@ definition {
 			var expirationDateMinute = ${expirationDateMinute} + ${increaseMinutes};
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/api/jsonws/commerce.cpdefinition/update-cp-definition \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d cpDefinitionId=${cpDefinitionId} \
 				-d nameMap={"en_US":"${newProductName}"} \
 				-d shortDescriptionMap={"en_US":"${newShortDescription}"} \
@@ -1117,6 +1558,78 @@ definition {
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
+	}
+
+	macro addCommerceProductSku {
+		Variables.assertDefined(parameterList = "${productName},${skuName}");
+
+		var responseBody = CommerceJSONProductsAPI._addCommerceProductSku(
+			cost = ${cost},
+			price = ${price},
+			productName = ${productName},
+			promoPrice = ${promoPrice},
+			published = ${published},
+			purchasable = ${purchasable},
+			skuName = ${skuName});
+
+		var skuId = JSONUtil.getWithJSONPath(${responseBody}, "$..['id']");
+
+		return ${skuId};
+	}
+
+	macro getCommerceProductMediaFieldValues {
+		Variables.assertDefined(parameterList = "${jsonPath},${productName}");
+
+		if (${type} == "images") {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProductImages(productName = ${productName});
+		}
+
+		if (${type} == "attachment") {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProductAttachments(productName = ${productName});
+		}
+
+		var fieldValues = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Field: ${fieldValues}");
+
+		return ${fieldValues};
+	}
+
+	macro getProductField {
+		Variables.assertDefined(parameterList = "${jsonPath},${productName}");
+
+		var responseBody = CommerceJSONProductsAPI._getProductById(productName = ${productName});
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Field: ${fieldValue}");
+
+		return ${fieldValue};
+	}
+
+	macro getProductIdsByName {
+		Variables.assertDefined(parameterList = ${productNames});
+
+		if (!(isSet(responseBody))) {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProducts();
+		}
+
+		var productIds = "";
+
+		for (var productName : list ${productNames}) {
+			var productId = JSONUtil.getWithJSONPath(${responseBody}, "$.items[?(@['name']['en_US'] == '${productName}')].['productId']");
+
+			if (${productIds} != "") {
+				var comma = ",";
+			}
+			else {
+				var comma = "";
+			}
+
+			var productIds = "${productIds}${comma}${productId}";
+		}
+
+		return ${productIds};
 	}
 
 }

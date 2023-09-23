@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
 
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -40,6 +32,7 @@ public class UserLocalServiceWrapper
 	 * Adds a default admin user for the company.
 	 *
 	 * @param companyId the primary key of the user's company
+	 * @param password the password of the user
 	 * @param screenName the user's screen name
 	 * @param emailAddress the user's email address
 	 * @param locale the user's locale
@@ -50,14 +43,14 @@ public class UserLocalServiceWrapper
 	 */
 	@Override
 	public User addDefaultAdminUser(
-			long companyId, String screenName, String emailAddress,
-			java.util.Locale locale, String firstName, String middleName,
-			String lastName)
+			long companyId, String password, String screenName,
+			String emailAddress, java.util.Locale locale, String firstName,
+			String middleName, String lastName)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userLocalService.addDefaultAdminUser(
-			companyId, screenName, emailAddress, locale, firstName, middleName,
-			lastName);
+			companyId, password, screenName, emailAddress, locale, firstName,
+			middleName, lastName);
 	}
 
 	/**
@@ -94,6 +87,13 @@ public class UserLocalServiceWrapper
 		return _userLocalService.addDefaultRoles(userId);
 	}
 
+	@Override
+	public User addDefaultServiceAccountUser(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.addDefaultServiceAccountUser(companyId);
+	}
+
 	/**
 	 * Adds the user to the default user groups, unless the user is already in
 	 * these user groups. The default user groups can be specified in
@@ -112,64 +112,64 @@ public class UserLocalServiceWrapper
 	}
 
 	@Override
-	public void addGroupUser(long groupId, long userId) {
-		_userLocalService.addGroupUser(groupId, userId);
+	public boolean addGroupUser(long groupId, long userId) {
+		return _userLocalService.addGroupUser(groupId, userId);
 	}
 
 	@Override
-	public void addGroupUser(long groupId, User user) {
-		_userLocalService.addGroupUser(groupId, user);
+	public boolean addGroupUser(long groupId, User user) {
+		return _userLocalService.addGroupUser(groupId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addGroupUsers(long groupId, java.util.List<User> users)
+	public boolean addGroupUsers(long groupId, java.util.List<User> users)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addGroupUsers(groupId, users);
+		return _userLocalService.addGroupUsers(groupId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addGroupUsers(long groupId, long[] userIds)
+	public boolean addGroupUsers(long groupId, long[] userIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addGroupUsers(groupId, userIds);
+		return _userLocalService.addGroupUsers(groupId, userIds);
 	}
 
 	@Override
-	public void addOrganizationUser(long organizationId, long userId) {
-		_userLocalService.addOrganizationUser(organizationId, userId);
+	public boolean addOrganizationUser(long organizationId, long userId) {
+		return _userLocalService.addOrganizationUser(organizationId, userId);
 	}
 
 	@Override
-	public void addOrganizationUser(long organizationId, User user) {
-		_userLocalService.addOrganizationUser(organizationId, user);
+	public boolean addOrganizationUser(long organizationId, User user) {
+		return _userLocalService.addOrganizationUser(organizationId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addOrganizationUsers(
+	public boolean addOrganizationUsers(
 			long organizationId, java.util.List<User> users)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addOrganizationUsers(organizationId, users);
+		return _userLocalService.addOrganizationUsers(organizationId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addOrganizationUsers(long organizationId, long[] userIds)
+	public boolean addOrganizationUsers(long organizationId, long[] userIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addOrganizationUsers(organizationId, userIds);
+		return _userLocalService.addOrganizationUsers(organizationId, userIds);
 	}
 
 	@Override
@@ -204,63 +204,63 @@ public class UserLocalServiceWrapper
 	}
 
 	@Override
-	public void addRoleUser(long roleId, long userId) {
-		_userLocalService.addRoleUser(roleId, userId);
+	public boolean addRoleUser(long roleId, long userId) {
+		return _userLocalService.addRoleUser(roleId, userId);
 	}
 
 	@Override
-	public void addRoleUser(long roleId, User user) {
-		_userLocalService.addRoleUser(roleId, user);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	@Override
-	public void addRoleUsers(long roleId, java.util.List<User> users)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_userLocalService.addRoleUsers(roleId, users);
+	public boolean addRoleUser(long roleId, User user) {
+		return _userLocalService.addRoleUser(roleId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addRoleUsers(long roleId, long[] userIds)
+	public boolean addRoleUsers(long roleId, java.util.List<User> users)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addRoleUsers(roleId, userIds);
-	}
-
-	@Override
-	public void addTeamUser(long teamId, long userId) {
-		_userLocalService.addTeamUser(teamId, userId);
-	}
-
-	@Override
-	public void addTeamUser(long teamId, User user) {
-		_userLocalService.addTeamUser(teamId, user);
+		return _userLocalService.addRoleUsers(roleId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addTeamUsers(long teamId, java.util.List<User> users)
+	public boolean addRoleUsers(long roleId, long[] userIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addTeamUsers(teamId, users);
+		return _userLocalService.addRoleUsers(roleId, userIds);
+	}
+
+	@Override
+	public boolean addTeamUser(long teamId, long userId) {
+		return _userLocalService.addTeamUser(teamId, userId);
+	}
+
+	@Override
+	public boolean addTeamUser(long teamId, User user) {
+		return _userLocalService.addTeamUser(teamId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addTeamUsers(long teamId, long[] userIds)
+	public boolean addTeamUsers(long teamId, java.util.List<User> users)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addTeamUsers(teamId, userIds);
+		return _userLocalService.addTeamUsers(teamId, users);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public boolean addTeamUsers(long teamId, long[] userIds)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.addTeamUsers(teamId, userIds);
 	}
 
 	/**
@@ -295,6 +295,7 @@ public class UserLocalServiceWrapper
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -315,7 +316,7 @@ public class UserLocalServiceWrapper
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -324,7 +325,7 @@ public class UserLocalServiceWrapper
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, type, groupIds,
 			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
 	}
 
@@ -344,33 +345,34 @@ public class UserLocalServiceWrapper
 	}
 
 	@Override
-	public void addUserGroupUser(long userGroupId, long userId) {
-		_userLocalService.addUserGroupUser(userGroupId, userId);
+	public boolean addUserGroupUser(long userGroupId, long userId) {
+		return _userLocalService.addUserGroupUser(userGroupId, userId);
 	}
 
 	@Override
-	public void addUserGroupUser(long userGroupId, User user) {
-		_userLocalService.addUserGroupUser(userGroupId, user);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	@Override
-	public void addUserGroupUsers(long userGroupId, java.util.List<User> users)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_userLocalService.addUserGroupUsers(userGroupId, users);
+	public boolean addUserGroupUser(long userGroupId, User user) {
+		return _userLocalService.addUserGroupUser(userGroupId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addUserGroupUsers(long userGroupId, long[] userIds)
+	public boolean addUserGroupUsers(
+			long userGroupId, java.util.List<User> users)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_userLocalService.addUserGroupUsers(userGroupId, userIds);
+		return _userLocalService.addUserGroupUsers(userGroupId, users);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public boolean addUserGroupUsers(long userGroupId, long[] userIds)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.addUserGroupUsers(userGroupId, userIds);
 	}
 
 	/**
@@ -405,6 +407,7 @@ public class UserLocalServiceWrapper
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -425,7 +428,7 @@ public class UserLocalServiceWrapper
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -434,7 +437,7 @@ public class UserLocalServiceWrapper
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, type, groupIds,
 			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
 	}
 
@@ -580,7 +583,6 @@ public class UserLocalServiceWrapper
 	 * authentication, without using the AuthPipeline. Primarily used for
 	 * authenticating users of <code>tunnel-web</code>.
 	 *
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 * @param companyId the primary key of the user's company
 	 * @param realm unused
 	 * @param nonce the number used once
@@ -589,6 +591,7 @@ public class UserLocalServiceWrapper
 	 * @param response the authentication response hash
 	 * @return the user's primary key if authentication is successful;
 	 <code>0</code> otherwise
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1067,15 +1070,15 @@ public class UserLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company, or <code>null</code> if a user
+	 * @return the guest user for the company, or <code>null</code> if a user
 	 with the company key could not be found
 	 */
 	@Override
-	public User fetchDefaultUser(long companyId) {
-		return _userLocalService.fetchDefaultUser(companyId);
+	public User fetchGuestUser(long companyId) {
+		return _userLocalService.fetchGuestUser(companyId);
 	}
 
 	@Override
@@ -1253,11 +1256,10 @@ public class UserLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUser(long)}
 	 */
+	@Deprecated
 	@Override
 	public User getDefaultUser(long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1266,11 +1268,10 @@ public class UserLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the primary key of the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the primary key of the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUserId(long)}
 	 */
+	@Deprecated
 	@Override
 	public long getDefaultUserId(long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1394,6 +1395,32 @@ public class UserLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userLocalService.getGroupUsersCount(groupId, status);
+	}
+
+	/**
+	 * Returns the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the guest user for the company
+	 */
+	@Override
+	public User getGuestUser(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.getGuestUser(companyId);
+	}
+
+	/**
+	 * Returns the primary key of the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the primary key of the guest user for the company
+	 */
+	@Override
+	public long getGuestUserId(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.getGuestUserId(companyId);
 	}
 
 	@Override
@@ -1598,6 +1625,11 @@ public class UserLocalServiceWrapper
 	@Override
 	public long[] getRoleUserIds(long roleId) {
 		return _userLocalService.getRoleUserIds(roleId);
+	}
+
+	@Override
+	public long[] getRoleUserIds(long roleId, long type) {
+		return _userLocalService.getRoleUserIds(roleId, type);
 	}
 
 	@Override
@@ -2075,12 +2107,12 @@ public class UserLocalServiceWrapper
 
 	@Override
 	public java.util.List<User> getUsers(
-		long companyId, boolean defaultUser, int status, int start, int end,
+		long companyId, int status, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator) {
 
 		return _userLocalService.getUsers(
-			companyId, defaultUser, status, start, end, orderByComparator);
+			companyId, status, start, end, orderByComparator);
 	}
 
 	/**
@@ -2094,8 +2126,8 @@ public class UserLocalServiceWrapper
 	}
 
 	@Override
-	public int getUsersCount(long companyId, boolean defaultUser, int status) {
-		return _userLocalService.getUsersCount(companyId, defaultUser, status);
+	public int getUsersCount(long companyId, int status) {
+		return _userLocalService.getUsersCount(companyId, status);
 	}
 
 	@Override
@@ -2200,16 +2232,16 @@ public class UserLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @return the guest user for the company
 	 */
 	@Override
-	public User loadGetDefaultUser(long companyId)
+	public User loadGetGuestUser(long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _userLocalService.loadGetDefaultUser(companyId);
+		return _userLocalService.loadGetGuestUser(companyId);
 	}
 
 	/**
@@ -3414,6 +3446,13 @@ public class UserLocalServiceWrapper
 		return _userLocalService.updateUser(user);
 	}
 
+	@Override
+	public void validateMaxUsers(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_userLocalService.validateMaxUsers(companyId);
+	}
+
 	/**
 	 * Verifies the email address of the ticket.
 	 *
@@ -3424,6 +3463,11 @@ public class UserLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_userLocalService.verifyEmailAddress(ticketKey);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _userLocalService.getBasePersistence();
 	}
 
 	@Override

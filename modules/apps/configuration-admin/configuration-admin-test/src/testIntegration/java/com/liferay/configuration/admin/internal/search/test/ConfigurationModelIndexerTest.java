@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.configuration.admin.internal.search.test;
@@ -21,6 +12,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDefinition;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
@@ -76,8 +68,8 @@ public class ConfigurationModelIndexerTest {
 
 		_bundleContext = _bundle.getBundleContext();
 
-		Bundle configAdminWebBundle = _getBundle(
-			"com.liferay.configuration.admin.web");
+		Bundle configAdminWebBundle = BundleUtil.getBundle(
+			_bundleContext, "com.liferay.configuration.admin.web");
 
 		Class<?> configurationModelClass = configAdminWebBundle.loadClass(
 			"com.liferay.configuration.admin.web.internal.model." +
@@ -190,18 +182,6 @@ public class ConfigurationModelIndexerTest {
 		Assert.assertEquals(hits.toString(), 1, hits.getLength());
 	}
 
-	private Bundle _getBundle(String bundleSymbolicName) {
-		Bundle[] bundles = _bundleContext.getBundles();
-
-		for (Bundle bundle : bundles) {
-			if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
-				return bundle;
-			}
-		}
-
-		return null;
-	}
-
 	private static final String _PID = RandomTestUtil.randomString(50);
 
 	private Bundle _bundle;
@@ -209,7 +189,9 @@ public class ConfigurationModelIndexerTest {
 	private Constructor<?> _configurationModelConstructor;
 	private final List<Document> _documents = new ArrayList<>();
 
-	@Inject(filter = "component.name=*.ConfigurationModelIndexer")
+	@Inject(
+		filter = "component.name=com.liferay.configuration.admin.web.internal.search.ConfigurationModelIndexer"
+	)
 	private Indexer<Object> _indexer;
 
 	@Inject

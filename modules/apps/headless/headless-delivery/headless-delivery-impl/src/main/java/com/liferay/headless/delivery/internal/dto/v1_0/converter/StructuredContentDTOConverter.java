@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.converter;
@@ -18,8 +9,8 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -64,13 +55,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,7 +73,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.journal.model.JournalArticle",
-	service = {DTOConverter.class, StructuredContentDTOConverter.class}
+	service = DTOConverter.class
 )
 public class StructuredContentDTOConverter
 	implements DTOConverter<JournalArticle, StructuredContent> {
@@ -221,15 +209,17 @@ public class StructuredContentDTOConverter
 	private Map<Locale, String> _filterDescriptionMap(
 		Map<Locale, String> descriptionMap) {
 
-		Set<Map.Entry<Locale, String>> set = descriptionMap.entrySet();
+		Map<Locale, String> filterDescriptionMap = new HashMap<>();
 
-		Stream<Map.Entry<Locale, String>> stream = set.stream();
+		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
+			if (StringPool.BLANK.equals(entry.getValue())) {
+				continue;
+			}
 
-		return stream.filter(
-			entry -> !StringPool.BLANK.equals(entry.getValue())
-		).collect(
-			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-		);
+			filterDescriptionMap.put(entry.getKey(), entry.getValue());
+		}
+
+		return filterDescriptionMap;
 	}
 
 	private ContentField[] _toContentFields(
@@ -254,10 +244,9 @@ public class StructuredContentDTOConverter
 		DDMStructure ddmStructure, DTOConverterContext dtoConverterContext,
 		JournalArticle journalArticle) {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (!uriInfoOptional.isPresent()) {
+		if (uriInfo == null) {
 			return null;
 		}
 
@@ -265,7 +254,6 @@ public class StructuredContentDTOConverter
 		HttpServletRequest httpServletRequest =
 			dtoConverterContext.getHttpServletRequest();
 		Locale locale = dtoConverterContext.getLocale();
-		UriInfo uriInfo = uriInfoOptional.get();
 
 		RenderedContent[] renderedContents = TransformUtil.transformToArray(
 			ddmStructure.getTemplates(),
@@ -295,17 +283,8 @@ public class StructuredContentDTOConverter
 						});
 					setRenderedContentValue(
 						() -> {
-							if (!uriInfoOptional.map(
-									UriInfo::getQueryParameters
-								).map(
-									parameters -> parameters.getFirst(
-										"nestedFields")
-								).map(
-									fields -> fields.contains(
-										"renderedContentValue")
-								).orElse(
-									false
-								)) {
+							if (!dtoConverterContext.containsNestedFieldsValue(
+									"renderedContentValue")) {
 
 								return null;
 							}

@@ -59,70 +59,15 @@ definition {
 		return ${managerId};
 	}
 
-	macro _createObjectDefinition {
-		Variables.assertDefined(parameterList = "${en_US_label},${name},${requiredStringFieldName},${en_US_plural_label}");
-
-		if (isSet(virtualHost)) {
-			if (!(isSet(port))) {
-				var port = 8080;
-			}
-
-			var portalURL = "http://${virtualHost}:${port}";
-		}
-		else {
-			var portalURL = JSONCompany.getPortalURL();
-		}
-
-		if (!(isSet(scope))) {
-			var scope = "company";
-		}
-
-		var curl = '''
-			${portalURL}/o/object-admin/v1.0/object-definitions \
-				-u test@liferay.com:test \
-				-H Content-Type: application/json \
-				-d {
-					"active": true,
-					"label": {
-						"en_US": "${en_US_label}"
-					},
-					"name": "${name}",
-					"objectFields": [{
-						"DBType": "String",
-						"businessType": "Text",
-						"indexed": true,
-						"indexedAsKeyword": true,
-						"label": {
-							"en_US": "${requiredStringFieldName}"
-						},
-						"name": "${requiredStringFieldName}",
-						"required": true,
-						"dbtype": "String"
-					}],
-					"pluralLabel": {
-						"en_US": "${en_US_plural_label}"
-					},
-					"portlet": true,
-					"scope": "${scope}"
-				}
-		''';
-
-		if (isSet(token)) {
-			var curl = StringUtil.add(${curl}, " -H 'Authorization: Bearer ${token}'", "");
-		}
-
-		var objectDefinitionId = JSONCurlUtil.post(${curl}, "$.id");
-
-		return ${objectDefinitionId};
-	}
-
 	macro _createObjectEntryWithName {
 		Variables.assertDefined(parameterList = ${name});
 
-		var response = ObjectDefinitionAPI.createObjectEntryWithField(
+		var response = CustomObjectAPI.createObjectEntryWithFields(
 			en_US_plural_label = ${en_US_plural_label},
 			fieldName = "name",
 			fieldValue = ${name},
+			keywords = ${keywords},
+			taxonomyCategoryIds = ${taxonomyCategoryIds},
 			token = ${token},
 			virtualHost = ${virtualHost});
 
@@ -284,36 +229,6 @@ definition {
 		return ${objectDefinitionStatus};
 	}
 
-	macro _getObjectEntryById {
-		Variables.assertDefined(parameterList = "${en_US_plural_label},${objectId}");
-
-		var en_US_plural_label_lowercase = StringUtil.lowerCase(${en_US_plural_label});
-
-		if (isSet(virtualHost)) {
-			if (!(isSet(port))) {
-				var port = 8080;
-			}
-
-			var portalURL = "http://${virtualHost}:${port}";
-		}
-		else {
-			var portalURL = JSONCompany.getPortalURL();
-		}
-
-		var curl = '''
-			${portalURL}/o/c/${en_US_plural_label_lowercase}/${objectId} \
-				-u test@liferay.com:test
-		''';
-
-		if (isSet(token)) {
-			var curl = StringUtil.add(${curl}, " -H 'Authorization: Bearer ${token}'", "");
-		}
-
-		var response = JSONCurlUtil.get(${curl});
-
-		return ${response};
-	}
-
 	macro _getObjectsWithAggregationTerms {
 		Variables.assertDefined(parameterList = ${aggregationTermsValue});
 
@@ -452,6 +367,25 @@ definition {
 		''';
 
 		var response = JSONCurlUtil.put(${curl});
+
+		return ${response};
+	}
+
+	macro _updateObjectDefinition {
+		Variables.assertDefined(parameterList = "${objectDefinitionId},${parameter},${parameterValue}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/object-admin/v1.0/object-definitions/${objectDefinitionId} \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d {
+					"${parameter}": "${parameterValue}"
+				}
+		''';
+
+		var response = JSONCurlUtil.patch(${curl});
 
 		return ${response};
 	}
@@ -636,11 +570,12 @@ definition {
 	}
 
 	macro createAndPublishObjectDefinition {
-		var objectDefinitionId = ObjectDefinitionAPI._createObjectDefinition(
+		var objectDefinitionId = ObjectDefinitionAPI.createObjectDefinition(
 			en_US_label = ${en_US_label},
 			en_US_plural_label = ${en_US_plural_label},
 			name = ${name},
 			requiredStringFieldName = ${requiredStringFieldName},
+			scope = ${scope},
 			token = ${token},
 			virtualHost = ${virtualHost});
 
@@ -687,10 +622,8 @@ definition {
 		return ${managerId};
 	}
 
-	macro createObjectEntryWithField {
-		Variables.assertDefined(parameterList = "${en_US_plural_label},${fieldName},${fieldValue}");
-
-		var en_US_plural_label_lowercase = StringUtil.lowerCase(${en_US_plural_label});
+	macro createObjectDefinition {
+		Variables.assertDefined(parameterList = "${name},${en_US_plural_label}");
 
 		if (isSet(virtualHost)) {
 			if (!(isSet(port))) {
@@ -703,50 +636,110 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
-		var body = '''"${fieldName}": "${fieldValue}"''';
-
-		if (isSet(secondField)) {
-			var body = StringUtil.add("${body},", "\"secondField\":\"${secondFieldValue}\"", "");
+		if (!(isSet(scope))) {
+			var scope = "company";
 		}
 
-		var api = ${en_US_plural_label_lowercase};
-
-		if (isSet(scopeKey)) {
-			var scopeKey = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			var api = StringUtil.add(${api}, "/scopes/${scopeKey}", "");
+		if (!(isSet(en_US_label))) {
+			var en_US_label = ${name};
 		}
 
-		var curlWithoutBody = '''
-			${portalURL}/o/c/${api} \
+		if (!(isSet(requiredStringFieldName))) {
+			var requiredStringFieldName = "name";
+		}
+
+		var curl = '''
+			${portalURL}/o/object-admin/v1.0/object-definitions \
 				-u test@liferay.com:test \
 				-H Content-Type: application/json \
+				-d {
+					"active": true,
+					"label": {
+						"en_US": "${en_US_label}"
+					},
+					"name": "${name}",
+					"objectFields": [{
+						"businessType": "Text",
+						"indexed": true,
+						"indexedAsKeyword": true,
+						"label": {
+							"en_US": "${requiredStringFieldName}"
+						},
+						"name": "${requiredStringFieldName}",
+						"required": true,
+						"DBType": "String"
+					}],
+					"pluralLabel": {
+						"en_US": "${en_US_plural_label}"
+					},
+					"portlet": true,
+					"scope": "${scope}"
+				}
 		''';
-
-		var curl = StringUtil.add(${curlWithoutBody}, "-d {${body}}", " ");
 
 		if (isSet(token)) {
 			var curl = StringUtil.add(${curl}, " -H 'Authorization: Bearer ${token}'", "");
 		}
 
-		var response = JSONCurlUtil.post(${curl});
+		var objectDefinitionId = JSONCurlUtil.post(${curl}, "$.id");
 
-		return ${response};
+		return ${objectDefinitionId};
+	}
+
+	macro createObjectDefinitionWithAllKindsOfFieldTypes {
+		var objectDefinitionId = ObjectDefinitionAPI.createAndPublishObjectDefinition(
+			en_US_label = ${en_US_label},
+			en_US_plural_label = ${en_US_plural_label},
+			name = ${objectDefinitionName},
+			requiredStringFieldName = ${requiredStringFieldName});
+
+		if (isSet(picklistId)) {
+			ObjectDefinitionAPI.postObjectDefinitionObjectField(
+				businessType = "Picklist",
+				dBType = "String",
+				listTypeDefinitionId = ${picklistId},
+				name = "customPicklist",
+				objectDefinitionName = ${objectDefinitionName});
+		}
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Attachment",
+			fieldLabelName = "customAttachment",
+			fieldName = "customAttachment",
+			fieldType = "Long",
+			fileSource = "userComputer",
+			isRequired = "false",
+			objectName = ${objectDefinitionName});
+
+		ObjectFieldAPI.createObjectFieldByObjectDefinitionId(
+			dbType = "BigDecimal",
+			name = "customPrecisionDecimal",
+			objectDefinitionId = ${objectDefinitionId});
+
+		ObjectFieldAPI.createObjectFieldByObjectDefinitionId(
+			dbType = "Boolean",
+			name = "customBoolean",
+			objectDefinitionId = ${objectDefinitionId});
+
+		ObjectFieldAPI.createObjectFieldByObjectDefinitionId(
+			dbType = "Clob",
+			name = "customLongText",
+			objectDefinitionId = ${objectDefinitionId});
 	}
 
 	macro createObjectEntryWithName {
 		var objectId = ObjectDefinitionAPI._createObjectEntryWithName(
 			en_US_plural_label = ${en_US_plural_label},
+			keywords = ${keywords},
 			name = ${name},
 			secondFieldValue = ${secondFieldValue},
+			taxonomyCategoryIds = ${taxonomyCategoryIds},
 			token = ${token},
 			virtualHost = ${virtualHost});
 
-		var response = ObjectDefinitionAPI._getObjectEntryById(
+		var response = CustomObjectAPI.getObjectEntryById(
 			en_US_plural_label = ${en_US_plural_label},
-			objectId = ${objectId},
+			objectEntryId = ${objectId},
 			token = ${token},
 			virtualHost = ${virtualHost});
 
@@ -780,6 +773,32 @@ definition {
 		return ${relationshipName};
 	}
 
+	macro createRelationshipWithObjectDefinitionNames {
+		Variables.assertDefined(parameterList = "${childObjectName},${name},${parentObjectName},${type}");
+
+		if (!(isSet(en_US_label))) {
+			var en_US_label = ${name};
+		}
+
+		if (!(isSet(deletionType))) {
+			var deletionType = "cascade";
+		}
+
+		var childObjectId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = ${childObjectName});
+		var parentObjectId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = ${parentObjectName});
+
+		var relationshipName = ObjectDefinitionAPI.createRelationship(
+			deletionType = ${deletionType},
+			en_US_label = ${en_US_label},
+			name = ${name},
+			objectDefinitionId1 = ${parentObjectId},
+			objectDefinitionId2 = ${childObjectId},
+			type = ${type},
+			virtualHost = ${virtualHost});
+
+		return ${relationshipName};
+	}
+
 	macro deleteObjectEntry {
 		ObjectDefinitionAPI._deleteObjectEntry(
 			en_US_plural_label = ${en_US_plural_label},
@@ -802,6 +821,39 @@ definition {
 		}
 
 		ObjectDefinitionAPI._deleteRelationship(relationshipId = ${relationshipId});
+	}
+
+	macro enableAccountRestrictedAndShowWidget {
+		Variables.assertDefined(parameterList = "${objectDefinitionId},${accountRestrictedField}");
+
+		ObjectDefinitionAPI.updateObjectDefinitionById(
+			objectDefinitionId = ${objectDefinitionId},
+			parameter = "accountEntryRestrictedObjectFieldName",
+			parameterValue = ${accountRestrictedField});
+
+		ObjectDefinitionAPI.updateObjectDefinitionById(
+			objectDefinitionId = ${objectDefinitionId},
+			parameter = "accountEntryRestricted",
+			parameterValue = "true");
+
+		ObjectDefinitionAPI.updateObjectDefinitionById(
+			objectDefinitionId = ${objectDefinitionId},
+			parameter = "portlet",
+			parameterValue = "true");
+	}
+
+	macro getIdOfObjectDefinitionExportBatch {
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/object-admin/v1.0/object-definitions/export-batch \
+				-H Content-Type: application/json \
+				-u test@liferay.com:test
+		''';
+
+		var objectDefinitionsExportBatchId = JSONCurlUtil.post(${curl}, "$.id");
+
+		return ${objectDefinitionsExportBatchId};
 	}
 
 	macro getObjectDefinitionIdByName {
@@ -867,10 +919,18 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
-		var curl = '''
-			${portalURL}/o/c/${en_US_plural_label_lowercase}/ \
-				-u test@liferay.com:test
-		''';
+		if (isSet(parameter)) {
+			var curl = '''
+				${portalURL}/o/c/${en_US_plural_label_lowercase}?${parameter} \
+					-u test@liferay.com:test
+			''';
+		}
+		else {
+			var curl = '''
+				${portalURL}/o/c/${en_US_plural_label_lowercase}/ \
+					-u test@liferay.com:test
+			''';
+		}
 
 		if (isSet(token)) {
 			var curl = StringUtil.add(${curl}, " -H 'Authorization: Bearer ${token}'", "");
@@ -924,6 +984,21 @@ definition {
 		return ${getObjectsWithNestedFieldJSON};
 	}
 
+	macro graphQL {
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/graphql \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d {"query":"{ c { students { items { id universityStudents } } } }","variables":null}
+		''';
+
+		var request = JSONCurlUtil.post(${curl});
+
+		return ${request};
+	}
+
 	macro modifyRelationship {
 		var objectDefinitionId = JSONObject.getObjectId(objectName = ${objectName});
 
@@ -932,6 +1007,69 @@ definition {
 		ObjectDefinitionAPI._modifyRelationship(
 			deletionType = ${deletionType},
 			relationshipId = ${relationshipId});
+	}
+
+	macro postObjectDefinitionObjectField {
+		Variables.assertDefined(parameterList = "${dBType},${businessType},${name},${objectDefinitionName}");
+
+		if (isSet(virtualHost)) {
+			if (!(isSet(port))) {
+				var port = 8080;
+			}
+
+			var portalURL = "http://${virtualHost}:${port}";
+		}
+		else {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(en_US_label))) {
+			var en_US_label = ${name};
+		}
+
+		if (!(isSet(required))) {
+			var required = "false";
+		}
+
+		var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = ${objectDefinitionName});
+
+		if (isSet(listTypeDefinitionId)) {
+			var curl = '''
+				${portalURL}/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/object-fields \
+					-u test@liferay.com:test \
+					-H Content-Type: application/json \
+					-H accept: application/json \
+					-d {
+						"DBType": "${dBType}",
+						"businessType": "${businessType}",
+						"label": {
+							"en_US": "${en_US_label}"
+						},
+						"name": "${name}",
+						"required": ${required},
+						"listTypeDefinitionId": ${listTypeDefinitionId}
+					}
+			''';
+		}
+		else {
+			var curl = '''
+				${portalURL}/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/object-fields \
+					-u test@liferay.com:test \
+					-H Content-Type: application/json \
+					-H accept: application/json \
+					-d {
+						"DBType": "${dBType}",
+						"businessType": "${businessType}",
+						"label": {
+							"en_US": "${en_US_label}"
+						},
+						"name": "${name}",
+						"required": ${required}
+					}
+			''';
+		}
+
+		JSONCurlUtil.post(${curl});
 	}
 
 	macro relateObjectEntries {
@@ -945,6 +1083,22 @@ definition {
 		var response = JSONCurlUtil.put(${curl});
 
 		return ${response};
+	}
+
+	macro relateObjectEntriesByName {
+		var childEntryId = CustomObjectAPI.getObjectEntryIdByName(
+			en_US_plural_label = ${child_plural_label},
+			name = ${childEntryName});
+		var parentEntryId = CustomObjectAPI.getObjectEntryIdByName(
+			en_US_plural_label = ${parent_plural_label},
+			name = ${parentEntryName});
+
+		var curl = ObjectDefinitionAPI.relateObjectEntries(
+			en_US_plural_label = ${parent_plural_label},
+			objectEntry1 = ${parentEntryId},
+			objectEntry2 = ${childEntryId},
+			relationshipName = ${relationshipName},
+			virtualHost = ${virtualHost});
 	}
 
 	macro setUpGlobalObjectDefinitionIdWithName {
@@ -1066,6 +1220,13 @@ definition {
 			expected = ${employeeFirstname});
 
 		return ${employeeId};
+	}
+
+	macro updateObjectDefinitionById {
+		ObjectDefinitionAPI._updateObjectDefinition(
+			objectDefinitionId = ${objectDefinitionId},
+			parameter = ${parameter},
+			parameterValue = ${parameterValue});
 	}
 
 }

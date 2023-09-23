@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 interface IThemeDisplay {
@@ -21,10 +12,19 @@ interface IThemeDisplay {
 	getUserName: () => string;
 }
 
+export type LiferayStorage = Storage & {
+	getItem(key: string, consentType: string): string | null;
+	setItem(key: string, value: string, consentType: string): void;
+};
+
 export type LiferayOnAction<T> = (payload: T) => void;
 
 interface ILiferay {
 	ThemeDisplay: IThemeDisplay;
+	Util: {
+		LocalStorage: LiferayStorage & {TYPES: {[key: string]: string}};
+		SessionStorage: LiferayStorage & {TYPES: {[key: string]: string}};
+	};
 	authToken: string;
 	detach: <T = any>(eventName: string, action?: (payload: T) => void) => void;
 	on: <T = any>(eventName: string, action?: (payload: T) => void) => void;
@@ -37,6 +37,8 @@ declare global {
 	}
 }
 
+const TYPES = {};
+
 export const Liferay = window.Liferay || {
 	ThemeDisplay: {
 		getCompanyGroupId: () => 0,
@@ -45,6 +47,10 @@ export const Liferay = window.Liferay || {
 		getSiteGroupId: () => 0,
 		getUserId: () => '',
 		getUserName: () => 'Test Test',
+	},
+	Util: {
+		LocalStorage: Object.assign(localStorage, {TYPES}),
+		SessionStorage: Object.assign(sessionStorage, {TYPES}),
 	},
 	authToken: '',
 	publish: '',

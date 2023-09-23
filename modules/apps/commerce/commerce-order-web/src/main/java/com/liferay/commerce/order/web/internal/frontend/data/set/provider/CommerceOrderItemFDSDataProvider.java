@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.web.internal.frontend.data.set.provider;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.frontend.model.ImageField;
 import com.liferay.commerce.model.CommerceOrder;
@@ -27,6 +18,7 @@ import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPSubscriptionInfo;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPSubscriptionType;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
@@ -165,7 +157,7 @@ public class CommerceOrderItemFDSDataProvider
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		return cpDefinition.getDefaultImageThumbnailSrc(
-			CommerceAccountConstants.ACCOUNT_ID_ADMIN);
+			AccountConstants.ACCOUNT_ENTRY_ID_ADMIN);
 	}
 
 	private List<OrderItem> _getOrderItems(
@@ -213,7 +205,12 @@ public class CommerceOrderItemFDSDataProvider
 					commerceOrderItem.getDeliveryGroup(),
 					_getDiscount(commerceOrderItemPrice, locale),
 					_commerceOrderItemQuantityFormatter.format(
-						commerceOrderItem, locale),
+						commerceOrderItem,
+						_cpInstanceUnitOfMeasureLocalService.
+							fetchCPInstanceUnitOfMeasure(
+								commerceOrderItem.getCPInstanceId(),
+								commerceOrderItem.getUnitOfMeasureKey()),
+						locale),
 					new ImageField(
 						name, "rounded", "lg", _getImage(commerceOrderItem)),
 					name, stringJoiner.toString(),
@@ -455,6 +452,10 @@ public class CommerceOrderItemFDSDataProvider
 
 	@Reference
 	private CPInstanceHelper _cpInstanceHelper;
+
+	@Reference
+	private CPInstanceUnitOfMeasureLocalService
+		_cpInstanceUnitOfMeasureLocalService;
 
 	@Reference
 	private CPSubscriptionTypeRegistry _cpSubscriptionTypeRegistry;

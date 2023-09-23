@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.v4_4_4.test;
@@ -33,16 +24,15 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.portal.upgrade.test.util.UpgradeTestUtil;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -86,7 +76,7 @@ public class JournalFeedTypeUpgradeProcessTest {
 
 		_journalFeed = JournalTestUtil.addFeed(
 			_group.getGroupId(), _layout.getPlid(),
-			RandomTestUtil.randomString(), ddmStructure.getStructureKey(),
+			RandomTestUtil.randomString(), ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey(), rendererDDMTemplate.getTemplateKey());
 
 		_journalFeedClassNameId = _classNameLocalService.getClassNameId(
@@ -144,30 +134,12 @@ public class JournalFeedTypeUpgradeProcessTest {
 		Assert.assertEquals(assetEntry1.getEntryId(), assetEntry2.getEntryId());
 	}
 
-	private UpgradeProcess _getUpgradeProcess() {
-		UpgradeProcess[] upgradeProcesses = new UpgradeProcess[1];
-
-		_upgradeStepRegistrator.register(
-			(fromSchemaVersionString, toSchemaVersionString, upgradeSteps) -> {
-				for (UpgradeStep upgradeStep : upgradeSteps) {
-					Class<? extends UpgradeStep> clazz = upgradeStep.getClass();
-
-					if (Objects.equals(clazz.getName(), _CLASS_NAME)) {
-						upgradeProcesses[0] = (UpgradeProcess)upgradeStep;
-
-						break;
-					}
-				}
-			});
-
-		return upgradeProcesses[0];
-	}
-
 	private void _runUpgrade() throws Exception {
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 				_CLASS_NAME, LoggerTestUtil.OFF)) {
 
-			UpgradeProcess upgradeProcess = _getUpgradeProcess();
+			UpgradeProcess upgradeProcess = UpgradeTestUtil.getUpgradeStep(
+				_upgradeStepRegistrator, _CLASS_NAME);
 
 			upgradeProcess.upgrade();
 		}

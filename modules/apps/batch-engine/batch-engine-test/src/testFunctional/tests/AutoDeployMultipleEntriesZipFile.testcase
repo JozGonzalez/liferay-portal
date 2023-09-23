@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -62,6 +62,43 @@ definition {
 			TestUtils.assertEquals(
 				actual = ${blogTotalCount},
 				expected = 1);
+		}
+	}
+
+	@priority = 4
+	test CanAutoDeployBlogPostingZipWithJsonT {
+		property portal.acceptance = "true";
+
+		task ("Given a blogPostingJsonT.zip file") {
+			var filePath = BatchEngine.copyDependenciesDirToFolder(file = "blogPostingJsonT");
+
+			FileUtil.replaceStringInFile("${filePath}/blogPostingJsonT.json", 20096, ${staticCompanyId});
+
+			FileUtil.replaceStringInFile("${filePath}/blogPostingJsonT.json", 20123, ${staticUserId});
+
+			FileUtil.replaceStringInFile("${filePath}/blogPostingJsonT.json", 20119, ${staticSiteId});
+
+			var archivedFilePath = BatchEngine.archiveAndDeleteOriginalFile(
+				fileNameWithExtension = "blogPostingJsonT.zip",
+				sourceFilePath = ${filePath});
+		}
+
+		task ("When I add it to deploy folder") {
+			BatchEngine.moveFileToDeployFolder(
+				fileName = "blogPostingJsonT.zip",
+				sourceFilePath = ${archivedFilePath});
+		}
+
+		task ("Then all blog postings are imported") {
+			BatchEngine.waitUntilBlogsVisibleInUI();
+
+			var response = BlogPostingAPI.getBlogPostings();
+
+			var blogTotalCount = JSONUtil.getWithJSONPath(${response}, "$..totalCount");
+
+			TestUtils.assertEquals(
+				actual = ${blogTotalCount},
+				expected = 3);
 		}
 	}
 

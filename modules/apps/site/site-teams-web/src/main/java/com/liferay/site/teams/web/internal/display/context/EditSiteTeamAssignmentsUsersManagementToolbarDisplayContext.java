@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.teams.web.internal.display.context;
@@ -19,16 +10,17 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.users.admin.item.selector.UserSiteTeamItemSelectorCriterion;
 
 import java.util.List;
 
@@ -89,26 +81,7 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 			return CreationMenuBuilder.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.putData("action", "selectUser");
-
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)httpServletRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
-
-					dropdownItem.putData(
-						"selectUserURL",
-						PortletURLBuilder.createRenderURL(
-							liferayPortletResponse
-						).setMVCPath(
-							"/select_users.jsp"
-						).setRedirect(
-							themeDisplay.getURLCurrent()
-						).setParameter(
-							"teamId",
-							_editSiteTeamAssignmentsUsersDisplayContext.
-								getTeamId()
-						).setWindowState(
-							LiferayWindowState.POP_UP
-						).buildString());
+					dropdownItem.putData("selectUserURL", _getSelectUsersURL());
 
 					String title = LanguageUtil.format(
 						httpServletRequest, "add-new-user-to-x",
@@ -157,13 +130,28 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 	}
 
 	@Override
-	protected String[] getNavigationKeys() {
-		return new String[] {"all"};
-	}
-
-	@Override
 	protected String[] getOrderByKeys() {
 		return new String[] {"first-name", "screen-name"};
+	}
+
+	private String _getSelectUsersURL() {
+		ItemSelector itemSelector =
+			(ItemSelector)httpServletRequest.getAttribute(
+				ItemSelector.class.getName());
+
+		UserSiteTeamItemSelectorCriterion userSiteTeamItemSelectorCriterion =
+			new UserSiteTeamItemSelectorCriterion();
+
+		userSiteTeamItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new UUIDItemSelectorReturnType());
+		userSiteTeamItemSelectorCriterion.setTeamId(
+			_editSiteTeamAssignmentsUsersDisplayContext.getTeamId());
+
+		return String.valueOf(
+			itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+				liferayPortletResponse.getNamespace() + "selectUsers",
+				userSiteTeamItemSelectorCriterion));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

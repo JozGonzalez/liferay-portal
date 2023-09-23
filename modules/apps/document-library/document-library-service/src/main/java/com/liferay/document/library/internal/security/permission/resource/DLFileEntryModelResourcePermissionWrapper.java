@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.security.permission.resource;
@@ -27,7 +18,6 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFacto
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.BaseModelPermissionCheckerUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.ResourcePermissionCheckerUtil;
 import com.liferay.portal.kernel.security.permission.resource.BaseModelResourcePermissionWrapper;
@@ -35,6 +25,7 @@ import com.liferay.portal.kernel.security.permission.resource.DynamicInheritance
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionLogic;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.StagedModelPermissionLogic;
 import com.liferay.portal.kernel.util.Validator;
@@ -111,11 +102,14 @@ public class DLFileEntryModelResourcePermissionWrapper
 							return null;
 						}
 
+						String relatedModelActionId = _getRelatedModelActionId(
+							actionId);
+
 						Boolean hasResourcePermission =
 							ResourcePermissionCheckerUtil.
 								containsResourcePermission(
 									permissionChecker, className, classPK,
-									actionId);
+									relatedModelActionId);
 
 						if ((hasResourcePermission != null) &&
 							!hasResourcePermission) {
@@ -124,10 +118,9 @@ public class DLFileEntryModelResourcePermissionWrapper
 						}
 
 						Boolean hasBaseModelPermission =
-							BaseModelPermissionCheckerUtil.
-								containsBaseModelPermission(
-									permissionChecker, fileEntry.getGroupId(),
-									className, classPK, actionId);
+							ModelResourcePermissionUtil.contains(
+								permissionChecker, fileEntry.getGroupId(),
+								className, classPK, relatedModelActionId);
 
 						if ((hasBaseModelPermission != null) &&
 							!hasBaseModelPermission) {
@@ -163,6 +156,14 @@ public class DLFileEntryModelResourcePermissionWrapper
 
 			return _dlFolderLocalService.getFolder(folderId);
 		};
+	}
+
+	private String _getRelatedModelActionId(String actionId) {
+		if (actionId.equals(ActionKeys.DOWNLOAD)) {
+			return ActionKeys.VIEW;
+		}
+
+		return actionId;
 	}
 
 	@Reference

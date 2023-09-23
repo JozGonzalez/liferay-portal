@@ -1,15 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {string} from 'yup';
+import {number, string} from 'yup';
 
 import {TacticKeys} from '../../../../../../common/enums/mdfRequestTactics';
 
@@ -50,17 +44,26 @@ const getMiscellaneousMarketingFieldsValidation = (tactic: TacticKeys) => {
 					.trim()
 					.max(255, 'You have exceeded the character limit')
 					.required('Required'),
-				weeksAiring: string()
-					.trim()
-					.max(255, 'You have exceeded the character limit'),
+				weeksAiring: number()
+					.typeError('The input must be a number')
+					.max(
+						999999999,
+						'The value cannot be greater than 9,999,999.99'
+					)
+					.min(1, 'Required')
+					.required('Required'),
 			};
 		}
 		else if (tactic === TacticKeys.DIRECT_MAIL) {
 			targetFields = {
 				...targetFields,
-				targetOfSends: string()
-					.trim()
-					.max(255, 'You have exceeded the character limit')
+				targetOfSends: number()
+					.typeError('The input must be a number')
+					.max(
+						999999999,
+						'The value cannot be greater than 9,999,999.99'
+					)
+					.min(1, 'Required')
 					.required('Required'),
 			};
 		}
@@ -81,9 +84,10 @@ const getMiscellaneousMarketingFieldsValidation = (tactic: TacticKeys) => {
 	else if (tactic === TacticKeys.CO_BRANDED_MERCHANDISE) {
 		targetFields = {
 			...basicEventFields,
-			quantity: string()
-				.trim()
-				.max(255, 'You have exceeded the character limit')
+			quantity: number()
+				.typeError('The input must be a number')
+				.max(999999999, 'The value cannot be greater than 9,999,999.99')
+				.min(1, 'Required')
 				.required('Required'),
 			typeMerchandise: string()
 				.trim()

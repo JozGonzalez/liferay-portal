@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.test.util;
@@ -117,56 +108,52 @@ public class SegmentsTestUtil {
 	}
 
 	public static SegmentsExperience addSegmentsExperience(
-			long groupId, long classNameId, long classPK)
+			long groupId, long plid)
 		throws PortalException {
 
 		SegmentsEntry segmentsEntry = addSegmentsEntry(groupId);
 
 		return addSegmentsExperience(
-			groupId, segmentsEntry.getSegmentsEntryId(), classNameId, classPK);
+			groupId, segmentsEntry.getSegmentsEntryId(), plid);
 	}
 
 	public static SegmentsExperience addSegmentsExperience(
-			long groupId, long segmentsEntryId, long classNameId, long classPK)
+			long groupId, long segmentsEntryId, long plid)
 		throws PortalException {
 
 		return addSegmentsExperience(
-			segmentsEntryId, classNameId, classPK,
+			segmentsEntryId, plid,
 			ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	public static SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
-			ServiceContext serviceContext)
+			long segmentsEntryId, long plid, ServiceContext serviceContext)
 		throws PortalException {
 
 		return SegmentsExperienceLocalServiceUtil.addSegmentsExperience(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			segmentsEntryId, classNameId, classPK,
-			RandomTestUtil.randomLocaleStringMap(), true,
+			segmentsEntryId, plid, RandomTestUtil.randomLocaleStringMap(), true,
 			new UnicodeProperties(true), serviceContext);
 	}
 
 	public static SegmentsExperience addSegmentsExperience(
-			long classNameId, long classPK, ServiceContext serviceContext)
+			long plid, ServiceContext serviceContext)
 		throws PortalException {
 
 		SegmentsEntry segmentsEntry = addSegmentsEntry(
 			serviceContext.getScopeGroupId());
 
 		return addSegmentsExperience(
-			segmentsEntry.getSegmentsEntryId(), classNameId, classPK,
-			serviceContext);
+			segmentsEntry.getSegmentsEntryId(), plid, serviceContext);
 	}
 
 	public static SegmentsExperiment addSegmentsExperiment(
-			long groupId, long segmentsExperienceId, long classNameId,
-			long classPK)
+			long groupId, long segmentsExperienceId, long plid)
 		throws PortalException {
 
 		return SegmentsExperimentLocalServiceUtil.addSegmentsExperiment(
-			segmentsExperienceId, classNameId, classPK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			segmentsExperienceId, plid, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
 			SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
 			StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(groupId));

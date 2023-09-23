@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.date.time;
@@ -58,18 +49,37 @@ public class DateTimeDDMFormFieldTypeSettingsTest
 
 		List<DDMFormRule> ddmFormRules = ddmForm.getDDMFormRules();
 
-		Assert.assertEquals(ddmFormRules.toString(), 1, ddmFormRules.size());
+		Assert.assertEquals(ddmFormRules.toString(), 2, ddmFormRules.size());
 
-		DDMFormRule ddmFormRule = ddmFormRules.get(0);
+		DDMFormRule ddmFormRule0 = ddmFormRules.get(0);
 
-		List<String> actions = ddmFormRule.getActions();
+		Assert.assertEquals(
+			"hasObjectField(getValue('objectFieldName'))",
+			ddmFormRule0.getCondition());
+
+		List<String> actions = ddmFormRule0.getActions();
 
 		Assert.assertEquals(actions.toString(), 1, actions.size());
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', getValue('required'))",
+			"setValue('required', isRequiredObjectField(getValue(" +
+				"'objectFieldName')))",
 			actions.get(0));
 
-		Assert.assertEquals("TRUE", ddmFormRule.getCondition());
+		DDMFormRule ddmFormRule1 = ddmFormRules.get(1);
+
+		actions = ddmFormRule1.getActions();
+
+		Assert.assertEquals(actions.toString(), 3, actions.size());
+		Assert.assertEquals(
+			"setEnabled('required', not(hasObjectField(" +
+				"getValue('objectFieldName'))))",
+			actions.get(0));
+		Assert.assertEquals("setVisible('dataType', false)", actions.get(1));
+		Assert.assertEquals(
+			"setVisible('requiredErrorMessage', getValue('required'))",
+			actions.get(2));
+
+		Assert.assertEquals("TRUE", ddmFormRule1.getCondition());
 	}
 
 	@Test
@@ -82,8 +92,9 @@ public class DateTimeDDMFormFieldTypeSettingsTest
 					"label", "tip", "required", "requiredErrorMessage"),
 				DDMFormLayoutTestUtil.createDDMFormLayoutPage(
 					"dataType", "name", "fieldReference", "predefinedValue",
-					"indexType", "showLabel", "repeatable", "readOnly",
-					"rulesActionDisabled", "rulesConditionDisabled")));
+					"objectFieldName", "indexType", "showLabel", "repeatable",
+					"readOnly", "rulesActionDisabled", "rulesConditionDisabled",
+					"type")));
 	}
 
 }

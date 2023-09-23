@@ -1,45 +1,49 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.content.web.internal.portlet.toolbar.contributor;
 
+import com.liferay.dynamic.data.mapping.item.selector.DDMStructureItemSelectorReturnType;
+import com.liferay.dynamic.data.mapping.item.selector.criterion.DDMStructureItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureService;
+import com.liferay.dynamic.data.mapping.util.comparator.StructureCreateDateComparator;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.constants.JournalConstants;
 import com.liferay.journal.constants.JournalContentPortletKeys;
-import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.content.web.internal.configuration.JournalContentPortletInstanceConfiguration;
-import com.liferay.journal.service.JournalFolderService;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.BasePortletToolbarContributor;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
+import com.liferay.portal.kernel.servlet.taglib.ui.JavaScriptMenuItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
@@ -62,10 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 		"mvc.path=-", "mvc.path=/view.jsp"
 	},
-	service = {
-		JournalContentPortletToolbarContributor.class,
-		PortletToolbarContributor.class
-	}
+	service = PortletToolbarContributor.class
 )
 public class JournalContentPortletToolbarContributor
 	extends BasePortletToolbarContributor {
@@ -89,7 +90,7 @@ public class JournalContentPortletToolbarContributor
 
 		try {
 			_addPortletTitleAddJournalArticleMenuItems(
-				menuItems, themeDisplay, portletRequest);
+				menuItems, themeDisplay, portletRequest, portletResponse);
 		}
 		catch (Exception exception) {
 			_log.error("Unable to add folder menu item", exception);
@@ -100,12 +101,16 @@ public class JournalContentPortletToolbarContributor
 
 	private void _addPortletTitleAddJournalArticleMenuItems(
 			List<MenuItem> menuItems, ThemeDisplay themeDisplay,
-			PortletRequest portletRequest)
+			PortletRequest portletRequest, PortletResponse portletResponse)
 		throws Exception {
 
-		long plid = themeDisplay.getPlid();
+		List<DDMStructure> ddmStructures = null;
+
+		long[] currentAndAncestorSiteGroupIds =
+			_portal.getCurrentAndAncestorSiteGroupIds(
+				themeDisplay.getScopeGroupId());
+
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-		long scopeGroupId = themeDisplay.getScopeGroupId();
 
 		PortletURL portletURL = PortletURLBuilder.create(
 			_portal.getControlPanelPortletURL(
@@ -118,24 +123,24 @@ public class JournalContentPortletToolbarContributor
 		).setPortletResource(
 			portletDisplay.getId()
 		).setParameter(
-			"groupId", scopeGroupId
+			"groupId", themeDisplay.getScopeGroupId()
 		).setParameter(
-			"refererPlid", plid
+			"refererPlid", themeDisplay.getPlid()
 		).buildPortletURL();
-
-		List<DDMStructure> ddmStructures =
-			_journalFolderService.getDDMStructures(
-				_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
-				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-				JournalFolderConstants.RESTRICTION_TYPE_INHERIT);
 
 		JournalContentPortletInstanceConfiguration
 			journalContentPortletInstanceConfiguration =
-				portletDisplay.getPortletInstanceConfiguration(
-					JournalContentPortletInstanceConfiguration.class);
+				_configurationProvider.getPortletInstanceConfiguration(
+					JournalContentPortletInstanceConfiguration.class,
+					themeDisplay);
 
 		if (journalContentPortletInstanceConfiguration.
 				sortStructuresByByName()) {
+
+			ddmStructures = _ddmStructureService.getStructures(
+				themeDisplay.getCompanyId(), currentAndAncestorSiteGroupIds,
+				_portal.getClassNameId(JournalArticle.class), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, new StructureCreateDateComparator());
 
 			Locale locale = themeDisplay.getLocale();
 
@@ -146,6 +151,16 @@ public class JournalContentPortletToolbarContributor
 
 					return name1.compareTo(name2);
 				});
+
+			ddmStructures = ddmStructures.subList(
+				0, _DEFAULT_MAX_DISPLAY_ITEMS);
+		}
+		else {
+			ddmStructures = _ddmStructureService.getStructures(
+				themeDisplay.getCompanyId(), currentAndAncestorSiteGroupIds,
+				_portal.getClassNameId(JournalArticle.class), 0,
+				_DEFAULT_MAX_DISPLAY_ITEMS,
+				new StructureCreateDateComparator());
 		}
 
 		for (DDMStructure ddmStructure : ddmStructures) {
@@ -172,10 +187,92 @@ public class JournalContentPortletToolbarContributor
 					themeDisplay.getLocale()));
 			urlMenuItem.setURL(
 				HttpComponentsUtil.addParameter(
-					portletURL.toString(), "refererPlid", plid));
+					portletURL.toString(), "refererPlid",
+					themeDisplay.getPlid()));
 
 			menuItems.add(urlMenuItem);
 		}
+
+		int count = _ddmStructureService.getStructuresCount(
+			themeDisplay.getCompanyId(), currentAndAncestorSiteGroupIds,
+			_portal.getClassNameId(JournalArticle.class));
+
+		if (count > _DEFAULT_MAX_DISPLAY_ITEMS) {
+			MenuItem menuItem = menuItems.get(menuItems.size() - 1);
+
+			menuItem.setSeparator(true);
+
+			JavaScriptMenuItem javaScriptMenuItem = new JavaScriptMenuItem();
+
+			javaScriptMenuItem.setLabel(
+				_language.get(
+					_portal.getHttpServletRequest(portletRequest),
+					"show-more"));
+			javaScriptMenuItem.setOnClick(
+				StringBundler.concat(
+					"Liferay.Util.openSelectionModal({id: '",
+					portletResponse.getNamespace(), "selectDDMStructure', ",
+					"onSelect: function (selectedItem) {if (selectedItem) {",
+					"const itemValue = JSON.parse(selectedItem.value);",
+					"Liferay.Util.navigate(Liferay.Util.addParams({",
+					_portal.getPortletNamespace(JournalPortletKeys.JOURNAL),
+					"ddmStructureId: itemValue.ddmstructureid}, '",
+					_getEditJournalArticleURL(
+						portletDisplay, portletRequest, themeDisplay),
+					"'));}}, selectEventName: '",
+					portletResponse.getNamespace(),
+					"selectDDMStructure', title: '",
+					UnicodeLanguageUtil.get(
+						_portal.getHttpServletRequest(portletRequest),
+						"select-structure"),
+					"', url: '",
+					_getSelectDDMStructureURL(portletRequest, portletResponse),
+					"'});"));
+
+			menuItems.add(javaScriptMenuItem);
+		}
+	}
+
+	private String _getEditJournalArticleURL(
+			PortletDisplay portletDisplay, PortletRequest portletRequest,
+			ThemeDisplay themeDisplay)
+		throws Exception {
+
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, JournalPortletKeys.JOURNAL,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_article.jsp"
+		).setRedirect(
+			_portal.getLayoutFullURL(themeDisplay)
+		).setPortletResource(
+			portletDisplay.getId()
+		).setParameter(
+			"groupId", themeDisplay.getScopeGroupId()
+		).setParameter(
+			"refererPlid", themeDisplay.getPlid()
+		).setGlobalParameter(
+			"refererPlid", themeDisplay.getPlid()
+		).buildString();
+	}
+
+	private String _getSelectDDMStructureURL(
+		PortletRequest portletRequest, PortletResponse portletResponse) {
+
+		DDMStructureItemSelectorCriterion ddmStructureItemSelectorCriterion =
+			new DDMStructureItemSelectorCriterion();
+
+		ddmStructureItemSelectorCriterion.setClassNameId(
+			_portal.getClassNameId(JournalArticle.class));
+		ddmStructureItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new DDMStructureItemSelectorReturnType());
+
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(portletRequest),
+				portletResponse.getNamespace() + "selectDDMStructure",
+				ddmStructureItemSelectorCriterion));
 	}
 
 	private boolean _hasAddArticlePermission(ThemeDisplay themeDisplay) {
@@ -209,14 +306,23 @@ public class JournalContentPortletToolbarContributor
 		return hasAddArticlePermission;
 	}
 
+	private static final int _DEFAULT_MAX_DISPLAY_ITEMS = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.MENU_MAX_DISPLAY_ITEMS));
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentPortletToolbarContributor.class);
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private DDMStructureService _ddmStructureService;
 
 	@Reference
 	private Html _html;
 
 	@Reference
-	private JournalFolderService _journalFolderService;
+	private ItemSelector _itemSelector;
 
 	@Reference
 	private Language _language;

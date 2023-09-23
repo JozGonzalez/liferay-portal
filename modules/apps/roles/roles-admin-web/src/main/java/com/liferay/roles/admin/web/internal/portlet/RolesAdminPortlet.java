@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.roles.admin.web.internal.portlet;
@@ -235,17 +226,20 @@ public class RolesAdminPortlet extends MVCPortlet {
 				roleTypeContributor.getClassName(), 0, name, titleMap,
 				descriptionMap, type, subtype, serviceContext);
 
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-			redirect = HttpComponentsUtil.setParameter(
-				redirect, actionResponse.getNamespace() + "roleId",
-				role.getRoleId());
-
-			actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(actionRequest, "redirect"));
 
 			SessionMessages.add(actionRequest, "roleCreated");
 
-			actionResponse.sendRedirect(redirect);
+			if (Validator.isNotNull(redirect)) {
+				redirect = HttpComponentsUtil.setParameter(
+					redirect, actionResponse.getNamespace() + "roleId",
+					role.getRoleId());
+
+				actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
+
+				actionResponse.sendRedirect(redirect);
+			}
 
 			return role;
 		}

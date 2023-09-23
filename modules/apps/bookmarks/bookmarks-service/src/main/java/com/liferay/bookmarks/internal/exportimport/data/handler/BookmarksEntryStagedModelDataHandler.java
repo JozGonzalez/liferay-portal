@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bookmarks.internal.exportimport.data.handler;
 
 import com.liferay.bookmarks.constants.BookmarksFolderConstants;
-import com.liferay.bookmarks.internal.exportimport.staged.model.repository.BookmarksEntryStagedModelRepository;
+import com.liferay.bookmarks.internal.exportimport.staged.model.repository.BookmarksEntryStagedModelRepositoryUtil;
 import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
@@ -120,7 +111,7 @@ public class BookmarksEntryStagedModelDataHandler
 		}
 		else {
 			importedEntry =
-				_bookmarksEntryStagedModelRepository.updateStagedModel(
+				BookmarksEntryStagedModelRepositoryUtil.updateStagedModel(
 					portletDataContext, importedEntry,
 					existingEntry.getEntryId());
 		}
@@ -136,7 +127,7 @@ public class BookmarksEntryStagedModelDataHandler
 	@Reference(
 		target = "(model.class.name=com.liferay.bookmarks.model.BookmarksEntry)"
 	)
-	private BookmarksEntryStagedModelRepository
+	private StagedModelRepository<BookmarksEntry>
 		_bookmarksEntryStagedModelRepository;
 
 }

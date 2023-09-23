@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.service.test;
@@ -45,6 +36,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -95,7 +87,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -116,17 +107,8 @@ public class BlogsEntryLocalServiceTest {
 		Bundle bundle = FrameworkUtil.getBundle(
 			BlogsEntryAttachmentFileEntryHelperTest.class);
 
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		for (Bundle installedBundle : bundleContext.getBundles()) {
-			String symbolicName = installedBundle.getSymbolicName();
-
-			if (symbolicName.equals("com.liferay.blogs.web")) {
-				bundle = installedBundle;
-
-				break;
-			}
-		}
+		bundle = BundleUtil.getBundle(
+			bundle.getBundleContext(), "com.liferay.blogs.web");
 
 		Class<?> clazz = bundle.loadClass(
 			"com.liferay.blogs.web.internal.util.BlogsUtil");

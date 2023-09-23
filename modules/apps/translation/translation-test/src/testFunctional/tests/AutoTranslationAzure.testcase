@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DMNavigator.openToConfigInSystemSettings(portlet = "Azure Translator");
 
@@ -24,7 +24,8 @@ definition {
 	@description = "This ensures that Azure translation can be used to auto-translate a content page."
 	@priority = 5
 	test CanTranslateContentPage {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateContentPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -57,7 +58,8 @@ definition {
 	@description = "This ensures that the fragment filed on content page can be translated independently."
 	@priority = 5
 	test CanTranslateContentPageFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateContentPageFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -112,7 +114,8 @@ definition {
 	@description = "This ensures that Azure translation can be used to auto-translate a web content."
 	@priority = 5
 	test CanTranslateWC {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateWC";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "WC content",
@@ -152,7 +155,8 @@ definition {
 	@description = "This ensures that the web content title and content filed can be translated independently"
 	@priority = 5
 	test CanTranslateWCFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateWCFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "This is the content of a web article",

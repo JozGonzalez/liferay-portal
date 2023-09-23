@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.web.internal.display.context;
@@ -35,9 +26,9 @@ import com.liferay.dynamic.data.mapping.form.web.internal.constants.DDMFormWebKe
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.helper.DDMFormAdminRequestHelper;
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.helper.FormInstancePermissionCheckerHelper;
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.util.DDMFormAdminActionDropdownItemsProvider;
-import com.liferay.dynamic.data.mapping.form.web.internal.instance.lifecycle.AddDefaultSharedFormLayoutPortalInstanceLifecycleListener;
 import com.liferay.dynamic.data.mapping.form.web.internal.search.DDMFormInstanceRowChecker;
 import com.liferay.dynamic.data.mapping.form.web.internal.search.DDMFormInstanceSearch;
+import com.liferay.dynamic.data.mapping.form.web.internal.util.DDMLayoutUtil;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeResponse;
@@ -146,8 +137,6 @@ public class DDMFormAdminDisplayContext {
 
 	public DDMFormAdminDisplayContext(
 		RenderRequest renderRequest, RenderResponse renderResponse,
-		AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
-			addDefaultSharedFormLayoutPortalInstanceLifecycleListener,
 		DDMFormBuilderContextFactory ddmFormBuilderContextFactory,
 		DDMFormBuilderSettingsRetriever ddmFormBuilderSettingsRetriever,
 		DDMFormContextDeserializer<DDMFormValues> ddmFormContextToDDMFormValues,
@@ -170,8 +159,6 @@ public class DDMFormAdminDisplayContext {
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		Portal portal) {
 
-		_addDefaultSharedFormLayoutPortalInstanceLifecycleListener =
-			addDefaultSharedFormLayoutPortalInstanceLifecycleListener;
 		_ddmFormBuilderContextFactory = ddmFormBuilderContextFactory;
 		_ddmFormBuilderSettingsRetriever = ddmFormBuilderSettingsRetriever;
 		_ddmFormContextToDDMFormValues = ddmFormContextToDDMFormValues;
@@ -640,11 +627,11 @@ public class DDMFormAdminDisplayContext {
 	}
 
 	public String getEmptyResultsMessage() {
-		SearchContainer<?> search = getSearch();
+		SearchContainer<?> searchContainer = getSearchContainer();
 
 		return LanguageUtil.get(
 			ddmFormAdminRequestHelper.getRequest(),
-			search.getEmptyResultsMessage());
+			searchContainer.getEmptyResultsMessage());
 	}
 
 	public String getExportFormURL(long formInstanceId) {
@@ -1091,7 +1078,19 @@ public class DDMFormAdminDisplayContext {
 		return ddmFormAdminRequestHelper.getScopeGroupId();
 	}
 
-	public SearchContainer<?> getSearch() {
+	public String getSearchActionURL() {
+		return PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/admin/view.jsp"
+		).setParameter(
+			"currentTab", "forms"
+		).setParameter(
+			"groupId", getScopeGroupId()
+		).buildString();
+	}
+
+	public SearchContainer<?> getSearchContainer() {
 		PortletURL portletURL = PortletURLBuilder.create(
 			getPortletURL()
 		).setParameter(
@@ -1129,25 +1128,13 @@ public class DDMFormAdminDisplayContext {
 		return ddmFormInstanceSearch;
 	}
 
-	public String getSearchActionURL() {
-		return PortletURLBuilder.createRenderURL(
-			renderResponse
-		).setMVCPath(
-			"/admin/view.jsp"
-		).setParameter(
-			"currentTab", "forms"
-		).setParameter(
-			"groupId", getScopeGroupId()
-		).buildString();
-	}
-
 	public String getSearchContainerId() {
 		return "formInstance";
 	}
 
 	public String getSharedFormURL() {
-		return _addDefaultSharedFormLayoutPortalInstanceLifecycleListener.
-			getFormLayoutURL(ddmFormAdminRequestHelper.getThemeDisplay());
+		return DDMLayoutUtil.getFormLayoutURL(
+			ddmFormAdminRequestHelper.getThemeDisplay());
 	}
 
 	public String getShareFormInstanceURL(DDMFormInstance ddmFormInstance) {
@@ -1194,7 +1181,7 @@ public class DDMFormAdminDisplayContext {
 	}
 
 	public int getTotalItems() {
-		SearchContainer<?> searchContainer = getSearch();
+		SearchContainer<?> searchContainer = getSearchContainer();
 
 		return searchContainer.getTotal();
 	}
@@ -1444,7 +1431,8 @@ public class DDMFormAdminDisplayContext {
 
 	protected String getDisplayStyle(
 		PortletRequest portletRequest,
-		DDMFormWebConfiguration formWebConfiguration, String[] displayViews) {
+		DDMFormWebConfiguration ddmFormWebConfiguration,
+		String[] displayViews) {
 
 		PortalPreferences portalPreferences =
 			PortletPreferencesFactoryUtil.getPortalPreferences(portletRequest);
@@ -1455,7 +1443,7 @@ public class DDMFormAdminDisplayContext {
 		if (Validator.isNull(displayStyle)) {
 			displayStyle = portalPreferences.getValue(
 				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN, "display-style",
-				formWebConfiguration.defaultDisplayView());
+				ddmFormWebConfiguration.defaultDisplayView());
 		}
 		else if (ArrayUtil.contains(displayViews, displayStyle)) {
 			portalPreferences.setValue(
@@ -1788,8 +1776,6 @@ public class DDMFormAdminDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormAdminDisplayContext.class);
 
-	private final AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
-		_addDefaultSharedFormLayoutPortalInstanceLifecycleListener;
 	private final DDMFormBuilderContextFactory _ddmFormBuilderContextFactory;
 	private DDMFormBuilderSettingsResponse _ddmFormBuilderSettingsResponse;
 	private final DDMFormBuilderSettingsRetriever

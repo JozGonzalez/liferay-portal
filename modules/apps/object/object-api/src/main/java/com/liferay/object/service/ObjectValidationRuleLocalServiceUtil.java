@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
@@ -48,12 +39,15 @@ public class ObjectValidationRuleLocalServiceUtil {
 	public static ObjectValidationRule addObjectValidationRule(
 			long userId, long objectDefinitionId, boolean active, String engine,
 			Map<java.util.Locale, String> errorLabelMap,
-			Map<java.util.Locale, String> nameMap, String script)
+			Map<java.util.Locale, String> nameMap, String outputType,
+			String script, boolean system,
+			List<com.liferay.object.model.ObjectValidationRuleSetting>
+				objectValidationRuleSettings)
 		throws PortalException {
 
 		return getService().addObjectValidationRule(
 			userId, objectDefinitionId, active, engine, errorLabelMap, nameMap,
-			script);
+			outputType, script, system, objectValidationRuleSettings);
 	}
 
 	/**
@@ -121,9 +115,11 @@ public class ObjectValidationRuleLocalServiceUtil {
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	public static ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule) {
+			ObjectValidationRule objectValidationRule)
+		throws PortalException {
 
 		return getService().deleteObjectValidationRule(objectValidationRule);
 	}
@@ -341,6 +337,13 @@ public class ObjectValidationRuleLocalServiceUtil {
 		return getService().getObjectValidationRulesCount();
 	}
 
+	public static int getObjectValidationRulesCount(
+		long objectDefinitionId, boolean active) {
+
+		return getService().getObjectValidationRulesCount(
+			objectDefinitionId, active);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -359,15 +362,24 @@ public class ObjectValidationRuleLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static void unassociateObjectField(
+		com.liferay.object.model.ObjectField objectField) {
+
+		getService().unassociateObjectField(objectField);
+	}
+
 	public static ObjectValidationRule updateObjectValidationRule(
 			long objectValidationRuleId, boolean active, String engine,
 			Map<java.util.Locale, String> errorLabelMap,
-			Map<java.util.Locale, String> nameMap, String script)
+			Map<java.util.Locale, String> nameMap, String outputType,
+			String script,
+			List<com.liferay.object.model.ObjectValidationRuleSetting>
+				objectValidationRuleSettings)
 		throws PortalException {
 
 		return getService().updateObjectValidationRule(
 			objectValidationRuleId, active, engine, errorLabelMap, nameMap,
-			script);
+			outputType, script, objectValidationRuleSettings);
 	}
 
 	/**
@@ -399,6 +411,10 @@ public class ObjectValidationRuleLocalServiceUtil {
 
 	public static ObjectValidationRuleLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ObjectValidationRuleLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ObjectValidationRuleLocalService _service;

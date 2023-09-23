@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -100,7 +91,19 @@ public class SessionKeysCheck extends BaseFileCheck {
 
 			String prefix = match.substring(0, y + 1);
 			String suffix = match.substring(z);
+
 			String oldKey = match.substring(y + 1, z);
+			String oldKeySuffix = StringPool.BLANK;
+
+			for (String allowedSuffix : _ALLOWED_SUFFIXES) {
+				if (oldKey.endsWith(allowedSuffix)) {
+					oldKey = oldKey.substring(
+						0, oldKey.lastIndexOf(allowedSuffix));
+					oldKeySuffix = allowedSuffix;
+
+					break;
+				}
+			}
 
 			boolean alphaNumericKey = true;
 
@@ -124,6 +127,11 @@ public class SessionKeysCheck extends BaseFileCheck {
 				continue;
 			}
 
+			if (Validator.isNotNull(oldKeySuffix)) {
+				newKey = newKey + oldKeySuffix;
+				oldKey = oldKey + oldKeySuffix;
+			}
+
 			String oldSub = StringBundler.concat(prefix, oldKey, suffix);
 			String newSub = StringBundler.concat(prefix, newKey, suffix);
 
@@ -141,5 +149,9 @@ public class SessionKeysCheck extends BaseFileCheck {
 
 		return content;
 	}
+
+	private static final String[] _ALLOWED_SUFFIXES = {
+		"_requestProcessedWarning"
+	};
 
 }

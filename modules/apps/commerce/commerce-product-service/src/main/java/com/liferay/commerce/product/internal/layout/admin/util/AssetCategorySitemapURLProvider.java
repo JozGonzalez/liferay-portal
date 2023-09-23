@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.internal.layout.admin.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
@@ -23,8 +15,10 @@ import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -40,6 +34,8 @@ import com.liferay.site.util.Sitemap;
 import com.liferay.site.util.SitemapURLProvider;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,17 +57,16 @@ public class AssetCategorySitemapURLProvider implements SitemapURLProvider {
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		long plid = _portal.getPlidFromPortletId(
-			layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
-			CPPortletKeys.CP_CATEGORY_CONTENT_WEB);
-
-		Layout layout = _layoutLocalService.fetchLayout(plid);
+		Layout layout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+			layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout());
 
 		if (layout == null) {
 			return;
 		}
 
-		if (layoutUuid.equals(layout.getUuid())) {
+		if (SitemapURLProviderUtil.hasPortletId(
+				layout, CPPortletKeys.CP_CATEGORY_CONTENT_WEB)) {
+
 			Group group = layoutSet.getGroup();
 
 			Company company = _companyLocalService.getCompany(
@@ -79,23 +74,23 @@ public class AssetCategorySitemapURLProvider implements SitemapURLProvider {
 
 			List<AssetVocabulary> assetVocabularies =
 				_assetVocabularyService.getGroupVocabularies(
-					company.getGroupId(),
-					group.getName(themeDisplay.getLocale()), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null);
+					company.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null);
 
-			if (assetVocabularies.size() == 1) {
-				AssetVocabulary assetVocabulary = assetVocabularies.get(0);
+			for (AssetVocabulary assetVocabulary : assetVocabularies) {
+				if (assetVocabulary.getVisibilityType() !=
+						AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL) {
 
-				List<AssetCategory> assetCategories =
-					_assetCategoryService.getVocabularyRootCategories(
-						assetVocabulary.getGroupId(),
-						assetVocabulary.getVocabularyId(), QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, null);
+					List<AssetCategory> assetCategories =
+						_assetCategoryService.getVocabularyCategories(
+							assetVocabulary.getVocabularyId(),
+							QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
-				for (AssetCategory assetCategory : assetCategories) {
-					visitLayout(
-						element, layout, assetCategory.getCategoryId(),
-						themeDisplay);
+					for (AssetCategory assetCategory : assetCategories) {
+						visitLayout(
+							element, layout, assetCategory.getCategoryId(),
+							themeDisplay);
+					}
 				}
 			}
 		}
@@ -137,13 +132,26 @@ public class AssetCategorySitemapURLProvider implements SitemapURLProvider {
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
 				_portal.getClassNameId(AssetCategory.class), assetCategoryId);
 
-		String categoryFriendlyURL =
-			currentSiteURL + urlSeparator +
-				friendlyURLEntry.getUrlTitle(themeDisplay.getLanguageId());
+		currentSiteURL = StringBundler.concat(
+			currentSiteURL, urlSeparator, friendlyURLEntry.getUrlTitle());
 
-		_sitemap.addURLElement(
-			element, categoryFriendlyURL, typeSettingsUnicodeProperties,
-			layout.getModifiedDate(), categoryFriendlyURL, null);
+		Map<Locale, String> alternateFriendlyURLs =
+			SitemapURLProviderUtil.getAlternateFriendlyURLs(
+				_portal.getAlternateURLs(
+					currentSiteURL, themeDisplay, layout,
+					_language.getAvailableLocales(layout.getGroupId())),
+				friendlyURLEntry.getFriendlyURLEntryId(),
+				_friendlyURLEntryLocalService);
+
+		String categoryFriendlyURL = alternateFriendlyURLs.get(
+			_portal.getLocale(themeDisplay.getRequest()));
+
+		for (String alternateFriendlyURL : alternateFriendlyURLs.values()) {
+			_sitemap.addURLElement(
+				element, alternateFriendlyURL, typeSettingsUnicodeProperties,
+				layout.getModifiedDate(), categoryFriendlyURL,
+				alternateFriendlyURLs);
+		}
 	}
 
 	@Reference
@@ -160,6 +168,9 @@ public class AssetCategorySitemapURLProvider implements SitemapURLProvider {
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

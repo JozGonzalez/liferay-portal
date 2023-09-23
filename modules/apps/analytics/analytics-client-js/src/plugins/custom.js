@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {closest, getClosestAssetElement} from '../utils/assets';
+import {closest, getClosestAssetElement, isTrackable} from '../utils/assets';
 import {CUSTOM, DEBOUNCE} from '../utils/constants';
 import {debounce} from '../utils/debounce';
 import {clickEvent, onReady} from '../utils/events';
@@ -26,26 +17,16 @@ const applicationId = CUSTOM;
  * @returns {Object} The payload with custom information
  */
 function getCustomAssetPayload({dataset}) {
-	const {
-		analyticsAssetCategory: category,
-		analyticsAssetId: assetId,
-		analyticsAssetTitle: title,
-	} = dataset;
-
-	return {
-		assetId,
-		category,
-		title,
+	const payload = {
+		assetId: dataset.analyticsAssetId.trim(),
+		category: dataset.analyticsAssetCategory,
 	};
-}
 
-/**
- * Wether a Custom Asset is trackable or not.
- * @param {Object} element The Custom DOM element
- * @returns {boolean} True if the element is trackable.
- */
-function isTrackableCustomAsset(element) {
-	return element && 'analyticsAssetId' in element.dataset;
+	if (dataset.analyticsAssetTitle) {
+		Object.assign(payload, {title: dataset.analyticsAssetTitle.trim()});
+	}
+
+	return payload;
 }
 
 /**
@@ -61,7 +42,13 @@ function trackCustomAssetDownloaded(analytics) {
 
 		const customAssetElement = getClosestAssetElement(target, 'custom');
 
-		if (actionElement && isTrackableCustomAsset(customAssetElement)) {
+		if (
+			actionElement &&
+			isTrackable(customAssetElement, [
+				'analyticsAssetId',
+				'analyticsAssetType',
+			])
+		) {
 			analytics.send(
 				'assetDownloaded',
 				applicationId,
@@ -112,8 +99,8 @@ function trackCustomAssetSubmitted(analytics) {
 		const customAssetElement = getClosestAssetElement(target, 'custom');
 
 		if (
-			!isTrackableCustomAsset(customAssetElement) ||
-			(isTrackableCustomAsset(customAssetElement) &&
+			!isTrackable(customAssetElement) ||
+			(isTrackable(customAssetElement) &&
 				(target.tagName !== 'FORM' || event.defaultPrevented))
 		) {
 			return;
@@ -144,7 +131,7 @@ function trackCustomAssetViewed(analytics) {
 					'[data-analytics-asset-type="custom"]'
 				)
 			)
-			.filter((element) => isTrackableCustomAsset(element))
+			.filter((element) => isTrackable(element))
 			.forEach((element) => {
 				const formEnabled = !!element.getElementsByTagName('form')
 					.length;
@@ -179,7 +166,7 @@ function trackCustomAssetClick(analytics) {
 		applicationId,
 		eventType: 'assetClicked',
 		getPayload: getCustomAssetPayload,
-		isTrackable: isTrackableCustomAsset,
+		isTrackable,
 		type: 'custom',
 	});
 }

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.registry;
 
-import com.liferay.portal.kernel.dao.db.DBProcessContext;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -27,8 +19,6 @@ import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-
-import org.osgi.framework.Version;
 
 /**
  * @author Carlos Sierra Andrés
@@ -50,23 +40,21 @@ public class UpgradeStepRegistryTest {
 			"0.0.0", "1.0.0", testUpgradeStep, testUpgradeStep, testUpgradeStep,
 			testUpgradeStep);
 
-		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos();
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
 
-		Assert.assertEquals(upgradeInfos.toString(), 4, upgradeInfos.size());
+		Assert.assertEquals(upgradeInfos.toString(), 1, upgradeInfos.size());
+
+		UpgradeInfo upgradeInfo = upgradeInfos.get(0);
+
+		Assert.assertEquals("0.0.0", upgradeInfo.getFromSchemaVersionString());
+		Assert.assertEquals("1.0.0", upgradeInfo.getToSchemaVersionString());
 		Assert.assertEquals(
 			Arrays.asList(
-				new UpgradeInfo("0.0.0", "1.0.0.step-3", 0, testUpgradeStep),
-				new UpgradeInfo(
-					"1.0.0.step-3", "1.0.0.step-2", 0, testUpgradeStep),
-				new UpgradeInfo(
-					"1.0.0.step-2", "1.0.0.step-1", 0, testUpgradeStep),
-				new UpgradeInfo("1.0.0.step-1", "1.0.0", 0, testUpgradeStep)),
-			upgradeInfos);
-
-		for (UpgradeInfo upgradeInfo : upgradeInfos) {
-			new Version(upgradeInfo.getFromSchemaVersionString());
-			new Version(upgradeInfo.getToSchemaVersionString());
-		}
+				testUpgradeStep, testUpgradeStep, testUpgradeStep,
+				testUpgradeStep),
+			ReflectionTestUtil.getFieldValue(
+				upgradeInfo.getUpgradeStep(), "arg$1"));
 	}
 
 	@Test
@@ -75,7 +63,8 @@ public class UpgradeStepRegistryTest {
 
 		upgradeStepRegistry.register("0.0.0", "1.0.0");
 
-		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos();
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
 
 		Assert.assertTrue(upgradeInfos.toString(), upgradeInfos.isEmpty());
 	}
@@ -88,7 +77,8 @@ public class UpgradeStepRegistryTest {
 
 		upgradeStepRegistry.register("0.0.0", "1.0.0", testUpgradeStep);
 
-		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos();
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
 
 		Assert.assertEquals(upgradeInfos.toString(), 1, upgradeInfos.size());
 		Assert.assertEquals(
@@ -115,6 +105,77 @@ public class UpgradeStepRegistryTest {
 		_registerAndCheckPreAndPostUpgradeSteps(
 			new UpgradeStep[] {new TestUpgradeStep(), new TestUpgradeStep()},
 			new UpgradeStep[0]);
+	}
+
+	@Test
+	public void testGetInitializationStep() {
+		UpgradeStepRegistry upgradeStepRegistry = new UpgradeStepRegistry(0);
+
+		upgradeStepRegistry.registerInitialization();
+
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
+
+		Assert.assertEquals(upgradeInfos.toString(), 1, upgradeInfos.size());
+
+		UpgradeInfo upgradeInfo = upgradeInfos.get(0);
+
+		Assert.assertEquals("0.0.0", upgradeInfo.getFromSchemaVersionString());
+		Assert.assertEquals("1.0.0", upgradeInfo.getToSchemaVersionString());
+		Assert.assertTrue(
+			upgradeInfo.getUpgradeStep() instanceof DummyUpgradeStep);
+	}
+
+	@Test
+	public void testGetInitializationStepWhenAnUpgradeProcessIsRegistered() {
+		UpgradeStepRegistry upgradeStepRegistry = new UpgradeStepRegistry(0);
+
+		upgradeStepRegistry.registerInitialization();
+
+		upgradeStepRegistry.register("1.0.0", "2.0.0", new TestUpgradeStep());
+
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
+
+		Assert.assertEquals(upgradeInfos.toString(), 2, upgradeInfos.size());
+
+		UpgradeInfo upgradeInfo = upgradeInfos.get(0);
+
+		Assert.assertEquals("0.0.0", upgradeInfo.getFromSchemaVersionString());
+		Assert.assertEquals("2.0.0", upgradeInfo.getToSchemaVersionString());
+		Assert.assertTrue(
+			upgradeInfo.getUpgradeStep() instanceof DummyUpgradeStep);
+	}
+
+	@Test
+	public void testSkipInitializationStepWhenAnUpgradeProcessIsRegisteredAndPortalNotUpgraded() {
+		UpgradeStepRegistry upgradeStepRegistry = new UpgradeStepRegistry(0);
+
+		upgradeStepRegistry.registerInitialization();
+
+		TestUpgradeStep testUpgradeStep = new TestUpgradeStep();
+
+		upgradeStepRegistry.register("1.0.0", "2.0.0", testUpgradeStep);
+
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			false);
+
+		Assert.assertEquals(upgradeInfos.toString(), 1, upgradeInfos.size());
+		Assert.assertEquals(
+			new UpgradeInfo("1.0.0", "2.0.0", 0, testUpgradeStep),
+			upgradeInfos.get(0));
+	}
+
+	@Test
+	public void testSkipInitializationStepWhenPortalNotUpgraded() {
+		UpgradeStepRegistry upgradeStepRegistry = new UpgradeStepRegistry(0);
+
+		upgradeStepRegistry.registerInitialization();
+
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			false);
+
+		Assert.assertEquals(upgradeInfos.toString(), 0, upgradeInfos.size());
 	}
 
 	private void _registerAndCheckPreAndPostUpgradeSteps(
@@ -146,24 +207,25 @@ public class UpgradeStepRegistryTest {
 			preUpgradeSteps, new UpgradeStep[] {upgradeProcess},
 			postUpgradeSteps);
 
-		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos();
+		List<UpgradeInfo> upgradeInfos = upgradeStepRegistry.getUpgradeInfos(
+			true);
 
-		Assert.assertEquals(upgradeInfos.toString(), 3, upgradeInfos.size());
+		Assert.assertEquals(upgradeInfos.toString(), 1, upgradeInfos.size());
+
+		UpgradeInfo upgradeInfo = upgradeInfos.get(0);
+
+		Assert.assertEquals("0.0.0", upgradeInfo.getFromSchemaVersionString());
+		Assert.assertEquals("1.0.0", upgradeInfo.getToSchemaVersionString());
 		Assert.assertEquals(
-			Arrays.asList(
-				new UpgradeInfo(
-					"0.0.0", "1.0.0.step-2", 0, sortedUpgradeSteps[0]),
-				new UpgradeInfo(
-					"1.0.0.step-2", "1.0.0.step-1", 0, sortedUpgradeSteps[1]),
-				new UpgradeInfo(
-					"1.0.0.step-1", "1.0.0", 0, sortedUpgradeSteps[2])),
-			upgradeInfos);
+			Arrays.asList(sortedUpgradeSteps),
+			ReflectionTestUtil.getFieldValue(
+				upgradeInfo.getUpgradeStep(), "arg$1"));
 	}
 
 	private static class TestUpgradeStep implements UpgradeStep {
 
 		@Override
-		public void upgrade(DBProcessContext dbProcessContext) {
+		public void upgrade() {
 		}
 
 	}

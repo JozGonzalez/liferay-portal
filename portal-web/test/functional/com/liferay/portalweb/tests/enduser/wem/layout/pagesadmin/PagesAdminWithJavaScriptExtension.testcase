@@ -1,55 +1,68 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Page Administration";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+	static var randomEntryName1 = StringUtil.randomString(8);
+	static var randomEntryName2 = StringUtil.randomString(8);
+	static var randomEntryName3 = StringUtil.randomString(8);
+	static var randomEntryName4 = StringUtil.randomString(8);
+	static var randomEntryName5 = StringUtil.randomString(8);
+	static var randomEntryName6 = StringUtil.randomString(8);
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			HeadlessSite.addSite(siteName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Upload six JavaScript extension files to Documents and Media") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Text Color",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "TextColor.js");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Inner Text",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "InnerText.js");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Font Family",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "FontFamily.js");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Font Size",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "FontSize.js");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Font Weight",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "FontWeight.js");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Margin Top",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "application/javascript",
 				sourceFileName = "MarginTop.js");
 		}
@@ -57,67 +70,54 @@ definition {
 		task ("Get the latest version URL of six documents") {
 			var firstURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Text Color",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var secondURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Inner Text",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var thirdURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Font Family",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var fourthURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Font Size",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var fifthURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Font Weight",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var sixthURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Margin Top",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 		}
 
 		task ("Add six remote apps for JavaScript extension") {
 			JSONClientExtension.addRemoteAppEntry(
-				name = "TextColor",
+				name = ${randomEntryName1},
 				type = "globalJS",
 				url = ${firstURL});
 
 			JSONClientExtension.addRemoteAppEntry(
-				name = "InnerText",
+				name = ${randomEntryName2},
 				type = "globalJS",
 				url = ${secondURL});
 
 			JSONClientExtension.addRemoteAppEntry(
-				name = "FontFamily",
+				name = ${randomEntryName3},
 				type = "globalJS",
 				url = ${thirdURL});
 
 			JSONClientExtension.addRemoteAppEntry(
-				name = "FontSize",
+				name = ${randomEntryName4},
 				type = "globalJS",
 				url = ${fourthURL});
 
 			JSONClientExtension.addRemoteAppEntry(
-				name = "FontWeight",
+				name = ${randomEntryName5},
 				type = "globalJS",
 				url = ${fifthURL});
 
 			JSONClientExtension.addRemoteAppEntry(
-				name = "MarginTop",
+				name = ${randomEntryName6},
 				type = "globalJS",
 				url = ${sixthURL});
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ClientExtensionGeneral.tearDown();
 		}
 	}
 
@@ -128,34 +128,31 @@ definition {
 
 		task ("Given a site designer has a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
 		task ("When the site designer accesses to Advanced settings of widget page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to widget page") {
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontFamily",
+				extensionNameList = ${randomEntryName3},
 				insertion = "In Page Head");
 
 			AssertVisible(
-				key_tableEntry = "FontFamily",
+				key_tableEntry = ${randomEntryName3},
 				locator1 = "LexiconTable#TABLE_ENTRY");
 
 			PortletEntry.save();
@@ -174,10 +171,10 @@ definition {
 
 		task ("Given a site designer has a content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -195,23 +192,18 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			Panel.expandPanel(panel = "JavaScript");
-
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to widget page") {
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "InnerText",
+				extensionNameList = ${randomEntryName2},
 				insertion = "In Page Bottom");
 
 			AssertVisible(
-				key_tableEntry = "InnerText",
+				key_tableEntry = ${randomEntryName2},
 				locator1 = "LexiconTable#TABLE_ENTRY");
 
 			PortletEntry.save();
@@ -222,7 +214,7 @@ definition {
 		}
 
 		task ("When the site designer accesses to Advanced settings of Pages") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -232,33 +224,28 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			Panel.expandPanel(panel = "JavaScript");
-
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to Pages") {
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "TextColor",
+				extensionNameList = ${randomEntryName1},
 				insertion = "In Page Bottom");
 
 			AssertVisible(
-				key_tableEntry = "TextColor",
+				key_tableEntry = ${randomEntryName1},
 				locator1 = "LexiconTable#TABLE_ENTRY");
 
 			PortletEntry.save();
 
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Content Page Name",
 				type = "content");
 
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Edit",
@@ -271,7 +258,7 @@ definition {
 				locator2 = "color",
 				value1 = "rgba(255, 0, 0, 1)");
 
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "View",
@@ -290,7 +277,7 @@ definition {
 		task ("Given a site designer has two content pages") {
 			for (var i : list "1,2") {
 				JSONLayout.addPublicLayout(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					layoutName = "Test Page Name ${i}",
 					type = "content");
 			}
@@ -299,18 +286,16 @@ definition {
 		task ("When the site designer add a JavaScript extension to page bottom of the first content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontFamily",
+				extensionNameList = ${randomEntryName3},
 				insertion = "In Page Head");
 
 			PortletEntry.save();
@@ -319,18 +304,16 @@ definition {
 		task ("Then the site designer could add the same JavaScript extension to page head of the second content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontFamily",
+				extensionNameList = ${randomEntryName3},
 				insertion = "In Page Bottom");
 
 			PortletEntry.save();
@@ -346,7 +329,7 @@ definition {
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "ControlMenu#HEADING",
@@ -362,17 +345,17 @@ definition {
 
 		task ("Given a site designer has a content page template with a JavaScript extension") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
 			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection",
 				layoutPageTemplateEntryName = "Content Page Template",
 				layoutPageTemplateStatus = "Draft",
 				layoutPageTemplateType = "Content Page Template");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -384,12 +367,10 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "InnerText",
+				extensionNameList = ${randomEntryName2},
 				insertion = "In Page Bottom");
 
 			PortletEntry.save();
@@ -402,7 +383,7 @@ definition {
 		}
 
 		task ("When the site designer adds a content page based on content page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				collectionName = "Page Template Collection",
@@ -419,16 +400,14 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
-				key_tableEntry = "InnerText",
+				key_tableEntry = ${randomEntryName2},
 				locator1 = "LexiconTable#TABLE_ENTRY");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "TextColor",
+				extensionNameList = ${randomEntryName1},
 				insertion = "In Page Bottom");
 
 			PortletEntry.save();
@@ -450,11 +429,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			Panel.expandPanel(panel = "JavaScript");
-
-			for (var extensionName : list "InnerText,TextColor") {
+			for (var extensionName : list "${randomEntryName2},${randomEntryName1}") {
 				Click(
 					key_tableEntry = ${extensionName},
 					locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
@@ -462,10 +439,7 @@ definition {
 				DropdownMenuItem.click(menuItem = "Delete");
 			}
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 
 			PortletEntry.save();
 
@@ -487,24 +461,22 @@ definition {
 	test ClearJavaScriptExtensionSelection {
 		task ("Given a site designer has a content page with a JavaScript extension") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "InnerText",
+				extensionNameList = ${randomEntryName2},
 				insertion = "In Page Bottom");
 
 			PortletEntry.save();
@@ -525,15 +497,17 @@ definition {
 		}
 
 		task ("Then the site designer could clear the JavaScript extension selection") {
+			Navigator.gotoNavTab(navTab = "JavaScript");
+
 			Click(
-				key_tableEntry = "InnerText",
+				key_tableEntry = ${randomEntryName2},
 				locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 
 			DropdownMenuItem.click(menuItem = "Delete");
 
 			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
+				key_buttonName = "Add JavaScript Client Extensions",
+				locator1 = "PagesAdmin#CUSTOMIZATION_BUTTON_SECONDARY_TEXT",
 				value1 = "No JavaScript client extensions were loaded.");
 
 			PortletEntry.save();
@@ -553,29 +527,29 @@ definition {
 
 		task ("Given a site designer has a page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
 		task ("When the site designer adds a JavaScript extension to page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontSize",
+				extensionNameList = ${randomEntryName4},
 				insertion = "In Page Head");
 		}
 
 		task ("Then the site designer could configure the load attribute of JavaScript extension") {
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "async");
 
@@ -592,18 +566,18 @@ definition {
 				locator2 = "font-size",
 				value1 = "20px");
 
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "defer");
 
@@ -623,10 +597,10 @@ definition {
 
 		task ("Given a site designer has a content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -644,18 +618,16 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontSize",
+				extensionNameList = ${randomEntryName4},
 				insertion = "In Page Head");
 		}
 
 		task ("Then the site designer could configure the load attribute of JavaScript extension") {
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "async");
 
@@ -676,12 +648,10 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "defer");
 
@@ -699,10 +669,10 @@ definition {
 
 		task ("Given a site designer has a master page") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				masterPageTemplateEntryName = "Master Page Template");
 
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Master Page Template");
 		}
@@ -712,16 +682,16 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontSize",
+				extensionNameList = ${randomEntryName4},
 				insertion = "In Page Head");
 		}
 
 		task ("Then the site designer could configure the load attribute of JavaScript extension") {
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "async");
 
@@ -740,10 +710,10 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "defer");
 
@@ -760,7 +730,7 @@ definition {
 		}
 
 		task ("Given a site designer accesses to the Advanced settings of Pages") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -770,24 +740,26 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 		}
 
 		task ("When the site designer adds a JavaScript extension to Pages") {
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontSize",
+				extensionNameList = ${randomEntryName4},
 				insertion = "In Page Head");
 		}
 
 		task ("Then the site designer could configure the load attribute of JavaScript extension") {
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "async");
 
 			PortletEntry.save();
+
+			Navigator.gotoBack();
 
 			ContentPages.addPage(pageName = "Content Page Name");
 
@@ -796,7 +768,7 @@ definition {
 				locator2 = "font-size",
 				value1 = "20px");
 
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -806,12 +778,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
-				key_tableEntry = "FontSize",
+				key_tableEntry = ${randomEntryName4},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD",
 				value1 = "defer");
 
@@ -819,7 +791,7 @@ definition {
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "ControlMenu#HEADING",
@@ -833,10 +805,10 @@ definition {
 	test ViewInheritedJavaScriptExtensionFromMasterPage {
 		task ("Given a site designer has a master page with a JavaScript extension") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				masterPageTemplateEntryName = "Master Page Template");
 
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Master Page Template");
 
@@ -844,10 +816,10 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "InnerText",
+				extensionNameList = ${randomEntryName2},
 				insertion = "In Page Bottom");
 
 			PortletEntry.save();
@@ -858,7 +830,7 @@ definition {
 		}
 
 		task ("When the site designer adds a content page based on master page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				masterLayoutName = "Master Page Template",
@@ -872,22 +844,20 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
-
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
 				key_groupHeader = "Page bottom JS client extensions",
-				key_tableEntry = "InnerText",
+				key_tableEntry = ${randomEntryName2},
 				locator1 = "LexiconTable#GROUPED_TABLE_ENTRY");
 
 			LexiconTable.viewTableEntryInfo(
 				index = 3,
-				tableEntry = "InnerText",
+				tableEntry = ${randomEntryName2},
 				tableEntryInfo = "From Master");
 
 			AssertNotEditable(
-				key_tableEntry = "InnerText",
+				key_tableEntry = ${randomEntryName2},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD");
 		}
 	}
@@ -896,7 +866,7 @@ definition {
 	@priority = 4
 	test ViewInheritedJavaScriptExtensionFromPages {
 		task ("Given a site designer has the Pages with a JavaScript extension") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -906,12 +876,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
-				extensionNameList = "FontFamily",
+				extensionNameList = ${randomEntryName3},
 				insertion = "In Page Head");
 
 			PortletEntry.save();
@@ -919,33 +889,33 @@ definition {
 
 		task ("When the site designer adds a page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
 		task ("Then the site designer could see the inherited JavaScript extension on the Advanced settings of page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
 				key_groupHeader = "Page Head JS Client Extensions",
-				key_tableEntry = "FontFamily",
+				key_tableEntry = ${randomEntryName3},
 				locator1 = "LexiconTable#GROUPED_TABLE_ENTRY");
 
 			LexiconTable.viewTableEntryInfo(
 				index = 3,
-				tableEntry = "FontFamily",
+				tableEntry = ${randomEntryName3},
 				tableEntryInfo = "From Pages");
 
 			AssertNotEditable(
-				key_tableEntry = "FontFamily",
+				key_tableEntry = ${randomEntryName3},
 				locator1 = "LexiconTable#TABLE_ENTRY_SELECT_FIELD");
 		}
 	}
@@ -955,7 +925,7 @@ definition {
 	test ViewLoadingOrderOfAppliedJavaScriptExtensions {
 		task ("Given a site designer has a page with multiple JavaScript extensions") {
 			task ("Add JavaScript extensions and embedded JavaScript to Pages") {
-				PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+				PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 				WaitForPageLoad();
 
@@ -965,16 +935,16 @@ definition {
 
 				WaitForPageLoad();
 
-				Navigator.gotoNavTab(navTab = "Advanced");
+				Navigator.gotoNavTab(navTab = "Design");
 
-				Panel.expandPanel(panel = "JavaScript");
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "FontFamily",
+					extensionNameList = ${randomEntryName3},
 					insertion = "In Page Head");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "TextColor",
+					extensionNameList = ${randomEntryName1},
 					insertion = "In Page Bottom");
 
 				var javaScript = '''document.evaluate("//*[@data-qa-id='headerTitle']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.style.textAlign = "right";''';
@@ -989,10 +959,10 @@ definition {
 
 			task ("Add JavaScript extensions and embedded JavaScript to a master page") {
 				JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					masterPageTemplateEntryName = "Master Page Template");
 
-				MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+				MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
 
 				MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Master Page Template");
 
@@ -1000,14 +970,14 @@ definition {
 
 				Click(locator1 = "PageEditor#MORE_LINK");
 
-				Navigator.gotoNavTab(navTab = "Advanced");
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "FontSize",
+					extensionNameList = ${randomEntryName4},
 					insertion = "In Page Head");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "InnerText",
+					extensionNameList = ${randomEntryName2},
 					insertion = "In Page Bottom");
 
 				var javaScript = '''document.body.style.backgroundColor = "olive";''';
@@ -1025,7 +995,7 @@ definition {
 			}
 
 			task ("Add JavaScript extensions and embedded JavaScript to a content page based on master page") {
-				PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+				PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 				ContentPages.addPage(
 					masterLayoutName = "Master Page Template",
@@ -1035,16 +1005,14 @@ definition {
 
 				Click(locator1 = "PageEditor#MORE_LINK");
 
-				Navigator.gotoNavTab(navTab = "Advanced");
-
-				Panel.expandPanel(panel = "JavaScript");
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "FontWeight",
+					extensionNameList = ${randomEntryName5},
 					insertion = "In Page Head");
 
 				PagesAdmin.addJavaScriptExtensions(
-					extensionNameList = "MarginTop",
+					extensionNameList = ${randomEntryName6},
 					insertion = "In Page Bottom");
 
 				var javaScript = '''document.body.style.marginBottom = "1px";''';
@@ -1075,7 +1043,7 @@ definition {
 
 			for (var extensionName : list "font-family,font-size,font-weight,text-color,inner-text,margin-top") {
 				AssertTextEquals.assertPartialText(
-					locator1 = "xpath=(//a[contains(@class,'html-resource-link')][contains(@href,'documents/d/test-site-name')])[${n}]",
+					locator1 = "xpath=(//a[contains(@class,'html-resource-link')][contains(@href,'documents/d/${siteURLKey}')])[${n}]",
 					value1 = ${extensionName});
 
 				var n = ${n} + 1;

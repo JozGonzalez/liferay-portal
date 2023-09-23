@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {FormikHelpers} from 'formik';
@@ -15,174 +9,146 @@ import MDFRequestDTO from '../../../common/interfaces/dto/mdfRequestDTO';
 import LiferayPicklist from '../../../common/interfaces/liferayPicklist';
 import MDFClaim from '../../../common/interfaces/mdfClaim';
 import {Liferay} from '../../../common/services/liferay';
-import createDocumentFolder from '../../../common/services/liferay/headless-delivery/createDocumentFolder';
-import createDocumentFolderDocument from '../../../common/services/liferay/headless-delivery/createDocumentFolderDocument';
-import createMDFClaimActivities from '../../../common/services/liferay/object/claim-activity/createMDFClaimActivities';
-import createMDFClaimActivityBudgets from '../../../common/services/liferay/object/claim-budgets/createMDFClaimActivityBudgets';
-import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
-import createMDFClaimDocuments from '../../../common/services/liferay/object/mdf-claim-documents/createMDFClaimDocuments';
-import createMDFClaim from '../../../common/services/liferay/object/mdf-claim/createMDFClaim';
 import {Status} from '../../../common/utils/constants/status';
-import renameFileKeepingExtention from './RenameFile';
-import createMDFClaimProxyAPI from './createMDFClaimProxyAPI';
+import updateStatus from '../../../common/utils/updateStatus';
+import submitDocuments from './submitDocuments';
+import submitMDFClaim from './submitMDFClaim';
+import submitMDFClaimActivity from './submitMDFClaimActivity';
+import submitMDFClaimActivityDocuments from './submitMDFClaimActivityDocuments';
+import submitMDFClaimBudget from './submitMDFClaimBudget';
+import submitMDFClaimProxyAPI from './submitMDFClaimProxyAPI';
 
 export default async function submitForm(
 	values: MDFClaim,
 	formikHelpers: Omit<FormikHelpers<MDFClaim>, 'setFieldValue'>,
-	mdfRequest: MDFRequestDTO,
 	claimParentFolderId: number,
+	mdfRequest: MDFRequestDTO,
 	siteURL: string,
-	currentClaimStatus?: LiferayPicklist
+	currentClaimStatus?: LiferayPicklist,
+	changeStatus?: boolean
 ) {
-	if (currentClaimStatus) {
-		values.mdfClaimStatus = currentClaimStatus;
-	}
-
 	formikHelpers.setSubmitting(true);
+	formikHelpers.setStatus(true);
 
-	values.partial = values.activities?.some((activity) =>
-		Boolean(activity.budgets?.some((budget) => !budget.selected))
-	);
+	try {
+		const submitValues = await submitDocuments(values, claimParentFolderId);
 
-	const dtoMDFClaim =
-		Liferay.FeatureFlags['LPS-164528'] &&
-		values.mdfClaimStatus !== Status.DRAFT
-			? await createMDFClaimProxyAPI(values, mdfRequest)
-			: await createMDFClaim(
-					ResourceName.MDF_CLAIM_DXP,
-					values,
-					mdfRequest
-			  );
+		formikHelpers.setValues(submitValues);
 
-	if (dtoMDFClaim?.id) {
-		const claimFolder = await createDocumentFolder(
-			claimParentFolderId,
-			`claim#${dtoMDFClaim.id}`
+		const updatedStatus = updateStatus(
+			submitValues.mdfClaimStatus,
+			currentClaimStatus,
+			changeStatus,
+			submitValues.id
 		);
 
-		if (values.reimbursementInvoice && claimFolder?.id) {
-			const claimDocument = await createDocumentFolderDocument(
-				claimFolder.id,
-				values.reimbursementInvoice
-			);
+		submitValues.mdfClaimStatus = updatedStatus;
 
-			if (claimDocument?.contentUrl) {
-				await createMDFClaimDocuments(
-					values.reimbursementInvoice,
-					claimDocument.contentUrl,
+		submitValues.partial = submitValues.activities?.some((activity) =>
+			Boolean(activity.budgets?.some((budget) => !budget.selected))
+		);
+
+		const dtoMDFClaim =
+			submitValues.mdfClaimStatus.key === Status.DRAFT.key
+				? await submitMDFClaim(submitValues, mdfRequest)
+				: await submitMDFClaimProxyAPI(submitValues, mdfRequest);
+
+		submitValues.id = dtoMDFClaim?.id;
+		submitValues.externalReferenceCode = dtoMDFClaim?.externalReferenceCode;
+
+		if (submitValues.activities?.length) {
+			for (const mdfClaimActivity of submitValues.activities) {
+				if (
+					mdfClaimActivity.selected &&
+					mdfRequest.r_accToMDFReqs_accountEntryId &&
 					dtoMDFClaim?.id
-				);
-			}
-		}
+				) {
+					const dtoMDFClaimActivity = await submitMDFClaimActivity(
+						mdfClaimActivity,
+						mdfRequest.r_accToMDFReqs_accountEntryId,
+						dtoMDFClaim.id
+					);
 
-		if (values.activities?.length) {
-			const dtoMDFClaimActivities = await createMDFClaimActivities(
-				dtoMDFClaim.id,
-				values.activities.filter((activity) => activity.selected)
-			);
+					mdfClaimActivity.id = dtoMDFClaimActivity.id;
+					mdfClaimActivity.externalReferenceCode =
+						dtoMDFClaimActivity.externalReferenceCode;
 
-			if (dtoMDFClaimActivities?.length) {
-				values.activities.map(async (activity, index) => {
-					const dtoActivity = dtoMDFClaimActivities[index];
-
-					if (dtoActivity?.id && claimFolder.id) {
-						const activityFolder = await createDocumentFolder(
-							claimFolder.id,
-							`activity#${dtoActivity.id}`
+					if (
+						mdfClaimActivity.proofOfPerformance &&
+						dtoMDFClaimActivity?.id &&
+						mdfRequest.r_accToMDFReqs_accountEntryId
+					) {
+						submitMDFClaimActivityDocuments(
+							mdfClaimActivity.proofOfPerformance,
+							mdfRequest.r_accToMDFReqs_accountEntryId,
+							dtoMDFClaimActivity.id
 						);
+					}
 
-						if (activityFolder?.id) {
-							if (activity.listQualifiedLeads) {
-								const listOfQualifiedLeadsWithId = renameFileKeepingExtention(
-									activity.listQualifiedLeads,
-									`list_of_qualified_leads#${dtoActivity.id}`
+					if (mdfClaimActivity.budgets?.length) {
+						for (const mdfClaimBudget of mdfClaimActivity.budgets) {
+							if (
+								mdfClaimBudget.selected &&
+								mdfRequest.r_accToMDFReqs_accountEntryId &&
+								dtoMDFClaimActivity.id
+							) {
+								const dtoMDFClaimBudget = await submitMDFClaimBudget(
+									mdfClaimBudget,
+									mdfRequest.r_accToMDFReqs_accountEntryId,
+									dtoMDFClaimActivity.id
 								);
 
-								const activityListQualifiedLeads = await createDocumentFolderDocument(
-									activityFolder.id,
-									listOfQualifiedLeadsWithId
-								);
-
-								if (activityListQualifiedLeads?.contentUrl) {
-									createMDFClaimDocuments(
-										listOfQualifiedLeadsWithId,
-										activityListQualifiedLeads.contentUrl,
-										dtoActivity?.id
-									);
-								}
-							}
-
-							if (activity.documents?.length) {
-								activity.documents.map(async (document) => {
-									if (activityFolder?.id) {
-										const activityDocument = await createDocumentFolderDocument(
-											activityFolder.id,
-											document
-										);
-
-										if (activityDocument?.contentUrl) {
-											createMDFClaimDocuments(
-												document,
-												activityDocument.contentUrl,
-												dtoActivity?.id
-											);
-										}
-									}
-								});
-							}
-
-							if (activity.budgets?.length) {
-								const dtoMDFClaimBudgets = await createMDFClaimActivityBudgets(
-									dtoActivity.id,
-									activity.budgets?.filter((budget) => {
-										return budget.invoice;
-									})
-								);
-
-								if (dtoMDFClaimBudgets?.length) {
-									activity.budgets.map(
-										async (budget, index) => {
-											const dtoBudget =
-												dtoMDFClaimBudgets[index];
-
-											if (
-												dtoBudget?.id &&
-												activityFolder?.id
-											) {
-												const budgetFolder = await createDocumentFolder(
-													activityFolder.id,
-													`budget#${dtoBudget.id}`
-												);
-
-												if (
-													budget.invoice &&
-													budgetFolder?.id
-												) {
-													const budgetDocument = await createDocumentFolderDocument(
-														budgetFolder.id,
-														budget.invoice
-													);
-
-													if (
-														budgetDocument?.contentUrl
-													) {
-														await createMDFClaimDocuments(
-															budget.invoice,
-															budgetDocument.contentUrl,
-															dtoBudget?.id
-														);
-													}
-												}
-											}
-										}
-									);
-								}
+								mdfClaimBudget.id = dtoMDFClaimBudget.id;
+								mdfClaimBudget.externalReferenceCode =
+									dtoMDFClaimBudget.externalReferenceCode;
 							}
 						}
 					}
-				});
+				}
 			}
 		}
+
+		formikHelpers.setValues(submitValues);
+
+		if (values.dateCreated) {
+			Liferay.Util.navigate(`${siteURL}/l/${mdfRequest.id}`);
+
+			Liferay.Util.openToast({
+				message: 'MDF Claim was successfully edited.',
+				type: 'success',
+			});
+
+			return;
+		}
+
+		if (submitValues.mdfClaimStatus.key === Status.DRAFT.key) {
+			Liferay.Util.navigate(`${siteURL}/l/${mdfRequest.id}`);
+
+			Liferay.Util.openToast({
+				message: 'MDF Claim was successfully saved as draft.',
+				type: 'success',
+			});
+
+			return;
+		}
+
+		Liferay.Util.navigate(`${siteURL}/l/${mdfRequest.id}`);
+
+		Liferay.Util.openToast({
+			message: 'MDF Claim was successfully submitted.',
+			type: 'success',
+		});
+
+		return;
 	}
-	Liferay.Util.navigate(`${siteURL}/l/${mdfRequest.id}`);
+	catch (error: unknown) {
+		formikHelpers.setStatus(false);
+		formikHelpers.setSubmitting(false);
+
+		Liferay.Util.openToast({
+			message: 'MDF Claim could not be submitted. Please, try again.',
+			title: 'Error',
+			type: 'danger',
+		});
+	}
 }

@@ -1,25 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.web.internal.fragment.renderer;
 
-import com.liferay.commerce.product.content.web.internal.info.item.renderer.ImageGalleryInfoItemRenderer;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.permission.CommerceProductViewPermission;
+import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.info.constants.InfoDisplayWebKeys;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -42,6 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alec Sloan
+ * @author Alessio Antonio Rendina
  */
 @Component(service = FragmentRenderer.class)
 public class ImageGalleryFragmentRenderer implements FragmentRenderer {
@@ -68,21 +68,65 @@ public class ImageGalleryFragmentRenderer implements FragmentRenderer {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Object infoItem = httpServletRequest.getAttribute(
-			InfoDisplayWebKeys.INFO_ITEM);
+		CPDefinition cpDefinition = null;
 
-		if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
-			if (_isEditMode(httpServletRequest)) {
-				_printPortletMessageInfo(
-					httpServletRequest, httpServletResponse,
-					"the-gallery-component-will-be-shown-here");
+		InfoItemReference infoItemReference =
+			(InfoItemReference)httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM_REFERENCE);
+
+		if (infoItemReference != null) {
+			CommerceContext commerceContext =
+				(CommerceContext)httpServletRequest.getAttribute(
+					CommerceWebKeys.COMMERCE_CONTEXT);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			try {
+				ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+					(ClassPKInfoItemIdentifier)
+						infoItemReference.getInfoItemIdentifier();
+
+				cpDefinition = _cpDefinitionLocalService.getCPDefinition(
+					classPKInfoItemIdentifier.getClassPK());
+
+				if (!_commerceProductViewPermission.contains(
+						themeDisplay.getPermissionChecker(),
+						CommerceUtil.getCommerceAccountId(commerceContext),
+						commerceContext.getCommerceChannelGroupId(),
+						cpDefinition.getCPDefinitionId())) {
+
+					return;
+				}
 			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
 
-			return;
+				return;
+			}
 		}
 
-		_galleryInfoItemRenderer.render(
-			(CPDefinition)infoItem, httpServletRequest, httpServletResponse);
+		if (cpDefinition == null) {
+			Object infoItem = httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM);
+
+			if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+				if (_isEditMode(httpServletRequest)) {
+					_printPortletMessageInfo(
+						httpServletRequest, httpServletResponse,
+						"the-gallery-component-will-be-shown-here");
+				}
+
+				return;
+			}
+
+			cpDefinition = (CPDefinition)infoItem;
+		}
+
+		_imageGalleryInfoItemRenderer.render(
+			cpDefinition, httpServletRequest, httpServletResponse);
 	}
 
 	private boolean _isEditMode(HttpServletRequest httpServletRequest) {
@@ -131,7 +175,15 @@ public class ImageGalleryFragmentRenderer implements FragmentRenderer {
 		ImageGalleryFragmentRenderer.class);
 
 	@Reference
-	private ImageGalleryInfoItemRenderer _galleryInfoItemRenderer;
+	private CommerceProductViewPermission _commerceProductViewPermission;
+
+	@Reference
+	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@Reference(
+		target = "(component.name=com.liferay.commerce.product.content.web.internal.info.item.renderer.ImageGalleryInfoItemRenderer)"
+	)
+	private InfoItemRenderer<CPDefinition> _imageGalleryInfoItemRenderer;
 
 	@Reference
 	private Language _language;

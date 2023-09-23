@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -19,6 +10,7 @@ import React, {useMemo, useRef} from 'react';
 import ServiceProvider from '../../../ServiceProvider/index';
 import {OPEN_MODAL} from '../../../utilities/eventsDefinitions';
 import {liferayNavigate} from '../../../utilities/index';
+import {MEDIUM_MODAL_SIZE} from '../../../utilities/modals/constants';
 import Modal from '../../modal/Modal';
 import OrdersTable from '../OrdersTable';
 import {VIEWS} from '../util/constants';
@@ -30,6 +22,7 @@ function OrdersListView({
 	createOrderURL,
 	currentAccount,
 	disabled,
+	namespace,
 	selectOrderURL,
 	setCurrentView,
 	showOrderTypeModal,
@@ -100,7 +93,10 @@ function OrdersListView({
 					displayType="primary"
 					onClick={() =>
 						showOrderTypeModal
-							? Liferay.fire(OPEN_MODAL, {id: 'add-order-modal'})
+							? Liferay.fire(OPEN_MODAL, {
+									id: `${namespace}add-order-modal`,
+									size: MEDIUM_MODAL_SIZE,
+							  })
 							: liferayNavigate(createOrderURL)
 					}
 				>
@@ -110,7 +106,7 @@ function OrdersListView({
 
 			{showOrderTypeModal ? (
 				<Modal
-					id="add-order-modal"
+					id={`${namespace}add-order-modal`}
 					refreshPageOnClose={true}
 					url={createOrderURL}
 				/>

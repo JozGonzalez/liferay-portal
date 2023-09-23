@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 
-import com.liferay.commerce.account.service.CommerceAccountGroupService;
+import com.liferay.account.service.AccountGroupService;
+import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRel;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel;
@@ -22,7 +14,6 @@ import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountG
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccountGroup;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountGroupDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountGroupUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListAccountGroupResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -30,10 +21,10 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -50,12 +41,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v2_0/price-list-account-group.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, PriceListAccountGroupResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = PriceListAccountGroupResource.class
 )
 public class PriceListAccountGroupResourceImpl
-	extends BasePriceListAccountGroupResourceImpl
-	implements NestedFieldSupport {
+	extends BasePriceListAccountGroupResourceImpl {
 
 	@Override
 	public void deletePriceListAccountGroup(Long id) throws Exception {
@@ -151,12 +141,11 @@ public class PriceListAccountGroupResourceImpl
 
 		CommercePriceListCommerceAccountGroupRel
 			commercePriceListCommerceAccountGroupRel =
-				PriceListAccountGroupUtil.
-					addCommercePriceListCommerceAccountGroupRel(
-						_commerceAccountGroupService,
-						_commercePriceListCommerceAccountGroupRelService,
-						priceListAccountGroup, commercePriceList,
-						_serviceContextHelper);
+				PriceListAccountGroupUtil.addCommercePriceListAccountGroupRel(
+					_accountGroupService,
+					_commercePriceListCommerceAccountGroupRelService,
+					priceListAccountGroup, commercePriceList,
+					_serviceContextHelper);
 
 		return _toPriceListAccountGroup(
 			commercePriceListCommerceAccountGroupRel.
@@ -170,13 +159,12 @@ public class PriceListAccountGroupResourceImpl
 
 		CommercePriceListCommerceAccountGroupRel
 			commercePriceListCommerceAccountGroupRel =
-				PriceListAccountGroupUtil.
-					addCommercePriceListCommerceAccountGroupRel(
-						_commerceAccountGroupService,
-						_commercePriceListCommerceAccountGroupRelService,
-						priceListAccountGroup,
-						_commercePriceListService.getCommercePriceList(id),
-						_serviceContextHelper);
+				PriceListAccountGroupUtil.addCommercePriceListAccountGroupRel(
+					_accountGroupService,
+					_commercePriceListCommerceAccountGroupRelService,
+					priceListAccountGroup,
+					_commercePriceListService.getCommercePriceList(id),
+					_serviceContextHelper);
 
 		return _toPriceListAccountGroup(
 			commercePriceListCommerceAccountGroupRel.
@@ -240,7 +228,7 @@ public class PriceListAccountGroupResourceImpl
 	}
 
 	@Reference
-	private CommerceAccountGroupService _commerceAccountGroupService;
+	private AccountGroupService _accountGroupService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel)"
@@ -258,9 +246,12 @@ public class PriceListAccountGroupResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private PriceListAccountGroupDTOConverter
-		_priceListAccountGroupDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountGroupDTOConverter)"
+	)
+	private DTOConverter
+		<CommerceDiscountCommerceAccountGroupRel, PriceListAccountGroup>
+			_priceListAccountGroupDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

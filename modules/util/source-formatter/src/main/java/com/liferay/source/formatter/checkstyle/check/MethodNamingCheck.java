@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.checkstyle.check;
@@ -206,9 +197,23 @@ public class MethodNamingCheck extends BaseCheck {
 
 		String returnTypeName = getTypeName(detailAST, true);
 
-		if (returnTypeName.contains("[]") ||
-			methodName.matches(".*" + returnTypeName + "[0-9]*") ||
-			methodName.matches("_?get" + returnTypeName + ".*")) {
+		if ((returnTypeName.contains(StringPool.LESS_THAN) &&
+			 returnTypeName.contains(StringPool.GREATER_THAN)) ||
+			returnTypeName.contains("[]")) {
+
+			return;
+		}
+
+		String innerClassName = returnTypeName;
+
+		int x = returnTypeName.indexOf(".");
+
+		if (x != -1) {
+			innerClassName = returnTypeName.substring(x + 1);
+		}
+
+		if (methodName.matches(".*" + innerClassName + "[0-9]*") ||
+			methodName.matches("_?get" + innerClassName + ".*")) {
 
 			return;
 		}
@@ -217,8 +222,10 @@ public class MethodNamingCheck extends BaseCheck {
 			_ENFORCE_TYPE_NAMES_KEY);
 
 		for (String enforceTypeName : enforceTypeNames) {
-			if (returnTypeName.matches(enforceTypeName)) {
-				log(detailAST, _MSG_INCORRECT_ENDING_METHOD, returnTypeName);
+			if (innerClassName.matches(enforceTypeName)) {
+				log(
+					detailAST, _MSG_INCORRECT_ENDING_METHOD, returnTypeName,
+					innerClassName);
 
 				return;
 			}

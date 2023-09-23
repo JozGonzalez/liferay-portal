@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import PropTypes from 'prop-types';
 import React, {useCallback} from 'react';
 
@@ -34,6 +26,8 @@ import {FieldSet} from './FieldSet';
 
 export function FragmentGeneralPanel({item}) {
 	const dispatch = useDispatch();
+
+	const restrictedItemIds = useSelector((state) => state.restrictedItemIds);
 
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
@@ -76,15 +70,30 @@ export function FragmentGeneralPanel({item}) {
 		[dispatch, fragmentEntryLink, languageId]
 	);
 
+	if (
+		Liferay.FeatureFlags['LPS-169923'] &&
+		restrictedItemIds.has(item.itemId)
+	) {
+		return (
+			<ClayAlert displayType="secondary" role={null}>
+				{Liferay.Language.get(
+					'this-content-cannot-be-displayed-due-to-permission-restrictions'
+				)}
+			</ClayAlert>
+		);
+	}
+
 	return (
 		<>
 			{selectedViewportSize === VIEWPORT_SIZES.desktop &&
 				fieldSets.map((fieldSet, index) => {
+					const fields = fieldSet.fields;
+
 					return (
-						<div className="mb-1" key={index}>
+						<div className="mb-1 panel-group-sm" key={index}>
 							<FieldSet
 								description={fieldSet.description}
-								fields={fieldSet.fields}
+								fields={fields}
 								fragmentEntryLinks={
 									fragmentEntryLinksRef.current
 								}

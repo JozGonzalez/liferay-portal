@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -26,17 +17,7 @@ if (folder != null) {
 	folderId = folder.getFolderId();
 }
 
-String ddmStructureKey = ParamUtil.getString(request, "ddmStructureKey");
-
-long ddmStructureId = 0;
-
-if (Validator.isNotNull(ddmStructureKey)) {
-	DDMStructure ddmStructure = DDMStructureLocalServiceUtil.fetchStructure(themeDisplay.getSiteGroupId(), PortalUtil.getClassNameId(JournalArticle.class), ddmStructureKey, true);
-
-	if (ddmStructure != null) {
-		ddmStructureId = ddmStructure.getStructureId();
-	}
-}
+long ddmStructureId = ParamUtil.getLong(request, "ddmStructureId");
 
 String subscribeActionName = StringPool.BLANK;
 String unsubscribeActionName = StringPool.BLANK;
@@ -49,13 +30,13 @@ String unsubscribeActionName = StringPool.BLANK;
 		boolean subscribed = false;
 		boolean unsubscribable = true;
 
-		if (Validator.isNotNull(ddmStructureKey)) {
+		if (ddmStructureId > 0) {
 			subscribed = JournalUtil.isSubscribedToStructure(themeDisplay.getCompanyId(), scopeGroupId, user.getUserId(), ddmStructureId);
 
 			subscribeActionName = "/journal/subscribe_ddm_structure";
 			unsubscribeActionName = "/journal/unsubscribe_ddm_structure";
 		}
-		else if (Validator.isNull(ddmStructureKey) && (article != null)) {
+		else if ((ddmStructureId > 0) && (article != null)) {
 			subscribed = JournalUtil.isSubscribedToArticle(themeDisplay.getCompanyId(), scopeGroupId, user.getUserId(), article.getResourcePrimKey());
 
 			subscribeActionName = "/journal/subscribe_article";
@@ -81,10 +62,10 @@ String unsubscribeActionName = StringPool.BLANK;
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 
 							<c:choose>
-								<c:when test="<%= Validator.isNotNull(ddmStructureKey) %>">
+								<c:when test="<%= ddmStructureId > 0 %>">
 									<portlet:param name="ddmStructureId" value="<%= String.valueOf(ddmStructureId) %>" />
 								</c:when>
-								<c:when test="<%= Validator.isNull(ddmStructureKey) && (article != null) %>">
+								<c:when test="<%= (ddmStructureId <= 0) && (article != null) %>">
 									<portlet:param name="articleId" value="<%= String.valueOf(article.getResourcePrimKey()) %>" />
 								</c:when>
 								<c:otherwise>
@@ -102,12 +83,14 @@ String unsubscribeActionName = StringPool.BLANK;
 						/>
 					</c:when>
 					<c:otherwise>
-						<clay:icon
-							aria-label='<%= LanguageUtil.get(request, "subscribed-to-a-parent-folder") %>'
-							cssClass="align-items-center d-flex icon-monospaced lfr-portal-tooltip"
-							symbol="bell-off"
-							title='<%= LanguageUtil.get(request, "subscribed-to-a-parent-folder") %>'
-						/>
+						<span class="align-items-center lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "subscribed-to-a-parent-folder") %>">
+							<clay:icon
+								aria-label='<%= LanguageUtil.get(request, "subscribed-to-a-parent-folder") %>'
+								cssClass="icon-monospaced mt-0"
+								symbol="bell-off"
+								title='<%= LanguageUtil.get(request, "subscribed-to-a-parent-folder") %>'
+							/>
+						</span>
 					</c:otherwise>
 				</c:choose>
 			</c:when>
@@ -116,10 +99,10 @@ String unsubscribeActionName = StringPool.BLANK;
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 
 					<c:choose>
-						<c:when test="<%= Validator.isNotNull(ddmStructureKey) %>">
+						<c:when test="<%= ddmStructureId > 0 %>">
 							<portlet:param name="ddmStructureId" value="<%= String.valueOf(ddmStructureId) %>" />
 						</c:when>
-						<c:when test="<%= Validator.isNull(ddmStructureKey) && (article != null) %>">
+						<c:when test="<%= (ddmStructureId <= 0) && (article != null) %>">
 							<portlet:param name="articleId" value="<%= String.valueOf(article.getResourcePrimKey()) %>" />
 						</c:when>
 						<c:otherwise>

@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import {Align, ClayDropDownWithItems} from '@clayui/drop-down';
+import ClayDropDown, {Align, ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayEmptyState from '@clayui/empty-state';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayList from '@clayui/list';
 import ClayModal, {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
@@ -30,6 +22,8 @@ import {
 	openConfirmModal,
 } from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
+
+import PublicationTimeline from './PublicationTimeline';
 
 const PublicationsSearchContainer = ({
 	ascending,
@@ -330,7 +324,7 @@ const PublicationsSearchContainer = ({
 		if (getListItem) {
 			viewTypeItems.push({
 				active: viewType === VIEW_TYPE_LIST,
-				label: Liferay.Language.get('list'),
+				label: Liferay.Language.get('list[noun]'),
 				onClick: () => setViewType(VIEW_TYPE_LIST),
 				symbolLeft: 'list',
 			});
@@ -612,7 +606,7 @@ const PublicationsSearchContainer = ({
 										? `${themeDisplay.getPathThemeImages()}/states/search_state.gif`
 										: `${themeDisplay.getPathThemeImages()}/states/empty_state.gif`
 								}
-								title={null}
+								title={Liferay.Language.get('no-results-found')}
 							/>
 						</div>
 					</div>
@@ -709,6 +703,9 @@ const PublicationsSearchContainer = ({
 
 export default function ChangeTrackingIndicator({
 	checkoutDropdownItem,
+	conflictIconClass,
+	conflictIconLabel,
+	conflictIconName,
 	createDropdownItem,
 	getSelectPublicationsURL,
 	iconClass,
@@ -719,6 +716,9 @@ export default function ChangeTrackingIndicator({
 	reviewDropdownItem,
 	saveDisplayPreferenceURL,
 	spritemap,
+	timelineIconClass,
+	timelineIconName,
+	timelineItems,
 	title,
 }) {
 	const COLUMN_MODIFIED_DATE = 'modifiedDate';
@@ -922,9 +922,11 @@ export default function ChangeTrackingIndicator({
 			>
 				<ClayList.ItemTitle>{entry.name}</ClayList.ItemTitle>
 
-				<ClayList.ItemText subtext>
-					{entry.description}
-				</ClayList.ItemText>
+				{!!entry.description && (
+					<ClayList.ItemText subtext>
+						{entry.description}
+					</ClayList.ItemText>
+				)}
 			</ClayList.ItemField>
 		);
 
@@ -940,9 +942,11 @@ export default function ChangeTrackingIndicator({
 					<a onClick={() => navigate(entry.checkoutURL, true)}>
 						<ClayList.ItemTitle>{entry.name}</ClayList.ItemTitle>
 
-						<ClayList.ItemText subtext>
-							{entry.description}
-						</ClayList.ItemText>
+						{!!entry.description && (
+							<ClayList.ItemText subtext>
+								{entry.description}
+							</ClayList.ItemText>
+						)}
 					</a>
 				</ClayList.ItemField>
 			);
@@ -960,9 +964,11 @@ export default function ChangeTrackingIndicator({
 					>
 						<ClayList.ItemTitle>{entry.name}</ClayList.ItemTitle>
 
-						<ClayList.ItemText subtext>
-							{entry.description}
-						</ClayList.ItemText>
+						{!!entry.description && (
+							<ClayList.ItemText subtext>
+								{entry.description}
+							</ClayList.ItemText>
+						)}
 					</ClayButton>
 				</ClayList.ItemField>
 			);
@@ -1075,25 +1081,99 @@ export default function ChangeTrackingIndicator({
 		);
 	};
 
+	const renderConflictIcon = (conflictIconClass, conflictIconName) => {
+		if (conflictIconClass && conflictIconName) {
+			return (
+				<ClayIcon
+					className={conflictIconClass}
+					style={{fontSize: 'medium'}}
+					symbol={conflictIconName}
+				/>
+			);
+		}
+	};
+
+	const renderTimeline = (timelineItems) => {
+		if (timelineItems) {
+			return (
+				<ClayDropDown
+					alignmentPosition={Align.BottomCenter}
+					trigger={
+						<ClayButton
+							aria-controls="publication-timeline-dropdown"
+							className="change-tracking-timeline-button"
+						>
+							<ClayIcon
+								className={timelineIconClass}
+								symbol={timelineIconName}
+							/>
+						</ClayButton>
+					}
+				>
+					<PublicationTimeline timelineItems={timelineItems} />
+				</ClayDropDown>
+			);
+		}
+	};
+
 	return (
 		<>
 			{renderModal()}
 
-			<ClayDropDownWithItems
-				alignmentPosition={Align.BottomCenter}
-				items={dropdownItems}
-				trigger={
-					<button className="change-tracking-indicator-button">
-						<ClayIcon className={iconClass} symbol={iconName} />
+			<ClayLayout.ContentRow style={{justifyContent: 'center'}}>
+				<ClayLayout.ContentCol>
+					<div
+						className="c-inner"
+						style={{
+							margin: '2px',
+							padding: '1px',
+							width: '16px',
+						}}
+						tabIndex="-1"
+						title={conflictIconLabel}
+					>
+						{renderConflictIcon(
+							conflictIconClass,
+							conflictIconName
+						)}
+					</div>
+				</ClayLayout.ContentCol>
 
-						<span className="change-tracking-indicator-title">
-							{title}
-						</span>
+				<ClayLayout.ContentCol>
+					<ClayDropDownWithItems
+						alignmentPosition={Align.BottomCenter}
+						items={dropdownItems}
+						trigger={
+							<button className="change-tracking-indicator-button">
+								<ClayIcon
+									className={iconClass}
+									symbol={iconName}
+								/>
 
-						<ClayIcon symbol="caret-bottom" />
-					</button>
-				}
-			/>
+								<span className="change-tracking-indicator-title">
+									{title}
+								</span>
+
+								<ClayIcon symbol="caret-bottom" />
+							</button>
+						}
+					/>
+				</ClayLayout.ContentCol>
+
+				<ClayLayout.ContentCol>
+					<div
+						className="c-inner"
+						style={{
+							padding: '1px',
+							width: '21px',
+						}}
+						tabIndex="-1"
+						title="Timeline"
+					>
+						{renderTimeline(timelineItems)}
+					</div>
+				</ClayLayout.ContentCol>
+			</ClayLayout.ContentRow>
 		</>
 	);
 }

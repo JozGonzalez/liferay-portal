@@ -1,6 +1,7 @@
 @component-name = "portal-categories"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Categories";
@@ -19,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -881,7 +882,8 @@ definition {
 	@description = "View the breadcrumb with Flattened Tree."
 	@priority = 3
 	test ViewBreadcrumbWithFlattenedTree {
-		property test.name.skip.portal.instance = "Categories#ViewBreadcrumbWithFlattenedTree";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Select the Flattened Tree as Category Navigation Display Style") {
 			ApplicationsMenu.gotoPortlet(
@@ -999,6 +1001,40 @@ definition {
 
 			Category.viewNavigationCP(
 				categoryName = "Category Name",
+				vocabularyName = "Vocabulary Name");
+		}
+	}
+
+	@description = "This is a use case for LPS-168430. Remove validation of asset category properties value."
+	@priority = 3
+	test ViewNoValidationForCategoryPropertyValue {
+		task ("Given Add a category") {
+			JSONCategory.addCategory(
+				groupName = "Test Site Name",
+				title = "Category Name",
+				vocabularyName = "Vocabulary Name");
+		}
+
+		Category.openCategoriesAdmin(siteURLKey = "test-site-name");
+
+		task ("When Add a property with forbidden characters in category property value") {
+			Category.addPropertyCP(
+				categoryName = "Category Name",
+				propertiesKeyField = "Category Property",
+				propertiesValueField = '''&'@)}:,=>/<\n({%|+?";*~''',
+				propertyNumber = 0);
+		}
+
+		task ("Then View no validation for that category property value") {
+			AssertElementNotPresent(
+				key_alertMessage = "Error:Please enter a valid property value.",
+				locator1 = "Message#ERROR_ENTER_ANY");
+
+			Category.viewCategoryPropertyCP(
+				categoryName = "Category Name",
+				propertiesKeyField = "Category Property",
+				propertiesValueField = '''&'@)}:,=>/<\n({%|+?";*~''',
+				propertyNumber = 0,
 				vocabularyName = "Vocabulary Name");
 		}
 	}

@@ -50,12 +50,12 @@
 </tr>
 <tr>
 	<td>NOTIFICATIONS_TITLE</td>
-	<td>//div[@class='title'] | //h4/a[contains(.,'${key_portletName} ${key_publicationType} ${key_contentBody}')]</td>
+	<td>//div[@class='title'] | //a[contains(.,'${key_portletName} ${key_publicationType} ${key_contentBody}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NOTIFICATIONS_TITLE_SPECIFIC</td>
-	<td>//h4//div[(@class='title') and contains(.,'${key_notificationsTitle}')]</td>
+	<td>//div[(@class='title') and contains(.,'${key_notificationsTitle}')]</td>
 	<td></td>
 </tr>
 <tr>

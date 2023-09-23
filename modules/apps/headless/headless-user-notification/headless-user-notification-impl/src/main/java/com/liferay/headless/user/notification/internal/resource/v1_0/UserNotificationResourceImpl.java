@@ -1,24 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.user.notification.internal.resource.v1_0;
 
 import com.liferay.headless.user.notification.dto.v1_0.UserNotification;
-import com.liferay.headless.user.notification.internal.dto.v1_0.UserNotificationDTOConverter;
 import com.liferay.headless.user.notification.internal.odata.entity.v1_0.UserNotificationEntityModel;
 import com.liferay.headless.user.notification.resource.v1_0.UserNotificationResource;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.search.Field;
@@ -30,13 +19,13 @@ import com.liferay.portal.kernel.service.UserNotificationEventService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
@@ -65,10 +54,6 @@ public class UserNotificationResourceImpl
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-83384")) {
-			throw new NotFoundException();
-		}
-
 		return _getPage(
 			filter, pagination, search, sorts, contextUser.getUserId());
 	}
@@ -79,20 +64,12 @@ public class UserNotificationResourceImpl
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-83384")) {
-			throw new NotFoundException();
-		}
-
 		return _getPage(filter, pagination, search, sorts, userAccountId);
 	}
 
 	@Override
 	public UserNotification getUserNotification(Long userNotificationId)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-83384")) {
-			throw new NotFoundException();
-		}
 
 		return _toUserNotification(
 			_userNotificationEventService.getUserNotificationEvent(
@@ -102,10 +79,6 @@ public class UserNotificationResourceImpl
 	@Override
 	public void putUserNotificationRead(Long userNotificationId)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-83384")) {
-			throw new NotFoundException();
-		}
 
 		UserNotificationEvent userNotificationEvent =
 			_userNotificationEventService.getUserNotificationEvent(
@@ -119,10 +92,6 @@ public class UserNotificationResourceImpl
 	@Override
 	public void putUserNotificationUnread(Long userNotificationId)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-83384")) {
-			throw new NotFoundException();
-		}
 
 		UserNotificationEvent userNotificationEvent =
 			_userNotificationEventService.getUserNotificationEvent(
@@ -203,8 +172,11 @@ public class UserNotificationResourceImpl
 	)
 	private ModelResourcePermission<User> _userModelResourcePermission;
 
-	@Reference
-	private UserNotificationDTOConverter _userNotificationDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.user.notification.internal.dto.v1_0.converter.UserNotificationDTOConverter)"
+	)
+	private DTOConverter<UserNotificationEvent, UserNotification>
+		_userNotificationDTOConverter;
 
 	@Reference
 	private UserNotificationEventService _userNotificationEventService;

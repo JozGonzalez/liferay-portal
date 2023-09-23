@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.importer.structure.util;
@@ -175,6 +166,13 @@ public class WidgetLayoutStructureItemImporter
 			return null;
 		}
 
+		Portlet portlet = _portletLocalService.fetchPortletById(
+			layout.getCompanyId(), widgetName);
+
+		if (portlet == null) {
+			return null;
+		}
+
 		String widgetInstanceId = (String)widgetInstance.get(
 			"widgetInstanceId");
 
@@ -187,7 +185,7 @@ public class WidgetLayoutStructureItemImporter
 		}
 
 		widgetInstanceId = _getPortletInstanceId(
-			layout, widgetInstanceId, widgetName);
+			layout, portlet, widgetInstanceId);
 
 		editableValueJSONObject.put(
 			"instanceId", widgetInstanceId
@@ -223,22 +221,16 @@ public class WidgetLayoutStructureItemImporter
 	}
 
 	private String _getPortletInstanceId(
-			Layout layout, String portletInstanceId, String portletId)
+			Layout layout, Portlet portlet, String portletInstanceId)
 		throws Exception {
-
-		Portlet portlet = _portletLocalService.fetchPortletById(
-			layout.getCompanyId(), portletId);
-
-		if (portlet == null) {
-			throw new PortletIdException();
-		}
 
 		if (portlet.isInstanceable()) {
 			return portletInstanceId;
 		}
 
 		long count = _portletPreferencesLocalService.getPortletPreferencesCount(
-			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(), portletId);
+			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(),
+			portlet.getPortletId());
 
 		if (count > 0) {
 			throw new PortletIdException(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.graphql.mutation.v1_0;
@@ -25,6 +16,7 @@ import com.liferay.headless.commerce.admin.channel.resource.v1_0.PaymentMethodGr
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ShippingFixedOptionOrderTypeResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ShippingFixedOptionTermResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ShippingMethodResource;
+import com.liferay.headless.commerce.admin.channel.resource.v1_0.TaxCategoryResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
@@ -106,6 +98,14 @@ public class Mutation {
 
 		_shippingMethodResourceComponentServiceObjects =
 			shippingMethodResourceComponentServiceObjects;
+	}
+
+	public static void setTaxCategoryResourceComponentServiceObjects(
+		ComponentServiceObjects<TaxCategoryResource>
+			taxCategoryResourceComponentServiceObjects) {
+
+		_taxCategoryResourceComponentServiceObjects =
+			taxCategoryResourceComponentServiceObjects;
 	}
 
 	@GraphQLField
@@ -467,6 +467,22 @@ public class Mutation {
 						channelId, callbackURL, contentType, fieldNames));
 	}
 
+	@GraphQLField
+	public Response createTaxCategoriesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_taxCategoryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			taxCategoryResource ->
+				taxCategoryResource.postTaxCategoriesPageExportBatch(
+					search, callbackURL, contentType, fieldNames));
+	}
+
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
 			_applyComponentServiceObjects(
 				ComponentServiceObjects<T> componentServiceObjects,
@@ -653,6 +669,26 @@ public class Mutation {
 			_vulcanBatchEngineImportTaskResource);
 	}
 
+	private void _populateResourceContext(
+			TaxCategoryResource taxCategoryResource)
+		throws Exception {
+
+		taxCategoryResource.setContextAcceptLanguage(_acceptLanguage);
+		taxCategoryResource.setContextCompany(_company);
+		taxCategoryResource.setContextHttpServletRequest(_httpServletRequest);
+		taxCategoryResource.setContextHttpServletResponse(_httpServletResponse);
+		taxCategoryResource.setContextUriInfo(_uriInfo);
+		taxCategoryResource.setContextUser(_user);
+		taxCategoryResource.setGroupLocalService(_groupLocalService);
+		taxCategoryResource.setRoleLocalService(_roleLocalService);
+
+		taxCategoryResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		taxCategoryResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
 	private static ComponentServiceObjects<ChannelResource>
 		_channelResourceComponentServiceObjects;
 	private static ComponentServiceObjects
@@ -666,6 +702,8 @@ public class Mutation {
 		_shippingFixedOptionTermResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ShippingMethodResource>
 		_shippingMethodResourceComponentServiceObjects;
+	private static ComponentServiceObjects<TaxCategoryResource>
+		_taxCategoryResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;

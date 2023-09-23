@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.selenium;
@@ -19,7 +10,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -61,9 +51,6 @@ public class LiferayByUtil {
 		@Override
 		public List<WebElement> findElements(SearchContext searchContext) {
 			if (searchContext instanceof WebDriver) {
-				JavascriptExecutor javascriptExecutor =
-					(JavascriptExecutor)searchContext;
-
 				String[] partialCssSelectors = _cssSelector.split(">>>");
 
 				for (int i = 0; i < (partialCssSelectors.length - 1); i++) {
@@ -73,15 +60,12 @@ public class LiferayByUtil {
 					WebElement webElement = byCssSelector.findElement(
 						searchContext);
 
-					searchContext =
-						(WebElement)javascriptExecutor.executeScript(
-							"return arguments[0].shadowRoot", webElement);
+					searchContext = webElement.getShadowRoot();
 				}
 
-				By.ByCssSelector byCssSelector = new By.ByCssSelector(
-					partialCssSelectors[partialCssSelectors.length - 1]);
-
-				return byCssSelector.findElements(searchContext);
+				return searchContext.findElements(
+					By.cssSelector(
+						partialCssSelectors[partialCssSelectors.length - 1]));
 			}
 
 			throw new WebDriverException(

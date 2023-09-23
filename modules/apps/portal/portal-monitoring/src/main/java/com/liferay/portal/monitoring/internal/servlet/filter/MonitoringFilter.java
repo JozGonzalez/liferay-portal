@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.monitoring.internal.servlet.filter;
@@ -49,9 +40,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Rajesh Thiagarajan
@@ -65,10 +53,9 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 		"servlet-filter-name=Monitoring Filter", "url-pattern=/c/*",
 		"url-pattern=/group/*", "url-pattern=/user/*", "url-pattern=/web/*"
 	},
-	service = {Filter.class, PortalMonitoringControl.class}
+	service = Filter.class
 )
-public class MonitoringFilter
-	extends BaseFilter implements PortalMonitoringControl {
+public class MonitoringFilter extends BaseFilter {
 
 	@Override
 	public boolean isFilterEnabled() {
@@ -76,7 +63,7 @@ public class MonitoringFilter
 			return false;
 		}
 
-		if (!_monitorPortalRequest &&
+		if (!_portalMonitoringControl.isMonitorPortalRequest() &&
 			!_portletMonitoringControl.isMonitorPortletActionRequest() &&
 			!_portletMonitoringControl.isMonitorPortletEventRequest() &&
 			!_portletMonitoringControl.isMonitorPortletRenderRequest() &&
@@ -87,16 +74,6 @@ public class MonitoringFilter
 		}
 
 		return true;
-	}
-
-	@Override
-	public boolean isMonitorPortalRequest() {
-		return _monitorPortalRequest;
-	}
-
-	@Override
-	public void setMonitorPortalRequest(boolean monitorPortalRequest) {
-		_monitorPortalRequest = monitorPortalRequest;
 	}
 
 	@Override
@@ -114,7 +91,7 @@ public class MonitoringFilter
 
 		_incrementProcessFilterCount();
 
-		if (_monitorPortalRequest) {
+		if (_portalMonitoringControl.isMonitorPortalRequest()) {
 			portalRequestDataSample =
 				(PortalRequestDataSample)
 					_dataSampleFactory.createPortalRequestDataSample(
@@ -201,7 +178,7 @@ public class MonitoringFilter
 
 		long plid = ParamUtil.getLong(httpServletRequest, "p_l_id");
 
-		if ((plid > 0) && (_layoutLocalService != null)) {
+		if (plid > 0) {
 			try {
 				layout = _layoutLocalService.getLayout(plid);
 
@@ -235,20 +212,17 @@ public class MonitoringFilter
 	@Reference
 	private DataSampleFactory _dataSampleFactory;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile LayoutLocalService _layoutLocalService;
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private MessageBus _messageBus;
 
-	private boolean _monitorPortalRequest;
-
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortalMonitoringControl _portalMonitoringControl;
 
 	@Reference
 	private PortletMonitoringControl _portletMonitoringControl;

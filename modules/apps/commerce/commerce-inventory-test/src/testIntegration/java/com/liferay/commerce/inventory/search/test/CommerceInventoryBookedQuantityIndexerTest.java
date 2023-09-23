@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.search.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.exception.CommerceAccountTypeException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalServiceUtil;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
@@ -63,6 +53,8 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.math.BigDecimal;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -101,15 +93,12 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 			_group.getGroupId(), _user.getUserId());
 
 		try {
-			_commerceAccount =
-				CommerceAccountLocalServiceUtil.addPersonalCommerceAccount(
-					_user.getUserId(), StringPool.BLANK, StringPool.BLANK,
-					_serviceContext);
+			_accountEntry = CommerceAccountTestUtil.addPersonAccountEntry(
+				_user.getUserId(), _serviceContext);
 		}
-		catch (CommerceAccountTypeException commerceAccountTypeException) {
-			_commerceAccount =
-				CommerceAccountLocalServiceUtil.getPersonalCommerceAccount(
-					_user.getUserId());
+		catch (Exception exception) {
+			_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+				_user.getUserId());
 		}
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
@@ -123,7 +112,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 			LocaleUtil.US.getDisplayLanguage(), _serviceContext);
 
 		_commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group, null, null);
+			null, _commerceCurrency, _commerceChannel, _user, _group, null);
 
 		_indexer = _indexerRegistry.nullSafeGetIndexer(
 			CommerceInventoryBookedQuantity.class);
@@ -133,21 +122,21 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 	public void tearDown() throws Exception {
 		List<CommerceInventoryBookedQuantity>
 			commerceInventoryBookedQuantities =
-				_commerceBookedQuantityLocalService.
+				_commerceInventoryBookedQuantityLocalService.
 					getCommerceInventoryBookedQuantities(
 						QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		for (CommerceInventoryBookedQuantity commerceInventoryBookedQuantity :
 				commerceInventoryBookedQuantities) {
 
-			_commerceBookedQuantityLocalService.
+			_commerceInventoryBookedQuantityLocalService.
 				deleteCommerceInventoryBookedQuantity(
 					commerceInventoryBookedQuantity);
 		}
 
 		for (CommerceOrderItem commerceOrderItem : _commerceOrderItems) {
 			_commerceOrderItemLocalService.deleteCommerceOrderItem(
-				commerceOrderItem);
+				_user.getUserId(), commerceOrderItem);
 		}
 	}
 
@@ -157,7 +146,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 
 		cpInstance.setSku("Example SKU");
 
-		_cpInstanceLocalService.updateCPInstance(cpInstance);
+		cpInstance = _cpInstanceLocalService.updateCPInstance(cpInstance);
 
 		_cpInstances.add(cpInstance);
 
@@ -168,7 +157,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 		_commerceInventoryWarehouseItems.add(
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
 				_user.getUserId(), _commerceInventoryWarehouse,
-				cpInstance.getSku(), 2));
+				BigDecimal.valueOf(2), cpInstance.getSku(), StringPool.BLANK));
 
 		_commerceChannelRel = CommerceTestUtil.addWarehouseCommerceChannelRel(
 			_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
@@ -177,21 +166,24 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceCurrency.getCommerceCurrencyId(), 0);
 
 		_commerceOrders.add(commerceOrder);
 
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemLocalService.addCommerceOrderItem(
-				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), null, 2, 0, _commerceContext,
+				_user.getUserId(), commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), null, BigDecimal.valueOf(2), 0,
+				BigDecimal.ZERO, StringPool.BLANK, _commerceContext,
 				_serviceContext);
 
 		CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
-			_commerceBookedQuantityLocalService.addCommerceBookedQuantity(
-				_user.getUserId(), cpInstance.getSku(), 2, null,
-				Collections.emptyMap());
+			_commerceInventoryBookedQuantityLocalService.
+				addCommerceInventoryBookedQuantity(
+					_user.getUserId(), null, new BigDecimal(2),
+					cpInstance.getSku(), StringPool.BLANK,
+					Collections.emptyMap());
 
 		commerceOrderItem =
 			_commerceOrderItemLocalService.updateCommerceOrderItem(
@@ -204,7 +196,8 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 			_commerceInventoryBookedQuantityLocalService.
 				getCommerceInventoryBookedQuantities(
 					commerceOrderItem.getCompanyId(),
-					commerceOrderItem.getSku(), -1, -1));
+					commerceOrderItem.getSku(),
+					commerceOrderItem.getUnitOfMeasureKey(), -1, -1));
 	}
 
 	@Test
@@ -213,7 +206,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 
 		cpInstance.setSku("Example SKU");
 
-		_cpInstanceLocalService.updateCPInstance(cpInstance);
+		cpInstance = _cpInstanceLocalService.updateCPInstance(cpInstance);
 
 		_cpInstances.add(cpInstance);
 
@@ -224,7 +217,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 		_commerceInventoryWarehouseItems.add(
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
 				_user.getUserId(), _commerceInventoryWarehouse,
-				cpInstance.getSku(), 2));
+				BigDecimal.valueOf(2), cpInstance.getSku(), StringPool.BLANK));
 
 		_commerceChannelRel = CommerceTestUtil.addWarehouseCommerceChannelRel(
 			_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
@@ -233,21 +226,24 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_commerceAccount.getCommerceAccountId(),
+				_accountEntry.getAccountEntryId(),
 				_commerceCurrency.getCommerceCurrencyId(), 0);
 
 		_commerceOrders.add(commerceOrder);
 
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemLocalService.addCommerceOrderItem(
-				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), null, 2, 0, _commerceContext,
+				_user.getUserId(), commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), null, BigDecimal.valueOf(2), 0,
+				BigDecimal.ZERO, StringPool.BLANK, _commerceContext,
 				_serviceContext);
 
 		CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
-			_commerceBookedQuantityLocalService.addCommerceBookedQuantity(
-				_user.getUserId(), cpInstance.getSku(), 2, null,
-				Collections.emptyMap());
+			_commerceInventoryBookedQuantityLocalService.
+				addCommerceInventoryBookedQuantity(
+					_user.getUserId(), null, new BigDecimal(2),
+					cpInstance.getSku(), StringPool.BLANK,
+					Collections.emptyMap());
 
 		commerceOrderItem =
 			_commerceOrderItemLocalService.updateCommerceOrderItem(
@@ -260,10 +256,11 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 				_commerceInventoryBookedQuantityLocalService.
 					getCommerceInventoryBookedQuantities(
 						commerceOrderItem.getCompanyId(),
-						commerceOrderItem.getSku(), -1, -1);
+						commerceOrderItem.getSku(),
+						commerceOrderItem.getUnitOfMeasureKey(), -1, -1);
 
 		_assertSearch(
-			_commerceAccount.getName(), cpInstance.getSku(),
+			_accountEntry.getName(), cpInstance.getSku(),
 			commerceInventoryBookedQuantities);
 		_assertSearch(
 			String.valueOf(commerceOrder.getCommerceOrderId()),
@@ -375,12 +372,7 @@ public class CommerceInventoryBookedQuantityIndexerTest {
 	@Inject
 	private static IndexerRegistry _indexerRegistry;
 
-	private CommerceAccount _commerceAccount;
-
-	@Inject
-	private CommerceInventoryBookedQuantityLocalService
-		_commerceBookedQuantityLocalService;
-
+	private AccountEntry _accountEntry;
 	private CommerceCatalog _commerceCatalog;
 
 	@DeleteAfterTestRun

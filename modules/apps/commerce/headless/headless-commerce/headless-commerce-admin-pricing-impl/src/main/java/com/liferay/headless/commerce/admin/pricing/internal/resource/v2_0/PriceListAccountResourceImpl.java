@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
@@ -22,7 +13,6 @@ import com.liferay.commerce.price.list.service.CommercePriceListAccountRelServic
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListAccountResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -30,10 +20,10 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -50,11 +40,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v2_0/price-list-account.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, PriceListAccountResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = PriceListAccountResource.class
 )
 public class PriceListAccountResourceImpl
-	extends BasePriceListAccountResourceImpl implements NestedFieldSupport {
+	extends BasePriceListAccountResourceImpl {
 
 	@Override
 	public void deletePriceListAccount(Long id) throws Exception {
@@ -224,8 +214,11 @@ public class PriceListAccountResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private PriceListAccountDTOConverter _priceListAccountDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountDTOConverter)"
+	)
+	private DTOConverter<CommercePriceListAccountRel, PriceListAccount>
+		_priceListAccountDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

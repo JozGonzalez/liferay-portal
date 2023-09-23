@@ -1,4 +1,5 @@
 Bundle-Name: Liferay Commerce Notification Web
 Bundle-SymbolicName: com.liferay.commerce.notification.web
-Bundle-Version: 4.0.27
+Bundle-Version: 4.0.31
 Web-ContextPath: /commerce-notification-web
+-dsannotations-options: inherit

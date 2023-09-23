@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.product.menu.web.internal.portlet;
@@ -24,9 +15,8 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
-import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.product.navigation.control.menu.manager.ProductNavigationControlMenuManager;
 import com.liferay.product.navigation.product.menu.constants.ProductNavigationProductMenuPortletKeys;
 import com.liferay.product.navigation.product.menu.web.internal.display.context.LayoutsTreeDisplayContext;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
@@ -78,51 +68,32 @@ public class ProductNavigationProductMenuPortlet extends MVCPortlet {
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			renderRequest);
 
-		String layoutMode = ParamUtil.getString(
-			_portal.getOriginalServletRequest(httpServletRequest), "p_l_mode",
-			Constants.VIEW);
+		if (!_productNavigationControlMenuManager.isShowControlMenu(
+				httpServletRequest)) {
 
-		if (layoutMode.equals(Constants.PREVIEW)) {
 			return;
 		}
 
 		renderRequest.setAttribute(
 			ApplicationListWebKeys.GROUP_PROVIDER, _groupProvider);
-
 		renderRequest.setAttribute(
 			ApplicationListWebKeys.PANEL_APP_REGISTRY, _panelAppRegistry);
-
-		PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(
-			_panelAppRegistry, _panelCategoryRegistry);
-
 		renderRequest.setAttribute(
-			ApplicationListWebKeys.PANEL_CATEGORY_HELPER, panelCategoryHelper);
-
+			ApplicationListWebKeys.PANEL_CATEGORY_HELPER,
+			new PanelCategoryHelper(_panelAppRegistry, _panelCategoryRegistry));
 		renderRequest.setAttribute(
 			ApplicationListWebKeys.PANEL_CATEGORY_REGISTRY,
 			_panelCategoryRegistry);
-
-		_setLayoutsTreeDisplayContextRequestAttribute(
-			httpServletRequest, renderRequest, renderResponse);
-
-		super.doDispatch(renderRequest, renderResponse);
-	}
-
-	private void _setLayoutsTreeDisplayContextRequestAttribute(
-		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
-
-		LayoutsTreeDisplayContext layoutsTreeDisplayContext =
+		renderRequest.setAttribute(
+			LayoutsTreeDisplayContext.class.getName(),
 			new LayoutsTreeDisplayContext(
 				httpServletRequest, _language, _layoutLocalService,
 				_layoutService, _layoutsTree, renderRequest, renderResponse,
 				_siteNavigationMenuItemLocalService,
 				_siteNavigationMenuItemTypeRegistry,
-				_siteNavigationMenuLocalService);
+				_siteNavigationMenuLocalService));
 
-		renderRequest.setAttribute(
-			LayoutsTreeDisplayContext.class.getName(),
-			layoutsTreeDisplayContext);
+		super.doDispatch(renderRequest, renderResponse);
 	}
 
 	@Reference
@@ -148,6 +119,10 @@ public class ProductNavigationProductMenuPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private ProductNavigationControlMenuManager
+		_productNavigationControlMenuManager;
 
 	@Reference
 	private SiteNavigationMenuItemLocalService

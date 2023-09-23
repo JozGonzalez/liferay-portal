@@ -12,6 +12,7 @@
 	&-logo {
 		margin-right: 1rem;
 		&-image {
+			border-radius: 8px;
 			height: 3.5rem;
 			width: 3.5rem;
 		}
@@ -23,7 +24,6 @@
 
 		&-text {
 			color: #282934;
-			font-family: 'Source Sans Pro', sans-serif;
 			font-size: 18px;
 			font-weight: 600;
 			line-height: 20px;

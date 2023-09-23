@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -83,7 +83,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanPreviewMultipleImagesInDM {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		for (var documentTitle : list "Document_1,Document_2,Document_3") {
 			JSONDocument.addFileWithUploadedFile(

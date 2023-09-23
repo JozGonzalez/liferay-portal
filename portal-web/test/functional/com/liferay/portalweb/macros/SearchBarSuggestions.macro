@@ -12,9 +12,7 @@ definition {
 		}
 
 		if (${addContributor} == "true") {
-			Click.mouseDownMouseUp(
-				key_text = "Add Suggestions",
-				locator1 = "Button#ANY");
+			Click.javaScriptClick(locator1 = "SearchBarSuggestions#ADD_SUGGESTIONS_BUTTON");
 		}
 
 		if (${deleteBasicContributor} == "true") {
@@ -27,12 +25,7 @@ definition {
 
 		if (isSet(suggestionContributor)) {
 			Click(
-				key_suggestionContributorOrder = ${suggestionContributorOrder},
-				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR");
-
-			Click(
 				key_suggestionContributor = ${suggestionContributor},
-				key_suggestionContributorOrder = ${suggestionContributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SELECT");
 		}
 
@@ -54,6 +47,16 @@ definition {
 			SelectFrame(locator1 = "IFrame#CONFIGURATION");
 		}
 
+		if (isSet(suggestionContributorActivity)) {
+			Click(
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_ACTIVITY");
+
+			Click(
+				key_menuItem = ${suggestionContributorActivity},
+				locator1 = "MenuItem#ANY_MENU_ITEM");
+		}
+
 		if (isSet(characterThreshold)) {
 			Type(
 				key_suggestionContributorOrder = ${suggestionContributorOrder},
@@ -68,12 +71,23 @@ definition {
 				value1 = ${suggestionContributorDisplayGroupName});
 		}
 
+		if (isSet(suggestionContributorMinimumSearches)) {
+			Type(
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_MINIMUM_SEARCHES",
+				value1 = ${suggestionContributorMinimumSearches});
+		}
+
 		if (isSet(suggestionContributorSize)) {
 			Type(
 				key_suggestionContributorOrder = ${suggestionContributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
 				value1 = ${suggestionContributorSize});
 		}
+
+		SelectFrameTop();
+
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		PortletEntry.save();
 
@@ -171,6 +185,28 @@ definition {
 		AssertTextEquals(
 			locator1 = "SearchResults#ASSET_DETAILS_TITLE",
 			value1 = ${searchAssetTitle});
+	}
+
+	macro viewSuggestionResultDetailsURL {
+		Type(
+			locator1 = "Search#EMBEDDED_SEARCH_BAR",
+			value1 = ${searchAssetTitle});
+
+		SearchBarSuggestions.viewSuggestions(
+			searchAssetDescription = "WC WebContent Description",
+			searchAssetTitle = ${searchAssetTitle});
+
+		SearchBarSuggestions.gotoSuggestionResultDetails(searchAssetTitle = ${searchAssetTitle});
+
+		AssertTextEquals(
+			locator1 = "SearchResults#ASSET_DETAILS_TITLE",
+			value1 = ${searchAssetTitle});
+
+		var currentURL = selenium.getCurrentUrl();
+
+		if (!(contains(${currentURL}, ${expectedURL}))) {
+			fail("The suggestion result details page must use the URL of the page the user came from");
+		}
 	}
 
 	macro viewSuggestions {

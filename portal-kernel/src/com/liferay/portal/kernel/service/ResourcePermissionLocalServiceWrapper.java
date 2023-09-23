@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
 
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.model.ResourcePermission;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -179,6 +171,18 @@ public class ResourcePermissionLocalServiceWrapper
 			serviceContext);
 	}
 
+	@Override
+	public void addResourcePermissions(
+			long companyId, long groupId, long userId, String name,
+			String[] primKeys, boolean portletActions,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_resourcePermissionLocalService.addResourcePermissions(
+			companyId, groupId, userId, name, primKeys, portletActions,
+			serviceContext);
+	}
+
 	/**
 	 * Grants the role permissions at the scope to perform the actions on all
 	 * resources of the type. Existing actions are retained.
@@ -207,11 +211,11 @@ public class ResourcePermissionLocalServiceWrapper
 
 	@Override
 	public void copyModelResourcePermissions(
-			long companyId, String name, long oldPrimKey, long newPrimKey)
+			long companyId, String name, long sourcePrimKey, long targetPrimKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_resourcePermissionLocalService.copyModelResourcePermissions(
-			companyId, name, oldPrimKey, newPrimKey);
+			companyId, name, sourcePrimKey, targetPrimKey);
 	}
 
 	/**
@@ -1171,6 +1175,11 @@ public class ResourcePermissionLocalServiceWrapper
 
 		_resourcePermissionLocalService.updateResourcePermissions(
 			companyId, name, scope, primKey, newPrimKey);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _resourcePermissionLocalService.getBasePersistence();
 	}
 
 	@Override

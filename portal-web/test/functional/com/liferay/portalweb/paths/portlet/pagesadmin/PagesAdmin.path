@@ -20,7 +20,7 @@
 </tr>
 <tr>
 	<td>PAGE_TYPE_DESCRIPTION</td>
-	<td>//p[contains(@class,'text')]</td>
+	<td>//div[contains(@class,'type')]/p[contains(@class,'text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -119,7 +119,7 @@
 </tr>
 <tr>
 	<td>LIST_GROUP_ITEM_PAGE_TYPE</td>
-	<td>//*[contains(@class,'list-group-item')]//h5[contains(.,'${key_pageType}')]/../ h4[contains(.,'${key_pageName}')]</td>
+	<td>//*[contains(@class,'list-group-item')]//div[contains(@class,'list-group-title')][contains(.,'${key_pageName}')]//following-sibling::div[contains(@class,'list-group-subtitle')]//span[normalize-space()='${key_pageType}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -170,27 +170,50 @@
 
 <tr>
 	<td>MASTER_LAYOUT_NAME</td>
-	<td>//div[contains(@class,'sheet-section')]//*[contains(@class,'sheet-subtitle')][normalize-space(text())='Master']//following-sibling::div//input</td>
+	<td>//div[contains(@class,'sheet-section')]/*[normalize-space()='Basic Settings']//following-sibling::div//label[normalize-space(text())='Master']//following-sibling::div//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOMIZATION_BUTTON_SECONDARY_TEXT</td>
+	<td>//div[contains(@class,'panel')]//button[contains(.,'${key_buttonName}')]/following-sibling::p | //div[contains(@class,'panel')]//button[contains(.,'${key_buttonName}')]/../following-sibling::p</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FIELD_LABEL_IN_SECTION</td>
+	<td>//div[contains(@class,'sheet-section')]//h3[normalize-space(text())='${key_sectionTitle}']//following-sibling::div//label[normalize-space(text())='${key_fieldLabel}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SECTION_TITLE</td>
-	<td>//div[@class='sheet-section']//h3[normalize-space(text())='${key_sectionTitle}']</td>
+	<td>//div[contains(@class,'sheet-section')]//h3[normalize-space(text())='${key_sectionTitle}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SECTION_SUBTITLE</td>
-	<td>//div[contains(@class,'sheet-section')]//h3[normalize-space(text())='${key_sectionTitle}']//following-sibling::p</td>
+	<td>//div[contains(@class,'sheet-section')]//h3[normalize-space(text())='${key_sectionTitle}']//following-sibling::p[last()]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>STYLE_BOOK_NAME</td>
-	<td>//div[contains(@class,'sheet-section')]//*[contains(@class,'sheet-subtitle')][normalize-space(text())='Style Book']//following-sibling::div//input</td>
+	<td>//div[contains(@class,'sheet-section')]/*[normalize-space()='Basic Settings']//following-sibling::div//label[normalize-space(text())='Style Book']//following-sibling::div//input</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FAVICON_NAME</td>
-	<td>//span[contains(@id,'faviconTitle')][contains(.,'${faviconName}')]</td>
+	<td>//label[normalize-space(text())='Favicon']//following-sibling::div//input</td>
+	<td></td>
+</tr>
+
+<!--CUSTOMIZATION-->
+
+<tr>
+	<td>NO_CSS_THEME_LOADED</td>
+	<td>//button[contains(@class,'nav-link active') and contains(text(),'CSS')]//ancestor::div//p[normalize-space(text())='No CSS Client extensions were loaded.']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NO_JAVASCRIPT_EXTENSIONS_LOADED</td>
+	<td>//button[contains(@class,'nav-link active') and contains(text(),'JavaScript')]//ancestor::div//p[normalize-space(text())='No JavaScript client extensions were loaded.']</td>
 	<td></td>
 </tr>
 <tr>

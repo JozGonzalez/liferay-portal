@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayCheckbox} from '@clayui/form';
@@ -19,6 +10,7 @@ import classNames from 'classnames';
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import i18n from '~/i18n';
 
 import {Sort} from '../../context/ListViewContext';
 import Permission from '../../core/Permission';
@@ -144,19 +136,30 @@ const Table: React.FC<TableProps> = ({
 
 						{columns.map((column, index) => (
 							<ClayTable.Cell headingTitle key={index}>
-								<>
-									{column.value}
+								<span className="d-flex justify-content-between">
+									<span
+										className={classNames({
+											'cursor-pointer': column.sorteable,
+										})}
+										onClick={() => {
+											if (column.sorteable) {
+												changeSort(column.key);
+											}
+										}}
+									>
+										{column.value}
+									</span>
 
 									{column.sorteable && (
 										<ClayIcon
-											className="cursor-pointer ml-1"
+											className="cursor-pointer"
 											onClick={() =>
 												changeSort(column.key)
 											}
 											symbol={getSortSymbol(column.key)}
 										/>
 									)}
-								</>
+								</span>
 							</ClayTable.Cell>
 						))}
 					</ClayTable.Row>
@@ -190,6 +193,44 @@ const Table: React.FC<TableProps> = ({
 							{rowSelectable && onSelectRow && (
 								<ClayTable.Cell>
 									<ClayCheckbox
+										aria-label={columns
+											.map((column) => {
+												const getValue = (
+													value: any
+												) => {
+													if (
+														React.isValidElement(
+															value
+														)
+													) {
+														return (value?.props as any)
+															?.children;
+													}
+
+													return value;
+												};
+
+												const value = column.render
+													? getValue(
+															column.render(
+																item[
+																	column.key
+																],
+																{
+																	...item,
+																	rowIndex,
+																},
+																mutate
+															)
+													  )
+													: item[column.key];
+
+												return `${column.value}: ${
+													value ??
+													i18n.translate('empty')
+												}`;
+											})
+											.join(', ')}
 										checked={selectedRows.includes(item.id)}
 										onChange={() => onSelectRow(item.id)}
 									/>

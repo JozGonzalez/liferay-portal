@@ -1,18 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
+
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link PasswordPolicyRelLocalService}.
@@ -38,7 +31,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.model.PasswordPolicyRel
 		addPasswordPolicyRel(
-			long passwordPolicyId, java.lang.String className, long classPK) {
+			long passwordPolicyId, String className, long classPK) {
 
 		return _passwordPolicyRelLocalService.addPasswordPolicyRel(
 			passwordPolicyId, className, classPK);
@@ -66,7 +59,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public void addPasswordPolicyRels(
-		long passwordPolicyId, java.lang.String className, long[] classPKs) {
+		long passwordPolicyId, String className, long[] classPKs) {
 
 		_passwordPolicyRelLocalService.addPasswordPolicyRels(
 			passwordPolicyId, className, classPKs);
@@ -120,7 +113,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public void deletePasswordPolicyRel(
-		long passwordPolicyId, java.lang.String className, long classPK) {
+		long passwordPolicyId, String className, long classPK) {
 
 		_passwordPolicyRelLocalService.deletePasswordPolicyRel(
 			passwordPolicyId, className, classPK);
@@ -147,9 +140,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 	}
 
 	@Override
-	public void deletePasswordPolicyRel(
-		java.lang.String className, long classPK) {
-
+	public void deletePasswordPolicyRel(String className, long classPK) {
 		_passwordPolicyRelLocalService.deletePasswordPolicyRel(
 			className, classPK);
 	}
@@ -162,7 +153,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public void deletePasswordPolicyRels(
-		long passwordPolicyId, java.lang.String className, long[] classPKs) {
+		long passwordPolicyId, String className, long[] classPKs) {
 
 		_passwordPolicyRelLocalService.deletePasswordPolicyRels(
 			passwordPolicyId, className, classPKs);
@@ -293,7 +284,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.PasswordPolicyRel
-		fetchPasswordPolicyRel(java.lang.String className, long classPK) {
+		fetchPasswordPolicyRel(String className, long classPK) {
 
 		return _passwordPolicyRelLocalService.fetchPasswordPolicyRel(
 			className, classPK);
@@ -320,7 +311,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 	 * @return the OSGi service identifier
 	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _passwordPolicyRelLocalService.getOSGiServiceIdentifier();
 	}
 
@@ -343,7 +334,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.model.PasswordPolicyRel
 			getPasswordPolicyRel(
-				long passwordPolicyId, java.lang.String className, long classPK)
+				long passwordPolicyId, String className, long classPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _passwordPolicyRelLocalService.getPasswordPolicyRel(
@@ -352,7 +343,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.PasswordPolicyRel
-			getPasswordPolicyRel(java.lang.String className, long classPK)
+			getPasswordPolicyRel(String className, long classPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _passwordPolicyRelLocalService.getPasswordPolicyRel(
@@ -400,7 +391,7 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	@Override
 	public boolean hasPasswordPolicyRel(
-		long passwordPolicyId, java.lang.String className, long classPK) {
+		long passwordPolicyId, String className, long classPK) {
 
 		return _passwordPolicyRelLocalService.hasPasswordPolicyRel(
 			passwordPolicyId, className, classPK);
@@ -424,6 +415,11 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 		return _passwordPolicyRelLocalService.updatePasswordPolicyRel(
 			passwordPolicyRel);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _passwordPolicyRelLocalService.getBasePersistence();
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.resource.v2_0;
@@ -19,6 +10,7 @@ import com.liferay.data.engine.rest.resource.v2_0.DataRecordCollectionResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
@@ -60,7 +52,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -782,18 +773,18 @@ public abstract class BaseDataRecordCollectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataRecordCollection, Exception>
-			dataRecordCollectionUnsafeConsumer = null;
+		UnsafeFunction<DataRecordCollection, DataRecordCollection, Exception>
+			dataRecordCollectionUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("dataDefinitionId")) {
-				dataRecordCollectionUnsafeConsumer =
+				dataRecordCollectionUnsafeFunction =
 					dataRecordCollection ->
 						postDataDefinitionDataRecordCollection(
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get("dataDefinitionId")),
 							dataRecordCollection);
 			}
@@ -803,21 +794,26 @@ public abstract class BaseDataRecordCollectionResourceImpl
 			}
 		}
 
-		if (dataRecordCollectionUnsafeConsumer == null) {
+		if (dataRecordCollectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for DataRecordCollection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataRecordCollections, dataRecordCollectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataRecordCollections, dataRecordCollectionUnsafeConsumer);
+				dataRecordCollections,
+				dataRecordCollectionUnsafeFunction::apply);
 		}
 		else {
 			for (DataRecordCollection dataRecordCollection :
 					dataRecordCollections) {
 
-				dataRecordCollectionUnsafeConsumer.accept(dataRecordCollection);
+				dataRecordCollectionUnsafeFunction.apply(dataRecordCollection);
 			}
 		}
 	}
@@ -870,7 +866,7 @@ public abstract class BaseDataRecordCollectionResourceImpl
 
 		if (parameters.containsKey("dataDefinitionId")) {
 			return getDataDefinitionDataRecordCollectionsPage(
-				Long.parseLong((String)parameters.get("dataDefinitionId")),
+				_parseLong((String)parameters.get("dataDefinitionId")),
 				(String)parameters.get("keywords"), pagination);
 		}
 		else {
@@ -907,40 +903,53 @@ public abstract class BaseDataRecordCollectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataRecordCollection, Exception>
-			dataRecordCollectionUnsafeConsumer = null;
+		UnsafeFunction<DataRecordCollection, DataRecordCollection, Exception>
+			dataRecordCollectionUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			dataRecordCollectionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			dataRecordCollectionUnsafeFunction =
 				dataRecordCollection -> putDataRecordCollection(
 					dataRecordCollection.getId() != null ?
 						dataRecordCollection.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"dataRecordCollectionId")),
 					dataRecordCollection);
 		}
 
-		if (dataRecordCollectionUnsafeConsumer == null) {
+		if (dataRecordCollectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for DataRecordCollection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataRecordCollections, dataRecordCollectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataRecordCollections, dataRecordCollectionUnsafeConsumer);
+				dataRecordCollections,
+				dataRecordCollectionUnsafeFunction::apply);
 		}
 		else {
 			for (DataRecordCollection dataRecordCollection :
 					dataRecordCollections) {
 
-				dataRecordCollectionUnsafeConsumer.accept(dataRecordCollection);
+				dataRecordCollectionUnsafeFunction.apply(dataRecordCollection);
 			}
 		}
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1108,6 +1117,16 @@ public abstract class BaseDataRecordCollectionResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<DataRecordCollection>,
+			 UnsafeFunction
+				 <DataRecordCollection, DataRecordCollection, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1324,6 +1343,12 @@ public abstract class BaseDataRecordCollectionResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1354,7 +1379,19 @@ public abstract class BaseDataRecordCollectionResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<DataRecordCollection>,
+		 UnsafeFunction<DataRecordCollection, DataRecordCollection, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<DataRecordCollection>,
 		 UnsafeConsumer<DataRecordCollection, Exception>, Exception>

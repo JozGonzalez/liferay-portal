@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -78,7 +69,7 @@ public class ObjectDefinitionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(67);
+		StringBundler sb = new StringBundler(75);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -102,6 +93,10 @@ public class ObjectDefinitionCacheModel
 		sb.append(accountEntryRestrictedObjectFieldId);
 		sb.append(", descriptionObjectFieldId=");
 		sb.append(descriptionObjectFieldId);
+		sb.append(", objectFolderId=");
+		sb.append(objectFolderId);
+		sb.append(", rootObjectDefinitionId=");
+		sb.append(rootObjectDefinitionId);
 		sb.append(", titleObjectFieldId=");
 		sb.append(titleObjectFieldId);
 		sb.append(", accountEntryRestricted=");
@@ -118,6 +113,10 @@ public class ObjectDefinitionCacheModel
 		sb.append(enableCategorization);
 		sb.append(", enableComments=");
 		sb.append(enableComments);
+		sb.append(", enableLocalization=");
+		sb.append(enableLocalization);
+		sb.append(", enableObjectEntryDraft=");
+		sb.append(enableObjectEntryDraft);
 		sb.append(", enableObjectEntryHistory=");
 		sb.append(enableObjectEntryHistory);
 		sb.append(", modifiable=");
@@ -201,6 +200,8 @@ public class ObjectDefinitionCacheModel
 			accountEntryRestrictedObjectFieldId);
 		objectDefinitionImpl.setDescriptionObjectFieldId(
 			descriptionObjectFieldId);
+		objectDefinitionImpl.setObjectFolderId(objectFolderId);
+		objectDefinitionImpl.setRootObjectDefinitionId(rootObjectDefinitionId);
 		objectDefinitionImpl.setTitleObjectFieldId(titleObjectFieldId);
 		objectDefinitionImpl.setAccountEntryRestricted(accountEntryRestricted);
 		objectDefinitionImpl.setActive(active);
@@ -228,6 +229,8 @@ public class ObjectDefinitionCacheModel
 
 		objectDefinitionImpl.setEnableCategorization(enableCategorization);
 		objectDefinitionImpl.setEnableComments(enableComments);
+		objectDefinitionImpl.setEnableLocalization(enableLocalization);
+		objectDefinitionImpl.setEnableObjectEntryDraft(enableObjectEntryDraft);
 		objectDefinitionImpl.setEnableObjectEntryHistory(
 			enableObjectEntryHistory);
 		objectDefinitionImpl.setModifiable(modifiable);
@@ -319,6 +322,10 @@ public class ObjectDefinitionCacheModel
 
 		descriptionObjectFieldId = objectInput.readLong();
 
+		objectFolderId = objectInput.readLong();
+
+		rootObjectDefinitionId = objectInput.readLong();
+
 		titleObjectFieldId = objectInput.readLong();
 
 		accountEntryRestricted = objectInput.readBoolean();
@@ -331,6 +338,10 @@ public class ObjectDefinitionCacheModel
 		enableCategorization = objectInput.readBoolean();
 
 		enableComments = objectInput.readBoolean();
+
+		enableLocalization = objectInput.readBoolean();
+
+		enableObjectEntryDraft = objectInput.readBoolean();
 
 		enableObjectEntryHistory = objectInput.readBoolean();
 
@@ -391,6 +402,10 @@ public class ObjectDefinitionCacheModel
 
 		objectOutput.writeLong(descriptionObjectFieldId);
 
+		objectOutput.writeLong(objectFolderId);
+
+		objectOutput.writeLong(rootObjectDefinitionId);
+
 		objectOutput.writeLong(titleObjectFieldId);
 
 		objectOutput.writeBoolean(accountEntryRestricted);
@@ -421,6 +436,10 @@ public class ObjectDefinitionCacheModel
 		objectOutput.writeBoolean(enableCategorization);
 
 		objectOutput.writeBoolean(enableComments);
+
+		objectOutput.writeBoolean(enableLocalization);
+
+		objectOutput.writeBoolean(enableObjectEntryDraft);
 
 		objectOutput.writeBoolean(enableObjectEntryHistory);
 
@@ -502,6 +521,8 @@ public class ObjectDefinitionCacheModel
 	public long modifiedDate;
 	public long accountEntryRestrictedObjectFieldId;
 	public long descriptionObjectFieldId;
+	public long objectFolderId;
+	public long rootObjectDefinitionId;
 	public long titleObjectFieldId;
 	public boolean accountEntryRestricted;
 	public boolean active;
@@ -510,6 +531,8 @@ public class ObjectDefinitionCacheModel
 	public String className;
 	public boolean enableCategorization;
 	public boolean enableComments;
+	public boolean enableLocalization;
+	public boolean enableObjectEntryDraft;
 	public boolean enableObjectEntryHistory;
 	public boolean modifiable;
 	public String name;

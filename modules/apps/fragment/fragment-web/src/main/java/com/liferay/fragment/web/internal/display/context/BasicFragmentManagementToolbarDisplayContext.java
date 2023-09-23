@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.display.context;
 
+import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
@@ -24,21 +16,27 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
+import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.LongTextInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -68,6 +66,9 @@ public class BasicFragmentManagementToolbarDisplayContext
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			fragmentDisplayContext.getFragmentEntriesSearchContainer(),
 			fragmentDisplayContext);
+
+		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
+			ItemSelector.class.getName());
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class BasicFragmentManagementToolbarDisplayContext
 							dropdownItem.putData(
 								"action",
 								"exportFragmentCompositionsAndFragmentEntries");
-							dropdownItem.setIcon("upload");
+							dropdownItem.setIcon("export");
 							dropdownItem.setLabel(
 								LanguageUtil.get(httpServletRequest, "export"));
 							dropdownItem.setQuickAction(true);
@@ -205,13 +206,26 @@ public class BasicFragmentManagementToolbarDisplayContext
 			).buildString()
 		).put(
 			"selectFragmentCollectionURL",
-			() -> PortletURLBuilder.createActionURL(
-				liferayPortletResponse
-			).setMVCRenderCommandName(
-				"/fragment/select_fragment_collection"
-			).setWindowState(
-				LiferayWindowState.POP_UP
-			).buildString()
+			() -> {
+				RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+					RequestBackedPortletURLFactoryUtil.create(
+						httpServletRequest);
+
+				FragmentCollectionItemSelectorCriterion
+					fragmentCollectionItemSelectorCriterion =
+						new FragmentCollectionItemSelectorCriterion();
+
+				fragmentCollectionItemSelectorCriterion.
+					setDesiredItemSelectorReturnTypes(
+						new UUIDItemSelectorReturnType());
+
+				return String.valueOf(
+					_itemSelector.getItemSelectorURL(
+						requestBackedPortletURLFactory,
+						liferayPortletResponse.getNamespace() +
+							"selectFragmentCollection",
+						fragmentCollectionItemSelectorCriterion));
+			}
 		).build();
 	}
 
@@ -268,6 +282,12 @@ public class BasicFragmentManagementToolbarDisplayContext
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (InfoFieldType infoFieldType : _INFO_FIELD_TYPES) {
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-183727") &&
+				(infoFieldType == DateTimeInfoFieldType.INSTANCE)) {
+
+				continue;
+			}
+
 			jsonArray.put(
 				JSONUtil.put(
 					"key", infoFieldType.getName()
@@ -316,10 +336,13 @@ public class BasicFragmentManagementToolbarDisplayContext
 
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
-		DateInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
-		HTMLInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
+		DateInfoFieldType.INSTANCE, DateTimeInfoFieldType.INSTANCE,
+		FileInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
+		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
 		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
 		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
 	};
+
+	private final ItemSelector _itemSelector;
 
 }

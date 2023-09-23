@@ -1,0 +1,54 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies.upgrade;
+
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+/**
+ * @author Nícolas Moura
+ */
+@Component(
+	service = UpgradeJavaAssetEntryAssetCategoriesCheck.class
+)
+public class UpgradeJavaAssetEntryAssetCategoriesCheck {
+
+	public void method(
+		long assetCategoryId, AssetCategory assetCategory,
+		long[] assetCategoryIds, List<AssetCategory> assetCategories,
+		long entryId) {
+
+		_assetCategoryLocalService.addAssetEntryAssetCategories(
+			entryId, assetCategories);
+
+		_assetCategoryLocalService.addAssetEntryAssetCategories(
+			entryId, assetCategoryIds);
+
+		_assetCategoryLocalService.addAssetEntryAssetCategory(
+			entryId, assetCategory);
+
+		_assetCategoryLocalService.addAssetEntryAssetCategory(
+			entryId, assetCategoryId);
+
+		_assetCategoryLocalService.deleteAssetEntryAssetCategories(
+			entryId, assetCategories);
+
+		_assetCategoryLocalService.deleteAssetEntryAssetCategories(
+			entryId, assetCategoryIds);
+
+		_assetCategoryLocalService.deleteAssetEntryAssetCategory(
+			entryId, assetCategory);
+
+		_assetCategoryLocalService.deleteAssetEntryAssetCategory(
+			entryId, assetCategoryId);
+	}
+
+	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+}

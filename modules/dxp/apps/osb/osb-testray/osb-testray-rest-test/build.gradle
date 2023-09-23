@@ -1,0 +1,20 @@
+configurations.all {
+	resolutionStrategy {
+		force group: "com.liferay.portal", name: "com.liferay.portal.test", version: "default"
+	}
+}
+
+dependencies {
+	testCompileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
+	testCompileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
+
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.13.4"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.13.4"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.13.4.2"
+	testIntegrationImplementation group: "javax.ws.rs", name: "javax.ws.rs-api", version: "2.1"
+	testIntegrationImplementation project(":apps:portal-odata:portal-odata-api")
+	testIntegrationImplementation project(":apps:portal-vulcan:portal-vulcan-api")
+	testIntegrationImplementation project(":dxp:apps:osb:osb-testray:osb-testray-rest-api")
+	testIntegrationImplementation project(":dxp:apps:osb:osb-testray:osb-testray-rest-client")
+	testIntegrationImplementation project(":test:arquillian-extension-junit-bridge")
+}

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,6 +16,13 @@ CommerceChannel commerceChannel = commerceOrderContentDisplayContext.fetchCommer
 	title='<%= LanguageUtil.format(locale, "select-x", "order-type") %>'
 >
 	<portlet:actionURL name="/commerce_open_order_content/edit_commerce_order" var="editCommerceOrderURL" />
+
+	<clay:alert
+		dismissible="<%= true %>"
+		displayType="info"
+		message="commerce-order-type-info"
+		title='<%= LanguageUtil.get(request, "info") %>'
+	/>
 
 	<aui:form action="<%= editCommerceOrderURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "addOrder();" %>'>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD %>" />
@@ -62,42 +60,57 @@ CommerceChannel commerceChannel = commerceOrderContentDisplayContext.fetchCommer
 			'#<portlet:namespace />commerceOrderTypeId'
 		).value;
 
-		var CartResource = ServiceProvider.default.DeliveryCartAPI('v1');
+		if (<%= ParamUtil.getBoolean(request, "addToCart") %>) {
+			window.parent.Liferay.fire(events.ADD_ITEM_TO_CART, {orderTypeId});
 
-		CartResource.createCartByChannelId(
-			'<%= commerceChannel.getCommerceChannelId() %>',
-			{
-				accountId:
-					'<%= commerceOrderContentDisplayContext.getCommerceAccountId() %>',
-				currencyCode: '<%= commerceChannel.getCommerceCurrencyCode() %>',
-				orderTypeId: orderTypeId,
-			}
-		)
-			.then((order) => {
-				Liferay.fire(
-					events.CURRENT_ORDER_UPDATED,
-					Object.assign({}, order)
-				);
-
-				var redirectURL = new Liferay.Util.PortletURL.createPortletURL(
-					'<%= editCommerceOrderRenderURL.toString() %>',
-					{
-						commerceOrderId: order.id,
-						p_auth: Liferay.authToken,
-						p_p_state: '<%= LiferayWindowState.MAXIMIZED.toString() %>',
-					}
-				);
-				window.parent.Liferay.fire(events.CLOSE_MODAL, {
-					redirectURL: redirectURL.toString(),
-					successNotification: {
-						showSuccessNotification: true,
-						message:
-							'<liferay-ui:message key="your-request-completed-successfully" />',
-					},
-				});
-			})
-			.catch((error) => {
-				return Promise.reject(error);
+			window.parent.Liferay.fire(events.CLOSE_MODAL, {
+				successNotification: {
+					showSuccessNotification: true,
+					message:
+						'<liferay-ui:message key="your-request-completed-successfully" />',
+				},
 			});
+		}
+		else {
+			var CartResource = ServiceProvider.default.DeliveryCartAPI('v1');
+
+			CartResource.createCartByChannelId(
+				'<%= commerceChannel.getCommerceChannelId() %>',
+				{
+					accountId:
+						'<%= commerceOrderContentDisplayContext.getCommerceAccountId() %>',
+					currencyCode:
+						'<%= commerceChannel.getCommerceCurrencyCode() %>',
+					orderTypeId: orderTypeId,
+				}
+			)
+				.then((order) => {
+					Liferay.fire(
+						events.CURRENT_ORDER_UPDATED,
+						Object.assign({}, order)
+					);
+
+					var redirectURL = new Liferay.Util.PortletURL.createPortletURL(
+						'<%= editCommerceOrderRenderURL.toString() %>',
+						{
+							commerceOrderId: order.id,
+							p_auth: Liferay.authToken,
+							p_p_state:
+								'<%= LiferayWindowState.MAXIMIZED.toString() %>',
+						}
+					);
+					window.parent.Liferay.fire(events.CLOSE_MODAL, {
+						redirectURL: redirectURL.toString(),
+						successNotification: {
+							showSuccessNotification: true,
+							message:
+								'<liferay-ui:message key="your-request-completed-successfully" />',
+						},
+					});
+				})
+				.catch((error) => {
+					return Promise.reject(error);
+				});
+		}
 	});
 </aui:script>

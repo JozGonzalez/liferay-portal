@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.site.facet.portlet;
@@ -28,17 +19,13 @@ import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.web.internal.facet.display.context.ScopeSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.ScopeSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.site.facet.constants.SiteFacetPortletKeys;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
 import java.io.IOException;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -126,9 +113,13 @@ public class SiteFacetPortlet extends MVCPortlet {
 			portletSharedSearchResponse.getFacet(
 				_getAggregationName(renderRequest)));
 
-		SearchOptionalUtil.copy(
-			() -> _getFilteredGroupIdsOptional(portletSharedSearchResponse),
-			scopeSearchFacetDisplayContextBuilder::setFilteredGroupIds);
+		long[] filteredGroupIds = _getFilteredGroupIds(
+			portletSharedSearchResponse);
+
+		if (filteredGroupIds != null) {
+			scopeSearchFacetDisplayContextBuilder.setFilteredGroupIds(
+				filteredGroupIds);
+		}
 
 		SiteFacetPortletPreferences siteFacetPortletPreferences =
 			new SiteFacetPortletPreferencesImpl(
@@ -156,10 +147,9 @@ public class SiteFacetPortlet extends MVCPortlet {
 
 		scopeSearchFacetDisplayContextBuilder.setParameterName(parameterName);
 
-		SearchOptionalUtil.copy(
-			() -> _getParameterValuesOptional(
-				parameterName, portletSharedSearchResponse, renderRequest),
-			scopeSearchFacetDisplayContextBuilder::setParameterValues);
+		scopeSearchFacetDisplayContextBuilder.setParameterValues(
+			portletSharedSearchResponse.getParameterValues(
+				parameterName, renderRequest));
 
 		scopeSearchFacetDisplayContextBuilder.setRequest(
 			_getHttpServletRequest(renderRequest));
@@ -183,7 +173,7 @@ public class SiteFacetPortlet extends MVCPortlet {
 		return portal.getPortletId(renderRequest);
 	}
 
-	private Optional<long[]> _getFilteredGroupIdsOptional(
+	private long[] _getFilteredGroupIds(
 		PortletSharedSearchResponse portletSharedSearchResponse) {
 
 		SearchSettings searchSettings =
@@ -191,7 +181,7 @@ public class SiteFacetPortlet extends MVCPortlet {
 
 		SearchContext searchContext = searchSettings.getSearchContext();
 
-		return Optional.ofNullable(searchContext.getGroupIds());
+		return searchContext.getGroupIds();
 	}
 
 	private HttpServletRequest _getHttpServletRequest(
@@ -222,18 +212,6 @@ public class SiteFacetPortlet extends MVCPortlet {
 		SearchRequest searchRequest = searchResponse.getRequest();
 
 		return searchRequest.getPaginationStartParameterName();
-	}
-
-	private Optional<List<String>> _getParameterValuesOptional(
-		String parameterName,
-		PortletSharedSearchResponse portletSharedSearchResponse,
-		RenderRequest renderRequest) {
-
-		Optional<String[]> optional =
-			portletSharedSearchResponse.getParameterValues(
-				parameterName, renderRequest);
-
-		return optional.map(Arrays::asList);
 	}
 
 }

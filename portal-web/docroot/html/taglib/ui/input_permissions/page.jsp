@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -34,7 +25,7 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 %>
 
 <c:choose>
-	<c:when test="<%= user.getDefaultUser() %>">
+	<c:when test="<%= user.isGuestUser() %>">
 		<liferay-ui:message key="not-available" />
 	</c:when>
 	<c:otherwise>
@@ -119,11 +110,13 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 					<option <%= inputPermissionsViewRole.equals(RoleConstants.OWNER) ? "selected=\"selected\"" : "" %> value="<%= RoleConstants.OWNER %>"><liferay-ui:message key="owner" /></option>
 				</select>
 
-				<div class="mt-3 <%= inputPermissionsShowOptions ? "hide" : "" %>" id="<%= uniqueNamespace %>inputPermissionsShowOptionsLink" style="margin-bottom: 60px;">
-					<a class="btn btn-secondary btn-sm mt-3" href="javascript:<%= uniqueNamespace %>inputPermissionsShowOptions();" role="button"><liferay-ui:message key="more-options" /></a> <liferay-ui:icon-help message="input-permissions-more-options-help" />
-				</div>
+				<button aria-controls="<%= uniqueNamespace %>inputPermissionsTable" aria-expanded="<%= inputPermissionsShowOptions %>" class="btn btn-secondary btn-sm <%= inputPermissionsShowOptions ? "mb-1 mt-3" : "mb-5 mt-3" %>" id="<%= uniqueNamespace %>inputPermissionsOptionsButton" onclick="<%= uniqueNamespace %>inputPermissionsToggle();" type="button">
+					<%= inputPermissionsShowOptions ? LanguageUtil.get(request, "hide-options") : LanguageUtil.get(request, "more-options") %>
+				</button>
 
-				<a class="btn btn-secondary btn-sm mt-3 <%= inputPermissionsShowOptions ? "" : "hide" %>" href="javascript:<%= uniqueNamespace %>inputPermissionsHideOptions();" id="<%= uniqueNamespace %>inputPermissionsHideOptionsLink" role="button"><liferay-ui:message key="hide-options" /></a>
+				<span class="mt-3 <%= inputPermissionsShowOptions ? "hide" : "" %>" id="<%= uniqueNamespace %>inputPermissionsShowOptionsHelp">
+					<liferay-ui:icon-help message="input-permissions-more-options-help" />
+				</span>
 			</p>
 		</c:if>
 
@@ -137,26 +130,14 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 		</c:choose>
 
 		<script>
-			function <%= uniqueNamespace %>inputPermissionsHideOptions() {
-				<%= uniqueNamespace %>togglePermissionsOptions(false);
-			}
 
-			function <%= uniqueNamespace %>inputPermissionsShowOptions() {
-				<%= uniqueNamespace %>togglePermissionsOptions(true);
+			function <%= uniqueNamespace %>inputPermissionsToggle() {
+				var isInputPermissionsShowOptionsTrue = (document.getElementById('<%= uniqueNamespace %>inputPermissionsShowOptions').value === 'true');
+
+				<%= uniqueNamespace %>togglePermissionsOptions(!isInputPermissionsShowOptionsTrue);
 			}
 
 			function <%= uniqueNamespace %>togglePermissionsOptions(force) {
-				var inputPermissionsHideOptionsLink = document.getElementById('<%= uniqueNamespace %>inputPermissionsHideOptionsLink');
-
-				if (inputPermissionsHideOptionsLink) {
-					if (force) {
-						inputPermissionsHideOptionsLink.classList.remove('hide');
-					}
-					else {
-						inputPermissionsHideOptionsLink.classList.add('hide');
-					}
-				}
-
 				var inputPermissionsTable = document.getElementById('<%= uniqueNamespace %>inputPermissionsTable');
 
 				if (inputPermissionsTable) {
@@ -168,14 +149,14 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 					}
 				}
 
-				var inputPermissionsShowOptionsLink = document.getElementById('<%= uniqueNamespace %>inputPermissionsShowOptionsLink');
+				var inputPermissionsShowOptionsHelp = document.getElementById('<%= uniqueNamespace %>inputPermissionsShowOptionsHelp');
 
-				if (inputPermissionsShowOptionsLink) {
+				if (inputPermissionsShowOptionsHelp) {
 					if (force) {
-						inputPermissionsShowOptionsLink.classList.add('hide');
+						inputPermissionsShowOptionsHelp.classList.add('hide');
 					}
 					else {
-						inputPermissionsShowOptionsLink.classList.remove('hide');
+						inputPermissionsShowOptionsHelp.classList.remove('hide');
 					}
 				}
 
@@ -183,6 +164,14 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 
 				if (inputPermissionsShowOptions) {
 					inputPermissionsShowOptions.value = force;
+				}
+
+				var inputPermissionsOptionsButton = document.getElementById('<%= uniqueNamespace %>inputPermissionsOptionsButton');
+
+				if (inputPermissionsOptionsButton) {
+					inputPermissionsOptionsButton.innerText = force ? '<%= LanguageUtil.get(request, "hide-options") %>' :'<%= LanguageUtil.get(request, "more-options") %>' ;
+					inputPermissionsOptionsButton.ariaExpanded = force;
+					inputPermissionsOptionsButton.classList = force ? "btn btn-secondary btn-sm mb-1 mt-3" : "btn btn-secondary btn-sm mb-5 mt-3";
 				}
 			}
 

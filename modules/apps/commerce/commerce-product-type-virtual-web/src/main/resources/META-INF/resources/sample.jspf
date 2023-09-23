@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -23,7 +14,7 @@
 
 <liferay-ui:error exception="<%= CPDefinitionVirtualSettingSampleException.class %>" message="please-enter-a-valid-sample-url-or-select-an-existing-sample-file" />
 <liferay-ui:error exception="<%= CPDefinitionVirtualSettingSampleFileEntryIdException.class %>" message="please-select-an-existing-sample-file" />
-<liferay-ui:error exception="<%= CPDefinitionVirtualSettingSampleUrlException.class %>" message="please-enter-a-valid-sample-url" />
+<liferay-ui:error exception="<%= CPDefinitionVirtualSettingSampleURLException.class %>" message="please-enter-a-valid-sample-url" />
 
 <aui:fieldset>
 	<aui:input label="enable-sample" name="useSample" />
@@ -57,7 +48,7 @@
 
 		<h4 class="<%= textCssClass %>" id="lfr-definition-virtual-sample-button-row-message"><liferay-ui:message key="or" /></h4>
 
-		<aui:input disabled="<%= useSampleFileEntry %>" label="sample-file-url" name="sampleUrl" />
+		<aui:input disabled="<%= useSampleFileEntry %>" label="sample-file-url" name="sampleURL" />
 	</aui:fieldset>
 </div>
 
@@ -94,12 +85,12 @@
 						sampleFileEntryId.value = value.fileEntryId;
 					}
 
-					const sampleUrl = document.getElementById(
-						'<portlet:namespace />sampleUrl'
+					const sampleURL = document.getElementById(
+						'<portlet:namespace />sampleURL'
 					);
 
-					if (sampleUrl) {
-						sampleUrl.setAttribute('disabled', true);
+					if (sampleURL) {
+						sampleURL.setAttribute('disabled', true);
 					}
 
 					const message = document.getElementById(
@@ -130,12 +121,12 @@
 			);
 
 			if (useSample.checked) {
-				const sampleUrl = document.getElementById(
-					'<portlet:namespace />sampleUrl'
+				const sampleURL = document.getElementById(
+					'<portlet:namespace />sampleURL'
 				);
 
-				if (sampleUrl) {
-					sampleUrl.setAttribute('disabled', false);
+				if (sampleURL) {
+					sampleURL.removeAttribute('disabled');
 				}
 			}
 
@@ -180,14 +171,14 @@
 		).hasClass('hide');
 
 		if (useSampleCheckbox.attr('checked')) {
-			A.one('#<portlet:namespace />sampleUrl').attr(
+			A.one('#<portlet:namespace />sampleURL').attr(
 				'disabled',
 				isSampleFileSelected
 			);
 			A.one('#<portlet:namespace />selectSampleFile').attr('disabled', false);
 		}
 		else {
-			A.one('#<portlet:namespace />sampleUrl').attr('disabled', true);
+			A.one('#<portlet:namespace />sampleURL').attr('disabled', true);
 			A.one('#<portlet:namespace />selectSampleFile').attr('disabled', true);
 		}
 	}

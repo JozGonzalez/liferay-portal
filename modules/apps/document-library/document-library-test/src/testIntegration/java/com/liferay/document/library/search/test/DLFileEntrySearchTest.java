@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.search.test;
@@ -18,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
@@ -64,6 +56,7 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.BaseSearchTestCase;
@@ -75,6 +68,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.File;
 import java.io.InputStream;
+
+import java.util.Collections;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -211,6 +206,11 @@ public class DLFileEntrySearchTest extends BaseSearchTestCase {
 	public void testSearchAttachments() throws Exception {
 	}
 
+	@Override
+	@Test
+	public void testSearchByDDMStructureField() throws Exception {
+	}
+
 	@Test
 	public void testSearchTikaRawMetadata() throws Exception {
 		ServiceContext serviceContext =
@@ -305,25 +305,30 @@ public class DLFileEntrySearchTest extends BaseSearchTestCase {
 
 		_ddmStructure = ddmStructure;
 
-		DDMStructure dlFileEntryTypeDDMStructure =
-			DDMStructureTestUtil.addStructure(
-				serviceContext.getScopeGroupId(),
-				DLFileEntryMetadata.class.getName());
-
 		DLFileEntryType dlFileEntryType =
-			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
+			DLFileEntryTypeLocalServiceUtil.fetchDataDefinitionFileEntryType(
+				ddmStructure.getGroupId(), ddmStructure.getStructureId());
+
+		if (dlFileEntryType == null) {
+			dlFileEntryType = DLFileEntryTypeLocalServiceUtil.addFileEntryType(
 				TestPropsValues.getUserId(), serviceContext.getScopeGroupId(),
-				null, StringPool.BLANK,
-				new long[] {
-					dlFileEntryTypeDDMStructure.getStructureId(),
-					ddmStructure.getStructureId()
-				},
+				ddmStructure.getStructureId(), null,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), "New File Entry Type"),
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), "New File Entry Type"),
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
 				serviceContext);
+
+			DLFileEntryTypeLocalServiceUtil.addDDMStructureLinks(
+				dlFileEntryType.getFileEntryTypeId(),
+				SetUtil.fromArray(ddmStructure.getStructureId()));
+		}
 
 		String content = "Content: Enterprise. Open Source. For Life.";
 
 		DDMFormValues ddmFormValues = createDDMFormValues(
-			DDMBeanTranslatorUtil.translate(_ddmStructure.getDDMForm()));
+			DDMBeanTranslatorUtil.translate(ddmStructure.getDDMForm()));
 
 		for (String keyword : keywords) {
 			ddmFormValues.addDDMFormFieldValue(

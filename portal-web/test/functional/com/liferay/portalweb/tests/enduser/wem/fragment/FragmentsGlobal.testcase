@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -24,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -398,7 +399,7 @@ definition {
 		task ("Assert the View Site Usages action not shown") {
 			LexiconCard.viewMenuItemDisabled(
 				card = "Global Fragment Name 1",
-				menuItem = "View Site Usages");
+				item = "View Site Usages");
 		}
 
 		task ("Add the second global fragment via JSON") {

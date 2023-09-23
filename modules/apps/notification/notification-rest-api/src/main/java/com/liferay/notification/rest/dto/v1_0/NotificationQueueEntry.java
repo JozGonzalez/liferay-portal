@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.rest.dto.v1_0;
@@ -41,7 +32,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -145,7 +135,7 @@ public class NotificationQueueEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String fromName;
 
 	@Schema
@@ -174,22 +164,22 @@ public class NotificationQueueEntry implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@DecimalMin("0")
 	@Schema
-	public Double getPriority() {
-		return priority;
+	@Valid
+	public Object[] getRecipients() {
+		return recipients;
 	}
 
-	public void setPriority(Double priority) {
-		this.priority = priority;
+	public void setRecipients(Object[] recipients) {
+		this.recipients = recipients;
 	}
 
 	@JsonIgnore
-	public void setPriority(
-		UnsafeSupplier<Double, Exception> priorityUnsafeSupplier) {
+	public void setRecipients(
+		UnsafeSupplier<Object[], Exception> recipientsUnsafeSupplier) {
 
 		try {
-			priority = priorityUnsafeSupplier.get();
+			recipients = recipientsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -201,7 +191,7 @@ public class NotificationQueueEntry implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Double priority;
+	protected Object[] recipients;
 
 	@Schema
 	public String getRecipientsSummary() {
@@ -284,7 +274,7 @@ public class NotificationQueueEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer status;
 
 	@Schema
@@ -340,7 +330,7 @@ public class NotificationQueueEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String triggerBy;
 
 	@Schema
@@ -366,7 +356,7 @@ public class NotificationQueueEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String type;
 
 	@Schema
@@ -476,14 +466,28 @@ public class NotificationQueueEntry implements Serializable {
 			sb.append(id);
 		}
 
-		if (priority != null) {
+		if (recipients != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"priority\": ");
+			sb.append("\"recipients\": ");
 
-			sb.append(priority);
+			sb.append("[");
+
+			for (int i = 0; i < recipients.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(recipients[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < recipients.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (recipientsSummary != null) {
@@ -674,5 +678,7 @@ public class NotificationQueueEntry implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

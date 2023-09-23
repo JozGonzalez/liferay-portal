@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
@@ -22,6 +13,7 @@ import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.commerce.product.service.CPOptionValueService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
+import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -31,21 +23,25 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+
+import java.io.Serializable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.ws.rs.HttpMethod;
@@ -62,12 +58,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/option-value.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, OptionValueResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = OptionValueResource.class
 )
 @CTAware
-public class OptionValueResourceImpl
-	extends BaseOptionValueResourceImpl implements NestedFieldSupport {
+public class OptionValueResourceImpl extends BaseOptionValueResourceImpl {
 
 	@Override
 	public Response deleteOptionValue(Long id) throws Exception {
@@ -181,10 +176,8 @@ public class OptionValueResourceImpl
 	public Response patchOptionValue(Long id, OptionValue optionValue)
 		throws Exception {
 
-		CPOptionValue cpOptionValue = _cpOptionValueService.getCPOptionValue(
-			id);
-
-		_addOrUpdateOptionValue(cpOptionValue.getCPOption(), optionValue);
+		_updateOptionValue(
+			_cpOptionValueService.getCPOptionValue(id), optionValue);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -206,7 +199,7 @@ public class OptionValueResourceImpl
 					externalReferenceCode);
 		}
 
-		_addOrUpdateOptionValue(cpOptionValue.getCPOption(), optionValue);
+		_updateOptionValue(cpOptionValue, optionValue);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -273,14 +266,19 @@ public class OptionValueResourceImpl
 			CPOption cpOption, OptionValue optionValue)
 		throws Exception {
 
+		ServiceContext serviceContext =
+			_serviceContextHelper.getServiceContext();
+
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(optionValue));
+
 		CPOptionValue cpOptionValue =
 			_cpOptionValueService.addOrUpdateCPOptionValue(
 				optionValue.getExternalReferenceCode(),
 				cpOption.getCPOptionId(),
 				LanguageUtils.getLocalizedMap(optionValue.getName()),
 				GetterUtil.get(optionValue.getPriority(), 0D),
-				optionValue.getKey(),
-				_serviceContextHelper.getServiceContext());
+				optionValue.getKey(), serviceContext);
 
 		return _toOptionValue(cpOptionValue.getCPOptionValueId());
 	}
@@ -304,6 +302,15 @@ public class OptionValueResourceImpl
 				ActionKeys.UPDATE, cpOptionValueId, contextUriInfo,
 				"patchOptionValue", getClass())
 		).build();
+	}
+
+	private Map<String, Serializable> _getExpandoBridgeAttributes(
+		OptionValue optionValue) {
+
+		return CustomFieldsUtil.toMap(
+			CPOptionValue.class.getName(), contextCompany.getCompanyId(),
+			optionValue.getCustomFields(),
+			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	private String _getHttpMethodName(Class<?> clazz, Method method)
@@ -376,6 +383,36 @@ public class OptionValueResourceImpl
 		}
 
 		return productOptionValues;
+	}
+
+	private OptionValue _updateOptionValue(
+			CPOptionValue cpOptionValue, OptionValue optionValue)
+		throws Exception {
+
+		Map<String, String> name = optionValue.getName();
+		Map<Locale, String> nameMap = null;
+
+		if (MapUtil.isEmpty(name)) {
+			nameMap = cpOptionValue.getNameMap();
+		}
+		else {
+			nameMap = LanguageUtils.getLocalizedMap(name);
+		}
+
+		ServiceContext serviceContext =
+			_serviceContextHelper.getServiceContext();
+
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(optionValue));
+
+		cpOptionValue = _cpOptionValueService.updateCPOptionValue(
+			cpOptionValue.getCPOptionValueId(), nameMap,
+			GetterUtil.get(
+				optionValue.getPriority(), cpOptionValue.getPriority()),
+			GetterUtil.get(optionValue.getKey(), cpOptionValue.getKey()),
+			serviceContext);
+
+		return _toOptionValue(cpOptionValue.getCPOptionValueId());
 	}
 
 	@Reference

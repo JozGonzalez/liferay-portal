@@ -22,7 +22,7 @@
 </tr>
 <tr>
 	<td>CATEGORY_FACET_EXPAND_VOCABULARIES</td>
-	<td>xpath=(//span[*[name()='svg'][contains(@class,'lexicon-icon-angle-right component-expanded-d-none')]])[2]</td>
+	<td>//span[*[name()='svg'][contains(@class,'lexicon-icon-angle-right component-expanded-d-none')]]/../../..//div[contains(.,'${key_siteName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -38,6 +38,11 @@
 <tr>
 	<td>CATEGORY_FACET_VOCABULARY_SCOPE_RADIO</td>
 	<td>//span[contains(.,'${vocabularyScope}')]/preceding-sibling::input[@role='radio']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOM_FILTER_WIDGET_VALUE_INPUT</td>
+	<td>//div[contains(@class,'input-text-wrapper')]//input[contains(@name,'${key_name}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -57,7 +62,7 @@
 </tr>
 <tr>
 	<td>GLOBAL_SEARCH_BAR</td>
-	<td>//input[@ref='searchInput']</td>
+	<td>//div[contains(@id,'search-bar')]//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -87,7 +92,7 @@
 </tr>
 <tr>
 	<td>EMBEDDED_SEARCH_BAR</td>
-	<td>//input[contains(@data-qa-id,'searchInput')]</td>
+	<td>//header[@id='banner']//input[contains(@data-qa-id,'searchInput')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -106,8 +111,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FACET_DISPLAY_FREQUENCIES</td>
-	<td>//small[contains(@class,'term-count')]/preceding-sibling::span[contains(.,'${facetValueName}')]</td>
+	<td>FACET_TERM</td>
+	<td>//section[contains(@class,'portlet') and contains(.,'${key_facetType}')]//li[contains(@class,'facet-value')]//label[contains(.,'${key_termValue}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FACET_TERM_FREQUENCIES</td>
+	<td>//section[contains(@class,'portlet') and contains(.,'${key_facetType}')]//li[contains(@class,'facet-value') and descendant::label[contains(.,'${key_termValue}')]]//small[contains(@class,'term-count')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,6 +138,16 @@
 <tr>
 	<td>MODIFIED_FACET_SELECTION</td>
 	<td>//div[contains(@id,'ModifiedFacet')]//span[contains(.,'${range}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MODIFIED_FACET_SPECIFIC_ORDER</td>
+	<td>//div[contains(@id,'ModifiedFacet')]//li[${resultOrder}]/a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REINDEX_IN_PROGRESS_INDICATOR</td>
+	<td>//div[contains(.,'The portal is currently reindexing.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -186,11 +206,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEARCH_TYPE_FACET_TERM_COUNT</td>
-	<td>//li[@class='facet-value']//small[@class='term-count']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SIMILAR_RESULTS_CARD_TITLE</td>
 	<td>//h3[@class='card-title']/a[contains(.,'${key_cardResultTitle}')]</td>
 	<td></td>
@@ -216,13 +231,68 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SORT_PORTLET_DROPDOWN</td>
+	<td>SORT_WIDGET_CONFIGURATION_DISPLAY_LABEL_AT_POSITION</td>
+	<td>xpath=(//input[contains(@id,'displayLabel')])[${key_position}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_DISPLAY_LABEL_WITH_VALUE</td>
+	<td>//div[contains(@class,'form-group')]//input[@value='${key_value}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_DRAG_AND_DROP_TARGET</td>
+	<td>xpath=(//div[contains(@class,'input-sets-item-drop-zone-root')])[${key_targetPosition}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_EMPTY_DISPLAY_LABEL</td>
+	<td>//input[contains(@id,'displayLabel')][@value='']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_EMPTY_INDEXED_FIELD</td>
+	<td>//input[contains(@id,'indexedField')][@value='']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_OPTION_DRAG_HANDLE</td>
+	<td>//div[contains(@class,'form-group')][.//input[@value='${key_displayLabel}']]//button[contains(@aria-label,'Move')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_ORDER_DROPDOWN</td>
+	<td>//div[contains(@class,'form-group')][.//input[@value='${key_displayLabel}']]//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_RELEVANCE_DISPLAY_LABEL</td>
+	<td>//input[@id='relevance']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_RELEVANCE_TOGGLE</td>
+	<td>//div[contains(@class,'input-group')][.//*[@id='relevance']]//input[contains(@class,'toggle-switch-check')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_CONFIGURATION_TRASH_BUTTON</td>
+	<td>//div[contains(@class,'form-group')][.//input[@value='${key_displayLabel}']]//button[@aria-label='Delete']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_DROPDOWN</td>
 	<td>//div/select[contains(@id, "SortPortlet")]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SORT_PORTLET_SORT_OPTION</td>
+	<td>SORT_WIDGET_SORT_OPTION</td>
 	<td>//div/select[contains(@id, "SortPortlet")]/option[contains(., "${sortOption}")]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_WIDGET_SORT_OPTION_POSITION</td>
+	<td>xpath=(//div/select[contains(@id, "SortPortlet")]/option)[${key_position}]</td>
 	<td></td>
 </tr>
 <tr>

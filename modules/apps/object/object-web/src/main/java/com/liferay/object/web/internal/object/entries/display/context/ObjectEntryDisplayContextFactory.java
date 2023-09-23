@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.entries.display.context;
 
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.object.display.context.ObjectEntryDisplayContext;
@@ -42,13 +34,16 @@ public class ObjectEntryDisplayContextFactory {
 		HttpServletRequest httpServletRequest) {
 
 		return new ObjectEntryDisplayContextImpl(
-			_ddmFormRenderer, httpServletRequest, _itemSelector,
-			_objectDefinitionLocalService, _objectEntryManagerRegistry,
-			_objectEntryLocalService, _objectEntryService,
-			_objectFieldBusinessTypeRegistry, _objectFieldLocalService,
-			_objectLayoutLocalService, _objectRelationshipLocalService,
-			_objectScopeProviderRegistry);
+			_ddmExpressionFactory, _ddmFormRenderer, httpServletRequest,
+			_itemSelector, _objectDefinitionLocalService,
+			_objectEntryManagerRegistry, _objectEntryLocalService,
+			_objectEntryService, _objectFieldBusinessTypeRegistry,
+			_objectFieldLocalService, _objectLayoutLocalService,
+			_objectRelationshipLocalService, _objectScopeProviderRegistry);
 	}
+
+	@Reference
+	private DDMExpressionFactory _ddmExpressionFactory;
 
 	@Reference
 	private DDMFormRenderer _ddmFormRenderer;

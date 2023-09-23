@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -35,17 +26,19 @@ if (journalContentDisplayContext.isShowArticle()) {
 	<c:when test="<%= article == null %>">
 		<c:choose>
 			<c:when test="<%= Validator.isNull(journalContentDisplayContext.getArticleId()) %>">
-				<div class="alert alert-info text-center">
-					<div>
-						<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
-					</div>
+				<clay:alert
+					displayType="info"
+				>
+					<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 
-					<c:if test="<%= journalContentDisplayContext.isShowSelectArticleLink() %>">
-						<div>
-							<aui:a href="javascript:void(0);" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-web-content-to-make-it-visible" /></aui:a>
-						</div>
-					</c:if>
-				</div>
+					<clay:button
+						cssClass="align-baseline border-0 p-0"
+						displayType="link"
+						label="select-web-content-to-make-it-visible"
+						onClick="<%= portletDisplay.getURLConfigurationJS() %>"
+						small="<%= true %>"
+					/>
+				</clay:alert>
 			</c:when>
 			<c:otherwise>
 
@@ -53,7 +46,11 @@ if (journalContentDisplayContext.isShowArticle()) {
 				JournalArticle selectedArticle = journalContentDisplayContext.getSelectedArticle();
 				%>
 
-				<div class="alert alert-warning text-center">
+				<clay:alert
+					cssClass="d-flex flex-column text-center"
+					defaultTitleDisabled="<%= true %>"
+					displayType="warning"
+				>
 					<c:choose>
 						<c:when test="<%= (selectedArticle != null) && selectedArticle.isInTrash() %>">
 							<liferay-ui:message arguments="<%= HtmlUtil.escape(selectedArticle.getTitle(locale)) %>" key="the-web-content-article-x-was-moved-to-the-recycle-bin" />
@@ -100,28 +97,34 @@ if (journalContentDisplayContext.isShowArticle()) {
 							</c:choose>
 						</div>
 					</c:if>
-				</div>
+				</clay:alert>
 			</c:otherwise>
 		</c:choose>
 	</c:when>
 	<c:otherwise>
 		<c:choose>
 			<c:when test="<%= !journalContentDisplayContext.hasViewPermission() %>">
-				<div class="alert alert-danger">
-					<liferay-ui:message key="you-do-not-have-the-roles-required-to-access-this-web-content-entry" />
-				</div>
+				<clay:alert
+					defaultTitleDisabled="<%= true %>"
+					displayType="danger"
+					message="you-do-not-have-the-roles-required-to-access-this-web-content-entry"
+				/>
 			</c:when>
 			<c:when test="<%= Validator.isNotNull(journalContentDisplayContext.getArticleId()) %>">
 				<c:choose>
 					<c:when test="<%= journalContentDisplayContext.isExpired() %>">
-						<div class="alert alert-warning">
-							<liferay-ui:message arguments="<%= HtmlUtil.escape(article.getTitle(locale)) %>" key="x-is-expired" />
-						</div>
+						<clay:alert
+							defaultTitleDisabled="<%= true %>"
+							displayType="warning"
+							message='<%= LanguageUtil.format(request, "x-is-expired", HtmlUtil.escape(article.getTitle(locale))) %>'
+						/>
 					</c:when>
 					<c:when test="<%= article.getDDMStructure() == null %>">
-						<div class="alert alert-warning">
-							<liferay-ui:message arguments="<%= HtmlUtil.escape(article.getTitle(locale)) %>" key="is-temporarily-unavailable" />
-						</div>
+						<clay:alert
+							defaultTitleDisabled="<%= true %>"
+							displayType="warning"
+							message='<%= LanguageUtil.format(request, "is-temporarily-unavailable", HtmlUtil.escape(article.getTitle(locale))) %>'
+						/>
 					</c:when>
 					<c:when test="<%= !journalContentDisplayContext.isPreview() && !article.isApproved() %>">
 
@@ -142,7 +145,10 @@ if (journalContentDisplayContext.isShowArticle()) {
 							</c:choose>
 						</liferay-util:buffer>
 
-						<div class="alert alert-warning">
+						<clay:alert
+							defaultTitleDisabled="<%= true %>"
+							displayType="warning"
+						>
 							<c:choose>
 								<c:when test="<%= assetRenderer.hasEditPermission(permissionChecker) %>">
 									<a href="<%= assetRenderer.getURLEdit(liferayPortletRequest, liferayPortletResponse, WindowState.NORMAL, currentURLObj) %>">
@@ -153,7 +159,7 @@ if (journalContentDisplayContext.isShowArticle()) {
 									<%= scheduledOrNotApprovedMessage %>
 								</c:otherwise>
 							</c:choose>
-						</div>
+						</clay:alert>
 					</c:when>
 					<c:when test="<%= articleDisplay != null %>">
 

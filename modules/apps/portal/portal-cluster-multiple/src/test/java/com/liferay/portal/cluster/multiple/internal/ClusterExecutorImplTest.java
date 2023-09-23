@@ -1,30 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.cluster.multiple.internal;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.cluster.multiple.configuration.ClusterExecutorConfiguration;
 import com.liferay.portal.kernel.cluster.Address;
-import com.liferay.portal.kernel.cluster.ClusterEvent;
-import com.liferay.portal.kernel.cluster.ClusterEventListener;
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
 import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.cluster.ClusterNodeResponse;
 import com.liferay.portal.kernel.cluster.ClusterNodeResponses;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.cluster.FutureClusterResponses;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -39,7 +28,6 @@ import com.liferay.portal.util.PropsImpl;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -67,57 +55,6 @@ public class ClusterExecutorImplTest extends BaseClusterTestCase {
 	}
 
 	@Test
-	public void testClusterEventListener() {
-
-		// Test 1, add cluster event listener
-
-		ClusterExecutorImpl clusterExecutorImpl = _getClusterExecutorImpl();
-
-		List<ClusterEventListener> clusterEventListeners =
-			clusterExecutorImpl.getClusterEventListeners();
-
-		Assert.assertEquals(
-			clusterEventListeners.toString(), 0, clusterEventListeners.size());
-
-		ClusterEventListener clusterEventListener = new ClusterEventListener() {
-
-			@Override
-			public void processClusterEvent(ClusterEvent clusterEvent) {
-			}
-
-		};
-
-		clusterExecutorImpl.addClusterEventListener(clusterEventListener);
-
-		clusterEventListeners = clusterExecutorImpl.getClusterEventListeners();
-
-		Assert.assertEquals(
-			clusterEventListeners.toString(), 1, clusterEventListeners.size());
-
-		// Test 2, remove cluster event listener
-
-		clusterExecutorImpl.removeClusterEventListener(clusterEventListener);
-
-		clusterEventListeners = clusterExecutorImpl.getClusterEventListeners();
-
-		Assert.assertEquals(
-			clusterEventListeners.toString(), 0, clusterEventListeners.size());
-
-		// Test 3, set cluster event listener
-
-		clusterEventListeners = new ArrayList<>();
-
-		clusterEventListeners.add(clusterEventListener);
-
-		clusterExecutorImpl.setClusterEventListeners(clusterEventListeners);
-
-		clusterEventListeners = clusterExecutorImpl.getClusterEventListeners();
-
-		Assert.assertEquals(
-			clusterEventListeners.toString(), 1, clusterEventListeners.size());
-	}
-
-	@Test
 	public void testDeactivate() {
 		ClusterExecutorImpl clusterExecutorImpl = _getClusterExecutorImpl();
 
@@ -140,51 +77,6 @@ public class ClusterExecutorImplTest extends BaseClusterTestCase {
 
 		Assert.assertTrue(clusterChannel.isClosed());
 		Assert.assertTrue(executorService.isShutdown());
-	}
-
-	@Test
-	public void testDebugClusterEventListener() {
-		ClusterExecutorImpl clusterExecutorImpl = _getClusterExecutorImpl();
-
-		clusterExecutorImpl.clusterExecutorConfiguration =
-			new ClusterExecutorConfiguration() {
-
-				@Override
-				public long clusterNodeAddressTimeout() {
-					return 100;
-				}
-
-				@Override
-				public boolean debugEnabled() {
-					return true;
-				}
-
-				@Override
-				public String[] excludedPropertyKeys() {
-					return new String[] {
-						"access_key", "connection_password",
-						"connection_username", "secret_access_key"
-					};
-				}
-
-			};
-
-		clusterExecutorImpl.manageDebugClusterEventListener();
-
-		List<ClusterEventListener> clusterEventListeners =
-			clusterExecutorImpl.getClusterEventListeners();
-
-		Assert.assertEquals(
-			clusterEventListeners.toString(), 1, clusterEventListeners.size());
-
-		ClusterEventListener clusterEventListener = clusterEventListeners.get(
-			0);
-
-		Class<?> clusterEventListenerClass = clusterEventListener.getClass();
-
-		Assert.assertEquals(
-			DebuggingClusterEventListenerImpl.class.getName(),
-			clusterEventListenerClass.getName());
 	}
 
 	@Test
@@ -385,7 +277,14 @@ public class ClusterExecutorImplTest extends BaseClusterTestCase {
 	private ClusterExecutorImpl _getClusterExecutorImpl() {
 		ClusterExecutorImpl clusterExecutorImpl = new ClusterExecutorImpl();
 
-		clusterExecutorImpl.setProps(
+		ReflectionTestUtil.setFieldValue(
+			clusterExecutorImpl, "_clusterChannelFactory",
+			new TestClusterChannelFactory());
+		ReflectionTestUtil.setFieldValue(
+			clusterExecutorImpl, "_portalExecutorManager",
+			new MockPortalExecutorManager());
+		ReflectionTestUtil.setFieldValue(
+			clusterExecutorImpl, "_props",
 			PropsTestUtil.setProps(
 				HashMapBuilder.<String, Object>put(
 					PropsKeys.CLUSTER_LINK_CHANNEL_NAME_CONTROL,
@@ -396,12 +295,6 @@ public class ClusterExecutorImplTest extends BaseClusterTestCase {
 				).put(
 					"configuration.override.", new Properties()
 				).build()));
-
-		clusterExecutorImpl.setClusterChannelFactory(
-			new TestClusterChannelFactory());
-
-		clusterExecutorImpl.setPortalExecutorManager(
-			new MockPortalExecutorManager());
 
 		clusterExecutorImpl.activate(
 			new MockComponentContext(new HashMapDictionary<>()));

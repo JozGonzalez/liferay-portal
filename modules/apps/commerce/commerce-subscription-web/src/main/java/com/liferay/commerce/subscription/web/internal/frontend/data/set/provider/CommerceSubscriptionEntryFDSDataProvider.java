@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.subscription.web.internal.frontend.data.set.provider;
 
 import com.liferay.account.constants.AccountPortletKeys;
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceSubscriptionEntryConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
@@ -87,11 +78,10 @@ public class CommerceSubscriptionEntryFDSDataProvider
 
 			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
 
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
-			String commerceAccountIdString = String.valueOf(
-				commerceAccount.getCommerceAccountId());
+			String accountEntryIdString = String.valueOf(
+				accountEntry.getAccountEntryId());
 
 			SubscriptionEntry subscriptionEntry = new SubscriptionEntry(
 				commerceSubscriptionEntry.getCommerceSubscriptionEntryId(),
@@ -101,12 +91,11 @@ public class CommerceSubscriptionEntryFDSDataProvider
 						commerceOrder.getCommerceOrderId(),
 						httpServletRequest)),
 				new Link(
-					commerceAccountIdString,
+					accountEntryIdString,
 					_getEditAccountURL(
-						commerceAccount.getCommerceAccountId(),
-						httpServletRequest)),
+						accountEntry.getAccountEntryId(), httpServletRequest)),
 				_getSubscriptionStatus(commerceSubscriptionEntry),
-				commerceAccount.getName());
+				accountEntry.getName());
 
 			subscriptionEntries.add(subscriptionEntry);
 		}
@@ -147,7 +136,7 @@ public class CommerceSubscriptionEntryFDSDataProvider
 	}
 
 	private String _getEditAccountURL(
-			long commerceAccountId, HttpServletRequest httpServletRequest)
+			long accountEntryId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		return PortletURLBuilder.create(
@@ -161,7 +150,7 @@ public class CommerceSubscriptionEntryFDSDataProvider
 				httpServletRequest, "currentUrl",
 				_portal.getCurrentURL(httpServletRequest))
 		).setParameter(
-			"accountEntryId", commerceAccountId
+			"accountEntryId", accountEntryId
 		).buildString();
 	}
 

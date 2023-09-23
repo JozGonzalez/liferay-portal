@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
@@ -58,6 +49,27 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected BigDecimal cost;
+
+	public CustomField[] getCustomFields() {
+		return customFields;
+	}
+
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
+	}
+
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected CustomField[] customFields;
 
 	public Double getDepth() {
 		return depth;
@@ -521,6 +533,139 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected SkuOption[] skuOptions;
+
+	public SkuSubscriptionConfiguration getSkuSubscriptionConfiguration() {
+		return skuSubscriptionConfiguration;
+	}
+
+	public void setSkuSubscriptionConfiguration(
+		SkuSubscriptionConfiguration skuSubscriptionConfiguration) {
+
+		this.skuSubscriptionConfiguration = skuSubscriptionConfiguration;
+	}
+
+	public void setSkuSubscriptionConfiguration(
+		UnsafeSupplier<SkuSubscriptionConfiguration, Exception>
+			skuSubscriptionConfigurationUnsafeSupplier) {
+
+		try {
+			skuSubscriptionConfiguration =
+				skuSubscriptionConfigurationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuSubscriptionConfiguration skuSubscriptionConfiguration;
+
+	public SkuUnitOfMeasure[] getSkuUnitOfMeasures() {
+		return skuUnitOfMeasures;
+	}
+
+	public void setSkuUnitOfMeasures(SkuUnitOfMeasure[] skuUnitOfMeasures) {
+		this.skuUnitOfMeasures = skuUnitOfMeasures;
+	}
+
+	public void setSkuUnitOfMeasures(
+		UnsafeSupplier<SkuUnitOfMeasure[], Exception>
+			skuUnitOfMeasuresUnsafeSupplier) {
+
+		try {
+			skuUnitOfMeasures = skuUnitOfMeasuresUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuUnitOfMeasure[] skuUnitOfMeasures;
+
+	public SkuVirtualSettings getSkuVirtualSettings() {
+		return skuVirtualSettings;
+	}
+
+	public void setSkuVirtualSettings(SkuVirtualSettings skuVirtualSettings) {
+		this.skuVirtualSettings = skuVirtualSettings;
+	}
+
+	public void setSkuVirtualSettings(
+		UnsafeSupplier<SkuVirtualSettings, Exception>
+			skuVirtualSettingsUnsafeSupplier) {
+
+		try {
+			skuVirtualSettings = skuVirtualSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuVirtualSettings skuVirtualSettings;
+
+	public String getUnitOfMeasureKey() {
+		return unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		this.unitOfMeasureKey = unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(
+		UnsafeSupplier<String, Exception> unitOfMeasureKeyUnsafeSupplier) {
+
+		try {
+			unitOfMeasureKey = unitOfMeasureKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String unitOfMeasureKey;
+
+	public Map<String, String> getUnitOfMeasureName() {
+		return unitOfMeasureName;
+	}
+
+	public void setUnitOfMeasureName(Map<String, String> unitOfMeasureName) {
+		this.unitOfMeasureName = unitOfMeasureName;
+	}
+
+	public void setUnitOfMeasureName(
+		UnsafeSupplier<Map<String, String>, Exception>
+			unitOfMeasureNameUnsafeSupplier) {
+
+		try {
+			unitOfMeasureName = unitOfMeasureNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, String> unitOfMeasureName;
+
+	public String getUnitOfMeasureSkuId() {
+		return unitOfMeasureSkuId;
+	}
+
+	public void setUnitOfMeasureSkuId(String unitOfMeasureSkuId) {
+		this.unitOfMeasureSkuId = unitOfMeasureSkuId;
+	}
+
+	public void setUnitOfMeasureSkuId(
+		UnsafeSupplier<String, Exception> unitOfMeasureSkuIdUnsafeSupplier) {
+
+		try {
+			unitOfMeasureSkuId = unitOfMeasureSkuIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String unitOfMeasureSkuId;
 
 	public String getUnspsc() {
 		return unspsc;

@@ -1,29 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.item.selector.web.internal;
 
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.users.admin.item.selector.UserItemSelectorCriterion;
-import com.liferay.users.admin.item.selector.web.internal.constants.UserItemSelectorViewConstants;
 import com.liferay.users.admin.item.selector.web.internal.display.context.UserItemSelectorViewDisplayContext;
-import com.liferay.users.admin.kernel.util.UsersAdmin;
 
 import java.io.IOException;
 
@@ -33,8 +22,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletURL;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -55,10 +42,6 @@ public class UserItemSelectorView
 		return UserItemSelectorCriterion.class;
 	}
 
-	public ServletContext getServletContext() {
-		return _servletContext;
-	}
-
 	@Override
 	public List<ItemSelectorReturnType> getSupportedItemSelectorReturnTypes() {
 		return _supportedItemSelectorReturnTypes;
@@ -66,7 +49,7 @@ public class UserItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return _language.get(_portal.getResourceBundle(locale), "users");
+		return _language.get(locale, "users");
 	}
 
 	@Override
@@ -81,20 +64,14 @@ public class UserItemSelectorView
 
 		UserItemSelectorViewDisplayContext userItemSelectorViewDisplayContext =
 			new UserItemSelectorViewDisplayContext(
-				_userLocalService, _usersAdmin, httpServletRequest, portletURL,
-				itemSelectedEventName);
+				httpServletRequest, portletURL, _userLocalService);
 
-		servletRequest.setAttribute(
-			UserItemSelectorViewConstants.
-				USER_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
-			userItemSelectorViewDisplayContext);
-
-		ServletContext servletContext = getServletContext();
-
-		RequestDispatcher requestDispatcher =
-			servletContext.getRequestDispatcher("/user_item_selector.jsp");
-
-		requestDispatcher.include(servletRequest, servletResponse);
+		_itemSelectorViewDescriptorRenderer.renderHTML(
+			httpServletRequest, servletResponse, userItemSelectorCriterion,
+			portletURL, itemSelectedEventName, search,
+			new UserItemSelectorViewDescriptor(
+				httpServletRequest, true,
+				userItemSelectorViewDisplayContext.getSearchContainer()));
 	}
 
 	private static final List<ItemSelectorReturnType>
@@ -102,20 +79,13 @@ public class UserItemSelectorView
 			new UUIDItemSelectorReturnType());
 
 	@Reference
+	private ItemSelectorViewDescriptorRenderer<UserItemSelectorCriterion>
+		_itemSelectorViewDescriptorRenderer;
+
+	@Reference
 	private Language _language;
 
 	@Reference
-	private Portal _portal;
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.users.admin.item.selector.web)"
-	)
-	private ServletContext _servletContext;
-
-	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference
-	private UsersAdmin _usersAdmin;
 
 }

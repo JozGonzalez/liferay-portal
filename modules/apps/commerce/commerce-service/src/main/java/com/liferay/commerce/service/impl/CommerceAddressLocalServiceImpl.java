@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.impl;
@@ -67,7 +58,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alec Sloan
  */
 @Component(
-	property = "model.class.name=com.liferay.commerce.model.CommerceAddress",
+	property = {
+		"liferay.service=false",
+		"model.class.name=com.liferay.commerce.model.CommerceAddress"
+	},
 	service = AopService.class
 )
 public class CommerceAddressLocalServiceImpl
@@ -139,24 +133,29 @@ public class CommerceAddressLocalServiceImpl
 
 	@Override
 	public CommerceAddress copyCommerceAddress(
-			long commerceAddressId, String className, long classPK,
+			long sourceCommerceAddressId, String className, long classPK,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		CommerceAddress commerceAddress = getCommerceAddress(commerceAddressId);
+		CommerceAddress sourceCommerceAddress = getCommerceAddress(
+			sourceCommerceAddressId);
 
-		CommerceAddress copiedCommerceAddress =
+		CommerceAddress targetCommerceAddress =
 			commerceAddressLocalService.addCommerceAddress(
-				className, classPK, commerceAddress.getName(),
-				commerceAddress.getDescription(), commerceAddress.getStreet1(),
-				commerceAddress.getStreet2(), commerceAddress.getStreet3(),
-				commerceAddress.getCity(), commerceAddress.getZip(),
-				commerceAddress.getRegionId(), commerceAddress.getCountryId(),
-				commerceAddress.getPhoneNumber(), false, false, serviceContext);
+				className, classPK, sourceCommerceAddress.getName(),
+				sourceCommerceAddress.getDescription(),
+				sourceCommerceAddress.getStreet1(),
+				sourceCommerceAddress.getStreet2(),
+				sourceCommerceAddress.getStreet3(),
+				sourceCommerceAddress.getCity(), sourceCommerceAddress.getZip(),
+				sourceCommerceAddress.getRegionId(),
+				sourceCommerceAddress.getCountryId(),
+				sourceCommerceAddress.getPhoneNumber(), false, false,
+				serviceContext);
 
 		return CommerceAddressImpl.fromAddress(
 			_addressLocalService.getAddress(
-				copiedCommerceAddress.getCommerceAddressId()));
+				targetCommerceAddress.getCommerceAddressId()));
 	}
 
 	@Override

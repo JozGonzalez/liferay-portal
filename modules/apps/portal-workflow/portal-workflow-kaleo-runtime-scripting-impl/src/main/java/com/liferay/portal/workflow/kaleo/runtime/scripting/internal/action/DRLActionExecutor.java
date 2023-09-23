@@ -1,35 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.scripting.internal.action;
 
-import com.liferay.portal.kernel.resource.StringResourceRetriever;
-import com.liferay.portal.rules.engine.Fact;
-import com.liferay.portal.rules.engine.Query;
-import com.liferay.portal.rules.engine.RulesEngine;
-import com.liferay.portal.rules.engine.RulesResourceRetriever;
 import com.liferay.portal.workflow.kaleo.model.KaleoAction;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.action.executor.ActionExecutor;
 import com.liferay.portal.workflow.kaleo.runtime.action.executor.ActionExecutorException;
-import com.liferay.portal.workflow.kaleo.runtime.util.RulesContextBuilder;
-import com.liferay.portal.workflow.kaleo.runtime.util.WorkflowContextUtil;
-
-import java.io.Serializable;
-
-import java.util.List;
-import java.util.Map;
+import com.liferay.portal.workflow.kaleo.runtime.scripting.internal.util.RulesEngineExecutor;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +26,8 @@ public class DRLActionExecutor implements ActionExecutor {
 		throws ActionExecutorException {
 
 		try {
-			doExecute(kaleoAction, executionContext);
+			_rulesEngineExecutor.executeAndMergeWorkflowContexts(
+				executionContext, kaleoAction.getScript());
 		}
 		catch (Exception exception) {
 			throw new ActionExecutorException(exception);
@@ -54,38 +35,11 @@ public class DRLActionExecutor implements ActionExecutor {
 	}
 
 	@Override
-	public String[] getActionExecutorKeys() {
-		return _ACTION_EXECUTOR_KEYS;
+	public String getActionExecutorKey() {
+		return "drl";
 	}
 
-	protected void doExecute(
-			KaleoAction kaleoAction, ExecutionContext executionContext)
-		throws Exception {
-
-		List<Fact<?>> facts = _rulesContextBuilder.buildRulesContext(
-			executionContext);
-
-		RulesResourceRetriever rulesResourceRetriever =
-			new RulesResourceRetriever(
-				new StringResourceRetriever(kaleoAction.getScript()));
-
-		Map<String, ?> results = _rulesEngine.execute(
-			rulesResourceRetriever, facts, Query.createStandardQuery());
-
-		Map<String, Serializable> resultsWorkflowContext =
-			(Map<String, Serializable>)results.get(
-				WorkflowContextUtil.WORKFLOW_CONTEXT_NAME);
-
-		WorkflowContextUtil.mergeWorkflowContexts(
-			executionContext, resultsWorkflowContext);
-	}
-
-	private static final String[] _ACTION_EXECUTOR_KEYS = {"drl"};
-
 	@Reference
-	private RulesContextBuilder _rulesContextBuilder;
-
-	@Reference
-	private RulesEngine _rulesEngine;
+	private RulesEngineExecutor _rulesEngineExecutor;
 
 }

@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -41,9 +32,11 @@ import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -87,9 +80,8 @@ public class CommerceOrderDiscountV2Test {
 
 		_user = UserTestUtil.addUser();
 
-		_commerceAccount =
-			_commerceAccountLocalService.getPersonalCommerceAccount(
-				_user.getUserId());
+		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+			_user.getUserId());
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			_group.getCompanyId());
@@ -127,7 +119,8 @@ public class CommerceOrderDiscountV2Test {
 		commerceOrder.setCommerceCurrencyId(
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
@@ -159,12 +152,9 @@ public class CommerceOrderDiscountV2Test {
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
 			commerceChannel.getCommerceChannelId());
 
-		int quantity = 10;
-		int orderedQuantity = 1;
-
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse,
-			cpInstanceDiscount.getSku(), quantity);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstanceDiscount.getSku(), StringPool.BLANK);
 
 		String couponCode = StringUtil.randomString();
 
@@ -173,12 +163,12 @@ public class CommerceOrderDiscountV2Test {
 			CommerceDiscountConstants.TARGET_TOTAL, null);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount,
+			_accountEntry, _commerceCurrency, null, _user, _group,
 			commerceOrder);
 
 		CommerceTestUtil.addCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(),
-			cpInstanceDiscount.getCPInstanceId(), orderedQuantity,
+			cpInstanceDiscount.getCPInstanceId(), BigDecimal.ONE,
 			commerceContext);
 
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
@@ -220,7 +210,8 @@ public class CommerceOrderDiscountV2Test {
 		commerceOrder.setCommerceCurrencyId(
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
@@ -264,16 +255,16 @@ public class CommerceOrderDiscountV2Test {
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
 			commerceChannel.getCommerceChannelId());
 
-		int quantity = 10;
-		int orderedQuantity = 1;
+		BigDecimal quantity = BigDecimal.TEN;
+		BigDecimal orderedQuantity = BigDecimal.ONE;
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse,
-			cpInstanceDiscount.getSku(), quantity);
+			_user.getUserId(), commerceInventoryWarehouse, quantity,
+			cpInstanceDiscount.getSku(), StringPool.BLANK);
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse,
-			cpInstancePlain.getSku(), quantity);
+			_user.getUserId(), commerceInventoryWarehouse, quantity,
+			cpInstancePlain.getSku(), StringPool.BLANK);
 
 		CommerceDiscount commerceDiscount1 =
 			CommerceDiscountTestUtil.addFixedCommerceDiscount(
@@ -295,7 +286,7 @@ public class CommerceOrderDiscountV2Test {
 			cpInstancePlain.getCPInstanceId(), orderedQuantity);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount,
+			_accountEntry, _commerceCurrency, null, _user, _group,
 			commerceOrder);
 
 		CommerceMoney totalCommerceMoney =
@@ -308,10 +299,8 @@ public class CommerceOrderDiscountV2Test {
 		BigDecimal prod1Price = commercePriceEntryDiscount.getPrice();
 		BigDecimal prod2Price = commercePriceEntryPlain.getPrice();
 
-		BigDecimal prod1TotalPrice = prod1Price.multiply(
-			BigDecimal.valueOf(orderedQuantity));
-		BigDecimal prod2TotalPrice = prod2Price.multiply(
-			BigDecimal.valueOf(orderedQuantity));
+		BigDecimal prod1TotalPrice = prod1Price.multiply(orderedQuantity);
+		BigDecimal prod2TotalPrice = prod2Price.multiply(orderedQuantity);
 
 		BigDecimal expectedCartValue = prod1TotalPrice.add(prod2TotalPrice);
 
@@ -359,7 +348,8 @@ public class CommerceOrderDiscountV2Test {
 		commerceOrder.setCommerceCurrencyId(
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
@@ -403,16 +393,16 @@ public class CommerceOrderDiscountV2Test {
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
 			commerceChannel.getCommerceChannelId());
 
-		int quantity = 10;
-		int orderedQuantity = 1;
+		BigDecimal quantity = BigDecimal.TEN;
+		BigDecimal orderedQuantity = BigDecimal.ONE;
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse,
-			cpInstanceDiscount.getSku(), quantity);
+			_user.getUserId(), commerceInventoryWarehouse, quantity,
+			cpInstanceDiscount.getSku(), StringPool.BLANK);
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse,
-			cpInstancePlain.getSku(), quantity);
+			_user.getUserId(), commerceInventoryWarehouse, quantity,
+			cpInstancePlain.getSku(), StringPool.BLANK);
 
 		CommerceDiscount commerceDiscount1 =
 			CommerceDiscountTestUtil.addFixedCommerceDiscount(
@@ -428,7 +418,7 @@ public class CommerceOrderDiscountV2Test {
 				CommerceDiscountConstants.TARGET_TOTAL, null);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount,
+			_accountEntry, _commerceCurrency, null, _user, _group,
 			commerceOrder);
 
 		CommerceTestUtil.addCommerceOrderItem(
@@ -454,10 +444,8 @@ public class CommerceOrderDiscountV2Test {
 		BigDecimal prod1Price = commercePriceEntryDiscount.getPrice();
 		BigDecimal prod2Price = commercePriceEntryPlain.getPrice();
 
-		BigDecimal prod1TotalPrice = prod1Price.multiply(
-			BigDecimal.valueOf(orderedQuantity));
-		BigDecimal prod2TotalPrice = prod2Price.multiply(
-			BigDecimal.valueOf(orderedQuantity));
+		BigDecimal prod1TotalPrice = prod1Price.multiply(orderedQuantity);
+		BigDecimal prod2TotalPrice = prod2Price.multiply(orderedQuantity);
 
 		BigDecimal expectedCartValue = prod1TotalPrice.add(prod2TotalPrice);
 
@@ -485,10 +473,8 @@ public class CommerceOrderDiscountV2Test {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
-
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	@DeleteAfterTestRun
+	private AccountEntry _accountEntry;
 
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;

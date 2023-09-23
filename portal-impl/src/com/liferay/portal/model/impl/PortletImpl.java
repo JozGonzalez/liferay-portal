@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -406,7 +397,7 @@ public class PortletImpl extends PortletBaseImpl {
 			getPortletName(), getDisplayName(), getPortletClass(),
 			getConfigurationActionClass(), getIndexerClasses(),
 			getOpenSearchClass(), getSchedulerEntries(), getPortletURLClass(),
-			getFriendlyURLMapperClass(), getFriendlyURLMapping(),
+			getFriendlyURLMapperClass(), _friendlyURLMapping,
 			getFriendlyURLRoutes(), getURLEncoderClass(),
 			getPortletDataHandlerClass(), getStagedModelDataHandlerClasses(),
 			getTemplateHandlerClass(), getPortletConfigurationListenerClass(),
@@ -927,18 +918,27 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	@Override
 	public String getFriendlyURLMapping() {
+		return getFriendlyURLMapping(true);
+	}
+
+	@Override
+	public String getFriendlyURLMapping(boolean lookUpFriendlyURLMapper) {
 		if (Validator.isNotNull(_friendlyURLMapping)) {
 			return _friendlyURLMapping;
 		}
 
-		FriendlyURLMapper friendlyURLMapperInstance =
-			getFriendlyURLMapperInstance();
+		if (lookUpFriendlyURLMapper) {
+			FriendlyURLMapper friendlyURLMapperInstance =
+				getFriendlyURLMapperInstance();
 
-		if (friendlyURLMapperInstance == null) {
-			return null;
+			if (friendlyURLMapperInstance == null) {
+				return null;
+			}
+
+			return friendlyURLMapperInstance.getMapping();
 		}
 
-		return friendlyURLMapperInstance.getMapping();
+		return null;
 	}
 
 	/**

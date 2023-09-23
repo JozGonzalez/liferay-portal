@@ -357,26 +357,6 @@ components:
                 shippingOptionKey:
                     type: string
             type: object
-        AccountGroup:
-            properties:
-                customFields:
-                    additionalProperties: true
-                    type: object
-                externalReferenceCode:
-                    example: AB-34098-789-N
-                    type: string
-                id:
-                    example: 30130
-                    format: int64
-                    minimum: 0
-                    readOnly: true
-                    type: integer
-                name:
-                    example: AccountGroup Name
-                    type: string
-            required:
-                - name
-            type: object
         AccountMember:
             properties:
                 accountId:
@@ -465,6 +445,29 @@ components:
                         hr_HR: Role Title HR
                         hu_HU: Role Title HU
                     type: object
+            required:
+                - name
+            type: object
+        AdminAccountGroup:
+            properties:
+                customFields:
+                    additionalProperties: true
+                    type: object
+                description:
+                    example: AdminAccountGroup Description
+                    type: string
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                name:
+                    example: AdminAccountGroup Name
+                    type: string
             required:
                 - name
             type: object
@@ -566,7 +569,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Account API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.account.client', and version '4.0.23'."
+        artifact ID 'com.liferay.headless.commerce.admin.account.client', and version '4.0.28'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -2812,6 +2815,10 @@ paths:
                   schema:
                       type: integer
                 - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
                   name: sort
                   required: false
                   schema:
@@ -2822,12 +2829,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -2868,27 +2875,27 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         post:
             operationId: postAccountGroup
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Created
                 202:
@@ -2935,9 +2942,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Creates or updates an AccountGroup.
+            summary: Creates or updates an AdminAccountGroup.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accountGroups/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteAccountGroupByExternalReferenceCode
@@ -2972,9 +2979,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Deletes an AccountGroup by external reference code.
+            summary: Deletes an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         get:
             operationId: getAccountGroupByExternalReferenceCode
             parameters:
@@ -2994,10 +3001,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -3038,9 +3045,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.read
-            summary: Gets an AccountGroup by external reference code.
+            summary: Gets an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         patch:
             operationId: patchAccountGroupByExternalReferenceCode
             parameters:
@@ -3059,10 +3066,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
@@ -3109,9 +3116,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Updates an AccountGroup by external reference code.
+            summary: Updates an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accountGroups/by-externalReferenceCode/{externalReferenceCode}/accounts:
         post:
             operationId: postAccountGroupByExternalReferenceCodeAccount
@@ -3299,9 +3306,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Deletes an AccountGroup by ID.
+            summary: Deletes an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         get:
             operationId: getAccountGroup
             parameters:
@@ -3322,10 +3329,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -3366,9 +3373,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.read
-            summary: Gets an AccountGroup by ID.
+            summary: Gets an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         patch:
             operationId: patchAccountGroup
             parameters:
@@ -3388,10 +3395,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
@@ -3438,9 +3445,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Updates an AccountGroup by ID.
+            summary: Updates an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts:
         get:
             operationId: getAccountsPage
@@ -5604,12 +5611,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -5650,7 +5657,7 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of Account's AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts/by-externalReferenceCode/{externalReferenceCode}/accountMembers:
         get:
             operationId: getAccountByExternalReferenceCodeAccountMembersPage
@@ -8512,12 +8519,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -8558,7 +8565,7 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of Account's AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts/{id}/accountMembers:
         get:
             operationId: getAccountIdAccountMembersPage

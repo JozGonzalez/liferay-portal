@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.info.item.provider.test;
@@ -21,7 +12,7 @@ import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.type.WebImage;
@@ -41,7 +32,6 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -111,7 +101,7 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 			displayDateCalendar.get(Calendar.YEAR),
 			displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 			displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true, 0, 0,
-			0, 0, 0, true, true, false, null, null, null, null,
+			0, 0, 0, true, true, false, 0, 0, null, null, null, null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		InfoItemFieldValues infoItemFieldValues =
@@ -152,9 +142,8 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 
 		InfoField infoField = ddmTemplateInfoFieldValue.getInfoField();
 
-		Assert.assertTrue(
-			GetterUtil.getBoolean(
-				infoField.getAttribute(TextInfoFieldType.HTML)));
+		Assert.assertEquals(
+			HTMLInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 	}
 
 	@Test
@@ -197,8 +186,9 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 					displayDateCalendar.get(Calendar.YEAR),
 					displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 					displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
-					true, 0, 0, 0, 0, 0, true, true, true, null, _getFile(),
-					null, null,
+					true, 0, 0, 0, 0, 0, true, true, true,
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER, 0,
+					null, _getFile(), null, null,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -213,7 +203,7 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 
 			Assert.assertEquals(
 				journalArticle.getArticleImageURL(themeDisplay),
-				webImage.getUrl());
+				webImage.getURL());
 		}
 		finally {
 			ServiceContextThreadLocal.pushServiceContext(
@@ -271,7 +261,7 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 	private Group _group;
 
 	@Inject(
-		filter = "component.name=*.JournalArticleInfoItemFieldValuesProvider"
+		filter = "component.name=com.liferay.journal.web.internal.info.item.provider.JournalArticleInfoItemFieldValuesProvider"
 	)
 	private InfoItemFieldValuesProvider _infoItemFieldValuesProvider;
 

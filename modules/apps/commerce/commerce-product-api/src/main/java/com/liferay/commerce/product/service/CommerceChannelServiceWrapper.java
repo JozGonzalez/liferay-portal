@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -39,8 +30,8 @@ public class CommerceChannelServiceWrapper
 
 	@Override
 	public CommerceChannel addCommerceChannel(
-			String externalReferenceCode, long siteGroupId, String name,
-			String type,
+			String externalReferenceCode, long accountEntryId, long siteGroupId,
+			String name, String type,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				typeSettingsUnicodeProperties,
 			String commerceCurrencyCode,
@@ -48,15 +39,15 @@ public class CommerceChannelServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceChannelService.addCommerceChannel(
-			externalReferenceCode, siteGroupId, name, type,
+			externalReferenceCode, accountEntryId, siteGroupId, name, type,
 			typeSettingsUnicodeProperties, commerceCurrencyCode,
 			serviceContext);
 	}
 
 	@Override
 	public CommerceChannel addOrUpdateCommerceChannel(
-			String externalReferenceCode, long siteGroupId, String name,
-			String type,
+			String externalReferenceCode, long accountEntryId, long siteGroupId,
+			String name, String type,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				typeSettingsUnicodeProperties,
 			String commerceCurrencyCode,
@@ -64,7 +55,7 @@ public class CommerceChannelServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceChannelService.addOrUpdateCommerceChannel(
-			externalReferenceCode, siteGroupId, name, type,
+			externalReferenceCode, accountEntryId, siteGroupId, name, type,
 			typeSettingsUnicodeProperties, commerceCurrencyCode,
 			serviceContext);
 	}
@@ -151,20 +142,8 @@ public class CommerceChannelServiceWrapper
 
 	@Override
 	public CommerceChannel updateCommerceChannel(
-			long commerceChannelId, long siteGroupId, String name, String type,
-			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsUnicodeProperties,
-			String commerceCurrencyCode)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceChannelService.updateCommerceChannel(
-			commerceChannelId, siteGroupId, name, type,
-			typeSettingsUnicodeProperties, commerceCurrencyCode);
-	}
-
-	@Override
-	public CommerceChannel updateCommerceChannel(
-			long commerceChannelId, long siteGroupId, String name, String type,
+			long commerceChannelId, long accountEntryId, long siteGroupId,
+			String name, String type,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				typeSettingsUnicodeProperties,
 			String commerceCurrencyCode, String priceDisplayType,
@@ -172,7 +151,7 @@ public class CommerceChannelServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceChannelService.updateCommerceChannel(
-			commerceChannelId, siteGroupId, name, type,
+			commerceChannelId, accountEntryId, siteGroupId, name, type,
 			typeSettingsUnicodeProperties, commerceCurrencyCode,
 			priceDisplayType, discountsTargetNetPrice);
 	}

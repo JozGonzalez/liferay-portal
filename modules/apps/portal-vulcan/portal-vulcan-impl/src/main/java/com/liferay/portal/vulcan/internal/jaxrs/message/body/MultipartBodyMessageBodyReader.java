@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.message.body;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.liferay.document.library.kernel.util.DLValidatorUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.vulcan.internal.multipart.MultipartUtil;
@@ -59,10 +51,6 @@ import org.apache.commons.fileupload.util.Streams;
 @Provider
 public class MultipartBodyMessageBodyReader
 	implements MessageBodyReader<MultipartBody> {
-
-	public MultipartBodyMessageBodyReader(long fileMaxSize) {
-		_fileMaxSize = fileMaxSize;
-	}
 
 	@Override
 	public boolean isReadable(
@@ -114,9 +102,6 @@ public class MultipartBodyMessageBodyReader
 				ServletFileUpload servletFileUpload = new ServletFileUpload(
 					new DiskFileItemFactory());
 
-				servletFileUpload.setFileSizeMax(_fileMaxSize);
-				servletFileUpload.setSizeMax(_fileMaxSize);
-
 				List<FileItem> fileItems = servletFileUpload.parseRequest(
 					_httpServletRequest);
 
@@ -141,7 +126,7 @@ public class MultipartBodyMessageBodyReader
 
 				throw new BadRequestException(
 					"Please enter a file with a valid file size no larger " +
-						"than " + _fileMaxSize,
+						"than " + DLValidatorUtil.getMaxAllowableSize(0, null),
 					sizeLimitExceededException);
 			}
 			catch (Exception exception) {
@@ -160,8 +145,6 @@ public class MultipartBodyMessageBodyReader
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MultipartBodyMessageBodyReader.class);
-
-	private final long _fileMaxSize;
 
 	@Context
 	private HttpServletRequest _httpServletRequest;

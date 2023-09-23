@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.rest.client.serdes.v1_0;
@@ -109,14 +100,30 @@ public class NotificationQueueEntrySerDes {
 			sb.append(notificationQueueEntry.getId());
 		}
 
-		if (notificationQueueEntry.getPriority() != null) {
+		if (notificationQueueEntry.getRecipients() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"priority\": ");
+			sb.append("\"recipients\": ");
 
-			sb.append(notificationQueueEntry.getPriority());
+			sb.append("[");
+
+			for (int i = 0; i < notificationQueueEntry.getRecipients().length;
+				 i++) {
+
+				sb.append("\"");
+
+				sb.append(_escape(notificationQueueEntry.getRecipients()[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < notificationQueueEntry.getRecipients().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (notificationQueueEntry.getRecipientsSummary() != null) {
@@ -270,13 +277,13 @@ public class NotificationQueueEntrySerDes {
 			map.put("id", String.valueOf(notificationQueueEntry.getId()));
 		}
 
-		if (notificationQueueEntry.getPriority() == null) {
-			map.put("priority", null);
+		if (notificationQueueEntry.getRecipients() == null) {
+			map.put("recipients", null);
 		}
 		else {
 			map.put(
-				"priority",
-				String.valueOf(notificationQueueEntry.getPriority()));
+				"recipients",
+				String.valueOf(notificationQueueEntry.getRecipients()));
 		}
 
 		if (notificationQueueEntry.getRecipientsSummary() == null) {
@@ -385,10 +392,10 @@ public class NotificationQueueEntrySerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "priority")) {
+			else if (Objects.equals(jsonParserFieldName, "recipients")) {
 				if (jsonParserFieldValue != null) {
-					notificationQueueEntry.setPriority(
-						Double.valueOf((String)jsonParserFieldValue));
+					notificationQueueEntry.setRecipients(
+						(Object[])jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "recipientsSummary")) {

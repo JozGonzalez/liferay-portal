@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
@@ -25,7 +16,6 @@ import com.liferay.commerce.pricing.service.CommercePriceModifierService;
 import com.liferay.commerce.pricing.service.CommercePricingClassService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifier;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceModifierDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceModifierUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
@@ -36,6 +26,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -403,8 +394,11 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private PriceModifierDTOConverter _priceModifierDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceModifierDTOConverter)"
+	)
+	private DTOConverter<CommercePriceModifier, PriceModifier>
+		_priceModifierDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

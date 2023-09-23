@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {filesize} from 'filesize';
 import {uniqueId} from 'lodash';
 
@@ -80,14 +85,14 @@ export function CustomizeAppStorefrontPage({
 	return (
 		<div className="storefront-page-container">
 			<Header
-				description="Design the storefront for your app. This will set the information displayed on ths app’s page."
+				description="Design the storefront for your app.  This will set the information displayed on the app page in the Marketplace."
 				title="Customize app storefront"
 			/>
 
 			<Section
 				label="App Storefront"
 				required
-				tooltip="More Info"
+				tooltip="Screenshots for your app must not exceed 1080 pixels in width and 678 pixels in height and must be in JPG or PNG format.  The file site of each screenshot must not exceed 384KB.  Each screenshot should preferrably be the same size, but each will be automatically scaled to match the aspect ratio of the above dimensions. It is preferrable if they are named sequentially, but you can reorder them as needed."
 				tooltipText="More Info"
 			>
 				<div className="storefront-page-info-container">
@@ -138,13 +143,14 @@ export function CustomizeAppStorefrontPage({
 				}
 				onClickBack={() => onClickBack()}
 				onClickContinue={() => {
-					appStorefrontImages?.forEach((image) => {
-						submitBase64EncodedFile(
+					appStorefrontImages?.forEach(async (image, index) => {
+						await submitBase64EncodedFile({
 							appERC,
-							image.file,
-							createImage,
-							image.fileName
-						);
+							file: image.file,
+							index,
+							requestFunction: createImage,
+							title: image.fileName,
+						});
 					});
 
 					onClickContinue();

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -34,7 +25,7 @@ else if (selLayout == null) {
 PluginPackage selPluginPackage = selTheme.getPluginPackage();
 %>
 
-<p class="h4 mb-3 mt-4"><liferay-ui:message key="current-theme" /></p>
+<p class="c-mb-3 c-mt-4 h4"><liferay-ui:message key="current-theme" /></p>
 
 <clay:row>
 	<clay:col
@@ -42,6 +33,8 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 		sm="5"
 	>
 		<clay:image-card
+			cssClass="c-mb-0"
+			imageAlt=""
 			imageSrc='<%= themeDisplay.getCDNBaseURL() + HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) + HtmlUtil.escapeAttribute(selTheme.getImagesPath()) + "/thumbnail.png" %>'
 			subtitle='<%= ((selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getAuthor())) ? HtmlUtil.escape(selPluginPackage.getAuthor()) : "" %>'
 			title='<%= Validator.isNotNull(selTheme.getName()) ? HtmlUtil.escapeAttribute(selTheme.getName()) : "" %>'
@@ -49,7 +42,7 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 	</clay:col>
 
 	<clay:col
-		cssClass="pl-4 pt-3"
+		cssClass="c-pl-4 c-pt-3"
 		size="6"
 		sm="7"
 	>
@@ -67,13 +60,8 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 				String value = selLayoutSet.getThemeSetting(name, "regular");
 			%>
 
-				<div class="mb-3">
-					<clay:checkbox
-						checked='<%= value.equals("true") %>'
-						disabled="<%= true %>"
-						label="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>"
-						name="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>"
-					/>
+				<div class="c-mb-3">
+					<aui:input checked='<%= value.equals("true") %>' disabled="<%= true %>" label="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>" labelCssClass="font-weight-normal" name="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>" type="checkbox" wrapperCssClass="c-mb-3" />
 				</div>
 
 			<%
@@ -81,6 +69,12 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 			%>
 
 		</c:if>
+
+		<clay:button
+			disabled="true"
+			displayType="secondary"
+			label="change-current-theme"
+		/>
 	</clay:col>
 </clay:row>
 
@@ -112,7 +106,7 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 					<img alt="" class="aspect-ratio-item-flush theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selColorScheme.getName()) %>" />
 				</div>
 
-				<div class="card-body p-2">
+				<div class="c-p-2 card-body">
 					<div class="card-row">
 						<div class="card-title text-truncate">
 							<%= HtmlUtil.escapeAttribute(selColorScheme.getName()) %>

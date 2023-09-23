@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.service.persistence.test;
@@ -125,6 +116,10 @@ public class AMImageEntryPersistenceTest {
 
 		AMImageEntry newAMImageEntry = _persistence.create(pk);
 
+		newAMImageEntry.setMvccVersion(RandomTestUtil.nextLong());
+
+		newAMImageEntry.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newAMImageEntry.setUuid(RandomTestUtil.randomString());
 
 		newAMImageEntry.setGroupId(RandomTestUtil.nextLong());
@@ -150,6 +145,12 @@ public class AMImageEntryPersistenceTest {
 		AMImageEntry existingAMImageEntry = _persistence.findByPrimaryKey(
 			newAMImageEntry.getPrimaryKey());
 
+		Assert.assertEquals(
+			existingAMImageEntry.getMvccVersion(),
+			newAMImageEntry.getMvccVersion());
+		Assert.assertEquals(
+			existingAMImageEntry.getCtCollectionId(),
+			newAMImageEntry.getCtCollectionId());
 		Assert.assertEquals(
 			existingAMImageEntry.getUuid(), newAMImageEntry.getUuid());
 		Assert.assertEquals(
@@ -279,10 +280,11 @@ public class AMImageEntryPersistenceTest {
 
 	protected OrderByComparator<AMImageEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"AMImageEntry", "uuid", true, "amImageEntryId", true, "groupId",
-			true, "companyId", true, "createDate", true, "configurationUuid",
-			true, "fileVersionId", true, "mimeType", true, "height", true,
-			"width", true, "size", true);
+			"AMImageEntry", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "amImageEntryId", true, "groupId", true, "companyId", true,
+			"createDate", true, "configurationUuid", true, "fileVersionId",
+			true, "mimeType", true, "height", true, "width", true, "size",
+			true);
 	}
 
 	@Test
@@ -576,6 +578,10 @@ public class AMImageEntryPersistenceTest {
 		long pk = RandomTestUtil.nextLong();
 
 		AMImageEntry amImageEntry = _persistence.create(pk);
+
+		amImageEntry.setMvccVersion(RandomTestUtil.nextLong());
+
+		amImageEntry.setCtCollectionId(RandomTestUtil.nextLong());
 
 		amImageEntry.setUuid(RandomTestUtil.randomString());
 

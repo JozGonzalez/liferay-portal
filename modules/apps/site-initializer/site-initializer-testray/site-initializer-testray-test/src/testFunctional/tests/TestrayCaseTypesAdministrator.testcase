@@ -12,146 +12,143 @@ definition {
 	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
+		}
 
-			Testray.addTR2Site(siteName = ${testSiteName});
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "casetypes",
-			objectName = ${caseType});
+		task ("Delete Testray Site and Client Extensions") {
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.testrayApisTearDown();
-
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "Automation ID: LPS-156676 | Test Summary: Verify if the Administrator can Add Case Types"
+	@description = "Story ID: LPS-146938 | Test Summary: Verify if the Administrator can Add Case Types"
 	@priority = 5
 	test AdminCanAddCaseTypes {
-		task ("Given that I create a 'Case Type' via API") {
-			JSONTestray.addCaseType(caseType = ${caseType});
-		}
-
-		task ("When I go to the manage menu") {
+		task ("Given that I go to the Case Type page") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			TestrayLayout.clickManageOnSidebar();
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Case Types");
 		}
 
-		task ("And I select the system 'Case Types' option") {
-			TestrayManage.selectOptionsManage(itemValue = "Case Types");
-
-			Testray.changePaginationInModal(
-				numberItems = 20,
-				valuePagination = 150);
+		task ("When I create a Case Type") {
+			TestrayManage.createCaseTypes(caseTypeName = ${caseType});
 		}
 
-		task ("Then I assert that the newly created 'Case Type' is present in the list") {
-			Testray.assertItemName(text = ${caseType});
+		task ("Then assert that the newly created case type is present in the list") {
+			Testray.viewTableEntryList(listEntry = ${caseType});
+		}
+
+		task ("Delete the case type via API") {
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = ${caseType});
 		}
 	}
 
-	@description = "Automation ID: LPS-156679 | Test Summary: Verify that as an Administrator I can delete Case Types"
+	@description = "Story ID: LPS-146938 | Test Summary: Verify that as an Administrator I can delete Case Types"
 	@priority = 5
 	test AdminCanDeleteCaseTypes {
-		task ("Given that I create a 'Case Type' via API") {
+		task ("Given that I create a case type via API") {
 			JSONTestray.addCaseType(caseType = ${caseType});
 		}
 
-		task ("When I go to the manage menu") {
+		task ("When I go to the case types") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			TestrayLayout.clickManageOnSidebar();
-		}
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Case Types");
 
-		task ("And I select the system 'Case Types' option") {
-			TestrayManage.selectOptionsManage(itemValue = "Case Types");
-
-			Testray.changePaginationInModal(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(
+				modal = "true",
+				quantity = 150);
 		}
 
 		task ("When I delete a Case Type") {
-			TestrayManage.deleteCasesTypes(valueName = ${caseType});
+			TestrayManage.deleteCasesTypes(tableEntry = ${caseType});
 		}
 
 		task ("Then I shouldn't be able to see the same in the list") {
-			Testray.assertItemNotPresent(text = ${caseType});
+			Testray.viewTableEntryListNotPresent(listEntry = ${caseType});
 		}
 	}
 
-	@description = "Automation ID: LPS-156681 | Test Summary: Verify if the Administrator can Edit Case Types"
+	@description = "Story ID: LPS-146938 | Test Summary: Verify if the Administrator can Edit Case Types"
 	@priority = 5
 	test AdminCanEditCaseTypes {
-		task ("Given that I create a 'Case Type' via API") {
+		task ("Given that I create a Case Type via API") {
 			JSONTestray.addCaseType(caseType = ${caseType});
 		}
 
-		task ("When I go to the manage menu") {
+		task ("When I go to the case types") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			TestrayLayout.clickManageOnSidebar();
-		}
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Case Types");
 
-		task ("And I select the system 'Case Types' option") {
-			TestrayManage.selectOptionsManage(itemValue = "Case Types");
-
-			Testray.changePaginationInModal(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(
+				modal = "true",
+				quantity = 150);
 		}
 
 		task ("And I edit the name of the Case Type") {
-			TestrayManage.editNewName(
-				valueName = ${caseType},
-				valueType = "Case Type Edited");
+			TestrayManage.editCaseType(
+				newName = "Case Type Edited",
+				tableEntry = ${caseType});
 		}
 
 		task ("Then I assert that the name has been changed in the list") {
-			Testray.assertItemName(text = "Case Type Edited");
+			Testray.viewTableEntryList(listEntry = "Case Type Edited");
 		}
 
-		task ("Delete object") {
+		task ("Delete the case type via API") {
 			JSONTestrayAPI.deleteObjectViaAPI(
 				object = "casetypes",
 				objectName = "Case Type Edited");
 		}
 	}
 
-	@description = "Automation ID: LPS-166555 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate cases types"
-	@priority = 5
+	@description = "Story ID: LPS-165582 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate cases types"
+	@priority = 3
 	test AdminCanNotAddDuplicateCasesTypes {
-		task ("Given that I create a 'Case Type' via API") {
+		task ("Given that I create a Case Type via API") {
 			JSONTestray.addCaseType(caseType = ${caseType});
 		}
 
-		task ("When I go to the manage menu") {
+		task ("When I go to the case types") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			TestrayLayout.clickManageOnSidebar();
-		}
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Case Types");
 
-		task ("And I select the system 'Case Types' option") {
-			TestrayManage.selectOptionsManage(itemValue = "Case Types");
-
-			Testray.changePaginationInModal(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(
+				modal = "true",
+				quantity = 150);
 		}
 
 		task ("When I try to create a new Case Type with an existing title") {
-			TestrayManage.createNewCaseTypes(caseName = ${caseType});
+			TestrayManage.createCaseTypes(caseTypeName = ${caseType});
 		}
 
 		task ("Then an error message is shown") {
@@ -159,24 +156,26 @@ definition {
 		}
 	}
 
-	@description = "Automation ID: LPS-164131 | Test Summary: Verify that the user can not create a case type if all the required fields are not filled in"
-	@priority = 3
+	@description = "Story ID: LPS-146938 | Test Summary: Verify that the user can not create a case type if all the required fields are not filled in"
+	@priority = 2
 	test AdminCanViewRequiredField {
-		task ("When I go to the manage menu") {
+		task ("Given that go to the case types") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			TestrayLayout.clickManageOnSidebar();
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Case Types");
+
+			Testray.changePagination(
+				modal = "true",
+				quantity = 150);
 		}
 
-		task ("Create a new Case Type and assert message of required field") {
-			TestrayManage.selectOptionsManage(itemValue = "Case Types");
+		task ("When create a case type without the field fill") {
+			TestrayManage.createCaseTypes();
+		}
 
-			Testray.changePaginationInModal(
-				numberItems = 20,
-				valuePagination = 150);
-
-			TestrayManage.createNewCaseTypes(caseName = "");
-
+		task ("Then can see the message of required field") {
 			Testray.viewErrorMessage(
 				fieldLabel = "Name",
 				warningMessage = "name is a required field");

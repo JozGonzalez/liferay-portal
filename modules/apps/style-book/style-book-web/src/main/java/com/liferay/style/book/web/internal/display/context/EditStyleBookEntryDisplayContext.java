@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.style.book.web.internal.display.context;
@@ -332,14 +323,13 @@ public class EditStyleBookEntryDisplayContext {
 					layoutPageTemplateEntryItemSelectorCriterion =
 						new LayoutPageTemplateEntryItemSelectorCriterion();
 
+				layoutPageTemplateEntryItemSelectorCriterion.
+					setDesiredItemSelectorReturnTypes(
+						new LayoutPageTemplateEntryItemSelectorReturnType());
 				layoutPageTemplateEntryItemSelectorCriterion.setGroupId(
 					_getPreviewItemsGroupId());
 				layoutPageTemplateEntryItemSelectorCriterion.setLayoutTypes(
 					layoutTypes);
-
-				layoutPageTemplateEntryItemSelectorCriterion.
-					setDesiredItemSelectorReturnTypes(
-						new LayoutPageTemplateEntryItemSelectorReturnType());
 
 				PortletURL entryItemSelectorURL =
 					_itemSelector.getItemSelectorURL(
@@ -386,7 +376,6 @@ public class EditStyleBookEntryDisplayContext {
 
 				layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 					new LayoutItemSelectorReturnType());
-				layoutItemSelectorCriterion.setShowHiddenPages(true);
 
 				Group group = _themeDisplay.getScopeGroup();
 
@@ -459,16 +448,18 @@ public class EditStyleBookEntryDisplayContext {
 
 	private String _getPreviewURL(Layout layout) {
 		try {
-			String layoutURL = HttpComponentsUtil.addParameter(
+			String layoutURL = HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(layout, _themeDisplay), "p_l_mode",
-				Constants.PREVIEW);
+				Constants.PREVIEW, "p_p_auth",
+				AuthTokenUtil.getToken(_httpServletRequest),
+				"styleBookEntryPreview", true);
 
-			layoutURL = HttpComponentsUtil.addParameter(
-				layoutURL, "p_p_auth",
-				AuthTokenUtil.getToken(_httpServletRequest));
+			if (Validator.isNotNull(_themeDisplay.getDoAsUserId())) {
+				layoutURL = PortalUtil.addPreservedParameters(
+					_themeDisplay, layoutURL, false, true);
+			}
 
-			return HttpComponentsUtil.addParameter(
-				layoutURL, "styleBookEntryPreview", true);
+			return layoutURL;
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -484,7 +475,7 @@ public class EditStyleBookEntryDisplayContext {
 			if (layoutPageTemplateEntry.getType() ==
 					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE) {
 
-				return HttpComponentsUtil.addParameters(
+				String previewURL = HttpComponentsUtil.addParameters(
 					_themeDisplay.getPortalURL() + _themeDisplay.getPathMain() +
 						"/portal/get_page_preview",
 					"p_l_mode", Constants.PREVIEW, "segmentsExperienceId",
@@ -493,6 +484,13 @@ public class EditStyleBookEntryDisplayContext {
 							layoutPageTemplateEntry.getPlid()),
 					"selPlid", layoutPageTemplateEntry.getPlid(),
 					"styleBookEntryPreview", true);
+
+				if (Validator.isNotNull(_themeDisplay.getDoAsUserId())) {
+					previewURL = PortalUtil.addPreservedParameters(
+						_themeDisplay, previewURL, false, true);
+				}
+
+				return previewURL;
 			}
 
 			return _getPreviewURL(

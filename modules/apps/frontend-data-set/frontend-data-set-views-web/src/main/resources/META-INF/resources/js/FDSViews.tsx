@@ -1,39 +1,41 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
+import ClayLink from '@clayui/link';
 import ClayModal from '@clayui/modal';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
-import {fetch, navigate, openModal, openToast} from 'frontend-js-web';
+import {IInternalRenderer, fetch, navigate, openModal} from 'frontend-js-web';
 import React, {useRef, useState} from 'react';
 
-import '../css/FDSEntries.scss';
-import {OBJECT_RELATIONSHIP, PAGINATION_PROPS} from './Constants';
-import RequiredMark from './RequiredMark';
+import {API_URL, FDS_DEFAULT_PROPS, OBJECT_RELATIONSHIP} from './Constants';
+import {FDSEntryType} from './FDSEntries';
+import RequiredMark from './components/RequiredMark';
+import openDefaultFailureToast from './utils/openDefaultFailureToast';
+import openDefaultSuccessToast from './utils/openDefaultSuccessToast';
 
-export type TFDSView = {
+const LIST_OF_ITEMS_PER_PAGE = '4, 8, 20, 40, 60';
+const DEFAULT_ITEMS_PER_PAGE = 20;
+
+type FDSViewType = {
+	[OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW]: FDSEntryType;
+	defaultItemsPerPage: number;
 	description: string;
+	externalReferenceCode: string;
+	fdsFiltersOrder: string;
+	fdsSortsOrder: string;
 	id: string;
 	label: string;
+	listOfItemsPerPage: string;
 };
 
-interface IAddFDSViewModalContentProps {
+interface IAddFDSViewModalContentInterface {
 	closeModal: Function;
 	fdsEntryId: string;
-	fdsViewsAPIURL: string;
 	loadData: Function;
 	namespace: string;
 }
@@ -41,10 +43,10 @@ interface IAddFDSViewModalContentProps {
 const AddFDSViewModalContent = ({
 	closeModal,
 	fdsEntryId,
-	fdsViewsAPIURL,
 	loadData,
 	namespace,
-}: IAddFDSViewModalContentProps) => {
+}: IAddFDSViewModalContentInterface) => {
+	const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 	const [labelValidationError, setLabelValidationError] = useState(false);
 
 	const fdsViewDescriptionRef = useRef<HTMLInputElement>(null);
@@ -52,13 +54,15 @@ const AddFDSViewModalContent = ({
 
 	const addFDSView = async () => {
 		const body = {
+			defaultItemsPerPage: DEFAULT_ITEMS_PER_PAGE,
 			description: fdsViewDescriptionRef.current?.value,
 			label: fdsViewLabelRef.current?.value,
+			listOfItemsPerPage: LIST_OF_ITEMS_PER_PAGE,
 			r_fdsEntryFDSViewRelationship_c_fdsEntryId: fdsEntryId,
 			symbol: 'catalog',
 		};
 
-		const response = await fetch(fdsViewsAPIURL, {
+		const response = await fetch(API_URL.FDS_VIEWS, {
 			body: JSON.stringify(body),
 			headers: {
 				'Accept': 'application/json',
@@ -67,27 +71,25 @@ const AddFDSViewModalContent = ({
 			method: 'POST',
 		});
 
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
+
 		const fdsView = await response.json();
 
 		if (fdsView?.id) {
 			closeModal();
 
-			openToast({
-				message: Liferay.Language.get(
-					'your-request-completed-successfully'
-				),
-				type: 'success',
-			});
+			openDefaultSuccessToast();
 
 			loadData();
 		}
 		else {
-			openToast({
-				message: Liferay.Language.get(
-					'your-request-failed-to-complete'
-				),
-				type: 'danger',
-			});
+			setSaveButtonDisabled(false);
+
+			openDefaultFailureToast();
 		}
 	};
 
@@ -104,7 +106,7 @@ const AddFDSViewModalContent = ({
 	return (
 		<>
 			<ClayModal.Header>
-				{Liferay.Language.get('new-dataset-view')}
+				{Liferay.Language.get('new-data-set-view')}
 			</ClayModal.Header>
 
 			<ClayModal.Body>
@@ -158,7 +160,10 @@ const AddFDSViewModalContent = ({
 				last={
 					<ClayButton.Group spaced>
 						<ClayButton
+							disabled={saveButtonDisabled}
 							onClick={() => {
+								setSaveButtonDisabled(true);
+
 								const success = validate();
 
 								if (success) {
@@ -182,24 +187,20 @@ const AddFDSViewModalContent = ({
 	);
 };
 
-interface IFDSViewsProps {
-	fdsEntriesAPIURL: string;
+interface IFDSViewsInterface {
 	fdsEntryId: string;
 	fdsEntryLabel: string;
 	fdsViewURL: string;
-	fdsViewsAPIURL: string;
 	namespace: string;
 }
 
 const FDSViews = ({
-	fdsEntriesAPIURL,
 	fdsEntryId,
 	fdsEntryLabel,
 	fdsViewURL,
-	fdsViewsAPIURL,
 	namespace,
-}: IFDSViewsProps) => {
-	const onViewClick = ({itemData}: {itemData: TFDSView}) => {
+}: IFDSViewsInterface) => {
+	const getEditURL = (itemData: FDSViewType) => {
 		const url = new URL(fdsViewURL);
 
 		url.searchParams.set(`${namespace}fdsEntryId`, fdsEntryId);
@@ -207,19 +208,23 @@ const FDSViews = ({
 		url.searchParams.set(`${namespace}fdsViewId`, itemData.id);
 		url.searchParams.set(`${namespace}fdsViewLabel`, itemData.label);
 
-		navigate(url);
+		return url;
+	};
+
+	const onEditClick = ({itemData}: {itemData: FDSViewType}) => {
+		navigate(getEditURL(itemData));
 	};
 
 	const onDeleteClick = ({
 		itemData,
 		loadData,
 	}: {
-		itemData: TFDSView;
+		itemData: FDSViewType;
 		loadData: Function;
 	}) => {
 		openModal({
 			bodyHTML: Liferay.Language.get(
-				'deleting-a-dataset-view-is-an-action-that-cannot-be-reversed'
+				'deleting-a-data-set-view-is-an-action-that-cannot-be-reversed'
 			),
 			buttons: [
 				{
@@ -234,39 +239,27 @@ const FDSViews = ({
 					onClick: ({processClose}: {processClose: Function}) => {
 						processClose();
 
-						fetch(`${fdsViewsAPIURL}/${itemData.id}`, {
+						fetch(`${API_URL.FDS_VIEWS}/${itemData.id}`, {
 							method: 'DELETE',
 						})
 							.then(() => {
-								openToast({
-									message: Liferay.Language.get(
-										'your-request-completed-successfully'
-									),
-									type: 'success',
-								});
+								openDefaultSuccessToast();
 
 								loadData();
 							})
-							.catch(() =>
-								openToast({
-									message: Liferay.Language.get(
-										'your-request-failed-to-complete'
-									),
-									type: 'danger',
-								})
-							);
+							.catch(openDefaultFailureToast);
 					},
 				},
 			],
 			status: 'danger',
-			title: Liferay.Language.get('delete-dataset-view'),
+			title: Liferay.Language.get('delete-data-set-view'),
 		});
 	};
 
 	const creationMenu = {
 		primaryItems: [
 			{
-				label: Liferay.Language.get('new-dataset-view'),
+				label: Liferay.Language.get('new-data-set-view'),
 				onClick: ({loadData}: {loadData: Function}) => {
 					openModal({
 						contentComponent: ({
@@ -277,7 +270,6 @@ const FDSViews = ({
 							<AddFDSViewModalContent
 								closeModal={closeModal}
 								fdsEntryId={fdsEntryId}
-								fdsViewsAPIURL={fdsViewsAPIURL}
 								loadData={loadData}
 								namespace={namespace}
 							/>
@@ -288,6 +280,16 @@ const FDSViews = ({
 		],
 	};
 
+	const TitleRenderer = ({itemData}: {itemData: FDSViewType}) => {
+		return (
+			<div className="table-list-title">
+				<ClayLink href={getEditURL(itemData).toString()}>
+					{itemData.label}
+				</ClayLink>
+			</div>
+		);
+	};
+
 	const views = [
 		{
 			contentRenderer: 'list',
@@ -296,20 +298,41 @@ const FDSViews = ({
 				description: 'description',
 				symbol: 'symbol',
 				title: 'label',
+				titleRenderer: {
+					component: TitleRenderer,
+					label: Liferay.Language.get('title'),
+					name: 'title',
+					type: 'internal',
+				} as IInternalRenderer,
 			},
 		},
 	];
 
 	return (
 		<FrontendDataSet
-			apiURL={`${fdsEntriesAPIURL}/${fdsEntryId}/${OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW}`}
+			{...FDS_DEFAULT_PROPS}
+			apiURL={`${API_URL.FDS_VIEWS}/?filter=(${OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW_ID} eq '${fdsEntryId}')`}
 			creationMenu={creationMenu}
+			emptyState={{
+				description: Liferay.Language.get(
+					'start-creating-one-to-show-your-data'
+				),
+				image: '/states/empty_state.gif',
+				title: Liferay.Language.get('no-views-created'),
+			}}
+			header={{
+				title: Liferay.Language.get('views'),
+			}}
 			id={`${namespace}FDSViews`}
 			itemsActions={[
 				{
-					icon: 'view',
-					label: Liferay.Language.get('view'),
-					onClick: onViewClick,
+					icon: 'pencil',
+					label: Liferay.Language.get('edit'),
+					onClick: onEditClick,
+				},
+				{
+					separator: true,
+					type: 'group',
 				},
 				{
 					icon: 'trash',
@@ -317,11 +340,11 @@ const FDSViews = ({
 					onClick: onDeleteClick,
 				},
 			]}
-			style="fluid"
+			sorts={[{direction: 'desc', key: 'dateModified'}]}
 			views={views}
-			{...PAGINATION_PROPS}
 		/>
 	);
 };
 
+export {FDSViewType};
 export default FDSViews;

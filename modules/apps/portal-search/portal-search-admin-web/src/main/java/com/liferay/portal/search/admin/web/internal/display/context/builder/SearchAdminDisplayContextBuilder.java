@@ -1,28 +1,34 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.admin.web.internal.display.context.builder;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerClassNameComparator;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.search.admin.web.internal.display.context.SearchAdminDisplayContext;
 import com.liferay.portal.search.index.IndexInformation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -46,6 +52,7 @@ public class SearchAdminDisplayContextBuilder {
 		SearchAdminDisplayContext searchAdminDisplayContext =
 			new SearchAdminDisplayContext();
 
+		searchAdminDisplayContext.setIndexersMap(getIndexersMap());
 		searchAdminDisplayContext.setIndexReindexerClassNames(
 			_indexReindexerClassNames);
 
@@ -63,6 +70,7 @@ public class SearchAdminDisplayContextBuilder {
 		}
 
 		searchAdminDisplayContext.setNavigationItemList(navigationItemList);
+
 		searchAdminDisplayContext.setSelectedTab(selectedTab);
 
 		return searchAdminDisplayContext;
@@ -76,6 +84,54 @@ public class SearchAdminDisplayContextBuilder {
 		List<String> indexReindexerClassNames) {
 
 		_indexReindexerClassNames = indexReindexerClassNames;
+	}
+
+	protected Map<String, List<Indexer<?>>> getIndexersMap() {
+		Set<Indexer<?>> indexersSet = IndexerRegistryUtil.getIndexers();
+
+		if (SetUtil.isEmpty(indexersSet)) {
+			return Collections.emptyMap();
+		}
+
+		Map<String, List<Indexer<?>>> indexersMap = new HashMap<>();
+
+		for (Indexer<?> indexer :
+				ListUtil.sort(
+					new ArrayList<Indexer<?>>(indexersSet),
+					new IndexerClassNameComparator(true))) {
+
+			String key = "com.liferay.custom";
+
+			try {
+				Matcher matcher = _pattern.matcher(indexer.getClassName());
+
+				matcher.find();
+
+				key = matcher.group(1);
+			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to categorize indexer " +
+							indexer.getClassName(),
+						exception);
+				}
+			}
+
+			if (indexersMap.containsKey(key)) {
+				List<Indexer<?>> indexers = new ArrayList<>(
+					indexersMap.get(key));
+
+				indexers.add(indexer);
+
+				indexersMap.put(key, indexers);
+			}
+			else {
+				indexersMap.put(key, ListUtil.fromArray(indexer));
+			}
+		}
+
+		return new TreeMap<>(indexersMap);
 	}
 
 	protected String getSelectedTab() {
@@ -120,6 +176,12 @@ public class SearchAdminDisplayContextBuilder {
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SearchAdminDisplayContextBuilder.class);
+
+	private static final Pattern _pattern = Pattern.compile(
+		"([\\w\\.]+)\\.model\\.[\\w\\.]+");
 
 	private IndexInformation _indexInformation;
 	private List<String> _indexReindexerClassNames;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.health.status;
@@ -24,10 +15,13 @@ import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.importer.CPFileImporter;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -36,16 +30,16 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Theme;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -99,10 +93,14 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 			privateLayout = false;
 		}
 
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext = new ServiceContext();
 
+		serviceContext.setScopeGroupId(commerceChannel.getSiteGroupId());
 		serviceContext.setTimeZone(TimeZone.getDefault());
+
+		User currentUser = _userService.getCurrentUser();
+
+		serviceContext.setUserId(currentUser.getUserId());
 
 		Layout layout = _layoutService.addLayout(
 			commerceChannel.getSiteGroupId(), privateLayout,
@@ -129,12 +127,12 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 		layoutTypePortlet.setLayoutTemplateId(0, "2_columns_i", false);
 
 		layoutTypePortlet.addPortletId(
-			PrincipalThreadLocal.getUserId(),
+			currentUser.getUserId(),
 			"com_liferay_login_web_portlet_LoginPortlet", "column-1", 0);
 
 		String journalArticlePortletId = layoutTypePortlet.addPortletId(
-			PrincipalThreadLocal.getUserId(),
-			JournalContentPortletKeys.JOURNAL_CONTENT, "column-2", 0);
+			currentUser.getUserId(), JournalContentPortletKeys.JOURNAL_CONTENT,
+			"column-2", 0);
 
 		PortletPreferences portletPreferences =
 			_portletPreferencesFactory.getPortletSetup(
@@ -158,10 +156,15 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 				jsonArray, classLoader,
 				dependenciesFilePath + "journal_articles/", serviceContext);
 
+			DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
+				serviceContext.getScopeGroupId(),
+				_portal.getClassNameId(JournalArticle.class.getName()),
+				"guest-checkout-authentication-structure", true);
+
 			List<JournalArticle> journalArticles =
 				_journalArticleLocalService.getArticlesByStructureId(
 					serviceContext.getScopeGroupId(),
-					"guest-checkout-authentication-structure", 0, 1, null);
+					ddmStructure.getStructureId(), 0, 1, null);
 
 			JournalArticle journalArticle = journalArticles.get(0);
 
@@ -291,6 +294,9 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 	private CPFileImporter _cpFileImporter;
 
 	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
 
 	@Reference
@@ -309,6 +315,12 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
+	private Portal _portal;
+
+	@Reference
 	private PortletPreferencesFactory _portletPreferencesFactory;
+
+	@Reference
+	private UserService _userService;
 
 }

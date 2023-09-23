@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,64 +19,66 @@ if (Validator.isNull(backURL)) {
 }
 %>
 
-<aui:form action="<%= layoutsSEODisplayContext.getEditCustomMetaTagsURL() %>" method="post" name="fm">
+<h2 class="mb-4 text-7"><liferay-ui:message key="custom-meta-tags" /></h2>
+
+<liferay-frontend:edit-form
+	action="<%= layoutsSEODisplayContext.getEditCustomMetaTagsURL() %>"
+	cssClass="pt-0"
+	method="post"
+	name="fm"
+	wrappedFormContent="<%= false %>"
+>
 	<aui:input name="redirect" type="hidden" value="<%= layoutsSEODisplayContext.getRedirectURL() %>" />
 	<aui:input name="portletResource" type="hidden" value='<%= ParamUtil.getString(request, "portletResource") %>' />
 	<aui:input name="groupId" type="hidden" value="<%= layoutsSEODisplayContext.getGroupId() %>" />
 	<aui:input name="privateLayout" type="hidden" value="<%= layoutsSEODisplayContext.isPrivateLayout() %>" />
 	<aui:input name="layoutId" type="hidden" value="<%= layoutsSEODisplayContext.getLayoutId() %>" />
 
-	<clay:sheet>
-		<clay:sheet-header>
-			<h2 class="sheet-title"><liferay-ui:message key="custom-meta-tags" /></h2>
+	<liferay-frontend:edit-form-body>
+		<clay:sheet
+			cssClass="ml-0"
+		>
+			<clay:sheet-section>
+				<h3 class="mb-4"><liferay-ui:message key="settings" /></h3>
 
-			<p class="text-secondary">
-				<liferay-ui:message key="custom-meta-tags-description" />
-			</p>
-		</clay:sheet-header>
+				<p class="text-secondary">
+					<liferay-ui:message key="custom-meta-tags-description" />
+				</p>
 
-		<liferay-ui:error exception="<%= DDMFormValuesValidationException.class %>" message="field-validation-failed" />
+				<liferay-ui:error exception="<%= DDMFormValuesValidationException.class %>" message="field-validation-failed" />
 
-		<liferay-ui:error exception="<%= DDMFormValuesValidationException.RequiredValue.class %>">
+				<liferay-ui:error exception="<%= DDMFormValuesValidationException.RequiredValue.class %>">
 
-			<%
-			DDMFormValuesValidationException.RequiredValue rv = (DDMFormValuesValidationException.RequiredValue)errorException;
+					<%
+					DDMFormValuesValidationException.RequiredValue rv = (DDMFormValuesValidationException.RequiredValue)errorException;
 
-			String fieldLabelValue = rv.getFieldLabelValue(themeDisplay.getLocale());
+					String fieldLabelValue = rv.getFieldLabelValue(themeDisplay.getLocale());
 
-			if (Validator.isNull(fieldLabelValue)) {
-				fieldLabelValue = rv.getFieldName();
-			}
-			%>
+					if (Validator.isNull(fieldLabelValue)) {
+						fieldLabelValue = rv.getFieldName();
+					}
+					%>
 
-			<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
-		</liferay-ui:error>
+					<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
+				</liferay-ui:error>
 
-		<liferay-ddm:html
-			classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
-			classPK="<%= layoutsSEODisplayContext.getDDMStructurePrimaryKey() %>"
-			ddmFormValues="<%= layoutsSEODisplayContext.getDDMFormValues() %>"
-			defaultEditLocale="<%= PortalUtil.getSiteDefaultLocale(layoutsSEODisplayContext.getGroupId()) %>"
-			defaultLocale="<%= PortalUtil.getSiteDefaultLocale(layoutsSEODisplayContext.getGroupId()) %>"
-			fieldsNamespace="<%= String.valueOf(layoutsSEODisplayContext.getDDMStructurePrimaryKey()) %>"
-			groupId="<%= layoutsSEODisplayContext.getGroupId() %>"
-			requestedLocale="<%= locale %>"
+				<liferay-ddm:html
+					classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
+					classPK="<%= layoutsSEODisplayContext.getDDMStructurePrimaryKey() %>"
+					ddmFormValues="<%= layoutsSEODisplayContext.getDDMFormValues() %>"
+					defaultEditLocale="<%= PortalUtil.getSiteDefaultLocale(layoutsSEODisplayContext.getGroupId()) %>"
+					defaultLocale="<%= PortalUtil.getSiteDefaultLocale(layoutsSEODisplayContext.getGroupId()) %>"
+					fieldsNamespace="<%= String.valueOf(layoutsSEODisplayContext.getDDMStructurePrimaryKey()) %>"
+					groupId="<%= layoutsSEODisplayContext.getGroupId() %>"
+					requestedLocale="<%= locale %>"
+				/>
+			</clay:sheet-section>
+		</clay:sheet>
+	</liferay-frontend:edit-form-body>
+
+	<liferay-frontend:edit-form-footer>
+		<liferay-frontend:edit-form-buttons
+			redirect="<%= backURL %>"
 		/>
-
-		<clay:sheet-footer>
-			<clay:button
-				cssClass="mr-3"
-				displayType="primary"
-				label='<%= LanguageUtil.get(request, "save") %>'
-				type="submit"
-			/>
-
-			<clay:link
-				displayType="secondary"
-				href="<%= HtmlUtil.escape(backURL) %>"
-				label='<%= LanguageUtil.get(request, "cancel") %>'
-				type="button"
-			/>
-		</clay:sheet-footer>
-	</clay:sheet>
-</aui:form>
+	</liferay-frontend:edit-form-footer>
+</liferay-frontend:edit-form>

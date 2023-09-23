@@ -22,7 +22,8 @@ definition {
 
 	@priority = 5
 	test CacheIsClearedOnCompanyRemoval {
-		property test.name.skip.portal.instance = "DatabasePartitioningCache#CacheIsClearedOnCompanyRemoval";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalInstances.openVirtualInstancesAdmin();
 
@@ -68,7 +69,8 @@ definition {
 
 	@priority = 5
 	test CacheIsOnlyPopulatedToSingleCompany {
-		property test.name.skip.portal.instance = "DatabasePartitioningCache#CacheIsOnlyPopulatedToSingleCompany";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalInstances.openVirtualInstancesAdmin();
 
@@ -95,7 +97,8 @@ definition {
 		property cluster.enabled = "true";
 		property minimum.slave.ram = "24";
 		property remote.elasticsearch.enabled = "true";
-		property test.name.skip.portal.instance = "DatabasePartitioningCache#CacheOnlyClearsOnSameCompanyAcrossCluster";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalInstances.openVirtualInstancesAdmin();
 
@@ -115,10 +118,21 @@ definition {
 			cacheValue = "test.value.node.1.company.2",
 			portalInstanceName = "www.able.com");
 
+		User.logoutPG();
+
 		User.firstLoginUI(
 			password = "test",
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
+
+		if (IsElementNotPresent(locator1 = "ApplicationsMenu#TOGGLE")) {
+			Refresh();
+
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://localhost:9080",
+				userEmailAddress = "test@liferay.com");
+		}
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -135,7 +149,15 @@ definition {
 			cacheValue = "test.value.node.2.company.2",
 			portalInstanceName = "www.able.com");
 
+		User.logoutPG();
+
 		User.firstLoginPG();
+
+		if (IsElementNotPresent(locator1 = "ApplicationsMenu#TOGGLE")) {
+			Refresh();
+
+			User.firstLoginPG();
+		}
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -151,7 +173,8 @@ definition {
 
 	@priority = 4
 	test NullCacheDoesNotBreakSiteFromAnotherPartition {
-		property test.name.skip.portal.instance = "DatabasePartitioningCache#NullCacheDoesNotBreakSiteFromAnotherPartition";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		HeadlessPortalInstanceAPI.addPortalInstance(
 			domain = "www.able.com",

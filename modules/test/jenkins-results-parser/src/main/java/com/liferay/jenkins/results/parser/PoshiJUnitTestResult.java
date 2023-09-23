@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -58,6 +49,9 @@ public class PoshiJUnitTestResult extends JUnitTestResult {
 			" - ",
 			Dom4JUtil.getNewAnchorElement(
 				getPoshiSummaryURL(), "Poshi Summary"),
+			" - ",
+			Dom4JUtil.getNewAnchorElement(
+				getPoshiConsoleURL(), "Poshi Console"),
 			" - ",
 			Dom4JUtil.getNewAnchorElement(
 				getConsoleOutputURL(), "Console Output"));
@@ -140,6 +134,19 @@ public class PoshiJUnitTestResult extends JUnitTestResult {
 
 	protected PoshiJUnitTestResult(Build build, JSONObject caseJSONObject) {
 		super(build, caseJSONObject);
+	}
+
+	protected String getPoshiConsoleURL() {
+		StringBuilder sb = new StringBuilder();
+
+		String name = getDisplayName();
+
+		sb.append(getTestrayLogsURL());
+		sb.append("/");
+		sb.append(name.replace('#', '_'));
+		sb.append("/console.txt.gz");
+
+		return sb.toString();
 	}
 
 	protected String getPoshiReportURL() {

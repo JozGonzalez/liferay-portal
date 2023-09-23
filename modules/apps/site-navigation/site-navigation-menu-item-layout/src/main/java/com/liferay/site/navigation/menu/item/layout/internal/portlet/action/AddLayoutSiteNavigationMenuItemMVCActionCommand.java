@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.menu.item.layout.internal.portlet.action;
@@ -40,8 +31,8 @@ import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
@@ -80,7 +71,7 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 			actionRequest);
 
 		Map<Long, SiteNavigationMenuItem> layoutSiteNavigationMenuItemMap =
-			new HashMap<>();
+			new LinkedHashMap<>();
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
@@ -105,9 +96,13 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 					continue;
 				}
 
+				long parentSiteNavigationMenuItemId = ParamUtil.getLong(
+					actionRequest, "parentSiteNavigationMenuItemId");
+
 				SiteNavigationMenuItem siteNavigationMenuItem =
 					_siteNavigationMenuItemService.addSiteNavigationMenuItem(
-						themeDisplay.getScopeGroupId(), siteNavigationMenuId, 0,
+						themeDisplay.getScopeGroupId(), siteNavigationMenuId,
+						parentSiteNavigationMenuItemId,
 						siteNavigationMenuItemType,
 						UnicodePropertiesBuilder.create(
 							true
@@ -126,29 +121,50 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 					layout.getPlid(), siteNavigationMenuItem);
 			}
 
+			int order = ParamUtil.getInteger(actionRequest, "order", -1);
+
+			int nextOrder = order;
+
 			for (Map.Entry<Long, SiteNavigationMenuItem> entry :
 					layoutSiteNavigationMenuItemMap.entrySet()) {
 
-				Layout layout = _layoutLocalService.fetchLayout(entry.getKey());
+				if (order < 0) {
+					Layout layout = _layoutLocalService.fetchLayout(
+						entry.getKey());
 
-				if (layout.getParentPlid() <= 0) {
-					continue;
+					if (layout.getParentPlid() <= 0) {
+						continue;
+					}
+
+					SiteNavigationMenuItem parentSiteNavigationMenuItem =
+						layoutSiteNavigationMenuItemMap.get(
+							layout.getParentPlid());
+
+					if (parentSiteNavigationMenuItem == null) {
+						continue;
+					}
+
+					SiteNavigationMenuItem siteNavigationMenuItem =
+						entry.getValue();
+
+					_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
+						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+						parentSiteNavigationMenuItem.
+							getSiteNavigationMenuItemId(),
+						layout.getPriority());
 				}
+				else {
+					SiteNavigationMenuItem siteNavigationMenuItem =
+						entry.getValue();
 
-				SiteNavigationMenuItem parentSiteNavigationMenuItem =
-					layoutSiteNavigationMenuItemMap.get(layout.getParentPlid());
+					_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
+						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+						siteNavigationMenuItem.
+							getParentSiteNavigationMenuItemId(),
+						nextOrder);
 
-				if (parentSiteNavigationMenuItem == null) {
-					continue;
+					nextOrder++;
 				}
-
-				SiteNavigationMenuItem siteNavigationMenuItem =
-					entry.getValue();
-
-				_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
-					siteNavigationMenuItem.getSiteNavigationMenuItemId(),
-					parentSiteNavigationMenuItem.getSiteNavigationMenuItemId(),
-					layout.getPriority());
 			}
 
 			if (MapUtil.isEmpty(layoutSiteNavigationMenuItemMap)) {

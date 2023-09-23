@@ -1,20 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.custom.facet.portlet;
-
-import java.util.Optional;
 
 /**
  * @author Wade Cao
@@ -41,13 +30,9 @@ public interface CustomFacetPortletPreferences {
 
 	public static final String PREFERENCE_KEY_PARAMETER_NAME = "parameterName";
 
-	public Optional<String> getAggregationFieldOptional();
+	public String getAggregationField();
 
-	public String getAggregationFieldString();
-
-	public Optional<String> getCustomHeadingOptional();
-
-	public String getCustomHeadingString();
+	public String getCustomHeading();
 
 	public String getFederatedSearchKey();
 
@@ -57,9 +42,7 @@ public interface CustomFacetPortletPreferences {
 
 	public String getOrder();
 
-	public Optional<String> getParameterNameOptional();
-
-	public String getParameterNameString();
+	public String getParameterName();
 
 	public boolean isFrequenciesVisible();
 

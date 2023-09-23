@@ -1,6 +1,7 @@
 Git-Descriptor: ${system-allow-fail;git describe --dirty --always}
 Bundle-Vendor: ${release.info.vendor}
 Git-SHA: ${system-allow-fail;git rev-list -1 HEAD}
+Liferay-Portal-Version-Display-Name: ${release.info.version.display.name}
 Liferay-Portal-Version: ${release.info.version}
 Javac-Compiler: ${javac.compiler}
 Javac-Debug: ${javac.debug}
@@ -15,4 +16,5 @@ Liferay-Portal-Parent-Build-Number: ${release.info.parent.build.number}
 Liferay-Portal-Release-Info: ${release.info.release.info}
 Liferay-Portal-Server-Info: ${release.info.server.info}
 -donotcopy: (\.touch)
+-fixupmessages.deprecated=annotations are deprecated
 -fixupmessages.deprecated=annotations are deprecated

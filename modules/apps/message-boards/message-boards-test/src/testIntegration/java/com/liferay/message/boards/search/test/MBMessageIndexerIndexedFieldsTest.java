@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.search.test;
@@ -29,6 +20,9 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.parsers.bbcode.BBCodeTranslatorUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchEngineHelper;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -58,6 +52,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -81,10 +76,19 @@ public class MBMessageIndexerIndexedFieldsTest {
 
 	@Before
 	public void setUp() throws Exception {
+
+		// Order is important. See LPS-182480.
+
 		setUpUserSearchFixture();
+
 		setUpIndexedFieldsFixture();
-		setUpMBMessageIndexerFixture();
 		setUpMBMessageFixture();
+		setUpMBMessageIndexerFixture();
+	}
+
+	@After
+	public void tearDown() {
+		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
 	}
 
 	@Test
@@ -103,7 +107,8 @@ public class MBMessageIndexerIndexedFieldsTest {
 				searchTerm, locale);
 
 		FieldValuesAssert.assertFieldValues(
-			_expectedFieldValues(mbMessage), name -> !name.equals("score"),
+			_expectedFieldValues(mbMessage),
+			name -> !name.equals("score") && !name.equals("timestamp"),
 			searchResponse);
 	}
 
@@ -141,6 +146,12 @@ public class MBMessageIndexerIndexedFieldsTest {
 
 		_user = userSearchFixture.addUser(
 			RandomTestUtil.randomString(), _group);
+
+		_originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
 
 		_users = userSearchFixture.getUsers();
 	}
@@ -336,6 +347,8 @@ public class MBMessageIndexerIndexedFieldsTest {
 
 	@DeleteAfterTestRun
 	private List<MBThread> _mbThreads;
+
+	private PermissionChecker _originalPermissionChecker;
 
 	@Inject
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;

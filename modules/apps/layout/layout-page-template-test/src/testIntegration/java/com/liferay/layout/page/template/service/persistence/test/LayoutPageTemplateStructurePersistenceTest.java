@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.service.persistence.test;
@@ -152,10 +143,7 @@ public class LayoutPageTemplateStructurePersistenceTest {
 		newLayoutPageTemplateStructure.setModifiedDate(
 			RandomTestUtil.nextDate());
 
-		newLayoutPageTemplateStructure.setClassNameId(
-			RandomTestUtil.nextLong());
-
-		newLayoutPageTemplateStructure.setClassPK(RandomTestUtil.nextLong());
+		newLayoutPageTemplateStructure.setPlid(RandomTestUtil.nextLong());
 
 		_layoutPageTemplateStructures.add(
 			_persistence.update(newLayoutPageTemplateStructure));
@@ -200,11 +188,8 @@ public class LayoutPageTemplateStructurePersistenceTest {
 			Time.getShortTimestamp(
 				newLayoutPageTemplateStructure.getModifiedDate()));
 		Assert.assertEquals(
-			existingLayoutPageTemplateStructure.getClassNameId(),
-			newLayoutPageTemplateStructure.getClassNameId());
-		Assert.assertEquals(
-			existingLayoutPageTemplateStructure.getClassPK(),
-			newLayoutPageTemplateStructure.getClassPK());
+			existingLayoutPageTemplateStructure.getPlid(),
+			newLayoutPageTemplateStructure.getPlid());
 	}
 
 	@Test
@@ -242,12 +227,11 @@ public class LayoutPageTemplateStructurePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_C_C() throws Exception {
-		_persistence.countByG_C_C(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+	public void testCountByG_P() throws Exception {
+		_persistence.countByG_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
-		_persistence.countByG_C_C(0L, 0L, 0L);
+		_persistence.countByG_P(0L, 0L);
 	}
 
 	@Test
@@ -285,7 +269,7 @@ public class LayoutPageTemplateStructurePersistenceTest {
 			"ctCollectionId", true, "uuid", true,
 			"layoutPageTemplateStructureId", true, "groupId", true, "companyId",
 			true, "userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "classNameId", true, "classPK", true);
+			"modifiedDate", true, "plid", true);
 	}
 
 	@Test
@@ -610,15 +594,10 @@ public class LayoutPageTemplateStructurePersistenceTest {
 				layoutPageTemplateStructure, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "groupId"));
 		Assert.assertEquals(
-			Long.valueOf(layoutPageTemplateStructure.getClassNameId()),
+			Long.valueOf(layoutPageTemplateStructure.getPlid()),
 			ReflectionTestUtil.<Long>invoke(
 				layoutPageTemplateStructure, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "classNameId"));
-		Assert.assertEquals(
-			Long.valueOf(layoutPageTemplateStructure.getClassPK()),
-			ReflectionTestUtil.<Long>invoke(
-				layoutPageTemplateStructure, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "classPK"));
+				new Class<?>[] {String.class}, "plid"));
 	}
 
 	protected LayoutPageTemplateStructure addLayoutPageTemplateStructure()
@@ -648,9 +627,7 @@ public class LayoutPageTemplateStructurePersistenceTest {
 
 		layoutPageTemplateStructure.setModifiedDate(RandomTestUtil.nextDate());
 
-		layoutPageTemplateStructure.setClassNameId(RandomTestUtil.nextLong());
-
-		layoutPageTemplateStructure.setClassPK(RandomTestUtil.nextLong());
+		layoutPageTemplateStructure.setPlid(RandomTestUtil.nextLong());
 
 		_layoutPageTemplateStructures.add(
 			_persistence.update(layoutPageTemplateStructure));

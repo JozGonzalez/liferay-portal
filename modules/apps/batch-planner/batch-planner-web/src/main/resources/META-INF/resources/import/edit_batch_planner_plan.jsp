@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -35,7 +26,6 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 	<form id="<portlet:namespace />fm" name="<portlet:namespace />fm">
 		<input id="<portlet:namespace />batchPlannerPlanId" name="<portlet:namespace />batchPlannerPlanId" type="hidden" value="<%= batchPlannerPlanId %>" />
 		<input id="<portlet:namespace />externalType" name="<portlet:namespace />externalType" type="hidden" value="" />
-		<input id="<portlet:namespace />taskItemDelegateName" name="<portlet:namespace />taskItemDelegateName" type="hidden" value="DEFAULT" />
 
 		<div class="row">
 			<div class="col-lg-6 d-flex flex-column">
@@ -57,10 +47,10 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 									md="6"
 								>
 									<clay:select
-										id='<%= liferayPortletResponse.getNamespace() + "internalClassName" %>'
+										id='<%= liferayPortletResponse.getNamespace() + "internalClassNameKey" %>'
 										label='<%= LanguageUtil.get(request, "entity-type") %>'
-										name="internalClassName"
-										options="<%= editBatchPlannerPlanDisplayContext.getInternalClassNameSelectOptions() %>"
+										name="internalClassNameKey"
+										options="<%= editBatchPlannerPlanDisplayContext.getInternalClassNameKeySelectOptions() %>"
 									/>
 								</clay:col>
 							</clay:row>
@@ -103,8 +93,9 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 									<clay:checkbox
 										checked="<%= false %>"
 										disabled="<%= true %>"
+										id='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
 										label='<%= LanguageUtil.get(request, "detect-category-names-from-CSV-file") %>'
-										name="headerCheckbox"
+										name='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
 									/>
 								</div>
 							</c:if>
@@ -118,23 +109,13 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 								/>
 							</div>
 
-							<div class="mt-2">
-								<clay:select
-									id='<%= liferayPortletResponse.getNamespace() + "createStrategy" %>'
-									label='<%= LanguageUtil.get(request, "import-strategy") %>'
-									name="createStrategy"
-									options="<%= editBatchPlannerPlanDisplayContext.getCreateStrategySelectOptions() %>"
-								/>
-							</div>
-
-							<div class="mt-2">
-								<clay:select
-									id='<%= liferayPortletResponse.getNamespace() + "updateStrategy" %>'
-									label='<%= LanguageUtil.get(request, "update-strategy") %>'
-									name="updateStrategy"
-									options="<%= editBatchPlannerPlanDisplayContext.getUpdateStrategySelectOptions() %>"
-								/>
-							</div>
+							<clay:row>
+								<clay:col>
+									<react:component
+										module="js/components/Strategies"
+									/>
+								</clay:col>
+							</clay:row>
 						</liferay-frontend:edit-form-body>
 					</div>
 				</div>
@@ -213,7 +194,7 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 <liferay-frontend:component
 	context='<%=
 		HashMapBuilder.<String, Object>put(
-			"initialTemplateClassName", editBatchPlannerPlanDisplayContext.getSelectedInternalClassName()
+			"initialTemplateClassName", editBatchPlannerPlanDisplayContext.getSelectedInternalClassNameKey()
 		).put(
 			"initialTemplateMapping", editBatchPlannerPlanDisplayContext.getSelectedBatchPlannerPlanMappings()
 		).put(

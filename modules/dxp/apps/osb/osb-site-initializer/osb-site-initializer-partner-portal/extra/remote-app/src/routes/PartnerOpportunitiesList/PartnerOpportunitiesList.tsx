@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -25,7 +19,6 @@ import {PartnerOpportunitiesColumnKey} from '../../common/enums/partnerOpportuni
 import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePagination from '../../common/hooks/usePagination';
-import DealRegistrationDTO from '../../common/interfaces/dto/dealRegistrationDTO';
 import TableColumn from '../../common/interfaces/tableColumn';
 import {Liferay} from '../../common/services/liferay';
 import getDoubleParagraph from '../../common/utils/getDoubleParagraph';
@@ -36,21 +29,17 @@ import PartnerOpportunitiesItem from './interfaces/partnerOpportunitiesItem';
 
 interface IProps {
 	columnsDates: TableColumn<PartnerOpportunitiesItem>[];
-	getDates: (
-		items: DealRegistrationDTO
-	) => PartnerOpportunitiesItem | undefined;
-	getFilteredItems: (
-		items: PartnerOpportunitiesItem[]
-	) => PartnerOpportunitiesItem[];
 	name: string;
+	newButtonDeal?: boolean;
+	opportunityFilter?: string;
 	sort: string;
 }
 
 const PartnerOpportunitiesList = ({
 	columnsDates,
-	getDates,
-	getFilteredItems,
 	name,
+	newButtonDeal,
+	opportunityFilter,
 	sort,
 }: IProps) => {
 	const {filters, filtersTerm, onFilter} = useFilters();
@@ -64,17 +53,25 @@ const PartnerOpportunitiesList = ({
 
 	const pagination = usePagination();
 	const {data, isValidating} = useGetListItemsFromPartnerOpportunities(
-		getDates,
 		pagination.activePage,
 		pagination.activeDelta,
 		filtersTerm,
-		sort
+		sort,
+		opportunityFilter
 	);
 	const {totalCount: totalPagination} = data;
-	const filteredData = data.items && getFilteredItems(data.items);
+	const filteredData = data.items;
 
 	const siteURL = useLiferayNavigate();
 	const columns = [
+		{
+			columnKey: PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME,
+			label: 'Partner Account Name',
+		},
+		{
+			columnKey: PartnerOpportunitiesColumnKey.PARTNER_NAME,
+			label: 'Partner Name',
+		},
 		{
 			columnKey: PartnerOpportunitiesColumnKey.ACCOUNT_NAME,
 			label: 'Account Name',
@@ -193,16 +190,18 @@ const PartnerOpportunitiesList = ({
 						</CSVLink>
 					)}
 
-					<ClayButton
-						className="mb-2 mb-lg-0 mr-2"
-						onClick={() =>
-							Liferay.Util.navigate(
-								`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
-							)
-						}
-					>
-						Register New Deal
-					</ClayButton>
+					{newButtonDeal && (
+						<ClayButton
+							className="mb-2 mb-lg-0 mr-2"
+							onClick={() =>
+								Liferay.Util.navigate(
+									`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
+								)
+							}
+						>
+							Register New Deal
+						</ClayButton>
+					)}
 				</div>
 			</TableHeader>
 

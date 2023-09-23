@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.portlet;
@@ -29,7 +20,6 @@ import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySuppli
 import com.liferay.portal.search.web.internal.modified.facet.constants.ModifiedFacetPortletKeys;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetDisplayContext;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.builder.ModifiedFacetDisplayContextBuilder;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
@@ -115,18 +105,17 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 				portletSharedSearchResponse.getPortletPreferences(
 					renderRequest));
 
-		String parameterName =
-			modifiedFacetPortletPreferences.getParameterName();
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameter(
-				parameterName + "From", renderRequest),
-			modifiedFacetDisplayContextBuilder::setFromParameterValue);
-
 		modifiedFacetDisplayContextBuilder.setFrequenciesVisible(
 			modifiedFacetPortletPreferences.isFrequenciesVisible());
 		modifiedFacetDisplayContextBuilder.setFrequencyThreshold(
 			modifiedFacetPortletPreferences.getFrequencyThreshold());
+
+		String parameterName =
+			modifiedFacetPortletPreferences.getParameterName();
+
+		modifiedFacetDisplayContextBuilder.setFromParameterValue(
+			portletSharedSearchResponse.getParameter(
+				parameterName + "From", renderRequest));
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(renderRequest);
 
@@ -137,19 +126,14 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 		modifiedFacetDisplayContextBuilder.setPaginationStartParameterName(
 			_getPaginationStartParameterName(portletSharedSearchResponse));
 		modifiedFacetDisplayContextBuilder.setParameterName(parameterName);
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameterValues(
-				parameterName, renderRequest),
-			modifiedFacetDisplayContextBuilder::setParameterValues);
-
+		modifiedFacetDisplayContextBuilder.setParameterValues(
+			portletSharedSearchResponse.getParameterValues(
+				parameterName, renderRequest));
 		modifiedFacetDisplayContextBuilder.setTimeZone(
 			themeDisplay.getTimeZone());
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameter(
-				parameterName + "To", renderRequest),
-			modifiedFacetDisplayContextBuilder::setToParameterValue);
+		modifiedFacetDisplayContextBuilder.setToParameterValue(
+			portletSharedSearchResponse.getParameter(
+				parameterName + "To", renderRequest));
 
 		SearchResponse searchResponse =
 			portletSharedSearchResponse.getSearchResponse();

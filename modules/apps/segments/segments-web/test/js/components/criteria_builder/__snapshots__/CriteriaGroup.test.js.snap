@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CriteriaGroup renders 1`] = `
+<DocumentFragment>
+  <div
+    class="color--user criteria-group-item"
+  >
+    <div
+      class="empty-drop-zone p-6 rounded border-secondary-light empty-drop-zone--dashed"
+    />
+  </div>
+</DocumentFragment>
+`;

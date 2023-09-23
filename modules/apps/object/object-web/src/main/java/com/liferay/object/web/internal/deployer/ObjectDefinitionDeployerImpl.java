@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.deployer;
@@ -17,22 +8,31 @@ package com.liferay.object.web.internal.deployer;
 import com.liferay.application.list.PanelApp;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.frontend.data.set.view.FDSView;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
+import com.liferay.info.collection.provider.InfoCollectionProvider;
+import com.liferay.info.item.action.executor.InfoItemActionExecutor;
+import com.liferay.info.item.capability.InfoItemCapability;
 import com.liferay.info.item.creator.InfoItemCreator;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
+import com.liferay.info.item.provider.InfoItemActionDetailsProvider;
 import com.liferay.info.item.provider.InfoItemCapabilitiesProvider;
+import com.liferay.info.item.provider.InfoItemCategorizationProvider;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
+import com.liferay.info.item.provider.InfoItemScopeProvider;
+import com.liferay.info.item.provider.InfoItemStatusProvider;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.item.renderer.InfoItemRendererRegistry;
+import com.liferay.info.item.updater.InfoItemFieldValuesUpdater;
 import com.liferay.info.list.renderer.InfoListRenderer;
 import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.item.selector.ItemSelectorView;
@@ -41,6 +41,7 @@ import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelect
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
+import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.deployer.ObjectDefinitionDeployer;
 import com.liferay.object.model.ObjectDefinition;
@@ -55,17 +56,25 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
 import com.liferay.object.web.internal.asset.model.ObjectEntryAssetRendererFactory;
+import com.liferay.object.web.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider;
+import com.liferay.object.web.internal.info.item.action.ObjectEntryInfoItemActionExecutor;
 import com.liferay.object.web.internal.info.item.creator.ObjectEntryInfoItemCreator;
+import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemActionDetailsProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemCapabilitiesProvider;
+import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemCategorizationProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemDetailsProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemFieldValuesProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemFormProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemObjectProvider;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemPermissionProvider;
+import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemScopeProvider;
+import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemStatusProvider;
 import com.liferay.object.web.internal.info.item.renderer.ObjectEntryRowInfoItemRenderer;
+import com.liferay.object.web.internal.info.item.updater.ObjectEntryInfoItemFieldValuesUpdater;
 import com.liferay.object.web.internal.info.list.renderer.ObjectEntryTableInfoListRenderer;
 import com.liferay.object.web.internal.info.permission.provider.ObjectEntryInfoPermissionProvider;
 import com.liferay.object.web.internal.item.selector.ObjectEntryItemSelectorView;
@@ -134,9 +143,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		InfoItemFormProvider<ObjectEntry> infoItemFormProvider =
 			new ObjectEntryInfoItemFormProvider(
-				objectDefinition, _infoItemFieldReaderFieldSetProvider,
-				_listTypeEntryLocalService, _objectDefinitionLocalService,
-				_objectFieldLocalService, _objectFieldSettingLocalService,
+				_displayPageInfoItemFieldSetProvider, objectDefinition,
+				_infoItemFieldReaderFieldSetProvider,
+				_listTypeEntryLocalService, _objectActionLocalService,
+				_objectDefinitionLocalService, _objectFieldLocalService,
+				_objectFieldSettingLocalService,
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_restContextPathResolverRegistry,
 				_templateInfoItemFieldSetProvider, _userLocalService);
@@ -154,8 +165,8 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				AssetRendererFactory.class,
 				new ObjectEntryAssetRendererFactory(
 					_assetDisplayPageFriendlyURLProvider, objectDefinition,
-					_objectEntryDisplayContextFactory, _objectEntryService,
-					_servletContext),
+					_objectEntryDisplayContextFactory, _objectEntryLocalService,
+					_objectEntryService, _servletContext),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -166,15 +177,66 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntriesTableFDSView(
 					_fdsTableSchemaBuilderFactory, objectDefinition,
 					_objectDefinitionLocalService, _objectFieldLocalService,
-					_objectRelationshipLocalService, _objectViewLocalService),
+					_objectRelationshipLocalService, _objectViewLocalService,
+					_userLocalService),
 				HashMapDictionaryBuilder.put(
 					"frontend.data.set.name", objectDefinition.getPortletId()
+				).build()),
+			_bundleContext.registerService(
+				InfoCollectionProvider.class,
+				new ObjectEntrySingleFormVariationInfoCollectionProvider(
+					_assetCategoryLocalService, _assetTagLocalService,
+					_assetVocabularyLocalService, _groupLocalService,
+					_listTypeEntryLocalService, objectDefinition,
+					_objectEntryLocalService, _objectEntryManagerRegistry,
+					_objectFieldLocalService, _objectLayoutLocalService,
+					_objectScopeProviderRegistry),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
+				InfoItemActionDetailsProvider.class,
+				new ObjectEntryInfoItemActionDetailsProvider(
+					infoItemFormProvider, _objectActionLocalService,
+					objectDefinition),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
+				InfoItemActionExecutor.class,
+				new ObjectEntryInfoItemActionExecutor(
+					infoItemFormProvider, _objectActionLocalService,
+					objectDefinition, _objectEntryManagerRegistry),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
 				).build()),
 			_bundleContext.registerService(
 				InfoItemCapabilitiesProvider.class,
 				new ObjectEntryInfoItemCapabilitiesProvider(
 					_displayPageInfoItemCapability, _editPageInfoItemCapability,
-					_templatePageInfoItemCapability),
+					_templateInfoItemCapability),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
+				InfoItemCategorizationProvider.class,
+				new ObjectEntryInfoItemCategorizationProvider(objectDefinition),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
+				InfoItemStatusProvider.class,
+				new ObjectEntryInfoItemStatusProvider(objectDefinition),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -183,8 +245,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				InfoItemCreator.class,
 				new ObjectEntryInfoItemCreator(
-					_groupLocalService, infoItemFormProvider, objectDefinition,
-					_objectEntryService, _objectScopeProviderRegistry),
+					infoItemFormProvider, objectDefinition,
+					_objectEntryLocalService, _objectEntryManagerRegistry,
+					_objectScopeProviderRegistry),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -203,14 +266,25 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				InfoItemFieldValuesProvider.class,
 				new ObjectEntryInfoItemFieldValuesProvider(
-					_assetDisplayPageFriendlyURLProvider, _dlAppLocalService,
-					_dlFileEntryLocalService, _dlURLHelper,
-					_infoItemFieldReaderFieldSetProvider, _jsonFactory,
-					_listTypeEntryLocalService, objectDefinition,
+					_assetDisplayPageFriendlyURLProvider,
+					_displayPageInfoItemFieldSetProvider, _dlAppLocalService,
+					_dlURLHelper, _infoItemFieldReaderFieldSetProvider,
+					_jsonFactory, _objectActionLocalService, objectDefinition,
 					_objectDefinitionLocalService, _objectEntryLocalService,
 					_objectEntryManagerRegistry, _objectFieldLocalService,
 					_objectRelationshipLocalService,
+					_objectScopeProviderRegistry,
 					_templateInfoItemFieldSetProvider, _userLocalService),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
+				InfoItemFieldValuesUpdater.class,
+				new ObjectEntryInfoItemFieldValuesUpdater(
+					infoItemFormProvider, objectDefinition,
+					_objectEntryManagerRegistry, _objectScopeProviderRegistry),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -227,21 +301,29 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				).build()),
 			_bundleContext.registerService(
 				InfoItemObjectProvider.class,
-				new ObjectEntryInfoItemObjectProvider(_objectEntryLocalService),
+				new ObjectEntryInfoItemObjectProvider(
+					objectDefinition, _objectEntryLocalService,
+					_objectEntryManagerRegistry),
 				HashMapDictionaryBuilder.<String, Object>put(
 					Constants.SERVICE_RANKING, 100
 				).put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
 					"info.item.identifier",
-					"com.liferay.info.item.ClassPKInfoItemIdentifier"
+					new String[] {
+						"com.liferay.info.item.ClassPKInfoItemIdentifier",
+						"com.liferay.info.item.ERCInfoItemIdentifier"
+					}
 				).put(
 					"item.class.name", objectDefinition.getClassName()
 				).build()),
 			_bundleContext.registerService(
 				InfoItemPermissionProvider.class,
 				new ObjectEntryInfoItemPermissionProvider(
-					objectDefinition, _objectEntryService),
+					objectDefinition,
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()),
+					_objectEntryService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -250,11 +332,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				InfoItemRenderer.class,
 				new ObjectEntryRowInfoItemRenderer(
-					_assetDisplayPageFriendlyURLProvider, _dlAppService,
-					_dlFileEntryLocalService, _dlURLHelper,
-					_listTypeEntryLocalService, _objectDefinitionLocalService,
-					_objectEntryLocalService, _objectFieldLocalService,
-					_objectRelationshipLocalService, _portal, _servletContext),
+					_assetDisplayPageFriendlyURLProvider, objectDefinition,
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()),
+					_objectFieldLocalService, _objectScopeProviderRegistry,
+					_servletContext),
 				HashMapDictionaryBuilder.<String, Object>put(
 					Constants.SERVICE_RANKING, 100
 				).put(
@@ -265,9 +347,19 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					"osgi.web.symbolicname", "com.liferay.object.web"
 				).build()),
 			_bundleContext.registerService(
+				InfoItemScopeProvider.class,
+				new ObjectEntryInfoItemScopeProvider(
+					objectDefinition, _objectScopeProviderRegistry),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
+			_bundleContext.registerService(
 				InfoListRenderer.class,
 				new ObjectEntryTableInfoListRenderer(
-					_infoItemRendererRegistry, _objectFieldLocalService),
+					_infoItemRendererRegistry, objectDefinition,
+					_objectFieldLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -284,8 +376,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				ItemSelectorView.class,
 				new ObjectEntryItemSelectorView(
 					infoPermissionProvider, _itemSelectorViewDescriptorRenderer,
-					objectDefinition, _objectDefinitionLocalService,
-					_objectEntryLocalService,
+					objectDefinition,
 					_objectEntryManagerRegistry.getObjectEntryManager(
 						objectDefinition.getStorageType()),
 					_objectRelatedModelsProviderRegistry, _portal),
@@ -296,7 +387,10 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				LayoutDisplayPageProvider.class,
 				new ObjectEntryLayoutDisplayPageProvider(
 					objectDefinition, _objectDefinitionLocalService,
-					_objectEntryLocalService),
+					_objectEntryLocalService,
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()),
+					_userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"item.class.name", objectDefinition.getClassName()
 				).build()),
@@ -316,7 +410,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				).put(
 					"com.liferay.portlet.display-category",
 					() -> {
-						if (objectDefinition.isPortlet()) {
+						if (objectDefinition.isPortlet() &&
+							!objectDefinition.isRootDescendantNode()) {
+
 							return "category.object";
 						}
 
@@ -397,7 +493,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		serviceRegistrations.add(
 			_bundleContext.registerService(
-				PanelApp.class, new ObjectEntriesPanelApp(objectDefinition),
+				PanelApp.class,
+				new ObjectEntriesPanelApp(
+					objectDefinition,
+					() -> _portletLocalService.getPortletById(
+						objectDefinition.getPortletId())),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"panel.app.order:Integer",
 					objectDefinition.getPanelAppOrder()
@@ -437,8 +537,17 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	}
 
 	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	@Reference
 	private AttachmentUploadFileEntryHandler _attachmentUploadFileEntryHandler;
@@ -448,23 +557,25 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 	private BundleContext _bundleContext;
 
+	@Reference(
+		target = "(info.item.capability.key=" + DisplayPageInfoItemCapability.KEY + ")"
+	)
+	private InfoItemCapability _displayPageInfoItemCapability;
+
 	@Reference
-	private DisplayPageInfoItemCapability _displayPageInfoItemCapability;
+	private DisplayPageInfoItemFieldSetProvider
+		_displayPageInfoItemFieldSetProvider;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
-	private DLAppService _dlAppService;
-
-	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
-
-	@Reference
 	private DLURLHelper _dlURLHelper;
 
-	@Reference
-	private EditPageInfoItemCapability _editPageInfoItemCapability;
+	@Reference(
+		target = "(info.item.capability.key=" + EditPageInfoItemCapability.KEY + ")"
+	)
+	private InfoItemCapability _editPageInfoItemCapability;
 
 	@Reference
 	private FDSTableSchemaBuilderFactory _fdsTableSchemaBuilderFactory;
@@ -518,6 +629,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
+	private ObjectLayoutLocalService _objectLayoutLocalService;
+
+	@Reference
 	private ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
 
@@ -548,11 +662,13 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.object.web)")
 	private ServletContext _servletContext;
 
-	@Reference
-	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
+	@Reference(
+		target = "(info.item.capability.key=" + TemplateInfoItemCapability.KEY + ")"
+	)
+	private InfoItemCapability _templateInfoItemCapability;
 
 	@Reference
-	private TemplateInfoItemCapability _templatePageInfoItemCapability;
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 	@Reference
 	private UploadHandler _uploadHandler;

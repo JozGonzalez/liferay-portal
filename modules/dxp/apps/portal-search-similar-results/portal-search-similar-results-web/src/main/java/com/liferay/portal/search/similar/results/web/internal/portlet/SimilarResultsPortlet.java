@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.similar.results.web.internal.portlet;
@@ -45,11 +36,9 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
-import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -107,12 +96,10 @@ public class SimilarResultsPortlet extends MVCPortlet {
 		SimilarResultsDisplayContext similarResultsDisplayContext =
 			_createSimilarResultsDisplayContext(renderRequest);
 
-		Optional<PortletPreferences> portletPreferencesOptional =
-			portletSharedSearchResponse.getPortletPreferences(renderRequest);
-
 		SimilarResultsPortletPreferences similarResultsPortletPreferences =
 			new SimilarResultsPortletPreferencesImpl(
-				portletPreferencesOptional.orElse(null));
+				portletSharedSearchResponse.getPortletPreferences(
+					renderRequest));
 
 		SearchResponse searchResponse =
 			portletSharedSearchResponse.getFederatedSearchResponse(

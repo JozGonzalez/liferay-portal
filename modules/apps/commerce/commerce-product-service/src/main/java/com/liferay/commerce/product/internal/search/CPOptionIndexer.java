@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.internal.search;
@@ -70,14 +61,14 @@ public class CPOptionIndexer extends BaseIndexer<CPOption> {
 			SearchContext searchContext)
 		throws Exception {
 
-		addSearchLocalizedTerm(
-			searchQuery, searchContext, Field.DESCRIPTION, false);
-		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
 		addSearchTerm(searchQuery, searchContext, CPField.KEY, false);
 		addSearchTerm(
 			searchQuery, searchContext, CPField.OPTION_VALUE_NAME, false);
 		addSearchLocalizedTerm(
 			searchQuery, searchContext, CPField.OPTION_VALUE_NAME, false);
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, Field.DESCRIPTION, false);
+		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
 		addSearchTerm(searchQuery, searchContext, Field.NAME, false);
 		addSearchLocalizedTerm(searchQuery, searchContext, Field.NAME, false);
 		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
@@ -102,7 +93,7 @@ public class CPOptionIndexer extends BaseIndexer<CPOption> {
 	@Override
 	protected Document doGetDocument(CPOption cpOption) throws Exception {
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing option " + cpOption);
+			_log.debug("Indexing commerce product option " + cpOption);
 		}
 
 		Document document = getBaseModelDocument(CLASS_NAME, cpOption);
@@ -124,21 +115,21 @@ public class CPOptionIndexer extends BaseIndexer<CPOption> {
 			}
 
 			document.addText(
-				_localization.getLocalizedName(Field.NAME, languageId), name);
+				CPField.COMMERCE_OPTION_TYPE_KEY,
+				cpOption.getCommerceOptionTypeKey());
+			document.addText(CPField.KEY, cpOption.getKey());
+			document.addText(Field.CONTENT, name);
 			document.addText(
 				_localization.getLocalizedName(Field.DESCRIPTION, languageId),
 				description);
-
-			document.addText(CPField.KEY, cpOption.getKey());
-			document.addText(Field.CONTENT, name);
-
 			document.addText(
-				CPField.DDM_FORM_FIELD_TYPE_NAME,
-				cpOption.getDDMFormFieldTypeName());
+				_localization.getLocalizedName(Field.NAME, languageId), name);
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Document " + cpOption + " indexed successfully");
+			_log.debug(
+				"Commerce product option " + cpOption +
+					" indexed successfully");
 		}
 
 		return document;
@@ -190,7 +181,7 @@ public class CPOptionIndexer extends BaseIndexer<CPOption> {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index commerce product option " +
-								cpOption.getCPOptionId(),
+								cpOption,
 							portalException);
 					}
 				}

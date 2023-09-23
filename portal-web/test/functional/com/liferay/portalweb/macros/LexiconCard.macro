@@ -11,9 +11,11 @@ definition {
 	}
 
 	macro clickCard {
-		WaitForLiferayEvent.initializeLiferayEventLog();
+		if (IsElementNotPresent(locator1 = "//body[contains(@class,'dialog-iframe-popup')]")) {
+			WaitForLiferayEvent.initializeLiferayEventLog();
 
-		WaitForPageLoad();
+			WaitForPageLoad();
+		}
 
 		Click(
 			key_card = ${card},
@@ -41,9 +43,16 @@ definition {
 	}
 
 	macro clickEllipsisItem {
-		Click.waitForMenuToggleJSClick(
-			key_card = ${card},
-			locator1 = "Card#CARD_ELLIPSIS");
+		if (!(isSet(specificFormFragment))) {
+			Click.waitForMenuToggleJSClick(
+				key_card = ${card},
+				locator1 = "Card#CARD_ELLIPSIS");
+		}
+		else {
+			Click.waitForMenuToggleJSClick(
+				key_card = ${card},
+				locator1 = "Card#SPECIFIC_CARD_ELLIPSIS");
+		}
 
 		MenuItem.clickNoError(menuItem = ${item});
 	}
@@ -57,7 +66,12 @@ definition {
 	}
 
 	macro viewCardLabel {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
 		AssertTextEquals(
+			index = ${index},
 			key_card = ${card},
 			locator1 = "Card#CARD_LABEL",
 			value1 = ${cardLabel});
@@ -115,7 +129,7 @@ definition {
 			locator1 = "Card#CARD_ELLIPSIS");
 
 		AssertElementPresent(
-			key_menuItem = ${menuItem},
+			key_menuItem = ${item},
 			locator1 = "MenuItem#DISABLED_MENU_ITEM");
 	}
 

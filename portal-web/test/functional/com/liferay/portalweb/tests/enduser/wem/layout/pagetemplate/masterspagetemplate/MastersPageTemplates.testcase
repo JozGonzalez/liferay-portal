@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Master Page Templates";
@@ -27,9 +28,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -65,7 +66,7 @@ definition {
 
 			PageEditor.configureFragment(
 				size = "Large",
-				type = "Link");
+				style = "Link");
 
 			PageEditor.gotoStyle(fragmentName = "Button");
 
@@ -96,7 +97,7 @@ definition {
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
 				size = "lg",
-				type = "link");
+				style = "link");
 
 			AssertCssValue(
 				key_fragmentName = "button",
@@ -558,8 +559,6 @@ definition {
 		task ("View the Custom Masters Page Template is still selected") {
 			Navigator.gotoBack();
 
-			ContentPages.gotoPageEditor();
-
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			AssertElementPresent(
@@ -743,7 +742,7 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
@@ -791,7 +790,7 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
@@ -888,7 +887,7 @@ definition {
 		task ("Assert can change master from Blank to custom master") {
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
@@ -938,7 +937,7 @@ definition {
 
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
@@ -1375,13 +1374,11 @@ definition {
 		task ("Change master from Blank to custom master") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
-			Click.waitForMenuToggleJSClick(
-				key_pageName = "Test Page Name",
-				locator1 = "PagesAdmin#LIST_GROUP_ITEM_ELLIPSIS_ICON");
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
 
-			MenuItem.click(menuItem = "Configure");
-
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			Click(
 				ariaLabel = "Change Master",
@@ -1503,7 +1500,7 @@ definition {
 		}
 	}
 
-	@description = "This is for LPS-102200. Can edit master page template elements from  "Look and Feel" of page editor."
+	@description = "This is for LPS-102200. Can edit master page template elements from  "Basic Settings" of page editor."
 	@priority = 5
 	test EditMasterPageTemplateViaPageEditorLookAndFeel {
 		property portal.acceptance = "true";
@@ -1556,6 +1553,8 @@ definition {
 				scope = "Master");
 
 			MastersPageTemplates.propagateChange();
+
+			Navigator.gotoBack();
 
 			WebContentDisplayPortlet.viewMessage();
 		}
@@ -1957,17 +1956,13 @@ definition {
 
 		task ("When adding a web content with email and telephone") {
 			task ("Create a web content structure") {
-				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "site-name");
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
-				WebContentStructures.addCP(structureName = "Contact Information");
+				NavItem.gotoStructures();
 
-				for (var fieldFieldLabel : list "Name,Email,Phone,Personal Web") {
-					DataEngine.addField(
-						fieldFieldLabel = ${fieldFieldLabel},
-						fieldName = "Text");
-				}
-
-				WebContentStructures.saveCP();
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
 			}
 
 			task ("Create a Web Content from Contact Information") {

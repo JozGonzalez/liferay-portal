@@ -12,7 +12,11 @@
 		"name": "Test Expando Column 2"
 	},
 	{
-		"dataType": 15,
+		"dataType": 6,
+		"defaultValue": [
+			2.0,
+			2.5
+		],
 		"modelResource": "com.liferay.commerce.model.CommerceOrderItem",
 		"name": "Test Expando Column 3",
 		"properties": {
@@ -23,5 +27,14 @@
 			"visibleWithUpdatePermission": false,
 			"width": "0"
 		}
+	},
+	{
+		"dataType": 10,
+		"defaultValue": [
+			100,
+			200
+		],
+		"modelResource": "com.liferay.portal.kernel.model.User",
+		"name": "Test Expando Column 4"
 	}
 ]

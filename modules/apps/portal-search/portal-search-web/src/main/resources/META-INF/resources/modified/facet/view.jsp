@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,6 +15,7 @@ taglib uri="http://liferay.com/tld/ddm" prefix="liferay-ddm" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
@@ -72,20 +64,23 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 			displayStyleGroupId="<%= modifiedFacetDisplayContext.getDisplayStyleGroupId() %>"
 			entries="<%= modifiedFacetDisplayContext.getBucketDisplayContexts() %>"
 		>
-			<liferay-ui:panel-container
-				extended="<%= true %>"
-				id='<%= liferayPortletResponse.getNamespace() + "facetModifiedPanelContainer" %>'
-				markupView="lexicon"
-				persistState="<%= true %>"
-			>
-				<liferay-ui:panel
-					collapsible="<%= true %>"
-					cssClass="search-facet"
-					id='<%= liferayPortletResponse.getNamespace() + "facetModifiedPanel" %>'
-					markupView="lexicon"
-					persistState="<%= true %>"
-					title="last-modified"
+			<clay:panel-group>
+				<clay:panel
+					collapseClassNames="search-facet"
+					displayTitle='<%= LanguageUtil.get(request, "last-modified") %>'
+					expanded="<%= true %>"
 				>
+					<c:if test="<%= !modifiedFacetDisplayContext.isNothingSelected() %>">
+						<clay:button
+							cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+							displayType="link"
+							id='<%= liferayPortletResponse.getNamespace() + "facetModifiedClear" %>'
+							onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+						>
+							<strong><liferay-ui:message key="clear" /></strong>
+						</clay:button>
+					</c:if>
+
 					<ul class="list-unstyled modified">
 
 						<%
@@ -95,7 +90,14 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 							<li class="facet-value">
 								<a href="<%= HtmlUtil.escapeHREF(bucketDisplayContext.getFilterValue()) %>">
 									<span class="term-name <%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
-										<liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" />
+										<c:choose>
+											<c:when test="<%= bucketDisplayContext.isSelected() %>">
+												<strong><liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" /></strong>
+											</c:when>
+											<c:otherwise>
+												<liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" />
+											</c:otherwise>
+										</c:choose>
 									</span>
 
 									<c:if test="<%= bucketDisplayContext.isFrequencyVisible() %>">
@@ -112,7 +114,16 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 
 						<li class="facet-value">
 							<a href="<%= HtmlUtil.escapeHREF(customRangeBucketDisplayContext.getFilterValue()) %>" id="<portlet:namespace /><%= customRangeBucketDisplayContext.getBucketText() %>-toggleLink">
-								<span class="term-name <%= customRangeBucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>"><liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;</span>
+								<span class="term-name <%= customRangeBucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
+									<c:choose>
+										<c:when test="<%= customRangeBucketDisplayContext.isSelected() %>">
+											<strong><liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;</strong>
+										</c:when>
+										<c:otherwise>
+											<liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;
+										</c:otherwise>
+									</c:choose>
+								</span>
 
 								<c:if test="<%= customRangeBucketDisplayContext.isSelected() %>">
 									<small class="term-count">
@@ -162,37 +173,40 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								</aui:field-wrapper>
 							</clay:col>
 
-							<aui:button cssClass="modified-facet-custom-range-filter-button" disabled="<%= modifiedFacetCalendarDisplayContext.isRangeBackwards() %>" name="searchCustomRangeButton" value="search" />
+							<clay:button
+								cssClass="modified-facet-custom-range-filter-button"
+								disabled="<%= modifiedFacetCalendarDisplayContext.isRangeBackwards() %>"
+								displayType="secondary"
+								id='<%= liferayPortletResponse.getNamespace() + "searchCustomRangeButton" %>'
+								label="search"
+								name='<%= liferayPortletResponse.getNamespace() + "searchCustomRangeButton" %>'
+							/>
 						</li>
 					</ul>
 
-					<c:if test="<%= !modifiedFacetDisplayContext.isNothingSelected() %>">
-						<aui:button cssClass="btn-link btn-unstyled facet-clear-btn" onClick="Liferay.Search.FacetUtil.clearSelections(event);" value="clear" />
-					</c:if>
-				</liferay-ui:panel>
-			</liferay-ui:panel-container>
+					<aui:script use="liferay-search-modified-facet">
+						new Liferay.Search.ModifiedFacetFilter({
+							form: A.one('#<portlet:namespace />fm'),
+							fromInputDatePicker: Liferay.component(
+								'<portlet:namespace />fromInputDatePicker'
+							),
+							fromInputName: '<portlet:namespace />fromInput',
+							namespace: '<portlet:namespace />',
+							searchCustomRangeButton: A.one(
+								'#<portlet:namespace />searchCustomRangeButton'
+							),
+							toInputDatePicker: Liferay.component(
+								'<portlet:namespace />toInputDatePicker'
+							),
+							toInputName: '<portlet:namespace />toInput',
+						});
+
+						Liferay.Search.FacetUtil.enableInputs(
+							document.querySelectorAll('#<portlet:namespace />fm .facet-term')
+						);
+					</aui:script>
+				</clay:panel>
+			</clay:panel-group>
 		</liferay-ddm:template-renderer>
 	</aui:form>
-
-	<aui:script use="liferay-search-modified-facet">
-		new Liferay.Search.ModifiedFacetFilter({
-			form: A.one('#<portlet:namespace />fm'),
-			fromInputDatePicker: Liferay.component(
-				'<portlet:namespace />fromInputDatePicker'
-			),
-			fromInputName: '<portlet:namespace />fromInput',
-			namespace: '<portlet:namespace />',
-			searchCustomRangeButton: A.one(
-				'#<portlet:namespace />searchCustomRangeButton'
-			),
-			toInputDatePicker: Liferay.component(
-				'<portlet:namespace />toInputDatePicker'
-			),
-			toInputName: '<portlet:namespace />toInput',
-		});
-
-		Liferay.Search.FacetUtil.enableInputs(
-			document.querySelectorAll('#<portlet:namespace />fm .facet-term')
-		);
-	</aui:script>
 </c:if>

@@ -27,7 +27,7 @@
 </tr>
 <tr>
 	<td>EXECUTION_NOTIFICATION</td>
-	<td>//h4/a/h2[@class = 'title' and contains(text(),'${key_title}')]/parent::a/div[@class = 'body' and contains(text(),'${key_body}')]</td>
+	<td>//a/h2[@class = 'title' and contains(text(),'${key_title}')]/parent::a/div[@class = 'body' and contains(text(),'${key_body}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -46,6 +46,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IMPORT_MAPPING_HEADER</td>
+	<td>//div[contains(@class,'import-mapping-table')]//*[contains(.,'Import Mappings')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>IMPORT_MAPPING_SELECT</td>
 	<td>//div[contains(@class,'import-mapping-table')]//select[contains(@id,'input-field-${key_destinationField}')]</td>
 	<td></td>
@@ -61,6 +66,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>UPDATE_STRATEGY</td>
+	<td>//div[not(contains(@class,'hide'))]/div[label[contains(.,'Update Strategy')]]/select[not(@disabled)]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>OPTIONAL_IMPORT_FIELD</td>
 	<td>//select[contains(@aria-required,'false')][contains(@id,'${key_destinationField}')]</td>
 	<td></td>
@@ -68,6 +78,11 @@
 <tr>
 	<td>PREVIEW_ENTRY</td>
 	<td>//div[@class="modal-content"]//tr/td[contains(.,'${key_entryName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PREVIEW_ENTRY_CONTENT_FIELDS</td>
+	<td>//div[@class='lfr-form-content']//*[text()='${key_contentName}']</td>
 	<td></td>
 </tr>
 <tr>

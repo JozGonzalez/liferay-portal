@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.rest.internal.graphql.servlet.v1_0;
@@ -17,7 +8,9 @@ package com.liferay.portal.search.rest.internal.graphql.servlet.v1_0;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.search.rest.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.portal.search.rest.internal.graphql.query.v1_0.Query;
+import com.liferay.portal.search.rest.internal.resource.v1_0.SearchResultResourceImpl;
 import com.liferay.portal.search.rest.internal.resource.v1_0.SuggestionResourceImpl;
+import com.liferay.portal.search.rest.resource.v1_0.SearchResultResource;
 import com.liferay.portal.search.rest.resource.v1_0.SuggestionResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
@@ -43,6 +36,8 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
+		Mutation.setSearchResultResourceComponentServiceObjects(
+			_searchResultResourceComponentServiceObjects);
 		Mutation.setSuggestionResourceComponentServiceObjects(
 			_suggestionResourceComponentServiceObjects);
 	}
@@ -82,12 +77,20 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createSearchPage",
+						new ObjectValuePair<>(
+							SearchResultResourceImpl.class, "postSearchPage"));
+					put(
 						"mutation#createSuggestionsPage",
 						new ObjectValuePair<>(
 							SuggestionResourceImpl.class,
 							"postSuggestionsPage"));
 				}
 			};
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<SearchResultResource>
+		_searchResultResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<SuggestionResource>

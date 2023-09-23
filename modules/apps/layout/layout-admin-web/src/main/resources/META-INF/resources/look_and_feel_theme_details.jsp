@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -65,7 +56,8 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 		sm="5"
 	>
 		<clay:image-card
-			imageAlt='<%= Validator.isNotNull(selTheme.getName()) ? HtmlUtil.escapeAttribute(selTheme.getName()) : "" %>'
+			cssClass="c-mb-0"
+			imageAlt=""
 			imageSrc='<%= themeDisplay.getCDNBaseURL() + HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) + HtmlUtil.escapeAttribute(selTheme.getImagesPath()) + "/thumbnail.png" %>'
 			subtitle='<%= ((selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getAuthor())) ? HtmlUtil.escape(selPluginPackage.getAuthor()) : "" %>'
 			title='<%= Validator.isNotNull(selTheme.getName()) ? HtmlUtil.escapeAttribute(selTheme.getName()) : "" %>'
@@ -73,7 +65,7 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 	</clay:col>
 
 	<clay:col
-		cssClass="pl-4 pt-3"
+		cssClass="c-pl-4 c-pt-3"
 		size="6"
 		sm="7"
 	>
@@ -117,20 +109,7 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 
 				<c:choose>
 					<c:when test='<%= type.equals("checkbox") %>'>
-						<div>
-							<react:component
-								module="js/layout/look_and_feel/SelectCustomThemeSettings"
-								props='<%=
-									HashMapBuilder.<String, Object>put(
-										"label", HtmlUtil.escape(name)
-									).put(
-										"propertyName", propertyName
-									).put(
-										"value", value
-									).build()
-								%>'
-							/>
-						</div>
+						<aui:input disabled="<%= layoutsAdminDisplayContext.isReadOnly() %>" label="<%= HtmlUtil.escape(name) %>" labelCssClass="font-weight-normal" name="<%= propertyName %>" type="checkbox" value="<%= value %>" wrapperCssClass="c-mb-3" />
 					</c:when>
 					<c:when test='<%= type.equals("text") || type.equals("textarea") %>'>
 						<aui:input label="<%= HtmlUtil.escape(name) %>" name="<%= propertyName %>" type="<%= type %>" value="<%= value %>" />
@@ -165,15 +144,11 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 		</c:if>
 
 		<clay:button
+			disabled="<%= layoutsAdminDisplayContext.isReadOnly() %>"
 			displayType="secondary"
 			id='<%= liferayPortletResponse.getNamespace() + "changeTheme" %>'
-			label='<%= LanguageUtil.get(request, "change-current-theme") %>'
+			label="change-current-theme"
 		/>
-
-		<portlet:renderURL var="selectThemeURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcPath" value="/select_theme.jsp" />
-			<portlet:param name="redirect" value="<%= currentURL %>" />
-		</portlet:renderURL>
 
 		<portlet:renderURL copyCurrentRenderParameters="<%= true %>" var="lookAndFeelDetailURL" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>">
 			<portlet:param name="mvcPath" value="/look_and_feel_theme_details.jsp" />
@@ -188,7 +163,7 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 				).put(
 					"lookAndFeelDetailURL", lookAndFeelDetailURL
 				).put(
-					"selectThemeURL", selectThemeURL
+					"selectThemeURL", layoutsAdminDisplayContext.getSelectThemeURL()
 				).put(
 					"themeContainerId", liferayPortletResponse.getNamespace() + "currentThemeContainer"
 				).build()
@@ -232,7 +207,7 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 							<img alt="" class="aspect-ratio-item-flush" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(curColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" />
 						</div>
 
-						<div class="card-body p-2">
+						<div class="c-p-2 card-body">
 							<div class="card-row">
 								<div class="card-title text-truncate">
 									<%= HtmlUtil.escapeAttribute(curColorScheme.getName()) %>

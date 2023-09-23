@@ -1,23 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.configuration.settings.internal.util;
 
 import aQute.bnd.annotation.metatype.Meta;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  * @author Iván Zaera
@@ -25,32 +13,15 @@ import java.lang.reflect.Method;
 public class ConfigurationPidUtil {
 
 	public static String getConfigurationPid(Class<?> configurationBeanClass) {
-		for (Annotation annotation : configurationBeanClass.getAnnotations()) {
-			Class<? extends Annotation> clazz = annotation.annotationType();
+		Meta.OCD ocd = configurationBeanClass.getAnnotation(Meta.OCD.class);
 
-			String name = clazz.getName();
-
-			if (name.equals(Meta.OCD.class.getName())) {
-				try {
-					Method method = clazz.getMethod("id");
-
-					method.setAccessible(true);
-
-					return (String)method.invoke(annotation);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new IllegalArgumentException(
-						"Unable to obtain configuration PID",
-						reflectiveOperationException);
-				}
-			}
+		if (ocd == null) {
+			throw new IllegalArgumentException(
+				"Invalid configuration bean class: " +
+					configurationBeanClass.getName());
 		}
 
-		throw new IllegalArgumentException(
-			"Invalid configuration bean class: " +
-				configurationBeanClass.getName());
+		return ocd.id();
 	}
 
 }

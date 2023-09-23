@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Rest from '../../core/Rest';
@@ -21,7 +12,7 @@ import {Liferay} from '../liferay';
 import {liferayMessageBoardImpl} from './LiferayMessageBoard';
 import {testrayCaseResultsIssuesImpl} from './TestrayCaseresultsIssues';
 import {testrayIssueImpl} from './TestrayIssues';
-import {TestrayCaseResult} from './types';
+import {CaseResultAggregation, TestrayCaseResult} from './types';
 
 type CaseResultForm = typeof yupSchema.caseResult.__outputType;
 
@@ -57,6 +48,7 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 				'case.caseType,component.team.name,team,build.productVersion,build.routine,run,user,caseResultToCaseResultsIssues',
 			transformData: (caseResult) => ({
 				...caseResult,
+				...this.normalizeCaseResultAggregation(caseResult),
 				build: caseResult?.r_buildToCaseResult_c_build
 					? {
 							...caseResult?.r_buildToCaseResult_c_build,
@@ -108,6 +100,34 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 			}),
 			uri: 'caseresults',
 		});
+	}
+
+	public normalizeCaseResultAggregation(
+		caseResultAggregation: CaseResultAggregation
+	): CaseResultAggregation {
+		return {
+			caseResultBlocked: Number(
+				caseResultAggregation.caseResultBlocked ?? 0
+			),
+			caseResultFailed: Number(
+				caseResultAggregation.caseResultFailed ?? 0
+			),
+			caseResultInProgress: Number(
+				caseResultAggregation.caseResultInProgress ?? 0
+			),
+			caseResultIncomplete: Number(
+				caseResultAggregation.caseResultIncomplete ?? 0
+			),
+			caseResultPassed: Number(
+				caseResultAggregation.caseResultPassed ?? 0
+			),
+			caseResultTestFix: Number(
+				caseResultAggregation.caseResultTestFix ?? 0
+			),
+			caseResultUntested: Number(
+				caseResultAggregation.caseResultUntested ?? 0
+			),
+		};
 	}
 
 	public assignTo(caseResult: TestrayCaseResult, userId: number) {

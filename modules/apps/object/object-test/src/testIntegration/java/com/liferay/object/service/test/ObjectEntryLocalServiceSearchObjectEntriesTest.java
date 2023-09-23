@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -17,7 +8,9 @@ package com.liferay.object.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.ObjectFieldBuilder;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -52,7 +45,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -78,10 +70,11 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 
 	@Test
 	public void testAttachment() throws Exception {
-		ObjectFieldBuilder objectFieldBuilder = new ObjectFieldBuilder();
+		ObjectFieldBuilder attachmentObjectFieldBuilder =
+			new AttachmentObjectFieldBuilder();
 
 		_testAttachment(
-			objectFieldBuilder.businessType(
+			attachmentObjectFieldBuilder.businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT
 			).dbType(
 				ObjectFieldConstants.DB_TYPE_LONG
@@ -98,11 +91,11 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 					_createObjectFieldSetting("maximumFileSize", "100"))
 			).build());
 		_testAttachment(
-			objectFieldBuilder.indexedAsKeyword(
+			attachmentObjectFieldBuilder.indexedAsKeyword(
 				true
 			).build());
 		_testAttachment(
-			objectFieldBuilder.indexed(
+			attachmentObjectFieldBuilder.indexed(
 				false
 			).build());
 	}
@@ -521,11 +514,13 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 		throws Exception {
 
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
-			_objectDefinitionLocalService, Arrays.asList(objectField));
+			false, _objectDefinitionLocalService, Arrays.asList(objectField));
 
 		_objectDefinition.setTitleObjectFieldId(_getTitleObjectFieldId());
 
-		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
 
 		_objectDefinition =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -563,13 +558,21 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 	}
 
 	private long _getTitleObjectFieldId() throws Exception {
-		ObjectField objectField = _objectFieldLocalService.addCustomObjectField(
-			null, TestPropsValues.getUserId(), 0,
-			_objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, true, true, null,
-			LocalizedMapUtil.getLocalizedMap("Beta"), "beta", false, false,
-			Collections.emptyList());
+		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).indexed(
+				true
+			).indexedAsKeyword(
+				true
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap("Beta")
+			).name(
+				"beta"
+			).objectDefinitionId(
+				_objectDefinition.getObjectDefinitionId()
+			).build());
 
 		return objectField.getObjectFieldId();
 	}

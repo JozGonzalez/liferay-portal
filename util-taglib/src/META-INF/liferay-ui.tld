@@ -12,16 +12,7 @@
 	<short-name>liferay-ui</short-name>
 	<uri>http://liferay.com/tld/ui</uri>
 	<tag>
-		<name>drop-here-info</name>
-		<tag-class>com.liferay.taglib.ui.DropHereInfoTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>message</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-frontend:logo-selector</code>]]> tag.</description>
 		<name>empty-result-message</name>
 		<tag-class>com.liferay.taglib.ui.EmptyResultMessageTag</tag-class>
 		<body-content>JSP</body-content>
@@ -700,7 +691,7 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description>Whether to disable the namespace for the component. The default value is <![CDATA[<code>false</code>]]>.</description>
+			<description>Deprecated as of 7.4.0, replaced by the attribute <![CDATA[<code>useNamespace</code>]]>.</description>
 			<name>disableNamespace</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -774,6 +765,13 @@
 			<name>showDisableCheckbox</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to use a namespace in the tag. The default value is <![CDATA[<code>true</code>]]>.</description>
+			<name>useNamespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 		<attribute>
 			<description>A variable name to refer to the year of the component.</description>
@@ -1317,18 +1315,6 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a component allowing users to make an event repeat over a given interval.</description>
-		<name>input-repeat</name>
-		<tag-class>com.liferay.taglib.ui.InputRepeatTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<description>A CSS class for styling the component.</description>
-			<name>cssClass</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
 		<description>Creates an input field for selecting resources such as folders.</description>
 		<name>input-resource</name>
 		<tag-class>com.liferay.taglib.ui.InputResourceTag</tag-class>
@@ -1490,7 +1476,7 @@
 			<type>int</type>
 		</attribute>
 		<attribute>
-			<description>A minute interval displayed in the input. The default value is <![CDATA[<code>30</code>]]>.</description>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>minuteInterval</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1520,6 +1506,13 @@
 			<name>timeFormat</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to use a namespace in the tag. The default value is <![CDATA[<code>true</code>]]>.</description>
+			<name>useNamespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 	</tag>
 	<tag>
@@ -1634,31 +1627,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<name>layout-common</name>
-		<tag-class>com.liferay.taglib.ui.LayoutCommonTag</tag-class>
-		<body-content>JSP</body-content>
-	</tag>
-	<tag>
-		<name>layout-templates-list</name>
-		<tag-class>com.liferay.taglib.ui.LayoutTemplatesListTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>layoutTemplateId</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>layoutTemplateIdPrefix</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>layoutTemplates</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-frontend:logo-selector</code>]]> tag.</description>
 		<name>logo-selector</name>
 		<tag-class>com.liferay.taglib.ui.LogoSelectorTag</tag-class>
 		<body-content>JSP</body-content>
@@ -1721,11 +1690,6 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
-	</tag>
-	<tag>
-		<name>membership-policy-error</name>
-		<tag-class>com.liferay.taglib.ui.MembershipPolicyErrorTag</tag-class>
-		<body-content>JSP</body-content>
 	</tag>
 	<tag>
 		<name>menu</name>
@@ -1899,7 +1863,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a collapsible panel for housing content.</description>
+		<description>Creates a collapsible panel for housing content. Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:panel</code>]]> tag.</description>
 		<name>panel</name>
 		<tag-class>com.liferay.taglib.ui.PanelTag</tag-class>
 		<body-content>JSP</body-content>
@@ -1980,7 +1944,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a collapsible container to house <![CDATA[<code>liferay-ui:panel</code>]]> components.</description>
+		<description>Creates a collapsible container to house <![CDATA[<code>liferay-ui:panel</code>]]> components. Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:panel-group</code>]]> tag.</description>
 		<name>panel-container</name>
 		<tag-class>com.liferay.taglib.ui.PanelContainerTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3179,6 +3143,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-display</code>]]> tag.</description>
 		<name>user-display</name>
 		<tag-class>com.liferay.taglib.ui.UserDisplayTag</tag-class>
 		<tei-class>com.liferay.taglib.ui.UserDisplayTei</tei-class>
@@ -3241,6 +3206,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-name-fields</code>]]> tag.</description>
 		<name>user-name-fields</name>
 		<tag-class>com.liferay.taglib.ui.UserNameFieldsTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3261,6 +3227,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-portrait</code>]]> tag.</description>
 		<name>user-portrait</name>
 		<tag-class>com.liferay.taglib.ui.UserPortraitTag</tag-class>
 		<body-content>JSP</body-content>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.dynamic.data.mapping.form.field.type.internal.object.relationship;
@@ -28,8 +19,8 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -54,10 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "ddm.form.field.type.name=" + ObjectDDMFormFieldTypeConstants.OBJECT_RELATIONSHIP,
-	service = {
-		DDMFormFieldTemplateContextContributor.class,
-		ObjectRelationshipDDMFormFieldTemplateContextContributor.class
-	}
+	service = DDMFormFieldTemplateContextContributor.class
 )
 public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	implements DDMFormFieldTemplateContextContributor {
@@ -80,6 +68,8 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 			"objectEntryId",
 			GetterUtil.getLong(
 				ddmFormFieldRenderingContext.getProperty("objectEntryId"))
+		).put(
+			"objectFieldBusinessType", _getObjectFieldBusinessType(ddmFormField)
 		).put(
 			"parameterObjectFieldName",
 			GetterUtil.getString(
@@ -197,27 +187,20 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 			return labelKey;
 		}
 
-		ObjectDefinition objectDefinition = _getObjectDefinition(ddmFormField);
+		ObjectField objectField = _getObjectField(ddmFormField);
 
-		if ((objectDefinition != null) &&
-			(objectDefinition.getTitleObjectFieldId() > 0)) {
-
-			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
-				objectDefinition.getTitleObjectFieldId());
-
-			if (objectField != null) {
-				String objectFieldName = objectField.getName();
-
-				objectFieldName = StringUtil.replace(
-					objectFieldName, "createDate", "dateCreated");
-				objectFieldName = StringUtil.replace(
-					objectFieldName, "modifiedDate", "dateModified");
-
-				return objectFieldName;
-			}
+		if (objectField == null) {
+			return "id";
 		}
 
-		return "id";
+		String objectFieldName = objectField.getName();
+
+		objectFieldName = StringUtil.replace(
+			objectFieldName, "createDate", "dateCreated");
+		objectFieldName = StringUtil.replace(
+			objectFieldName, "modifiedDate", "dateModified");
+
+		return objectFieldName;
 	}
 
 	private ObjectDefinition _getObjectDefinition(DDMFormField ddmFormField) {
@@ -228,18 +211,41 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 						ddmFormField.getProperty("objectDefinitionId")))));
 	}
 
+	private ObjectField _getObjectField(DDMFormField ddmFormField) {
+		ObjectDefinition objectDefinition = _getObjectDefinition(ddmFormField);
+
+		if ((objectDefinition != null) &&
+			(objectDefinition.getTitleObjectFieldId() > 0)) {
+
+			return _objectFieldLocalService.fetchObjectField(
+				objectDefinition.getTitleObjectFieldId());
+		}
+
+		return null;
+	}
+
+	private String _getObjectFieldBusinessType(DDMFormField ddmFormField) {
+		ObjectField objectField = _getObjectField(ddmFormField);
+
+		if (objectField == null) {
+			return null;
+		}
+
+		return objectField.getBusinessType();
+	}
+
 	private String _getValueKey(DDMFormField ddmFormField) {
 		ObjectDefinition objectDefinition = _getObjectDefinition(ddmFormField);
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
-		if (systemObjectDefinitionMetadata == null) {
+		if (systemObjectDefinitionManager == null) {
 			return "id";
 		}
 
-		return systemObjectDefinitionMetadata.getRESTDTOIdPropertyName();
+		return systemObjectDefinitionManager.getRESTDTOIdPropertyName();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -264,7 +270,7 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	private RESTContextPathResolverRegistry _restContextPathResolverRegistry;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

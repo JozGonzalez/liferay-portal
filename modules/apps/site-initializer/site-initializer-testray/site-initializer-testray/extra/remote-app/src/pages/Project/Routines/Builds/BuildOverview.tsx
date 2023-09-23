@@ -1,24 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayChart from '@clayui/charts';
 import {useRef} from 'react';
+import Form from '~/components/Form';
+import {useCaseResultsChart} from '~/hooks/useCaseResultsChart';
 
 import JiraLink from '../../../../components/JiraLink';
 import Container from '../../../../components/Layout/Container';
 import QATable from '../../../../components/Table/QATable';
-import useCaseResultGroupBy from '../../../../hooks/data/useCaseResultGroupBy';
+import {useTotalTestCases} from '../../../../hooks/data/useCaseResultGroupBy';
 import useIssuesFound from '../../../../hooks/data/useIssuesFound';
 import i18n from '../../../../i18n';
 import {TestrayBuild, TestrayTask} from '../../../../services/rest';
@@ -32,8 +25,14 @@ type BuildOverviewProps = {
 };
 
 const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
-	const totalTestCasesGroup = useCaseResultGroupBy(testrayBuild.id);
+	const totalTestCasesGroup = useTotalTestCases(testrayBuild);
+
+	const {chart, chartSelectData, setEntity} = useCaseResultsChart({
+		buildId: testrayBuild.id,
+	});
+
 	const issues = useIssuesFound({buildId: testrayBuild.id});
+
 	const ref = useRef<any>();
 
 	const [testrayTask] = testrayBuild?.tasks as TestrayTask[];
@@ -110,51 +109,62 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 				collapsable
 				title={i18n.translate('total-test-cases')}
 			>
-				<div className="row">
-					{totalTestCasesGroup.ready && (
-						<div className="col-2">
-							<ClayChart
-								data={{
-									colors: totalTestCasesGroup.colors,
-									columns: totalTestCasesGroup.donut.columns,
-									type: 'donut',
-								}}
-								donut={{
-									expand: false,
-									label: {
-										show: false,
-									},
-									legend: {
-										show: false,
-									},
-									title: totalTestCasesGroup.donut.total.toString(),
-									width: 15,
-								}}
-								legend={{show: false}}
-								onafterinit={() => {
-									getDonutLegend(ref.current, {
-										data: totalTestCasesGroup.donut.columns.map(
-											([name]) => name
-										),
-										elementId:
-											'testrayTotalMetricsGraphLegend',
-										total: totalTestCasesGroup.donut
-											.total as number,
-									});
-								}}
-								ref={ref}
-								size={{
-									height: 200,
-								}}
-							/>
-						</div>
-					)}
+				<div className="d-flex justify-content-between row">
+					<div className="align-items-center col-4 d-flex">
+						{totalTestCasesGroup.ready && (
+							<div className="col-8">
+								<ClayChart
+									data={{
+										colors: totalTestCasesGroup.colors,
+										columns:
+											totalTestCasesGroup.donut.columns,
+										type: 'donut',
+									}}
+									donut={{
+										expand: false,
+										label: {
+											show: false,
+										},
+										legend: {
+											show: false,
+										},
+										title: totalTestCasesGroup.donut.total.toString(),
+										width: 15,
+									}}
+									legend={{show: false}}
+									onafterinit={() => {
+										getDonutLegend(ref.current, {
+											data: totalTestCasesGroup.donut.columns.map(
+												([name]) => name
+											),
+											elementId:
+												'testrayTotalMetricsGraphLegend',
+											total: totalTestCasesGroup.donut
+												.total as number,
+										});
+									}}
+									ref={ref}
+									size={{
+										height: 200,
+									}}
+								/>
+							</div>
+						)}
 
-					<div className="col-2">
-						<div id="testrayTotalMetricsGraphLegend" />
+						<div className="col-">
+							<div id="testrayTotalMetricsGraphLegend" />
+						</div>
 					</div>
 
 					<div className="col-8">
+						<Form.Select
+							className="col-2 ml-6"
+							defaultOption={false}
+							name="priority"
+							onChange={({target: {value}}) => setEntity(value)}
+							options={chartSelectData}
+						/>
+
 						<ClayChart
 							axis={{
 								y: {
@@ -172,9 +182,9 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 								},
 							}}
 							data={{
-								colors: totalTestCasesGroup.colors,
-								columns: totalTestCasesGroup.donut.columns,
-								groups: [totalTestCasesGroup.statuses],
+								colors: chart.colors,
+								columns: chart.columns,
+								groups: [chart.statuses],
 								type: 'bar',
 							}}
 							legend={{

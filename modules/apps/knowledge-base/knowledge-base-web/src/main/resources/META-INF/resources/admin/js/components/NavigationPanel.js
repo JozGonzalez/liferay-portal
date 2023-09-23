@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {TreeView as ClayTreeView} from '@clayui/core';
@@ -19,83 +10,32 @@ import {fetch, navigate, objectToFormData, openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useMemo, useState} from 'react';
 
-import normalizeDropdownItems from '../utils/normalizeDropdownItems';
+import getSearchItems from '../utils/getSearchItems';
+import normalizeItems from '../utils/normalizeItems';
+import showSuccessMessage from '../utils/showSuccessMessage';
 import ActionsDropdown from './ActionsDropdown';
 import SearchField from './SearchField';
 
 const ITEM_TYPES_SYMBOL = {
-	article: 'document-text',
-	folder: 'folder',
+	KBArticle: 'document-text',
+	KBFolder: 'folder',
 };
 
 const ITEM_TYPES = {
-	article: 'article',
-	folder: 'folder',
+	KBArticle: 'article',
+	KBFolder: 'folder',
 };
 
-const showSuccessMessage = (portletNamespace) => {
-	const openToastSuccessProps = {
-		message: Liferay.Language.get('your-request-completed-successfully'),
-		type: 'success',
-	};
-
-	const reloadButtonLabel = Liferay.Language.get('reload');
-	const reloadButtonClassName = 'knowledge-base-reload-button';
-
-	openToastSuccessProps.message =
-		openToastSuccessProps.message +
-		`<div class="alert-footer">
-				<div class="btn-group" role="group">
-					<button class="btn btn-sm btn-primary alert-btn ${reloadButtonClassName}">${reloadButtonLabel}</button>
-				</div>
-		</div>`;
-
-	openToastSuccessProps.onClick = ({event, onClose: closeToast}) => {
-		if (event.target.classList.contains(reloadButtonClassName)) {
-			Liferay.Portlet.refresh(`#p_p_id${portletNamespace}`);
-			closeToast();
-		}
-	};
-
-	openToast(openToastSuccessProps);
-};
-
-const normalizeItems = (items) => {
-	if (items) {
-		return items.map((item) => {
-			return {
-				...item,
-				actions: normalizeDropdownItems(item.actions),
-				children: normalizeItems(item.children),
-			};
-		});
-	}
-};
-
-const getSearchItems = (items) => {
-	return items.reduce(function reducer(acc, item) {
-		acc.push({
-			href: item.href,
-			id: item.id,
-			name: item.name,
-			type: item.type,
-		});
-
-		if (item.children) {
-			item.children.reduce(reducer, acc);
-		}
-
-		return acc;
-	}, []);
-};
 export default function NavigationPanel({
 	items: initialItems,
 	moveKBObjectURL,
 	portletNamespace,
 	selectedItemId,
 }) {
-	const items = useMemo(() => normalizeItems(initialItems), [initialItems]);
-
+	const items = useMemo(
+		() => normalizeItems(initialItems, portletNamespace),
+		[initialItems, portletNamespace]
+	);
 	const searchItems = useMemo(() => getSearchItems(initialItems), [
 		initialItems,
 	]);
@@ -206,6 +146,7 @@ export default function NavigationPanel({
 									})}
 								>
 									<ClayIcon
+										aria-label={item.name}
 										symbol={ITEM_TYPES_SYMBOL[item.type]}
 									/>
 
@@ -227,6 +168,7 @@ export default function NavigationPanel({
 												}}
 											>
 												<ClayIcon
+													aria-label={item.name}
 													symbol={
 														ITEM_TYPES_SYMBOL[
 															item.type

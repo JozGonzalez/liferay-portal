@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.web.internal.type.deployer;
@@ -18,25 +9,27 @@ import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.CustomElementCET;
 import com.liferay.client.extension.type.IFrameCET;
+import com.liferay.client.extension.type.JSImportMapsEntryCET;
 import com.liferay.client.extension.type.deployer.CETDeployer;
-import com.liferay.client.extension.web.internal.portlet.ClientExtensionEntryFriendlyURLMapper;
-import com.liferay.client.extension.web.internal.portlet.ClientExtensionEntryPortlet;
-import com.liferay.client.extension.web.internal.portlet.action.ClientExtensionEntryConfigurationAction;
+import com.liferay.client.extension.web.internal.frontend.js.importmaps.extender.ClientExtensionJSImportMapsContributor;
+import com.liferay.client.extension.web.internal.portlet.CETPortletFriendlyURLMapper;
+import com.liferay.client.extension.web.internal.portlet.CustomElementCETPortlet;
+import com.liferay.client.extension.web.internal.portlet.IFrameCETPortlet;
+import com.liferay.client.extension.web.internal.portlet.action.CETPortletConfigurationAction;
 import com.liferay.client.extension.web.internal.util.CETUtil;
+import com.liferay.frontend.js.importmaps.extender.JSImportMapsContributor;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,65 +49,106 @@ public class CETDeployerImpl implements CETDeployer {
 
 	@Override
 	public List<ServiceRegistration<?>> deploy(CET cet) {
-		if (!Objects.equals(
-				cet.getType(),
-				ClientExtensionEntryConstants.TYPE_CUSTOM_ELEMENT) &&
-			!Objects.equals(
-				cet.getType(), ClientExtensionEntryConstants.TYPE_IFRAME)) {
-
-			return Collections.emptyList();
-		}
-
-		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
-
-		serviceRegistrations.add(_registerConfigurationAction(cet));
-
-		CustomElementCET customElementCET = null;
-		String friendlyURLMapping = null;
-		IFrameCET iFrameCET = null;
-		boolean instanceable = false;
-		String portletCategoryName = null;
-
 		if (Objects.equals(
 				cet.getType(),
 				ClientExtensionEntryConstants.TYPE_CUSTOM_ELEMENT)) {
 
-			customElementCET = (CustomElementCET)cet;
-
-			friendlyURLMapping = customElementCET.getFriendlyURLMapping();
-			instanceable = customElementCET.isInstanceable();
-			portletCategoryName = customElementCET.getPortletCategoryName();
+			return _deploy((CustomElementCET)cet);
 		}
 		else if (Objects.equals(
 					cet.getType(), ClientExtensionEntryConstants.TYPE_IFRAME)) {
 
-			iFrameCET = (IFrameCET)cet;
+			return _deploy((IFrameCET)cet);
+		}
+		else if (Objects.equals(
+					cet.getType(),
+					ClientExtensionEntryConstants.TYPE_JS_IMPORT_MAPS_ENTRY)) {
 
-			friendlyURLMapping = iFrameCET.getFriendlyURLMapping();
-			instanceable = iFrameCET.isInstanceable();
-			portletCategoryName = iFrameCET.getPortletCategoryName();
+			return _deploy((JSImportMapsEntryCET)cet);
 		}
 
-		if (Validator.isNull(portletCategoryName)) {
-			portletCategoryName = "category.client-extensions";
-		}
-
-		if (!instanceable && Validator.isNotNull(friendlyURLMapping)) {
-			serviceRegistrations.add(
-				_registerFriendlyURLMapper(cet, friendlyURLMapping));
-		}
-
-		serviceRegistrations.add(
-			_registerPortlet(
-				cet, customElementCET, iFrameCET, instanceable,
-				portletCategoryName));
-
-		return serviceRegistrations;
+		return Collections.emptyList();
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
+	}
+
+	private List<ServiceRegistration<?>> _deploy(
+		CustomElementCET customElementCET) {
+
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
+
+		String portletId = _getPortletId(customElementCET);
+
+		serviceRegistrations.add(
+			_register(
+				ConfigurationAction.class,
+				new CETPortletConfigurationAction(
+					"/entry/configuration.jsp", portletId)));
+
+		String friendlyURLMapping = customElementCET.getFriendlyURLMapping();
+
+		if (!customElementCET.isInstanceable() &&
+			Validator.isNotNull(friendlyURLMapping)) {
+
+			serviceRegistrations.add(
+				_register(
+					FriendlyURLMapper.class,
+					new CETPortletFriendlyURLMapper(
+						friendlyURLMapping, portletId)));
+		}
+
+		serviceRegistrations.add(
+			_register(
+				Portlet.class,
+				new CustomElementCETPortlet(
+					customElementCET, _npmResolver, portletId)));
+
+		return serviceRegistrations;
+	}
+
+	private List<ServiceRegistration<?>> _deploy(IFrameCET iFrameCET) {
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
+
+		String portletId = _getPortletId(iFrameCET);
+
+		serviceRegistrations.add(
+			_register(
+				ConfigurationAction.class,
+				new CETPortletConfigurationAction(
+					"/entry/configuration.jsp", portletId)));
+
+		String friendlyURLMapping = iFrameCET.getFriendlyURLMapping();
+
+		if (!iFrameCET.isInstanceable() &&
+			Validator.isNotNull(friendlyURLMapping)) {
+
+			serviceRegistrations.add(
+				_register(
+					FriendlyURLMapper.class,
+					new CETPortletFriendlyURLMapper(
+						friendlyURLMapping, portletId)));
+		}
+
+		serviceRegistrations.add(
+			_register(
+				Portlet.class,
+				new IFrameCETPortlet(iFrameCET, _npmResolver, portletId)));
+
+		return serviceRegistrations;
+	}
+
+	private List<ServiceRegistration<?>> _deploy(
+		JSImportMapsEntryCET jsImportMapsEntryCET) {
+
+		return Arrays.asList(
+			_register(
+				JSImportMapsContributor.class,
+				new ClientExtensionJSImportMapsContributor(
+					jsImportMapsEntryCET.getBareSpecifier(), _jsonFactory,
+					jsImportMapsEntryCET.getURL())));
 	}
 
 	private String _getPortletId(CET cet) {
@@ -126,107 +160,17 @@ public class CETDeployerImpl implements CETDeployer {
 				cet.getExternalReferenceCode()));
 	}
 
-	private String[] _prepareURLs(long lastModified, String[] urls) {
-		for (int i = 0; i < urls.length; i++) {
-			urls[i] = HttpComponentsUtil.addParameter(
-				urls[i], "t", lastModified);
-		}
-
-		return urls;
-	}
-
-	private ServiceRegistration<ConfigurationAction>
-		_registerConfigurationAction(CET cet) {
+	private <T extends Registrable> ServiceRegistration<?> _register(
+		Class<? super T> clazz, T registrable) {
 
 		return _bundleContext.registerService(
-			ConfigurationAction.class,
-			new ClientExtensionEntryConfigurationAction(),
-			HashMapDictionaryBuilder.<String, Object>put(
-				"javax.portlet.name", _getPortletId(cet)
-			).build());
-	}
-
-	private ServiceRegistration<FriendlyURLMapper> _registerFriendlyURLMapper(
-		CET cet, String friendlyURLMapping) {
-
-		return _bundleContext.registerService(
-			FriendlyURLMapper.class,
-			new ClientExtensionEntryFriendlyURLMapper(friendlyURLMapping),
-			HashMapDictionaryBuilder.<String, Object>put(
-				"javax.portlet.name", _getPortletId(cet)
-			).build());
-	}
-
-	private ServiceRegistration<Portlet> _registerPortlet(
-		CET cet, CustomElementCET customElementCET, IFrameCET iFrameCET,
-		boolean instanceable, String portletCategoryName) {
-
-		String portletName = _getPortletId(cet);
-
-		Dictionary<String, Object> dictionary =
-			HashMapDictionaryBuilder.<String, Object>put(
-				"com.liferay.portlet.company", cet.getCompanyId()
-			).put(
-				"com.liferay.portlet.css-class-wrapper",
-				"portlet-client-extension"
-			).put(
-				"com.liferay.portlet.display-category", portletCategoryName
-			).put(
-				"com.liferay.portlet.instanceable", instanceable
-			).put(
-				"javax.portlet.display-name", cet.getName(LocaleUtil.US)
-			).put(
-				"javax.portlet.name", portletName
-			).put(
-				"javax.portlet.security-role-ref", "power-user,user"
-			).put(
-				"javax.portlet.version", "3.0"
-			).build();
-
-		long lastModified = System.currentTimeMillis();
-
-		if (customElementCET != null) {
-			String cssURLs = customElementCET.getCSSURLs();
-
-			if (Validator.isNotNull(cssURLs)) {
-				dictionary.put(
-					"com.liferay.portlet.header-portal-css",
-					_prepareURLs(
-						lastModified, cssURLs.split(StringPool.NEW_LINE)));
-			}
-
-			String urls = customElementCET.getURLs();
-
-			String[] urlsArray = urls.split(StringPool.NEW_LINE);
-
-			if (customElementCET.isUseESM()) {
-				for (int i = 0; i < urlsArray.length; i++) {
-					urlsArray[i] = "module:" + urlsArray[i];
-				}
-			}
-
-			dictionary.put(
-				"com.liferay.portlet.header-portal-javascript",
-				_prepareURLs(lastModified, urlsArray));
-		}
-		else if (iFrameCET != null) {
-			dictionary.put(
-				"com.liferay.portlet.header-portlet-css",
-				"/display/css/main.css");
-		}
-		else {
-			throw new IllegalArgumentException(
-				"Invalid client extension entry type: " + cet.getType());
-		}
-
-		return _bundleContext.registerService(
-			Portlet.class,
-			new ClientExtensionEntryPortlet(
-				cet, customElementCET, iFrameCET, _npmResolver),
-			dictionary);
+			clazz, registrable, registrable.getDictionary());
 	}
 
 	private BundleContext _bundleContext;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private NPMResolver _npmResolver;

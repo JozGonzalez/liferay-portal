@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.model.impl;
@@ -77,10 +68,14 @@ public class CTCollectionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(35);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", ctCollectionId=");
 		sb.append(ctCollectionId);
 		sb.append(", companyId=");
@@ -91,12 +86,18 @@ public class CTCollectionCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", ctRemoteId=");
+		sb.append(ctRemoteId);
 		sb.append(", schemaVersionId=");
 		sb.append(schemaVersionId);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
+		sb.append(", onDemandUserId=");
+		sb.append(onDemandUserId);
+		sb.append(", shareable=");
+		sb.append(shareable);
 		sb.append(", status=");
 		sb.append(status);
 		sb.append(", statusByUserId=");
@@ -113,6 +114,21 @@ public class CTCollectionCacheModel
 		CTCollectionImpl ctCollectionImpl = new CTCollectionImpl();
 
 		ctCollectionImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			ctCollectionImpl.setUuid("");
+		}
+		else {
+			ctCollectionImpl.setUuid(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			ctCollectionImpl.setExternalReferenceCode("");
+		}
+		else {
+			ctCollectionImpl.setExternalReferenceCode(externalReferenceCode);
+		}
+
 		ctCollectionImpl.setCtCollectionId(ctCollectionId);
 		ctCollectionImpl.setCompanyId(companyId);
 		ctCollectionImpl.setUserId(userId);
@@ -131,6 +147,7 @@ public class CTCollectionCacheModel
 			ctCollectionImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		ctCollectionImpl.setCtRemoteId(ctRemoteId);
 		ctCollectionImpl.setSchemaVersionId(schemaVersionId);
 
 		if (name == null) {
@@ -147,6 +164,8 @@ public class CTCollectionCacheModel
 			ctCollectionImpl.setDescription(description);
 		}
 
+		ctCollectionImpl.setOnDemandUserId(onDemandUserId);
+		ctCollectionImpl.setShareable(shareable);
 		ctCollectionImpl.setStatus(status);
 		ctCollectionImpl.setStatusByUserId(statusByUserId);
 
@@ -165,6 +184,8 @@ public class CTCollectionCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
+		externalReferenceCode = objectInput.readUTF();
 
 		ctCollectionId = objectInput.readLong();
 
@@ -174,9 +195,15 @@ public class CTCollectionCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
+		ctRemoteId = objectInput.readLong();
+
 		schemaVersionId = objectInput.readLong();
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
+
+		onDemandUserId = objectInput.readLong();
+
+		shareable = objectInput.readBoolean();
 
 		status = objectInput.readInt();
 
@@ -188,6 +215,20 @@ public class CTCollectionCacheModel
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
+		}
+
 		objectOutput.writeLong(ctCollectionId);
 
 		objectOutput.writeLong(companyId);
@@ -195,6 +236,8 @@ public class CTCollectionCacheModel
 		objectOutput.writeLong(userId);
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
+
+		objectOutput.writeLong(ctRemoteId);
 
 		objectOutput.writeLong(schemaVersionId);
 
@@ -212,6 +255,10 @@ public class CTCollectionCacheModel
 			objectOutput.writeUTF(description);
 		}
 
+		objectOutput.writeLong(onDemandUserId);
+
+		objectOutput.writeBoolean(shareable);
+
 		objectOutput.writeInt(status);
 
 		objectOutput.writeLong(statusByUserId);
@@ -219,14 +266,19 @@ public class CTCollectionCacheModel
 	}
 
 	public long mvccVersion;
+	public String uuid;
+	public String externalReferenceCode;
 	public long ctCollectionId;
 	public long companyId;
 	public long userId;
 	public long createDate;
 	public long modifiedDate;
+	public long ctRemoteId;
 	public long schemaVersionId;
 	public String name;
 	public String description;
+	public long onDemandUserId;
+	public boolean shareable;
 	public int status;
 	public long statusByUserId;
 	public long statusDate;

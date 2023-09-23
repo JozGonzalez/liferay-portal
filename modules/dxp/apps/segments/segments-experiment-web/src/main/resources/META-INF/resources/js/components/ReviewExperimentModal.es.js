@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -33,14 +27,14 @@ import {
 	MIN_CONFIDENCE_LEVEL,
 	percentageNumberToIndex,
 } from '../util/percentages.es';
-import BusyButton from './BusyButton/BusyButton.es';
+import LoadingButton from './LoadingButton/LoadingButton.es';
 import {SliderWithLabel} from './SliderWithLabel.es';
 import {SplitPicker} from './SplitPicker/SplitPicker.es';
 
 const TIME_ESTIMATION_THROTTLE_TIME_MS = 1000;
 
 function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
-	const [busy, setBusy] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
 	const [estimation, setEstimation] = useState({
 		days: null,
@@ -241,13 +235,13 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 								{Liferay.Language.get('cancel')}
 							</ClayButton>
 
-							<BusyButton
-								busy={busy}
-								disabled={busy}
+							<LoadingButton
+								disabled={loading}
+								loading={loading}
 								onClick={_handleRun}
 							>
 								{Liferay.Language.get('run')}
-							</BusyButton>
+							</LoadingButton>
 						</ClayButton.Group>
 					)
 				}
@@ -262,14 +256,14 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 	function _handleRun() {
 		const splitVariantsMap = _variantsToSplitVariantsMap(draftVariants);
 
-		setBusy(true);
+		setLoading(true);
 
 		onRun({
 			confidenceLevel: percentageNumberToIndex(confidenceLevel),
 			splitVariantsMap,
 		}).then(() => {
 			if (mountedRef.current) {
-				setBusy(false);
+				setLoading(false);
 				setSuccess(true);
 			}
 		});

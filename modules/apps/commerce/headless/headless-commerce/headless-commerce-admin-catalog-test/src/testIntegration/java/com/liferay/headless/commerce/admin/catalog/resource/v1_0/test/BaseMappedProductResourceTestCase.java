@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.MappedProductSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -64,8 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -687,23 +677,23 @@ public abstract class BaseMappedProductResourceTestCase {
 
 	@Test
 	public void testGetProductIdMappedProductsPage() throws Exception {
-		Long productId = testGetProductIdMappedProductsPage_getProductId();
-		Long irrelevantProductId =
-			testGetProductIdMappedProductsPage_getIrrelevantProductId();
+		Long id = testGetProductIdMappedProductsPage_getId();
+		Long irrelevantId =
+			testGetProductIdMappedProductsPage_getIrrelevantId();
 
 		Page<MappedProduct> page =
 			mappedProductResource.getProductIdMappedProductsPage(
-				productId, null, Pagination.of(1, 10), null);
+				id, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
-		if (irrelevantProductId != null) {
+		if (irrelevantId != null) {
 			MappedProduct irrelevantMappedProduct =
 				testGetProductIdMappedProductsPage_addMappedProduct(
-					irrelevantProductId, randomIrrelevantMappedProduct());
+					irrelevantId, randomIrrelevantMappedProduct());
 
 			page = mappedProductResource.getProductIdMappedProductsPage(
-				irrelevantProductId, null, Pagination.of(1, 2), null);
+				irrelevantId, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -713,19 +703,19 @@ public abstract class BaseMappedProductResourceTestCase {
 			assertValid(
 				page,
 				testGetProductIdMappedProductsPage_getExpectedActions(
-					irrelevantProductId));
+					irrelevantId));
 		}
 
 		MappedProduct mappedProduct1 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
-				productId, randomMappedProduct());
+				id, randomMappedProduct());
 
 		MappedProduct mappedProduct2 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
-				productId, randomMappedProduct());
+				id, randomMappedProduct());
 
 		page = mappedProductResource.getProductIdMappedProductsPage(
-			productId, null, Pagination.of(1, 10), null);
+			id, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -733,8 +723,7 @@ public abstract class BaseMappedProductResourceTestCase {
 			Arrays.asList(mappedProduct1, mappedProduct2),
 			(List<MappedProduct>)page.getItems());
 		assertValid(
-			page,
-			testGetProductIdMappedProductsPage_getExpectedActions(productId));
+			page, testGetProductIdMappedProductsPage_getExpectedActions(id));
 
 		mappedProductResource.deleteMappedProduct(mappedProduct1.getId());
 
@@ -742,8 +731,7 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetProductIdMappedProductsPage_getExpectedActions(
-				Long productId)
+			testGetProductIdMappedProductsPage_getExpectedActions(Long id)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
@@ -755,23 +743,23 @@ public abstract class BaseMappedProductResourceTestCase {
 	public void testGetProductIdMappedProductsPageWithPagination()
 		throws Exception {
 
-		Long productId = testGetProductIdMappedProductsPage_getProductId();
+		Long id = testGetProductIdMappedProductsPage_getId();
 
 		MappedProduct mappedProduct1 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
-				productId, randomMappedProduct());
+				id, randomMappedProduct());
 
 		MappedProduct mappedProduct2 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
-				productId, randomMappedProduct());
+				id, randomMappedProduct());
 
 		MappedProduct mappedProduct3 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
-				productId, randomMappedProduct());
+				id, randomMappedProduct());
 
 		Page<MappedProduct> page1 =
 			mappedProductResource.getProductIdMappedProductsPage(
-				productId, null, Pagination.of(1, 2), null);
+				id, null, Pagination.of(1, 2), null);
 
 		List<MappedProduct> mappedProducts1 =
 			(List<MappedProduct>)page1.getItems();
@@ -781,7 +769,7 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		Page<MappedProduct> page2 =
 			mappedProductResource.getProductIdMappedProductsPage(
-				productId, null, Pagination.of(2, 2), null);
+				id, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -793,7 +781,7 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		Page<MappedProduct> page3 =
 			mappedProductResource.getProductIdMappedProductsPage(
-				productId, null, Pagination.of(1, 3), null);
+				id, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(mappedProduct1, mappedProduct2, mappedProduct3),
@@ -907,7 +895,7 @@ public abstract class BaseMappedProductResourceTestCase {
 			return;
 		}
 
-		Long productId = testGetProductIdMappedProductsPage_getProductId();
+		Long id = testGetProductIdMappedProductsPage_getId();
 
 		MappedProduct mappedProduct1 = randomMappedProduct();
 		MappedProduct mappedProduct2 = randomMappedProduct();
@@ -918,15 +906,15 @@ public abstract class BaseMappedProductResourceTestCase {
 		}
 
 		mappedProduct1 = testGetProductIdMappedProductsPage_addMappedProduct(
-			productId, mappedProduct1);
+			id, mappedProduct1);
 
 		mappedProduct2 = testGetProductIdMappedProductsPage_addMappedProduct(
-			productId, mappedProduct2);
+			id, mappedProduct2);
 
 		for (EntityField entityField : entityFields) {
 			Page<MappedProduct> ascPage =
 				mappedProductResource.getProductIdMappedProductsPage(
-					productId, null, Pagination.of(1, 2),
+					id, null, Pagination.of(1, 2),
 					entityField.getName() + ":asc");
 
 			assertEquals(
@@ -935,7 +923,7 @@ public abstract class BaseMappedProductResourceTestCase {
 
 			Page<MappedProduct> descPage =
 				mappedProductResource.getProductIdMappedProductsPage(
-					productId, null, Pagination.of(1, 2),
+					id, null, Pagination.of(1, 2),
 					entityField.getName() + ":desc");
 
 			assertEquals(
@@ -945,21 +933,19 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	protected MappedProduct testGetProductIdMappedProductsPage_addMappedProduct(
-			Long productId, MappedProduct mappedProduct)
+			Long id, MappedProduct mappedProduct)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdMappedProductsPage_getProductId()
-		throws Exception {
-
+	protected Long testGetProductIdMappedProductsPage_getId() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdMappedProductsPage_getIrrelevantProductId()
+	protected Long testGetProductIdMappedProductsPage_getIrrelevantId()
 		throws Exception {
 
 		return null;
@@ -986,13 +972,13 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductMappedProductBySequence() throws Exception {
+	public void testGetProductIdMappedProductBySequence() throws Exception {
 		MappedProduct postMappedProduct =
-			testGetProductMappedProductBySequence_addMappedProduct();
+			testGetProductIdMappedProductBySequence_addMappedProduct();
 
 		MappedProduct getMappedProduct =
-			mappedProductResource.getProductMappedProductBySequence(
-				testGetProductMappedProductBySequence_getProductId(
+			mappedProductResource.getProductIdMappedProductBySequence(
+				testGetProductIdMappedProductBySequence_getId(
 					postMappedProduct),
 				postMappedProduct.getSequence());
 
@@ -1000,15 +986,15 @@ public abstract class BaseMappedProductResourceTestCase {
 		assertValid(getMappedProduct);
 	}
 
-	protected Long testGetProductMappedProductBySequence_getProductId(
+	protected Long testGetProductIdMappedProductBySequence_getId(
 			MappedProduct mappedProduct)
 		throws Exception {
 
-		return mappedProduct.getProductId();
+		return mappedProduct.getId();
 	}
 
 	protected MappedProduct
-			testGetProductMappedProductBySequence_addMappedProduct()
+			testGetProductIdMappedProductBySequence_addMappedProduct()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1016,11 +1002,11 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetProductMappedProductBySequence()
+	public void testGraphQLGetProductIdMappedProductBySequence()
 		throws Exception {
 
 		MappedProduct mappedProduct =
-			testGraphQLGetProductMappedProductBySequence_addMappedProduct();
+			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct();
 
 		Assert.assertTrue(
 			equals(
@@ -1029,12 +1015,12 @@ public abstract class BaseMappedProductResourceTestCase {
 					JSONUtil.getValueAsString(
 						invokeGraphQLQuery(
 							new GraphQLField(
-								"productMappedProductBySequence",
+								"productIdMappedProductBySequence",
 								new HashMap<String, Object>() {
 									{
 										put(
-											"productId",
-											testGraphQLGetProductMappedProductBySequence_getProductId(
+											"id",
+											testGraphQLGetProductIdMappedProductBySequence_getId(
 												mappedProduct));
 
 										put(
@@ -1045,21 +1031,21 @@ public abstract class BaseMappedProductResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
-						"Object/productMappedProductBySequence"))));
+						"Object/productIdMappedProductBySequence"))));
 	}
 
-	protected Long testGraphQLGetProductMappedProductBySequence_getProductId(
+	protected Long testGraphQLGetProductIdMappedProductBySequence_getId(
 			MappedProduct mappedProduct)
 		throws Exception {
 
-		return mappedProduct.getProductId();
+		return mappedProduct.getId();
 	}
 
 	@Test
-	public void testGraphQLGetProductMappedProductBySequenceNotFound()
+	public void testGraphQLGetProductIdMappedProductBySequenceNotFound()
 		throws Exception {
 
-		Long irrelevantProductId = RandomTestUtil.randomLong();
+		Long irrelevantId = RandomTestUtil.randomLong();
 		String irrelevantSequence = "\"" + RandomTestUtil.randomString() + "\"";
 
 		Assert.assertEquals(
@@ -1067,10 +1053,10 @@ public abstract class BaseMappedProductResourceTestCase {
 			JSONUtil.getValueAsString(
 				invokeGraphQLQuery(
 					new GraphQLField(
-						"productMappedProductBySequence",
+						"productIdMappedProductBySequence",
 						new HashMap<String, Object>() {
 							{
-								put("productId", irrelevantProductId);
+								put("id", irrelevantId);
 								put("sequence", irrelevantSequence);
 							}
 						},
@@ -1080,7 +1066,7 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	protected MappedProduct
-			testGraphQLGetProductMappedProductBySequence_addMappedProduct()
+			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct()
 		throws Exception {
 
 		return testGraphQLMappedProduct_addMappedProduct();
@@ -1297,14 +1283,19 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1550,14 +1541,16 @@ public abstract class BaseMappedProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1587,18 +1580,18 @@ public abstract class BaseMappedProductResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1630,11 +1623,47 @@ public abstract class BaseMappedProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("productExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					mappedProduct.getProductExternalReferenceCode()));
-			sb.append("'");
+			Object object = mappedProduct.getProductExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1656,26 +1685,139 @@ public abstract class BaseMappedProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("sequence")) {
-			sb.append("'");
-			sb.append(String.valueOf(mappedProduct.getSequence()));
-			sb.append("'");
+			Object object = mappedProduct.getSequence();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("sku")) {
-			sb.append("'");
-			sb.append(String.valueOf(mappedProduct.getSku()));
-			sb.append("'");
+			Object object = mappedProduct.getSku();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("skuExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(mappedProduct.getSkuExternalReferenceCode()));
-			sb.append("'");
+			Object object = mappedProduct.getSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

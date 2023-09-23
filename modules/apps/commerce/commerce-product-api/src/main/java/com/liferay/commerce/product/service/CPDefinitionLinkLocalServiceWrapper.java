@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -17,6 +8,7 @@ package com.liferay.commerce.product.service;
 import com.liferay.commerce.product.model.CPDefinitionLink;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -60,12 +52,28 @@ public class CPDefinitionLinkLocalServiceWrapper
 
 	@Override
 	public CPDefinitionLink addCPDefinitionLinkByCProductId(
-			long cpDefinitionId, long cProductId, double priority, String type,
+			long cpDefinitionId, long cProductId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority, String type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLinkLocalService.addCPDefinitionLinkByCProductId(
-			cpDefinitionId, cProductId, priority, type, serviceContext);
+			cpDefinitionId, cProductId, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire, priority,
+			type, serviceContext);
+	}
+
+	@Override
+	public void checkCPDefinitionLinks()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_cpDefinitionLinkLocalService.checkCPDefinitionLinks();
 	}
 
 	/**
@@ -358,6 +366,14 @@ public class CPDefinitionLinkLocalServiceWrapper
 
 	@Override
 	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status) {
+
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
+			cpDefinitionId, status);
+	}
+
+	@Override
+	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, int start, int end) {
 
 		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
@@ -366,10 +382,36 @@ public class CPDefinitionLinkLocalServiceWrapper
 
 	@Override
 	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, int status, int start, int end) {
+
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
+			cpDefinitionId, status, start, end);
+	}
+
+	@Override
+	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
 		long cpDefinitionId, String type) {
 
 		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
 			cpDefinitionId, type);
+	}
+
+	@Override
+	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status) {
+
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
+			cpDefinitionId, type, status);
+	}
+
+	@Override
+	public java.util.List<CPDefinitionLink> getCPDefinitionLinks(
+		long cpDefinitionId, String type, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CPDefinitionLink>
+			orderByComparator) {
+
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinks(
+			cpDefinitionId, type, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -436,9 +478,23 @@ public class CPDefinitionLinkLocalServiceWrapper
 	}
 
 	@Override
+	public int getCPDefinitionLinksCount(long cpDefinitionId, int status) {
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
+			cpDefinitionId, status);
+	}
+
+	@Override
 	public int getCPDefinitionLinksCount(long cpDefinitionId, String type) {
 		return _cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
 			cpDefinitionId, type);
+	}
+
+	@Override
+	public int getCPDefinitionLinksCount(
+		long cpDefinitionId, String type, int status) {
+
+		return _cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
+			cpDefinitionId, type, status);
 	}
 
 	@Override
@@ -488,6 +544,14 @@ public class CPDefinitionLinkLocalServiceWrapper
 			cProductId, type);
 	}
 
+	@Override
+	public java.util.List<CPDefinitionLink> getReverseCPDefinitionLinks(
+		long cProductId, String type, int status) {
+
+		return _cpDefinitionLinkLocalService.getReverseCPDefinitionLinks(
+			cProductId, type, status);
+	}
+
 	/**
 	 * Updates the cp definition link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -508,12 +572,21 @@ public class CPDefinitionLinkLocalServiceWrapper
 
 	@Override
 	public CPDefinitionLink updateCPDefinitionLink(
-			long cpDefinitionLinkId, double priority,
+			long userId, long cpDefinitionLinkId, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, double priority,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLinkLocalService.updateCPDefinitionLink(
-			cpDefinitionLinkId, priority, serviceContext);
+			userId, cpDefinitionLinkId, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire, priority,
+			serviceContext);
 	}
 
 	@Override
@@ -524,6 +597,23 @@ public class CPDefinitionLinkLocalServiceWrapper
 
 		_cpDefinitionLinkLocalService.updateCPDefinitionLinkCProductIds(
 			cpDefinitionId, cProductIds, type, serviceContext);
+	}
+
+	@Override
+	public CPDefinitionLink updateStatus(
+			long userId, long cpDefinitionLinkId, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext,
+			java.util.Map<String, java.io.Serializable> workflowContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionLinkLocalService.updateStatus(
+			userId, cpDefinitionLinkId, status, serviceContext,
+			workflowContext);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _cpDefinitionLinkLocalService.getBasePersistence();
 	}
 
 	@Override

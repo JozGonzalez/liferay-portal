@@ -1,38 +1,34 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context.helper;
 
-import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Objects;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import org.springframework.test.util.ReflectionTestUtils;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * @author Cristina González
@@ -43,6 +39,22 @@ public class FileEntryDisplayContextHelperTest {
 	@Rule
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_frameworkUtilMockedStatic.close();
+	}
 
 	@Test
 	public void testIsCancelCheckoutDocumentActionAvailableWithCheckedOutAndOverridePermissionAndMoreThat1Version()
@@ -225,17 +237,26 @@ public class FileEntryDisplayContextHelperTest {
 	private void _configureDLFileEntryPermission(
 		boolean overrideCheckOutPermission, boolean updatePermission) {
 
-		ReflectionTestUtils.setField(
-			_dlFileEntryPermission, "_dlFileEntryModelResourcePermission",
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		bundleContext.registerService(
+			ModelResourcePermission.class,
 			new MockModelResourcePermission(
-				overrideCheckOutPermission, updatePermission));
-		ReflectionTestUtils.setField(
-			_dlFileEntryPermission, "_fileEntryModelResourcePermission",
+				overrideCheckOutPermission, updatePermission),
+			MapUtil.singletonDictionary(
+				"model.class.name",
+				"com.liferay.document.library.kernel.model.DLFileEntry"));
+
+		bundleContext.registerService(
+			ModelResourcePermission.class,
 			new MockModelResourcePermission(
-				overrideCheckOutPermission, updatePermission));
+				overrideCheckOutPermission, updatePermission),
+			MapUtil.singletonDictionary(
+				"model.class.name",
+				"com.liferay.portal.kernel.repository.model.FileEntry"));
 	}
 
-	private final DLFileEntryPermission _dlFileEntryPermission =
-		new DLFileEntryPermission();
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 
 }

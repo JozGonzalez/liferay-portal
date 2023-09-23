@@ -1,79 +1,57 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.taglib.internal.servlet;
 
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.osgi.util.service.Snapshot;
+import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
 import javax.servlet.ServletContext;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Michael Bradford
  */
-@Component(service = {})
 public class ServletContextUtil {
 
-	public static String getContextPath() {
-		return _servletContext.getContextPath();
+	public static InfoItemServiceRegistry getInfoItemServiceRegistry() {
+		return _infoItemServiceRegistrySnapshot.get();
 	}
 
-	public static InfoItemServiceRegistry getInfoItemServiceRegistry() {
-		return _infoItemServiceRegistry;
+	public static PortletDisplayTemplate getPortletDisplayTemplate() {
+		return _portletDisplayTemplateSnapshot.get();
 	}
 
 	public static ServletContext getServletContext() {
-		return _servletContext;
+		return _servletContextSnapshot.get();
 	}
 
 	public static SiteNavigationMenuItemType getSiteNavigationMenuItemType(
 		String type) {
 
-		return _siteNavigationMenuItemTypeRegistry.
-			getSiteNavigationMenuItemType(type);
+		SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry =
+			_siteNavigationMenuItemTypeRegistrySnapshot.get();
+
+		return siteNavigationMenuItemTypeRegistry.getSiteNavigationMenuItemType(
+			type);
 	}
 
-	@Reference(unbind = "-")
-	protected void setInfoItemServiceRegistry(
-		InfoItemServiceRegistry infoItemServiceRegistry) {
-
-		_infoItemServiceRegistry = infoItemServiceRegistry;
-	}
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.site.navigation.taglib)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSiteNavigationMenuItemTypeRegistry(
-		SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry) {
-
-		_siteNavigationMenuItemTypeRegistry =
-			siteNavigationMenuItemTypeRegistry;
-	}
-
-	private static InfoItemServiceRegistry _infoItemServiceRegistry;
-	private static ServletContext _servletContext;
-	private static SiteNavigationMenuItemTypeRegistry
-		_siteNavigationMenuItemTypeRegistry;
+	private static final Snapshot<InfoItemServiceRegistry>
+		_infoItemServiceRegistrySnapshot = new Snapshot<>(
+			ServletContextUtil.class, InfoItemServiceRegistry.class);
+	private static final Snapshot<PortletDisplayTemplate>
+		_portletDisplayTemplateSnapshot = new Snapshot<>(
+			ServletContextUtil.class, PortletDisplayTemplate.class);
+	private static final Snapshot<ServletContext> _servletContextSnapshot =
+		new Snapshot<>(
+			ServletContextUtil.class, ServletContext.class,
+			"(osgi.web.symbolicname=com.liferay.site.navigation.taglib)");
+	private static final Snapshot<SiteNavigationMenuItemTypeRegistry>
+		_siteNavigationMenuItemTypeRegistrySnapshot = new Snapshot<>(
+			ServletContextUtil.class, SiteNavigationMenuItemTypeRegistry.class);
 
 }

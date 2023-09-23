@@ -28,9 +28,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -463,7 +463,7 @@ definition {
 	@description = "This ensures that the shortcuts permissions can be edited via bulk editing."
 	@priority = 5
 	test CanEditShortcutsPermissions {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -524,7 +524,7 @@ definition {
 	@description = "This test selects multiple documents and moves them into one folder."
 	@priority = 5
 	test CanMoveDocumentsToFolder {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -598,17 +598,15 @@ definition {
 
 		DMDocument.selectDocuments(dmDocumentTitle = "Document_1,DM Folder Name");
 
-		DMNavigator.gotoItemViaManagementBar(
-			item = "dropdownMenu",
-			menuItem = "Permissions");
+		Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
 
-		Alert.viewErrorMessage(errorMessage = "It is not possible to simultaneously change the permissions of different asset types.");
+		MenuItem.viewDisabled(menuItem = "Permissions");
 	}
 
 	@description = "This ensures that users can not edit file and shortcut permissions simultaneously."
 	@priority = 4
 	test CannotEditFileAndShortcutPermissionsSimultaneously {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -626,11 +624,9 @@ definition {
 
 		PortletEntry.selectAll();
 
-		DMNavigator.gotoItemViaManagementBar(
-			item = "dropdownMenu",
-			menuItem = "Permissions");
+		Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
 
-		Alert.viewErrorMessage(errorMessage = "It is not possible to simultaneously change the permissions of different asset types.");
+		MenuItem.viewDisabled(menuItem = "Permissions");
 	}
 
 	@description = "This ensures that the files permissions can be removed via bulk editing."
@@ -656,7 +652,7 @@ definition {
 
 		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
 			addOrRemoveViewPermission = "Remove",
-			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
+			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX,INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
 			roleTitle = "Guest");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
@@ -670,7 +666,7 @@ definition {
 		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
 			addOrRemoveViewPermission = "Remove",
 			permissionsBulkEditing = "true",
-			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
+			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX,INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
 			roleTitle = "Guest");
 
 		User.logoutPG();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
@@ -18,6 +9,7 @@ import {openSelectionModal} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 export default function ThemeCSSReplacementSelector({
+	isReadOnly,
 	placeholder,
 	portletNamespace,
 	selectThemeCSSClientExtensionEventName,
@@ -31,6 +23,10 @@ export default function ThemeCSSReplacementSelector({
 	);
 
 	const onClick = () => {
+		if (isReadOnly) {
+			return;
+		}
+
 		openSelectionModal<{value: string}>({
 			onSelect: (selectedItem) => {
 				const item = JSON.parse(selectedItem.value);
@@ -46,6 +42,12 @@ export default function ThemeCSSReplacementSelector({
 
 	return (
 		<>
+			<p className="text-secondary">
+				{Liferay.Language.get(
+					'use-this-client-extension-to-fully-replace-the-default-css-contained-in-the-theme'
+				)}
+			</p>
+
 			<ClayInput
 				name={`${portletNamespace}themeCSSCETExternalReferenceCode`}
 				type="hidden"
@@ -55,10 +57,10 @@ export default function ThemeCSSReplacementSelector({
 				<label
 					htmlFor={`${portletNamespace}themeCSSReplacementExtension`}
 				>
-					{Liferay.Language.get('client-extension')}
+					{Liferay.Language.get('theme-css')}
 				</label>
 
-				<ClayInput.Group className="w-50" small>
+				<ClayInput.Group>
 					<ClayInput.GroupItem>
 						<ClayInput
 							id={`${portletNamespace}themeCSSReplacementExtension`}
@@ -75,30 +77,30 @@ export default function ThemeCSSReplacementSelector({
 							<>
 								<ClayButtonWithIcon
 									aria-label={Liferay.Language.get('replace')}
-									className="mr-2"
+									className="c-mr-2"
+									disabled={isReadOnly}
 									displayType="secondary"
 									onClick={onClick}
-									small
 									symbol="change"
 								/>
 
 								<ClayButtonWithIcon
 									aria-label={Liferay.Language.get('delete')}
+									disabled={isReadOnly}
 									displayType="secondary"
 									onClick={() => {
 										setExtensionName('');
 										setCETExternalReferenceCode('');
 									}}
-									small
 									symbol="trash"
 								/>
 							</>
 						) : (
 							<ClayButtonWithIcon
 								aria-label={Liferay.Language.get('select')}
+								disabled={isReadOnly}
 								displayType="secondary"
 								onClick={onClick}
-								small
 								symbol="plus"
 							/>
 						)}
@@ -110,6 +112,7 @@ export default function ThemeCSSReplacementSelector({
 }
 
 interface IProps {
+	isReadOnly: boolean;
 	placeholder: string;
 	portletNamespace: string;
 	selectThemeCSSClientExtensionEventName: string;

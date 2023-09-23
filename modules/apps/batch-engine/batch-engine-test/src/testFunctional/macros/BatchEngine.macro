@@ -16,6 +16,18 @@ definition {
 		return ${archivedFilePath};
 	}
 
+	macro assertExportedFileContainsCorrectObject {
+		Variables.assertDefined(parameterList = "${fileName},${jsonObject},${expectedValue}");
+
+		var fileContent = TestCase.getTempFileContent(fileName = ${fileName});
+
+		var actualValue = JSONUtil.getWithJSONPath(${fileContent}, ${jsonObject});
+
+		TestUtils.assertEquals(
+			actual = ${actualValue},
+			expected = ${expectedValue});
+	}
+
 	macro copyDependenciesDirToFolder {
 		Variables.assertDefined(parameterList = ${file});
 
@@ -32,6 +44,21 @@ definition {
 		return ${destinationFilePath};
 	}
 
+	macro deleteFileInModulesFolder {
+		Variables.assertDefined(parameterList = ${file});
+
+		var homeDir = PropsUtil.get("liferay.home.dir.name");
+
+		var fileExists = FileUtil.exists("${homeDir}/osgi/modules/${file}");
+
+		if (${fileExists} == "true") {
+			FileUtil.delete("${homeDir}/osgi/modules/${file}");
+		}
+		else {
+			echo("The file ${file} doesn't exist in osgi modules folder.");
+		}
+	}
+
 	macro moveFileToDeployFolder {
 		Variables.assertDefined(parameterList = "${sourceFilePath},${fileName}");
 
@@ -41,15 +68,27 @@ definition {
 			var deployFolder = "${liferayHome}/deploy";
 		}
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
+		AntCommands.runCommand("build-test.xml", "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
 
 		WaitForConsoleTextPresent(value1 = "Processing ${fileName}");
 	}
 
+	macro moveFileToOSGIModulesFolder {
+		Variables.assertDefined(parameterList = "${sourceFilePath},${fileName},${appName}");
+
+		if (!(isSet(destinationPath))) {
+			var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+			var deployFolder = "${liferayHome}/osgi/modules";
+		}
+
+		AntCommands.runCommand("build-test.xml", "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
+
+		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
+	}
+
 	macro setUpGlobalIds {
-		var companyId = JSONCompany.getCompanyIdNoSelenium(portalURL = ${portalURL});
+		var companyId = JSONCompany.getCompanyId(portalURL = ${portalURL});
 		var siteId = JSONGroupAPI._getSiteIdByGroupKey(groupName = "Guest");
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
 		static var staticCompanyId = ${companyId};
@@ -87,7 +126,9 @@ definition {
 			WaitForSPARefresh();
 		}
 
-		CreateObject.assertCustomObject(labelName = "User");
+		AssertElementPresent(
+			key_labelName = "User",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	macro waitUntilWebContentPresentInUI {

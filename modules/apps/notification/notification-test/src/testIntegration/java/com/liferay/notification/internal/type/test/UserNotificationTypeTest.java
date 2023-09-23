@@ -1,58 +1,43 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.internal.type.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.notification.constants.NotificationConstants;
-import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.constants.NotificationRecipientConstants;
 import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
-import com.liferay.notification.context.NotificationContextBuilder;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
+import com.liferay.object.constants.ObjectActionExecutorConstants;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
-import com.liferay.object.field.builder.TextObjectFieldBuilder;
-import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.model.ObjectEntry;
-import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectEntryLocalService;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.io.Serializable;
-
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,61 +54,89 @@ public class UserNotificationTypeTest extends BaseNotificationTypeTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Before
-	public void setUp() throws Exception {
-		user = TestPropsValues.getUser();
-
-		_objectDefinition =
-			_objectDefinitionLocalService.addCustomObjectDefinition(
-				user.getUserId(), false,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				Arrays.asList(
-					new TextObjectFieldBuilder(
-					).labelMap(
-						LocalizedMapUtil.getLocalizedMap(
-							RandomTestUtil.randomString())
-					).name(
-						"textObjectFieldName"
-					).objectFieldSettings(
-						Collections.emptyList()
-					).build()));
-
-		_objectDefinition =
-			_objectDefinitionLocalService.publishCustomObjectDefinition(
-				user.getUserId(), _objectDefinition.getObjectDefinitionId());
+	@After
+	public void tearDown() throws PortalException {
+		_userNotificationEventLocalService.deleteUserNotificationEvents(
+			user1.getUserId());
+		_userNotificationEventLocalService.deleteUserNotificationEvents(
+			user2.getUserId());
 	}
 
 	@Test
 	public void testSendNotificationRecipientTypeRole() throws Exception {
 		_testSendNotification(
-			1,
 			Arrays.asList(
-				createNotificationRecipientSetting("roleName", "Administrator"),
-				createNotificationRecipientSetting("roleName", "User")),
+				createNotificationRecipientSetting(
+					"roleName", RoleConstants.ADMINISTRATOR),
+				createNotificationRecipientSetting("roleName", role.getName())),
 			NotificationRecipientConstants.TYPE_ROLE);
 	}
 
 	@Test
-	public void testSendNotificationRecipientTypeTerm() throws Exception {
-		_testSendNotification(
-			2,
+	public void testSendNotificationRecipientTypeTermChildAuthorTerm()
+		throws Exception {
+
+		_testSendNotificationRecipientTypeTerm(
 			Arrays.asList(
-				createNotificationRecipientSetting("term", _getTerm("creator")),
-				createNotificationRecipientSetting("term", "test")),
+				createNotificationRecipientSetting(
+					"term", getTermName("AUTHOR_ID"))),
+			NotificationRecipientConstants.TYPE_TERM);
+	}
+
+	@Test
+	public void testSendNotificationRecipientTypeTermCurrentUserTerm()
+		throws Exception {
+
+		_testSendNotificationRecipientTypeTerm(
+			Arrays.asList(
+				createNotificationRecipientSetting(
+					"term", "[%CURRENT_USER_ID%]")),
+			NotificationRecipientConstants.TYPE_TERM);
+	}
+
+	@Test
+	public void testSendNotificationRecipientTypeTermParentAuthorTerm()
+		throws Exception {
+
+		_testSendNotificationRecipientTypeTerm(
+			Arrays.asList(
+				createNotificationRecipientSetting(
+					"term", getTermName(true, "AUTHOR_ID"))),
+			NotificationRecipientConstants.TYPE_TERM);
+	}
+
+	@Test
+	public void testSendNotificationRecipientTypeTermScreenName()
+		throws Exception {
+
+		_testSendNotification(
+			Arrays.asList(
+				createNotificationRecipientSetting(
+					"term", getTermName("creator")),
+				createNotificationRecipientSetting(
+					"term", user1.getScreenName())),
 			NotificationRecipientConstants.TYPE_TERM);
 	}
 
 	@Test
 	public void testSendNotificationRecipientTypeUser() throws Exception {
 		_testSendNotification(
-			1,
 			Arrays.asList(
-				createNotificationRecipientSetting("userScreenName", "test")),
+				createNotificationRecipientSetting(
+					"userScreenName", user1.getScreenName()),
+				createNotificationRecipientSetting(
+					"userScreenName", user2.getScreenName())),
 			NotificationRecipientConstants.TYPE_USER);
+	}
+
+	private void _assertNotificationRecipientSetting(
+		NotificationRecipientSetting notificationRecipientSetting,
+		String userFullName) {
+
+		Assert.assertEquals(
+			"userFullName", notificationRecipientSetting.getName());
+		Assert.assertEquals(
+			notificationRecipientSetting.getValue(), userFullName);
 	}
 
 	private NotificationContext _createNotificationContext(
@@ -143,7 +156,7 @@ public class UserNotificationTypeTest extends BaseNotificationTypeTest {
 		notificationTemplate.setName(RandomTestUtil.randomString());
 		notificationTemplate.setRecipientType(recipientType);
 		notificationTemplate.setSubject(
-			"Subject " + _getTerm("textObjectFieldName"));
+			ListUtil.toString(getTermNames(), StringPool.BLANK));
 		notificationTemplate.setType(
 			NotificationConstants.TYPE_USER_NOTIFICATION);
 
@@ -159,14 +172,7 @@ public class UserNotificationTypeTest extends BaseNotificationTypeTest {
 		return notificationContext;
 	}
 
-	private String _getTerm(String objectFieldName) {
-		return StringBundler.concat(
-			"[%", StringUtil.upperCase(_objectDefinition.getShortName()), "_",
-			StringUtil.upperCase(objectFieldName), "%]");
-	}
-
 	private void _testSendNotification(
-			long expectedUserNotificationEventsCount,
 			List<NotificationRecipientSetting> notificationRecipientSettings,
 			String recipientType)
 		throws Exception {
@@ -179,88 +185,180 @@ public class UserNotificationTypeTest extends BaseNotificationTypeTest {
 			notificationQueueEntries.toString(), 0,
 			notificationQueueEntries.size());
 
-		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			user.getUserId(), 0, _objectDefinition.getObjectDefinitionId(),
-			HashMapBuilder.<String, Serializable>put(
-				"textObjectFieldName", "textObjectFieldNameValue"
-			).build(),
-			ServiceContextTestUtil.getServiceContext());
-
 		Assert.assertEquals(
 			0,
 			_userNotificationEventLocalService.getUserNotificationEventsCount(
-				user.getUserId()));
+				user1.getUserId()));
 
-		sendNotification(
-			new NotificationContextBuilder(
-			).className(
-				_objectDefinition.getClassName()
-			).classPK(
-				objectEntry.getObjectEntryId()
-			).notificationTemplate(
-				notificationTemplateLocalService.addNotificationTemplate(
-					_createNotificationContext(
-						notificationRecipientSettings, recipientType))
-			).termValues(
-				HashMapBuilder.<String, Object>put(
-					"creator", String.valueOf(user.getUserId())
-				).put(
-					"textObjectFieldName", "textObjectFieldNameValue"
-				).build()
-			).userId(
-				user.getUserId()
-			).build(),
-			NotificationConstants.TYPE_USER_NOTIFICATION);
+		NotificationTemplate notificationTemplate =
+			notificationTemplateLocalService.addNotificationTemplate(
+				_createNotificationContext(
+					notificationRecipientSettings, recipientType));
+
+		objectActionLocalService.addObjectAction(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			childObjectDefinition.getObjectDefinitionId(), true,
+			StringPool.BLANK, RandomTestUtil.randomString(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString(),
+			ObjectActionExecutorConstants.KEY_NOTIFICATION,
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD,
+			UnicodePropertiesBuilder.put(
+				"notificationTemplateId",
+				notificationTemplate.getNotificationTemplateId()
+			).build());
+
+		ObjectEntry objectEntry = objectEntryManager.addObjectEntry(
+			dtoConverterContext, parentObjectDefinition,
+			new ObjectEntry() {
+				{
+					properties = parentObjectEntryValues;
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		objectEntryManager.addObjectEntry(
+			dtoConverterContext, childObjectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.putAll(
+						childObjectEntryValues
+					).put(
+						getObjectRelationshipObjectField2Name(),
+						objectEntry.getId()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
 
 		notificationQueueEntries =
 			notificationQueueEntryLocalService.getNotificationQueueEntries(
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(
-			expectedUserNotificationEventsCount,
-			_userNotificationEventLocalService.getUserNotificationEventsCount(
-				user.getUserId()));
+			notificationQueueEntries.toString(), 1,
+			notificationQueueEntries.size());
 
-		_userNotificationEventLocalService.deleteUserNotificationEvents(
-			user.getUserId());
+		notificationQueueEntry = notificationQueueEntries.get(0);
+
+		assertTermValues(
+			getTermValues(),
+			ListUtil.fromString(
+				notificationQueueEntry.getSubject(), StringPool.COMMA));
+
+		NotificationRecipient notificationRecipient =
+			notificationQueueEntry.getNotificationRecipient();
+
+		notificationRecipientSettings =
+			notificationRecipient.getNotificationRecipientSettings();
+
+		Assert.assertEquals(
+			notificationRecipientSettings.toString(), 2,
+			notificationRecipientSettings.size());
+		_assertNotificationRecipientSetting(
+			notificationRecipientSettings.get(0), user1.getFullName());
+		_assertNotificationRecipientSetting(
+			notificationRecipientSettings.get(1), user2.getFullName());
+
+		Assert.assertEquals(
+			1,
+			_userNotificationEventLocalService.getUserNotificationEventsCount(
+				user1.getUserId()));
+	}
+
+	private void _testSendNotificationRecipientTypeTerm(
+			List<NotificationRecipientSetting> notificationRecipientSettings,
+			String recipientType)
+		throws Exception {
+
+		List<NotificationQueueEntry> notificationQueueEntries =
+			notificationQueueEntryLocalService.getNotificationQueueEntries(
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			notificationQueueEntries.toString(), 0,
+			notificationQueueEntries.size());
+
+		Assert.assertEquals(
+			0,
+			_userNotificationEventLocalService.getUserNotificationEventsCount(
+				user2.getUserId()));
+
+		NotificationTemplate notificationTemplate =
+			notificationTemplateLocalService.addNotificationTemplate(
+				_createNotificationContext(
+					notificationRecipientSettings, recipientType));
+
+		objectActionLocalService.addObjectAction(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			childObjectDefinition.getObjectDefinitionId(), true,
+			StringPool.BLANK, RandomTestUtil.randomString(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString(),
+			ObjectActionExecutorConstants.KEY_NOTIFICATION,
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD,
+			UnicodePropertiesBuilder.put(
+				"notificationTemplateId",
+				notificationTemplate.getNotificationTemplateId()
+			).build());
+
+		ObjectEntry objectEntry = objectEntryManager.addObjectEntry(
+			dtoConverterContext, parentObjectDefinition,
+			new ObjectEntry() {
+				{
+					properties = parentObjectEntryValues;
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		objectEntryManager.addObjectEntry(
+			dtoConverterContext, childObjectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.putAll(
+						childObjectEntryValues
+					).put(
+						getObjectRelationshipObjectField2Name(),
+						objectEntry.getId()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		notificationQueueEntries =
+			notificationQueueEntryLocalService.getNotificationQueueEntries(
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(
 			notificationQueueEntries.toString(), 1,
 			notificationQueueEntries.size());
 
-		_notificationQueueEntry = notificationQueueEntries.get(0);
+		notificationQueueEntry = notificationQueueEntries.get(0);
 
-		Assert.assertEquals(
-			NotificationQueueEntryConstants.STATUS_SENT,
-			_notificationQueueEntry.getStatus());
-		Assert.assertEquals(
-			"Subject textObjectFieldNameValue",
-			_notificationQueueEntry.getSubject());
+		assertTermValues(
+			getTermValues(),
+			ListUtil.fromString(
+				notificationQueueEntry.getSubject(), StringPool.COMMA));
 
 		NotificationRecipient notificationRecipient =
-			_notificationQueueEntry.getNotificationRecipient();
+			notificationQueueEntry.getNotificationRecipient();
 
-		for (NotificationRecipientSetting notificationRecipientSetting :
-				notificationRecipient.getNotificationRecipientSettings()) {
+		notificationRecipientSettings =
+			notificationRecipient.getNotificationRecipientSettings();
 
-			Assert.assertEquals(
-				"userFullName", notificationRecipientSetting.getName());
-			Assert.assertEquals(
-				"Test Test", notificationRecipientSetting.getValue());
-		}
+		Assert.assertEquals(
+			notificationRecipientSettings.toString(), 1,
+			notificationRecipientSettings.size());
+		_assertNotificationRecipientSetting(
+			notificationRecipientSettings.get(0), user2.getFullName());
+
+		Assert.assertEquals(
+			1,
+			_userNotificationEventLocalService.getUserNotificationEventsCount(
+				user2.getUserId()));
 	}
-
-	@DeleteAfterTestRun
-	private static ObjectDefinition _objectDefinition;
-
-	@Inject
-	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@DeleteAfterTestRun
-	private NotificationQueueEntry _notificationQueueEntry;
-
-	@Inject
-	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Inject
 	private UserNotificationEventLocalService

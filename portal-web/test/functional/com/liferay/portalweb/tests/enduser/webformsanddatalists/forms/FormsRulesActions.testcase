@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -277,7 +277,8 @@ definition {
 	test CanCreateACalculateRule {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsRulesActions#CanCreateACalculateRule";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -495,7 +496,8 @@ definition {
 	test CanCreateARequireRule {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsRulesActions#CanCreateARequireRule";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -1013,7 +1015,8 @@ definition {
 	test CanUtilizeDataProvidersInAutofillRule {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsRulesActions#CanUtilizeDataProvidersInAutofillRule";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Content > Forms and add a Data Provider") {
 			FormsAdmin.openFormsAdmin(siteURLKey = "guest");
@@ -1117,7 +1120,8 @@ definition {
 	@priority = 5
 	test CanUtilizeDataProvidersToCreateAnAutofillRule {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "FormsRulesActions#CanUtilizeDataProvidersToCreateAnAutofillRule";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1260,7 +1264,8 @@ definition {
 	test ShowDoesNotTriggerWhenTypingIntoUnrelatedField {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsRulesActions#ShowDoesNotTriggerWhenTypingIntoUnrelatedField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 

@@ -37,11 +37,13 @@ definition {
 
 		AssertVisible(locator1 = "Button#SELECT_FILES");
 
-		var key_attachmentFileName = ${attachmentFileName};
+		var fileName = ${attachmentFileName};
 
-		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = ${fileName});
+
+		UploadFile(
 			locator1 = "TextInput#FILE",
-			value1 = ${attachmentFileName});
+			value1 = ${dependencyFilePath});
 
 		WaitForElementPresent(locator1 = "Checkbox#SELECT_ALL");
 
@@ -288,6 +290,8 @@ definition {
 				wikiPageTitle = ${wikiPageTitle});
 		}
 		else {
+			WaitForPageLoad();
+
 			AssertClick(
 				locator1 = "Wiki#FRONTPAGE_DEFAULT_MESSAGE",
 				value1 = "This page is empty. Edit it to add some text.");
@@ -318,6 +322,8 @@ definition {
 			CKEditor.addSourceContent(content = ${wikiPageContent});
 		}
 		else {
+			WaitForElementPresent(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
 			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 			Type(
@@ -366,7 +372,7 @@ definition {
 			locator1 = "Wiki#FRONTPAGE_DEFAULT_MESSAGE",
 			value1 = ${emptyPageMessage});
 
-		Type.typeCKEditorWaitForCKEditor(
+		Type.typeEditorWaitForEditor(
 			locator1 = "CKEditor#BODY_FIELD",
 			value1 = ${wikiPageContent});
 
@@ -810,7 +816,7 @@ definition {
 			locator1 = "Link#WIKI_EDIT",
 			value1 = "Edit");
 
-		Type.typeCKEditorWaitForCKEditor(
+		Type.typeEditorWaitForEditor(
 			locator1 = "CKEditor#BODY_FIELD",
 			value1 = ${wikiPageContentEdit});
 

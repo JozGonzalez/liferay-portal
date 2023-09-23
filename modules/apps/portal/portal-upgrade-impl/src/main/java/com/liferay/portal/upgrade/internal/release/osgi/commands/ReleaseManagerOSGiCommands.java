@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.release.osgi.commands;
@@ -17,29 +8,22 @@ package com.liferay.portal.upgrade.internal.release.osgi.commands;
 import com.liferay.gogo.shell.logging.TeeLoggingUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.upgrade.UpgradeStep;
-import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
-import com.liferay.portal.kernel.version.Version;
-import com.liferay.portal.upgrade.PortalUpgradeProcess;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.upgrade.internal.executor.UpgradeExecutor;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 import com.liferay.portal.upgrade.internal.release.ReleaseManagerImpl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
 
 import org.apache.felix.service.command.Descriptor;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -59,17 +43,17 @@ public class ReleaseManagerOSGiCommands {
 
 	@Descriptor("List pending upgrades")
 	public String check() {
-		return _check(false);
+		return _releaseManagerImpl.getStatusMessage(false);
 	}
 
 	@Descriptor("List pending upgrade processes and their upgrade steps")
 	public String checkAll() {
-		return _check(true);
+		return _releaseManagerImpl.getStatusMessage(true);
 	}
 
 	@Descriptor("Execute upgrade for a specific module")
 	public String execute(String bundleSymbolicName) {
-		List<UpgradeInfo> upgradeInfos = _releaseManagerImpl.getUpgradeInfos(
+		List<UpgradeInfo> upgradeInfos = _upgradeExecutor.getUpgradeInfos(
 			bundleSymbolicName);
 
 		if (upgradeInfos == null) {
@@ -79,7 +63,10 @@ public class ReleaseManagerOSGiCommands {
 		TeeLoggingUtil.runWithTeeLogging(
 			() -> {
 				try {
-					_upgradeExecutor.execute(bundleSymbolicName, upgradeInfos);
+					_upgradeExecutor.execute(
+						BundleUtil.getBundle(
+							_bundleContext, bundleSymbolicName),
+						upgradeInfos);
 				}
 				catch (Throwable throwable) {
 					_log.error(
@@ -94,7 +81,7 @@ public class ReleaseManagerOSGiCommands {
 
 	@Descriptor("Execute upgrade for a specific module and final version")
 	public String execute(String bundleSymbolicName, String toVersionString) {
-		List<UpgradeInfo> upgradeInfos = _releaseManagerImpl.getUpgradeInfos(
+		List<UpgradeInfo> upgradeInfos = _upgradeExecutor.getUpgradeInfos(
 			bundleSymbolicName);
 
 		if (upgradeInfos == null) {
@@ -106,7 +93,7 @@ public class ReleaseManagerOSGiCommands {
 
 		TeeLoggingUtil.runWithTeeLogging(
 			() -> _upgradeExecutor.executeUpgradeInfos(
-				bundleSymbolicName,
+				BundleUtil.getBundle(_bundleContext, bundleSymbolicName),
 				releaseGraphManager.getUpgradeInfos(
 					_releaseManagerImpl.getSchemaVersionString(
 						bundleSymbolicName),
@@ -148,7 +135,7 @@ public class ReleaseManagerOSGiCommands {
 	@Descriptor("List registered upgrade processes for all modules")
 	public String list() {
 		Set<String> bundleSymbolicNames =
-			_releaseManagerImpl.getBundleSymbolicNames();
+			_upgradeExecutor.getBundleSymbolicNames();
 
 		StringBundler sb = new StringBundler(2 * bundleSymbolicNames.size());
 
@@ -164,7 +151,7 @@ public class ReleaseManagerOSGiCommands {
 
 	@Descriptor("List registered upgrade processes for a specific module")
 	public String list(String bundleSymbolicName) {
-		List<UpgradeInfo> upgradeInfos = _releaseManagerImpl.getUpgradeInfos(
+		List<UpgradeInfo> upgradeInfos = _upgradeExecutor.getUpgradeInfos(
 			bundleSymbolicName);
 
 		StringBundler sb = new StringBundler(5 + (3 * upgradeInfos.size()));
@@ -187,6 +174,11 @@ public class ReleaseManagerOSGiCommands {
 		return sb.toString();
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+	}
+
 	protected void executeAll(
 		Set<String> upgradeThrewExceptionBundleSymbolicNames) {
 
@@ -206,11 +198,13 @@ public class ReleaseManagerOSGiCommands {
 
 				try {
 					List<UpgradeInfo> upgradeInfos =
-						_releaseManagerImpl.getUpgradeInfos(
+						_upgradeExecutor.getUpgradeInfos(
 							upgradableBundleSymbolicName);
 
 					_upgradeExecutor.execute(
-						upgradableBundleSymbolicName, upgradeInfos);
+						BundleUtil.getBundle(
+							_bundleContext, upgradableBundleSymbolicName),
+						upgradeInfos);
 				}
 				catch (Throwable throwable) {
 					_log.error(
@@ -225,178 +219,10 @@ public class ReleaseManagerOSGiCommands {
 		}
 	}
 
-	private String _check(boolean showUpgradeSteps) {
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(_checkPortal(showUpgradeSteps));
-
-		if (sb.length() > 0) {
-			sb.append(StringPool.NEW_LINE);
-		}
-
-		sb.append(_checkModules(showUpgradeSteps));
-
-		return sb.toString();
-	}
-
-	private String _checkModules(boolean showUpgradeSteps) {
-		StringBundler sb = new StringBundler();
-
-		Set<String> bundleSymbolicNames =
-			_releaseManagerImpl.getBundleSymbolicNames();
-
-		for (String bundleSymbolicName : bundleSymbolicNames) {
-			String schemaVersionString =
-				_releaseManagerImpl.getSchemaVersionString(bundleSymbolicName);
-
-			ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
-				_releaseManagerImpl.getUpgradeInfos(bundleSymbolicName));
-
-			List<List<UpgradeInfo>> upgradeInfosList =
-				releaseGraphManager.getUpgradeInfosList(schemaVersionString);
-
-			int size = upgradeInfosList.size();
-
-			if (size > 1) {
-				sb.append("There are ");
-				sb.append(size);
-				sb.append(" possible end nodes for ");
-				sb.append(schemaVersionString);
-				sb.append(StringPool.NEW_LINE);
-			}
-
-			if (size == 0) {
-				continue;
-			}
-
-			List<UpgradeInfo> upgradeInfos = upgradeInfosList.get(0);
-
-			UpgradeInfo lastUpgradeInfo = upgradeInfos.get(
-				upgradeInfos.size() - 1);
-
-			sb.append(
-				_getModulePendingUpgradeMessage(
-					bundleSymbolicName, schemaVersionString,
-					lastUpgradeInfo.getToSchemaVersionString()));
-
-			if (showUpgradeSteps) {
-				sb.append(StringPool.COLON);
-
-				for (UpgradeInfo upgradeInfo : upgradeInfos) {
-					UpgradeStep upgradeStep = upgradeInfo.getUpgradeStep();
-
-					sb.append(StringPool.NEW_LINE);
-					sb.append(StringPool.TAB);
-					sb.append(
-						_getPendingUpgradeProcessMessage(
-							upgradeStep.getClass(),
-							upgradeInfo.getFromSchemaVersionString(),
-							upgradeInfo.getToSchemaVersionString()));
-				}
-			}
-
-			sb.append(StringPool.NEW_LINE);
-		}
-
-		return sb.toString();
-	}
-
-	private String _checkPortal(boolean showUpgradeSteps) {
-		try (Connection connection = DataAccess.getConnection()) {
-			Version currentSchemaVersion =
-				PortalUpgradeProcess.getCurrentSchemaVersion(connection);
-
-			SortedMap<Version, UpgradeProcess> pendingUpgradeProcesses =
-				PortalUpgradeProcess.getPendingUpgradeProcesses(
-					currentSchemaVersion);
-
-			if (!pendingUpgradeProcesses.isEmpty()) {
-				Version latestSchemaVersion =
-					PortalUpgradeProcess.getLatestSchemaVersion();
-
-				StringBundler sb = new StringBundler();
-
-				sb.append(
-					_getModulePendingUpgradeMessage(
-						"Portal", currentSchemaVersion.toString(),
-						latestSchemaVersion.toString()));
-
-				sb.append(" (requires upgrade tool or auto upgrade)");
-
-				if (showUpgradeSteps) {
-					sb.append(StringPool.COLON);
-
-					for (SortedMap.Entry<Version, UpgradeProcess> entry :
-							pendingUpgradeProcesses.entrySet()) {
-
-						sb.append(StringPool.NEW_LINE);
-						sb.append(StringPool.TAB);
-
-						UpgradeProcess upgradeProcess = entry.getValue();
-						Version version = entry.getKey();
-
-						sb.append(
-							_getPendingUpgradeProcessMessage(
-								upgradeProcess.getClass(),
-								currentSchemaVersion.toString(),
-								version.toString()));
-
-						sb.append(StringPool.NEW_LINE);
-
-						currentSchemaVersion = version;
-					}
-				}
-
-				return sb.toString();
-			}
-		}
-		catch (SQLException sqlException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to get pending upgrade information for the portal",
-					sqlException);
-			}
-		}
-
-		return StringPool.BLANK;
-	}
-
-	private String _getModulePendingUpgradeMessage(
-		String moduleName, String currentSchemaVersion,
-		String finalSchemaVersion) {
-
-		return StringBundler.concat(
-			"There are upgrade processes available for ", moduleName, " from ",
-			currentSchemaVersion, " to ", finalSchemaVersion);
-	}
-
-	private String _getPendingUpgradeProcessMessage(
-		Class<?> upgradeClass, String fromSchemaVersion,
-		String toSchemaVersion) {
-
-		StringBundler sb = new StringBundler(6);
-
-		String toMessage = toSchemaVersion;
-
-		if (UpgradeProcessUtil.isRequiredSchemaVersion(
-				Version.parseVersion(fromSchemaVersion),
-				Version.parseVersion(toSchemaVersion))) {
-
-			toMessage += " (REQUIRED)";
-		}
-
-		sb.append(fromSchemaVersion);
-		sb.append(" to ");
-		sb.append(toMessage);
-		sb.append(StringPool.COLON);
-		sb.append(StringPool.SPACE);
-		sb.append(upgradeClass.getName());
-
-		return sb.toString();
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReleaseManagerOSGiCommands.class);
+
+	private BundleContext _bundleContext;
 
 	@Reference
 	private ReleaseManagerImpl _releaseManagerImpl;

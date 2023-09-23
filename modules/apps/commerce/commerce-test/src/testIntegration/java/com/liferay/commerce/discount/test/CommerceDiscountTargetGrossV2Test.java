@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.test;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -27,7 +18,6 @@ import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
 import com.liferay.commerce.discount.model.CommerceDiscount;
-import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.test.util.CommerceDiscountTestUtil;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.model.CommerceOrder;
@@ -57,7 +47,6 @@ import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -104,9 +93,8 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		_user = UserTestUtil.addUser();
 
-		_commerceAccount =
-			_commerceAccountLocalService.getPersonalCommerceAccount(
-				_user.getUserId());
+		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+			_user.getUserId());
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			_group.getCompanyId());
@@ -116,7 +104,8 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		_commerceChannel.setDiscountsTargetNetPrice(false);
 
-		_commerceChannelLocalService.updateCommerceChannel(_commerceChannel);
+		_commerceChannel = _commerceChannelLocalService.updateCommerceChannel(
+			_commerceChannel);
 
 		_commerceTaxMethod = CommerceTaxTestUtil.addCommerceByAddressTaxMethod(
 			_user.getUserId(), _commerceChannel.getGroupId(), true);
@@ -161,9 +150,9 @@ public class CommerceDiscountTargetGrossV2Test {
 			_user.getUserId(), _commerceChannel.getGroupId(), cpTaxCategoryId,
 			_commerceTaxMethod.getCommerceTaxMethodId(), rate);
 
-		CommerceAccountGroup commerceAccountGroup =
-			CommerceAccountGroupTestUtil.addCommerceAccountToAccountGroup(
-				_group.getGroupId(), _commerceAccount);
+		AccountGroup accountGroup =
+			CommerceAccountGroupTestUtil.addAccountEntryToAccountGroup(
+				_group.getGroupId(), _accountEntry);
 
 		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
@@ -179,7 +168,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
@@ -199,15 +189,16 @@ public class CommerceDiscountTargetGrossV2Test {
 				cpDefinition.getCPDefinitionId());
 
 		CommerceDiscountTestUtil.addDiscountCommerceAccountGroupRel(
-			commerceDiscount, commerceAccountGroup);
+			commerceDiscount, accountGroup);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceDiscountValue discountValue =
 			commerceProductPrice.getDiscountValue();
@@ -288,7 +279,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
@@ -308,12 +300,13 @@ public class CommerceDiscountTargetGrossV2Test {
 				cpDefinition.getCPDefinitionId());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		BigDecimal expectedPrice = CommerceTaxTestUtil.getPriceWithTaxAmount(
 			commercePriceEntry.getPrice(), taxRate,
@@ -388,35 +381,40 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition1.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition1.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition1);
+		cpDefinition1 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition1);
 
 		CPDefinition cpDefinition2 = cpInstance2.getCPDefinition();
 
 		cpDefinition2.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition2.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition2);
+		cpDefinition2 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition2);
 
 		CPDefinition cpDefinition3 = cpInstance3.getCPDefinition();
 
 		cpDefinition3.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition3.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition3);
+		cpDefinition3 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition3);
 
 		CPDefinition cpDefinition4 = cpInstance4.getCPDefinition();
 
 		cpDefinition4.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition4.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition4);
+		cpDefinition4 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition4);
 
 		CPDefinition cpDefinition5 = cpInstance5.getCPDefinition();
 
 		cpDefinition5.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition5.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition5);
+		cpDefinition5 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition5);
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
@@ -490,28 +488,33 @@ public class CommerceDiscountTargetGrossV2Test {
 				assetCategory2.getCategoryId());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice1 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance1.getCPInstanceId(), 1, commerceContext);
+				cpInstance1.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice2 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance2.getCPInstanceId(), 1, commerceContext);
+				cpInstance2.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice3 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance3.getCPInstanceId(), 1, commerceContext);
+				cpInstance3.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice4 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance4.getCPInstanceId(), 1, commerceContext);
+				cpInstance4.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice5 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance5.getCPInstanceId(), 1, commerceContext);
+				cpInstance5.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		BigDecimal price1 = commercePriceEntry1.getPrice();
 
@@ -681,35 +684,40 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition1.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition1.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition1);
+		cpDefinition1 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition1);
 
 		CPDefinition cpDefinition2 = cpInstance2.getCPDefinition();
 
 		cpDefinition2.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition2.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition2);
+		cpDefinition2 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition2);
 
 		CPDefinition cpDefinition3 = cpInstance3.getCPDefinition();
 
 		cpDefinition3.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition3.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition3);
+		cpDefinition3 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition3);
 
 		CPDefinition cpDefinition4 = cpInstance4.getCPDefinition();
 
 		cpDefinition4.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition4.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition4);
+		cpDefinition4 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition4);
 
 		CPDefinition cpDefinition5 = cpInstance5.getCPDefinition();
 
 		cpDefinition5.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition5.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition5);
+		cpDefinition5 = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition5);
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
@@ -843,28 +851,33 @@ public class CommerceDiscountTargetGrossV2Test {
 			assetCategory2.getCategoryId());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice1 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance1.getCPInstanceId(), 1, commerceContext);
+				cpInstance1.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice2 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance2.getCPInstanceId(), 1, commerceContext);
+				cpInstance2.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice3 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance3.getCPInstanceId(), 1, commerceContext);
+				cpInstance3.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice4 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance4.getCPInstanceId(), 1, commerceContext);
+				cpInstance4.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceProductPrice commerceProductPrice5 =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance5.getCPInstanceId(), 1, commerceContext);
+				cpInstance5.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		BigDecimal price1 = CommerceTaxTestUtil.getPriceWithTaxAmount(
 			commercePriceEntry1.getPrice(), taxRate,
@@ -1018,7 +1031,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		commerceOrder.setCommerceCurrencyId(
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
@@ -1034,7 +1048,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
@@ -1055,11 +1070,9 @@ public class CommerceDiscountTargetGrossV2Test {
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
 			_commerceChannel.getCommerceChannelId());
 
-		int quantity = 10;
-
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
-			quantity);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
 
 		String couponCode = StringUtil.randomString();
 
@@ -1070,25 +1083,26 @@ public class CommerceDiscountTargetGrossV2Test {
 				cpDefinition.getCPDefinitionId());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, commerceOrder);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			commerceOrder);
 
 		CommerceTestUtil.addCommerceOrderItem(
-			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
-			commerceContext);
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
+			BigDecimal.ONE, commerceContext);
 
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
 			commerceOrder.getCommerceOrderId(), couponCode, commerceContext);
 
 		commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, commerceOrder);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			commerceOrder);
 
 		_commerceOrders.add(commerceOrder);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		BigDecimal actualPrice = BigDecimal.ZERO;
 		BigDecimal discountPrice = BigDecimal.ZERO;
@@ -1171,7 +1185,7 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -1182,7 +1196,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		BigDecimal price1 = BigDecimal.valueOf(20);
 
@@ -1198,7 +1213,7 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
 			commercePriceEntry.getCommercePriceEntryId(), StringPool.BLANK,
-			price5, 5, true, false, BigDecimal.valueOf(10),
+			price5, BigDecimal.valueOf(5), true, false, BigDecimal.valueOf(10),
 			BigDecimal.valueOf(10), BigDecimal.valueOf(10),
 			BigDecimal.valueOf(10), true, true);
 
@@ -1206,7 +1221,7 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
 			commercePriceEntry.getCommercePriceEntryId(), StringPool.BLANK,
-			price10, 10, true, false, BigDecimal.valueOf(10),
+			price10, BigDecimal.TEN, true, false, BigDecimal.valueOf(10),
 			BigDecimal.valueOf(10), BigDecimal.valueOf(10),
 			BigDecimal.valueOf(10), true, true);
 
@@ -1214,27 +1229,28 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
 			commercePriceEntry.getCommercePriceEntryId(), StringPool.BLANK,
-			price15, 15, true, false, BigDecimal.valueOf(10),
+			price15, BigDecimal.valueOf(15), true, false,
 			BigDecimal.valueOf(10), BigDecimal.valueOf(10),
-			BigDecimal.valueOf(10), true, true);
+			BigDecimal.valueOf(10), BigDecimal.valueOf(10), true, true);
 
 		BigDecimal price20 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
 			commercePriceEntry.getCommercePriceEntryId(), StringPool.BLANK,
-			price20, 20, true, false, BigDecimal.valueOf(10),
+			price20, BigDecimal.valueOf(20), true, false,
 			BigDecimal.valueOf(10), BigDecimal.valueOf(10),
-			BigDecimal.valueOf(10), true, true);
+			BigDecimal.valueOf(10), BigDecimal.valueOf(10), true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
-		int quantity = 10;
+		BigDecimal quantity = BigDecimal.TEN;
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, false, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, false, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1245,8 +1261,7 @@ public class CommerceDiscountTargetGrossV2Test {
 			price10, taxRate,
 			RoundingMode.valueOf(_commerceCurrency.getRoundingMode()));
 
-		BigDecimal expectedPrice = price10.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice = price10.multiply(quantity);
 
 		BigDecimal expectedPrice_level1 = _subtractPercentage(
 			expectedPrice, BigDecimal.valueOf(10));
@@ -1306,7 +1321,7 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -1317,7 +1332,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		BigDecimal price1 = BigDecimal.valueOf(20);
 
@@ -1329,14 +1345,15 @@ public class CommerceDiscountTargetGrossV2Test {
 			BigDecimal.valueOf(5), BigDecimal.valueOf(10), true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
-		int quantity = 10;
+		BigDecimal quantity = BigDecimal.TEN;
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, false, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, false, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1347,8 +1364,7 @@ public class CommerceDiscountTargetGrossV2Test {
 			price1, taxRate,
 			RoundingMode.valueOf(_commerceCurrency.getRoundingMode()));
 
-		BigDecimal expectedPrice = price1.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice = price1.multiply(quantity);
 
 		BigDecimal expectedPrice_level1 = _subtractPercentage(
 			expectedPrice, BigDecimal.valueOf(10));
@@ -1409,7 +1425,7 @@ public class CommerceDiscountTargetGrossV2Test {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -1420,7 +1436,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		BigDecimal price1 = BigDecimal.valueOf(20);
 
@@ -1455,12 +1472,13 @@ public class CommerceDiscountTargetGrossV2Test {
 			cpDefinition.getCPDefinitionId());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1536,7 +1554,8 @@ public class CommerceDiscountTargetGrossV2Test {
 		cpDefinition.setCPTaxCategoryId(cpTaxCategoryId);
 		cpDefinition.setTaxExempt(false);
 
-		_cpDefinitionLocalService.updateCPDefinition(cpDefinition);
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition);
 
 		BigDecimal price = BigDecimal.valueOf(20);
 
@@ -1549,12 +1568,13 @@ public class CommerceDiscountTargetGrossV2Test {
 				BigDecimal.valueOf(0), BigDecimal.valueOf(5), true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1608,10 +1628,8 @@ public class CommerceDiscountTargetGrossV2Test {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
-
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	@DeleteAfterTestRun
+	private AccountEntry _accountEntry;
 
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
@@ -1623,9 +1641,6 @@ public class CommerceDiscountTargetGrossV2Test {
 	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	private CommerceCurrency _commerceCurrency;
-
-	@Inject
-	private CommerceDiscountLocalService _commerceDiscountLocalService;
 
 	@Inject
 	private CommerceOrderLocalService _commerceOrderLocalService;
@@ -1652,8 +1667,5 @@ public class CommerceDiscountTargetGrossV2Test {
 	private CPDefinitionLocalService _cpDefinitionLocalService;
 
 	private Group _group;
-
-	@Inject
-	private UserLocalService _userLocalService;
 
 }

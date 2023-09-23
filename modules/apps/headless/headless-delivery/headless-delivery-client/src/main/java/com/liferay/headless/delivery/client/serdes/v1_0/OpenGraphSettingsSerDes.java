@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
@@ -89,6 +80,30 @@ public class OpenGraphSettingsSerDes {
 			sb.append(String.valueOf(openGraphSettings.getImage()));
 		}
 
+		if (openGraphSettings.getImageAlt() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageAlt\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(openGraphSettings.getImageAlt()));
+
+			sb.append("\"");
+		}
+
+		if (openGraphSettings.getImageAlt_i18n() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageAlt_i18n\": ");
+
+			sb.append(_toJSON(openGraphSettings.getImageAlt_i18n()));
+		}
+
 		if (openGraphSettings.getTitle() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -159,6 +174,23 @@ public class OpenGraphSettingsSerDes {
 			map.put("image", String.valueOf(openGraphSettings.getImage()));
 		}
 
+		if (openGraphSettings.getImageAlt() == null) {
+			map.put("imageAlt", null);
+		}
+		else {
+			map.put(
+				"imageAlt", String.valueOf(openGraphSettings.getImageAlt()));
+		}
+
+		if (openGraphSettings.getImageAlt_i18n() == null) {
+			map.put("imageAlt_i18n", null);
+		}
+		else {
+			map.put(
+				"imageAlt_i18n",
+				String.valueOf(openGraphSettings.getImageAlt_i18n()));
+		}
+
 		if (openGraphSettings.getTitle() == null) {
 			map.put("title", null);
 		}
@@ -213,6 +245,18 @@ public class OpenGraphSettingsSerDes {
 				if (jsonParserFieldValue != null) {
 					openGraphSettings.setImage(
 						ContentDocumentSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "imageAlt")) {
+				if (jsonParserFieldValue != null) {
+					openGraphSettings.setImageAlt((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "imageAlt_i18n")) {
+				if (jsonParserFieldValue != null) {
+					openGraphSettings.setImageAlt_i18n(
+						(Map)OpenGraphSettingsSerDes.toMap(
 							(String)jsonParserFieldValue));
 				}
 			}

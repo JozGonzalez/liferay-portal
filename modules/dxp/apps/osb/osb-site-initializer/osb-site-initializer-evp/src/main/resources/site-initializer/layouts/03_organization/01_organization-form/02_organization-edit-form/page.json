@@ -32,6 +32,7 @@
 		},
 		{
 			"actionIds": [
+				"VIEW"
 			],
 			"roleName": "Employee",
 			"scope": 4
@@ -41,6 +42,13 @@
 				"VIEW"
 			],
 			"roleName": "Finance User",
+			"scope": 4
+		},
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "Liferay Manager",
 			"scope": 4
 		}
 	],

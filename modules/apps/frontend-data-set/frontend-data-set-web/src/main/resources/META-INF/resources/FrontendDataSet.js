@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
@@ -30,20 +21,14 @@ import ClayEmptyState from '@clayui/empty-state';
 
 import FrontendDataSetContext from './FrontendDataSetContext';
 import ManagementBar from './management_bar/ManagementBar';
+import CreationMenu from './management_bar/components/CreationMenu';
 import {
 	getFilterSelectedItemsLabel,
 	getOdataFilterString,
 } from './management_bar/components/filters/Filter';
 import Modal from './modal/Modal';
 import SidePanel from './side_panel/SidePanel';
-import {
-	DATASET_ACTION_PERFORMED,
-	DATASET_DISPLAY_UPDATED,
-	OPEN_MODAL,
-	OPEN_SIDE_PANEL,
-	SIDE_PANEL_CLOSED,
-	UPDATE_DATASET_DISPLAY,
-} from './utils/eventsDefinitions';
+import EVENTS from './utils/eventsDefinitions';
 import {
 	formatItemChanges,
 	getCurrentItemUpdates,
@@ -68,11 +53,14 @@ const FrontendDataSet = ({
 	creationMenu,
 	currentURL,
 	customDataRenderers,
+	customRenderers,
 	customViews,
 	customViewsEnabled,
+	emptyState,
 	filters: initialFilters,
 	formId,
 	formName,
+	header,
 	id,
 	inlineAddingSettings,
 	inlineEditingSettings,
@@ -83,6 +71,7 @@ const FrontendDataSet = ({
 	nestedItemsReferenceKey,
 	onActionDropdownItemClick,
 	onBulkActionItemClick,
+	onSelect,
 	overrideEmptyResultView,
 	pagination,
 	portletId,
@@ -93,7 +82,7 @@ const FrontendDataSet = ({
 	showPagination,
 	showSearch,
 	sidePanelId,
-	sorting: sortingProp,
+	sorts: sortsProp,
 	style,
 	uniformActionsDisplay,
 	views,
@@ -151,19 +140,23 @@ const FrontendDataSet = ({
 			...initialActiveView,
 		};
 
-		const filters = initialFilters.map((filter) => {
-			const preloadedData = filter.preloadedData;
+		const filters = initialFilters
+			? initialFilters.map((filter) => {
+					const preloadedData = filter.preloadedData;
 
-			if (preloadedData) {
-				filter.active = true;
-				filter.selectedData = preloadedData;
+					if (preloadedData) {
+						filter.active = true;
+						filter.selectedData = preloadedData;
 
-				filter.odataFilterString = getOdataFilterString(filter);
-				filter.selectedItemsLabel = getFilterSelectedItemsLabel(filter);
-			}
+						filter.odataFilterString = getOdataFilterString(filter);
+						filter.selectedItemsLabel = getFilterSelectedItemsLabel(
+							filter
+						);
+					}
 
-			return filter;
-		});
+					return filter;
+			  })
+			: [];
 
 		const paginationDelta =
 			showPagination &&
@@ -177,13 +170,13 @@ const FrontendDataSet = ({
 				activeView,
 				filters,
 				paginationDelta,
-				sorting: sortingProp,
+				sorts: sortsProp,
 				visibleFieldNames: initialVisibleFieldNames,
 			},
 			filters,
 			modifiedFields: {},
 			paginationDelta,
-			sorting: sortingProp,
+			sorts: sortsProp,
 			views,
 			visibleFieldNames: initialVisibleFieldNames,
 		};
@@ -193,7 +186,7 @@ const FrontendDataSet = ({
 		useReducer(viewsReducer, getInitialViewsState())
 	);
 
-	const {activeView, filters, paginationDelta, sorting} = viewsState;
+	const {activeView, filters, paginationDelta, sorts} = viewsState;
 
 	const {
 		component: View,
@@ -218,7 +211,7 @@ const FrontendDataSet = ({
 			searchParam,
 			paginationDelta,
 			pageNumber,
-			sorting
+			sorts
 		);
 	}, [
 		apiURL,
@@ -227,7 +220,7 @@ const FrontendDataSet = ({
 		filters,
 		pageNumber,
 		searchParam,
-		sorting,
+		sorts,
 	]);
 
 	const isMounted = useIsMounted();
@@ -313,7 +306,7 @@ const FrontendDataSet = ({
 
 					setDataLoading(false);
 
-					Liferay.fire(DATASET_DISPLAY_UPDATED, {id});
+					Liferay.fire(EVENTS.DISPLAY_UPDATED, {id});
 				}
 
 				return data;
@@ -435,12 +428,12 @@ const FrontendDataSet = ({
 			);
 		}
 
-		Liferay.on(SIDE_PANEL_CLOSED, handleCloseSidePanel);
-		Liferay.on(UPDATE_DATASET_DISPLAY, handleRefreshFromTheOutside);
+		Liferay.on(EVENTS.SIDE_PANEL_CLOSED, handleCloseSidePanel);
+		Liferay.on(EVENTS.UPDATE_DISPLAY, handleRefreshFromTheOutside);
 
 		return () => {
-			Liferay.detach(SIDE_PANEL_CLOSED, handleCloseSidePanel);
-			Liferay.detach(UPDATE_DATASET_DISPLAY, handleRefreshFromTheOutside);
+			Liferay.detach(EVENTS.SIDE_PANEL_CLOSED, handleCloseSidePanel);
+			Liferay.detach(EVENTS.UPDATE_DISPLAY, handleRefreshFromTheOutside);
 		};
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -483,6 +476,7 @@ const FrontendDataSet = ({
 				inlineAddingSettings ? (
 					<View
 						frontendDataSetContext={FrontendDataSetContext}
+						header={header}
 						items={items}
 						itemsActions={itemsActions}
 						style={style}
@@ -490,12 +484,23 @@ const FrontendDataSet = ({
 					/>
 				) : (
 					<ClayEmptyState
-						description={Liferay.Language.get(
-							'sorry,-no-results-were-found'
+						description={
+							emptyState?.description ??
+							Liferay.Language.get('sorry,-no-results-were-found')
+						}
+						imgSrc={
+							themeDisplay.getPathThemeImages() +
+							(emptyState?.image ?? '/states/search_state.gif')
+						}
+						title={
+							emptyState?.title ??
+							Liferay.Language.get('no-results-found')
+						}
+					>
+						{creationMenu && (
+							<CreationMenu {...creationMenu} inEmptyState />
 						)}
-						imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
-						title={Liferay.Language.get('no-results-found')}
-					/>
+					</ClayEmptyState>
 				)}
 			</div>
 		) : (
@@ -509,7 +514,15 @@ const FrontendDataSet = ({
 					activeDelta={paginationDelta}
 					activePage={pageNumber}
 					deltas={pagination?.deltas}
+					disableEllipsis={items.length / paginationDelta - 5 > 999}
 					ellipsisBuffer={3}
+					labels={{
+						paginationResults: Liferay.Language.get(
+							'showing-x-to-x-of-x-entries'
+						),
+						perPageItems: Liferay.Language.get('x-items'),
+						selectPerPageItems: Liferay.Language.get('x-items'),
+					}}
 					onDeltaChange={(delta) => {
 						setPageNumber(1);
 
@@ -541,7 +554,7 @@ const FrontendDataSet = ({
 		})
 			.then((response) => {
 				if (response.ok) {
-					Liferay.fire(DATASET_ACTION_PERFORMED, {
+					Liferay.fire(EVENTS.ACTION_PERFORMED, {
 						id,
 					});
 
@@ -582,7 +595,7 @@ const FrontendDataSet = ({
 	}
 
 	function openSidePanel(config) {
-		return Liferay.fire(OPEN_SIDE_PANEL, {
+		return Liferay.fire(EVENTS.OPEN_SIDE_PANEL, {
 			id: dataSetSupportSidePanelId,
 			onSubmit: refreshData,
 			...config,
@@ -590,7 +603,7 @@ const FrontendDataSet = ({
 	}
 
 	function openModal(config) {
-		return Liferay.fire(OPEN_MODAL, {
+		return Liferay.fire(EVENTS.OPEN_MODAL, {
 			id: dataSetSupportModalId,
 			onSubmit: refreshData,
 			...config,
@@ -737,6 +750,7 @@ const FrontendDataSet = ({
 				applyItemInlineUpdates,
 				createInlineItem,
 				customDataRenderers,
+				customRenderers,
 				executeAsyncItemAction,
 				formId,
 				formName,
@@ -754,6 +768,7 @@ const FrontendDataSet = ({
 				nestedItemsReferenceKey,
 				onActionDropdownItemClick,
 				onBulkActionItemClick,
+				onSelect,
 				openModal,
 				openSidePanel,
 				portletId,
@@ -767,7 +782,7 @@ const FrontendDataSet = ({
 				selectedItemsValue,
 				selectionType,
 				sidePanelId: dataSetSupportSidePanelId,
-				sorting,
+				sorts,
 				style,
 				toggleItemInlineEdit,
 				uniformActionsDisplay,
@@ -829,7 +844,6 @@ const FrontendDataSet = ({
 FrontendDataSet.defaultProps = {
 	bulkActions: [],
 	customViews: '{}',
-	filters: [],
 	inlineEditingSettings: null,
 	items: null,
 	itemsActions: null,
@@ -838,7 +852,7 @@ FrontendDataSet.defaultProps = {
 	showManagementBar: true,
 	showPagination: true,
 	showSearch: true,
-	sorting: [],
+	sorts: [],
 	style: 'default',
 };
 

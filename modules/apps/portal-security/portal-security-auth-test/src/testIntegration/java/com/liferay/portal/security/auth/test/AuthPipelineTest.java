@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.auth.test;
@@ -22,6 +13,7 @@ import com.liferay.portal.kernel.security.auth.AuthFailure;
 import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.security.auth.AuthPipeline;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -68,7 +60,10 @@ public class AuthPipelineTest {
 					return null;
 				}),
 			HashMapDictionaryBuilder.<String, Object>put(
-				"key", new String[] {"auth.failure", "auth.max.failures"}
+				"key",
+				new String[] {
+					PropsKeys.AUTH_FAILURE, PropsKeys.AUTH_MAX_FAILURES
+				}
 			).put(
 				"service.ranking", Integer.MAX_VALUE
 			).build());
@@ -84,7 +79,7 @@ public class AuthPipelineTest {
 					return Authenticator.SUCCESS;
 				}),
 			HashMapDictionaryBuilder.<String, Object>put(
-				"key", "auth.pipeline.pre"
+				"key", PropsKeys.AUTH_PIPELINE_PRE
 			).put(
 				"service.ranking", Integer.MAX_VALUE
 			).build());
@@ -105,7 +100,7 @@ public class AuthPipelineTest {
 	@Test
 	public void testAuthenticateByEmailAddress() throws AuthException {
 		AuthPipeline.authenticateByEmailAddress(
-			"auth.pipeline.pre", 0, RandomTestUtil.randomString(),
+			PropsKeys.AUTH_PIPELINE_PRE, 0, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, null);
 
 		Assert.assertTrue(_calledAuthenticator);
@@ -114,7 +109,7 @@ public class AuthPipelineTest {
 	@Test
 	public void testAuthenticateByScreenName() throws AuthException {
 		AuthPipeline.authenticateByScreenName(
-			"auth.pipeline.pre", 0, RandomTestUtil.randomString(),
+			PropsKeys.AUTH_PIPELINE_PRE, 0, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, null);
 
 		Assert.assertTrue(_calledAuthenticator);
@@ -123,7 +118,7 @@ public class AuthPipelineTest {
 	@Test
 	public void testAuthenticateByUserId() throws AuthException {
 		AuthPipeline.authenticateByUserId(
-			"auth.pipeline.pre", 0, RandomTestUtil.randomLong(),
+			PropsKeys.AUTH_PIPELINE_PRE, 0, RandomTestUtil.randomLong(),
 			RandomTestUtil.randomString(), null, null);
 
 		Assert.assertTrue(_calledAuthenticator);
@@ -133,7 +128,8 @@ public class AuthPipelineTest {
 	public void testOnFailureByScreenName() {
 		try {
 			AuthPipeline.onFailureByScreenName(
-				"auth.failure", 0, RandomTestUtil.randomString(), null, null);
+				PropsKeys.AUTH_FAILURE, 0, RandomTestUtil.randomString(), null,
+				null);
 		}
 		catch (AuthException authException) {
 			if (_log.isDebugEnabled()) {
@@ -148,7 +144,8 @@ public class AuthPipelineTest {
 	public void testOnFailureByUserId() {
 		try {
 			AuthPipeline.onFailureByUserId(
-				"auth.failure", 0, RandomTestUtil.randomLong(), null, null);
+				PropsKeys.AUTH_FAILURE, 0, RandomTestUtil.randomLong(), null,
+				null);
 		}
 		catch (AuthException authException) {
 			if (_log.isDebugEnabled()) {
@@ -163,8 +160,8 @@ public class AuthPipelineTest {
 	public void testOnMaxFailuresByEmailAddress() {
 		try {
 			AuthPipeline.onMaxFailuresByEmailAddress(
-				"auth.max.failures", 0, RandomTestUtil.randomString(), null,
-				null);
+				PropsKeys.AUTH_MAX_FAILURES, 0, RandomTestUtil.randomString(),
+				null, null);
 		}
 		catch (AuthException authException) {
 			if (_log.isDebugEnabled()) {
@@ -179,8 +176,8 @@ public class AuthPipelineTest {
 	public void testOnMaxFailuresByScreenName() {
 		try {
 			AuthPipeline.onMaxFailuresByScreenName(
-				"auth.max.failures", 0, RandomTestUtil.randomString(), null,
-				null);
+				PropsKeys.AUTH_MAX_FAILURES, 0, RandomTestUtil.randomString(),
+				null, null);
 		}
 		catch (AuthException authException) {
 			if (_log.isDebugEnabled()) {
@@ -195,8 +192,8 @@ public class AuthPipelineTest {
 	public void testOnMaxFailuresByUserId() {
 		try {
 			AuthPipeline.onMaxFailuresByUserId(
-				"auth.max.failures", 0, RandomTestUtil.randomLong(), null,
-				null);
+				PropsKeys.AUTH_MAX_FAILURES, 0, RandomTestUtil.randomLong(),
+				null, null);
 		}
 		catch (AuthException authException) {
 			if (_log.isDebugEnabled()) {

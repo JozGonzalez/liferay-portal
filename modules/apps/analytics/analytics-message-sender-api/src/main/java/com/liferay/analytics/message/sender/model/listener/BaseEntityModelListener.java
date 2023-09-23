@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.sender.model.listener;
@@ -27,6 +18,7 @@ import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.ModelListenerException;
@@ -47,7 +39,6 @@ import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -92,14 +83,22 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 		if (modelClassName.equals(Contact.class.getName())) {
 			Contact contact = (Contact)model;
 
-			if (isUserExcluded(
-					userLocalService.fetchUser(contact.getClassPK()))) {
+			User user = userLocalService.fetchUser(contact.getClassPK());
+
+			if ((!StringUtil.equalsIgnoreCase(eventType, "delete") &&
+				 !isUserActive(user)) ||
+				isUserExcluded(user)) {
 
 				return;
 			}
 		}
 		else if (modelClassName.equals(User.class.getName())) {
-			if (isUserExcluded((User)model)) {
+			User user = (User)model;
+
+			if ((!StringUtil.equalsIgnoreCase(eventType, "delete") &&
+				 !isUserActive(user)) ||
+				isUserExcluded(user)) {
+
 				return;
 			}
 		}
@@ -136,7 +135,7 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 
 			analyticsMessageLocalService.addAnalyticsMessage(
 				shardedModel.getCompanyId(),
-				userLocalService.getDefaultUserId(shardedModel.getCompanyId()),
+				userLocalService.getGuestUserId(shardedModel.getCompanyId()),
 				analyticsMessageJSON.getBytes(Charset.defaultCharset()));
 		}
 		catch (Exception exception) {
@@ -346,13 +345,22 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 		return false;
 	}
 
+	protected boolean isUserActive(User user) {
+		if ((user == null) ||
+			Objects.equals(
+				user.getStatus(), WorkflowConstants.STATUS_INACTIVE)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	protected boolean isUserExcluded(User user) {
 		if ((user == null) ||
 			Objects.equals(
 				user.getScreenName(),
-				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN) ||
-			Objects.equals(
-				user.getStatus(), WorkflowConstants.STATUS_INACTIVE)) {
+				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN)) {
 
 			return true;
 		}
@@ -717,7 +725,7 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 			User user = userLocalService.fetchUser((long)associationClassPK);
 
 			if (!eventType.equals("deleteAssociation") &&
-				isUserExcluded(user)) {
+				(!isUserActive(user) || isUserExcluded(user))) {
 
 				return;
 			}
@@ -765,7 +773,7 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 				analyticsMessageBuilder.buildJSONString();
 
 			analyticsMessageLocalService.addAnalyticsMessage(
-				companyId, userLocalService.getDefaultUserId(companyId),
+				companyId, userLocalService.getGuestUserId(companyId),
 				analyticsMessageJSON.getBytes(Charset.defaultCharset()));
 		}
 		catch (Exception exception) {
@@ -787,10 +795,10 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 			"treePath", "type");
 	private static final List<String> _userAttributeNames = Arrays.asList(
 		"agreedToTermsOfUse", "comments", "companyId", "contactId",
-		"createDate", "defaultUser", "emailAddress", "emailAddressVerified",
-		"expando", "externalReferenceCode", "facebookId", "firstName",
-		"googleUserId", "greeting", "jobTitle", "languageId", "lastName",
-		"ldapServerId", "memberships", "middleName", "modifiedDate", "openId",
-		"portraitId", "screenName", "status", "timeZoneId", "uuid");
+		"createDate", "emailAddress", "emailAddressVerified", "expando",
+		"externalReferenceCode", "facebookId", "firstName", "googleUserId",
+		"greeting", "jobTitle", "languageId", "lastName", "ldapServerId",
+		"memberships", "middleName", "modifiedDate", "openId", "portraitId",
+		"screenName", "status", "timeZoneId", "uuid");
 
 }

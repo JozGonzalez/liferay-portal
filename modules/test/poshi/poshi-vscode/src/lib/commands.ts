@@ -1,25 +1,16 @@
 /* eslint-disable no-console */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import * as child_process from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
+import * as vscode from 'vscode';
 
 import * as notifications from './notifications';
-import * as vscode from 'vscode';
 import {getDocumentTokens, getTokens} from './tokens';
 
 export async function runTestCaseInFile(textEditor: vscode.TextEditor) {
@@ -70,6 +61,7 @@ export async function runTestCaseUnderCursor(textEditor: vscode.TextEditor) {
 
 	if (!testName) {
 		notifications.warning('No test case found under the cursor.');
+
 		return;
 	}
 
@@ -84,8 +76,8 @@ function buildGradleCommand(gradleExecutablePath: string, testCase: string) {
 }
 
 interface Command {
-	cwd: string;
 	command: string;
+	cwd: string;
 }
 
 async function getCommand(
@@ -225,18 +217,19 @@ async function runTestCase(document: vscode.TextDocument, testName: string) {
 		notifications.warning(
 			`Unable to run the test case: ${testCase}. No Ant or Gradle task runner was found.`
 		);
+
 		return;
 	}
 
 	notifications.info(`Running testcase: ${testCase}`);
 
-	const opts: vscode.TerminalOptions = {
-		name: `Poshi: Run ${testCase}`,
+	const options: vscode.TerminalOptions = {
 		cwd: command.cwd,
 		message: `Running Poshi testcase: ${testCase}`,
+		name: `Poshi: Run ${testCase}`,
 	};
 
-	const terminal = vscode.window.createTerminal(opts);
+	const terminal = vscode.window.createTerminal(options);
 
 	terminal.show();
 

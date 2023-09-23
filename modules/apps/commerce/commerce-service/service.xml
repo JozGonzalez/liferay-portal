@@ -325,15 +325,15 @@
 
 		<!-- Other fields -->
 
-		<column name="bookedQuantityId" type="long" />
+		<column db-name="CIBookedQuantityId" name="commerceInventoryBookedQuantityId" type="long" />
 		<column name="commerceOrderId" type="long" />
 		<column name="commercePriceListId" type="long" />
 		<column name="CPInstanceId" type="long" />
 		<column name="CPMeasurementUnitId" type="long" />
 		<column name="CProductId" type="long" />
+		<column name="customerCommerceOrderItemId" type="long" />
 		<column name="parentCommerceOrderItemId" type="long" />
 		<column name="shippingAddressId" type="long" />
-		<column name="decimalQuantity" type="BigDecimal" />
 		<column name="deliveryGroup" type="String" />
 		<column name="deliveryMaxSubscriptionCycles" type="long" />
 		<column name="deliverySubscriptionLength" type="int" />
@@ -360,20 +360,25 @@
 		<column name="maxSubscriptionCycles" type="long" />
 		<column localized="true" name="name" type="String" />
 		<column name="priceManuallyAdjusted" type="boolean" />
+		<column name="priceOnApplication" type="boolean" />
 		<column name="printedNote" type="String" />
 		<column name="promoPrice" type="BigDecimal" />
 		<column name="promoPriceWithTaxAmount" type="BigDecimal" />
-		<column name="quantity" type="int" />
+		<column name="quantity" type="BigDecimal" />
+		<column name="replacedCPInstanceId" type="long" />
+		<column name="replacedSku" type="String" />
 		<column name="requestedDeliveryDate" type="Date" />
 		<column name="shipSeparately" type="boolean" />
 		<column name="shippable" type="boolean" />
-		<column name="shippedQuantity" type="int" />
+		<column name="shippedQuantity" type="BigDecimal" />
 		<column name="shippingExtraPrice" type="double" />
 		<column name="sku" type="String" />
 		<column name="subscription" type="boolean" />
 		<column name="subscriptionLength" type="int" />
 		<column name="subscriptionType" type="String" />
 		<column name="subscriptionTypeSettings" type="String" />
+		<column db-name="UOMIncrementalOrderQuantity" name="unitOfMeasureIncrementalOrderQuantity" type="BigDecimal" />
+		<column name="unitOfMeasureKey" type="String" />
 		<column name="unitPrice" type="BigDecimal" />
 		<column name="unitPriceWithTaxAmount" type="BigDecimal" />
 		<column name="weight" type="double" />
@@ -387,8 +392,8 @@
 
 		<!-- Finder methods -->
 
-		<finder name="BookedQuantityId" return-type="CommerceOrderItem">
-			<finder-column name="bookedQuantityId" />
+		<finder name="CommerceInventoryBookedQuantityId" return-type="CommerceOrderItem">
+			<finder-column name="commerceInventoryBookedQuantityId" />
 		</finder>
 		<finder name="CommerceOrderId" return-type="Collection">
 			<finder-column name="commerceOrderId" />
@@ -398,6 +403,9 @@
 		</finder>
 		<finder name="CProductId" return-type="Collection">
 			<finder-column name="CProductId" />
+		</finder>
+		<finder name="CustomerCommerceOrderItemId" return-type="Collection">
+			<finder-column name="customerCommerceOrderItemId" />
 		</finder>
 		<finder name="ParentCommerceOrderItemId" return-type="Collection">
 			<finder-column name="parentCommerceOrderItemId" />
@@ -655,7 +663,8 @@
 		<column name="commerceShipmentId" type="long" />
 		<column name="commerceOrderItemId" type="long" />
 		<column name="commerceInventoryWarehouseId" type="long" />
-		<column name="quantity" type="int" />
+		<column name="quantity" type="BigDecimal" />
+		<column name="unitOfMeasureKey" type="String" />
 
 		<!-- Order -->
 
@@ -900,12 +909,12 @@
 		<column name="lowStockActivity" type="String" />
 		<column name="displayAvailability" type="boolean" />
 		<column name="displayStockQuantity" type="boolean" />
-		<column name="minStockQuantity" type="int" />
+		<column name="minStockQuantity" type="BigDecimal" />
 		<column name="backOrders" type="boolean" />
-		<column name="minOrderQuantity" type="int" />
-		<column name="maxOrderQuantity" type="int" />
+		<column name="minOrderQuantity" type="BigDecimal" />
+		<column name="maxOrderQuantity" type="BigDecimal" />
 		<column name="allowedOrderQuantities" type="String" />
-		<column name="multipleOrderQuantity" type="int" />
+		<column name="multipleOrderQuantity" type="BigDecimal" />
 
 		<!-- Finder methods -->
 
@@ -953,6 +962,9 @@
 		<exception>CommerceSubscriptionEntryStartDate</exception>
 		<exception>CommerceSubscriptionEntrySubscriptionStatus</exception>
 		<exception>CommerceSubscriptionType</exception>
+		<exception>CPDefinitionInventoryMaxOrderQuantity</exception>
+		<exception>CPDefinitionInventoryMinOrderQuantity</exception>
+		<exception>CPDefinitionInventoryMultipleOrderQuantity</exception>
 		<exception>DuplicateCommerceOrderNote</exception>
 		<exception>DuplicateCommerceOrderTypeRel</exception>
 		<exception>DuplicateCommerceShipment</exception>

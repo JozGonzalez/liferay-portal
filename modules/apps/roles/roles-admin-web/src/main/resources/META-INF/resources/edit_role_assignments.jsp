@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -90,6 +81,7 @@ renderResponse.setTitle(role.getTitle(locale));
 	clearResultsURL="<%= editRoleAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
+	orderDropdownItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getOrderByDropDownItems() %>"
 	propsTransformer="js/EditRoleAssignmentsManagementToolbarPropsTransformer"
 	searchActionURL="<%= editRoleAssignmentsManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="assigneesSearch"
@@ -102,14 +94,14 @@ renderResponse.setTitle(role.getTitle(locale));
 	viewTypeItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<c:if test='<%= !SegmentsEntryDisplayContext.isRoleSegmentationEnabled(themeDisplay.getCompanyId()) && tabs2.equals("segments") %>'>
+<c:if test='<%= !SegmentsEntryDisplayUtil.isRoleSegmentationEnabled(themeDisplay.getCompanyId()) && tabs2.equals("segments") %>'>
 	<clay:stripe
 		displayType="warning"
 	>
 		<strong class="lead"><liferay-ui:message key="assigning-roles-by-segment-is-disabled" /></strong>
 
 		<%
-		String segmentsConfigurationURL = SegmentsEntryDisplayContext.getSegmentsCompanyConfigurationURL(request);
+		String segmentsConfigurationURL = SegmentsEntryDisplayUtil.getSegmentsCompanyConfigurationURL(request);
 		%>
 
 		<c:choose>

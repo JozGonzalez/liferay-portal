@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -27,21 +18,6 @@ const REGEX_URL_ALLOW_RELATIVE = /((([A-Za-z]{3,9}:(?:\/\/)?)|\/(?:[-;:&=+$,\w]+
 
 const urlAllowRelative = (url) => REGEX_URL_ALLOW_RELATIVE.test(url);
 
-const USER_AGENT_OPTIONS = [
-	{
-		label: Liferay.Language.get('all'),
-		value: 'all',
-	},
-	{
-		label: Liferay.Language.get('bot'),
-		value: 'bot',
-	},
-	{
-		label: Liferay.Language.get('human'),
-		value: 'human',
-	},
-];
-
 const PatternField = ({
 	destinationURL: initialDestinationUrl,
 	error,
@@ -52,9 +28,11 @@ const PatternField = ({
 	pattern = '',
 	portletNamespace,
 	strings,
-	userAgent,
+	userAgent: initialUserAgent,
+	userAgents,
 }) => {
 	const [destinationUrl, setDestinationUrl] = useState(initialDestinationUrl);
+	const [userAgent, setUserAgent] = useState(initialUserAgent);
 
 	return (
 		<div className="redirect-pattern-group">
@@ -170,9 +148,12 @@ const PatternField = ({
 						aria-label={Liferay.Language.get('select-user-agent')}
 						id="userAgent"
 						name={`${portletNamespace}userAgent_${index}`}
+						onChange={({currentTarget}) =>
+							setUserAgent(currentTarget.value)
+						}
 						value={userAgent}
 					>
-						{USER_AGENT_OPTIONS.map((item) => (
+						{userAgents.map((item) => (
 							<ClaySelect.Option
 								key={item.value}
 								label={item.label}
@@ -192,6 +173,7 @@ const RedirectPattern = ({
 	patterns: initialPatternsList,
 	portletNamespace,
 	strings,
+	userAgents,
 }) => {
 	const emptyRow = () => ({
 		destinationURL: '',
@@ -260,6 +242,7 @@ const RedirectPattern = ({
 							portletNamespace={portletNamespace}
 							strings={strings}
 							userAgent={item.userAgent}
+							userAgents={userAgents}
 						/>
 					))}
 				</div>
@@ -291,6 +274,7 @@ RedirectPattern.propTypes = {
 		absoluteURL: PropTypes.string,
 		relativeURL: PropTypes.string,
 	}),
+	userAgents: PropTypes.array.isRequired,
 };
 
 export default RedirectPattern;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.display.context;
@@ -18,8 +9,6 @@ import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureModifiedDateComparator;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureNameComparator;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.service.JournalFolderServiceUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -31,7 +20,6 @@ import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -69,33 +57,6 @@ public class JournalViewMoreMenuItemsDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public List<DDMStructure> getDDMStructures() throws PortalException {
-		if (ListUtil.isNotEmpty(_ddmStructures)) {
-			return _ddmStructures;
-		}
-
-		if (Validator.isNull(_getKeywords())) {
-			_ddmStructures = JournalFolderServiceUtil.getDDMStructures(
-				SiteConnectedGroupGroupProviderUtil.
-					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId(), true),
-				_folderId, _restrictionType, _getOrderByComparator());
-		}
-		else {
-			_ddmStructures = JournalFolderServiceUtil.searchDDMStructures(
-				_themeDisplay.getCompanyId(),
-				SiteConnectedGroupGroupProviderUtil.
-					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId(), true),
-				_folderId, _restrictionType, _getKeywords(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, _getOrderByComparator());
-		}
-
-		Collections.sort(_ddmStructures, _getOrderByComparator());
-
-		return _ddmStructures;
-	}
-
 	public String getDDMStructureScopeName(
 			DDMStructure ddmStructure, Locale locale)
 		throws PortalException {
@@ -127,13 +88,51 @@ public class JournalViewMoreMenuItemsDisplayContext {
 			return _ddmStructuresSearchContainer;
 		}
 
-		SearchContainer<DDMStructure> searchContainer = new SearchContainer(
+		SearchContainer<DDMStructure> searchContainer = new SearchContainer<>(
 			_renderRequest, getPortletURL(), null, "no-results-were-found");
 
 		searchContainer.setOrderByCol(getOrderByCol());
 		searchContainer.setOrderByComparator(_getOrderByComparator());
 		searchContainer.setOrderByType(getOrderByType());
-		searchContainer.setResultsAndTotal(getDDMStructures());
+
+		long[] currentAndAncestorSiteAndDepotGroupIds =
+			SiteConnectedGroupGroupProviderUtil.
+				getCurrentAndAncestorSiteAndDepotGroupIds(
+					_themeDisplay.getScopeGroupId(), true);
+
+		searchContainer.setResultsAndTotal(
+			() -> {
+				if (Objects.equals(getOrderByCol(), "name")) {
+					List<DDMStructure> ddmStructures =
+						JournalFolderServiceUtil.searchDDMStructures(
+							_themeDisplay.getCompanyId(),
+							currentAndAncestorSiteAndDepotGroupIds, _folderId,
+							_restrictionType, _getKeywords(), QueryUtil.ALL_POS,
+							QueryUtil.ALL_POS, _getOrderByComparator());
+
+					Collections.sort(ddmStructures, _getOrderByComparator());
+
+					int end = searchContainer.getEnd();
+
+					if (ddmStructures.size() < searchContainer.getEnd()) {
+						end = ddmStructures.size();
+					}
+
+					return ddmStructures.subList(
+						searchContainer.getStart(), end);
+				}
+
+				return JournalFolderServiceUtil.searchDDMStructures(
+					_themeDisplay.getCompanyId(),
+					currentAndAncestorSiteAndDepotGroupIds, _folderId,
+					_restrictionType, _getKeywords(),
+					searchContainer.getStart(), searchContainer.getEnd(),
+					_getOrderByComparator());
+			},
+			JournalFolderServiceUtil.searchDDMStructuresCount(
+				_themeDisplay.getCompanyId(),
+				currentAndAncestorSiteAndDepotGroupIds, _folderId,
+				_restrictionType, _getKeywords()));
 
 		_ddmStructuresSearchContainer = searchContainer;
 
@@ -150,16 +149,6 @@ public class JournalViewMoreMenuItemsDisplayContext {
 			_renderResponse.getNamespace() + "selectAddMenuItem");
 
 		return _eventName;
-	}
-
-	public List<NavigationItem> getNavigationItems() {
-		return NavigationItemListBuilder.add(
-			navigationItem -> {
-				navigationItem.setActive(true);
-				navigationItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "all-menu-items"));
-			}
-		).build();
 	}
 
 	public String getOrderByCol() {
@@ -238,7 +227,6 @@ public class JournalViewMoreMenuItemsDisplayContext {
 		return orderByComparator;
 	}
 
-	private List<DDMStructure> _ddmStructures;
 	private SearchContainer<DDMStructure> _ddmStructuresSearchContainer;
 	private String _eventName;
 	private final long _folderId;

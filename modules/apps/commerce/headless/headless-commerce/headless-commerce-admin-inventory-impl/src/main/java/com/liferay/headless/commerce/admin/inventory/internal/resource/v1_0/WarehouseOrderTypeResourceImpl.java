@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.inventory.internal.resource.v1_0;
@@ -23,16 +14,15 @@ import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.service.CommerceOrderTypeService;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseOrderType;
-import com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.WarehouseOrderTypeDTOConverter;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseOrderTypeResource;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -47,11 +37,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/warehouse-order-type.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, WarehouseOrderTypeResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = WarehouseOrderTypeResource.class
 )
 public class WarehouseOrderTypeResourceImpl
-	extends BaseWarehouseOrderTypeResourceImpl implements NestedFieldSupport {
+	extends BaseWarehouseOrderTypeResourceImpl {
 
 	@Override
 	public void deleteWarehouseOrderType(Long id) throws Exception {
@@ -235,7 +225,10 @@ public class WarehouseOrderTypeResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private WarehouseOrderTypeDTOConverter _warehouseOrderTypeDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.converter.WarehouseOrderTypeDTOConverter)"
+	)
+	private DTOConverter<CommerceInventoryWarehouseRel, WarehouseOrderType>
+		_warehouseOrderTypeDTOConverter;
 
 }

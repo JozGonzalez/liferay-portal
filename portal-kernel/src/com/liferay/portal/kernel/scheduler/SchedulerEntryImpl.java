@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.scheduler;
@@ -22,15 +13,18 @@ import com.liferay.petra.string.StringPool;
  */
 public class SchedulerEntryImpl implements SchedulerEntry {
 
-	public SchedulerEntryImpl(String eventListenerClass, Trigger trigger) {
-		this(eventListenerClass, trigger, StringPool.BLANK);
+	public SchedulerEntryImpl(
+		String eventListenerClass, TriggerConfiguration triggerConfiguration) {
+
+		this(eventListenerClass, triggerConfiguration, StringPool.BLANK);
 	}
 
 	public SchedulerEntryImpl(
-		String eventListenerClass, Trigger trigger, String description) {
+		String eventListenerClass, TriggerConfiguration triggerConfiguration,
+		String description) {
 
 		_eventListenerClass = eventListenerClass;
-		_trigger = trigger;
+		_triggerConfiguration = triggerConfiguration;
 		_description = description;
 	}
 
@@ -45,19 +39,20 @@ public class SchedulerEntryImpl implements SchedulerEntry {
 	}
 
 	@Override
-	public Trigger getTrigger() {
-		return _trigger;
+	public TriggerConfiguration getTriggerConfiguration() {
+		return _triggerConfiguration;
 	}
 
 	@Override
 	public String toString() {
 		return StringBundler.concat(
-			", description=, eventListenerClass=", _eventListenerClass,
-			", trigger=", _trigger, "}");
+			"{description=", _description, ", eventListenerClass=",
+			_eventListenerClass, ", triggerConfiguration=",
+			_triggerConfiguration, "}");
 	}
 
 	private String _description;
 	private String _eventListenerClass;
-	private Trigger _trigger;
+	private TriggerConfiguration _triggerConfiguration;
 
 }

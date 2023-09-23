@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter;
@@ -43,6 +34,10 @@ public class ElasticsearchEngineAdapterFixture {
 			_facetProcessor);
 	}
 
+	public void tearDown() {
+		_searchRequestExecutorFixture.tearDown();
+	}
+
 	protected static SearchEngineAdapter createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver,
 		ElasticsearchDocumentFactory elasticsearchDocumentFactory,
@@ -71,13 +66,12 @@ public class ElasticsearchEngineAdapterFixture {
 				}
 			};
 
-		SearchRequestExecutorFixture searchRequestExecutorFixture =
-			new SearchRequestExecutorFixture() {
-				{
-					setElasticsearchClientResolver(elasticsearchClientResolver);
-					setFacetProcessor(facetProcessor);
-				}
-			};
+		_searchRequestExecutorFixture = new SearchRequestExecutorFixture() {
+			{
+				setElasticsearchClientResolver(elasticsearchClientResolver);
+				setFacetProcessor(facetProcessor);
+			}
+		};
 
 		SnapshotRequestExecutorFixture snapshotRequestExecutorFixture =
 			new SnapshotRequestExecutorFixture() {
@@ -89,7 +83,7 @@ public class ElasticsearchEngineAdapterFixture {
 		clusterRequestExecutorFixture.setUp();
 		documentRequestExecutorFixture.setUp();
 		indexRequestExecutorFixture.setUp();
-		searchRequestExecutorFixture.setUp();
+		_searchRequestExecutorFixture.setUp();
 		snapshotRequestExecutorFixture.setUp();
 
 		SearchEngineAdapter searchEngineAdapter =
@@ -110,7 +104,7 @@ public class ElasticsearchEngineAdapterFixture {
 			indexRequestExecutorFixture.getIndexRequestExecutor());
 		ReflectionTestUtil.setFieldValue(
 			searchEngineAdapter, "_searchRequestExecutor",
-			searchRequestExecutorFixture.getSearchRequestExecutor());
+			_searchRequestExecutorFixture.getSearchRequestExecutor());
 		ReflectionTestUtil.setFieldValue(
 			searchEngineAdapter, "_snapshotRequestExecutor",
 			snapshotRequestExecutorFixture.getSnapshotRequestExecutor());
@@ -143,6 +137,8 @@ public class ElasticsearchEngineAdapterFixture {
 
 		return new DefaultElasticsearchDocumentFactory();
 	}
+
+	private static SearchRequestExecutorFixture _searchRequestExecutorFixture;
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 	private ElasticsearchDocumentFactory _elasticsearchDocumentFactory;

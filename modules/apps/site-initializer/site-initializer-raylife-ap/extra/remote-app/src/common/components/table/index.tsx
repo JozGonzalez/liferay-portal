@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button, {ClayButtonWithIcon} from '@clayui/button';
@@ -22,7 +13,7 @@ type sort = {
 	[keys: string]: boolean;
 };
 
-export type TableRowContentType = {[keys: string]: string | number};
+export type TableRowContentType = {[keys: string]: any};
 
 export type TableHeaders = {
 	bold?: boolean;
@@ -41,7 +32,7 @@ export type TableHeaders = {
 
 type TableProps = {
 	actions: ActionObject[];
-	data: {[keys: string]: string}[];
+	data: {[keys: string]: string | boolean}[];
 	headers: TableHeaders[];
 	onClickRules?: (
 		item: TableHeaders,
@@ -149,7 +140,7 @@ const Table: React.FC<TableProps> = ({
 							<Cell
 								className={classnames('border-top-0', {
 									'ray-row-table-danger':
-										rowContent.isRedLine === 'true',
+										rowContent.isRedLine === true,
 								})}
 								key={index}
 							>
@@ -162,9 +153,9 @@ const Table: React.FC<TableProps> = ({
 								>
 									{item.type === 'hasBubble' && (
 										<div
-											className={`${rowContent[
-												item.key
-											].toLowerCase()} flex-shrink-0 mr-2 rounded-circle status-color`}
+											className={`${rowContent[item.key]
+												.toString()
+												.toLowerCase()} flex-shrink-0 mr-2 rounded-circle status-color`}
 										></div>
 									)}
 
@@ -172,8 +163,7 @@ const Table: React.FC<TableProps> = ({
 										className={classnames('', {
 											'cursor-pointer':
 												!!item.clickable &&
-												rowContent.isClickable ===
-													'true',
+												rowContent.isClickable === true,
 											'font-weight-bolder': !!item.bold,
 											'text-danger font-weight-bolder':
 												Number(rowContent[item.key]) <
@@ -196,12 +186,12 @@ const Table: React.FC<TableProps> = ({
 							<Cell
 								className={classnames('border-top-0', {
 									'ray-row-table-danger':
-										rowContent.isRedLine === 'true',
+										rowContent.isRedLine === true,
 								})}
 							>
 								<SettingsButton
 									actions={actions}
-									identifier={rowContent.key}
+									identifier={rowContent.key.toString()}
 								/>
 							</Cell>
 						)}

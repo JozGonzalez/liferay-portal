@@ -1,23 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.settings.authentication.ldap.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.counter.kernel.service.CounterLocalService;
-import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.portlet.PortletContextFactory;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -48,13 +37,9 @@ import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletContext;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
-import javax.servlet.ServletContext;
-
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -125,58 +110,6 @@ public class EditLDAPServerMVCActionCommand extends BaseMVCActionCommand {
 
 			throw exception;
 		}
-	}
-
-	@Activate
-	protected void activate() {
-		_portletContext = _portletContextFactory.createUntrackedInstance(
-			_portlet, _servletContext);
-	}
-
-	@Reference(unbind = "-")
-	protected void setCounterLocalService(
-		CounterLocalService counterLocalService) {
-
-		_counterLocalService = counterLocalService;
-	}
-
-	@Reference(
-		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)",
-		unbind = "-"
-	)
-	protected void setLDAPServerConfigurationProvider(
-		ConfigurationProvider<LDAPServerConfiguration>
-			ldapServerConfigurationProvider) {
-
-		_ldapServerConfigurationProvider = ldapServerConfigurationProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortal(Portal portal) {
-		_portal = portal;
-	}
-
-	@Reference(
-		target = "(javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS + ")",
-		unbind = "-"
-	)
-	protected void setPortlet(Portlet portlet) {
-		_portlet = portlet;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletContextFactory(
-		PortletContextFactory portletContextFactory) {
-
-		_portletContextFactory = portletContextFactory;
-	}
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.settings.authentication.ldap.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
 	}
 
 	private void _deleteLDAPServer(ActionRequest actionRequest)
@@ -302,18 +235,16 @@ public class EditLDAPServerMVCActionCommand extends BaseMVCActionCommand {
 		_ldapFilterValidator.validate(groupFilter, "importGroupSearchFilter");
 	}
 
-	private static ConfigurationProvider<LDAPServerConfiguration>
-		_ldapServerConfigurationProvider;
-
+	@Reference
 	private CounterLocalService _counterLocalService;
 
 	@Reference
 	private LDAPFilterValidator _ldapFilterValidator;
 
-	private Portal _portal;
-	private Portlet _portlet;
-	private PortletContext _portletContext;
-	private PortletContextFactory _portletContextFactory;
-	private ServletContext _servletContext;
+	@Reference(
+		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)"
+	)
+	private ConfigurationProvider<LDAPServerConfiguration>
+		_ldapServerConfigurationProvider;
 
 }

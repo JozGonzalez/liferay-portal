@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Directly calls the JSON WS API to delete an utility page"
 	macro _deleteLayoutUtilityPage {
 		Variables.assertDefined(parameterList = ${layoutUtilityPageEntryId});
 
@@ -8,16 +7,17 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/layoututilitypage.layoututilitypageentry/delete-layout-utility-page-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d layoutUtilityPageEntryId=${layoutUtilityPageEntryId}
 		''';
 
 		JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Get the layoutUtilityPageEntryId from an utility page by using groupId and layoutUtilityPageName"
 	macro _getLayoutUtilityPageEntryId {
 		Variables.assertDefined(parameterList = "${groupId},${layoutUtilityPageName}");
 
@@ -25,9 +25,11 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/layoututilitypage.layoututilitypageentry/get-layout-utility-page-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 

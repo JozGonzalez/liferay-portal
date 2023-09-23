@@ -27,7 +27,7 @@ definition {
 			keepCachedAppServerData = "true",
 			nodePort = 8080);
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -45,9 +45,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -63,7 +63,8 @@ definition {
 	@refactordone
 	test CanPublishBlogWithEmbeddedVideo {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DLVideoRemoteStaging#CanPublishBlogWithEmbeddedVideo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		User.logoutPG();
 

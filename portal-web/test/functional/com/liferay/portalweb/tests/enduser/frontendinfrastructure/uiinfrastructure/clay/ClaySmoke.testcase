@@ -1,11 +1,12 @@
 @component-name = "portal-frontend-infrastructure"
 definition {
 
+	property ci.retries.disabled = "true";
 	property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Clay";
-	property testray.main.component.name = "User Interface";
+	property testray.main.component.name = "Clay";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -30,9 +31,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.manager.v1_0;
@@ -18,6 +9,7 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.portal.kernel.util.MapUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +41,13 @@ public class ObjectEntry1toMObjectRelationshipElementsParserImpl
 		if (objectRelationship.getObjectDefinitionId1() ==
 				objectDefinition.getObjectDefinitionId()) {
 
-			return Collections.singletonList(parseOne(value));
+			ObjectEntry objectEntry = parseOne(value);
+
+			if (objectEntry == null) {
+				return Collections.emptyList();
+			}
+
+			return Collections.singletonList(objectEntry);
 		}
 
 		return parseMany(value);
@@ -59,7 +57,14 @@ public class ObjectEntry1toMObjectRelationshipElementsParserImpl
 	protected ObjectEntry parseOne(Object object) {
 		validateOne(object);
 
-		return toObjectEntry((Map<String, Object>)object);
+		Map<String, Object> nestedObjectEntryProperties =
+			(Map<String, Object>)object;
+
+		if (MapUtil.isEmpty(nestedObjectEntryProperties)) {
+			return null;
+		}
+
+		return toObjectEntry(nestedObjectEntryProperties);
 	}
 
 }

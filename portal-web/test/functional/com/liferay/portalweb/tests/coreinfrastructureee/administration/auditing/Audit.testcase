@@ -18,7 +18,8 @@ definition {
 	@description = "LPS-133646 and LPS-133653 TC-1: Verify that information is present in the logs after enabling log context & Incoming X-Request-ID."
 	@priority = 5
 	test AssertAuditConsoleInformationIsPresentAfterEnabledLog {
-		property test.name.skip.portal.instance = "Audit#AssertAuditConsoleInformationIsPresentAfterEnabledLog";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var companyId = JSONCompany.getCompanyId();
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
@@ -46,10 +47,114 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-176997. TC-1: Verify MALU, APV and Scope are enabled on default instance when a LXC environment is being set up."
+	@priority = 5
+	test AssertAuditHeadersOnDefaultInstance {
+		property liferay.online.properties = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("When: Get HTTP response headers in login state") {
+			var curl = '''http://localhost:8080/web/guest?SM_USER=test@liferay.com -I''';
+
+			var response = JSONCurlUtil.post(${curl});
+		}
+
+		task ("Then: Assert the values of X-Liferay-Request-Company and X-Liferay-Request-Group are companyId and groupId respectively and X-Liferay-Request-Guest-User is false.") {
+			var companyId = JSONCompany.getCompanyId();
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Guest",
+				site = "true");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Company: ${companyId}");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Group: ${groupId}");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Guest-User: false");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-User");
+		}
+
+		task ("And: Verify that the value of X-Liferay-Request-Guest-User is true in the unlogged-in state") {
+			var curl = '''http://localhost:8080/web/guest -I''';
+
+			var response = JSONCurlUtil.post(${curl});
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Guest-User: true");
+		}
+	}
+
+	@description = "This is a use case for LPS-176997. TC-2: Verify MALU, APV and Scope are enabled on virtual instance when a LXC environment is being set up."
+	@priority = 5
+	test AssertAuditHeadersOnVirtualInstance {
+		property liferay.online.properties = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add a virtual instance") {
+			HeadlessPortalInstanceAPI.addPortalInstance(
+				domain = "www.able.com",
+				portalInstanceId = "www.able.com",
+				virtualHost = "www.able.com");
+
+			var companyId = JSONCompany.getCompanyId(portalInstanceName = "www.able.com");
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Guest",
+				portalInstanceName = "www.able.com",
+				site = "true",
+				specificURL = "http://www.able.com:8080");
+		}
+
+		task ("When: Get HTTP response headers in login state") {
+			var curl = '''http://www.able.com:8080/web/guest?SM_USER=test@www.able.com -I''';
+
+			var response = JSONCurlUtil.post(${curl});
+		}
+
+		task ("Then: Assert the values of X-Liferay-Request-Company and X-Liferay-Request-Group are companyId and groupId respectively and X-Liferay-Request-Guest-User is false.") {
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Company: ${companyId}");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Group: ${groupId}");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Guest-User: false");
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-User:");
+		}
+
+		task ("And: Verify that the value of X-Liferay-Request-Guest-User is true in the unlogged-in state") {
+			var curl = '''http://www.able.com:8080/web/guest -I''';
+
+			var response = JSONCurlUtil.post(${curl});
+
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "X-Liferay-Request-Guest-User: true");
+		}
+	}
+
 	@description = "This is a use case for LPS-155728. TC-1: Assert the email address is present in the audit log context in a human-readable format."
-	@priority = 2
+	@priority = 5
 	test AssertEmailAddressIsPresentInReadable {
-		property test.name.skip.portal.instance = "Audit#AssertEmailAddressIsPresentInReadable";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Enable log context and Incoming X-Request-ID") {
 			Audit.gotoSystemSettings(portlet = "Audit Log Context");
@@ -75,7 +180,8 @@ definition {
 	test AssertInvalidXRequestId {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}useIncomingXRequestId=\"true\"";
-		property test.name.skip.portal.instance = "Audit#AssertInvalidXRequestId";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var companyId = JSONCompany.getCompanyId();
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
@@ -96,10 +202,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-140258. TC-1: Assert that sessionId is not present in the audit log context."
-	@priority = 2
+	@priority = 5
 	test AssertSessionIdIsNotPresentInAuditLogContext {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Audit#AssertSessionIdIsNotPresentInAuditLogContext";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Enable log context and Incoming X-Request-ID") {
 			Audit.gotoSystemSettings(portlet = "Audit Log Context");
@@ -123,10 +230,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-140258. TC-2: Assert that sessionId is not present in the Audit Log portlet's UI."
-	@priority = 2
+	@priority = 5
 	test AssertSessionIdIsNotPresentInAuditLogPortlet {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Audit#AssertSessionIdIsNotPresentInAuditLogPortlet";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Enable log context and Incoming X-Request-ID") {
 			Audit.gotoSystemSettings(portlet = "Audit Log Context");
@@ -166,7 +274,8 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}useIncomingXRequestId=\"true\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Audit#AssertValidXRequestId";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var companyId = JSONCompany.getCompanyId();
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
@@ -184,12 +293,547 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-180465 TC-1 and TC-2. Verify Audit data could be filtered by Site ID and export Audit log with SiteIDs listed in the exported CSV file."
+	@priority = 5
+	test AuditDataCanBeFilteredBySiteID {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.router.configuration.PersistentAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a new Object definition with site scope is created") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "MyObject",
+				objectName = "MyObject",
+				pluralLabelName = "MyObject");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "My Object Field",
+				fieldName = "myObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "MyObject");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectSystemObject(label = "MyObject");
+
+			CreateObject.selectScope(fieldLabel = "Site");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#ENABLE_ENTRY_HISTORY_IN_AUDIT_FRAMEWORK_BUTTON");
+
+			CreateObject.saveObject();
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "MyObject");
+
+			var objectId = JSONObject.getObjectId(objectName = "MyObject");
+		}
+
+		task ("And add object widget to widget page and create a new record on each site") {
+			for (var count : list "A,B") {
+				HeadlessSite.addSite(siteName = "Site ${count}");
+
+				JSONLayout.addPublicLayout(
+					groupName = "Site ${count}",
+					layoutName = "Object Page ${count}");
+
+				Navigator.gotoSitePage(
+					pageName = "Object Page ${count}",
+					siteName = "Site ${count}");
+
+				Portlet.addPG(
+					pageName = "Object Page ${count}",
+					portletName = "MyObject");
+
+				Navigator.gotoSitePage(
+					pageName = "Object Page ${count}",
+					siteName = "Site ${count}");
+
+				LexiconEntry.gotoAdd();
+
+				ObjectPortlet.typeCustomField(
+					customField = "My Object Field",
+					entry = "Test Content ${count}");
+
+				PortletEntry.save();
+
+				Navigator.gotoSitePage(
+					pageName = "Object Page ${count}",
+					siteName = "Site ${count}");
+
+				ObjectPortlet.viewEntry(entry = "Test Content ${count}");
+			}
+
+			var groupId1 = JSONGroupAPI._getGroupIdByName(
+				groupName = "Site A",
+				site = "true");
+			var groupId2 = JSONGroupAPI._getGroupIdByName(
+				groupName = "Site B",
+				site = "true");
+		}
+
+		task ("When you search for SiteID of Site A and export audit events") {
+			Audit.openAuditAdmin();
+
+			var resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}";
+
+			Audit.searchCP(
+				groupId = ${groupId1},
+				match = "All",
+				searchTerm = ${groupId1});
+
+			Audit.exportAuditEvents();
+
+			AssertConfirm.assertConfirmationNoError(value1 = "Warning: This CSV file contains user supplied inputs. Opening a CSV file in a spreadsheet program may be dangerous.");
+
+			DownloadTempFile();
+
+			DMDocument.assertFileNameFromTempFolder(fileName = "audit_events.csv");
+		}
+
+		task ("Then verify that only Site A related entry is returning to the result table") {
+			AssertTextEquals(
+				key_resourceAction = "ADD",
+				key_resourceName = ${resourceName},
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
+				value1 = "ADD");
+
+			AssertElementNotPresent(
+				key_resourceAction = "ADD",
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION_2");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "myObjectField,Test Content",
+				groupId = ${groupId1},
+				key_resourceAction = "ADD",
+				key_resourceName = "ObjectDefinition#${objectId}",
+				resourceAction = "ADD",
+				resourceName = "ObjectDefinition#${objectId}",
+				userName = "Test Test");
+		}
+
+		task ("And verify it only contains Site A related entry in the exported CSV log file") {
+			var fileContent = TestCase.getTempFileContent(fileName = "audit_events.csv");
+
+			echo(${fileContent});
+
+			DMDocument.assertDownloadedFileContent(
+				downloadedContent = ${groupId1},
+				fileName = "audit_events.csv");
+
+			DMDocument.assertDownloadedFileContentNotExist(
+				downloadedContent = ${groupId2},
+				fileName = "audit_events.csv");
+		}
+	}
+
+	@description = "This is a use case for LPS-174421 TC-1. Verify that the user is able to export the filtered audit data as a CSV format file."
+	@priority = 5
+	test CanExportCSVFilteredAuditDataFile {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.router.configuration.PersistentAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given Login portal with wrong password login with correct password search LOGIN_FAILURE in Audit") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				locator1 = "TextInput#EMAIL_ADDRESS",
+				value1 = "test@liferay.com");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test1");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+
+			Navigator.openURL();
+
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			AssertTextEquals(
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "Test Test",
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
+				value1 = "LOGIN_FAILURE");
+
+			AssertElementNotPresent(
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "Test Test",
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION_2");
+		}
+
+		task ("When Export audit events") {
+			Audit.exportAuditEvents();
+		}
+
+		task ("Then Assert that confoirmation pop-up csv file downloaled correct list right event") {
+			AssertConfirm.assertConfirmationNoError(value1 = "Warning: This CSV file contains user supplied inputs. Opening a CSV file in a spreadsheet program may be dangerous.");
+
+			DownloadTempFile();
+
+			DMDocument.assertFileNameFromTempFolder(fileName = "audit_events.csv");
+
+			var fileContent = TestCase.getTempFileContent(fileName = "audit_events.csv");
+
+			echo(${fileContent});
+
+			DMDocument.assertDownloadedFileContent(
+				downloadedContent = '''LOGIN_FAILURE''',
+				fileName = "audit_events.csv");
+		}
+	}
+
+	@description = "This is a use case for LPS-174421 TC-2. Verify that the user is able to export the filtered audit data as a CSV format file on virtual instance."
+	@priority = 5
+	test CanExportCSVFilteredAuditDataFileOnVirtualInstance {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.router.configuration.PersistentAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given Add virtual instance login with wrong password login with correct password search LOGIN_FAILURE in Audit") {
+			HeadlessPortalInstanceAPI.addPortalInstance(
+				domain = "www.able.com",
+				portalInstanceId = "www.able.com",
+				virtualHost = "www.able.com");
+
+			UserBar.signOut();
+
+			User.firstLoginUI(
+				password = "test1",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "Security",
+				panel = "Control Panel",
+				portlet = "Audit");
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			AssertTextEquals(
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "Test Test",
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
+				value1 = "LOGIN_FAILURE");
+
+			AssertElementNotPresent(
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "Test Test",
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION_2",
+				value1 = "LOGIN_FAILURE");
+		}
+
+		task ("When Export audit events") {
+			Audit.exportAuditEvents();
+		}
+
+		task ("Then Assert that confoirmation pop-up csv file downloaled correct list right event") {
+			AssertConfirm.assertConfirmationNoError(value1 = "Warning: This CSV file contains user supplied inputs. Opening a CSV file in a spreadsheet program may be dangerous.");
+
+			DownloadTempFile();
+
+			DMDocument.assertFileNameFromTempFolder(fileName = "audit_events.csv");
+
+			var fileContent = TestCase.getTempFileContent(fileName = "audit_events.csv");
+
+			echo(${fileContent});
+
+			DMDocument.assertDownloadedFileContent(
+				downloadedContent = '''LOGIN_FAILURE''',
+				fileName = "audit_events.csv");
+		}
+	}
+
+	@description = "This is a use case for LPS-180466 TC-1 and TC3. Verify that Audit event stores that specific event with the info of the site."
+	@priority = 5
+	test CanStoreSiteIDForAuditEvent {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.router.configuration.PersistentAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a new Object definition with site scope is created") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "MyObject",
+				objectName = "MyObject",
+				pluralLabelName = "MyObject");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "My Object Field",
+				fieldName = "myObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "MyObject");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectSystemObject(label = "MyObject");
+
+			CreateObject.selectScope(fieldLabel = "Site");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#ENABLE_ENTRY_HISTORY_IN_AUDIT_FRAMEWORK_BUTTON");
+
+			CreateObject.saveObject();
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "MyObject");
+
+			var objectId = JSONObject.getObjectId(objectName = "MyObject");
+		}
+
+		task ("And the widget named after the Object to a page on new site is added") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Object Page");
+
+			Navigator.gotoSitePage(
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			Portlet.addPG(
+				pageName = "Object Page",
+				portletName = "MyObject");
+
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Site Name",
+				site = "true");
+		}
+
+		task ("When use the widget to create a new record") {
+			Navigator.gotoSitePage(
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			LexiconEntry.gotoAdd();
+
+			ObjectPortlet.typeCustomField(
+				customField = "My Object Field",
+				entry = "Test Content");
+
+			PortletEntry.save();
+
+			Navigator.gotoSitePage(
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			ObjectPortlet.viewEntry(entry = "Test Content");
+		}
+
+		task ("Then you should see the groupId in the audit event") {
+			Audit.openAuditAdmin();
+
+			var resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}";
+
+			AssertElementPresent(
+				key_resourceAction = "ADD",
+				key_resourceName = ${resourceName},
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_NAME");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "myObjectField,Test Content",
+				groupId = ${groupId},
+				key_resourceAction = "ADD",
+				key_resourceName = "ObjectDefinition#${objectId}",
+				resourceAction = "ADD",
+				resourceName = "ObjectDefinition#${objectId}",
+				userName = "Test Test");
+		}
+
+		task ("When search the groupId in the advanced search") {
+			Audit.openAuditAdmin();
+
+			Audit.searchCP(
+				groupId = ${groupId},
+				match = "All",
+				searchTerm = ${groupId});
+		}
+
+		task ("Then the relevant audit events should display") {
+			AssertTextEquals(
+				key_resourceAction = "ADD",
+				key_resourceName = ${resourceName},
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
+				value1 = "ADD");
+		}
+	}
+
+	@description = "This is a use case for LPS-180466 TC-2. Verify that Audit event stores that specific event with the info of the site on virtual instance."
+	@priority = 5
+	test CanStoreSiteIDForAuditEventOnVirtualInstance {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.router.configuration.PersistentAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a new Object definition with site scope is created on virtual instance") {
+			HeadlessPortalInstanceAPI.addPortalInstance(
+				domain = "www.able.com",
+				portalInstanceId = "www.able.com",
+				virtualHost = "www.able.com");
+
+			User.firstLoginPG(
+				password = "test",
+				userEmailAddress = "test@www.able.com",
+				virtualHostsURL = "http://www.able.com:8080");
+
+			ObjectAdmin.openObjectAdmin(baseURL = "http://www.able.com:8080");
+
+			ObjectAdmin.addNewObject(
+				fieldLabelName = "MyObject",
+				pluralLabelName = "MyObject");
+
+			CreateObject.saveObject();
+
+			ObjectPortlet.selectSystemObject(label = "MyObject");
+
+			CreateObject.selectScope(fieldLabel = "Site");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
+
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#ENABLE_ENTRY_HISTORY_IN_AUDIT_FRAMEWORK_BUTTON");
+
+			CreateObject.saveObject();
+
+			ObjectAdmin.openObjectAdmin(baseURL = "http://www.able.com:8080");
+
+			ObjectPortlet.selectCustomObject(label = "MyObject");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "My Object Field",
+				fieldName = "myObjectField",
+				fieldType = "Text");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "My Object Field",
+				fieldType = "Text");
+
+			ObjectAdmin.goToDetailsTab();
+
+			ObjectAdmin.publishObjectViaUI();
+
+			var objectId = JSONObject.getObjectId(
+				objectName = "MyObject",
+				userEmailAddress = "test@www.able.com",
+				virtualHost = "www.able.com");
+		}
+
+		task ("And the widget named after the Object to a page on new site is added on virtual instance") {
+			HeadlessSite.addSite(
+				portalURL = "http://www.able.com:8080",
+				siteName = "Site Name",
+				userEmailAddress = "test@www.able.com",
+				userPassword = "test");
+
+			PagesAdmin.openPagesAdmin(
+				baseURL = "http://www.able.com:8080",
+				siteURLKey = "site-name");
+
+			PagesAdmin.addPage(
+				pageName = "Object Page",
+				sitePageType = "Widget Page");
+
+			Navigator.gotoSitePage(
+				baseURL = "http://www.able.com:8080",
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			Portlet.addPG(
+				pageName = "Object Page",
+				portletName = "MyObject");
+
+			var groupId = JSONGroupAPI._getGroupIdByNameViaOtherUser(
+				creatorEmailAddress = "test@www.able.com",
+				groupName = "Site Name",
+				portalInstanceName = "www.able.com",
+				portalURL = "http://www.able.com:8080",
+				site = "true");
+		}
+
+		task ("When use the widget to create a new record on virtual instance") {
+			Navigator.gotoSitePage(
+				baseURL = "http://www.able.com:8080",
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			LexiconEntry.gotoAdd();
+
+			ObjectPortlet.typeCustomField(
+				customField = "My Object Field",
+				entry = "Test Content");
+
+			PortletEntry.save();
+
+			Navigator.gotoSitePage(
+				baseURL = "http://www.able.com:8080",
+				pageName = "Object Page",
+				siteName = "Site Name");
+
+			ObjectPortlet.viewEntry(entry = "Test Content");
+		}
+
+		task ("Then you should see the groupId in the audit event on virtual instance") {
+			Audit.openAuditAdmin(baseURL = "http://www.able.com:8080");
+
+			var resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}";
+
+			AssertElementPresent(
+				key_resourceAction = "ADD",
+				key_resourceName = ${resourceName},
+				locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_NAME");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "myObjectField,Test Content",
+				groupId = ${groupId},
+				key_resourceAction = "ADD",
+				key_resourceName = "ObjectDefinition#${objectId}",
+				resourceAction = "ADD",
+				resourceName = "ObjectDefinition#${objectId}",
+				userName = "Test Test");
+		}
+	}
+
 	@description = "This is a use case for LPS-150300. Verify that Console outputs the correct clientIP when reading of the X-Forwarded-For http header."
 	@priority = 5
 	test VerifyCorrectClientIP {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}useIncomingXRequestId=\"true\"";
-		property test.name.skip.portal.instance = "Audit#VerifyCorrectClientIP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add the OSGI configuration file") {
 			OSGiConfig.copyOSGiConfigFile(
@@ -212,6 +856,501 @@ definition {
 			var runGet = JSONCurlUtil.get(${curl});
 
 			AuditLog.viewLogFileContent(logString = "clientIP=127.0.0.1");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-2: Verify LOGIN_DNE message returns when the User tries to login with a non-existing email address but an existing password."
+	@priority = 5
+	test ViewLoginDNEMessageWhenAuthenticateByEmailAddress {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("When: Login with a non-existing email address but an existing password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				locator1 = "TextInput#EMAIL_ADDRESS",
+				value1 = "steve.jobs@liferay.com");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_DNE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_DNE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "User does not exist,emailAddress",
+				key_resourceAction = "LOGIN_DNE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_DNE",
+				resourceName = "com.liferay.portal.kernel.model.User");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-6: Verify LOGIN_DNE message returns when user tries to login with a non-existing Screen Name but an existing password."
+	@priority = 5
+	test ViewLoginDNEMessageWhenAuthenticateByScreenName {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("And: Change to authenticate by Screen Name") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "User Authentication",
+				configurationName = "General",
+				configurationScope = "Virtual Instance Scope");
+
+			PortalSettings.editConfigurationAuthenticationGeneral(authenticationMethod = "By Screen Name");
+		}
+
+		task ("When: Login with a non-existing Screen Name but an existing password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				key_text = "Screen Name",
+				locator1 = "TextInput#ANY",
+				value1 = "steve");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.firstLoginUI(
+				authenticationMethod = "By Screen Name",
+				password = "test",
+				userScreenName = "test");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_DNE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "User does not exist,screenName",
+				key_resourceAction = "LOGIN_DNE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_DNE",
+				resourceName = "com.liferay.portal.kernel.model.User");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-4: Verify LOGIN_DNE message returns when the User tries to login with a non-existing user ID but an existing password."
+	@priority = 5
+	test ViewLoginDNEMessageWhenAuthenticateByUserID {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("And: Change to authenticate by user ID") {
+			var userId = JSONUserSetter.setUserId(userEmailAddress = "test@liferay.com");
+
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "User Authentication",
+				configurationName = "General",
+				configurationScope = "Virtual Instance Scope");
+
+			PortalSettings.editConfigurationAuthenticationGeneral(authenticationMethod = "By User ID");
+		}
+
+		task ("When: Login with a non-existing user ID but an existing password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				key_text = "ID",
+				locator1 = "TextInput#ANY",
+				value1 = 12345);
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_DNE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.firstLoginUI(
+				authenticationMethod = "By User ID",
+				password = "test",
+				userId = ${userId});
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_DNE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "User does not exist,userId",
+				key_resourceAction = "LOGIN_DNE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_DNE",
+				resourceName = "com.liferay.portal.kernel.model.User");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-1: Verify LOGIN_FAILURE message returns when user tries to login with a valid email address but an invalid password."
+	@priority = 5
+	test ViewLoginFailureMessageWhenAuthenticateByEmailAddress {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("When: Login with a valid email address but an invalid password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				locator1 = "TextInput#EMAIL_ADDRESS",
+				value1 = "test@liferay.com");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test1");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "Failed to authenticate by email address",
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_FAILURE",
+				resourceName = "com.liferay.portal.kernel.model.User",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-5: Verify LOGIN_FAILURE message returns when user tries to login with a valid Screen Name but an invalid password."
+	@priority = 5
+	test ViewLoginFailureMessageWhenAuthenticateByScreenName {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("And: Change to authenticate by Screen Name") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "User Authentication",
+				configurationName = "General",
+				configurationScope = "Virtual Instance Scope");
+
+			PortalSettings.editConfigurationAuthenticationGeneral(authenticationMethod = "By Screen Name");
+		}
+
+		task ("When: Login with a valid Screen Name but an invalid password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				key_text = "Screen Name",
+				locator1 = "TextInput#ANY",
+				value1 = "test");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test1");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.firstLoginUI(
+				authenticationMethod = "By Screen Name",
+				password = "test",
+				userScreenName = "test");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "Failed to authenticate by screen name",
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_FAILURE",
+				resourceName = "com.liferay.portal.kernel.model.User",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-3: Verify LOGIN_FAILURE message returns when user tries to login with a valid user ID but an invalid password."
+	@priority = 5
+	test ViewLoginFailureMessageWhenAuthenticateByUserID {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+
+			Audit.verifyConfigurationElementIsConfigured(
+				element = "Audit#AUDIT_LOG_MESSAGE_FORMAT",
+				portlet = "Logging Message Audit",
+				text = "JSON");
+		}
+
+		task ("And: Change to authenticate by user ID") {
+			var userId = JSONUserSetter.setUserId(userEmailAddress = "test@liferay.com");
+
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "User Authentication",
+				configurationName = "General",
+				configurationScope = "Virtual Instance Scope");
+
+			PortalSettings.editConfigurationAuthenticationGeneral(authenticationMethod = "By User ID");
+		}
+
+		task ("When: Login with a valid user ID but an invalid password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				key_text = "ID",
+				locator1 = "TextInput#ANY",
+				value1 = ${userId});
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test1");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.firstLoginUI(
+				authenticationMethod = "By User ID",
+				password = "test",
+				userId = ${userId});
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "Failed to authenticate by user ID",
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_FAILURE",
+				resourceName = "com.liferay.portal.kernel.model.User",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "This is a use case for LPS-159334. TC-7: Verify LOGIN_FAILURE message returns when LDAP user enters the wrong password during login."
+	@priority = 5
+	test ViewLoginFailureMessageWhenLDAPUserEnterWrongPassword {
+		property apacheds.enabled = "true";
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration.config:com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Add the OSGI configuration file") {
+			OSGiConfig.copyOSGiConfigFile(
+				osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructureee/administration/auditing/dependencies",
+				osgiConfigFileName = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration.config");
+		}
+
+		task ("And: Add LDAP server") {
+			PortalSettings.addLDAPServer();
+
+			PortalSettings.editLDAPServer();
+
+			PortalSettings.testLDAPConnection();
+
+			var enableSettingList = "enabled,ldapImportEnabled";
+
+			LDAP.enableLDAPSettings(enableSettingList = ${enableSettingList});
+
+			PortalSettings.setImportIntervalTime(importIntervalTime = 1);
+
+			LDAP.installLDAPCommandUtil();
+
+			LDAP.updateLDAPDatabaseWithLDIFFile(ldifName = "addUser");
+
+			LDAP.verifyUserImportAfterImportIntervalTime(userScreenName = "testUser");
+		}
+
+		task ("When: Login with a valid email address from LDAP but an invalid password") {
+			User.logoutPG();
+
+			Navigator.gotoLoginPage();
+
+			Type.typePause(
+				locator1 = "TextInput#EMAIL_ADDRESS",
+				value1 = "testUser2@liferay.com");
+
+			Type.typePause(
+				locator1 = "TextInput#PASSWORD",
+				value1 = "test1");
+
+			Click(locator1 = "Button#SIGN_IN");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_DISMISSIBLE",
+				value1 = "Authentication failed. Please try again.");
+		}
+
+		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
+			Navigator.openURL();
+
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			Audit.openAuditAdmin();
+
+			Audit.searchViaKeywords(
+				resourceName = "com.liferay.portal.kernel.model.User",
+				searchTerm = "LOGIN_FAILURE");
+
+			Audit.viewAuditDetails(
+				additionalInformation = "Failed to authenticate by email address",
+				key_resourceAction = "LOGIN_FAILURE",
+				key_resourceName = "com.liferay.portal.kernel.model.User",
+				resourceAction = "LOGIN_FAILURE",
+				resourceName = "com.liferay.portal.kernel.model.User",
+				userName = "firstName lastName");
 		}
 	}
 

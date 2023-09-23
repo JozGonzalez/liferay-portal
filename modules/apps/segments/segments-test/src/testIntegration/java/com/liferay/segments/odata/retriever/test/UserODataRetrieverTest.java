@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.odata.retriever.test;
@@ -356,7 +347,7 @@ public class UserODataRetrieverTest {
 
 		_user2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_userLocalService.updateUser(_user2);
+		_user2 = _userLocalService.updateUser(_user2);
 
 		String filterString = String.format(
 			"(dateModified eq %s) and (firstName eq '%s')",
@@ -387,7 +378,7 @@ public class UserODataRetrieverTest {
 
 		_user2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_userLocalService.updateUser(_user2);
+		_user2 = _userLocalService.updateUser(_user2);
 
 		String filterString = String.format(
 			"(dateModified gt %s) and (firstName eq '%s')",
@@ -420,7 +411,7 @@ public class UserODataRetrieverTest {
 
 		_user2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_userLocalService.updateUser(_user2);
+		_user2 = _userLocalService.updateUser(_user2);
 
 		String filterString = String.format(
 			"(dateModified ge %s) and (firstName eq '%s')",
@@ -451,7 +442,7 @@ public class UserODataRetrieverTest {
 
 		_user2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_userLocalService.updateUser(_user2);
+		_user2 = _userLocalService.updateUser(_user2);
 
 		String filterString = String.format(
 			"(dateModified lt %s) and (firstName eq '%s')",
@@ -484,7 +475,7 @@ public class UserODataRetrieverTest {
 
 		_user2.setModifiedDate(Date.from(instant.plusSeconds(1)));
 
-		_userLocalService.updateUser(_user2);
+		_user2 = _userLocalService.updateUser(_user2);
 
 		String filterString = String.format(
 			"(dateModified le %s) and (firstName eq '%s')",
@@ -756,7 +747,7 @@ public class UserODataRetrieverTest {
 
 		_user1.setJobTitle(RandomTestUtil.randomString());
 
-		_userLocalService.updateUser(_user1);
+		_user1 = _userLocalService.updateUser(_user1);
 
 		_user2 = _addUser(_group1);
 
@@ -782,7 +773,7 @@ public class UserODataRetrieverTest {
 
 		_user1.setJobTitle(jobTitlePrefix + RandomTestUtil.randomString());
 
-		_userLocalService.updateUser(_user1);
+		_user1 = _userLocalService.updateUser(_user1);
 
 		_user2 = _addUser(_group1);
 

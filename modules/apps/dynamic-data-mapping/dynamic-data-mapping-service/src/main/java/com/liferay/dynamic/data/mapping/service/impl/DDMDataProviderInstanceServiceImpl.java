@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
@@ -19,6 +10,7 @@ import com.liferay.dynamic.data.mapping.constants.DDMConstants;
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.service.base.DDMDataProviderInstanceServiceBaseImpl;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -37,8 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -169,34 +159,28 @@ public class DDMDataProviderInstanceServiceImpl
 		long companyId, long[] groupIds, String keywords, int start, int end,
 		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
 
-		List<DDMDataProviderInstance> ddmDataProviderInstances =
+		return TransformUtil.transform(
 			ddmDataProviderInstanceFinder.filterByKeywords(
-				companyId, groupIds, keywords, start, end, orderByComparator);
-
-		Stream<DDMDataProviderInstance> ddmDataProviderInstancesStream =
-			ddmDataProviderInstances.stream();
-
-		return ddmDataProviderInstancesStream.filter(
+				companyId, groupIds, keywords, start, end, orderByComparator),
 			ddmDataProviderInstance -> {
 				try {
-					return _ddmDataProviderInstanceModelResourcePermission.
-						contains(
-							getPermissionChecker(),
-							ddmDataProviderInstance.getDataProviderInstanceId(),
-							ActionKeys.VIEW);
+					if (_ddmDataProviderInstanceModelResourcePermission.
+							contains(
+								getPermissionChecker(),
+								ddmDataProviderInstance.
+									getDataProviderInstanceId(),
+								ActionKeys.VIEW)) {
+
+						return _removeAuthenticationData(
+							ddmDataProviderInstance);
+					}
 				}
 				catch (PortalException portalException) {
 					_log.error(portalException);
-
-					return false;
 				}
-			}
-		).map(
-			ddmDataProviderInstance -> _removeAuthenticationData(
-				ddmDataProviderInstance)
-		).collect(
-			Collectors.toList()
-		);
+
+				return null;
+			});
 	}
 
 	@Override

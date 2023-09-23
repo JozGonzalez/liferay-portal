@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.type.internal.manager;
 
+import com.liferay.client.extension.exception.ClientExtensionEntryTypeException;
 import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
 import com.liferay.client.extension.type.CET;
@@ -23,6 +15,7 @@ import com.liferay.client.extension.type.factory.CETFactory;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Sort;
@@ -62,7 +55,10 @@ public class CETManagerImpl implements CETManager {
 
 		cetsMap.put(externalReferenceCode, cet);
 
-		_serviceRegistrationsMaps.put(
+		Map<String, List<ServiceRegistration<?>>> serviceRegistrationsMap =
+			_getServiceRegistrationsMap(cet.getCompanyId());
+
+		serviceRegistrationsMap.put(
 			externalReferenceCode, _cetDeployer.deploy(cet));
 
 		return cet;
@@ -157,10 +153,19 @@ public class CETManagerImpl implements CETManager {
 				_clientExtensionEntryLocalService.getClientExtensionEntries(
 					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
 
-			CET cet = _cetFactory.create(clientExtensionEntry);
+			try {
+				CET cet = _cetFactory.create(clientExtensionEntry);
 
-			if (_isInclude(cet, keywords, type)) {
-				cets.add(cet);
+				if (_isInclude(cet, keywords, type)) {
+					cets.add(cet);
+				}
+			}
+			catch (ClientExtensionEntryTypeException
+						clientExtensionEntryTypeException) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(clientExtensionEntryTypeException);
+				}
 			}
 		}
 
@@ -189,6 +194,21 @@ public class CETManagerImpl implements CETManager {
 		return cetsMap;
 	}
 
+	private Map<String, List<ServiceRegistration<?>>>
+		_getServiceRegistrationsMap(long companyId) {
+
+		Map<String, List<ServiceRegistration<?>>> serviceRegistrationsMap =
+			_serviceRegistrationsMaps.get(companyId);
+
+		if (serviceRegistrationsMap == null) {
+			serviceRegistrationsMap = new ConcurrentHashMap<>();
+
+			_serviceRegistrationsMaps.put(companyId, serviceRegistrationsMap);
+		}
+
+		return serviceRegistrationsMap;
+	}
+
 	private boolean _isInclude(CET cet, String keywords, String type) {
 		if (Validator.isNotNull(type) && !Objects.equals(type, cet.getType())) {
 			return false;
@@ -203,12 +223,21 @@ public class CETManagerImpl implements CETManager {
 			return false;
 		}
 
+		String key = CETFactory.FEATURE_FLAG_KEYS.get(cet.getType());
+
+		if ((key != null) && !FeatureFlagManagerUtil.isEnabled(key)) {
+			return false;
+		}
+
 		return true;
 	}
 
 	private void _undeployCET(CET cet) {
+		Map<String, List<ServiceRegistration<?>>> serviceRegistrationsMap =
+			_getServiceRegistrationsMap(cet.getCompanyId());
+
 		List<ServiceRegistration<?>> serviceRegistrations =
-			_serviceRegistrationsMaps.remove(cet.getExternalReferenceCode());
+			serviceRegistrationsMap.remove(cet.getExternalReferenceCode());
 
 		if (serviceRegistrations != null) {
 			for (ServiceRegistration<?> serviceRegistration :
@@ -233,7 +262,7 @@ public class CETManagerImpl implements CETManager {
 	@Reference
 	private ClientExtensionEntryLocalService _clientExtensionEntryLocalService;
 
-	private final Map<String, List<ServiceRegistration<?>>>
+	private final Map<Long, Map<String, List<ServiceRegistration<?>>>>
 		_serviceRegistrationsMaps = new ConcurrentHashMap<>();
 
 }

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -23,31 +14,18 @@ CommerceTierPriceEntry commerceTierPriceEntry = cpInstanceCommerceTierPriceEntry
 CommercePriceEntry commercePriceEntry = cpInstanceCommerceTierPriceEntryDisplayContext.getCommercePriceEntry();
 CPDefinition cpDefinition = cpInstanceCommerceTierPriceEntryDisplayContext.getCPDefinition();
 CPInstance cpInstance = cpInstanceCommerceTierPriceEntryDisplayContext.getCPInstance();
-long commercePriceEntryId = cpInstanceCommerceTierPriceEntryDisplayContext.getCommercePriceEntryId();
-long commerceTierPriceEntryId = cpInstanceCommerceTierPriceEntryDisplayContext.getCommerceTierPriceEntryId();
-String title = cpInstanceCommerceTierPriceEntryDisplayContext.getContextTitle();
-
-CommercePriceList commercePriceList = commercePriceEntry.getCommercePriceList();
-
-CommerceCurrency commerceCurrency = commercePriceList.getCommerceCurrency();
-
-BigDecimal price = BigDecimal.ZERO;
-
-if ((commerceTierPriceEntry != null) && (commerceTierPriceEntry.getPrice() != null)) {
-	price = commerceCurrency.round(commerceTierPriceEntry.getPrice());
-}
 %>
 
 <commerce-ui:modal-content
-	title="<%= title %>"
+	title="<%= cpInstanceCommerceTierPriceEntryDisplayContext.getContextTitle() %>"
 >
 	<portlet:actionURL name="/cp_definitions/edit_cp_instance_commerce_tier_price_entry" var="editCommerceTierPriceEntryActionURL" />
 
 	<aui:form action="<%= editCommerceTierPriceEntryActionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-		<aui:input name="commercePriceEntryId" type="hidden" value="<%= commercePriceEntryId %>" />
-		<aui:input name="commerceTierPriceEntryId" type="hidden" value="<%= commerceTierPriceEntryId %>" />
+		<aui:input name="commercePriceEntryId" type="hidden" value="<%= cpInstanceCommerceTierPriceEntryDisplayContext.getCommercePriceEntryId() %>" />
+		<aui:input name="commerceTierPriceEntryId" type="hidden" value="<%= cpInstanceCommerceTierPriceEntryDisplayContext.getCommerceTierPriceEntryId() %>" />
 		<aui:input name="cpDefinitionId" type="hidden" value="<%= cpDefinition.getCPDefinitionId() %>" />
 		<aui:input name="cpInstanceId" type="hidden" value="<%= cpInstance.getCPInstanceId() %>" />
 
@@ -55,12 +33,33 @@ if ((commerceTierPriceEntry != null) && (commerceTierPriceEntry.getPrice() != nu
 
 		<div class="row">
 			<div class="col-12">
+
+				<%
+				CommercePriceList commercePriceList = commercePriceEntry.getCommercePriceList();
+
+				CommerceCurrency commerceCurrency = commercePriceList.getCommerceCurrency();
+
+				BigDecimal price = BigDecimal.ZERO;
+
+				if ((commerceTierPriceEntry != null) && (commerceTierPriceEntry.getPrice() != null)) {
+					price = commerceCurrency.round(commerceTierPriceEntry.getPrice());
+				}
+				%>
+
 				<aui:input name="price" suffix="<%= HtmlUtil.escape(commerceCurrency.getCode()) %>" type="text" value="<%= price %>">
 					<aui:validator name="min">0</aui:validator>
 					<aui:validator name="number" />
 				</aui:input>
 
-				<aui:input bean="<%= commerceTierPriceEntry %>" model="<%= CommerceTierPriceEntry.class %>" name="minQuantity">
+				<%
+				BigDecimal minQuantity = BigDecimal.ZERO;
+
+				if ((commerceTierPriceEntry != null) && (commerceTierPriceEntry.getMinQuantity() != null)) {
+					minQuantity = commerceTierPriceEntry.getMinQuantity();
+				}
+				%>
+
+				<aui:input name="minQuantity" value="<%= minQuantity.intValue() %>">
 					<aui:validator name="min">0</aui:validator>
 				</aui:input>
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context.logic;
@@ -37,6 +28,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -250,6 +242,32 @@ public class UIItemsBuilder {
 		).build();
 	}
 
+	public DropdownItem createCopyDropdownItem() {
+		String mvcRenderCommand;
+
+		if (_fileShortcut != null) {
+			mvcRenderCommand = "/document_library/copy_file_shortcut";
+		}
+		else {
+			mvcRenderCommand = "/document_library/copy_file_entry";
+		}
+
+		return DropdownItemBuilder.setHref(
+			() -> {
+				PortletURL portletURL = _getControlPanelRenderURL(
+					mvcRenderCommand);
+
+				return portletURL.toString();
+			}
+		).setIcon(
+			"copy"
+		).setKey(
+			DLUIItemKeys.COPY
+		).setLabel(
+			LanguageUtil.get(_httpServletRequest, "copy-to")
+		).build();
+	}
+
 	public DropdownItem createDeleteDropdownItem() throws PortalException {
 		String cmd = null;
 
@@ -394,6 +412,22 @@ public class UIItemsBuilder {
 			DLUIItemKeys.EDIT_IMAGE
 		).setLabel(
 			LanguageUtil.get(_httpServletRequest, "edit-image")
+		).build();
+	}
+
+	public DropdownItem createHistoryDropdownItem() {
+		return DropdownItemBuilder.setHref(
+			PortletURLBuilder.create(
+				_getRenderURL("/document_library/view_file_entry_history")
+			).setBackURL(
+				_getCurrentURL()
+			).buildPortletURL()
+		).setIcon(
+			"date-time"
+		).setKey(
+			DLUIItemKeys.VIEW_HISTORY
+		).setLabel(
+			LanguageUtil.get(_httpServletRequest, "view-history")
 		).build();
 	}
 
@@ -595,6 +629,24 @@ public class UIItemsBuilder {
 			_fileVersion.getExtension());
 	}
 
+	public boolean isCopyActionAvailable() throws PortalException {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPS-182512")) {
+
+			return false;
+		}
+
+		if (((_fileShortcut != null) &&
+			 !_fileShortcutDisplayContextHelper.isCopyActionAvailable()) ||
+			((_fileShortcut == null) &&
+			 !_fileEntryDisplayContextHelper.isCopyActionAvailable())) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	public boolean isDeleteActionAvailable() throws PortalException {
 		if (_isDeleteActionAvailable() ||
 			_isMoveToTheRecycleBinActionAvailable()) {
@@ -656,6 +708,14 @@ public class UIItemsBuilder {
 		}
 
 		return true;
+	}
+
+	public boolean isHistoryActionAvailable() throws PortalException {
+		if (_fileShortcut == null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isMoveActionAvailable() throws PortalException {

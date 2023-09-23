@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.search;
@@ -107,8 +98,8 @@ public class CommerceOrderItemIndexer extends BaseIndexer<CommerceOrderItem> {
 			SearchContext searchContext)
 		throws Exception {
 
-		addSearchTerm(searchQuery, searchContext, FIELD_SKU, false);
 		addSearchLocalizedTerm(searchQuery, searchContext, Field.NAME, true);
+		addSearchTerm(searchQuery, searchContext, FIELD_SKU, false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -151,14 +142,13 @@ public class CommerceOrderItemIndexer extends BaseIndexer<CommerceOrderItem> {
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing order item " + commerceOrderItem);
+			_log.debug("Indexing commerce order item " + commerceOrderItem);
 		}
 
 		Document document = getBaseModelDocument(CLASS_NAME, commerceOrderItem);
 
 		document.addLocalizedKeyword(
 			Field.NAME, commerceOrderItem.getNameMap());
-		document.addKeyword(FIELD_SKU, commerceOrderItem.getSku());
 		document.addNumber(
 			FIELD_COMMERCE_ORDER_ID, commerceOrderItem.getCommerceOrderId());
 		document.addKeyword(
@@ -169,6 +159,7 @@ public class CommerceOrderItemIndexer extends BaseIndexer<CommerceOrderItem> {
 			FIELD_PARENT_COMMERCE_ORDER_ITEM_ID,
 			commerceOrderItem.getParentCommerceOrderItemId());
 		document.addNumber(FIELD_QUANTITY, commerceOrderItem.getQuantity());
+		document.addKeyword(FIELD_SKU, commerceOrderItem.getSku());
 		document.addNumber(FIELD_UNIT_PRICE, commerceOrderItem.getUnitPrice());
 
 		_expandoBridgeIndexer.addAttributes(
@@ -176,7 +167,8 @@ public class CommerceOrderItemIndexer extends BaseIndexer<CommerceOrderItem> {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Document " + commerceOrderItem + " indexed successfully");
+				"Commerce order item " + commerceOrderItem +
+					" indexed successfully");
 		}
 
 		return document;
@@ -232,7 +224,7 @@ public class CommerceOrderItemIndexer extends BaseIndexer<CommerceOrderItem> {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index commerce order item " +
-								commerceOrderItem.getCommerceOrderItemId(),
+								commerceOrderItem,
 							portalException);
 					}
 				}

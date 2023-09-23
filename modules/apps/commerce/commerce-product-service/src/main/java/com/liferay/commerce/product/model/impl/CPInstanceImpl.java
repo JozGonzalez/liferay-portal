@@ -1,26 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
 
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CPSubscriptionInfo;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+
+import java.util.List;
 
 /**
  * @author Marco Leo
@@ -44,16 +40,34 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 	}
 
 	@Override
+	public CPInstanceUnitOfMeasure getCPInstanceUnitOfMeasure(String key)
+		throws PortalException {
+
+		return CPInstanceUnitOfMeasureLocalServiceUtil.
+			getCPInstanceUnitOfMeasure(getCPInstanceId(), key);
+	}
+
+	@Override
+	public List<CPInstanceUnitOfMeasure> getCPInstanceUnitOfMeasures(
+		int start, int end,
+		OrderByComparator<CPInstanceUnitOfMeasure> orderByComparator) {
+
+		return CPInstanceUnitOfMeasureLocalServiceUtil.
+			getCPInstanceUnitOfMeasures(
+				getCPInstanceId(), start, end, orderByComparator);
+	}
+
+	@Override
 	public CPSubscriptionInfo getCPSubscriptionInfo() throws PortalException {
 		if (isOverrideSubscriptionInfo() &&
 			(isSubscriptionEnabled() || isDeliverySubscriptionEnabled())) {
 
 			return new CPSubscriptionInfo(
 				getSubscriptionLength(), getSubscriptionType(),
-				getSubscriptionTypeSettingsProperties(),
+				getSubscriptionTypeSettingsUnicodeProperties(),
 				getMaxSubscriptionCycles(), getDeliverySubscriptionLength(),
 				getDeliverySubscriptionType(),
-				getDeliverySubscriptionTypeSettingsProperties(),
+				getDeliverySubscriptionTypeSettingsUnicodeProperties(),
 				getDeliveryMaxSubscriptionCycles());
 		}
 		else if (!isOverrideSubscriptionInfo()) {
@@ -65,12 +79,12 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 				return new CPSubscriptionInfo(
 					cpDefinition.getSubscriptionLength(),
 					cpDefinition.getSubscriptionType(),
-					cpDefinition.getSubscriptionTypeSettingsProperties(),
+					cpDefinition.getSubscriptionTypeSettingsUnicodeProperties(),
 					cpDefinition.getMaxSubscriptionCycles(),
 					cpDefinition.getDeliverySubscriptionLength(),
 					cpDefinition.getDeliverySubscriptionType(),
 					cpDefinition.
-						getDeliverySubscriptionTypeSettingsProperties(),
+						getDeliverySubscriptionTypeSettingsUnicodeProperties(),
 					cpDefinition.getDeliveryMaxSubscriptionCycles());
 			}
 		}
@@ -79,7 +93,9 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 	}
 
 	@Override
-	public UnicodeProperties getDeliverySubscriptionTypeSettingsProperties() {
+	public UnicodeProperties
+		getDeliverySubscriptionTypeSettingsUnicodeProperties() {
+
 		if (_deliverySubscriptionTypeSettingsUnicodeProperties == null) {
 			_deliverySubscriptionTypeSettingsUnicodeProperties =
 				UnicodePropertiesBuilder.create(
@@ -93,7 +109,7 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 	}
 
 	@Override
-	public UnicodeProperties getSubscriptionTypeSettingsProperties() {
+	public UnicodeProperties getSubscriptionTypeSettingsUnicodeProperties() {
 		if (_subscriptionTypeSettingsUnicodeProperties == null) {
 			_subscriptionTypeSettingsUnicodeProperties =
 				UnicodePropertiesBuilder.create(
@@ -116,7 +132,7 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 	}
 
 	@Override
-	public void setDeliverySubscriptionTypeSettingsProperties(
+	public void setDeliverySubscriptionTypeSettingsUnicodeProperties(
 		UnicodeProperties deliverySubscriptionTypeSettingsUnicodeProperties) {
 
 		_deliverySubscriptionTypeSettingsUnicodeProperties =
@@ -139,7 +155,7 @@ public class CPInstanceImpl extends CPInstanceBaseImpl {
 	}
 
 	@Override
-	public void setSubscriptionTypeSettingsProperties(
+	public void setSubscriptionTypeSettingsUnicodeProperties(
 		UnicodeProperties subscriptionTypeSettingsUnicodeProperties) {
 
 		_subscriptionTypeSettingsUnicodeProperties =

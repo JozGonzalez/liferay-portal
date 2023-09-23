@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.internal.action.executor;
 
 import com.liferay.portal.kernel.workflow.WorkflowException;
-import com.liferay.portal.kernel.workflow.WorkflowStatusManager;
+import com.liferay.portal.kernel.workflow.WorkflowStatusManagerUtil;
 import com.liferay.portal.workflow.kaleo.definition.ActionType;
 import com.liferay.portal.workflow.kaleo.model.KaleoAction;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
@@ -23,7 +14,6 @@ import com.liferay.portal.workflow.kaleo.runtime.action.executor.ActionExecutor;
 import com.liferay.portal.workflow.kaleo.runtime.action.executor.ActionExecutorException;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rafael Praxedes
@@ -37,7 +27,7 @@ public class UpdateStatusActionExecutor implements ActionExecutor {
 		throws ActionExecutorException {
 
 		try {
-			_workflowStatusManager.updateStatus(
+			WorkflowStatusManagerUtil.updateStatus(
 				kaleoAction.getStatus(), executionContext.getWorkflowContext());
 		}
 		catch (WorkflowException workflowException) {
@@ -46,15 +36,8 @@ public class UpdateStatusActionExecutor implements ActionExecutor {
 	}
 
 	@Override
-	public String[] getActionExecutorKeys() {
-		return _ACTION_EXECUTOR_KEYS;
+	public String getActionExecutorKey() {
+		return ActionType.UPDATE_STATUS.name();
 	}
-
-	private static final String[] _ACTION_EXECUTOR_KEYS = {
-		ActionType.UPDATE_STATUS.name()
-	};
-
-	@Reference
-	private WorkflowStatusManager _workflowStatusManager;
 
 }

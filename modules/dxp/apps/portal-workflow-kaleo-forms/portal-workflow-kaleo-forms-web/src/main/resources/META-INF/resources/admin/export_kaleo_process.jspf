@@ -1,0 +1,85 @@
+<%--
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+--%>
+
+<div class="hide" id="<portlet:namespace />exportProcess">
+	<aui:select label="file-extension" name="fileExtension">
+		<aui:option value="csv">CSV</aui:option>
+		<aui:option value="xml">XML</aui:option>
+	</aui:select>
+
+	<aui:input label="export-only-approved-submissions" name="exportOnlyApproved" type="checkbox" />
+</div>
+
+<aui:script>
+	Liferay.provide(
+		window,
+		'<portlet:namespace />exportKaleoProcess',
+		(url) => {
+			var A = AUI();
+
+			var form = A.Node.create('<form method="post" />');
+
+			var content = A.one('#<portlet:namespace />exportProcess');
+
+			if (content) {
+				form.append(content);
+
+				content.show();
+			}
+
+			var dialog = Liferay.Util.Window.getWindow({
+				dialog: {
+					bodyContent: form,
+					cssClass: 'kaleo-process-export-dialog',
+					height: 286,
+					render: '#p_p_id<portlet:namespace />',
+					resizable: false,
+					toolbars: {
+						footer: [
+							{
+								cssClass: 'btn-primary',
+								label:
+									'<%= UnicodeLanguageUtil.get(request, "ok") %>',
+								on: {
+									click: function () {
+										submitForm(form, url, false);
+
+										dialog.hide();
+									},
+								},
+								primary: true,
+							},
+							{
+								label:
+									'<%= UnicodeLanguageUtil.get(request, "cancel") %>',
+								on: {
+									click: function () {
+										dialog.hide();
+									},
+								},
+							},
+						],
+						header: [
+							{
+								cssClass: 'close',
+								label: '\u00D7',
+								on: {
+									click: function (event) {
+										dialog.hide();
+									},
+								},
+							},
+						],
+					},
+					width: 350,
+				},
+				title: '<%= UnicodeLanguageUtil.get(request, "export") %>',
+			});
+		},
+		['liferay-util-window']
+	);
+</aui:script>

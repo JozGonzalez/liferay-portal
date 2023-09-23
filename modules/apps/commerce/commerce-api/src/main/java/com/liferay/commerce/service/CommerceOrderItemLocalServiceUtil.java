@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service;
@@ -62,38 +53,30 @@ public class CommerceOrderItemLocalServiceUtil {
 	}
 
 	public static CommerceOrderItem addCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, String json, int quantity,
-			int shippedQuantity,
+			long userId, long commerceOrderId, long cpInstanceId, String json,
+			java.math.BigDecimal quantity, long replacedCPInstanceId,
+			java.math.BigDecimal shippedQuantity, String unitOfMeasureKey,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addCommerceOrderItem(
-			commerceOrderId, cpInstanceId, json, quantity, shippedQuantity,
+			userId, commerceOrderId, cpInstanceId, json, quantity,
+			replacedCPInstanceId, shippedQuantity, unitOfMeasureKey,
 			commerceContext, serviceContext);
 	}
 
 	public static CommerceOrderItem addOrUpdateCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, int quantity,
-			int shippedQuantity,
+			long userId, long commerceOrderId, long cpInstanceId, String json,
+			java.math.BigDecimal quantity, long replacedCPInstanceId,
+			java.math.BigDecimal shippedQuantity, String unitOfMeasureKey,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrUpdateCommerceOrderItem(
-			commerceOrderId, cpInstanceId, quantity, shippedQuantity,
-			commerceContext, serviceContext);
-	}
-
-	public static CommerceOrderItem addOrUpdateCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, String json, int quantity,
-			int shippedQuantity,
-			com.liferay.commerce.context.CommerceContext commerceContext,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addOrUpdateCommerceOrderItem(
-			commerceOrderId, cpInstanceId, json, quantity, shippedQuantity,
+			userId, commerceOrderId, cpInstanceId, json, quantity,
+			replacedCPInstanceId, shippedQuantity, unitOfMeasureKey,
 			commerceContext, serviceContext);
 	}
 
@@ -135,22 +118,11 @@ public class CommerceOrderItemLocalServiceUtil {
 	 *
 	 * @param commerceOrderItem the commerce order item
 	 * @return the commerce order item that was removed
-	 * @throws PortalException
 	 */
 	public static CommerceOrderItem deleteCommerceOrderItem(
-			CommerceOrderItem commerceOrderItem)
-		throws PortalException {
+		CommerceOrderItem commerceOrderItem) {
 
 		return getService().deleteCommerceOrderItem(commerceOrderItem);
-	}
-
-	public static CommerceOrderItem deleteCommerceOrderItem(
-			CommerceOrderItem commerceOrderItem,
-			com.liferay.commerce.context.CommerceContext commerceContext)
-		throws PortalException {
-
-		return getService().deleteCommerceOrderItem(
-			commerceOrderItem, commerceContext);
 	}
 
 	/**
@@ -171,25 +143,53 @@ public class CommerceOrderItemLocalServiceUtil {
 		return getService().deleteCommerceOrderItem(commerceOrderItemId);
 	}
 
-	public static void deleteCommerceOrderItems(long commerceOrderId)
+	public static CommerceOrderItem deleteCommerceOrderItem(
+			long userId, CommerceOrderItem commerceOrderItem)
 		throws PortalException {
 
-		getService().deleteCommerceOrderItems(commerceOrderId);
+		return getService().deleteCommerceOrderItem(userId, commerceOrderItem);
 	}
 
-	public static void deleteCommerceOrderItemsByCPInstanceId(long cpInstanceId)
+	public static CommerceOrderItem deleteCommerceOrderItem(
+			long userId, CommerceOrderItem commerceOrderItem,
+			com.liferay.commerce.context.CommerceContext commerceContext)
 		throws PortalException {
 
-		getService().deleteCommerceOrderItemsByCPInstanceId(cpInstanceId);
+		return getService().deleteCommerceOrderItem(
+			userId, commerceOrderItem, commerceContext);
+	}
+
+	public static CommerceOrderItem deleteCommerceOrderItem(
+			long userId, long commerceOrderItemId)
+		throws PortalException {
+
+		return getService().deleteCommerceOrderItem(
+			userId, commerceOrderItemId);
+	}
+
+	public static void deleteCommerceOrderItems(
+			long userId, long commerceOrderId)
+		throws PortalException {
+
+		getService().deleteCommerceOrderItems(userId, commerceOrderId);
+	}
+
+	public static void deleteCommerceOrderItemsByCPInstanceId(
+			long userId, long cpInstanceId)
+		throws PortalException {
+
+		getService().deleteCommerceOrderItemsByCPInstanceId(
+			userId, cpInstanceId);
 	}
 
 	public static void deleteMissingCommerceOrderItems(
-			long commerceOrderId, Long[] commerceOrderItemIds,
+			long userId, long commerceOrderId, Long[] commerceOrderItemIds,
 			String[] externalReferenceCodes)
 		throws PortalException {
 
 		getService().deleteMissingCommerceOrderItems(
-			commerceOrderId, commerceOrderItemIds, externalReferenceCodes);
+			userId, commerceOrderId, commerceOrderItemIds,
+			externalReferenceCodes);
 	}
 
 	/**
@@ -300,11 +300,13 @@ public class CommerceOrderItemLocalServiceUtil {
 		return getService().fetchCommerceOrderItem(commerceOrderItemId);
 	}
 
-	public static CommerceOrderItem fetchCommerceOrderItemByBookedQuantityId(
-		long bookedQuantityId) {
+	public static CommerceOrderItem
+		fetchCommerceOrderItemByCommerceInventoryBookedQuantityId(
+			long commerceInventoryBookedQuantityId) {
 
-		return getService().fetchCommerceOrderItemByBookedQuantityId(
-			bookedQuantityId);
+		return getService().
+			fetchCommerceOrderItemByCommerceInventoryBookedQuantityId(
+				commerceInventoryBookedQuantityId);
 	}
 
 	public static CommerceOrderItem
@@ -349,8 +351,9 @@ public class CommerceOrderItemLocalServiceUtil {
 			parentCommerceOrderItemId);
 	}
 
-	public static int getCommerceInventoryWarehouseItemQuantity(
-			long commerceOrderItemId, long commerceInventoryWarehouseId)
+	public static java.math.BigDecimal
+			getCommerceInventoryWarehouseItemQuantity(
+				long commerceOrderItemId, long commerceInventoryWarehouseId)
 		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouseItemQuantity(
@@ -423,6 +426,14 @@ public class CommerceOrderItemLocalServiceUtil {
 
 		return getService().getCommerceOrderItems(
 			commerceOrderId, start, end, orderByComparator);
+	}
+
+	public static List<CommerceOrderItem> getCommerceOrderItems(
+		long cpInstanceId, int[] orderStatuses, String unitOfMeasureKey,
+		int start, int end) {
+
+		return getService().getCommerceOrderItems(
+			cpInstanceId, orderStatuses, unitOfMeasureKey, start, end);
 	}
 
 	public static List<CommerceOrderItem> getCommerceOrderItems(
@@ -508,8 +519,18 @@ public class CommerceOrderItemLocalServiceUtil {
 			groupId, commerceAccountId, orderStatuses);
 	}
 
-	public static int getCommerceOrderItemsQuantity(long commerceOrderId) {
+	public static java.math.BigDecimal getCommerceOrderItemsQuantity(
+		long commerceOrderId) {
+
 		return getService().getCommerceOrderItemsQuantity(commerceOrderId);
+	}
+
+	public static List<Long> getCustomerCommerceOrderIds(long commerceOrderId) {
+		return getService().getCustomerCommerceOrderIds(commerceOrderId);
+	}
+
+	public static int getCustomerCommerceOrderIdsCount(long commerceOrderId) {
+		return getService().getCustomerCommerceOrderIdsCount(commerceOrderId);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -551,22 +572,40 @@ public class CommerceOrderItemLocalServiceUtil {
 		return getService().getSubscriptionCommerceOrderItems(commerceOrderId);
 	}
 
+	public static List<Long> getSupplierCommerceOrderIds(long commerceOrderId) {
+		return getService().getSupplierCommerceOrderIds(commerceOrderId);
+	}
+
+	public static int getSupplierCommerceOrderIdsCount(long commerceOrderId) {
+		return getService().getSupplierCommerceOrderIdsCount(commerceOrderId);
+	}
+
+	public static List<CommerceOrderItem> getSupplierCommerceOrderItems(
+		long customerCommerceOrderItemId, int start, int end) {
+
+		return getService().getSupplierCommerceOrderItems(
+			customerCommerceOrderItemId, start, end);
+	}
+
 	public static CommerceOrderItem importCommerceOrderItem(
-			String externalReferenceCode, long commerceOrderItemId,
+			long userId, String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, java.math.BigDecimal decimalQuantity,
-			int quantity, int shippedQuantity,
+			String cpMeasurementUnitKey, java.math.BigDecimal quantity,
+			java.math.BigDecimal shippedQuantity,
+			java.math.BigDecimal unitOfMeasureIncrementalOrderQuantity,
+			String unitOfMeasureKey,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().importCommerceOrderItem(
-			externalReferenceCode, commerceOrderItemId, commerceOrderId,
-			cpInstanceId, cpMeasurementUnitKey, decimalQuantity, quantity,
-			shippedQuantity, serviceContext);
+			userId, externalReferenceCode, commerceOrderItemId, commerceOrderId,
+			cpInstanceId, cpMeasurementUnitKey, quantity, shippedQuantity,
+			unitOfMeasureIncrementalOrderQuantity, unitOfMeasureKey,
+			serviceContext);
 	}
 
 	public static CommerceOrderItem incrementShippedQuantity(
-			long commerceOrderItemId, int shippedQuantity)
+			long commerceOrderItemId, java.math.BigDecimal shippedQuantity)
 		throws PortalException {
 
 		return getService().incrementShippedQuantity(
@@ -623,61 +662,68 @@ public class CommerceOrderItemLocalServiceUtil {
 	}
 
 	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, int quantity,
-			com.liferay.commerce.context.CommerceContext commerceContext,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, quantity, commerceContext, serviceContext);
-	}
-
-	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, long bookedQuantityId)
+			long commerceOrderItemId, long commerceInventoryBookedQuantityId)
 		throws com.liferay.commerce.exception.NoSuchOrderItemException {
 
 		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, bookedQuantityId);
+			commerceOrderItemId, commerceInventoryBookedQuantityId);
 	}
 
 	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, long cpMeasurementUnitId, int quantity,
+			long userId, long commerceOrderItemId,
+			java.math.BigDecimal quantity,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, cpMeasurementUnitId, quantity, commerceContext,
+			userId, commerceOrderItemId, quantity, commerceContext,
 			serviceContext);
 	}
 
 	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, long cpMeasurementUnitId, int quantity,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, cpMeasurementUnitId, quantity, serviceContext);
-	}
-
-	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, String json, int quantity,
+			long userId, long commerceOrderItemId, long cpMeasurementUnitId,
+			java.math.BigDecimal quantity,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, json, quantity, commerceContext,
-			serviceContext);
+			userId, commerceOrderItemId, cpMeasurementUnitId, quantity,
+			commerceContext, serviceContext);
 	}
 
 	public static CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, String json, int quantity,
+			long userId, long commerceOrderItemId, long cpMeasurementUnitId,
+			java.math.BigDecimal quantity,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateCommerceOrderItem(
-			commerceOrderItemId, json, quantity, serviceContext);
+			userId, commerceOrderItemId, cpMeasurementUnitId, quantity,
+			serviceContext);
+	}
+
+	public static CommerceOrderItem updateCommerceOrderItem(
+			long userId, long commerceOrderItemId, String json,
+			java.math.BigDecimal quantity,
+			com.liferay.commerce.context.CommerceContext commerceContext,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateCommerceOrderItem(
+			userId, commerceOrderItemId, json, quantity, commerceContext,
+			serviceContext);
+	}
+
+	public static CommerceOrderItem updateCommerceOrderItem(
+			long userId, long commerceOrderItemId, String json,
+			java.math.BigDecimal quantity,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateCommerceOrderItem(
+			userId, commerceOrderItemId, json, quantity, serviceContext);
 	}
 
 	public static CommerceOrderItem updateCommerceOrderItemDeliveryDate(
@@ -798,17 +844,7 @@ public class CommerceOrderItemLocalServiceUtil {
 
 	public static CommerceOrderItem updateCommerceOrderItemUnitPrice(
 			long userId, long commerceOrderItemId,
-			java.math.BigDecimal decimalQuantity,
-			java.math.BigDecimal unitPrice)
-		throws PortalException {
-
-		return getService().updateCommerceOrderItemUnitPrice(
-			userId, commerceOrderItemId, decimalQuantity, unitPrice);
-	}
-
-	public static CommerceOrderItem updateCommerceOrderItemUnitPrice(
-			long userId, long commerceOrderItemId, int quantity,
-			java.math.BigDecimal unitPrice)
+			java.math.BigDecimal quantity, java.math.BigDecimal unitPrice)
 		throws PortalException {
 
 		return getService().updateCommerceOrderItemUnitPrice(
@@ -834,6 +870,10 @@ public class CommerceOrderItemLocalServiceUtil {
 
 	public static CommerceOrderItemLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(CommerceOrderItemLocalService service) {
+		_service = service;
 	}
 
 	private static volatile CommerceOrderItemLocalService _service;

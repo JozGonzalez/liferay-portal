@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-AuthorizeNetGroupServiceConfiguration authorizeNetCommercePaymentEngineGroupServiceConfiguration = (AuthorizeNetGroupServiceConfiguration)request.getAttribute(AuthorizeNetGroupServiceConfiguration.class.getName());
+AuthorizeNetGroupServiceConfiguration authorizeNetGroupServiceConfiguration = (AuthorizeNetGroupServiceConfiguration)request.getAttribute(AuthorizeNetGroupServiceConfiguration.class.getName());
 %>
 
 <portlet:actionURL name="/commerce_payment_methods/edit_authorize_net_commerce_payment_method_configuration" var="editCommercePaymentMethodActionURL" />
@@ -31,9 +22,9 @@ AuthorizeNetGroupServiceConfiguration authorizeNetCommercePaymentEngineGroupServ
 		<commerce-ui:info-box
 			title='<%= LanguageUtil.get(request, "authentication") %>'
 		>
-			<aui:input label="api-login-id" name="settings--apiLoginId--" value="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.apiLoginId() %>" />
+			<aui:input label="api-login-id" name="settings--apiLoginId--" value="<%= authorizeNetGroupServiceConfiguration.apiLoginId() %>" />
 
-			<aui:input label="transaction-key" name="settings--transactionKey--" value="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.transactionKey() %>" />
+			<aui:input label="transaction-key" name="settings--transactionKey--" value="<%= authorizeNetGroupServiceConfiguration.transactionKey() %>" />
 
 			<aui:select name="settings--environment--">
 
@@ -41,7 +32,7 @@ AuthorizeNetGroupServiceConfiguration authorizeNetCommercePaymentEngineGroupServ
 				for (String environment : AuthorizeNetCommercePaymentMethodConstants.ENVIRONMENTS) {
 				%>
 
-					<aui:option label="<%= environment %>" selected="<%= environment.equals(authorizeNetCommercePaymentEngineGroupServiceConfiguration.environment()) %>" value="<%= environment %>" />
+					<aui:option label="<%= environment %>" selected="<%= environment.equals(authorizeNetGroupServiceConfiguration.environment()) %>" value="<%= environment %>" />
 
 				<%
 				}
@@ -53,19 +44,19 @@ AuthorizeNetGroupServiceConfiguration authorizeNetCommercePaymentEngineGroupServ
 		<commerce-ui:info-box
 			title='<%= LanguageUtil.get(request, "display") %>'
 		>
-			<aui:input checked="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.showBankAccount() %>" label="show-bank-account" name="settings--showBankAccount--" type="checkbox" />
+			<aui:input checked="<%= authorizeNetGroupServiceConfiguration.showBankAccount() %>" label="show-bank-account" name="settings--showBankAccount--" type="checkbox" />
 
-			<aui:input checked="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.showCreditCard() %>" label="show-credit-card" name="settings--showCreditCard--" type="checkbox" />
+			<aui:input checked="<%= authorizeNetGroupServiceConfiguration.showCreditCard() %>" label="show-credit-card" name="settings--showCreditCard--" type="checkbox" />
 
-			<aui:input checked="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.showStoreName() %>" label="show-store-name" name="settings--showStoreName--" type="checkbox" />
+			<aui:input checked="<%= authorizeNetGroupServiceConfiguration.showStoreName() %>" label="show-store-name" name="settings--showStoreName--" type="checkbox" />
 		</commerce-ui:info-box>
 
 		<commerce-ui:info-box
 			title='<%= LanguageUtil.get(request, "security") %>'
 		>
-			<aui:input checked="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.requireCaptcha() %>" label="require-captcha" name="settings--requireCaptcha--" type="checkbox" />
+			<aui:input checked="<%= authorizeNetGroupServiceConfiguration.requireCaptcha() %>" label="require-captcha" name="settings--requireCaptcha--" type="checkbox" />
 
-			<aui:input checked="<%= authorizeNetCommercePaymentEngineGroupServiceConfiguration.requireCardCodeVerification() %>" label="require-card-code-verification" name="settings--requireCardCodeVerification--" type="checkbox" />
+			<aui:input checked="<%= authorizeNetGroupServiceConfiguration.requireCardCodeVerification() %>" label="require-card-code-verification" name="settings--requireCardCodeVerification--" type="checkbox" />
 		</commerce-ui:info-box>
 	</commerce-ui:panel>
 

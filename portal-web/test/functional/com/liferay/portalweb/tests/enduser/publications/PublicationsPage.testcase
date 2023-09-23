@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Page Administration";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,13 +15,319 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Publications.disablePublications();
+		}
+	}
+
+	@description = "Assert that is possible to add a Information Template to a Publication"
+	@priority = 3
+	test CanAddInformationTemplateAndApplyItWithinPublications {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Add a new publications, select it and crete a new site") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+
+			HeadlessSite.addSite(siteName = "Test Site Name");
+		}
+
+		task ("Add a web content") {
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content",
+				groupName = "Test Site Name",
+				title = "WC WebContent Title");
+		}
+
+		task ("Go to new site and add a new Information Template") {
+			ApplicationsMenu.gotoSite(site = "Test Site Name");
+
+			ProductMenu.gotoPortlet(
+				category = "Design",
+				portlet = "Templates");
+
+			InformationTemplates.addCP(
+				informationTemplateName = "Test Information Template",
+				itemSubtype = "Basic Document",
+				itemType = "Document");
+
+			InformationTemplates.addField(
+				fieldName = "Title",
+				panelTitle = "Basic Information");
+
+			PortletEntry.save();
+		}
+
+		task ("Add a Content Page and add a HTML fragment in it") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "HTML");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "HTML",
+				id = "element-html");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "WC WebContent Title",
+				navItem = "Web Content");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Title");
+
+			PageEditor.publish();
+		}
+
+		task ("Assert that the HTML fragment is shown in the content page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			AssertTextEquals.assertPartialText(
+				fragmentName = "html",
+				id = "element-html",
+				index = 1,
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
+				value1 = "WC WebContent Title");
+		}
+
+		task ("Go to review changes and assert that the changes were indeed made") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Dynamic Data Mapping Template",
+				changeSite = "Test Site Name",
+				changeTitle = "Test Information Template",
+				changeType = "Added",
+				changeUser = "Test Test");
+		}
+
+		task ("Publish the publication and assert that it was published successfully") {
+			Publications.publishPublication(publicationName = "Publication Name");
+		}
+	}
+
+	@description = "Can add a new page with master template into a Publication and publish"
+	@priority = 3
+	test CanAddNewPageWithMasterTemplateWithinPublication {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		task ("Add a Master Page Template with footer fragment") {
+			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
+				groupName = "Site Name",
+				masterPageTemplateEntryName = "Custom Master Page Template");
+
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "site-name");
+
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Master Page Template");
+
+			PageEditor.addFragment(
+				collectionName = "Footers",
+				dropTarget = "Footer",
+				fragmentName = "Footer Nav Dark",
+				scope = "Master");
+
+			MastersPageTemplates.publishMaster();
+		}
+
+		task ("Add a content page based on custom master") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+
+			ContentPages.addPage(
+				masterLayoutName = "Custom Master Page Template",
+				pageName = "Test Page");
+
+			PageEditor.publish();
+		}
+
+		task ("Assert the fragment is shown in the content page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page",
+				siteName = "Site Name");
+
+			AssertVisible(
+				key_type = "dark",
+				locator1 = "PageEditor#FOOTERS");
+		}
+
+		task ("Review changes and assert the Master Page Template change displays") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Fragment Entry Link",
+				changeSite = "Site Name",
+				changeTitle = "Footer Nav Dark for Custom Master Page Template.",
+				changeType = "Added",
+				changeUser = "Test Test");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Asset",
+				changeOrder = 5,
+				changeSite = "Site Name",
+				changeTitle = "Custom Master Page Template",
+				changeType = "Added",
+				changeUser = "Test Test",
+				showAllItems = "true");
+		}
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "Add style book and apply it within Publications"
+	@priority = 3
+	test CanAddStyleBookAndApplyItWithinPublications {
+		task ("Create Publication and Site") {
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+
+			HeadlessSite.addSite(siteName = "Test Site");
+		}
+
+		task ("Create Style Book with times as Font Family Base") {
+			StyleBooksAdmin.openStyleBooksAdmin(siteURLKey = "test-site");
+
+			StyleBooksAdmin.addStyleBooks(styleBookName = "Test Style Book Name");
+
+			StyleBooks.selectForm(formName = "Typography");
+
+			Type(
+				key_fieldLabel = "Font Family Base",
+				key_groupLabel = "Font Family",
+				locator1 = "TextInput#GROUPED_TEXT_INPUT",
+				value1 = "times");
+
+			StyleBooks.clickManagementBar();
+
+			StyleBooks.waitForAutoSave();
+
+			StyleBooks.clickPublish();
+		}
+
+		task ("Create Content Page and select Test Style Book Name") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site");
+
+			ContentPages.addPage(pageName = "Example Page");
+
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Navigator.gotoNavTab(navTab = "Style Book");
+
+			StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
+
+			PageEditor.publish();
+		}
+
+		task ("Assert Style Book is applied to Content Page and publish") {
+			Navigator.gotoSitePage(
+				pageName = "Example Page",
+				siteName = "Test Site");
+
+			AssertCssValue(
+				locator1 = "//body",
+				locator2 = "font-family",
+				value1 = "times");
+
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+		}
+	}
+
+	@description = "Assert that it's possible to add and apply widget template within publications"
+	@priority = 3
+	test CanAddWidgetTemplateAndApplyItWithinPublications {
+		task ("Add new Publication and select it for use") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+		}
+
+		task ("Add new site and go to it") {
+			HeadlessSite.addSite(siteName = "Test Site Name");
+
+			ApplicationsMenu.gotoSite(site = "Test Site Name");
+		}
+
+		task ("Add Blog Template using 'adt_blogs_basic.ftl' file") {
+			ProductMenu.gotoPortlet(
+				category = "Design",
+				portlet = "Templates");
+
+			Navigator.gotoNavTab(navTab = "Widget Templates");
+
+			ApplicationDisplayTemplates.addCP(
+				adtFile = "adt_blogs_basic.ftl",
+				adtType = "Blogs");
+		}
+
+		task ("Add new Widget Page using the Blog Template") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Widget Page Name");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Widget Page Name",
+				widgetName = "Blogs");
+
+			Navigator.gotoSitePage(
+				pageName = "Test Widget Page Name",
+				siteName = "Test Site Name");
+
+			ApplicationDisplayTemplates.selectPortletADT(
+				portletName = "Blogs",
+				templateName = "Blogs Test ADT");
+		}
+
+		task ("Add new Blog") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title",
+				groupName = "Test Site Name");
+
+			Refresh();
+		}
+
+		task ("Assert that the blog is shown on the Blogs Widget") {
+			AssertElementPresent(
+				key_entryTitle = "Blogs Entry Title",
+				locator1 = "BlogsEntry#TITLE");
+		}
+
+		task ("Go to review changes and assert that the changes were actually made") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Dynamic Data Mapping Template",
+				changeSite = "Test Site Name",
+				changeTitle = "Blogs Test ADT",
+				changeType = "Added",
+				changeUser = "Test Test");
+		}
+
+		task ("Publish the Publication and assert that it was published successfully") {
+			Publications.publishPublication(publicationName = "Publication Name");
 		}
 	}
 
@@ -33,7 +339,7 @@ definition {
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
 		task ("Add a content page template") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
 
@@ -75,11 +381,9 @@ definition {
 			PageEditor.viewFragment(fragmentName = "Button");
 		}
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 	@description = "Add custom fragments into a publication and publish"
@@ -89,7 +393,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
@@ -145,18 +449,16 @@ definition {
 				text = "Example Rich Text");
 		}
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 	@description = "Create pages through an existing page template into a publication and publish"
 	@priority = 3
 	test CanCreatePagethroughExistingPageTemplateAndPublish {
 		task ("Add a widget page template") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
 
@@ -198,11 +500,9 @@ definition {
 			Portlet.viewSpecificPG(portletName = "Blogs");
 		}
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 	@description = "This is a use cas for LPS-176197. As a publication admin, I would like to preview fragment before publishing"
@@ -259,6 +559,231 @@ definition {
 			PublicationsChangeDetails.viewFragmentChangePreviewInDisplay(
 				fragmentPreviewInProduction = "previewCTCollectionId=0",
 				fragmentPreviewInPublication = "previewCTCollectionId=${ctCollectionId}");
+		}
+	}
+
+	@description = "This is a use case for LPS-190511 - Publish Page with Content and Web Content Display"
+	@priority = 4
+	test CanPublishPageWithContentAndWebContentDisplay {
+		task ("Create 2 Web Contents and a new Publication") {
+			for (var count : list "1,2") {
+				JSONWebcontent.addWebContent(
+					content = "WC WebContent Content ${count}",
+					groupName = "Guest",
+					title = "WC${count}");
+			}
+
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+		}
+
+		task ("Create new Content Page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			JSONLayout.publishLayout(
+				groupName = "Guest",
+				layoutName = "Test Page Name");
+		}
+
+		task ("Add Web Content Display Widget to the page and configure it to display WC1") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Guest");
+
+			PageEditor.addWidget(
+				collectionName = "Content Management",
+				portletName = "Web Content Display");
+
+			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC1");
+
+			IFrame.closeFrame();
+
+			PageEditor.publish();
+		}
+
+		task ("Add Content Display Fragment to the page and configure it to display WC2") {
+			PageEditor.addFragment(
+				collectionName = "Content Display",
+				fragmentName = "Content Display",
+				targetFragmentName = "Web Content Display");
+
+			PageEditor.editContentDisplay(
+				fragmentName = "Content Display",
+				webcontent = "true",
+				webContentTitle = "WC2");
+
+			PageEditor.publish();
+		}
+
+		task ("Assert that the page displays properly and publish Publication") {
+			Navigator.gotoPage(pageName = "Test Page Name");
+
+			WebContentDisplayPortlet.viewContent(webContentContent = "WC WebContent Content 1");
+
+			WebContentDisplayPortlet.viewContent(
+				index = 2,
+				webContentContent = "WC WebContent Content 2");
+
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+	}
+
+	@description = "Assert that is possible to publish Publication with Asset Publisher configurations"
+	@priority = 3
+	test CanPublishWithAssetPublisherConfigurations {
+		task ("Create two widget pages and add to each page an Asset Publisher") {
+			for (var pageNumber : list "1,2") {
+				JSONLayout.addPublicLayout(
+					groupName = "Guest",
+					layoutName = "Widget Page Name ${pageNumber}");
+
+				JSONLayout.addWidgetToPublicLayout(
+					groupName = "Guest",
+					layoutName = "Widget Page Name ${pageNumber}",
+					widgetName = "Asset Publisher");
+			}
+		}
+
+		task ("Add two Documents") {
+			for (var count : list "1,2") {
+				JSONDocument.addFileWithUploadedFile(
+					dmDocumentDescription = "DM Document Description",
+					dmDocumentTitle = "Document_${count}.jpg",
+					groupName = "Guest",
+					mimeType = "image/jpeg",
+					sourceFileName = "Document_${count}.jpg");
+			}
+		}
+
+		task ("Add new Publication and use it") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			Publications.selectPublication(publicationName = "Publication Name");
+		}
+
+		task ("Go to Widget Page Name 1 and configure Asset Publisher") {
+			Navigator.gotoPage(pageName = "Widget Page Name 1");
+
+			AssetPublisherPortlet.configureManualAssetSelectionPG(
+				assetTitle = "Document_1.jpg",
+				assetType = "Basic Document");
+		}
+
+		task ("Go to Widget Page Name 2 and configure Asset Publisher") {
+			Navigator.gotoPage(pageName = "Widget Page Name 2");
+
+			AssetPublisherPortlet.configureManualAssetSelectionPG(
+				assetTitle = "Document_2.jpg",
+				assetType = "Basic Document");
+		}
+
+		task ("Assert that the changes were made") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Page",
+				changeSite = "Guest",
+				changeTitle = "Widget Page Name 1",
+				changeType = "Modified",
+				changeUser = "Test Test");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Page",
+				changeOrder = 2,
+				changeSite = "Guest",
+				changeTitle = "Widget Page Name 2",
+				changeType = "Modified",
+				changeUser = "Test Test");
+		}
+
+		task ("Publish the publication and assert that it was published successfully") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		task ("Go to Widget Page Name 1 and assert that Asset Publisher kept the changes") {
+			Navigator.gotoPage(pageName = "Widget Page Name 1");
+
+			DMDocument.viewPGViaAP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "Document_1.jpg");
+		}
+
+		task ("Go to Widget Page Name 2 and assert that Asset Publisher kept the changes") {
+			Navigator.gotoPage(pageName = "Widget Page Name 2");
+
+			DMDocument.viewPGViaAP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "Document_2.jpg");
+		}
+	}
+
+	@description = "Assert that is possible to revert tag added to page"
+	@priority = 3
+	test CanRevertTagAddedToPage {
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page Name",
+				type = "content");
+		}
+
+		task ("Add and use new Publications") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+		}
+
+		task ("Add new tag") {
+			JSONAssettag.addTag(
+				groupName = "Guest",
+				tagName = "tag name");
+		}
+
+		task ("Go to content page and add a tag to it") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
+
+			AssetCategorization.addTag(tagName = "tag name");
+
+			Button.clickSave();
+		}
+
+		task ("Publish the publication and assert that it was published successfully") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		task ("Revert Publications") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Publications.revertPublication(
+				publicationName = "Publication Name",
+				publishNow = "true");
+
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Revert \"Publication Name\"");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Tag",
+				changeSite = "Guest",
+				changeTitle = "tag name",
+				changeType = "Deleted",
+				changeUser = "Test Test");
 		}
 	}
 
@@ -322,7 +847,7 @@ definition {
 	test ContentPageChangesCanBeAutomaticallyResolved {
 		property test.assert.warning.exceptions = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -386,9 +911,9 @@ definition {
 
 		PageEditor.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name 2");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name 2");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name 2");
 
 		PublicationsNavigator.gotoPublish(
 			gotoPublicationsAdmin = "true",
@@ -410,7 +935,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -438,6 +963,20 @@ definition {
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
 
+		PublicationsChanges.viewChanges(
+			changeCategory = "Page Set",
+			changeSite = "Site Name",
+			changeTitle = "Pages",
+			changeType = "Added",
+			changeUser = "Test Test");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Page",
+			changeSite = "Site Name",
+			changeTitle = "Test Page",
+			changeType = "Added",
+			changeUser = "Test Test");
+
 		PublicationsNavigator.gotoViewChangeDetails(
 			changeCategory = "Page",
 			changeTitle = "Test Page");
@@ -451,7 +990,7 @@ definition {
 
 	@priority = 4
 	test PublishDeletedPageWithTag {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -497,9 +1036,7 @@ definition {
 			changeType = "Deleted",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.openSiteURL(siteName = "site-name");
 
@@ -514,7 +1051,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONFragment.addFragmentCollection(
 			groupName = "Site Name",
@@ -557,9 +1094,9 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		Navigator.gotoPrivateSitePage(
 			pageName = "Test Page",
@@ -570,9 +1107,241 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
+	@description = "This is a use case for LPS-190509 - Publish publication with a page with modified custom field values."
+	@priority = 3
+	test PublishWithModifiedCustomFieldValues {
+		task ("Create a new page and a Page Custom Field") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page Name");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "Custom Fields");
+
+			CustomFields.addCP(
+				customFieldName = "Text Field",
+				customFieldType = "Input Field",
+				customInputDataType = "Text",
+				resourceName = "Page");
+		}
+
+		task ("Create a new Publication and update the Custom Field in the page settings") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
+
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			Type(
+				key_fieldLabel = "Text Field",
+				locator1 = "CustomFields#CUSTOM_INPUT_FIELD",
+				value1 = "Text Field Update");
+
+			PortletEntry.save();
+		}
+
+		task ("Go back to Production mode and update the Custom Field in the page settings again") {
+			Publications.workOnProduction();
+
+			Type(
+				key_fieldLabel = "Text Field",
+				locator1 = "CustomFields#CUSTOM_INPUT_FIELD",
+				value1 = "Text Field Update 2");
+
+			PortletEntry.save();
+		}
+
+		task ("Go back to the Publication, Publish and assert it was published successfully") {
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		task ("Assert that the Field Value from the Publication shows up") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
+
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			AssertElementPresent(
+				key_fieldLabel = "Text Field",
+				locator1 = "CustomFields#CUSTOM_INPUT_FIELD",
+				value1 = "Text Field Update");
+		}
+	}
+
+	@description = "This is use case for LPS-179333. Verify that timline and conflict icon can display for the conflict pulication bar."
+	@priority = 3
+	test TimelineAndConflictIconCanAppearOnConflictPublicationBar {
+		property custom.properties = "feature.flag.LPS-161033=true";
+		property test.assert.warning.exceptions = "true";
+
+		task ("Make change to the Home page on Publication 1 Name") {
+			JSONPublications.addPublication(publicationName = "Publication 1 Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication 1 Name");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading",
+				targetFragmentName = "Container");
+
+			PageEditor.publish();
+		}
+
+		task ("Make change to the Home page on Publication 1 Name") {
+			JSONPublications.addPublication(publicationName = "Publication 2 Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication 2 Name");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading",
+				targetFragmentName = "Container");
+
+			PageEditor.publish();
+		}
+
+		task ("Publish Publication 2 Name") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication 1 Name");
+		}
+
+		task ("Access the Home page on Publication 2 Name") {
+			JSONPublications.selectPublication(publicationName = "Publication 2 Name");
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Home",
+				siteName = "Guest");
+		}
+
+		task ("Assert Timeline and conflict icon appear on the Publication bar") {
+			Publications.viewPublicationTimeline(publicationName = "Publication 1 Name");
+
+			AssertElementPresent(locator1 = "Publications#PUBLICATION_CONFLICT_BUTTON");
+		}
+	}
+
+	@description = "Verify that changes made across multiple Publications are shown in the history"
+	@priority = 3
+	test ViewChangesAcrossMultiplePublications {
+		property custom.properties = "feature.flag.LPS-161033=true";
+
+		task ("Add new site and a new page in it with Documents and Media widget") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Page Name");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Page Name",
+				widgetName = "Documents and Media");
+		}
+
+		task ("Add Document and Media ") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "Document_1",
+				groupName = "Site Name",
+				mimeType = "application/msword",
+				sourceFileName = "Document_1.doc");
+		}
+
+		task ("Add and select a new Publication 1") {
+			JSONPublications.addPublication(publicationName = "Publication Name 1");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name 1");
+		}
+
+		task ("Delete Documents and Media widget") {
+			Navigator.gotoSitePage(
+				pageName = "Page Name",
+				siteName = "Site Name");
+
+			Portlet.deletePG(portletName = "Documents and Media");
+		}
+
+		task ("Assert that the timeline of Publication 1 is present") {
+			Navigator.gotoSitePage(
+				pageName = "Page Name",
+				siteName = "Site Name");
+
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
+		}
+
+		task ("Add and select a new Publication 2") {
+			JSONPublications.addPublication(publicationName = "Publication Name 2");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name 2");
+		}
+
+		task ("Add new content page with a Documents and Media widget") {
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Page Name 2",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Page Name 2",
+				siteName = "Site Name");
+
+			PageEditor.addWidget(portletName = "Documents and Media");
+
+			PageEditor.publish();
+
+			Navigator.gotoSitePage(
+				pageName = "Page Name 2",
+				siteName = "Site Name");
+		}
+
+		task ("Assert that the timeline of Publication 2 is present") {
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 2");
+		}
+
+		task ("Publish Publication 2 and assert that the timeline for Publication 2 is shown in Production") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name 2");
+
+			Navigator.gotoSitePage(
+				pageName = "Page Name 2",
+				siteName = "Site Name");
+
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 2");
+		}
+	}
+
 	@priority = 5
 	test ViewPageFriendlyURLAfterRevertingPublication {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -602,9 +1371,9 @@ definition {
 			locator1 = "TextInput#ANY",
 			value1 = "/test-page");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 
@@ -634,8 +1403,9 @@ definition {
 	}
 
 	@description = "Widgets pages run into conflicts in a publication"
+	@priority = 3
 	test WidgetPageChangesCanBeAutomaticallyResolved {
-		JSONGroup.addGroup(groupName = "Test Site");
+		HeadlessSite.addSite(siteName = "Test Site");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site",

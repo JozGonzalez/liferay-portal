@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.graphql.mutation.v1_0;
 
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.DDMOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishList;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishListItem;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
@@ -111,7 +103,7 @@ public class Mutation {
 			@GraphQLName("channelId") Long channelId,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("accountId") Long accountId,
-			@GraphQLName("quantity") Integer quantity,
+			@GraphQLName("quantity") java.math.BigDecimal quantity,
 			@GraphQLName("ddmOptions") DDMOption[] ddmOptions)
 		throws Exception {
 
@@ -119,6 +111,25 @@ public class Mutation {
 			_skuResourceComponentServiceObjects, this::_populateResourceContext,
 			skuResource -> skuResource.postChannelProductSku(
 				channelId, productId, accountId, quantity, ddmOptions));
+	}
+
+	@GraphQLField(
+		description = "Retrieves a SKU from selected channel and product ID."
+	)
+	public Sku createChannelProductSkuBySkuOption(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("productId") Long productId,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("quantity") java.math.BigDecimal quantity,
+			@GraphQLName("skuUnitOfMeasureKey") String skuUnitOfMeasureKey,
+			@GraphQLName("skuOptions") SkuOption[] skuOptions)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_skuResourceComponentServiceObjects, this::_populateResourceContext,
+			skuResource -> skuResource.postChannelProductSkuBySkuOption(
+				channelId, productId, accountId, quantity, skuUnitOfMeasureKey,
+				skuOptions));
 	}
 
 	@GraphQLField
@@ -161,7 +172,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public WishList patchChannelWishList(
+	public WishList patchWishList(
 			@GraphQLName("wishListId") Long wishListId,
 			@GraphQLName("wishList") WishList wishList)
 		throws Exception {
@@ -169,7 +180,7 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_wishListResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			wishListResource -> wishListResource.patchChannelWishList(
+			wishListResource -> wishListResource.patchWishList(
 				wishListId, wishList));
 	}
 
@@ -202,7 +213,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public WishListItem createChannelWishListItem(
+	public WishListItem createWishlistWishListWishListItem(
 			@GraphQLName("wishListId") Long wishListId,
 			@GraphQLName("accountId") Long accountId,
 			@GraphQLName("wishListItem") WishListItem wishListItem)
@@ -212,7 +223,7 @@ public class Mutation {
 			_wishListItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			wishListItemResource ->
-				wishListItemResource.postChannelWishListItem(
+				wishListItemResource.postWishlistWishListWishListItem(
 					wishListId, accountId, wishListItem));
 	}
 

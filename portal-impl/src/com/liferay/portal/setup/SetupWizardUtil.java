@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.setup;
@@ -83,9 +74,9 @@ public class SetupWizardUtil {
 			Company company = CompanyLocalServiceUtil.getCompanyById(
 				PortalInstances.getDefaultCompanyId());
 
-			User defaultUser = company.getDefaultUser();
+			User guestUser = company.getGuestUser();
 
-			return defaultUser.getTimeZoneId();
+			return guestUser.getTimeZoneId();
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -300,7 +291,7 @@ public class SetupWizardUtil {
 			throw new Exception(
 				StringBundler.concat(
 					driverClassName,
-					" is not a specified in the portal property \"",
+					" is not specified in the portal property \"",
 					PropsKeys.SETUP_DATABASE_DRIVER_CLASS_NAME, "\""));
 		}
 
@@ -336,7 +327,7 @@ public class SetupWizardUtil {
 			PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + StringPool.AT +
 				company.getMx());
 
-		PropsValues.ADMIN_EMAIL_FROM_ADDRESS = emailAddress;
+		PropsUtil.set(PropsKeys.ADMIN_EMAIL_FROM_ADDRESS, emailAddress);
 
 		unicodeProperties.put(PropsKeys.ADMIN_EMAIL_FROM_ADDRESS, emailAddress);
 
@@ -370,7 +361,7 @@ public class SetupWizardUtil {
 			company, themeDisplay.getLocale(), themeDisplay.getLanguageId(),
 			emailAddress, firstName, lastName, passwordReset);
 
-		PropsValues.ADMIN_EMAIL_FROM_NAME = user.getFullName();
+		PropsUtil.set(PropsKeys.ADMIN_EMAIL_FROM_NAME, user.getFullName());
 
 		unicodeProperties.put(
 			PropsKeys.ADMIN_EMAIL_FROM_NAME, user.getFullName());
@@ -379,7 +370,7 @@ public class SetupWizardUtil {
 
 		String companyDefaultWebId = emailAddress.substring(index + 1);
 
-		PropsValues.COMPANY_DEFAULT_WEB_ID = companyDefaultWebId;
+		PropsUtil.set(PropsKeys.COMPANY_DEFAULT_WEB_ID, companyDefaultWebId);
 
 		unicodeProperties.put(
 			PropsKeys.COMPANY_DEFAULT_WEB_ID, companyDefaultWebId);
@@ -391,8 +382,9 @@ public class SetupWizardUtil {
 			PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX,
 			defaultAdminEmailAddressPrefix);
 
-		PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX =
-			defaultAdminEmailAddressPrefix;
+		PropsUtil.set(
+			PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX,
+			defaultAdminEmailAddressPrefix);
 
 		HttpSession httpSession = httpServletRequest.getSession();
 
@@ -423,7 +415,7 @@ public class SetupWizardUtil {
 			httpServletRequest, httpServletResponse, languageId,
 			LocaleUtil.fromLanguageId(languageId));
 
-		PropsValues.COMPANY_DEFAULT_LOCALE = languageId;
+		PropsUtil.set(PropsKeys.COMPANY_DEFAULT_LOCALE, languageId);
 
 		unicodeProperties.put(PropsKeys.COMPANY_DEFAULT_LOCALE, languageId);
 
@@ -458,8 +450,12 @@ public class SetupWizardUtil {
 			return;
 		}
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
 		Company company = CompanyLocalServiceUtil.getCompanyById(
-			PortalInstances.getDefaultCompanyId());
+			themeDisplay.getCompanyId());
 
 		if (Objects.equals(companyDefaultWebId, company.getWebId())) {
 			return;
@@ -468,11 +464,11 @@ public class SetupWizardUtil {
 		company.setWebId(companyDefaultWebId);
 		company.setMx(companyDefaultWebId);
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		company = CompanyLocalServiceUtil.updateCompany(company);
 
-		themeDisplay.setCompany(CompanyLocalServiceUtil.updateCompany(company));
+		PortalInstances.initCompany(company);
+
+		themeDisplay.setCompany(company);
 	}
 
 	private static void _updateLanguage(

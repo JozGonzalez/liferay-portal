@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.announcements.service.impl;
@@ -61,7 +52,7 @@ import com.liferay.portal.kernel.service.persistence.UserGroupPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.EscapableLocalizableFunction;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.EscapableObject;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -664,12 +655,12 @@ public class AnnouncementsEntryLocalServiceImpl
 			"[$COMPANY_ID$]", String.valueOf(company.getCompanyId()));
 		mailTemplateContextBuilder.put("[$COMPANY_MX$]", company.getMx());
 		mailTemplateContextBuilder.put(
-			"[$COMPANY_NAME$]", HtmlUtil.escape(company.getName()));
+			"[$COMPANY_NAME$]", new EscapableObject<>(company.getName()));
 		mailTemplateContextBuilder.put("[$ENTRY_CONTENT$]", entry.getContent());
 		mailTemplateContextBuilder.put(
 			"[$ENTRY_ID$]", String.valueOf(entry.getEntryId()));
 		mailTemplateContextBuilder.put(
-			"[$ENTRY_TITLE$]", HtmlUtil.escape(entry.getTitle()));
+			"[$ENTRY_TITLE$]", new EscapableObject<>(entry.getTitle()));
 		mailTemplateContextBuilder.put(
 			"[$ENTRY_TYPE$]",
 			new EscapableLocalizableFunction(
@@ -677,7 +668,7 @@ public class AnnouncementsEntryLocalServiceImpl
 		mailTemplateContextBuilder.put("[$ENTRY_URL$]", entry.getUrl());
 		mailTemplateContextBuilder.put("[$FROM_ADDRESS$]", fromAddress);
 		mailTemplateContextBuilder.put(
-			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
+			"[$FROM_NAME$]", new EscapableObject<>(fromName));
 		mailTemplateContextBuilder.put(
 			"[$PORTAL_URL$]", company.getPortalURL(0));
 		mailTemplateContextBuilder.put(
@@ -690,11 +681,13 @@ public class AnnouncementsEntryLocalServiceImpl
 			Group group = _groupLocalService.getGroup(entry.getGroupId());
 
 			mailTemplateContextBuilder.put(
-				"[$SITE_NAME$]", HtmlUtil.escape(group.getDescriptiveName()));
+				"[$SITE_NAME$]",
+				new EscapableObject<>(group.getDescriptiveName()));
 		}
 
 		mailTemplateContextBuilder.put("[$TO_ADDRESS$]", toAddress);
-		mailTemplateContextBuilder.put("[$TO_NAME$]", HtmlUtil.escape(toName));
+		mailTemplateContextBuilder.put(
+			"[$TO_NAME$]", new EscapableObject<>(toName));
 
 		MailTemplateContext mailTemplateContext =
 			mailTemplateContextBuilder.build();

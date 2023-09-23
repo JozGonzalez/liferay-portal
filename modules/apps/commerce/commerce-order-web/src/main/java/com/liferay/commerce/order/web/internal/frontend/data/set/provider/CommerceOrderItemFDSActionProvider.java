@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.web.internal.frontend.data.set.provider;
@@ -18,7 +9,6 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.web.internal.constants.CommerceOrderFDSNames;
 import com.liferay.commerce.order.web.internal.model.OrderItem;
-import com.liferay.commerce.order.web.internal.security.permission.resource.CommerceOrderPermission;
 import com.liferay.frontend.data.set.provider.FDSActionProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
@@ -32,6 +22,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -69,7 +60,7 @@ public class CommerceOrderItemFDSActionProvider implements FDSActionProvider {
 		}
 
 		return DropdownItemListBuilder.add(
-			() -> _commerceOrderPermission.contains(
+			() -> _commerceOrderModelResourcePermission.contains(
 				PermissionThreadLocal.getPermissionChecker(),
 				orderItem.getOrderId(), ActionKeys.UPDATE),
 			dropdownItem -> {
@@ -81,7 +72,7 @@ public class CommerceOrderItemFDSActionProvider implements FDSActionProvider {
 				dropdownItem.setTarget("sidePanel");
 			}
 		).add(
-			() -> _commerceOrderPermission.contains(
+			() -> _commerceOrderModelResourcePermission.contains(
 				PermissionThreadLocal.getPermissionChecker(),
 				orderItem.getOrderId(), ActionKeys.UPDATE),
 			dropdownItem -> {
@@ -151,8 +142,11 @@ public class CommerceOrderItemFDSActionProvider implements FDSActionProvider {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceOrderItemFDSActionProvider.class);
 
-	@Reference
-	private CommerceOrderPermission _commerceOrderPermission;
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.model.CommerceOrder)"
+	)
+	private ModelResourcePermission<CommerceOrder>
+		_commerceOrderModelResourcePermission;
 
 	@Reference
 	private Language _language;

@@ -1,0 +1,94 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies.upgrade;
+
+import com.liferay.portal.kernel.service.ServiceContext;
+
+import com.liferay.portal.kernel.model.role.RoleConstants;
+
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
+
+/**
+ * @author Michael Cavalcanti
+ */
+@Component(immediate = true)
+public class UpgradeJavaModelPermissionsCheck {
+
+	@Override
+	public App addOrUpdate() throws IOException, PortalException {
+		ServiceContext serviceContext;
+
+		String[] groupPermissions = {"VIEW"};
+		String[] guestPermissions = {"VIEW"};
+
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setDeriveDefaultPermissions(true);
+
+		ModelPermissions modelPermissions = serviceContext.getModelPermissions();
+
+		if (modelPermissions == null) {
+			modelPermissions = ModelPermissionsFactory.create(groupPermissions, guestPermissions);
+		}
+		else {
+			modelPermissions.addRolePermissions(RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE, groupPermissions);
+			modelPermissions.addRolePermissions(RoleConstants.GUEST, guestPermissions);
+		}
+
+		serviceContext.setModelPermissions(modelPermissions);
+
+	}
+
+	@Override
+	public App addOrUpdate2() throws IOException, PortalException {
+		ServiceContext serviceContext;
+
+		String[] groupPermissions = {"VIEW"};
+
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setDeriveDefaultPermissions(true);
+
+		ModelPermissions modelPermissions = serviceContext.getModelPermissions();
+
+		if (modelPermissions == null) {
+			modelPermissions = ModelPermissionsFactory.create(groupPermissions, new String[0]);
+		}
+		else {
+			modelPermissions.addRolePermissions(RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE, groupPermissions);
+		}
+
+		serviceContext.setModelPermissions(modelPermissions);
+	}
+
+	@Override
+	public App addOrUpdate3() throws IOException, PortalException {
+		ServiceContext serviceContext2;
+
+		String[] guestPermissions = {"VIEW"};
+
+		serviceContext2.setAddGroupPermissions(true);
+		serviceContext2.setDeriveDefaultPermissions(true);
+
+		ModelPermissions modelPermissions = serviceContext2.getModelPermissions();
+
+		if (modelPermissions == null) {
+			modelPermissions = ModelPermissionsFactory.create(new String[0], guestPermissions);
+		}
+		else {
+			modelPermissions.addRolePermissions(RoleConstants.GUEST, guestPermissions);
+		}
+
+		serviceContext2.setModelPermissions(modelPermissions);
+	}
+
+	@Override
+	public App addOrUpdate4() throws IOException, PortalException {
+		ServiceContext serviceContext2;
+
+		serviceContext2.setAddGroupPermissions(true);
+		serviceContext2.setDeriveDefaultPermissions(true);
+	}
+
+}

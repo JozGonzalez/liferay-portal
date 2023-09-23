@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -17,6 +8,7 @@ package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.workflow.metrics.model.AddNodeRequest;
@@ -26,7 +18,6 @@ import com.liferay.portal.workflow.metrics.rest.dto.v1_0.util.NodeUtil;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.NodeResource;
 import com.liferay.portal.workflow.metrics.rest.spi.resource.SPINodeResource;
 import com.liferay.portal.workflow.metrics.search.index.NodeWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -97,8 +88,7 @@ public class NodeResourceImpl extends BaseNodeResourceImpl {
 
 	private SPINodeResource<Node> _getSPINodeResource() {
 		return new SPINodeResource<>(
-			contextCompany.getCompanyId(), _nodeWorkflowMetricsIndexNameBuilder,
-			_processWorkflowMetricsIndexNameBuilder, _queries,
+			contextCompany.getCompanyId(), _indexNameBuilder, _queries,
 			_searchRequestExecutor,
 			document -> NodeUtil.toNode(
 				document, _language,
@@ -108,18 +98,13 @@ public class NodeResourceImpl extends BaseNodeResourceImpl {
 	}
 
 	@Reference
+	private IndexNameBuilder _indexNameBuilder;
+
+	@Reference
 	private Language _language;
 
 	@Reference
 	private NodeWorkflowMetricsIndexer _nodeWorkflowMetricsIndexer;
-
-	@Reference(target = "(workflow.metrics.index.entity.name=node)")
-	private WorkflowMetricsIndexNameBuilder
-		_nodeWorkflowMetricsIndexNameBuilder;
-
-	@Reference(target = "(workflow.metrics.index.entity.name=process)")
-	private WorkflowMetricsIndexNameBuilder
-		_processWorkflowMetricsIndexNameBuilder;
 
 	@Reference
 	private Queries _queries;

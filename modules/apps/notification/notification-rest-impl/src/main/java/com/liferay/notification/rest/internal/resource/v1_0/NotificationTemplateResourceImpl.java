@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.rest.internal.resource.v1_0;
@@ -18,6 +9,7 @@ import com.liferay.notification.constants.NotificationActionKeys;
 import com.liferay.notification.constants.NotificationConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.model.NotificationRecipient;
+import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplateAttachment;
 import com.liferay.notification.rest.dto.v1_0.NotificationTemplate;
 import com.liferay.notification.rest.dto.v1_0.util.NotificationUtil;
@@ -47,6 +39,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -111,13 +106,13 @@ public class NotificationTemplateResourceImpl
 				addAction(
 					NotificationActionKeys.ADD_NOTIFICATION_TEMPLATE,
 					"postNotificationTemplate",
-					NotificationConstants.RESOURCE_NAME,
+					NotificationConstants.RESOURCE_NAME_NOTIFICATION_TEMPLATE,
 					contextCompany.getCompanyId())
 			).put(
 				"get",
 				addAction(
 					ActionKeys.VIEW, "getNotificationTemplatesPage",
-					NotificationConstants.RESOURCE_NAME,
+					NotificationConstants.RESOURCE_NAME_NOTIFICATION_TEMPLATE,
 					contextCompany.getCompanyId())
 			).build(),
 			booleanQuery -> {
@@ -176,16 +171,48 @@ public class NotificationTemplateResourceImpl
 				_notificationTemplateService.getNotificationTemplate(
 					notificationTemplateId);
 
-		NotificationRecipient notificationRecipient =
-			notificationTemplate.getNotificationRecipient();
+		notificationTemplate.setUuid(null);
+		notificationTemplate.setExternalReferenceCode(null);
+		notificationTemplate.setUserId(contextUser.getUserId());
+		notificationTemplate.setUserName(contextUser.getFullName());
 
-		notificationContext.setNotificationRecipient(notificationRecipient);
-		notificationContext.setNotificationRecipientSettings(
-			notificationRecipient.getNotificationRecipientSettings());
+		Date date = new Date();
+
+		notificationTemplate.setCreateDate(date);
+		notificationTemplate.setModifiedDate(date);
 
 		notificationTemplate.setName(
 			StringUtil.appendParentheticalSuffix(
 				notificationTemplate.getName(), "copy"));
+
+		NotificationRecipient notificationRecipient =
+			notificationTemplate.getNotificationRecipient();
+
+		notificationRecipient.setUuid(null);
+		notificationRecipient.setUserId(contextUser.getUserId());
+		notificationRecipient.setUserName(contextUser.getFullName());
+		notificationRecipient.setCreateDate(date);
+		notificationRecipient.setModifiedDate(date);
+
+		notificationContext.setNotificationRecipient(notificationRecipient);
+
+		List<NotificationRecipientSetting> notificationRecipientSettings =
+			new ArrayList<>();
+
+		for (NotificationRecipientSetting notificationRecipientSetting :
+				notificationRecipient.getNotificationRecipientSettings()) {
+
+			notificationRecipientSetting.setUuid(null);
+			notificationRecipientSetting.setUserId(contextUser.getUserId());
+			notificationRecipientSetting.setUserName(contextUser.getFullName());
+			notificationRecipientSetting.setCreateDate(date);
+			notificationRecipientSetting.setModifiedDate(date);
+
+			notificationRecipientSettings.add(notificationRecipientSetting);
+		}
+
+		notificationContext.setNotificationRecipientSettings(
+			notificationRecipientSettings);
 
 		notificationContext.setNotificationTemplate(notificationTemplate);
 		notificationContext.setType(notificationTemplate.getType());
@@ -261,6 +288,10 @@ public class NotificationTemplateResourceImpl
 	private NotificationTemplate _toNotificationTemplate(
 		com.liferay.notification.model.NotificationTemplate
 			serviceBuilderNotificationTemplate) {
+
+		if (serviceBuilderNotificationTemplate == null) {
+			return null;
+		}
 
 		NotificationRecipient notificationRecipient =
 			serviceBuilderNotificationTemplate.getNotificationRecipient();

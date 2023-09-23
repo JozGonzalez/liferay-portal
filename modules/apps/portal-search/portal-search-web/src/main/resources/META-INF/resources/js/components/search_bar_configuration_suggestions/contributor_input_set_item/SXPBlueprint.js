@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayInput, ClaySelect} from '@clayui/form';
@@ -44,11 +35,11 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 		});
 	};
 
-	const _handleChangeSXPBlueprint = (id) => {
+	const _handleChangeSXPBlueprint = (externalReferenceCode) => {
 		onInputSetItemChange(index, {
 			attributes: {
 				...value.attributes,
-				sxpBlueprintId: id,
+				sxpBlueprintExternalReferenceCode: externalReferenceCode,
 			},
 		});
 	};
@@ -66,14 +57,14 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 					)}
 
 					<LearnMessage
-						className="ml-1"
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="search-bar-suggestions-blueprints"
 					/>
 				</InputSetItemHeader.Description>
 			</InputSetItemHeader>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-3 form-group-autofit">
 				<DisplayGroupNameInput
 					onBlur={onBlur('displayGroupName')}
 					onChange={onInputSetItemChange(index, 'displayGroupName')}
@@ -89,16 +80,22 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 				/>
 			</div>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-3 form-group-autofit">
 				<SXPBlueprintSelectorInput
-					onBlur={onBlur('attributes.sxpBlueprintId')}
+					onBlur={onBlur(
+						'attributes.sxpBlueprintExternalReferenceCode'
+					)}
 					onSubmit={_handleChangeSXPBlueprint}
-					sxpBlueprintId={value.attributes?.sxpBlueprintId}
-					touched={touched['attributes.sxpBlueprintId']}
+					sxpBlueprintExternalReferenceCode={
+						value.attributes?.sxpBlueprintExternalReferenceCode
+					}
+					touched={
+						touched['attributes.sxpBlueprintExternalReferenceCode']
+					}
 				/>
 			</div>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-3 form-group-autofit">
 				<CharacterThresholdInput
 					onBlur={onBlur('attributes.characterThreshold')}
 					onChange={_handleChangeAttribute('characterThreshold')}
@@ -112,7 +109,7 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 
 						<ClayTooltipProvider>
 							<span
-								className="ml-2"
+								className="c-ml-2"
 								data-tooltip-align="top"
 								title={Liferay.Language.get(
 									'include-asset-url-help'
@@ -146,7 +143,7 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 
 						<ClayTooltipProvider>
 							<span
-								className="ml-2"
+								className="c-ml-2"
 								data-tooltip-align="top"
 								title={Liferay.Language.get(
 									'include-asset-summary-help'
@@ -179,7 +176,7 @@ function SXPBlueprint({index, onBlur, onInputSetItemChange, touched, value}) {
 				</ClayInput.GroupItem>
 			</div>
 
-			<div className="form-group-autofit">
+			<div className="c-mb-0 form-group-autofit">
 				<FieldsInput
 					fields={value.attributes?.fields}
 					onBlur={onBlur('attributes.fields')}

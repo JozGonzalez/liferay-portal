@@ -16,9 +16,9 @@ definition {
 
 		Picklist.deleteAllPicklistsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -104,7 +104,7 @@ definition {
 				fieldPicklist = "Picklist Test",
 				fieldType = "Picklist",
 				itemName = "Picklist Item Test",
-				maskAsState = "true");
+				markAsState = "true");
 
 			Refresh();
 		}
@@ -256,15 +256,15 @@ definition {
 				fieldPicklist = "Picklist Test",
 				fieldType = "Picklist",
 				itemName = "Picklist Item Test 1",
-				maskAsState = "true");
-
-			Refresh();
+				markAsState = "true");
 		}
 
 		task ("Publish the Custom Object and assert that is possible to edit state") {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161902");
 
 			ObjectAdmin.goToFieldsDetails(label = "Field Picklist");
+
+			Form.gotoAdvancedTab();
 
 			Click(locator1 = "ObjectAdmin#DROPDOWN_DEFAULT_VALUE");
 
@@ -341,7 +341,9 @@ definition {
 
 		Picklist.clickSaveButton();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Key");
+		AssertElementPresent(
+			key_fieldLabel = "Key",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to leave Name field empty for a Picklist item"
@@ -359,7 +361,9 @@ definition {
 
 		Picklist.clickSaveButton();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Name");
+		AssertElementPresent(
+			key_fieldLabel = "Name",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to leave Name field empty for Picklist"
@@ -375,7 +379,9 @@ definition {
 
 		Button.clickSave();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Name");
+		AssertElementPresent(
+			key_fieldLabel = "Name",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to update a Picklist item's key"
@@ -668,7 +674,9 @@ definition {
 	test EmptyStateMessageDisplayedWhenNoPicklist {
 		Picklist.gotoPicklists();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-136595 - Verify the empty state message when where is no items for a Picklist"
@@ -682,7 +690,9 @@ definition {
 
 		Picklist.selectPickilistModalFrame();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-140407 - Verify that the Key field is autofilled when the Name field is filled"
@@ -704,7 +714,8 @@ definition {
 	@description = "LPS-136595 - Verify that the translated Picklist item's name will be displayed on Forms"
 	@priority = 3
 	test ViewTranslatedPicklistItemNameOnForms {
-		property test.name.skip.portal.instance = "Picklist#ViewTranslatedPicklistItemNameOnForms";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Custom Picklist and a Item (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
@@ -957,7 +968,8 @@ definition {
 	@description = "LPS-136595 - Verify that the translated Picklist name will be displayed on the Object Admin"
 	@priority = 3
 	test ViewTranslatedPicklistNameOnObjectAdmin {
-		property test.name.skip.portal.instance = "Picklist#ViewTranslatedPicklistNameOnObjectAdmin";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Custom Picklist (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");

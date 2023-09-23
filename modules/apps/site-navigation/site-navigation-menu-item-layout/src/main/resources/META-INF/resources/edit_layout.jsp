@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,17 +19,11 @@ String taglibOnChange = "Liferay.Util.toggleDisabled('#" + liferayPortletRespons
 	<aui:input checked="<%= useCustomName %>" helpMessage="use-custom-name-help" label="use-custom-name" labelCssClass="font-weight-normal" name="TypeSettingsProperties--useCustomName--" onChange="<%= taglibOnChange %>" type="checkbox" />
 </aui:fieldset>
 
-<aui:input disabled="<%= !useCustomName %>" label="name" localized="<%= true %>" maxlength='<%= ModelHintsUtil.getMaxLength(SiteNavigationMenuItem.class.getName(), "name") %>' name="name" placeholder="name" type="text" value='<%= SiteNavigationMenuItemUtil.getSiteNavigationMenuItemXML(siteNavigationMenuItem, "name") %>'>
-	<aui:validator name="required" />
-</aui:input>
+<aui:input disabled="<%= !useCustomName %>" label="name" localized="<%= true %>" maxlength='<%= ModelHintsUtil.getMaxLength(SiteNavigationMenuItem.class.getName(), "name") %>' name="name" placeholder="name" required="<%= true %>" type="text" value='<%= SiteNavigationMenuItemUtil.getSiteNavigationMenuItemXML(siteNavigationMenuItem, "name") %>' />
 
-<aui:input id="groupId" name="TypeSettingsProperties--groupId--" type="hidden" value="<%= (selLayout != null) ? selLayout.getGroupId() : StringPool.BLANK %>">
-	<aui:validator name="required" />
-</aui:input>
+<aui:input id="groupId" name="TypeSettingsProperties--groupId--" required="<%= true %>" type="hidden" value="<%= (selLayout != null) ? selLayout.getGroupId() : StringPool.BLANK %>" />
 
-<aui:input id="privateLayout" name="TypeSettingsProperties--privateLayout--" type="hidden" value="<%= (selLayout != null) ? selLayout.isPrivateLayout() : StringPool.BLANK %>">
-	<aui:validator name="required" />
-</aui:input>
+<aui:input id="privateLayout" name="TypeSettingsProperties--privateLayout--" required="<%= true %>" type="hidden" value="<%= (selLayout != null) ? selLayout.isPrivateLayout() : StringPool.BLANK %>" />
 
 <div class="form-group input-text-wrapper mb-2 text-default">
 	<div class="d-inline-block" id="<portlet:namespace />layoutItemRemove" role="button">
@@ -61,9 +46,7 @@ String taglibOnChange = "Liferay.Util.toggleDisabled('#" + liferayPortletRespons
 		</span>
 	</div>
 
-	<aui:input id="layoutUuid" name="TypeSettingsProperties--layoutUuid--" type="hidden" value="<%= (selLayout != null) ? selLayout.getUuid() : StringPool.BLANK %>">
-		<aui:validator name="required" />
-	</aui:input>
+	<aui:input id="layoutUuid" name="TypeSettingsProperties--layoutUuid--" required="<%= true %>" type="hidden" value="<%= (selLayout != null) ? selLayout.getUuid() : StringPool.BLANK %>" />
 </div>
 
 <%
@@ -75,7 +58,6 @@ LayoutItemSelectorCriterion layoutItemSelectorCriterion = new LayoutItemSelector
 
 layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new UUIDItemSelectorReturnType());
 layoutItemSelectorCriterion.setShowBreadcrumb(false);
-layoutItemSelectorCriterion.setShowHiddenPages(true);
 
 PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, layoutItemSelectorCriterion);
 
@@ -95,7 +77,7 @@ if (selLayout != null) {
 	cssClass="mb-4"
 	displayType="secondary"
 	id='<%= liferayPortletResponse.getNamespace() + "chooseLayout" %>'
-	label='<%= LanguageUtil.get(resourceBundle, "choose") %>'
+	label="choose"
 	propsTransformer="js/ChooseLayoutButtonPropsTransformer"
 	small="<%= true %>"
 />

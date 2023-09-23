@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
@@ -34,15 +25,15 @@ public class SkuOption implements Cloneable, Serializable {
 		return SkuOptionSerDes.toDTO(json);
 	}
 
-	public Long getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	public void setKey(Long key) {
+	public void setKey(String key) {
 		this.key = key;
 	}
 
-	public void setKey(UnsafeSupplier<Long, Exception> keyUnsafeSupplier) {
+	public void setKey(UnsafeSupplier<String, Exception> keyUnsafeSupplier) {
 		try {
 			key = keyUnsafeSupplier.get();
 		}
@@ -51,17 +42,61 @@ public class SkuOption implements Cloneable, Serializable {
 		}
 	}
 
-	protected Long key;
+	protected String key;
 
-	public Long getValue() {
+	public Long getOptionId() {
+		return optionId;
+	}
+
+	public void setOptionId(Long optionId) {
+		this.optionId = optionId;
+	}
+
+	public void setOptionId(
+		UnsafeSupplier<Long, Exception> optionIdUnsafeSupplier) {
+
+		try {
+			optionId = optionIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long optionId;
+
+	public Long getOptionValueId() {
+		return optionValueId;
+	}
+
+	public void setOptionValueId(Long optionValueId) {
+		this.optionValueId = optionValueId;
+	}
+
+	public void setOptionValueId(
+		UnsafeSupplier<Long, Exception> optionValueIdUnsafeSupplier) {
+
+		try {
+			optionValueId = optionValueIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long optionValueId;
+
+	public String getValue() {
 		return value;
 	}
 
-	public void setValue(Long value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
-	public void setValue(UnsafeSupplier<Long, Exception> valueUnsafeSupplier) {
+	public void setValue(
+		UnsafeSupplier<String, Exception> valueUnsafeSupplier) {
+
 		try {
 			value = valueUnsafeSupplier.get();
 		}
@@ -70,7 +105,7 @@ public class SkuOption implements Cloneable, Serializable {
 		}
 	}
 
-	protected Long value;
+	protected String value;
 
 	@Override
 	public SkuOption clone() throws CloneNotSupportedException {

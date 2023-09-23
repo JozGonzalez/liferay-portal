@@ -15,6 +15,261 @@ definition {
 		CommerceConfiguration.commerceTearDown();
 	}
 
+	@description = "This is a test for COMMERCE-9800. Users can add a sample URL to the virtual products after the selected file is removed."
+	@priority = 3
+	test CanAddSampleURLAfterRemovingSelectedFile {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the user selects a sample file for the virtual product") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = "Virtual");
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.updateProductVirtualConfiguration(
+				enableSample = "true",
+				sampleFileName = "Commerce_White.jpg",
+				virtualProductFile = "Commerce_Blue.jpg");
+		}
+
+		task ("When the user removes the file") {
+			Click(
+				key_sampleFileName = "Commerce_White.jpg",
+				locator1 = "CommerceEntry#DELETE_SAMPLE_FILE_ATTACHMENT");
+		}
+
+		task ("Then a sample file URL can be added") {
+			Type(
+				key_labelName = "Sample File URL",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = "virtualproduct");
+
+			AssertElementPresent(
+				key_labelName = "Sample File URL",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = "virtualproduct");
+		}
+	}
+
+	@description = "This is a test case for COMMERCE-5582. A new virtual product with no saved configuration will use the default settings and check out with no console errors."
+	@priority = 3
+	test CanCheckoutVirtualProductWithNoSavedConfiguration {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account with a buyer user are created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				gtin = "GTIN1",
+				manufacturerPartNumber = "MPN1",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("When the buyer user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And completes a checkout after adding the virtual product to the cart no console errors are thrown") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual Product",
+				productQuantity = 1);
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual Product",
+				productQuantity = 1,
+				productUnitPrice = 0);
+
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#CHECKOUT_SUCCESS_MESSAGE",
+				value1 = "Success! Your order has been processed.");
+
+			AssertConsoleTextNotPresent(value1 = "MessageListenerException");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11343. User can disable the virtual product's SKU override correctly via both UI and API"
+	@priority = 3
+	test CanDisableVirtualProductSKUOverrideCorrectly {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the admin enables override for SKU with all settings is updated") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = '''"Virtual Product"''');
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings Override");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.updateVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black.jpg",
+				virtualProductFile = "Commerce_Black.jpg");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black",
+				virtualProductFile = "Commerce_Black");
+		}
+
+		task ("When the admin disables the override for the SKU via UI") {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("Then the virtual settings are overridden to the default values") {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Completed",
+				duration = 0,
+				enableSample = "false",
+				maxDownloads = 0,
+				virtualURL = "");
+		}
+
+		task ("When the admin disables the override for the SKU via API") {
+			CommerceProducts.updateVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black.jpg",
+				virtualProductFile = "Commerce_Black.jpg");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black",
+				virtualProductFile = "Commerce_Black");
+
+			CommerceJSONProductsAPI._patchCommerceVirtualProductSku(
+				override = "false",
+				productSku = "VIRTUALSKU");
+		}
+
+		task ("Then the virtual settings are overridden to the default values") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = '''"Virtual Product"''');
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings Override");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Completed",
+				duration = 0,
+				enableSample = "false",
+				maxDownloads = 0,
+				virtualURL = "");
+		}
+	}
+
 	@description = "COMMERCE-11063 | As a buyer I want to be able to download virtual products when the activation status is pending"
 	@priority = 4
 	test CanDownloadVirtualProductWhenActivationStatusPending {
@@ -90,9 +345,9 @@ definition {
 				locator1 = "AppBuilder#CHOOSE_SEARCH_FILTER_BY_OPTION");
 
 			CommerceProducts.updateProductVirtualActivationStatus(
+				activationStatus = "Pending",
 				key_contentType = "Base Information",
-				key_fieldLabel = "Activation Status",
-				status = "Pending");
+				key_fieldLabel = "Activation Status");
 		}
 
 		task ("And the admin deploys 'product downloads' widget inside the Minium Pending Orders page") {
@@ -166,7 +421,6 @@ definition {
 	}
 
 	@description = "COMMERCE-10709 | As a buyer I want to be able to download virtual products when the order status matches the activation status"
-	@ignore = "true"
 	@priority = 4
 	test CanDownloadVirtualProductWhenOrderStatusMatchesActivationStatusCompleted {
 		property portal.acceptance = "false";
@@ -459,7 +713,6 @@ definition {
 	}
 
 	@description = "COMMERCE-10709 | As a buyer I want to be able to download virtual products when the order status matches the activation status"
-	@ignore = "true"
 	@priority = 4
 	test CanDownloadVirtualProductWhenOrderStatusMatchesActivationStatusProcessing {
 		property portal.acceptance = "false";
@@ -613,6 +866,310 @@ definition {
 
 		task ("Then the product along with the download button are present inside the widget") {
 			AssertElementPresent(locator1 = "Link#DOWNLOAD");
+		}
+	}
+
+	@description = "COMMERCE-11344 Verify that the Virtual SKU Override actually override the Product Virtual Settings"
+	@priority = 4
+	test CanUseVirtualSkuOverride {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account with a buyer user are created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the admin selects a file for the virtual product along with the activation status") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = "Virtual");
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.updateProductVirtualConfiguration(
+				activationStatus = "Completed",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				virtualProductFile = "Commerce_White.jpg");
+		}
+
+		task ("And the buyer user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And an order with a virtual product is placed") {
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual Product",
+				productQuantity = 1);
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual Product",
+				productQuantity = 1,
+				productUnitPrice = 0);
+		}
+
+		task ("And the admin logs in again") {
+			User.logoutPG();
+
+			User.loginPG();
+		}
+
+		task ("And the admin checks the setting in the Items page") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			CommerceNavigator.gotoEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceOrders#ORDER_ITEMS_FILE_NAME",
+				value1 = "Commerce_White");
+		}
+
+		task ("When the admin enables the override for the SKU") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = '''"Virtual Product"''');
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings Override");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.updateVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black.jpg",
+				virtualProductFile = "Commerce_Black.jpg");
+		}
+
+		task ("And the buyer logs in again") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And adds something to the cart") {
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual Product",
+				productQuantity = 1);
+
+			var orderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+		}
+
+		task ("Then the Virtual Product sample download button is now present") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/virtual-product");
+
+			AssertElementPresent(
+				key_entry = "Download Sample File",
+				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+		}
+
+		task ("When the checkout is completed") {
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual Product",
+				productQuantity = 1,
+				productUnitPrice = 0);
+		}
+
+		task ("And the admin logs in again") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("Then the Virtual Setting for the item are different") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = ${orderId});
+
+			CommerceNavigator.gotoEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceOrders#ORDER_ITEMS_FILE_NAME",
+				value1 = "Commerce_Black");
+
+			var duration = selenium.getAttribute("//div[label[contains(.,'Duration')]]//input[not(contains(@type,'checkbox'))]@value");
+			var maxDownload = selenium.getAttribute("//div[label[contains(.,'Max Number of Downloads')]]//input[@type='text']@value");
+
+			if ((${duration} != 3) && (${maxDownload} != 3)) {
+				fail("The Duration or Max Number of Downloads is not updated correctly");
+			}
+		}
+	}
+
+	@description = "COMMERCE-9794 | As an Admin, I want to be able to view the Virtual Settings tab on a virtual product's Order Item details"
+	@priority = 4
+	test CanViewVirtualProductSettingsOnOrderItemPage {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account with a buyer user are created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the admin selects a file for the virtual product along with the activation status") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = "Virtual");
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.updateProductVirtualConfiguration(
+				activationStatus = "Completed",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				virtualProductFile = "Commerce_White.jpg");
+		}
+
+		task ("When the buyer user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And completes a checkout adding the virtual product to the cart") {
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual Product",
+				productQuantity = 1);
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual Product",
+				productQuantity = 1,
+				productUnitPrice = 0);
+		}
+
+		task ("And the admin logs in again") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("And the admin check the setting in the Items page") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			CommerceNavigator.gotoEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceOrders#ORDER_ITEMS_FILE_NAME",
+				value1 = "Commerce_White");
 		}
 	}
 

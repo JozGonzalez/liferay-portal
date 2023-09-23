@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Directly calls the JSON WS API to add a fragment collection"
 	macro _addFragmentCollection {
 		Variables.assertDefined(parameterList = "${groupId},${name}");
 
@@ -13,9 +12,11 @@ definition {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmentcollection/add-fragment-collection \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d name=${name} \
 				-d description=${description}
@@ -24,15 +25,15 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a fragment (default type is section)"
 	macro _addSection {
 		Variables.assertDefined(parameterList = "${groupId},${collectionId},${name},${html},${configuration},${type},${status}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmententry/add-fragment-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d fragmentCollectionId=${collectionId} \
 				-d fragmentEntryKey= \
@@ -54,30 +55,30 @@ definition {
 		return ${fragmentEntryId};
 	}
 
-	@summary = "Directly calls the JSON WS API to delete a fragment collection"
 	macro _deleteCollection {
 		Variables.assertDefined(parameterList = ${collectionId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmentcollection/delete-fragment-collection \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d fragmentCollectionId=${collectionId}
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Get the collectionId from a collection by using collectionName and groupId"
 	macro _getCollectionIdByName {
 		Variables.assertDefined(parameterList = "${groupId},${collectionName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmentcollection/get-fragment-collections \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d name=${collectionName} \
 				-d <CURL_DATA[start=-1]CURL_DATA> \
@@ -94,13 +95,13 @@ definition {
 		return ${collectionId};
 	}
 
-	@summary = "Get the collectionName by using collectionName"
 	macro _getCollectionName {
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmentcollection/get-fragment-collections \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d name=${collectionName} \
 				-d <CURL_DATA[start=-1]CURL_DATA> \
@@ -113,13 +114,13 @@ definition {
 		return ${collectionNameResult};
 	}
 
-	@summary = "Get the fragmentName from a fragmentCollection by using fragmentName "
 	macro _getFragmentName {
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/fragment.fragmententry/get-fragment-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d fragmentCollectionId=${fragmentCollectionId} \
 				-d <CURL_DATA[start=-1]CURL_DATA> \

@@ -1,14 +1,14 @@
 definition {
 
-	@summary = "Directly calls the JSON WS API to add a displayPageTemplateEntry"
 	macro _addDisplayPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${classNameId},${classTypeId},${displayPageTemplateEntryName},${groupId},${masterLayoutPlid},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=0 \
 				-d classNameId=${classNameId} \
@@ -22,15 +22,15 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a globalPageTemplateEntry"
 	macro _addGlobalPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${active},${descriptionMap},${nameMap},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutprototype/add-layout-prototype \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d nameMap=${nameMap} \
 				-d descriptionMap=${descriptionMap} \
 				-d active=${active} \
@@ -40,33 +40,35 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a layoutPageTemplateCollection"
 	macro _addLayoutPageTemplateCollection {
-		Variables.assertDefined(parameterList = "${description},${groupId},${layoutPageTemplateCollectionName},${serviceContext}");
+		Variables.assertDefined(parameterList = "${description},${groupId},${layoutPageTemplateCollectionName},${serviceContext},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplatecollection/add-layout-page-template-collection \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
+				-d parentLayoutPageTemplateCollection=0 \
 				-d name=${layoutPageTemplateCollectionName} \
 				-d description=${description} \
+				-d type=${type} \
 				-d serviceContext=${serviceContext}
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a layoutPageTemplateEntry"
 	macro _addLayoutPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${groupId},${layoutPageTemplateCollectionId},${layoutPageTemplateEntryName},${masterLayoutPlid},${serviceContext},${status},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=${layoutPageTemplateCollectionId} \
 				-d name=${layoutPageTemplateEntryName} \
@@ -79,15 +81,15 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a masterPageTemplateEntry"
 	macro _addMasterPageTemplateEntry {
 		Variables.assertDefined(parameterList = "${groupId},${masterPageTemplateEntryName},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=0 \
 				-d name=${masterPageTemplateEntryName} \
@@ -100,30 +102,30 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to delete a layoutPageTemplateEntry"
 	macro _deleteLayoutPageTemplateEntry {
 		Variables.assertDefined(parameterList = ${layoutPageTemplateEntryId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/delete-layout-page-template-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d layoutPageTemplateEntryId=${layoutPageTemplateEntryId}
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Get the displayPageTemplatePlid from a layoutPageTemplateEntry by using groupId and layoutPageTemplateEntryName"
 	macro _getDisplayPageTemplatePlidByName {
 		Variables.assertDefined(parameterList = "${groupId},${displayPageTemplateEntryName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/get-layout-page-template-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d type=1 \
 				-d "start=-1" \
@@ -140,16 +142,17 @@ definition {
 		return ${displayPageTemplatePlid};
 	}
 
-	@summary = "Get the layoutPageTemplateCollectionId from a layoutPageTemplateCollection by using groupId and layoutPageTemplateCollectionName"
 	macro _getLayoutPageTemplateCollectionIdByName {
 		Variables.assertDefined(parameterList = "${groupId},${layoutPageTemplateCollectionName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplatecollection/get-layout-page-template-collections \
-				-u test@liferay.com:test \
-				-d groupId=${groupId}
+				-u ${userLoginInfo} \
+				-d groupId=${groupId} \
+				-d type=${type}
 		''';
 
 		var layoutPageTemplateCollectionId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${layoutPageTemplateCollectionName}')]['layoutPageTemplateCollectionId']");
@@ -161,15 +164,15 @@ definition {
 		return ${layoutPageTemplateCollectionId};
 	}
 
-	@summary = "Get the layoutPageTemplateEntryId from a layoutPageTemplateEntry by using groupId and layoutPageTemplateEntryName"
 	macro _getLayoutPageTemplateEntryIdByName {
 		Variables.assertDefined(parameterList = "${groupId},${layoutPageTemplateEntryName},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/get-layout-page-template-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d type=${type} \
 				-d "start=-1" \
@@ -186,15 +189,15 @@ definition {
 		return ${layoutPageTemplateEntryId};
 	}
 
-	@summary = "Get the layoutPrototypeId from a layoutPageTemplateEntry"
 	macro _getLayoutPrototypeId {
 		Variables.assertDefined(parameterList = "${groupId},${layoutPageTemplateEntryName},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/get-layout-page-template-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d type=${type} \
 				-d "start=-1" \
@@ -211,15 +214,15 @@ definition {
 		return ${layoutPrototypeId};
 	}
 
-	@summary = "Get the masterLayoutPlid from a masterLayoutEntry by using groupId and masterLayoutEntryName"
 	macro _getMasterLayoutPlidByName {
 		Variables.assertDefined(parameterList = "${groupId},${masterLayoutEntryName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/get-layout-page-template-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d type=3 \
 				-d "start=-1" \
@@ -236,17 +239,33 @@ definition {
 		return ${masterLayoutPlid};
 	}
 
-	@summary = "Set the layoutPageTemplateEntry as default by using layoutPageTemplateEntryId"
 	macro _setLayoutPageTemplateEntryAsDefault {
 		Variables.assertDefined(parameterList = ${layoutPageTemplateEntryId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/update-layout-page-template-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d layoutPageTemplateEntryId=${layoutPageTemplateEntryId} \
 				-d defaultTemplate=true
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	macro _setLayoutPageTemplateEntryAsNonDefault {
+		Variables.assertDefined(parameterList = ${layoutPageTemplateEntryId});
+
+		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/update-layout-page-template-entry \
+				-u ${userLoginInfo} \
+				-d layoutPageTemplateEntryId=${layoutPageTemplateEntryId} \
+				-d defaultTemplate=false
 		''';
 
 		JSONCurlUtil.post(${curl});

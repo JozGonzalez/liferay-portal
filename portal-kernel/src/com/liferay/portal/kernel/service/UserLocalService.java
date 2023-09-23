@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -80,6 +71,7 @@ public interface UserLocalService
 	 * Adds a default admin user for the company.
 	 *
 	 * @param companyId the primary key of the user's company
+	 * @param password the password of the user
 	 * @param screenName the user's screen name
 	 * @param emailAddress the user's email address
 	 * @param locale the user's locale
@@ -89,8 +81,9 @@ public interface UserLocalService
 	 * @return the new default admin user
 	 */
 	public User addDefaultAdminUser(
-			long companyId, String screenName, String emailAddress,
-			Locale locale, String firstName, String middleName, String lastName)
+			long companyId, String password, String screenName,
+			String emailAddress, Locale locale, String firstName,
+			String middleName, String lastName)
 		throws PortalException;
 
 	/**
@@ -117,6 +110,9 @@ public interface UserLocalService
 	 */
 	public boolean addDefaultRoles(long userId) throws PortalException;
 
+	public User addDefaultServiceAccountUser(long companyId)
+		throws PortalException;
+
 	/**
 	 * Adds the user to the default user groups, unless the user is already in
 	 * these user groups. The default user groups can be specified in
@@ -129,36 +125,36 @@ public interface UserLocalService
 	 */
 	public boolean addDefaultUserGroups(long userId) throws PortalException;
 
-	public void addGroupUser(long groupId, long userId);
+	public boolean addGroupUser(long groupId, long userId);
 
-	public void addGroupUser(long groupId, User user);
+	public boolean addGroupUser(long groupId, User user);
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addGroupUsers(long groupId, List<User> users)
+	public boolean addGroupUsers(long groupId, List<User> users)
 		throws PortalException;
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addGroupUsers(long groupId, long[] userIds)
+	public boolean addGroupUsers(long groupId, long[] userIds)
 		throws PortalException;
 
-	public void addOrganizationUser(long organizationId, long userId);
+	public boolean addOrganizationUser(long organizationId, long userId);
 
-	public void addOrganizationUser(long organizationId, User user);
+	public boolean addOrganizationUser(long organizationId, User user);
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addOrganizationUsers(long organizationId, List<User> users)
+	public boolean addOrganizationUsers(long organizationId, List<User> users)
 		throws PortalException;
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addOrganizationUsers(long organizationId, long[] userIds)
+	public boolean addOrganizationUsers(long organizationId, long[] userIds)
 		throws PortalException;
 
 	public User addOrUpdateUser(
@@ -180,36 +176,36 @@ public interface UserLocalService
 	 */
 	public void addPasswordPolicyUsers(long passwordPolicyId, long[] userIds);
 
-	public void addRoleUser(long roleId, long userId);
+	public boolean addRoleUser(long roleId, long userId);
 
-	public void addRoleUser(long roleId, User user);
+	public boolean addRoleUser(long roleId, User user);
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addRoleUsers(long roleId, List<User> users)
+	public boolean addRoleUsers(long roleId, List<User> users)
 		throws PortalException;
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addRoleUsers(long roleId, long[] userIds)
+	public boolean addRoleUsers(long roleId, long[] userIds)
 		throws PortalException;
 
-	public void addTeamUser(long teamId, long userId);
+	public boolean addTeamUser(long teamId, long userId);
 
-	public void addTeamUser(long teamId, User user);
+	public boolean addTeamUser(long teamId, User user);
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addTeamUsers(long teamId, List<User> users)
+	public boolean addTeamUsers(long teamId, List<User> users)
 		throws PortalException;
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addTeamUsers(long teamId, long[] userIds)
+	public boolean addTeamUsers(long teamId, long[] userIds)
 		throws PortalException;
 
 	/**
@@ -244,6 +240,7 @@ public interface UserLocalService
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -263,7 +260,7 @@ public interface UserLocalService
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -281,20 +278,20 @@ public interface UserLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public User addUser(User user);
 
-	public void addUserGroupUser(long userGroupId, long userId);
+	public boolean addUserGroupUser(long userGroupId, long userId);
 
-	public void addUserGroupUser(long userGroupId, User user);
+	public boolean addUserGroupUser(long userGroupId, User user);
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addUserGroupUsers(long userGroupId, List<User> users)
+	public boolean addUserGroupUsers(long userGroupId, List<User> users)
 		throws PortalException;
 
 	/**
 	 * @throws PortalException
 	 */
-	public void addUserGroupUsers(long userGroupId, long[] userIds)
+	public boolean addUserGroupUsers(long userGroupId, long[] userIds)
 		throws PortalException;
 
 	/**
@@ -329,6 +326,7 @@ public interface UserLocalService
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -348,7 +346,7 @@ public interface UserLocalService
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -474,7 +472,6 @@ public interface UserLocalService
 	 * authentication, without using the AuthPipeline. Primarily used for
 	 * authenticating users of <code>tunnel-web</code>.
 	 *
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 * @param companyId the primary key of the user's company
 	 * @param realm unused
 	 * @param nonce the number used once
@@ -483,6 +480,7 @@ public interface UserLocalService
 	 * @param response the authentication response hash
 	 * @return the user's primary key if authentication is successful;
 	 <code>0</code> otherwise
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS)
@@ -780,14 +778,14 @@ public interface UserLocalService
 	public String encryptUserId(String name) throws PortalException;
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company, or <code>null</code> if a user
+	 * @return the guest user for the company, or <code>null</code> if a user
 	 with the company key could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User fetchDefaultUser(long companyId);
+	public User fetchGuestUser(long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User fetchUser(long userId);
@@ -928,21 +926,19 @@ public interface UserLocalService
 	public int getCompanyUsersCount(long companyId);
 
 	/**
-	 * Returns the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUser(long)}
 	 */
-	@Transactional(enabled = false)
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User getDefaultUser(long companyId) throws PortalException;
 
 	/**
-	 * Returns the primary key of the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the primary key of the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUserId(long)}
 	 */
-	@Transactional(enabled = false)
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getDefaultUserId(long companyId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -1026,6 +1022,24 @@ public interface UserLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupUsersCount(long groupId, int status)
 		throws PortalException;
+
+	/**
+	 * Returns the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the guest user for the company
+	 */
+	@Transactional(enabled = false)
+	public User getGuestUser(long companyId) throws PortalException;
+
+	/**
+	 * Returns the primary key of the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the primary key of the guest user for the company
+	 */
+	@Transactional(enabled = false)
+	public long getGuestUserId(long companyId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -1172,6 +1186,9 @@ public interface UserLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long[] getRoleUserIds(long roleId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public long[] getRoleUserIds(long roleId, long type);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<User> getRoleUsers(long roleId);
@@ -1523,7 +1540,7 @@ public interface UserLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<User> getUsers(
-		long companyId, boolean defaultUser, int status, int start, int end,
+		long companyId, int status, int start, int end,
 		OrderByComparator<User> orderByComparator);
 
 	/**
@@ -1535,7 +1552,7 @@ public interface UserLocalService
 	public int getUsersCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getUsersCount(long companyId, boolean defaultUser, int status);
+	public int getUsersCount(long companyId, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasGroupUser(long groupId, long userId);
@@ -1608,13 +1625,13 @@ public interface UserLocalService
 	public boolean isPasswordExpired(User user) throws PortalException;
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @return the guest user for the company
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User loadGetDefaultUser(long companyId) throws PortalException;
+	public User loadGetGuestUser(long companyId) throws PortalException;
 
 	/**
 	 * Returns an ordered range of all the users who match the keywords and
@@ -2526,6 +2543,8 @@ public interface UserLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public User updateUser(User user);
+
+	public void validateMaxUsers(long companyId) throws PortalException;
 
 	/**
 	 * Verifies the email address of the ticket.

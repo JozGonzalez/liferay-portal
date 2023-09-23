@@ -3,7 +3,7 @@
 
 <service-builder api-package-path="com.liferay.portal.kernel" auto-import-default-references="false" mvcc-enabled="true" package-path="com.liferay.portal">
 	<namespace>Portal</namespace>
-	<entity external-reference-code="company" local-service="true" name="Address" persistence-class="com.liferay.portal.service.persistence.impl.AddressPersistenceImpl2" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="true" name="Address" persistence-class="com.liferay.portal.service.persistence.impl.AddressPersistenceImpl2" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -153,6 +153,8 @@
 		<column name="industry" type="String" />
 		<column name="type" type="String" />
 		<column name="size" type="String" />
+		<column name="indexNameCurrent" type="String" />
+		<column name="indexNameNext" type="String" />
 
 		<!-- Finder methods -->
 
@@ -380,7 +382,7 @@
 			<finder-column name="primary" />
 		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="Group" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="true" name="Group" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1421,7 +1423,7 @@
 	</entity>
 	<entity change-tracking-enabled="true" local-service="false" name="Permission" remote-service="true">
 	</entity>
-	<entity local-service="true" name="Phone" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="Phone" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -2102,7 +2104,7 @@
 			<finder-column name="companyId" />
 			<finder-column name="name" />
 			<finder-column name="scope" />
-			<finder-column name="primKey" />
+			<finder-column arrayable-operator="OR" name="primKey" />
 		</finder>
 		<finder name="C_N_S_R" return-type="Collection">
 			<finder-column name="companyId" />
@@ -2442,7 +2444,6 @@
 
 		<!-- Other fields -->
 
-		<column name="defaultUser" type="boolean" />
 		<column name="contactId" type="long" />
 		<column json-enabled="false" name="password" type="String" />
 		<column json-enabled="false" name="passwordEncrypted" type="boolean" />
@@ -2477,6 +2478,7 @@
 		<column name="lockoutDate" type="Date" />
 		<column name="agreedToTermsOfUse" type="boolean" />
 		<column name="emailAddressVerified" type="boolean" />
+		<column name="type" type="int" />
 		<column name="status" type="int" />
 
 		<!-- Relationships -->
@@ -2489,7 +2491,7 @@
 
 		<!-- Finder methods -->
 
-		<finder name="CompanyId" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder name="CompanyId" return-type="Collection" where="type_ = 1">
 			<finder-column name="companyId" />
 		</finder>
 		<finder name="ContactId" return-type="User" unique="true">
@@ -2501,7 +2503,7 @@
 		<finder name="PortraitId" return-type="User">
 			<finder-column name="portraitId" />
 		</finder>
-		<finder db-index="false" name="GtU_C" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder db-index="false" name="GtU_C" return-type="Collection" where="type_ = 1">
 			<finder-column comparator="&gt;" name="userId" />
 			<finder-column name="companyId" />
 		</finder>
@@ -2509,17 +2511,13 @@
 			<finder-column name="companyId" />
 			<finder-column name="userId" />
 		</finder>
-		<finder name="C_CD" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder name="C_CD" return-type="Collection" where="type_ = 1">
 			<finder-column name="companyId" />
 			<finder-column name="createDate" />
 		</finder>
-		<finder name="C_MD" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder name="C_MD" return-type="Collection" where="type_ = 1">
 			<finder-column name="companyId" />
 			<finder-column name="modifiedDate" />
-		</finder>
-		<finder name="C_DU" return-type="User">
-			<finder-column name="companyId" />
-			<finder-column name="defaultUser" />
 		</finder>
 		<finder name="C_SN" return-type="User" unique="true">
 			<finder-column name="companyId" />
@@ -2541,18 +2539,22 @@
 			<finder-column name="companyId" />
 			<finder-column name="openId" />
 		</finder>
-		<finder name="C_S" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder name="C_T" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="type" />
+		</finder>
+		<finder name="C_S" return-type="Collection" where="type_ = 1">
 			<finder-column name="companyId" />
 			<finder-column name="status" />
 		</finder>
-		<finder name="C_CD_MD" return-type="Collection" where="defaultUser = [$FALSE$]">
+		<finder name="C_CD_MD" return-type="Collection" where="type_ = 1">
 			<finder-column name="companyId" />
 			<finder-column name="createDate" />
 			<finder-column name="modifiedDate" />
 		</finder>
-		<finder name="C_DU_S" return-type="Collection">
+		<finder name="C_T_S" return-type="Collection">
 			<finder-column name="companyId" />
-			<finder-column name="defaultUser" />
+			<finder-column name="type" />
 			<finder-column name="status" />
 		</finder>
 	</entity>
@@ -3210,6 +3212,7 @@
 		<exception>LayoutSetBranchName</exception>
 		<exception>LayoutSetVirtualHost</exception>
 		<exception>LayoutType</exception>
+		<exception>LockedLayout</exception>
 		<exception>MasterLayout</exception>
 		<exception>MembershipRequestComments</exception>
 		<exception>OldServiceComponent</exception>

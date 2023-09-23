@@ -9,7 +9,7 @@
 	</authors>
 	<description>Provides the AUI component tags, prefixed with <![CDATA[<code>aui:</code>]]>.</description>
 	<component bodyContent="true" name="A" writeJSP="false">
-		<description>Creates an anchor (or link) that offers custom configuration and localization.</description>
+		<description>Creates an anchor (or link) that offers custom configuration and localization. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:link</code>.</description>
 		<attributes>
 			<attribute>
 				<description>A role for assistive technologies to interpret HTML elements that have been used for something other than their intended purpose. For example, the <![CDATA[<code>&lt;p&gt;</code>]]> tag could be used for something other than a paragraph.</description>
@@ -87,6 +87,7 @@
 		</attributes>
 	</component>
 	<component bodyContent="true" name="Alert">
+		<description>Deprecated as of Athanasius (7.4.x), replaced by <code>clay:alert</code>.</description>
 		<attributes>
 			<attribute>
 				<name>animated</name>
@@ -129,7 +130,7 @@
 		</attributes>
 	</component>
 	<component alloyComponent="false" bodyContent="true" name="Button" writeStartJSP="false">
-		<description>Creates a fully configurable button that offers portlet namespacing and custom icons.</description>
+		<description>Creates a fully configurable button that offers portlet namespacing and custom icons. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:button</code>.</description>
 		<attributes>
 			<attribute>
 				<description>A CSS class for styling the component. These styles override the ones set by the <![CDATA[<code>primary</code>]]> attribute.</description>
@@ -222,7 +223,7 @@
 		</attributes>
 	</component>
 	<component alloyComponent="false" bodyContent="true" name="ButtonRow" writeEndJSP="false">
-		<description>Creates a button row <![CDATA[<code>&lt;div&gt;</code>]]> tag to wrap <![CDATA[<code>&lt;aui:button&gt;</code>]]> components and offer additional styling.</description>
+		<description>Creates a button row <![CDATA[<code>&lt;div&gt;</code>]]> tag to wrap <![CDATA[<code>&lt;aui:button&gt;</code>]]> components and offer additional styling. Deprecated as of Athanasius (7.4.x), with no direct replacement.</description>
 		<attributes>
 			<attribute>
 				<description>A CSS class for styling the component.</description>
@@ -289,7 +290,7 @@
 		</attributes>
 	</component>
 	<component bodyContent="true" dynamicAttributes="false" name="FieldWrapper">
-		<description>Creates a <![CDATA[<code>&lt;div&gt;</code>]]> tag to wrap form fields and offer additional styling.</description>
+		<description>Creates a <![CDATA[<code>&lt;div&gt;</code>]]> tag to wrap form fields and offer additional styling. Deprecated as of Athanasius (7.4.x), with no direct replacement.</description>
 		<attributes>
 			<attribute>
 				<description>A CSS class for styling the component.</description>
@@ -368,7 +369,7 @@
 		</attributes>
 	</component>
 	<component bodyContent="true" name="Fieldset">
-		<description>Creates a <![CDATA[<code>&lt;div&gt;</code>]]> tag to group related form elements and offer additional styling.</description>
+		<description>Creates a <![CDATA[<code>&lt;div&gt;</code>]]> tag to group related form elements and offer additional styling. Deprecated as of Athanasius (7.4.x), with no direct replacement.</description>
 		<attributes>
 			<attribute>
 				<name>collapsed</name>
@@ -503,7 +504,7 @@
 		</attributes>
 	</component>
 	<component name="Icon">
-		<description>Creates a customizable icon that can leverage Bootstrap CSS icon classes.</description>
+		<description>Creates a customizable icon that can leverage Bootstrap CSS icon classes. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:icon</code>.</description>
 		<attributes>
 			<attribute>
 				<description>A class to give to the container of the icon, to provide an implementation for the icon. Note that the preferred method of setting the icon's image is via the <![CDATA[<code>image</code>]]> attribute.</description>
@@ -905,6 +906,251 @@
 			</attribute>
 		</attributes>
 	</component>
+	<component bodyContent="false" name="Nav">
+		<description>Creates a navigation wrapper component to hold <![CDATA[<code>&lt;nav:item&gt;</code>]]> components for an <![CDATA[<code>&lt;aui:nav-bar&gt;</code>]]> component. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:navigation-bar</code>.</description>
+		<attributes>
+			<attribute>
+				<description>A name for the navigation component for assistive technologies to interpret.</description>
+				<name>ariaLabel</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A role for assistive technologies to interpret HTML elements that have been used for something other than their intended purpose. For example, the <![CDATA[<code>&lt;p&gt;</code>]]> tag could be used for something other than a paragraph.</description>
+				<name>ariaRole</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>collapsible</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+			</attribute>
+			<attribute>
+				<description>A CSS class for styling the component.</description>
+				<name>cssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>icon</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>An ID for the component instance.</description>
+				<name>id</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A search container for the navigation component to use.</description>
+				<name>searchContainer</name>
+				<inputType><![CDATA[com.liferay.portal.kernel.dao.search.SearchContainer<?>]]></inputType>
+				<outputType><![CDATA[com.liferay.portal.kernel.dao.search.SearchContainer<?>]]></outputType>
+			</attribute>
+			<attribute>
+				<description>Whether to use the default portlet namespace, to avoid name conflicts. The default value is <![CDATA[<code>true</code>]]>.</description>
+				<name>useNamespace</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>true</defaultValue>
+			</attribute>
+		</attributes>
+	</component>
+	<component bodyContent="false" name="NavBar">
+		<description>Creates a navigation bar to house navigation components. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:navigation-bar</code>.</description>
+		<attributes>
+			<attribute>
+				<description>A CSS class for styling the component.</description>
+				<name>cssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Miscellaneous data to be stored via a map. For example, the <![CDATA[<code>HashMap&lt;"class-name", foo&gt;</code>]]> would render as the attribute <![CDATA[<code>data-class-name = foo;</code>]]>.</description>
+				<name>data</name>
+				<inputType>java.lang.Object</inputType>
+				<outputType>java.util.Map</outputType>
+			</attribute>
+			<attribute>
+				<description>An ID for the component instance.</description>
+				<name>id</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+		</attributes>
+	</component>
+	<component bodyContent="true" name="NavBarSearch">
+		<description>Creates a search component for an <![CDATA[<code>&lt;aui:nav-bar&gt;</code>]]> component. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:navigation-bar</code>.</description>
+		<attributes>
+			<attribute>
+				<description>A CSS class for styling the component.</description>
+				<name>cssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>file</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>An ID for the component instance.</description>
+				<name>id</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A search container for the navigation bar to use.</description>
+				<name>searchContainer</name>
+				<inputType><![CDATA[com.liferay.portal.kernel.dao.search.SearchContainer<?>]]></inputType>
+				<outputType><![CDATA[com.liferay.portal.kernel.dao.search.SearchContainer<?>]]></outputType>
+			</attribute>
+		</attributes>
+	</component>
+	<component bodyContent="true" name="NavItem" writeStartJSP="false">
+		<description>Creates a navigation item for using in an <![CDATA[<code>&lt;aui:nav&gt;</code>]]> component. Deprecated as of Athanasius (7.4.x), replaced by <code>clay:navigation-bar</code>.</description>
+		<attributes>
+			<attribute>
+				<description>A CSS class for styling the link set in the <![CDATA[<code>href</code>]]> attribute.</description>
+				<name>anchorCssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Miscellaneous data to be stored via a map. For example, the <![CDATA[<code>HashMap&lt;"class-name", foo&gt;</code>]]> would render as the attribute <![CDATA[<code>data-class-name = foo;</code>]]>.</description>
+				<name>anchorData</name>
+				<inputType>java.lang.Object</inputType>
+				<outputType>java.util.Map</outputType>
+			</attribute>
+			<attribute>
+				<description>An ID for the instance of the navigation item's link, set in the <![CDATA[<code>href</code>]]> attribute.</description>
+				<name>anchorId</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A name for the navigation item for assistive technologies to interpret.</description>
+				<name>ariaLabel</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A role for assistive technologies to interpret HTML elements that have been used for something other than their intended purpose. For example, the <![CDATA[<code>&lt;p&gt;</code>]]> tag could be used for something other than a paragraph.</description>
+				<name>ariaRole</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A CSS class for styling the component.</description>
+				<name>cssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Miscellaneous data to be stored via a map. For example, the <![CDATA[<code>HashMap&lt;"class-name", foo&gt;</code>]]> would render as the attribute <![CDATA[<code>data-class-name = foo;</code>]]>.</description>
+				<name>data</name>
+				<inputType>java.lang.Object</inputType>
+				<outputType>java.util.Map</outputType>
+			</attribute>
+			<attribute>
+				<description>Whether the navigation item is a dropdown menu. The default value is <![CDATA[<code>false</code>]]>.</description>
+				<name>dropdown</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+			</attribute>
+			<attribute>
+				<description>A URL navigated to when the navigation item is clicked.</description>
+				<name>href</name>
+				<inputType>java.lang.Object</inputType>
+				<outputType>java.lang.String</outputType>
+				<defaultValue>javascript:void(0);</defaultValue>
+			</attribute>
+			<attribute>
+				<description>A CSS class for styling the navigation item's icon.</description>
+				<name>iconCssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>iconSrc</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>An ID for the component instance.</description>
+				<name>id</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Text to display for the navigation item.</description>
+				<name>label</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Whether to translate the label's text into the user's language. The default value is <![CDATA[<code>true</code>]]>.</description>
+				<name>localizeLabel</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>true</defaultValue>
+			</attribute>
+			<attribute>
+				<description>Whether the navigation item is selected by default. The default value is <![CDATA[<code>false</code>]]>.</description>
+				<name>selected</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+			</attribute>
+			<attribute>
+				<name>state</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>target</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>Sets the navigation item's title.</description>
+				<name>title</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>toggle</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+			</attribute>
+			<attribute>
+				<name>toggleTouch</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>true</defaultValue>
+			</attribute>
+			<attribute>
+				<description>Whether to open a dialog window with the <![CDATA[<code>href</code>]]> location when a user clicks the navigation item. The default value is <![CDATA[<code>false</code>]]>.</description>
+				<name>useDialog</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+			</attribute>
+			<attribute>
+				<description>Whether to wrap the navigation item's dropdown menu in an unordered list with the <![CDATA[<code>drop-down-menu</code>]]> class. The default value is <![CDATA[<code>true</code>]]>.</description>
+				<name>wrapDropDownMenu</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>true</defaultValue>
+			</attribute>
+		</attributes>
+	</component>
 	<component bodyContent="true" name="Option" writeEndJSP="false">
 		<description>Creates an option component for using in an <![CDATA[<code>&lt;aui:select&gt;</code>]]> component.</description>
 		<attributes>
@@ -986,11 +1232,6 @@
 	<component dynamicAttributes="false" name="Script" parentClass="com.liferay.taglib.util.PositionTagSupport" writeJSP="false">
 		<description>Creates a script component in which to write JavaScript that facilitates using AlloyUI modules.</description>
 		<attributes>
-			<attribute>
-				<name>load</name>
-				<inputType>java.lang.String</inputType>
-				<outputType>java.lang.String</outputType>
-			</attribute>
 			<attribute>
 				<description>A position for the script.</description>
 				<name>position</name>
@@ -1209,7 +1450,7 @@
 		</attributes>
 	</component>
 	<component dynamicAttributes="false" name="TranslationManager">
-		<description>Creates a UI component for managing translation of associated content.</description>
+		<description>Creates a UI component for managing translation of associated content. Deprecated as of Athanasius (7.4.x), replaced by <code>liferay-frontend:translation-manager</code>.</description>
 		<attributes>
 			<attribute>
 				<description>Available locales of translation languages from which to choose.</description>

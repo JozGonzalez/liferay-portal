@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.bootstrap;
+
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.xmlsec.DecryptionConfiguration;
 import org.opensaml.xmlsec.EncryptionConfiguration;
 import org.opensaml.xmlsec.SignatureSigningConfiguration;
@@ -84,14 +76,14 @@ public class SecurityConfigurationBootstrap {
 					(String[])blacklistedAlgorithmsObject));
 		}
 
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			DecryptionConfiguration.class, basicDecryptionConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			EncryptionConfiguration.class, basicEncryptionConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			SignatureSigningConfiguration.class,
 			basicSignatureSigningConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			SignatureValidationConfiguration.class,
 			basicSignatureValidationConfiguration);
 	}

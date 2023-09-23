@@ -14,14 +14,14 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "Check for errors in the minified browser console"
+	@description = "LPS-171187. Check for errors in the minified browser console"
 	@priority = 3
 	test SmokeMinifiedEnabled {
 		task ("When: Restart portal") {
@@ -43,10 +43,11 @@ definition {
 		}
 	}
 
-	@description = "Check for errors in the browser console on the jQuery page"
+	@description = "LPS-154782. Check for errors in the browser console on the jQuery page"
 	@priority = 3
-	test VerifyErroWhenJQueryEnabled {
-		property test.name.skip.portal.instance = "Minified#VerifyErroWhenJQueryEnabled";
+	test VerifyErrorWhenJQueryEnabled {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given Navigate through the menus and select System Settings") {
 			SystemSettings.openSystemSettingsAdmin();

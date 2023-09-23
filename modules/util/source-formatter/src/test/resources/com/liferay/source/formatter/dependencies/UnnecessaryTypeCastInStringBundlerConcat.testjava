@@ -1,0 +1,19 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies;
+
+import com.liferay.petra.string.StringBundler;
+
+/**
+ * @author Qi Zhang
+ */
+public class UnnecessaryTypeCastInStringBundlerConcat {
+
+	public String method(String s1, String s2, String s3) {
+		return StringBundler.concat(String.valueOf(s1), s2.toString(), s3);
+	}
+
+}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.display.context;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,11 +27,8 @@ import com.liferay.user.associated.data.web.internal.util.UADLanguageUtil;
 import java.io.Serializable;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -210,58 +199,25 @@ public class UADExportProcessDisplayContext {
 			int status = getBackgroundTaskStatus(navigation);
 
 			searchContainer.setResultsAndTotal(
-				() -> {
-					List<BackgroundTask> results =
-						UADExportBackgroundTaskManagerUtil.getBackgroundTasks(
-							themeDisplay.getScopeGroupId(),
-							selectedUser.getUserId(), status);
-
-					Stream<BackgroundTask> backgroundTaskStream =
-						results.stream();
-
-					return backgroundTaskStream.sorted(
-						getComparator(
-							themeDisplay.getLocale(),
-							searchContainer.getOrderByCol(),
-							searchContainer.getOrderByType())
-					).skip(
-						searchContainer.getStart()
-					).limit(
-						searchContainer.getDelta()
-					).collect(
-						Collectors.toList()
-					);
-				},
-				UADExportBackgroundTaskManagerUtil.getBackgroundTasksCount(
-					themeDisplay.getScopeGroupId(), selectedUser.getUserId(),
-					status));
+				ListUtil.sort(
+					UADExportBackgroundTaskManagerUtil.getBackgroundTasks(
+						themeDisplay.getScopeGroupId(),
+						selectedUser.getUserId(), status),
+					getComparator(
+						themeDisplay.getLocale(),
+						searchContainer.getOrderByCol(),
+						searchContainer.getOrderByType())));
 		}
 		else {
 			searchContainer.setResultsAndTotal(
-				() -> {
-					List<BackgroundTask> results =
-						UADExportBackgroundTaskManagerUtil.getBackgroundTasks(
-							themeDisplay.getScopeGroupId(),
-							selectedUser.getUserId());
-
-					Stream<BackgroundTask> backgroundTaskStream =
-						results.stream();
-
-					return backgroundTaskStream.sorted(
-						getComparator(
-							themeDisplay.getLocale(),
-							searchContainer.getOrderByCol(),
-							searchContainer.getOrderByType())
-					).skip(
-						searchContainer.getStart()
-					).limit(
-						searchContainer.getDelta()
-					).collect(
-						Collectors.toList()
-					);
-				},
-				UADExportBackgroundTaskManagerUtil.getBackgroundTasksCount(
-					themeDisplay.getScopeGroupId(), selectedUser.getUserId()));
+				ListUtil.sort(
+					UADExportBackgroundTaskManagerUtil.getBackgroundTasks(
+						themeDisplay.getScopeGroupId(),
+						selectedUser.getUserId()),
+					getComparator(
+						themeDisplay.getLocale(),
+						searchContainer.getOrderByCol(),
+						searchContainer.getOrderByType())));
 		}
 
 		_searchContainer = searchContainer;

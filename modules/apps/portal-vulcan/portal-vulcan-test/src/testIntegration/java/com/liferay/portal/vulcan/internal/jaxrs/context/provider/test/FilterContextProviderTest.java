@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider.test;
@@ -20,6 +11,8 @@ import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.odata.filter.InvalidFilterException;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.test.util.MockFeature;
@@ -27,7 +20,9 @@ import com.liferay.portal.vulcan.internal.jaxrs.context.provider.test.util.MockM
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.test.util.MockResource;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.cxf.jaxrs.ext.ContextProvider;
 
@@ -113,6 +108,49 @@ public class FilterContextProviderTest {
 
 		Assert.assertEquals("example", queryTerm.getValue());
 		Assert.assertEquals("internalTitle", queryTerm.getField());
+	}
+
+	@Test(expected = InvalidFilterException.class)
+	public void testCreateContextThrowsInvalidFilterException()
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest() {
+				{
+					addParameter("filter", "title eeq 'example'");
+				}
+			};
+
+		Class<? extends MockResource> clazz = _mockResource.getClass();
+
+		_contextProvider.createContext(
+			new MockMessage(
+				mockHttpServletRequest,
+				clazz.getMethod(MockResource.METHOD_NAME, String.class),
+				_mockResource));
+	}
+
+	@Test(expected = NotAcceptableException.class)
+	public void testCreateContextThrowsNotAcceptableException()
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest() {
+				{
+					addParameter("filter", "title eq 'example'");
+					addHeader(
+						HttpHeaders.ACCEPT_LANGUAGE,
+						LocaleUtil.toW3cLanguageId(LocaleUtil.TAIWAN));
+				}
+			};
+
+		Class<? extends MockResource> clazz = _mockResource.getClass();
+
+		_contextProvider.createContext(
+			new MockMessage(
+				mockHttpServletRequest,
+				clazz.getMethod(MockResource.METHOD_NAME, String.class),
+				_mockResource));
 	}
 
 	private ContextProvider<Filter> _contextProvider;

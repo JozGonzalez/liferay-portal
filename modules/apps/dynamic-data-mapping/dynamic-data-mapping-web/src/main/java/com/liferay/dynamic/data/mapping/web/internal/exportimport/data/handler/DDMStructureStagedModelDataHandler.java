@@ -1,18 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.web.internal.exportimport.data.handler;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
 import com.liferay.data.engine.service.DEDataDefinitionFieldLinkLocalService;
@@ -66,6 +60,8 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Element;
+
+import java.io.IOException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -147,10 +143,10 @@ public class DDMStructureStagedModelDataHandler
 			"structure-key", structure.getStructureKey()
 		).build();
 
-		long defaultUserId = 0;
+		long guestUserId = 0;
 
 		try {
-			defaultUserId = _userLocalService.getDefaultUserId(
+			guestUserId = _userLocalService.getGuestUserId(
 				structure.getCompanyId());
 		}
 		catch (Exception exception) {
@@ -163,7 +159,7 @@ public class DDMStructureStagedModelDataHandler
 
 		referenceAttributes.put(
 			"preloaded",
-			String.valueOf(_isPreloadedStructure(defaultUserId, structure)));
+			String.valueOf(_isPreloadedStructure(guestUserId, structure)));
 
 		return referenceAttributes;
 	}
@@ -248,7 +244,7 @@ public class DDMStructureStagedModelDataHandler
 		}
 
 		if (_isPreloadedStructure(
-				_userLocalService.getDefaultUserId(structure.getCompanyId()),
+				_userLocalService.getGuestUserId(structure.getCompanyId()),
 				structure)) {
 
 			structureElement.addAttribute("preloaded", "true");
@@ -479,6 +475,20 @@ public class DDMStructureStagedModelDataHandler
 
 	@Reference
 	protected JSONFactory jsonFactory;
+
+	private boolean _equalsJSON(String json1, String json2) {
+		try {
+			JsonNode jsonNode1 = _objectMapper.readTree(json1);
+			JsonNode jsonNode2 = _objectMapper.readTree(json2);
+
+			return jsonNode1.equals(jsonNode2);
+		}
+		catch (IOException ioException) {
+			_log.error(ioException);
+
+			return false;
+		}
+	}
 
 	private void _exportDDMDataProviderInstances(
 			PortletDataContext portletDataContext, DDMStructure structure,
@@ -769,7 +779,7 @@ public class DDMStructureStagedModelDataHandler
 
 		// Check other attributes
 
-		if (!Objects.equals(
+		if (!_equalsJSON(
 				existingStructure.getDefinition(), structure.getDefinition()) ||
 			!Objects.equals(
 				existingStructure.getDescriptionMap(),
@@ -788,9 +798,9 @@ public class DDMStructureStagedModelDataHandler
 	}
 
 	private boolean _isPreloadedStructure(
-		long defaultUserId, DDMStructure structure) {
+		long guestUserId, DDMStructure structure) {
 
-		if (defaultUserId == structure.getUserId()) {
+		if (guestUserId == structure.getUserId()) {
 			return true;
 		}
 
@@ -807,7 +817,7 @@ public class DDMStructureStagedModelDataHandler
 		}
 
 		if ((ddmStructureVersion != null) &&
-			(defaultUserId == ddmStructureVersion.getUserId())) {
+			(guestUserId == ddmStructureVersion.getUserId())) {
 
 			return true;
 		}
@@ -861,6 +871,8 @@ public class DDMStructureStagedModelDataHandler
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMStructureStagedModelDataHandler.class);
+
+	private static final ObjectMapper _objectMapper = new ObjectMapper();
 
 	@Reference
 	private DDM _ddm;

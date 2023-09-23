@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -38,8 +32,8 @@ export default function EditTitleModal({
 	disabled,
 	displayLocale,
 	fieldFocus,
-	initialDescription,
-	initialTitle,
+	initialDescriptionI18n,
+	initialTitleI18n,
 	observer,
 	onClose,
 	onSubmit,
@@ -61,9 +55,11 @@ export default function EditTitleModal({
 
 	const defaultLocaleBCP47 = formatLocaleWithDashes(defaultLocale);
 
-	const [description, setDescription] = useState(initialDescription);
+	const [descriptionI18n, setDescriptionI18n] = useState(
+		initialDescriptionI18n
+	);
 	const [hasError, setHasError] = useState(false);
-	const [title, setTitle] = useState(initialTitle);
+	const [titleI18n, setTitleI18n] = useState(initialTitleI18n);
 
 	const descriptionInputRef = useRef();
 	const titleInputRef = useRef();
@@ -73,7 +69,7 @@ export default function EditTitleModal({
 			setHasError(!event.currentTarget.value);
 		}
 		else {
-			setHasError(!title[defaultLocaleBCP47]);
+			setHasError(!titleI18n[defaultLocaleBCP47]);
 		}
 	};
 
@@ -85,13 +81,16 @@ export default function EditTitleModal({
 	const _handleSubmit = (event) => {
 		event.preventDefault();
 
-		if (!title[defaultLocaleBCP47]) {
+		if (!titleI18n[defaultLocaleBCP47]) {
 			setHasError(true);
 
 			titleInputRef.current.focus();
 		}
 		else {
-			onSubmit({description, title});
+			onSubmit({
+				description_i18n: descriptionI18n,
+				title_i18n: titleI18n,
+			});
 
 			onClose();
 		}
@@ -147,11 +146,11 @@ export default function EditTitleModal({
 							onSelectedLocaleChange={_handleSelectedLocaleChange(
 								titleInputRef
 							)}
-							onTranslationsChange={setTitle}
+							onTranslationsChange={setTitleI18n}
 							placeholder=""
 							ref={titleInputRef}
 							selectedLocale={selectedLocale}
-							translations={disabled ? {} : title}
+							translations={disabled ? {} : titleI18n}
 						/>
 
 						{hasError && (
@@ -185,11 +184,11 @@ export default function EditTitleModal({
 							onSelectedLocaleChange={_handleSelectedLocaleChange(
 								descriptionInputRef
 							)}
-							onTranslationsChange={setDescription}
+							onTranslationsChange={setDescriptionI18n}
 							placeholder=""
 							ref={descriptionInputRef}
 							selectedLocale={selectedLocale}
-							translations={disabled ? {} : description}
+							translations={disabled ? {} : descriptionI18n}
 						/>
 					</div>
 				</ClayModal.Body>

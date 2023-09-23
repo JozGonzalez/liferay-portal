@@ -1,34 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMemo} from 'react';
 
 import {MDFColumnKey} from '../../../common/enums/mdfColumnKey';
-import useGetMDFRequests from '../../../common/services/liferay/object/mdf-requests/useGetMDFRequests';
+import MDFRequestDTO from '../../../common/interfaces/dto/mdfRequestDTO';
+import getIntlNumberFormat from '../../../common/utils/getIntlNumberFormat';
 import getMDFActivityPeriod from '../utils/getMDFActivityPeriod';
 import getMDFBudgetInfos from '../utils/getMDFBudgetInfos';
 import getMDFDates from '../utils/getMDFDates';
-import getSummaryMDFClaims from '../utils/getSummaryMDFClaims';
 
 export default function useGetListItemsFromMDFRequests(
-	page: number,
-	pageSize: number,
-	filtersTerm: string
+	items?: MDFRequestDTO[]
 ) {
-	const swrResponse = useGetMDFRequests(page, pageSize, filtersTerm);
-
-	const listItems = useMemo(
+	return useMemo(
 		() =>
-			swrResponse.data?.items.map((item) => ({
-				...getSummaryMDFClaims(item.currency, item.mdfReqToMDFClms),
+			items?.map((item) => ({
 				[MDFColumnKey.ID]: String(item.id),
 				[MDFColumnKey.NAME]: item.overallCampaignName,
 				...getMDFActivityPeriod(
@@ -37,21 +26,24 @@ export default function useGetListItemsFromMDFRequests(
 				),
 				[MDFColumnKey.STATUS]: item.mdfRequestStatus?.name,
 				[MDFColumnKey.PARTNER]: item.companyName,
+				[MDFColumnKey.PAID]: !Number(item.totalPaidAmount)
+					? '-'
+					: getIntlNumberFormat(item.currency).format(
+							Number(item.totalPaidAmount)
+					  ),
+				[MDFColumnKey.AMOUNT_CLAIMED]: !Number(item.totalClaimedRequest)
+					? '-'
+					: getIntlNumberFormat(item.currency).format(
+							Number(item.totalClaimedRequest)
+					  ),
 				...getMDFDates(item.dateCreated, item.dateModified),
 				...getMDFBudgetInfos(
 					item.totalCostOfExpense,
 					item.totalMDFRequestAmount,
-					item.currency
+					item.currency,
+					item.mdfRequestStatus.key
 				),
 			})),
-		[swrResponse.data?.items]
+		[items]
 	);
-
-	return {
-		...swrResponse,
-		data: {
-			...swrResponse.data,
-			items: listItems,
-		},
-	};
 }

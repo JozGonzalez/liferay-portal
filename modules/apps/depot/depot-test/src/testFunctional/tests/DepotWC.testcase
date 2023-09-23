@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -135,10 +135,13 @@ definition {
 			value1 = "WC Folder Name Edit");
 	}
 
-	@description = "This test edits template and structure in a depot."
+	@description = "This test edits template and structure in a depot. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanEditTemplateAndStructure {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotWebContentStructuresAdmin(depotName = "Test Depot Name");
 
 		WebContentStructures.addCP(

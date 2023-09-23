@@ -82,13 +82,15 @@ definition {
 			value1 = ${queryAndOperator});
 
 		Type(
-			locator1 = "AssetLists#ASSET_LIST_KEYWORDS_FIELD",
+			key_text = "Keywords",
+			locator1 = "TextInput#ANY",
 			value1 = ${keyWords});
 
 		PortletEntry.save();
 
 		AssertTextEquals(
-			locator1 = "AssetLists#ASSET_LIST_KEYWORDS_FIELD",
+			key_text = "Keywords",
+			locator1 = "TextInput#ANY",
 			value1 = ${keyWords});
 	}
 
@@ -127,7 +129,9 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconTable.clickTableEntryTitle(tableEntry = ${segmentName});
+		Click(
+			key_tableEntry = ${segmentName},
+			locator1 = "LexiconTable#TABLE_ENTRY_TITLE");
 
 		SelectFrameTop();
 
@@ -231,6 +235,8 @@ definition {
 	}
 
 	macro configureItemTypeInDynamicCollection {
+		WaitForPageLoad();
+
 		Panel.expandPanel(panel = "Source");
 
 		if (isSet(itemType)) {
@@ -253,6 +259,8 @@ definition {
 	}
 
 	macro configureItemTypeInManualCollection {
+		WaitForPageLoad();
+
 		if (isSet(variationName)) {
 			Navigator.gotoNavTab(navTab = ${variationName});
 		}
@@ -559,6 +567,8 @@ definition {
 			LexiconCard.clickCard(card = ${depotName});
 		}
 
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
 		if (isSet(entryList)) {
 			for (var assetName : list ${entryList}) {
 				LexiconEntry.selectEntry(rowEntry = ${assetName});
@@ -570,11 +580,11 @@ definition {
 
 		SelectFrameTop();
 
-		Button.clickAdd();
-
-		Alert.viewSuccessMessage();
+		Button.click(button = "Add");
 
 		SelectFrameTop();
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro viewAssetList {

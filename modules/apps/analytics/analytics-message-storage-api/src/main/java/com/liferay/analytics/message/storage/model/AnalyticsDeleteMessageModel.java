@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.model;
@@ -18,6 +9,7 @@ import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 
@@ -36,7 +28,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface AnalyticsDeleteMessageModel
-	extends BaseModel<AnalyticsDeleteMessage>, MVCCModel, ShardedModel {
+	extends BaseModel<AnalyticsDeleteMessage>, CTModel<AnalyticsDeleteMessage>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +42,7 @@ public interface AnalyticsDeleteMessageModel
 	 *
 	 * @return the primary key of this analytics delete message
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,6 +50,7 @@ public interface AnalyticsDeleteMessageModel
 	 *
 	 * @param primaryKey the primary key of this analytics delete message
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -73,6 +68,22 @@ public interface AnalyticsDeleteMessageModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this analytics delete message.
+	 *
+	 * @return the ct collection ID of this analytics delete message
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this analytics delete message.
+	 *
+	 * @param ctCollectionId the ct collection ID of this analytics delete message
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the analytics delete message ID of this analytics delete message.

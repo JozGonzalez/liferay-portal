@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -87,7 +78,8 @@ public class ObjectValidationRuleModelImpl
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"objectDefinitionId", Types.BIGINT}, {"active_", Types.BOOLEAN},
 		{"engine", Types.VARCHAR}, {"errorLabel", Types.VARCHAR},
-		{"name", Types.VARCHAR}, {"script", Types.CLOB}
+		{"name", Types.VARCHAR}, {"outputType", Types.VARCHAR},
+		{"script", Types.CLOB}, {"system_", Types.BOOLEAN}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -107,11 +99,13 @@ public class ObjectValidationRuleModelImpl
 		TABLE_COLUMNS_MAP.put("engine", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("errorLabel", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("outputType", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("script", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("system_", Types.BOOLEAN);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ObjectValidationRule (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,objectValidationRuleId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,objectDefinitionId LONG,active_ BOOLEAN,engine VARCHAR(75) null,errorLabel STRING null,name STRING null,script TEXT null)";
+		"create table ObjectValidationRule (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,objectValidationRuleId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,objectDefinitionId LONG,active_ BOOLEAN,engine VARCHAR(255) null,errorLabel STRING null,name STRING null,outputType VARCHAR(75) null,script TEXT null,system_ BOOLEAN)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table ObjectValidationRule";
@@ -150,14 +144,20 @@ public class ObjectValidationRuleModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 8L;
+	public static final long OUTPUTTYPE_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OBJECTVALIDATIONRULEID_COLUMN_BITMASK = 16L;
+	public static final long OBJECTVALIDATIONRULEID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -296,7 +296,11 @@ public class ObjectValidationRuleModelImpl
 				"errorLabel", ObjectValidationRule::getErrorLabel);
 			attributeGetterFunctions.put("name", ObjectValidationRule::getName);
 			attributeGetterFunctions.put(
+				"outputType", ObjectValidationRule::getOutputType);
+			attributeGetterFunctions.put(
 				"script", ObjectValidationRule::getScript);
+			attributeGetterFunctions.put(
+				"system", ObjectValidationRule::getSystem);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -369,9 +373,17 @@ public class ObjectValidationRuleModelImpl
 				(BiConsumer<ObjectValidationRule, String>)
 					ObjectValidationRule::setName);
 			attributeSetterBiConsumers.put(
+				"outputType",
+				(BiConsumer<ObjectValidationRule, String>)
+					ObjectValidationRule::setOutputType);
+			attributeSetterBiConsumers.put(
 				"script",
 				(BiConsumer<ObjectValidationRule, String>)
 					ObjectValidationRule::setScript);
+			attributeSetterBiConsumers.put(
+				"system",
+				(BiConsumer<ObjectValidationRule, Boolean>)
+					ObjectValidationRule::setSystem);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -847,6 +859,35 @@ public class ObjectValidationRuleModelImpl
 
 	@JSON
 	@Override
+	public String getOutputType() {
+		if (_outputType == null) {
+			return "";
+		}
+		else {
+			return _outputType;
+		}
+	}
+
+	@Override
+	public void setOutputType(String outputType) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_outputType = outputType;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalOutputType() {
+		return getColumnOriginalValue("outputType");
+	}
+
+	@JSON
+	@Override
 	public String getScript() {
 		if (_script == null) {
 			return "";
@@ -863,6 +904,27 @@ public class ObjectValidationRuleModelImpl
 		}
 
 		_script = script;
+	}
+
+	@JSON
+	@Override
+	public boolean getSystem() {
+		return _system;
+	}
+
+	@JSON
+	@Override
+	public boolean isSystem() {
+		return _system;
+	}
+
+	@Override
+	public void setSystem(boolean system) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_system = system;
 	}
 
 	@Override
@@ -1030,7 +1092,9 @@ public class ObjectValidationRuleModelImpl
 		objectValidationRuleImpl.setEngine(getEngine());
 		objectValidationRuleImpl.setErrorLabel(getErrorLabel());
 		objectValidationRuleImpl.setName(getName());
+		objectValidationRuleImpl.setOutputType(getOutputType());
 		objectValidationRuleImpl.setScript(getScript());
+		objectValidationRuleImpl.setSystem(isSystem());
 
 		objectValidationRuleImpl.resetOriginalValues();
 
@@ -1068,8 +1132,12 @@ public class ObjectValidationRuleModelImpl
 			this.<String>getColumnOriginalValue("errorLabel"));
 		objectValidationRuleImpl.setName(
 			this.<String>getColumnOriginalValue("name"));
+		objectValidationRuleImpl.setOutputType(
+			this.<String>getColumnOriginalValue("outputType"));
 		objectValidationRuleImpl.setScript(
 			this.<String>getColumnOriginalValue("script"));
+		objectValidationRuleImpl.setSystem(
+			this.<Boolean>getColumnOriginalValue("system_"));
 
 		return objectValidationRuleImpl;
 	}
@@ -1222,6 +1290,14 @@ public class ObjectValidationRuleModelImpl
 			objectValidationRuleCacheModel.name = null;
 		}
 
+		objectValidationRuleCacheModel.outputType = getOutputType();
+
+		String outputType = objectValidationRuleCacheModel.outputType;
+
+		if ((outputType != null) && (outputType.length() == 0)) {
+			objectValidationRuleCacheModel.outputType = null;
+		}
+
 		objectValidationRuleCacheModel.script = getScript();
 
 		String script = objectValidationRuleCacheModel.script;
@@ -1229,6 +1305,8 @@ public class ObjectValidationRuleModelImpl
 		if ((script != null) && (script.length() == 0)) {
 			objectValidationRuleCacheModel.script = null;
 		}
+
+		objectValidationRuleCacheModel.system = isSystem();
 
 		return objectValidationRuleCacheModel;
 	}
@@ -1308,7 +1386,9 @@ public class ObjectValidationRuleModelImpl
 	private String _errorLabelCurrentLanguageId;
 	private String _name;
 	private String _nameCurrentLanguageId;
+	private String _outputType;
 	private String _script;
+	private boolean _system;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1354,7 +1434,9 @@ public class ObjectValidationRuleModelImpl
 		_columnOriginalValues.put("engine", _engine);
 		_columnOriginalValues.put("errorLabel", _errorLabel);
 		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("outputType", _outputType);
 		_columnOriginalValues.put("script", _script);
+		_columnOriginalValues.put("system_", _system);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1364,6 +1446,7 @@ public class ObjectValidationRuleModelImpl
 
 		attributeNames.put("uuid_", "uuid");
 		attributeNames.put("active_", "active");
+		attributeNames.put("system_", "system");
 
 		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
@@ -1405,7 +1488,11 @@ public class ObjectValidationRuleModelImpl
 
 		columnBitmasks.put("name", 4096L);
 
-		columnBitmasks.put("script", 8192L);
+		columnBitmasks.put("outputType", 8192L);
+
+		columnBitmasks.put("script", 16384L);
+
+		columnBitmasks.put("system_", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

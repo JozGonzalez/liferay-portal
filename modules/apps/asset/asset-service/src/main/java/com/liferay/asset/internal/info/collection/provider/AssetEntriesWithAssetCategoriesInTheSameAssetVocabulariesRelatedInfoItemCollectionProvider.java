@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.internal.info.collection.provider;
@@ -27,12 +18,14 @@ import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.ConfigurableInfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.type.SelectInfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
+import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.localized.bundle.ModelResourceLocalizedValue;
 import com.liferay.info.pagination.InfoPage;
 import com.liferay.info.pagination.Pagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -263,8 +256,6 @@ public class
 	}
 
 	private InfoField _getItemTypesInfoField() {
-		List<SelectInfoFieldType.Option> options = new ArrayList<>();
-
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -287,32 +278,25 @@ public class
 				return true;
 			});
 
-		Locale locale = serviceContext.getLocale();
-
 		assetRendererFactories.sort(
-			new AssetRendererFactoryTypeNameComparator(locale));
-
-		for (AssetRendererFactory<?> assetRendererFactory :
-				assetRendererFactories) {
-
-			options.add(
-				new SelectInfoFieldType.Option(
-					new ModelResourceLocalizedValue(
-						assetRendererFactory.getClassName()),
-					assetRendererFactory.getClassName()));
-		}
+			new AssetRendererFactoryTypeNameComparator(
+				serviceContext.getLocale()));
 
 		InfoField.FinalStep finalStep = InfoField.builder(
 		).infoFieldType(
-			SelectInfoFieldType.INSTANCE
+			MultiselectInfoFieldType.INSTANCE
 		).namespace(
 			StringPool.BLANK
 		).name(
 			"item_types"
 		).attribute(
-			SelectInfoFieldType.MULTIPLE, true
-		).attribute(
-			SelectInfoFieldType.OPTIONS, options
+			MultiselectInfoFieldType.OPTIONS,
+			TransformUtil.transform(
+				assetRendererFactories,
+				assetRendererFactory -> new OptionInfoFieldType(
+					new ModelResourceLocalizedValue(
+						assetRendererFactory.getClassName()),
+					assetRendererFactory.getClassName()))
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.localize(getClass(), "item-type")
 		).localizable(

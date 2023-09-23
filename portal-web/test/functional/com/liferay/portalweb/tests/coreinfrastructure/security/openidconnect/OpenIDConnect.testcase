@@ -14,9 +14,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-139642 TC6-3: Assert error message when add invalid auth server local metadata."
-	@priority = 3
+	@priority = 5
 	test AssertErrorMessageWhenAddInvalidAuthServerLocalMetadata {
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertErrorMessageWhenAddInvalidAuthServerLocalMetadata";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add Auth Server Local Metadata with invalid metadata") {
 			OAuthClient.openOAuthClientAdmin(navbar = "Auth Server Local Metadata");
@@ -40,9 +41,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-139642 TC2: Verify OAuth client configurations could be removed and readded."
-	@priority = 4
+	@priority = 5
 	test AssertOAuthClientCanBeRemovedAndReadded {
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertOAuthClientCouldBeRemovedAndReadded";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Add an OAuth Client") {
 			OAuthClient.openOAuthClientAdmin(navbar = "Clients");
@@ -78,9 +80,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-139642 TC7: Verify OAuth client cannot be created with duplicate client ID."
-	@priority = 4
+	@priority = 5
 	test AssertOAuthClientCannotBeAddedWithDuplicateClientID {
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertOAuthClientCannotBeAddedWithDuplicateClientID";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Add an OAuth Client") {
 			OAuthClient.openOAuthClientAdmin(navbar = "Clients");
@@ -110,7 +113,8 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertRegularRoleIsAssignedToOIDCUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("openid.provider.okta.test.account.email.address");
 		var userPassword = PropsUtil.get("openid.provider.okta.test.account.password");
@@ -147,6 +151,8 @@ definition {
 		task ("When: Logout and login with OpenID Connect") {
 			User.logoutPG();
 
+			User.viewLoggedOutPG();
+
 			User.loginUserWithOpenIDConnectEnabledPG(
 				userEmailAddress = ${userEmailAddress},
 				userPassword = ${userPassword});
@@ -160,9 +166,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124898 TC-6: Verify Refresh Token Offset is not existing in the Instance Settings."
-	@priority = 4
+	@priority = 5
 	test AssertTokenRefreshOffsetCannotBeSetAtInstanceLevel {
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertTokenRefreshOffsetCannotBeSetAtInstanceLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalSettings.openInstanceSettingsAdmin();
 
@@ -175,16 +182,15 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124900 TC-4 and LPS-139642 TC-5: Users should be logged out when they don't have a valid access token because OIDC Provider expires the session."
-	@priority = 4
+	@priority = 5
 	test AssertUserIsLoggedOutWhenAccessTokenIsExpiredByOIDCProvider {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"30\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#AssertUserIsLoggedOutWithHigherRefreshToken";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Startup Keycloak for test") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 		}
 
 		task ("Add OIDC provider configuration and logout") {
@@ -216,10 +222,47 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-179688 TC-6: Verify user could log in via OIDC when password creation is disabled."
+	@priority = 5
+	test CanLoginViaOIDCWithDisablePasswordCreation {
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		var userEmailAddress = PropsUtil.get("openid.provider.okta.test.account.email.address");
+		var userPassword = PropsUtil.get("openid.provider.okta.test.account.password");
+
+		task ("Given Disable Allow Custom Password At Account Creation in Users add OAuth Client") {
+			User.configureCustomPasswordField();
+
+			Navigator.openURL();
+
+			OAuthClient.openOAuthClientAdmin(navbar = "Clients");
+
+			OAuthClient.addClient(
+				jsonFileName = "okta.json",
+				wellknownURI = "https://dev-5081331.okta.com/.well-known/openid-configuration");
+		}
+
+		task ("When Logout and login with OpenID Connect") {
+			User.logoutPG();
+
+			User.loginUserWithOpenIDConnectEnabledPG(
+				userEmailAddress = ${userEmailAddress},
+				userPassword = ${userPassword});
+		}
+
+		task ("Then Verify Logout and login") {
+			User.logoutAndLoginPG();
+		}
+	}
+
 	@description = "This is a use case for LPS-139642 TC6-2: Cannot add OAuth client with empty configuration."
-	@priority = 3
+	@priority = 5
 	test CannotAddOAuthClientWithEmptyConfiguration {
-		property test.name.skip.portal.instance = "OpenIDConnect#CannotAddOAuthClientWithEmptyConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add an OAuth Client with empty well-known URI") {
 			OAuthClient.openOAuthClientAdmin(navbar = "Clients");
@@ -271,9 +314,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-139642 TC6-1: Cannot add OAuth client with invalid configurations."
-	@priority = 3
+	@priority = 5
 	test CannotAddOAuthClientWithInvalidConfigurations {
-		property test.name.skip.portal.instance = "OpenIDConnect#CannotAddOAuthClientWithInvalidConfigurations";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add an OAuth Client with invalid client information") {
 			OAuthClient.openOAuthClientAdmin(navbar = "Clients");
@@ -287,11 +331,12 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-105151 and LPS-139642 TC-3: Users could configure multiple OpenID Connect providers."
-	@priority = 4
+	@priority = 5
 	test ConfigureMultipleOpenIDConnectProviders {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#ConfigureMultipleOpenIDConnectProviders";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("email.address.2");
 		var userPassword = PropsUtil.get("email.password.2");
@@ -337,7 +382,8 @@ definition {
 	@priority = 5
 	test ConfigureOnSystemLevelShouldApplyToInstanceLevel {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#ConfigureOnSystemLevelShouldApplyToInstanceLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Add the OSGI configuration file") {
 			OSGiConfig.copyOSGiConfigFile(
@@ -370,7 +416,8 @@ definition {
 	test ExistedUserMapperCanBeEdited {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#ExistedUserMapperCanBeEdited";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var jsonFileName = "keycloak.json";
 		var jsonFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructure/security/openidconnect/dependencies";
@@ -379,9 +426,7 @@ definition {
 		var userMapperInfo = FileUtil.read("${jsonFileBaseDir}/OAuth2_User_mapping.json");
 
 		task ("Given: User starts Keycloak for test and set debug level") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 
 			OpenIDConnect.enableOpenIDConnectDebugLogs();
 
@@ -489,12 +534,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-154744. TC4-1: The OIDC user is assigned the regular role which contains multiple spaces given through the property."
-	@priority = 4
+	@priority = 5
 	test MultipleSpacesRoleNameCanBeAssignedToOIDCUser {
 		property custom.properties = "open.id.connect.user.info.processor.impl.issuer=https://dev-5081331.okta.com${line.separator}open.id.connect.user.info.processor.impl.regular.role=My Custom Regular Role";
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#MultipleSpacesRoleNameCanBeAssignedToOIDCUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("openid.provider.okta.test.account.email.address");
 		var userPassword = PropsUtil.get("openid.provider.okta.test.account.password");
@@ -550,11 +596,12 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-105151 and LPS-139642 TC-9: Users could login with instance-level configured OpenID Connect provider."
-	@priority = 4
+	@priority = 5
 	test OpenIDConnectOnInstanceLevelSmoke {
 		property portal.acceptance = "true";
 		property portal.ssl.enabled = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectOnInstanceLevelSmoke";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("email.address.2");
 		var userPassword = PropsUtil.get("email.password.2");
@@ -610,10 +657,11 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-40911. Users could login and logout using OpenID Connect provider."
-	@priority = 4
+	@priority = 5
 	test OpenIDConnectSmoke {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectSmoke";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var openIdConnectClientId = PropsUtil.get("google.client.id.3");
 		var openIdConnectClientSecret = PropsUtil.get("google.client.secret.3");
@@ -661,7 +709,8 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectSmokeWithAuth0";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("openid.provider.auth0.test.account.email.address");
 		var userPassword = PropsUtil.get("openid.provider.auth0.test.account.password");
@@ -708,13 +757,16 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LRQA-72792. Users could login and logout using Azure as OpenID Connect provider."
+	@description = "This is a use case for LRQA-72792. Users could login and logout using Azure as OpenID Connect provider. Blocked by ISIT-35689"
+	@ignore = "true"
 	@priority = 5
 	test OpenIDConnectSmokeWithAzure {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectSmokeWithAzure";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("openid.provider.azure.test.account.email.address");
 		var userPassword = PropsUtil.get("openid.provider.azure.test.account.password");
@@ -762,12 +814,14 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-72792 and LPS-139642 TC1: Users could login and logout using Okta as OpenID Connect provider."
+	@ignore = "true"
 	@priority = 5
 	test OpenIDConnectSmokeWithOkta {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectSmokeWithOkta";
+		property portal.acceptance = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userEmailAddress = PropsUtil.get("openid.provider.okta.test.account.email.address");
 		var userPassword = PropsUtil.get("openid.provider.okta.test.account.password");
@@ -794,12 +848,14 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-72792. Users could login and logout using PingOne as OpenID Connect provider."
+	@ignore = "true"
 	@priority = 5
 	test OpenIDConnectSmokeWithPingOne {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenRefreshOffset=\"120\"";
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectSmokeWithPingOne";
+		property portal.acceptance = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var userName = PropsUtil.get("openid.provider.pingone.test.account.username");
 		var userPassword = PropsUtil.get("openid.provider.pingone.test.account.password");
@@ -847,9 +903,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-148619. User could log in and log out using Google as OpenID Connect provider, using custom parameters for the connection."
+	@priority = 5
 	test OpenIDConnectWithGoogleCustomParameters {
 		property dummy.socket.proxy.disabled = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#OpenIDConnectWithGoogleCustomParameters";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var customTokenRequestParameters = "resource=https://contacts.google.com";
 		var customAuthorizationRequestParameters = "access_type=offline";
@@ -914,9 +972,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124898 TC-1: Verify Instance admin can set the token refresh offset via System settings."
-	@priority = 4
+	@priority = 5
 	test TokenRefreshOffsetCanBeSetAtSystemLevel {
-		property test.name.skip.portal.instance = "OpenIDConnect#TokenRefreshOffsetCanBeSetAtSystemLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable and set the OpenID connect token refresh offset time") {
 			OpenIDConnect.enableOpenIdConnect();
@@ -930,12 +989,11 @@ definition {
 	test UserAttributesCanBeMappedInOIDCOnInstanceLevel {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#UserAttributesCanBeMappedInOIDCOnInstanceLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User starts Keycloak for test and set debug level") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 
 			OpenIDConnect.enableOpenIDConnectDebugLogs();
 
@@ -998,12 +1056,11 @@ definition {
 	test UserAttributesCanBeMappedInOIDCOnSystemLevel {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#UserAttributesCanBeMappedInOIDCOnSystemLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User starts Keycloak for test and set debug level") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 
 			OpenIDConnect.enableOpenIDConnectDebugLogs();
 
@@ -1056,12 +1113,11 @@ definition {
 		property custom.properties = "open.id.connect.user.info.processor.impl.issuer=http://127.0.0.1:18080/auth/realms/master${line.separator}open.id.connect.user.info.processor.impl.regular.role=Power User";
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "OpenIDConnect#UserRoleCanBeSyncedToKeycloak";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User starts Keycloak for test and set debug level and custom properties are set accordingly") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 
 			OpenIDConnect.enableOpenIDConnectDebugLogs();
 
@@ -1103,7 +1159,8 @@ definition {
 	@ignore = "true"
 	@priority = 5
 	test VerifyOIDCMandatoryFields {
-		property test.name.skip.portal.instance = "OpenIDConnect#VerifyOIDCMandatoryFields";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var jsonFileName = "keycloak.json";
 		var jsonFileBaseDir = "test/functional/com/liferay/portalweb/tests/coreinfrastructure/security/openidconnect/dependencies";
@@ -1231,12 +1288,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124898 TC-5: Verify Token Refresh Offset cannot be saved with a value under 30 second. Blocked by LPS-138193."
-	@priority = 4
+	@priority = 5
 	test VerifyTokenRefreshOffsetMinimum {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration~default.config";
 		property portal.release = "quarantine";
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "OpenIDConnect#VerifyTokenRefreshOffsetMinimum";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		OpenIDConnect.enableOpenIdConnect();
 
@@ -1255,12 +1313,11 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#VerifyUserCouldLoginWithPKCE";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Startup Keycloak for test") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 		}
 
 		task ("Add the OSGI configuration file") {
@@ -1310,12 +1367,11 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "OpenIDConnect#VerifyUserIsStillLoggedInAfterAccessTokenExpiresAndRenew";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Startup Keycloak for test") {
-			AntCommand(
-				locator1 = "build-test-keycloak.xml",
-				value1 = "prepare-selenium-keycloak-server");
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
 		}
 
 		task ("Add the OSGI configuration file") {

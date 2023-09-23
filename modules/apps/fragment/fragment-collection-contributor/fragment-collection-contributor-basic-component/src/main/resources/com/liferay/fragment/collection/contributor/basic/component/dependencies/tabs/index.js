@@ -122,6 +122,8 @@ function openTabPanel(event, i) {
 		activeTab(currentTarget, i);
 		activeTabPanel(tabPanelItems[i]);
 		persistedTab.setId(i);
+
+		Liferay.fire('tabsFragment:activePanel', {panel: tabPanelItems[i]});
 	}
 }
 

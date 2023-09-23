@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context.helper;
@@ -23,6 +14,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.util.RepositoryUtil;
 
 /**
  * @author Iván Zaera
@@ -33,10 +25,9 @@ public class FileEntryDisplayContextHelper {
 		PermissionChecker permissionChecker, FileEntry fileEntry) {
 
 		_permissionChecker = permissionChecker;
-
 		_fileEntry = fileEntry;
 
-		if (_fileEntry == null) {
+		if (fileEntry == null) {
 			_setValuesForNullFileEntry();
 		}
 	}
@@ -62,6 +53,15 @@ public class FileEntryDisplayContextHelper {
 		}
 
 		return _hasDeletePermission;
+	}
+
+	public boolean hasDownloadPermission() throws PortalException {
+		if (_hasDownloadPermission == null) {
+			_hasDownloadPermission = DLFileEntryPermission.contains(
+				_permissionChecker, _fileEntry, ActionKeys.DOWNLOAD);
+		}
+
+		return _hasDownloadPermission;
 	}
 
 	public boolean hasExportImportPermission() throws PortalException {
@@ -171,6 +171,16 @@ public class FileEntryDisplayContextHelper {
 		return false;
 	}
 
+	public boolean isCopyActionAvailable() throws PortalException {
+		if (hasViewPermission() && hasDownloadPermission() &&
+			!_isExternalRepository()) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isDLFileEntry() {
 		if (_dlFileEntry == null) {
 			if (_fileEntry.getModel() instanceof DLFileEntry) {
@@ -185,7 +195,11 @@ public class FileEntryDisplayContextHelper {
 	}
 
 	public boolean isDownloadActionAvailable() throws PortalException {
-		return hasViewPermission();
+		if ((_fileEntry.getSize() > 0) && hasDownloadPermission()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isEditActionAvailable() throws PortalException {
@@ -244,16 +258,26 @@ public class FileEntryDisplayContextHelper {
 		return false;
 	}
 
+	private boolean _isExternalRepository() {
+		if ((_fileEntry != null) &&
+			RepositoryUtil.isExternalRepository(_fileEntry.getRepositoryId())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _setValuesForNullFileEntry() {
 		_checkedOut = false;
 		_dlFileEntry = true;
 		_hasDeletePermission = false;
+		_hasDownloadPermission = false;
 		_hasExportImportPermission = false;
 		_hasLock = false;
 		_hasOverrideCheckoutPermission = false;
 		_hasPermissionsPermission = true;
 		_hasUpdatePermission = true;
-		_hasViewPermission = false;
 		_supportsLocking = false;
 	}
 
@@ -261,6 +285,7 @@ public class FileEntryDisplayContextHelper {
 	private Boolean _dlFileEntry;
 	private final FileEntry _fileEntry;
 	private Boolean _hasDeletePermission;
+	private Boolean _hasDownloadPermission;
 	private Boolean _hasExportImportPermission;
 	private Boolean _hasLock;
 	private Boolean _hasOverrideCheckoutPermission;

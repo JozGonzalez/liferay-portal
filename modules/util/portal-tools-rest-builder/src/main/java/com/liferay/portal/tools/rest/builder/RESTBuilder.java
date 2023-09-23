@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder;
@@ -33,6 +24,7 @@ import com.liferay.portal.kernel.util.Validator_IW;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.FreeMarkerTool;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodSignature;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.FreeMarkerUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
 import com.liferay.portal.tools.rest.builder.internal.util.FileUtil;
@@ -67,8 +59,11 @@ import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -356,6 +351,15 @@ public class RESTBuilder {
 					_createResourceTestFile(
 						context, escapedVersion, schemaName);
 				}
+
+				if (ConfigUtil.isVersionCompatible(_configYAML, 3)) {
+					_createBaseDTOActionMetadataProviderFile(
+						context, escapedVersion, schemaName);
+					_createDTOActionMetadataProviderFile(
+						context, escapedVersion, schemaName);
+					_createDTOActionProviderFile(
+						context, escapedVersion, schemaName);
+				}
 			}
 		}
 
@@ -502,7 +506,29 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "application", context));
+				_copyrightFile, _getCopyrightYear(file), "application",
+				context));
+	}
+
+	private void _createBaseDTOActionMetadataProviderFile(
+			Map<String, Object> context, String escapedVersion,
+			String schemaName)
+		throws Exception {
+
+		File file = new File(
+			StringBundler.concat(
+				_configYAML.getImplDir(), "/",
+				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
+				"/internal/dto/", escapedVersion, "/action/metadata/Base",
+				schemaName, "DTOActionMetadataProvider.java"));
+
+		_files.add(file);
+
+		FileUtil.write(
+			file,
+			FreeMarkerUtil.processTemplate(
+				_copyrightFile, _getCopyrightYear(file),
+				"base_dto_action_metadata_provider", context));
 	}
 
 	private void _createBaseResourceImplFile(
@@ -522,7 +548,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "base_resource_impl", context));
+				_copyrightFile, _getCopyrightYear(file), "base_resource_impl",
+				context));
 	}
 
 	private void _createBaseResourceTestCaseFile(
@@ -542,7 +569,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "base_resource_test_case", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"base_resource_test_case", context));
 	}
 
 	private void _createClientAggregationFile(Map<String, Object> context)
@@ -559,7 +587,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_aggregation", context));
+				_copyrightFile, _getCopyrightYear(file), "client_aggregation",
+				context));
 	}
 
 	private void _createClientBaseJSONParserFile(Map<String, Object> context)
@@ -576,7 +605,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_base_json_parser", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"client_base_json_parser", context));
 	}
 
 	private void _createClientDTOFile(
@@ -595,7 +625,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_dto", context));
+				_copyrightFile, _getCopyrightYear(file), "client_dto",
+				context));
 	}
 
 	private void _createClientEnumFile(
@@ -614,7 +645,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_enum", context));
+				_copyrightFile, _getCopyrightYear(file), "client_enum",
+				context));
 	}
 
 	private void _createClientFacetFile(Map<String, Object> context)
@@ -631,7 +663,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_facet", context));
+				_copyrightFile, _getCopyrightYear(file), "client_facet",
+				context));
 	}
 
 	private void _createClientHttpInvokerFile(Map<String, Object> context)
@@ -648,7 +681,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_http_invoker", context));
+				_copyrightFile, _getCopyrightYear(file), "client_http_invoker",
+				context));
 	}
 
 	private void _createClientPageFile(Map<String, Object> context)
@@ -665,7 +699,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_page", context));
+				_copyrightFile, _getCopyrightYear(file), "client_page",
+				context));
 	}
 
 	private void _createClientPaginationFile(Map<String, Object> context)
@@ -682,7 +717,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_pagination", context));
+				_copyrightFile, _getCopyrightYear(file), "client_pagination",
+				context));
 	}
 
 	private void _createClientPermissionFile(Map<String, Object> context)
@@ -699,7 +735,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_permission", context));
+				_copyrightFile, _getCopyrightYear(file), "client_permission",
+				context));
 	}
 
 	private void _createClientProblemFile(Map<String, Object> context)
@@ -716,7 +753,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_problem", context));
+				_copyrightFile, _getCopyrightYear(file), "client_problem",
+				context));
 	}
 
 	private void _createClientResourceFile(
@@ -736,7 +774,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_resource", context));
+				_copyrightFile, _getCopyrightYear(file), "client_resource",
+				context));
 	}
 
 	private void _createClientSerDesFile(
@@ -756,7 +795,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_serdes", context));
+				_copyrightFile, _getCopyrightYear(file), "client_serdes",
+				context));
 	}
 
 	private void _createClientUnsafeSupplierFile(Map<String, Object> context)
@@ -773,7 +813,54 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "client_unsafe_supplier", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"client_unsafe_supplier", context));
+	}
+
+	private void _createDTOActionMetadataProviderFile(
+			Map<String, Object> context, String escapedVersion,
+			String schemaName)
+		throws Exception {
+
+		File file = new File(
+			StringBundler.concat(
+				_configYAML.getImplDir(), "/",
+				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
+				"/internal/dto/", escapedVersion, "/action/metadata/",
+				schemaName, "DTOActionMetadataProvider.java"));
+
+		_files.add(file);
+
+		if (file.exists()) {
+			return;
+		}
+
+		FileUtil.write(
+			file,
+			FreeMarkerUtil.processTemplate(
+				_copyrightFile, _getCopyrightYear(file),
+				"dto_action_metadata_provider", context));
+	}
+
+	private void _createDTOActionProviderFile(
+			Map<String, Object> context, String escapedVersion,
+			String schemaName)
+		throws Exception {
+
+		File file = new File(
+			StringBundler.concat(
+				_configYAML.getImplDir(), "/",
+				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
+				"/internal/dto/", escapedVersion, "/action/", schemaName,
+				"DTOActionProvider.java"));
+
+		_files.add(file);
+
+		FileUtil.write(
+			file,
+			FreeMarkerUtil.processTemplate(
+				_copyrightFile, _getCopyrightYear(file), "dto_action_provider",
+				context));
 	}
 
 	private void _createDTOFile(
@@ -791,7 +878,8 @@ public class RESTBuilder {
 
 		FileUtil.write(
 			file,
-			FreeMarkerUtil.processTemplate(_copyrightFile, "dto", context));
+			FreeMarkerUtil.processTemplate(
+				_copyrightFile, _getCopyrightYear(file), "dto", context));
 	}
 
 	private void _createEnumFile(
@@ -809,7 +897,8 @@ public class RESTBuilder {
 
 		FileUtil.write(
 			file,
-			FreeMarkerUtil.processTemplate(_copyrightFile, "enum", context));
+			FreeMarkerUtil.processTemplate(
+				_copyrightFile, _getCopyrightYear(file), "enum", context));
 	}
 
 	private void _createExternalSchemaFiles(
@@ -848,7 +937,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "graphql_mutation", context));
+				_copyrightFile, _getCopyrightYear(file), "graphql_mutation",
+				context));
 	}
 
 	private void _createGraphQLQueryFile(
@@ -866,7 +956,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "graphql_query", context));
+				_copyrightFile, _getCopyrightYear(file), "graphql_query",
+				context));
 	}
 
 	private void _createGraphQLServletDataFile(
@@ -885,7 +976,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "graphql_servlet_data", context));
+				_copyrightFile, _getCopyrightYear(file), "graphql_servlet_data",
+				context));
 	}
 
 	private void _createLiberalPermissionCheckerFile(
@@ -903,7 +995,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "liberal_permission_checker", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"liberal_permission_checker", context));
 	}
 
 	private void _createOpenAPIResourceFile(
@@ -922,7 +1015,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "openapi_resource_impl", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"openapi_resource_impl", context));
 	}
 
 	private void _createPropertiesFile(
@@ -939,7 +1033,8 @@ public class RESTBuilder {
 		_files.add(file);
 
 		FileUtil.write(
-			file, FreeMarkerUtil.processTemplate(null, "properties", context));
+			file,
+			FreeMarkerUtil.processTemplate(null, null, "properties", context));
 	}
 
 	private void _createResourceFactoryImplFile(
@@ -959,7 +1054,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "resource_factory_impl", context));
+				_copyrightFile, _getCopyrightYear(file),
+				"resource_factory_impl", context));
 	}
 
 	private void _createResourceFile(
@@ -979,7 +1075,7 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "resource", context));
+				_copyrightFile, _getCopyrightYear(file), "resource", context));
 	}
 
 	private void _createResourceImplFile(
@@ -1003,7 +1099,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "resource_impl", context));
+				_copyrightFile, _getCopyrightYear(file), "resource_impl",
+				context));
 	}
 
 	private void _createResourceTestFile(
@@ -1027,7 +1124,8 @@ public class RESTBuilder {
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, "resource_test", context));
+				_copyrightFile, _getCopyrightYear(file), "resource_test",
+				context));
 	}
 
 	private String _fixOpenAPIContentApplicationXML(
@@ -1157,8 +1255,7 @@ public class RESTBuilder {
 		Info info = openAPIYAML.getInfo();
 
 		if (info == null) {
-			return StringBundler.concat(
-				"info:\n", licenseSB.toString(), '\n', yamlString);
+			return StringBundler.concat("info:\n", licenseSB, '\n', yamlString);
 		}
 
 		License license = info.getLicense();
@@ -1680,6 +1777,24 @@ public class RESTBuilder {
 
 			return null;
 		}
+	}
+
+	private String _getCopyrightYear(File file) throws Exception {
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy");
+
+		String year = simpleDateFormat.format(new Date());
+
+		if (file.exists()) {
+			String content = FileUtil.read(file);
+
+			int x = content.indexOf("/**\n * SPDX-FileCopyrightText: (c) ");
+
+			if (x != -1) {
+				year = content.substring(x + 35, x + 39);
+			}
+		}
+
+		return year;
 	}
 
 	private int _getLineEndIndex(String s, int startIndex) {

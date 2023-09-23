@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.internal.manager;
@@ -38,10 +29,10 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
-import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.kaleo.runtime.internal.BaseKaleoBean;
 import com.liferay.portal.workflow.kaleo.runtime.manager.PortalKaleoManager;
+import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.io.InputStream;
 
@@ -75,8 +66,7 @@ public class DefaultPortalKaleoManager
 		companyLocalService.forEachCompanyId(
 			companyId -> {
 				try {
-					User defaultUser = userLocalService.getDefaultUser(
-						companyId);
+					User guestUser = userLocalService.getGuestUser(companyId);
 
 					Group companyGroup = groupLocalService.getCompanyGroup(
 						companyId);
@@ -92,7 +82,7 @@ public class DefaultPortalKaleoManager
 					serviceContext.setCompanyId(companyId);
 
 					deployDefaultDefinitionLink(
-						defaultUser, companyId, companyGroup, assetClassName,
+						guestUser, companyId, companyGroup, assetClassName,
 						definitionName);
 				}
 				catch (PortalException portalException) {
@@ -116,7 +106,7 @@ public class DefaultPortalKaleoManager
 
 	@Override
 	public void deployDefaultDefinitionLinks(long companyId) throws Exception {
-		User defaultUser = userLocalService.getDefaultUser(companyId);
+		User guestUser = userLocalService.getGuestUser(companyId);
 
 		Group companyGroup = groupLocalService.getCompanyGroup(companyId);
 
@@ -129,7 +119,7 @@ public class DefaultPortalKaleoManager
 			String definitionName = entry.getValue();
 
 			deployDefaultDefinitionLink(
-				defaultUser, companyId, companyGroup, assetClassName,
+				guestUser, companyId, companyGroup, assetClassName,
 				definitionName);
 		}
 	}
@@ -183,10 +173,10 @@ public class DefaultPortalKaleoManager
 				return;
 			}
 
-			User defaultUser = userLocalService.getDefaultUser(companyId);
+			User guestUser = userLocalService.getGuestUser(companyId);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				serviceContext.getCompanyId(), defaultUser.getUserId(),
+				serviceContext.getCompanyId(), guestUser.getUserId(),
 				_getLocalizedTitle(companyId, definitionName), definitionName,
 				FileUtil.getBytes(inputStream));
 		}
@@ -207,7 +197,7 @@ public class DefaultPortalKaleoManager
 
 	@Override
 	public void deployDefaultRoles(long companyId) throws Exception {
-		User defaultUser = userLocalService.getDefaultUser(companyId);
+		User guestUser = userLocalService.getGuestUser(companyId);
 
 		for (Map.Entry<String, String> entry : _defaultRoles.entrySet()) {
 			String name = entry.getKey();
@@ -219,7 +209,7 @@ public class DefaultPortalKaleoManager
 			}
 
 			roleLocalService.addRole(
-				defaultUser.getUserId(), null, 0, name, null,
+				guestUser.getUserId(), null, 0, name, null,
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), entry.getValue()
 				).build(),
@@ -254,7 +244,7 @@ public class DefaultPortalKaleoManager
 	}
 
 	protected void deployDefaultDefinitionLink(
-			User defaultUser, long companyId, Group companyGroup,
+			User guestUser, long companyId, Group companyGroup,
 			String assetClassName, String workflowDefinitionName)
 		throws PortalException {
 
@@ -285,7 +275,7 @@ public class DefaultPortalKaleoManager
 		WorkflowDefinition workflowDefinition = workflowDefinitions.get(0);
 
 		workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
-			defaultUser.getUserId(), companyId, companyGroup.getGroupId(),
+			guestUser.getUserId(), companyId, companyGroup.getGroupId(),
 			assetClassName, 0, 0, workflowDefinition.getName(),
 			workflowDefinition.getVersion());
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service;
@@ -132,7 +123,7 @@ public class DDMTemplateServiceUtil {
 	 * extracted from the original one. This method supports defining a new name
 	 * and description.
 	 *
-	 * @param templateId the primary key of the template to be copied
+	 * @param sourceTemplateId the primary key of the template to be copied
 	 * @param nameMap the new template's locales and localized names
 	 * @param descriptionMap the new template's locales and localized
 	 descriptions
@@ -143,21 +134,21 @@ public class DDMTemplateServiceUtil {
 	 * @return the new template
 	 */
 	public static DDMTemplate copyTemplate(
-			long templateId, Map<java.util.Locale, String> nameMap,
+			long sourceTemplateId, Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().copyTemplate(
-			templateId, nameMap, descriptionMap, serviceContext);
+			sourceTemplateId, nameMap, descriptionMap, serviceContext);
 	}
 
 	public static DDMTemplate copyTemplate(
-			long templateId,
+			long sourceTemplateId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		return getService().copyTemplate(templateId, serviceContext);
+		return getService().copyTemplate(sourceTemplateId, serviceContext);
 	}
 
 	/**
@@ -167,10 +158,10 @@ public class DDMTemplateServiceUtil {
 	 *
 	 * @param classNameId the primary key of the class name for template's
 	 related model
-	 * @param oldClassPK the primary key of the old template's related entity
+	 * @param sourceClassPK the primary key of the old template's related entity
 	 * @param resourceClassNameId the primary key of the class name for
 	 template's resource model
-	 * @param newClassPK the primary key of the new template's related entity
+	 * @param targetClassPK the primary key of the new template's related entity
 	 * @param type the template's type. For more information, see
 	 DDMTemplateConstants in the dynamic-data-mapping-api module.
 	 * @param serviceContext the service context to be applied. Must have the
@@ -180,14 +171,14 @@ public class DDMTemplateServiceUtil {
 	 * @return the new template
 	 */
 	public static List<DDMTemplate> copyTemplates(
-			long classNameId, long oldClassPK, long resourceClassNameId,
-			long newClassPK, String type,
+			long classNameId, long sourceClassPK, long resourceClassNameId,
+			long targetClassPK, String type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().copyTemplates(
-			classNameId, oldClassPK, resourceClassNameId, newClassPK, type,
-			serviceContext);
+			classNameId, sourceClassPK, resourceClassNameId, targetClassPK,
+			type, serviceContext);
 	}
 
 	/**
@@ -856,6 +847,10 @@ public class DDMTemplateServiceUtil {
 
 	public static DDMTemplateService getService() {
 		return _service;
+	}
+
+	public static void setService(DDMTemplateService service) {
+		_service = service;
 	}
 
 	private static volatile DDMTemplateService _service;

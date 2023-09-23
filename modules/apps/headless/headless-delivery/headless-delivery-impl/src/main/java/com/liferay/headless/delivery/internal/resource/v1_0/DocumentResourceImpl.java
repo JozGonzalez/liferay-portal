@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -23,10 +14,12 @@ import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -34,7 +27,7 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
 import com.liferay.headless.delivery.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.dto.v1_0.Document;
@@ -42,7 +35,6 @@ import com.liferay.headless.delivery.dto.v1_0.DocumentType;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.DDMFormValuesUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.DocumentDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.DocumentEntityModel;
@@ -83,6 +75,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
@@ -90,6 +83,7 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
@@ -100,6 +94,7 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -205,6 +200,14 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			_createDocumentsPageBooleanQueryUnsafeConsumer(
 				assetLibraryId, flatten),
 			search, aggregation, filter, pagination, sorts);
+	}
+
+	@Override
+	public Page<Document> getAssetLibraryDocumentsRatedByMePage(
+			Long assetLibraryId, Pagination pagination)
+		throws Exception {
+
+		return _getGroupDocumentsRatedByMePage(assetLibraryId, pagination);
 	}
 
 	@Override
@@ -338,6 +341,14 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	}
 
 	@Override
+	public Page<Document> getSiteDocumentsRatedByMePage(
+			Long siteId, Pagination pagination)
+		throws Exception {
+
+		return _getGroupDocumentsRatedByMePage(siteId, pagination);
+	}
+
+	@Override
 	public Document patchDocument(Long documentId, MultipartBody multipartBody)
 		throws Exception {
 
@@ -359,12 +370,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		existingFileEntry = _moveDocument(
 			documentId, document, existingFileEntry);
 
+		String fileName = null;
 		String title = null;
 		String description = null;
 
 		if (document != null) {
+			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
+		}
+
+		if (fileName == null) {
+			fileName = binaryFile.getFileName();
 		}
 
 		if (title == null) {
@@ -377,10 +394,10 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.updateFileEntry(
-				documentId, binaryFile.getFileName(),
-				binaryFile.getContentType(), title, null, description, null,
-				DLVersionNumberIncrease.AUTOMATIC, binaryFile.getInputStream(),
-				binaryFile.getSize(), existingFileEntry.getExpirationDate(),
+				documentId, fileName, binaryFile.getContentType(), title, null,
+				description, null, DLVersionNumberIncrease.AUTOMATIC,
+				binaryFile.getInputStream(), binaryFile.getSize(),
+				existingFileEntry.getExpirationDate(),
 				existingFileEntry.getReviewDate(),
 				_createServiceContext(
 					Constants.UPDATE,
@@ -524,24 +541,29 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			throw new BadRequestException("No file found in body");
 		}
 
+		String fileName = null;
 		String title = null;
 		String description = null;
 
 		if (document != null) {
+			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
 		}
 
+		if (fileName == null) {
+			fileName = binaryFile.getFileName();
+		}
+
 		if (title == null) {
-			title = binaryFile.getFileName();
+			title = fileName;
 		}
 
 		return _toDocument(
 			_dlAppService.addFileEntry(
-				externalReferenceCode, repositoryId, documentFolderId,
-				binaryFile.getFileName(), binaryFile.getContentType(), title,
-				null, description, null, binaryFile.getInputStream(),
-				binaryFile.getSize(), null, null,
+				externalReferenceCode, repositoryId, documentFolderId, fileName,
+				binaryFile.getContentType(), title, null, description, null,
+				binaryFile.getInputStream(), binaryFile.getSize(), null, null,
 				_createServiceContext(
 					Constants.ADD, () -> new Long[0], () -> new String[0],
 					documentFolderId, document, groupId)));
@@ -601,13 +623,17 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			viewableBy = Document.ViewableBy.OWNER.getValue();
 		}
 
-		ServiceContext serviceContext =
-			ServiceContextRequestUtil.createServiceContext(
-				assetCategoryIds, assetTagNames,
-				CustomFieldsUtil.toMap(
-					DLFileEntry.class.getName(), contextCompany.getCompanyId(),
-					customFields, contextAcceptLanguage.getPreferredLocale()),
-				groupId, contextHttpServletRequest, viewableBy);
+		ServiceContext serviceContext = ServiceContextBuilder.create(
+			groupId, contextHttpServletRequest, viewableBy
+		).assetCategoryIds(
+			assetCategoryIds
+		).assetTagNames(
+			assetTagNames
+		).expandoBridgeAttributes(
+			CustomFieldsUtil.toMap(
+				DLFileEntry.class.getName(), contextCompany.getCompanyId(),
+				customFields, contextAcceptLanguage.getPreferredLocale())
+		).build();
 
 		serviceContext.setCommand(command);
 		serviceContext.setCompanyId(contextCompany.getCompanyId());
@@ -629,15 +655,15 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 				"fileEntryTypeId", dlFileEntryType.getFileEntryTypeId());
 
 			List<DDMStructure> ddmStructures =
-				dlFileEntryType.getDDMStructures();
+				DLFileEntryTypeUtil.getDDMStructures(dlFileEntryType);
 
 			DocumentType documentType = document.getDocumentType();
 
 			ContentField[] contentFields = documentType.getContentFields();
 
 			for (DDMStructure ddmStructure : ddmStructures) {
-				com.liferay.dynamic.data.mapping.model.DDMStructure
-					modelDDMStructure = _ddmStructureService.getStructure(
+				DDMStructure modelDDMStructure =
+					_ddmStructureService.getStructure(
 						ddmStructure.getStructureId());
 
 				DDMForm ddmForm = modelDDMStructure.getDDMForm();
@@ -679,9 +705,8 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			return 0;
 		}
 
-		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
-			_ddmStructureService.getStructure(
-				dlFileEntryType.getDataDefinitionId());
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			dlFileEntryType.getDataDefinitionId());
 
 		return ddmStructure.getStructureId();
 	}
@@ -759,6 +784,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			document -> _toDocument(
 				_dlAppService.getFileEntry(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+	}
+
+	private Page<Document> _getGroupDocumentsRatedByMePage(
+			long groupId, Pagination pagination)
+		throws Exception {
+
+		return Page.of(
+			_toDocuments(
+				_dlFileEntryService.getFileEntries(
+					groupId, 0.1, pagination.getStartPosition(),
+					pagination.getEndPosition())),
+			pagination, _dlFileEntryService.getFileEntriesCount(groupId, 0.1));
 	}
 
 	private SPIRatingResource<Rating> _getSPIRatingResource() {
@@ -884,6 +921,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 				contextUser));
 	}
 
+	private List<Document> _toDocuments(List<DLFileEntry> dlFileEntries)
+		throws Exception {
+
+		List<Document> documents = new ArrayList<>();
+
+		for (DLFileEntry dlFileEntry : dlFileEntries) {
+			documents.add(_toDocument(new LiferayFileEntry(dlFileEntry)));
+		}
+
+		return documents;
+	}
+
 	private Document _updateDocument(
 			FileEntry fileEntry, MultipartBody multipartBody)
 		throws Exception {
@@ -907,13 +956,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		fileEntry = _moveDocument(
 			fileEntry.getFileEntryId(), document, fileEntry);
 
+		String fileName = null;
 		String title = null;
-
 		String description = null;
 
 		if (document != null) {
+			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
+		}
+
+		if (fileName == null) {
+			fileName = binaryFile.getFileName();
 		}
 
 		if (title == null) {
@@ -922,7 +976,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.updateFileEntry(
-				fileEntry.getFileEntryId(), binaryFile.getFileName(),
+				fileEntry.getFileEntryId(), fileName,
 				binaryFile.getContentType(), title, null, description, null,
 				DLVersionNumberIncrease.AUTOMATIC, binaryFile.getInputStream(),
 				binaryFile.getSize(), fileEntry.getExpirationDate(),
@@ -964,10 +1018,15 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 	@Reference
-	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+	private DLFileEntryService _dlFileEntryService;
 
 	@Reference
-	private DocumentDTOConverter _documentDTOConverter;
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.DocumentDTOConverter)"
+	)
+	private DTOConverter<DLFileEntry, Document> _documentDTOConverter;
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;

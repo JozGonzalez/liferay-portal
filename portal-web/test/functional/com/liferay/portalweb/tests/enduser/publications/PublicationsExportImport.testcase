@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -15,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,7 +27,7 @@ definition {
 	@description = "This is a use case for LPS-164716."
 	@priority = 4
 	test CanImportExportedWCStructuresTemplatesAndFolders {
-		JSONGroup.addGroup(groupName = "Site Name 1");
+		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "site-name-1");
 
@@ -57,7 +56,7 @@ definition {
 
 		LAR.exportPortlet(larFileName = "publications-web-content-files.lar");
 
-		JSONGroup.addGroup(groupName = "Site Name 2");
+		HeadlessSite.addSite(siteName = "Site Name 2");
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -66,10 +65,6 @@ definition {
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-2");
 
 		LAR.importPortlet(larFileName = "publications-web-content-files.lar");
-
-		AssertElementPresent(
-			key_webContentTitle = "WC Folder Name",
-			locator1 = "WC#ENTRY_LIST_TITLE");
 
 		WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "site-name-2");
 
@@ -84,13 +79,9 @@ definition {
 			templateDescription = "WC Template Description",
 			templateName = "WC Template Name");
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-2");
 

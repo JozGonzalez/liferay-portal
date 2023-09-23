@@ -1,28 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.test.util.AssetTestUtil;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupCommerceAccountRelLocalService;
-import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -61,6 +52,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -103,14 +95,22 @@ public class CommercePricingTest {
 
 		_user = UserTestUtil.addUser();
 
-		_commerceAccount =
-			_commerceAccountLocalService.getPersonalCommerceAccount(
-				_user.getUserId());
+		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+			_user.getUserId());
 
-		_commerceAccountGroup =
-			_commerceAccountGroupLocalService.addCommerceAccountGroup(
-				_user.getCompanyId(), RandomTestUtil.randomString(), 0, false,
-				"", ServiceContextTestUtil.getServiceContext());
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		AccountGroup accountGroup = _accountGroupLocalService.addAccountGroup(
+			serviceContext.getUserId(), null, RandomTestUtil.randomString(),
+			serviceContext);
+
+		accountGroup.setExternalReferenceCode("");
+		accountGroup.setDefaultAccountGroup(false);
+		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_DYNAMIC);
+		accountGroup.setExpandoBridgeAttributes(serviceContext);
+
+		_accountGroupLocalService.updateAccountGroup(accountGroup);
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			_group.getCompanyId());
@@ -160,23 +160,25 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(15);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), "", price5, 5, true,
-			false, null, null, null, null, true, true);
+			commercePriceEntry.getCommercePriceEntryId(), "", price5,
+			BigDecimal.valueOf(5), true, false, null, null, null, null, true,
+			true);
 
 		BigDecimal price10 = BigDecimal.valueOf(10);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), "", price10, 10, true,
-			false, null, null, null, null, true, true);
+			commercePriceEntry.getCommercePriceEntryId(), "", price10,
+			BigDecimal.TEN, true, false, null, null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
-		int quantity = 1;
+		BigDecimal quantity = BigDecimal.ONE;
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -186,18 +188,18 @@ public class CommercePricingTest {
 		Assert.assertEquals(
 			price1.stripTrailingZeros(), finalPrice.stripTrailingZeros());
 
-		quantity = 100;
+		quantity = BigDecimal.valueOf(100);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, StringPool.BLANK,
+				commerceContext);
 
 		finalPriceCommerceMoney = commerceProductPrice.getFinalPrice();
 
 		finalPrice = finalPriceCommerceMoney.getPrice();
 
-		BigDecimal expectedPrice = price10.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice = price10.multiply(quantity);
 
 		Assert.assertEquals(
 			expectedPrice.stripTrailingZeros(),
@@ -230,7 +232,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -246,11 +248,12 @@ public class CommercePricingTest {
 			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -310,7 +313,8 @@ public class CommercePricingTest {
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
 			commercePriceEntry.getCommercePriceEntryId(), StringPool.BLANK,
-			tierPrice, 5, false, false, null, null, null, null, true, true);
+			tierPrice, BigDecimal.valueOf(5), false, false, null, null, null,
+			null, true, true);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
 			StringPool.BLANK, cpDefinition.getCProductId(),
@@ -330,20 +334,20 @@ public class CommercePricingTest {
 			commerceChannel.getCommerceChannelId());
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
-			10);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
 
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(), _commerceCurrency);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount,
+			_accountEntry, _commerceCurrency, null, _user, _group,
 			commerceOrder);
 
 		CommerceOrderItem commerceOrderItem =
 			CommerceTestUtil.addCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), 10, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, commerceContext);
 
 		CommerceOrderItemPrice commerceOrderItemPrice =
 			_commerceOrderPriceCalculation.getCommerceOrderItemPrice(
@@ -414,20 +418,20 @@ public class CommercePricingTest {
 			commerceChannel.getCommerceChannelId());
 
 		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
-			10);
+			_user.getUserId(), commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
 
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(), _commerceCurrency);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount,
+			_accountEntry, _commerceCurrency, null, _user, _group,
 			commerceOrder);
 
 		CommerceOrderItem commerceOrderItem =
 			CommerceTestUtil.addCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, commerceContext);
 
 		CommerceOrderItemPrice commerceOrderItemPrice =
 			_commerceOrderPriceCalculation.getCommerceOrderItemPrice(
@@ -475,11 +479,12 @@ public class CommercePricingTest {
 			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -536,11 +541,12 @@ public class CommercePricingTest {
 			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -581,7 +587,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		CommercePriceList basePriceList =
@@ -647,11 +653,12 @@ public class CommercePricingTest {
 			ServiceContextTestUtil.getServiceContext());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -695,7 +702,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		CommercePriceList basePriceList =
@@ -726,11 +733,12 @@ public class CommercePricingTest {
 			ServiceContextTestUtil.getServiceContext());
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -785,21 +793,23 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(40);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), "", price5, 5, false,
-			false, null, null, null, null, true, true);
+			commercePriceEntry.getCommercePriceEntryId(), "", price5,
+			BigDecimal.valueOf(5), false, false, null, null, null, null, true,
+			true);
 
 		BigDecimal price10 = BigDecimal.valueOf(30);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), "", price10, 10,
-			false, false, null, null, null, null, true, true);
+			commercePriceEntry.getCommercePriceEntryId(), "", price10,
+			BigDecimal.TEN, false, false, null, null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -812,7 +822,8 @@ public class CommercePricingTest {
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 100, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.valueOf(100),
+				StringPool.BLANK, commerceContext);
 
 		finalPriceCommerceMoney = commerceProductPrice.getFinalPrice();
 
@@ -875,8 +886,9 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(8);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePromoEntry.getCommercePriceEntryId(), "", price5, 5, false,
-			true, BigDecimal.valueOf(RandomTestUtil.randomInt()),
+			commercePromoEntry.getCommercePriceEntryId(), "", price5,
+			BigDecimal.valueOf(5), false, true,
+			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()), true, true);
@@ -884,18 +896,20 @@ public class CommercePricingTest {
 		BigDecimal price10 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePromoEntry.getCommercePriceEntryId(), "", price10, 10,
-			false, false, BigDecimal.valueOf(RandomTestUtil.randomInt()),
+			commercePromoEntry.getCommercePriceEntryId(), "", price10,
+			BigDecimal.TEN, false, false,
+			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()),
 			BigDecimal.valueOf(RandomTestUtil.randomInt()), true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -947,80 +961,85 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(18);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price5, 5, true);
+			commercePriceEntry.getCommercePriceEntryId(), price5,
+			BigDecimal.valueOf(5), true);
 
 		BigDecimal price10 = BigDecimal.valueOf(15);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price10, 10, true);
+			commercePriceEntry.getCommercePriceEntryId(), price10,
+			BigDecimal.TEN, true);
 
 		BigDecimal price15 = BigDecimal.valueOf(10);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price15, 15, true);
+			commercePriceEntry.getCommercePriceEntryId(), price15,
+			BigDecimal.valueOf(15), true);
 
 		BigDecimal price20 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price20, 20, true);
+			commercePriceEntry.getCommercePriceEntryId(), price20,
+			BigDecimal.valueOf(20), true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 1, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney commerceMoney1 = commerceProductPrice.getFinalPrice();
 
 		Assert.assertEquals(0, price1.compareTo(commerceMoney1.getPrice()));
 
-		int quantity = 10;
+		BigDecimal quantity = BigDecimal.TEN;
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney commerceMoney10 = commerceProductPrice.getFinalPrice();
 
 		BigDecimal commercePrice10 = commerceMoney10.getPrice();
 
-		BigDecimal expectedPrice10 = price10.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice10 = price10.multiply(quantity);
 
 		Assert.assertEquals(
 			expectedPrice10.stripTrailingZeros(),
 			commercePrice10.stripTrailingZeros());
 
-		quantity = 18;
+		quantity = BigDecimal.valueOf(18);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney commerceMoney15 = commerceProductPrice.getFinalPrice();
 
 		BigDecimal commercePrice15 = commerceMoney15.getPrice();
 
-		BigDecimal expectedPrice15 = price15.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice15 = price15.multiply(quantity);
 
 		Assert.assertEquals(
 			expectedPrice15.stripTrailingZeros(),
 			commercePrice15.stripTrailingZeros());
 
-		quantity = 25;
+		quantity = BigDecimal.valueOf(25);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), quantity, commerceContext);
+				cpInstance.getCPInstanceId(), quantity, StringPool.BLANK,
+				commerceContext);
 
 		CommerceMoney commerceMoney20 = commerceProductPrice.getFinalPrice();
 
 		BigDecimal commercePrice20 = commerceMoney20.getPrice();
 
-		BigDecimal expectedPrice20 = price20.multiply(
-			BigDecimal.valueOf(quantity));
+		BigDecimal expectedPrice20 = price20.multiply(quantity);
 
 		Assert.assertEquals(
 			expectedPrice20.stripTrailingZeros(),
@@ -1057,7 +1076,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -1076,29 +1095,34 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(18);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price5, 5, false);
+			commercePriceEntry.getCommercePriceEntryId(), price5,
+			BigDecimal.valueOf(5), false);
 
 		BigDecimal price10 = BigDecimal.valueOf(15);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price10, 10, false);
+			commercePriceEntry.getCommercePriceEntryId(), price10,
+			BigDecimal.TEN, false);
 
 		BigDecimal price15 = BigDecimal.valueOf(10);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price15, 15, false);
+			commercePriceEntry.getCommercePriceEntryId(), price15,
+			BigDecimal.valueOf(15), false);
 
 		BigDecimal price20 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price20, 20, false);
+			commercePriceEntry.getCommercePriceEntryId(), price20,
+			BigDecimal.valueOf(20), false);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1116,7 +1140,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePromotion.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		BigDecimal promoPrice = BigDecimal.valueOf(10);
@@ -1127,7 +1151,8 @@ public class CommercePricingTest {
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPromoPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1171,7 +1196,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePriceList1.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -1190,29 +1215,34 @@ public class CommercePricingTest {
 		BigDecimal price5 = BigDecimal.valueOf(18);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price5, 5, false);
+			commercePriceEntry.getCommercePriceEntryId(), price5,
+			BigDecimal.valueOf(5), false);
 
 		BigDecimal price10 = BigDecimal.valueOf(15);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price10, 10, false);
+			commercePriceEntry.getCommercePriceEntryId(), price10,
+			BigDecimal.valueOf(10), false);
 
 		BigDecimal price15 = BigDecimal.valueOf(10);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price15, 15, false);
+			commercePriceEntry.getCommercePriceEntryId(), price15,
+			BigDecimal.valueOf(15), false);
 
 		BigDecimal price20 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePriceEntry.getCommercePriceEntryId(), price20, 20, false);
+			commercePriceEntry.getCommercePriceEntryId(), price20,
+			BigDecimal.valueOf(20), false);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, null, _user, _group, _commerceAccount, null);
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1230,7 +1260,7 @@ public class CommercePricingTest {
 
 		_commercePriceListAccountRelLocalService.addCommercePriceListAccountRel(
 			_user.getUserId(), commercePromotion.getCommercePriceListId(),
-			_commerceAccount.getCommerceAccountId(), 0,
+			_accountEntry.getAccountEntryId(), 0,
 			ServiceContextTestUtil.getServiceContext());
 
 		BigDecimal promoPrice = BigDecimal.valueOf(10);
@@ -1244,16 +1274,19 @@ public class CommercePricingTest {
 		BigDecimal price3 = BigDecimal.valueOf(8);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePromotionEntry.getCommercePriceEntryId(), price3, 3, false);
+			commercePromotionEntry.getCommercePriceEntryId(), price3,
+			BigDecimal.valueOf(3), false);
 
 		BigDecimal price7 = BigDecimal.valueOf(5);
 
 		CommercePriceEntryTestUtil.addCommerceTierPriceEntry(
-			commercePromotionEntry.getCommercePriceEntryId(), price7, 7, false);
+			commercePromotionEntry.getCommercePriceEntryId(), price7,
+			BigDecimal.valueOf(7), false);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
-				cpInstance.getCPInstanceId(), 10, false, commerceContext);
+				cpInstance.getCPInstanceId(), BigDecimal.TEN, false,
+				StringPool.BLANK, commerceContext);
 
 		CommerceMoney finalPromoPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
@@ -1295,18 +1328,11 @@ public class CommercePricingTest {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
-	private CommerceAccountGroup _commerceAccountGroup;
+	@DeleteAfterTestRun
+	private AccountEntry _accountEntry;
 
 	@Inject
-	private CommerceAccountGroupCommerceAccountRelLocalService
-		_commerceAccountGroupCommerceAccountRelLocalService;
-
-	@Inject
-	private CommerceAccountGroupLocalService _commerceAccountGroupLocalService;
-
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;

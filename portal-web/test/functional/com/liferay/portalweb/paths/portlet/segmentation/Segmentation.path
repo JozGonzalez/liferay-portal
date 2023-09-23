@@ -12,7 +12,12 @@
 <tbody>
 <tr>
 	<td>ADD_FIELD_POSITION</td>
-	<td>//*[contains(@class, 'criteria-group-item-root')]//*[contains(@class, 'empty-drop-zone-root')]/div[1] | //*[contains(@class, 'edit-container')]</td>
+	<td>//*[contains(@class, 'criteria-group-item-root')]/div[1] | //*[contains(@class, 'edit-container')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_FIELD_POSITION_N</td>
+	<td>xpath=(//*[contains(@class, 'criteria-group-item-root')]/div[1])[${indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -22,12 +27,17 @@
 </tr>
 <tr>
 	<td>ADD_FIELD_POSITION_EMPTY</td>
-	<td>//div[contains(@class, 'empty-drop-zone-dashed')] //*[contains(@class, 'drop-zone-target')]</td>
+	<td>//div[contains(@class, 'empty-drop-zone--dashed')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ADD_FIELD_TYPE</td>
 	<td>//*[contains(@class, 'criteria-sidebar-item-root') and (text()='${key_propertyOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_FIELD_TYPE_VISIBLE</td>
+	<td>//button[contains(@class,'panel-header')][contains(@class,'show')]//following-sibling::div//*[contains(@class, 'criteria-sidebar-item-root') and (text()='${key_propertyOption}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -47,7 +57,7 @@
 </tr>
 <tr>
 	<td>CONDITIONS_PROPERTY_NAME</td>
-	<td>//div[@class='criterion'] //span[contains(.,'${propertyName}')]</td>
+	<td>//div[contains(@class,'criterion')]//span[contains(.,'${propertyName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -57,7 +67,7 @@
 </tr>
 <tr>
 	<td>CRITERION_INPUT_ANY</td>
-	<td>//*[contains(@class,'edit-container')] //*[contains(@class,'form-control') and not(contains(@class,'operator-input')) and not(@placeholder='Key')]</td>
+	<td>//*[contains(@class,'edit-container')] //*[contains(@class,'form-control') and not(@type='hidden') and not(contains(@class,'operator-input')) and not(@placeholder='Key')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -91,6 +101,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>EMPTY_DROP_ZONE_DASHED</td>
+	<td>//div[contains(@class,'empty-drop-zone--dashed')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ENABLE_ASSIGN_ROLES_SEGMENTS_CHECKBOX</td>
 	<td>//input[contains(@class, 'custom-control-input') and contains(@name, 'roleSegmentation')]</td>
 	<td></td>
@@ -102,7 +117,7 @@
 </tr>
 <tr>
 	<td>MEMBERS_MATCHED</td>
-	<td>//b[contains(@class,'ml-2 text-dark')]</td>
+	<td>//b[contains(@class,'c-ml-2 font-weight-bold text-dark')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -136,11 +151,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEGMENT_FIELDS_TYPE</td>
-	<td>//a[contains(@class, 'sidebar-collapse-header') and contains(text(),'${key_typeName}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>TITLE_FIELD</td>
 	<td>//input[@data-testid='localized-main-input']</td>
 	<td></td>
@@ -157,7 +167,7 @@
 </tr>
 <tr>
 	<td>TRANSLATION_STATUS_TITLE</td>
-	<td>//ul[contains(@class, 'dropdown-menu')]/li[contains(@role, 'presentation')]/descendant::span[contains(text(), '${key_locale}')]/span</td>
+	<td>//div[contains(@class, 'dropdown-menu')]//li[contains(@role, 'presentation')]//span[contains(text(), '${key_locale}')]</td>
 	<td></td>
 </tr>
 </tbody>

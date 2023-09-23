@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -43,6 +34,7 @@ page import="com.liferay.fragment.model.FragmentEntry" %><%@
 page import="com.liferay.fragment.renderer.FragmentRendererController" %><%@
 page import="com.liferay.fragment.service.FragmentCollectionLocalServiceUtil" %><%@
 page import="com.liferay.fragment.web.internal.constants.FragmentWebKeys" %><%@
+page import="com.liferay.fragment.web.internal.display.context.ConfigurationDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.display.context.ContributedFragmentManagementToolbarDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.display.context.EditFragmentEntryDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.display.context.FragmentCollectionResourcesDisplayContext" %><%@
@@ -59,11 +51,8 @@ page import="com.liferay.fragment.web.internal.display.context.GroupFragmentEntr
 page import="com.liferay.fragment.web.internal.display.context.GroupFragmentEntryUsageManagementToolbarDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.display.context.ImportDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.display.context.RenderFragmentEntryDisplayContext" %><%@
-page import="com.liferay.fragment.web.internal.display.context.SelectFragmentCollectionDisplayContext" %><%@
-page import="com.liferay.fragment.web.internal.display.context.SelectFragmentCollectionManagementToolbarDisplayContext" %><%@
 page import="com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.ContributedFragmentCompositionVerticalCard" %><%@
 page import="com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.ContributedFragmentEntryVerticalCard" %><%@
-page import="com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.FragmentCollectionNavigationCard" %><%@
 page import="com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.FragmentCollectionResourceVerticalCard" %><%@
 page import="com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.FragmentEntryVerticalCardFactory" %><%@
 page import="com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission" %><%@
@@ -73,7 +62,6 @@ page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
-page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
@@ -93,7 +81,7 @@ page import="java.util.Objects" %>
 <portlet:defineObjects />
 
 <%
-FragmentDisplayContext fragmentDisplayContext = new FragmentDisplayContext(request, renderRequest, renderResponse);
+FragmentDisplayContext fragmentEntriesDisplayContext = new FragmentDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <%@ include file="/init-ext.jsp" %>

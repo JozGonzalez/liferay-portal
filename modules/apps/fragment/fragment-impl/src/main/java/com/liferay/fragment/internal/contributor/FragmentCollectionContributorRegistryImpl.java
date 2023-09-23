@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.contributor;
@@ -24,16 +15,17 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.validator.FragmentEntryValidator;
+import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -261,7 +253,7 @@ public class FragmentCollectionContributorRegistryImpl
 
 		if (_getFragmentServiceCompanyConfiguration(companyId) != null) {
 			FragmentServiceConfiguration companyFragmentServiceConfiguration =
-				ConfigurationProviderUtil.getCompanyConfiguration(
+				_configurationProvider.getCompanyConfiguration(
 					FragmentServiceConfiguration.class, companyId);
 
 			return companyFragmentServiceConfiguration.
@@ -269,7 +261,7 @@ public class FragmentCollectionContributorRegistryImpl
 		}
 
 		FragmentServiceConfiguration systemFragmentServiceConfiguration =
-			ConfigurationProviderUtil.getSystemConfiguration(
+			_configurationProvider.getSystemConfiguration(
 				FragmentServiceConfiguration.class);
 
 		return systemFragmentServiceConfiguration.
@@ -305,28 +297,38 @@ public class FragmentCollectionContributorRegistryImpl
 					return;
 				}
 
-				Set<String> fragmentEntriesSet = fragmentEntries.keySet();
+				try (AutoCloseable autoCloseable =
+						_layoutServiceContextHelper.
+							getServiceContextAutoCloseable(company)) {
 
-				List<FragmentEntryLink> fragmentEntryLinks =
-					_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-						company.getCompanyId(),
-						fragmentEntriesSet.toArray(new String[0]));
+					Set<String> fragmentEntriesSet = fragmentEntries.keySet();
 
-				for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
-					FragmentEntry fragmentEntry = fragmentEntries.get(
-						fragmentEntryLink.getRendererKey());
+					List<FragmentEntryLink> fragmentEntryLinks =
+						_fragmentEntryLinkLocalService.getFragmentEntryLinks(
+							company.getCompanyId(),
+							fragmentEntriesSet.toArray(new String[0]));
 
-					if (fragmentEntry == null) {
-						continue;
+					for (FragmentEntryLink fragmentEntryLink :
+							fragmentEntryLinks) {
+
+						FragmentEntry fragmentEntry = fragmentEntries.get(
+							fragmentEntryLink.getRendererKey());
+
+						if (fragmentEntry == null) {
+							continue;
+						}
+
+						try {
+							_fragmentEntryLinkLocalService.updateLatestChanges(
+								fragmentEntry, fragmentEntryLink);
+						}
+						catch (PortalException portalException) {
+							_log.error(portalException);
+						}
 					}
-
-					try {
-						_fragmentEntryLinkLocalService.updateLatestChanges(
-							fragmentEntry, fragmentEntryLink);
-					}
-					catch (PortalException portalException) {
-						_log.error(portalException);
-					}
+				}
+				catch (Exception exception) {
+					_log.error(exception);
 				}
 			});
 	}
@@ -365,7 +367,13 @@ public class FragmentCollectionContributorRegistryImpl
 	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private LayoutServiceContextHelper _layoutServiceContextHelper;
 
 	@Reference
 	private PortalPreferencesLocalService _portalPreferencesLocalService;

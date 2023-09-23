@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.search;
@@ -34,7 +25,6 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.highlight.HighlightFieldBuilderFactory;
 import com.liferay.portal.search.hits.SearchHitBuilderFactory;
-import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
 import com.liferay.portal.search.searcher.SearchTimeValue;
 
@@ -45,6 +35,7 @@ import org.apache.lucene.search.TotalHits;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -110,8 +101,7 @@ public class SearchSearchResponseAssemblerImpl
 		SearchResponse searchResponse,
 		SearchSearchResponse searchSearchResponse) {
 
-		org.elasticsearch.search.SearchHits searchHits =
-			searchResponse.getHits();
+		SearchHits searchHits = searchResponse.getHits();
 
 		TotalHits totalHits = searchHits.getTotalHits();
 
@@ -170,13 +160,11 @@ public class SearchSearchResponseAssemblerImpl
 			_documentBuilderFactory, _highlightFieldBuilderFactory,
 			_geoBuilders);
 
-		org.elasticsearch.search.SearchHits elasticsearchSearchHits =
-			searchResponse.getHits();
+		SearchHits searchHits = searchResponse.getHits();
 
 		searchSearchResponse.setSearchHits(
 			searchHitsTranslator.translate(
-				elasticsearchSearchHits,
-				searchSearchRequest.getAlternateUidFieldName()));
+				searchHits, searchSearchRequest.getAlternateUidFieldName()));
 	}
 
 	private void _setSearchTimeValue(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.product.navigation.control.menu;
@@ -20,10 +11,13 @@ import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItemRegistry;
 import com.liferay.analytics.reports.info.item.ClassNameClassPKInfoItemIdentifier;
 import com.liferay.analytics.reports.info.item.provider.AnalyticsReportsInfoItemObjectProvider;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
+import com.liferay.analytics.reports.web.internal.constants.ProductNavigationControlMenuEntryConstants;
 import com.liferay.analytics.reports.web.internal.info.item.provider.AnalyticsReportsInfoItemObjectProviderRegistry;
 import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.frontend.taglib.clay.servlet.taglib.ButtonTag;
+import com.liferay.frontend.taglib.clay.servlet.taglib.IconTag;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -41,7 +35,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
@@ -49,17 +42,14 @@ import com.liferay.portal.template.react.renderer.ReactRenderer;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
-import com.liferay.taglib.aui.IconTag;
 import com.liferay.taglib.util.BodyBottomTag;
 
 import java.io.IOException;
 import java.io.Writer;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
@@ -82,10 +72,7 @@ import org.osgi.service.component.annotations.Reference;
 		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
 		"product.navigation.control.menu.entry.order:Integer=400"
 	},
-	service = {
-		AnalyticsReportsProductNavigationControlMenuEntry.class,
-		ProductNavigationControlMenuEntry.class
-	}
+	service = ProductNavigationControlMenuEntry.class
 )
 public class AnalyticsReportsProductNavigationControlMenuEntry
 	extends BaseProductNavigationControlMenuEntry {
@@ -130,7 +117,11 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 		Map<String, String> values = new HashMap<>();
 
-		if (isPanelStateOpen(httpServletRequest)) {
+		if (isPanelStateOpen(
+				httpServletRequest,
+				ProductNavigationControlMenuEntryConstants.
+					SESSION_CLICKS_KEY)) {
+
 			values.put("cssClass", "active");
 		}
 		else {
@@ -147,7 +138,7 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		IconTag iconTag = new IconTag();
 
 		iconTag.setCssClass("icon-monospaced");
-		iconTag.setImage("analytics");
+		iconTag.setSymbol("analytics");
 
 		try {
 			values.put(
@@ -165,17 +156,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		writer.write(StringUtil.replace(_ICON_TMPL_CONTENT, "${", "}", values));
 
 		return true;
-	}
-
-	public boolean isPanelStateOpen(HttpServletRequest httpServletRequest) {
-		String analyticsReportsPanelState = SessionClicks.get(
-			httpServletRequest, _SESSION_CLICKS_KEY, "closed");
-
-		if (Objects.equals(analyticsReportsPanelState, "open")) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override
@@ -239,12 +219,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		return super.isShow(httpServletRequest);
 	}
 
-	public void setPanelState(
-		HttpServletRequest httpServletRequest, String panelState) {
-
-		SessionClicks.put(httpServletRequest, _SESSION_CLICKS_KEY, panelState);
-	}
-
 	@Activate
 	protected void activate() {
 		_portletNamespace = _portal.getPortletNamespace(
@@ -292,7 +266,14 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			).setParameter(
 				"className", infoItemReference.getClassName()
 			).setParameter(
-				"classPK", infoItemReference.getClassPK()
+				"classPK",
+				() -> {
+					ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+						(ClassPKInfoItemIdentifier)
+							infoItemReference.getInfoItemIdentifier();
+
+					return classPKInfoItemIdentifier.getClassPK();
+				}
 			).setParameter(
 				"p_p_resource_id", "/analytics_reports/get_data"
 			).buildString();
@@ -332,11 +313,15 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 			JspWriter jspWriter = pageContext.getOut();
 
-			StringBundler sb = new StringBundler(23);
+			StringBundler sb = new StringBundler(24);
 
 			sb.append("<div class=\"");
 
-			if (isPanelStateOpen(httpServletRequest)) {
+			if (isPanelStateOpen(
+					httpServletRequest,
+					ProductNavigationControlMenuEntryConstants.
+						SESSION_CLICKS_KEY)) {
+
 				sb.append("lfr-has-analytics-reports-panel open-admin-panel ");
 			}
 
@@ -346,7 +331,8 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 					"lfr-product-menu-panel lfr-analytics-reports-panel ",
 					"sidenav-fixed sidenav-menu-slider sidenav-right\" id=\""));
 			sb.append(_portletNamespace);
-			sb.append("analyticsReportsPanelId\">");
+			sb.append("analyticsReportsPanelId\" ");
+			sb.append("tabindex=\"-1\">");
 			sb.append("<div class=\"sidebar sidebar-light sidenav-menu ");
 			sb.append("sidebar-sm\">");
 			sb.append("<div class=\"lfr-analytics-reports-sidebar\" ");
@@ -361,15 +347,17 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			sb.append(_language.get(httpServletRequest, "content-performance"));
 			sb.append("</span>");
 
-			IconTag iconTag = new IconTag();
+			ButtonTag buttonTag = new ButtonTag();
 
-			iconTag.setCssClass(
-				"btn btn-monospaced btn-unstyled component-action " +
-					"sidenav-close text-secondary");
-			iconTag.setImage("times");
-			iconTag.setUrl("javascript:void(0);");
+			buttonTag.setCssClass("close sidenav-close");
+			buttonTag.setDisplayType("unstyled");
+			buttonTag.setDynamicAttribute(
+				StringPool.BLANK, "aria-label",
+				_language.get(
+					(HttpServletRequest)pageContext.getRequest(), "close"));
+			buttonTag.setIcon("times");
 
-			sb.append(iconTag.doTagAsString(pageContext));
+			sb.append(buttonTag.doTagAsString(pageContext));
 
 			sb.append("</div>");
 			sb.append("<div class=\"sidebar-body\">");
@@ -385,9 +373,16 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 						"/js/AnalyticsReportsApp"),
 				HashMapBuilder.<String, Object>put(
 					"context",
-					Collections.singletonMap(
+					HashMapBuilder.<String, Object>put(
 						"analyticsReportsDataURL",
-						_getAnalyticsReportsURL(httpServletRequest))
+						_getAnalyticsReportsURL(httpServletRequest)
+					).put(
+						"isPanelStateOpen",
+						isPanelStateOpen(
+							httpServletRequest,
+							ProductNavigationControlMenuEntryConstants.
+								SESSION_CLICKS_KEY)
+					).build()
 				).put(
 					"portletNamespace", _portletNamespace
 				).build(),
@@ -402,9 +397,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 	private static final String _ICON_TMPL_CONTENT = StringUtil.read(
 		AnalyticsReportsProductNavigationControlMenuEntry.class, "icon.tmpl");
-
-	private static final String _SESSION_CLICKS_KEY =
-		"com.liferay.analytics.reports.web_panelState";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsReportsProductNavigationControlMenuEntry.class);

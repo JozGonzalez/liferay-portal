@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -96,7 +87,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiScriptFunctionFormat() throws Exception {
-		String actualFileName = "UnformattedPoshiScript.function";
+		String actualFileName = "UnformattedPoshiScriptFunction.function";
 		String expectedFileName = "PoshiScriptFunction.function";
 
 		PoshiElement actualElement = _getPoshiElement(actualFileName);
@@ -128,7 +119,7 @@ public class PoshiElementFactoryTest {
 			"PoshiScriptMacro.macro");
 
 		int[] expectedLineNumbers = {
-			4, 9, 11, 17, 19, 28, 29, 30, 32, 34, 38, 42, 46, 50, 54, 58
+			4, 9, 11, 17, 19, 29, 30, 31, 33, 35, 39, 43, 47, 51, 55, 59
 		};
 
 		int i = 0;
@@ -155,7 +146,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiScriptMacroFormat() throws Exception {
-		String actualFileName = "UnformattedPoshiScript.macro";
+		String actualFileName = "UnformattedPoshiScriptMacro.macro";
 		String expectedFileName = "PoshiScriptMacro.macro";
 
 		PoshiElement actualElement = _getPoshiElement(actualFileName);
@@ -252,7 +243,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLMacroFormat() throws Exception {
-		String actualFileName = "UnformattedPoshiScript.macro";
+		String actualFileName = "UnformattedPoshiScriptMacro.macro";
 		String expectedFileName = "PoshiSyntaxMacro.macro";
 
 		PoshiElement actualElement = _getPoshiElement(actualFileName);

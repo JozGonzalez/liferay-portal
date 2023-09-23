@@ -1,7 +1,12 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayButton from '@clayui/button';
 
-import githubIcon from '../../assets/icons/github-icon.svg';
-import linkIcon from '../../assets/icons/link-icon.svg';
+import githubIcon from '../../assets/icons/github_icon.svg';
+import linkIcon from '../../assets/icons/link_icon.svg';
 import AutoComplete from '../AutoComplete';
 
 import './GithubCard.scss';

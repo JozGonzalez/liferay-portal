@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.persistence.impl;
@@ -52,8 +43,9 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+
+import java.math.BigDecimal;
 
 import java.sql.Timestamp;
 
@@ -5309,6 +5301,736 @@ public class CommercePriceEntryPersistenceImpl
 	private static final String _FINDER_COLUMN_C_C_S_STATUS_2 =
 		"commercePriceEntry.status = ?";
 
+	private FinderPath _finderPathWithPaginationFindByC_Q_U;
+	private FinderPath _finderPathWithoutPaginationFindByC_Q_U;
+	private FinderPath _finderPathCountByC_Q_U;
+
+	/**
+	 * Returns all the commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @return the matching commerce price entries
+	 */
+	@Override
+	public List<CommercePriceEntry> findByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey) {
+
+		return findByC_Q_U(
+			CPInstanceUuid, quantity, unitOfMeasureKey, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param start the lower bound of the range of commerce price entries
+	 * @param end the upper bound of the range of commerce price entries (not inclusive)
+	 * @return the range of matching commerce price entries
+	 */
+	@Override
+	public List<CommercePriceEntry> findByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		int start, int end) {
+
+		return findByC_Q_U(
+			CPInstanceUuid, quantity, unitOfMeasureKey, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param start the lower bound of the range of commerce price entries
+	 * @param end the upper bound of the range of commerce price entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce price entries
+	 */
+	@Override
+	public List<CommercePriceEntry> findByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		int start, int end,
+		OrderByComparator<CommercePriceEntry> orderByComparator) {
+
+		return findByC_Q_U(
+			CPInstanceUuid, quantity, unitOfMeasureKey, start, end,
+			orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param start the lower bound of the range of commerce price entries
+	 * @param end the upper bound of the range of commerce price entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching commerce price entries
+	 */
+	@Override
+	public List<CommercePriceEntry> findByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		int start, int end,
+		OrderByComparator<CommercePriceEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		CPInstanceUuid = Objects.toString(CPInstanceUuid, "");
+		unitOfMeasureKey = Objects.toString(unitOfMeasureKey, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CommercePriceEntry.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_Q_U;
+				finderArgs = new Object[] {
+					CPInstanceUuid, quantity, unitOfMeasureKey
+				};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByC_Q_U;
+			finderArgs = new Object[] {
+				CPInstanceUuid, quantity, unitOfMeasureKey, start, end,
+				orderByComparator
+			};
+		}
+
+		List<CommercePriceEntry> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<CommercePriceEntry>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (CommercePriceEntry commercePriceEntry : list) {
+					if (!CPInstanceUuid.equals(
+							commercePriceEntry.getCPInstanceUuid()) ||
+						!Objects.equals(
+							quantity, commercePriceEntry.getQuantity()) ||
+						!unitOfMeasureKey.equals(
+							commercePriceEntry.getUnitOfMeasureKey())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(5);
+			}
+
+			sb.append(_SQL_SELECT_COMMERCEPRICEENTRY_WHERE);
+
+			boolean bindCPInstanceUuid = false;
+
+			if (CPInstanceUuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_3);
+			}
+			else {
+				bindCPInstanceUuid = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_2);
+			}
+
+			boolean bindQuantity = false;
+
+			if (quantity == null) {
+				sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_1);
+			}
+			else {
+				bindQuantity = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_2);
+			}
+
+			boolean bindUnitOfMeasureKey = false;
+
+			if (unitOfMeasureKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_3);
+			}
+			else {
+				bindUnitOfMeasureKey = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(CommercePriceEntryModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindCPInstanceUuid) {
+					queryPos.add(CPInstanceUuid);
+				}
+
+				if (bindQuantity) {
+					queryPos.add(quantity);
+				}
+
+				if (bindUnitOfMeasureKey) {
+					queryPos.add(unitOfMeasureKey);
+				}
+
+				list = (List<CommercePriceEntry>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first commerce price entry in the ordered set where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce price entry
+	 * @throws NoSuchPriceEntryException if a matching commerce price entry could not be found
+	 */
+	@Override
+	public CommercePriceEntry findByC_Q_U_First(
+			String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+			OrderByComparator<CommercePriceEntry> orderByComparator)
+		throws NoSuchPriceEntryException {
+
+		CommercePriceEntry commercePriceEntry = fetchByC_Q_U_First(
+			CPInstanceUuid, quantity, unitOfMeasureKey, orderByComparator);
+
+		if (commercePriceEntry != null) {
+			return commercePriceEntry;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("CPInstanceUuid=");
+		sb.append(CPInstanceUuid);
+
+		sb.append(", quantity=");
+		sb.append(quantity);
+
+		sb.append(", unitOfMeasureKey=");
+		sb.append(unitOfMeasureKey);
+
+		sb.append("}");
+
+		throw new NoSuchPriceEntryException(sb.toString());
+	}
+
+	/**
+	 * Returns the first commerce price entry in the ordered set where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce price entry, or <code>null</code> if a matching commerce price entry could not be found
+	 */
+	@Override
+	public CommercePriceEntry fetchByC_Q_U_First(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		OrderByComparator<CommercePriceEntry> orderByComparator) {
+
+		List<CommercePriceEntry> list = findByC_Q_U(
+			CPInstanceUuid, quantity, unitOfMeasureKey, 0, 1,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last commerce price entry in the ordered set where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce price entry
+	 * @throws NoSuchPriceEntryException if a matching commerce price entry could not be found
+	 */
+	@Override
+	public CommercePriceEntry findByC_Q_U_Last(
+			String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+			OrderByComparator<CommercePriceEntry> orderByComparator)
+		throws NoSuchPriceEntryException {
+
+		CommercePriceEntry commercePriceEntry = fetchByC_Q_U_Last(
+			CPInstanceUuid, quantity, unitOfMeasureKey, orderByComparator);
+
+		if (commercePriceEntry != null) {
+			return commercePriceEntry;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("CPInstanceUuid=");
+		sb.append(CPInstanceUuid);
+
+		sb.append(", quantity=");
+		sb.append(quantity);
+
+		sb.append(", unitOfMeasureKey=");
+		sb.append(unitOfMeasureKey);
+
+		sb.append("}");
+
+		throw new NoSuchPriceEntryException(sb.toString());
+	}
+
+	/**
+	 * Returns the last commerce price entry in the ordered set where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce price entry, or <code>null</code> if a matching commerce price entry could not be found
+	 */
+	@Override
+	public CommercePriceEntry fetchByC_Q_U_Last(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		OrderByComparator<CommercePriceEntry> orderByComparator) {
+
+		int count = countByC_Q_U(CPInstanceUuid, quantity, unitOfMeasureKey);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<CommercePriceEntry> list = findByC_Q_U(
+			CPInstanceUuid, quantity, unitOfMeasureKey, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the commerce price entries before and after the current commerce price entry in the ordered set where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param commercePriceEntryId the primary key of the current commerce price entry
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next commerce price entry
+	 * @throws NoSuchPriceEntryException if a commerce price entry with the primary key could not be found
+	 */
+	@Override
+	public CommercePriceEntry[] findByC_Q_U_PrevAndNext(
+			long commercePriceEntryId, String CPInstanceUuid,
+			BigDecimal quantity, String unitOfMeasureKey,
+			OrderByComparator<CommercePriceEntry> orderByComparator)
+		throws NoSuchPriceEntryException {
+
+		CPInstanceUuid = Objects.toString(CPInstanceUuid, "");
+		unitOfMeasureKey = Objects.toString(unitOfMeasureKey, "");
+
+		CommercePriceEntry commercePriceEntry = findByPrimaryKey(
+			commercePriceEntryId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			CommercePriceEntry[] array = new CommercePriceEntryImpl[3];
+
+			array[0] = getByC_Q_U_PrevAndNext(
+				session, commercePriceEntry, CPInstanceUuid, quantity,
+				unitOfMeasureKey, orderByComparator, true);
+
+			array[1] = commercePriceEntry;
+
+			array[2] = getByC_Q_U_PrevAndNext(
+				session, commercePriceEntry, CPInstanceUuid, quantity,
+				unitOfMeasureKey, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected CommercePriceEntry getByC_Q_U_PrevAndNext(
+		Session session, CommercePriceEntry commercePriceEntry,
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey,
+		OrderByComparator<CommercePriceEntry> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(5);
+		}
+
+		sb.append(_SQL_SELECT_COMMERCEPRICEENTRY_WHERE);
+
+		boolean bindCPInstanceUuid = false;
+
+		if (CPInstanceUuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_3);
+		}
+		else {
+			bindCPInstanceUuid = true;
+
+			sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_2);
+		}
+
+		boolean bindQuantity = false;
+
+		if (quantity == null) {
+			sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_1);
+		}
+		else {
+			bindQuantity = true;
+
+			sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_2);
+		}
+
+		boolean bindUnitOfMeasureKey = false;
+
+		if (unitOfMeasureKey.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_3);
+		}
+		else {
+			bindUnitOfMeasureKey = true;
+
+			sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(CommercePriceEntryModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		if (bindCPInstanceUuid) {
+			queryPos.add(CPInstanceUuid);
+		}
+
+		if (bindQuantity) {
+			queryPos.add(quantity);
+		}
+
+		if (bindUnitOfMeasureKey) {
+			queryPos.add(unitOfMeasureKey);
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						commercePriceEntry)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<CommercePriceEntry> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63; from the database.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 */
+	@Override
+	public void removeByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey) {
+
+		for (CommercePriceEntry commercePriceEntry :
+				findByC_Q_U(
+					CPInstanceUuid, quantity, unitOfMeasureKey,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(commercePriceEntry);
+		}
+	}
+
+	/**
+	 * Returns the number of commerce price entries where CPInstanceUuid = &#63; and quantity = &#63; and unitOfMeasureKey = &#63;.
+	 *
+	 * @param CPInstanceUuid the cp instance uuid
+	 * @param quantity the quantity
+	 * @param unitOfMeasureKey the unit of measure key
+	 * @return the number of matching commerce price entries
+	 */
+	@Override
+	public int countByC_Q_U(
+		String CPInstanceUuid, BigDecimal quantity, String unitOfMeasureKey) {
+
+		CPInstanceUuid = Objects.toString(CPInstanceUuid, "");
+		unitOfMeasureKey = Objects.toString(unitOfMeasureKey, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CommercePriceEntry.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_Q_U;
+
+			finderArgs = new Object[] {
+				CPInstanceUuid, quantity, unitOfMeasureKey
+			};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_COUNT_COMMERCEPRICEENTRY_WHERE);
+
+			boolean bindCPInstanceUuid = false;
+
+			if (CPInstanceUuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_3);
+			}
+			else {
+				bindCPInstanceUuid = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_2);
+			}
+
+			boolean bindQuantity = false;
+
+			if (quantity == null) {
+				sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_1);
+			}
+			else {
+				bindQuantity = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_QUANTITY_2);
+			}
+
+			boolean bindUnitOfMeasureKey = false;
+
+			if (unitOfMeasureKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_3);
+			}
+			else {
+				bindUnitOfMeasureKey = true;
+
+				sb.append(_FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindCPInstanceUuid) {
+					queryPos.add(CPInstanceUuid);
+				}
+
+				if (bindQuantity) {
+					queryPos.add(quantity);
+				}
+
+				if (bindUnitOfMeasureKey) {
+					queryPos.add(unitOfMeasureKey);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_2 =
+		"commercePriceEntry.CPInstanceUuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_Q_U_CPINSTANCEUUID_3 =
+		"(commercePriceEntry.CPInstanceUuid IS NULL OR commercePriceEntry.CPInstanceUuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_C_Q_U_QUANTITY_1 =
+		"commercePriceEntry.quantity IS NULL AND ";
+
+	private static final String _FINDER_COLUMN_C_Q_U_QUANTITY_2 =
+		"commercePriceEntry.quantity = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_2 =
+		"commercePriceEntry.unitOfMeasureKey = ?";
+
+	private static final String _FINDER_COLUMN_C_Q_U_UNITOFMEASUREKEY_3 =
+		"(commercePriceEntry.unitOfMeasureKey IS NULL OR commercePriceEntry.unitOfMeasureKey = '')";
+
 	private FinderPath _finderPathFetchByERC_C;
 	private FinderPath _finderPathCountByERC_C;
 
@@ -5379,21 +6101,21 @@ public class CommercePriceEntryPersistenceImpl
 
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CommercePriceEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {externalReferenceCode, companyId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByERC_C, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			CommercePriceEntry.class);
 
 		if (result instanceof CommercePriceEntry) {
 			CommercePriceEntry commercePriceEntry = (CommercePriceEntry)result;
@@ -5405,6 +6127,15 @@ public class CommercePriceEntryPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						CommercePriceEntry.class,
+						commercePriceEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -6410,17 +7141,20 @@ public class CommercePriceEntryPersistenceImpl
 		ctStrictColumnNames.add("commercePriceListId");
 		ctStrictColumnNames.add("CPInstanceUuid");
 		ctStrictColumnNames.add("CProductId");
-		ctStrictColumnNames.add("price");
-		ctStrictColumnNames.add("promoPrice");
+		ctStrictColumnNames.add("bulkPricing");
 		ctStrictColumnNames.add("discountDiscovery");
 		ctStrictColumnNames.add("discountLevel1");
 		ctStrictColumnNames.add("discountLevel2");
 		ctStrictColumnNames.add("discountLevel3");
 		ctStrictColumnNames.add("discountLevel4");
-		ctStrictColumnNames.add("hasTierPrice");
-		ctStrictColumnNames.add("bulkPricing");
 		ctStrictColumnNames.add("displayDate");
 		ctStrictColumnNames.add("expirationDate");
+		ctStrictColumnNames.add("hasTierPrice");
+		ctStrictColumnNames.add("price");
+		ctStrictColumnNames.add("priceOnApplication");
+		ctStrictColumnNames.add("promoPrice");
+		ctStrictColumnNames.add("quantity");
+		ctStrictColumnNames.add("unitOfMeasureKey");
 		ctStrictColumnNames.add("lastPublishDate");
 		ctStrictColumnNames.add("status");
 		ctStrictColumnNames.add("statusByUserId");
@@ -6627,6 +7361,34 @@ public class CommercePriceEntryPersistenceImpl
 			new String[] {"commercePriceListId", "CPInstanceUuid", "status"},
 			false);
 
+		_finderPathWithPaginationFindByC_Q_U = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_Q_U",
+			new String[] {
+				String.class.getName(), BigDecimal.class.getName(),
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"CPInstanceUuid", "quantity", "unitOfMeasureKey"},
+			true);
+
+		_finderPathWithoutPaginationFindByC_Q_U = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_Q_U",
+			new String[] {
+				String.class.getName(), BigDecimal.class.getName(),
+				String.class.getName()
+			},
+			new String[] {"CPInstanceUuid", "quantity", "unitOfMeasureKey"},
+			true);
+
+		_finderPathCountByC_Q_U = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_Q_U",
+			new String[] {
+				String.class.getName(), BigDecimal.class.getName(),
+				String.class.getName()
+			},
+			new String[] {"CPInstanceUuid", "quantity", "unitOfMeasureKey"},
+			false);
+
 		_finderPathFetchByERC_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
@@ -6637,30 +7399,14 @@ public class CommercePriceEntryPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setCommercePriceEntryUtilPersistence(this);
+		CommercePriceEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCommercePriceEntryUtilPersistence(null);
+		CommercePriceEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(CommercePriceEntryImpl.class.getName());
-	}
-
-	private void _setCommercePriceEntryUtilPersistence(
-		CommercePriceEntryPersistence commercePriceEntryPersistence) {
-
-		try {
-			Field field = CommercePriceEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, commercePriceEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

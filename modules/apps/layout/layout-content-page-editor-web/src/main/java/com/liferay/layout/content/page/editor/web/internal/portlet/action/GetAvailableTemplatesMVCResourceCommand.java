@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
@@ -32,6 +24,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Collections;
@@ -62,15 +55,18 @@ public class GetAvailableTemplatesMVCResourceCommand
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		String className = ParamUtil.getString(resourceRequest, "className");
 		long classPK = ParamUtil.getLong(resourceRequest, "classPK");
+		String externalReferenceCode = ParamUtil.getString(
+			resourceRequest, "externalReferenceCode");
 
-		JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-		Object infoItemObject = _getInfoItemObject(className, classPK);
+		Object infoItemObject = _getInfoItemObject(
+			className, classPK, externalReferenceCode);
 
 		for (InfoItemRenderer<?> infoItemRenderer :
 				_infoItemRendererRegistry.getInfoItemRenderers(className)) {
@@ -136,9 +132,21 @@ public class GetAvailableTemplatesMVCResourceCommand
 			resourceRequest, resourceResponse, jsonArray);
 	}
 
-	private Object _getInfoItemObject(String className, long classPK) {
-		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
-			classPK);
+	private Object _getInfoItemObject(
+		String className, long classPK, String externalReferenceCode) {
+
+		InfoItemIdentifier infoItemIdentifier = null;
+
+		if (classPK > 0) {
+			infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
+		}
+		else if (Validator.isNotNull(externalReferenceCode)) {
+			infoItemIdentifier = new ERCInfoItemIdentifier(
+				externalReferenceCode);
+		}
+		else {
+			return null;
+		}
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(

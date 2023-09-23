@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {LayoutTypes} from './LayoutTypes';
 
 export interface Config {
+	actionableInfoItemSelectorURL: string;
 	addFragmentCompositionURL: string;
 	addFragmentEntryLinkCommentURL: string;
 	addFragmentEntryLinkURL: string;
@@ -53,7 +45,6 @@ export interface Config {
 
 	changeMasterLayoutURL: string;
 	changeStyleBookEntryURL: string;
-	contentPagePersonalizationLearnURL: string;
 	collectionSelectorURL: string;
 
 	commonStyles: Array<{
@@ -82,6 +73,7 @@ export interface Config {
 			defaultValue: string;
 		};
 	};
+	contentPagePersonalizationLearnURL: string;
 
 	createLayoutPageTemplateEntryURL: string;
 
@@ -101,7 +93,6 @@ export interface Config {
 	deleteFragmentEntryLinkCommentURL: string;
 	deleteSegmentsExperienceURL: string;
 	discardDraftURL: string;
-	draft: boolean;
 	duplicateItemURL: string;
 	duplicateSegmentsExperienceURL: string;
 	editFragmentEntryLinkCommentURL: string;
@@ -111,13 +102,15 @@ export interface Config {
 		getAvailableImageConfigurationsURL: string;
 		getAvailableListItemRenderersURL: string;
 		getAvailableListRenderersURL: string;
-		[key: string]: {
-			cssVariable: string;
-			editorType: string;
-			label: string;
-			name: string;
-			value: string;
-		} | string;
+		[key: string]:
+			| {
+					cssVariable: string;
+					editorType: string;
+					label: string;
+					name: string;
+					value: string;
+			  }
+			| string;
 	};
 	getAvailableTemplatesURL: string;
 	getCollectionConfigurationURL: string;
@@ -126,11 +119,13 @@ export interface Config {
 	getCollectionItemCountURL: string;
 	getCollectionMappingFieldsURL: string;
 	getCollectionSupportedFiltersURL: string;
+	getCollectionWarningMessageURL: string;
 	getExperienceDataURL: string;
+	getFormConfigURL: string;
 	getIframeContentCssURL: string;
 	getIframeContentURL: string;
+	getInfoItemActionErrorMessageURL: string;
 	getInfoItemFieldValueURL: string;
-	getInfoItemMappingFieldsURL: string;
 	getLayoutFriendlyURL: string;
 	getLayoutPageTemplateCollectionsURL: string;
 	getPageContentsURL: string;
@@ -169,11 +164,11 @@ export interface Config {
 	searchContainerPageMaxDelta: number;
 
 	selectedMappingTypes?: {
-		type: {
+		subtype: {
 			id: string;
 			label: string;
 		};
-		subtype: {
+		type: {
 			id: string;
 			label: string;
 		};

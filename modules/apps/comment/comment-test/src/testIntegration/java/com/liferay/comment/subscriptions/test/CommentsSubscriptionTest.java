@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.comment.subscriptions.test;
@@ -25,7 +16,6 @@ import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBDiscussionLocalServiceUtil;
 import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
 import com.liferay.message.boards.test.util.MBTestUtil;
-import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -94,14 +84,10 @@ public class CommentsSubscriptionTest {
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			String.valueOf(blogsEntry.getEntryId()), ActionKeys.VIEW);
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(
-				PermissionCheckerFactoryUtil.create(
-					UserLocalServiceUtil.getDefaultUser(
-						_group.getCompanyId())));
-
 		Assert.assertFalse(
-			discussionPermission.hasSubscribePermission(
+			_discussionPermission.hasSubscribePermission(
+				PermissionCheckerFactoryUtil.create(
+					UserLocalServiceUtil.getGuestUser(_group.getCompanyId())),
 				TestPropsValues.getCompanyId(), _group.getGroupId(),
 				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
 	}
@@ -116,12 +102,9 @@ public class CommentsSubscriptionTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), _creatorUser.getUserId()));
 
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(
-				PermissionCheckerFactoryUtil.create(_user));
-
 		Assert.assertTrue(
-			discussionPermission.hasSubscribePermission(
+			_discussionPermission.hasSubscribePermission(
+				PermissionCheckerFactoryUtil.create(_user),
 				_group.getCompanyId(), _group.getGroupId(),
 				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
 	}
@@ -267,11 +250,11 @@ public class CommentsSubscriptionTest {
 			serviceContext);
 	}
 
-	@Inject
-	private CommentManager _commentManager;
-
 	@DeleteAfterTestRun
 	private User _creatorUser;
+
+	@Inject
+	private DiscussionPermission _discussionPermission;
 
 	@DeleteAfterTestRun
 	private Group _group;

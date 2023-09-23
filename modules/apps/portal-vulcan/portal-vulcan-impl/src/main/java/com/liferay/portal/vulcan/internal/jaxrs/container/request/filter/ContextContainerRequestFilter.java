@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.container.request.filter;
@@ -29,15 +20,21 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResourceFactory;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
 import com.liferay.portal.vulcan.internal.accept.language.AcceptLanguageImpl;
 import com.liferay.portal.vulcan.internal.configuration.util.ConfigurationUtil;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.ContextProviderUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import java.net.URI;
+
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -46,7 +43,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
@@ -72,9 +72,10 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		ResourcePermissionLocalService resourcePermissionLocalService,
 		RoleLocalService roleLocalService, Object scopeChecker,
 		SortParserProvider sortParserProvider,
-		VulcanBatchEngineExportTaskResource vulcanBatchEngineExportTaskResource,
-		VulcanBatchEngineImportTaskResource
-			vulcanBatchEngineImportTaskResource) {
+		VulcanBatchEngineExportTaskResourceFactory
+			vulcanBatchEngineExportTaskResourceFactory,
+		VulcanBatchEngineImportTaskResourceFactory
+			vulcanBatchEngineImportTaskResourceFactory) {
 
 		_configurationAdmin = configurationAdmin;
 		_expressionConvert = expressionConvert;
@@ -87,10 +88,10 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		_roleLocalService = roleLocalService;
 		_scopeChecker = scopeChecker;
 		_sortParserProvider = sortParserProvider;
-		_vulcanBatchEngineExportTaskResource =
-			vulcanBatchEngineExportTaskResource;
-		_vulcanBatchEngineImportTaskResource =
-			vulcanBatchEngineImportTaskResource;
+		_vulcanBatchEngineExportTaskResourceFactory =
+			vulcanBatchEngineExportTaskResourceFactory;
+		_vulcanBatchEngineImportTaskResourceFactory =
+			vulcanBatchEngineImportTaskResourceFactory;
 	}
 
 	@Override
@@ -139,6 +140,116 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		}
 	}
 
+	private UriInfo _getVulcanUriInfo(
+		HttpServletRequest httpServletRequest, Message message) {
+
+		UriInfo uriInfo = new UriInfoImpl(message);
+
+		return new UriInfo() {
+
+			@Override
+			public URI getAbsolutePath() {
+				return uriInfo.getAbsolutePath();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return uriInfo.getAbsolutePathBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return uriInfo.getBaseUri();
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriInfoUtil.getBaseUriBuilder(
+					httpServletRequest, uriInfo);
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return uriInfo.getMatchedResources();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return uriInfo.getMatchedURIs();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return uriInfo.getMatchedURIs(decode);
+			}
+
+			@Override
+			public String getPath() {
+				return uriInfo.getPath();
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return uriInfo.getPath(decode);
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return uriInfo.getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return uriInfo.getPathParameters(decode);
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return uriInfo.getPathSegments();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return uriInfo.getPathSegments(decode);
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return uriInfo.getQueryParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return uriInfo.getQueryParameters(decode);
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return uriInfo.getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return uriInfo.getRequestUriBuilder();
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return uriInfo.relativize(uri);
+			}
+
+			@Override
+			public URI resolve(URI uri) {
+				return uriInfo.resolve(uri);
+			}
+
+		};
+	}
+
 	private void _handleMessage(
 			ContainerRequestContext containerRequestContext, Message message)
 		throws Exception {
@@ -155,11 +266,20 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		_filterExcludedOperationIds(
 			containerRequestContext, httpServletRequest, message);
 
-		Class<?> clazz = instance.getClass();
+		_setInstanceFields(
+			instance.getClass(), httpServletRequest, message, instance);
+	}
 
-		Class<?> superClass = clazz.getSuperclass();
+	private void _setInstanceFields(
+			Class<?> clazz, HttpServletRequest httpServletRequest,
+			Message message, Object instance)
+		throws Exception {
 
-		for (Field field : superClass.getDeclaredFields()) {
+		if (clazz == Object.class) {
+			return;
+		}
+
+		for (Field field : clazz.getDeclaredFields()) {
 			if (Modifier.isFinal(field.getModifiers()) ||
 				Modifier.isStatic(field.getModifiers())) {
 
@@ -244,7 +364,8 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 			else if (fieldClass.isAssignableFrom(UriInfo.class)) {
 				field.setAccessible(true);
 
-				field.set(instance, new UriInfoImpl(message));
+				field.set(
+					instance, _getVulcanUriInfo(httpServletRequest, message));
 			}
 			else if (fieldClass.isAssignableFrom(User.class)) {
 				field.setAccessible(true);
@@ -256,15 +377,22 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 
 				field.setAccessible(true);
 
-				field.set(instance, _vulcanBatchEngineExportTaskResource);
+				field.set(
+					instance,
+					_vulcanBatchEngineExportTaskResourceFactory.create());
 			}
 			else if (fieldClass.isAssignableFrom(
 						VulcanBatchEngineImportTaskResource.class)) {
 
 				field.setAccessible(true);
 
-				field.set(instance, _vulcanBatchEngineImportTaskResource);
+				field.set(
+					instance,
+					_vulcanBatchEngineImportTaskResourceFactory.create());
 			}
+
+			_setInstanceFields(
+				clazz.getSuperclass(), httpServletRequest, message, instance);
 		}
 	}
 
@@ -280,9 +408,9 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 	private final RoleLocalService _roleLocalService;
 	private final Object _scopeChecker;
 	private final SortParserProvider _sortParserProvider;
-	private final VulcanBatchEngineExportTaskResource
-		_vulcanBatchEngineExportTaskResource;
-	private final VulcanBatchEngineImportTaskResource
-		_vulcanBatchEngineImportTaskResource;
+	private final VulcanBatchEngineExportTaskResourceFactory
+		_vulcanBatchEngineExportTaskResourceFactory;
+	private final VulcanBatchEngineImportTaskResourceFactory
+		_vulcanBatchEngineImportTaskResourceFactory;
 
 }

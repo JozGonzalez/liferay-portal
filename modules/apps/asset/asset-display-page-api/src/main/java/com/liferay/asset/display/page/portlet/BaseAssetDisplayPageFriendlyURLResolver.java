@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.display.page.portlet;
@@ -44,13 +35,13 @@ import com.liferay.layout.seo.template.LayoutSEOTemplateProcessor;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
 import com.liferay.portal.kernel.model.LayoutQueryStringComposite;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -93,12 +84,11 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			(HttpServletRequest)requestContext.get("request");
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			_getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(friendlyURL);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			_getLayoutDisplayPageObjectProvider(
-				layoutDisplayPageProvider, groupId, friendlyURL,
-				_getVersion(params));
+			getLayoutDisplayPageObjectProvider(
+				layoutDisplayPageProvider, groupId, friendlyURL, params);
 
 		Object infoItem = _getInfoItem(layoutDisplayPageObjectProvider, params);
 
@@ -130,8 +120,8 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		Locale locale = portal.getLocale(httpServletRequest);
-		Layout layout = _getLayoutDisplayPageObjectProviderLayout(
-			groupId, layoutDisplayPageObjectProvider,
+		Layout layout = getLayoutDisplayPageObjectProviderLayout(
+			groupId, friendlyURL, layoutDisplayPageObjectProvider,
 			layoutDisplayPageProvider);
 
 		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
@@ -182,19 +172,18 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		throws PortalException {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			_getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(friendlyURL);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			_getLayoutDisplayPageObjectProvider(
-				layoutDisplayPageProvider, groupId, friendlyURL,
-				_getVersion(params));
+			getLayoutDisplayPageObjectProvider(
+				layoutDisplayPageProvider, groupId, friendlyURL, params);
 
 		if (layoutDisplayPageObjectProvider == null) {
 			throw new PortalException();
 		}
 
-		Layout layout = _getLayoutDisplayPageObjectProviderLayout(
-			groupId, layoutDisplayPageObjectProvider,
+		Layout layout = getLayoutDisplayPageObjectProviderLayout(
+			groupId, friendlyURL, layoutDisplayPageObjectProvider,
 			layoutDisplayPageProvider);
 
 		String originalFriendlyURL = _getOriginalFriendlyURL(friendlyURL);
@@ -204,7 +193,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		String urlTitle = layoutDisplayPageObjectProvider.getURLTitle(
 			getLocale(requestContext));
 
-		if (Validator.isNotNull(urlTitle)) {
+		if (useOriginalFriendlyURL() && Validator.isNotNull(urlTitle)) {
 			localizedFriendlyURL = getURLSeparator() + urlTitle;
 		}
 
@@ -225,6 +214,33 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			layoutDisplayPageObjectProvider.getClassPK());
 	}
 
+	protected LayoutDisplayPageObjectProvider<?>
+		getLayoutDisplayPageObjectProvider(
+			LayoutDisplayPageProvider<?> layoutDisplayPageProvider,
+			long groupId, String friendlyURL, Map<String, String[]> params) {
+
+		return _getLayoutDisplayPageObjectProvider(
+			layoutDisplayPageProvider, groupId, friendlyURL,
+			_getVersion(params));
+	}
+
+	protected Layout getLayoutDisplayPageObjectProviderLayout(
+		long groupId, String friendlyURL,
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider) {
+
+		return _getLayoutDisplayPageObjectProviderLayout(
+			groupId, layoutDisplayPageObjectProvider,
+			layoutDisplayPageProvider);
+	}
+
+	protected LayoutDisplayPageProvider<?> getLayoutDisplayPageProvider(
+			String friendlyURL)
+		throws PortalException {
+
+		return _getLayoutDisplayPageProvider(friendlyURL);
+	}
+
 	protected Locale getLocale(Map<String, Object> requestContext) {
 		Locale locale = (Locale)requestContext.get(WebKeys.LOCALE);
 
@@ -242,6 +258,10 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		return locale;
+	}
+
+	protected boolean useOriginalFriendlyURL() {
+		return true;
 	}
 
 	@Reference

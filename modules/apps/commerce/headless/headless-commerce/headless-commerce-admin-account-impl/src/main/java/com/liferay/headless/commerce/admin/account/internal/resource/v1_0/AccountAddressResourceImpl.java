@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
@@ -35,7 +26,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -53,11 +43,10 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-address.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {AccountAddressResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = AccountAddressResource.class
 )
-public class AccountAddressResourceImpl
-	extends BaseAccountAddressResourceImpl implements NestedFieldSupport {
+public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
 	public Response deleteAccountAddress(Long id) throws Exception {
@@ -184,6 +173,9 @@ public class AccountAddressResourceImpl
 				accountAddress.getType(), commerceAddress.getType()),
 			_serviceContextHelper.getServiceContext());
 
+		_updateDefaultBillingShippingAddressId(
+			commerceAddress.getClassPK(), accountAddress, commerceAddress);
+
 		return _toAccountAddress(commerceAddress);
 	}
 
@@ -233,6 +225,9 @@ public class AccountAddressResourceImpl
 			GetterUtil.getInteger(
 				accountAddress.getType(), commerceAddress.getType()),
 			_serviceContextHelper.getServiceContext());
+
+		_updateDefaultBillingShippingAddressId(
+			commerceAddress.getClassPK(), accountAddress, commerceAddress);
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -359,6 +354,9 @@ public class AccountAddressResourceImpl
 					CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING),
 				_serviceContextHelper.getServiceContext());
 
+		_updateDefaultBillingShippingAddressId(
+			accountEntry.getAccountEntryId(), accountAddress, commerceAddress);
+
 		return _accountAddressDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				commerceAddress.getCommerceAddressId(),
@@ -429,6 +427,26 @@ public class AccountAddressResourceImpl
 		}
 
 		return accountAddresses;
+	}
+
+	private void _updateDefaultBillingShippingAddressId(
+			long accountEntryId, AccountAddress accountAddress,
+			CommerceAddress commerceAddress)
+		throws Exception {
+
+		if (Boolean.TRUE.equals(accountAddress.getDefaultBilling())) {
+			_accountEntryLocalService.updateDefaultBillingAddressId(
+				accountEntryId, commerceAddress.getCommerceAddressId());
+
+			commerceAddress.setDefaultBilling(true);
+		}
+
+		if (Boolean.TRUE.equals(accountAddress.getDefaultShipping())) {
+			_accountEntryLocalService.updateDefaultShippingAddressId(
+				accountEntryId, commerceAddress.getCommerceAddressId());
+
+			commerceAddress.setDefaultShipping(true);
+		}
 	}
 
 	@Reference(

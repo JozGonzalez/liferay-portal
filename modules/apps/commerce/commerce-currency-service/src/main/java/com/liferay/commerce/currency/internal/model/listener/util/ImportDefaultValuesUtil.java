@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.internal.model.listener.util;
@@ -19,7 +10,10 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
+
+import java.util.Locale;
 
 /**
  * @author Shuyang Zhou
@@ -32,20 +26,33 @@ public class ImportDefaultValuesUtil {
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
-				ServiceContext serviceContext = new ServiceContext();
+				Locale defaultLocale = LocaleThreadLocal.getDefaultLocale();
+				Locale siteDefaultLocale =
+					LocaleThreadLocal.getSiteDefaultLocale();
 
-				serviceContext.setCompanyId(company.getCompanyId());
-				serviceContext.setLanguageId(
-					LocaleUtil.toLanguageId(company.getLocale()));
+				try {
+					LocaleThreadLocal.setDefaultLocale(company.getLocale());
+					LocaleThreadLocal.setSiteDefaultLocale(null);
 
-				User defaultUser = company.getDefaultUser();
+					ServiceContext serviceContext = new ServiceContext();
 
-				serviceContext.setUserId(defaultUser.getUserId());
+					serviceContext.setCompanyId(company.getCompanyId());
+					serviceContext.setLanguageId(
+						LocaleUtil.toLanguageId(company.getLocale()));
 
-				commerceCurrencyLocalService.importDefaultValues(
-					serviceContext);
+					User guestUser = company.getGuestUser();
 
-				return null;
+					serviceContext.setUserId(guestUser.getUserId());
+
+					commerceCurrencyLocalService.importDefaultValues(
+						false, serviceContext);
+
+					return null;
+				}
+				finally {
+					LocaleThreadLocal.setDefaultLocale(defaultLocale);
+					LocaleThreadLocal.setSiteDefaultLocale(siteDefaultLocale);
+				}
 			});
 	}
 

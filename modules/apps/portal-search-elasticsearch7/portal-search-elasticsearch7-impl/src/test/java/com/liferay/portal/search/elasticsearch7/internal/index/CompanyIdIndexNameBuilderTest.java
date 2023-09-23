@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.index;
@@ -17,6 +8,8 @@ package com.liferay.portal.search.elasticsearch7.internal.index;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
@@ -32,12 +25,18 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexResponse;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * @author André de Oliveira
@@ -47,6 +46,22 @@ public class CompanyIdIndexNameBuilderTest {
 	@ClassRule
 	public static LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		_frameworkUtilMockedStatic.when(
+			() -> FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_frameworkUtilMockedStatic.close();
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -65,6 +80,20 @@ public class CompanyIdIndexNameBuilderTest {
 	@After
 	public void tearDown() throws Exception {
 		_elasticsearchFixture.tearDown();
+
+		if (_companyIndexFactory != null) {
+			ReflectionTestUtil.invoke(
+				_companyIndexFactory, "deactivate", new Class<?>[0]);
+
+			_companyIndexFactory = null;
+		}
+
+		if (_companyIndexFactoryHelper != null) {
+			ReflectionTestUtil.invoke(
+				_companyIndexFactoryHelper, "deactivate", new Class<?>[0]);
+
+			_companyIndexFactoryHelper = null;
+		}
 	}
 
 	@Test
@@ -138,24 +167,45 @@ public class CompanyIdIndexNameBuilderTest {
 	protected void createIndices(String indexNamePrefix, long companyId)
 		throws Exception {
 
-		final CompanyIdIndexNameBuilder companyIdIndexNameBuilder =
+		CompanyIdIndexNameBuilder companyIdIndexNameBuilder =
 			new CompanyIdIndexNameBuilder();
 
 		companyIdIndexNameBuilder.setIndexNamePrefix(indexNamePrefix);
 
-		CompanyIndexFactory companyIndexFactory = new CompanyIndexFactory() {
-			{
-				setElasticsearchConfigurationWrapper(
-					createElasticsearchConfigurationWrapper());
-				setIndexNameBuilder(companyIdIndexNameBuilder);
-				setJsonFactory(new JSONFactoryImpl());
-			}
-		};
+		_companyIndexFactoryHelper = new CompanyIndexFactoryHelper();
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_elasticsearchConfigurationWrapper",
+			createElasticsearchConfigurationWrapper());
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_indexNameBuilder",
+			companyIdIndexNameBuilder);
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactoryHelper, "_jsonFactory", new JSONFactoryImpl());
+
+		ReflectionTestUtil.invoke(
+			_companyIndexFactoryHelper, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
+
+		_companyIndexFactory = new CompanyIndexFactory();
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_companyIndexFactoryHelper",
+			_companyIndexFactoryHelper);
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_elasticsearchConfigurationWrapper",
+			createElasticsearchConfigurationWrapper());
+
+		ReflectionTestUtil.invoke(
+			_companyIndexFactory, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchFixture.getRestHighLevelClient();
 
-		companyIndexFactory.createIndices(
+		_companyIndexFactory.createIndices(
 			restHighLevelClient.indices(), companyId);
 	}
 
@@ -176,6 +226,11 @@ public class CompanyIdIndexNameBuilderTest {
 			new String[] {expectedIndexName}, getIndexResponse.getIndices());
 	}
 
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
+
+	private CompanyIndexFactory _companyIndexFactory;
+	private CompanyIndexFactoryHelper _companyIndexFactoryHelper;
 	private ElasticsearchFixture _elasticsearchFixture;
 
 }

@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "This calls the JSON WS API to add a DL Folder"
 	macro addFolder {
 		var portalURL = JSONCompany.getPortalURL();
 
@@ -34,10 +33,11 @@ definition {
 		var serviceContext = JSONServiceContextUtil.setServiceContext(
 			addGroupPermissions = ${groupPermissions},
 			addGuestPermissions = ${guestPermissions});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlapp/add-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d externalReferenceCode= \
 				-d repositoryId=${repositoryId} \
 				-d parentFolderId=${parentFolderId} \
@@ -55,30 +55,30 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to delete a folder"
 	macro deleteFolder {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
 			groupName = ${groupName},
 			name = ${folderName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfolder/delete-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d folderId=${folderId}
 		''';
 	}
 
-	@summary = "This calls the JSON WS API to move a folder to trash"
 	macro moveFolderToTrash {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
 			groupName = ${groupName},
 			name = ${folderName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dltrash/move-folder-to-trash \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d folderId=${folderId}
 		''';
 

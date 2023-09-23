@@ -4,7 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Object Entries REST APIs";
 
 	setUp {
 		TestCase.setUpPortalInstanceNoSelenium();
@@ -47,13 +47,13 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
 		JSONUser.tearDownNonAdminUsersNoSelenium();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCPNoSelenium();
 		}
 	}
@@ -94,7 +94,6 @@ definition {
 	@priority = 5
 	test CanCreateMultipleOneToManyRelationshipsBetweenTwoObjects {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "MakeRelationshipsBetweenCustomAndSystemObjects#CanCreateMultipleOneToManyRelationshipsBetweenTwoObjects";
 
 		task ("And Given oneToMany subjectAccounts relationship created") {
 			ObjectDefinitionAPI.createRelationship(
@@ -133,7 +132,6 @@ definition {
 	@priority = 4
 	test CanGetEmptyPageWithNoEntriesRelated {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "MakeRelationshipsBetweenCustomAndSystemObjects#CanGetEmptyPageWithNoEntriesRelated";
 
 		task ("And Given I request PUT to relate University entry to the Account entry with /o/c/universities/{universityId}/universitiesAccounts/{accountId}") {
 			ObjectDefinitionAPI.relateObjectEntries(

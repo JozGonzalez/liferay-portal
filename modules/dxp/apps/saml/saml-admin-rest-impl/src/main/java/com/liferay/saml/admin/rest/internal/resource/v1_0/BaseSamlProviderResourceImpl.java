@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.admin.rest.internal.resource.v1_0;
@@ -17,6 +8,7 @@ package com.liferay.saml.admin.rest.internal.resource.v1_0;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -28,6 +20,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -44,7 +37,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.saml.admin.rest.dto.v1_0.SamlProvider;
 import com.liferay.saml.admin.rest.resource.v1_0.SamlProviderResource;
 
@@ -192,30 +184,34 @@ public abstract class BaseSamlProviderResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<SamlProvider, Exception> samlProviderUnsafeConsumer =
-			null;
+		UnsafeFunction<SamlProvider, SamlProvider, Exception>
+			samlProviderUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			samlProviderUnsafeConsumer = samlProvider -> postSamlProvider(
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			samlProviderUnsafeFunction = samlProvider -> postSamlProvider(
 				samlProvider);
 		}
 
-		if (samlProviderUnsafeConsumer == null) {
+		if (samlProviderUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for SamlProvider");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				samlProviders, samlProviderUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				samlProviders, samlProviderUnsafeConsumer);
+				samlProviders, samlProviderUnsafeFunction::apply);
 		}
 		else {
 			for (SamlProvider samlProvider : samlProviders) {
-				samlProviderUnsafeConsumer.accept(samlProvider);
+				samlProviderUnsafeFunction.apply(samlProvider);
 			}
 		}
 	}
@@ -295,36 +291,49 @@ public abstract class BaseSamlProviderResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<SamlProvider, Exception> samlProviderUnsafeConsumer =
-			null;
+		UnsafeFunction<SamlProvider, SamlProvider, Exception>
+			samlProviderUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			samlProviderUnsafeConsumer = samlProvider -> patchSamlProvider(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			samlProviderUnsafeFunction = samlProvider -> patchSamlProvider(
 				samlProvider);
 		}
 
-		if (samlProviderUnsafeConsumer == null) {
+		if (samlProviderUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for SamlProvider");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				samlProviders, samlProviderUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				samlProviders, samlProviderUnsafeConsumer);
+				samlProviders, samlProviderUnsafeFunction::apply);
 		}
 		else {
 			for (SamlProvider samlProvider : samlProviders) {
-				samlProviderUnsafeConsumer.accept(samlProvider);
+				samlProviderUnsafeFunction.apply(samlProvider);
 			}
 		}
 	}
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<SamlProvider>,
+			 UnsafeFunction<SamlProvider, SamlProvider, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -540,6 +549,12 @@ public abstract class BaseSamlProviderResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -570,7 +585,19 @@ public abstract class BaseSamlProviderResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<SamlProvider>,
+		 UnsafeFunction<SamlProvider, SamlProvider, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<SamlProvider>, UnsafeConsumer<SamlProvider, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

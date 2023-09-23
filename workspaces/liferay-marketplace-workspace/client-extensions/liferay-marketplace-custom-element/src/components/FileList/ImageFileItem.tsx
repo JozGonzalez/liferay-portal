@@ -1,8 +1,13 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayButton from '@clayui/button';
 import {CircularProgressbarWithChildren} from 'react-circular-progressbar';
 
-import arrowNorth from '../../assets/icons/arrow-north.svg';
-import arrowSouth from '../../assets/icons/arrow-south.svg';
+import arrowNorth from '../../assets/icons/arrow_north_icon.svg';
+import arrowSouth from '../../assets/icons/arrow_south_icon.svg';
 import {Tooltip} from '../Tooltip/Tooltip';
 import {UploadedFile} from './FileList';
 

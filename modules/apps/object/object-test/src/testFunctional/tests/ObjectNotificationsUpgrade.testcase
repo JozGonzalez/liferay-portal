@@ -2,7 +2,9 @@
 definition {
 
 	property portal.release = "true";
-	property portal.upstream = "true";
+	property portal.upstream = "quarantine";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Object";
 	property testray.main.component.name = "Upgrades Object";
 
@@ -23,10 +25,7 @@ definition {
 		property portal.version = "7.4.13.u33";
 
 		task ("View an email notification template after Upgrade") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Notifications",
-				panel = "Control Panel",
-				portlet = "Templates");
+			Notifications.goToNotificationTemplateAdmin();
 
 			ObjectNotifications.viewNotificationTemplateDetails(
 				bcc = "test@liferay.com",

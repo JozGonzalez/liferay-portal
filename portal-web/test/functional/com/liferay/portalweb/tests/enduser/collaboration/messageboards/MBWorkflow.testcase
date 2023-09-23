@@ -10,13 +10,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -70,7 +70,7 @@ definition {
 
 		Workflow.gotoAssetViaTableTitle(workflowAssetTitle = "Message Boards Thread");
 
-		Comments.addPG(entryComment = "Can you update the entry title");
+		WorkflowComment.add(workflowComment = "Can you update the entry title");
 
 		Comments.edit(
 			entryComment = "Can you update the entry title",
@@ -84,7 +84,7 @@ definition {
 
 		Workflow.gotoAssetViaTableTitle(workflowAssetTitle = "Message Boards Thread");
 
-		Panel.expandPanel(panel = "Comments");
+		Panel.expandPanel(panel = "comments");
 
 		Comments.viewPG(
 			commentCount = 1,

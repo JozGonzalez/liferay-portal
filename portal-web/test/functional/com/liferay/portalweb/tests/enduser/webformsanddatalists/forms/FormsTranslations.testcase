@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -131,9 +131,7 @@ definition {
 
 		Form.editName(formName = "Form1");
 
-		Form.gotoAddField(
-			fieldPositionNumber = 0,
-			fieldType = "Text");
+		Form.gotoAddField(fieldType = "Text");
 
 		Form.addTranslation(localizedLanguage = "Spanish (Spain)");
 
@@ -149,11 +147,15 @@ definition {
 
 		Form.addTranslation(localizedLanguage = "Spanish (Spain)");
 
-		FormFields.viewTransltaionNotDuplicated(
-			key_language1 = "Spanish (Spain)",
-			key_language2 = "Spanish (Spain)",
-			key_position1 = 2,
-			key_position2 = 3);
+		AssertElementPresent(
+			key_index = 1,
+			key_language = "Spanish (Spain)",
+			locator1 = "FormViewBuilder#TRANSLATED_TAB_INDEX");
+
+		AssertElementNotPresent(
+			key_index = 2,
+			key_language = "Spanish (Spain)",
+			locator1 = "FormViewBuilder#TRANSLATED_TAB_INDEX");
 	}
 
 	@description = "Verify that a Form can be created with Spanish as the default portal language"
@@ -161,7 +163,8 @@ definition {
 	test CanBeCreatedWithSpanishAsDefaultLanguage {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsTranslations#CanBeCreatedWithSpanishAsDefaultLanguage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 

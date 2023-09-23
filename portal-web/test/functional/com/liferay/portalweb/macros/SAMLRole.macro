@@ -71,15 +71,11 @@ definition {
 	}
 
 	macro convertEncryptionCertificate {
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "prepare-encryption-PCKS12-certificate");
+		AntCommands.runCommand("build-test.xml", "prepare-encryption-PCKS12-certificate");
 	}
 
 	macro convertSingingCertificate {
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "prepare-signing-PCKS12-certificate");
+		AntCommands.runCommand("build-test.xml", "prepare-signing-PCKS12-certificate");
 	}
 
 	macro createCertificate {
@@ -200,6 +196,18 @@ definition {
 				key_certificateUsage = "ENCRYPTION",
 				locator1 = "CPSAMLAdmin#REPLACE_CERTIFICATE");
 		}
+	}
+
+	macro viewGeneralConfigurations {
+		AssertChecked(locator1 = "CPSAMLAdmin#SAML_ENABLED_CHECKBOX");
+
+		AssertElementPresent(
+			locator1 = "CPSAMLAdmin#SAML_ROLE_SELECT",
+			value1 = ${samlRoleType});
+
+		AssertElementPresent(
+			locator1 = "CPSAMLAdmin#SAML_ENTITY_ID_FIELD",
+			value1 = ${samlEntityId});
 	}
 
 }

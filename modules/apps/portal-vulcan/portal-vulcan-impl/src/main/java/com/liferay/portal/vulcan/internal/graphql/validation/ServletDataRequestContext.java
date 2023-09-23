@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.graphql.validation;
 
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContext;
-import com.liferay.portal.vulcan.internal.graphql.servlet.ServletDataAdapter;
 
 import java.lang.reflect.Method;
 
@@ -67,14 +58,27 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 	}
 
 	@Override
-	public boolean isValidationRequired() {
-		if ((_servletData == null) ||
-			(_servletData instanceof ServletDataAdapter)) {
+	public boolean isJaxRsResourceInvocation() {
+		return _servletData.isJaxRsResourceInvocation();
+	}
 
-			return false;
+	private String _getMethodName(Method method) {
+		Class<?> declaringClass = method.getDeclaringClass();
+
+		if (declaringClass == null) {
+			return method.getName();
 		}
 
-		return true;
+		GraphQLTypeExtension graphQLTypeExtension =
+			declaringClass.getAnnotation(GraphQLTypeExtension.class);
+
+		if (graphQLTypeExtension == null) {
+			return method.getName();
+		}
+
+		Class<?> value = graphQLTypeExtension.value();
+
+		return value.getSimpleName() + "." + method.getName();
 	}
 
 	private String _getNamespace(ServletData servletData) {
@@ -97,7 +101,7 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 
 		ObjectValuePair<Class<?>, String> resourceMethodObjectValuePair =
 			servletData.getResourceMethodObjectValuePair(
-				method.getName(), mutation);
+				_getMethodName(method), mutation);
 
 		if (resourceMethodObjectValuePair == null) {
 			return null;
@@ -115,7 +119,7 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 
 		ObjectValuePair<Class<?>, String> resourceMethodObjectValuePair =
 			servletData.getResourceMethodObjectValuePair(
-				method.getName(), mutation);
+				_getMethodName(method), mutation);
 
 		if (resourceMethodObjectValuePair == null) {
 			return null;

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Web Content Administration";
@@ -19,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -118,64 +119,68 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-125458. The web content created via Headless should be assigned to the default display page."
-	@priority = 4
-	test AddWebContentViaHeadlessAssignedToDefaultDisplayPage {
-		task ("Add a web content folder") {
-			JSONWebcontent.addFolder(
-				folderName = "WC Folder Name",
-				groupName = "Test Site Name");
+	@description = "This is a test for LPS-192836. Assert can select feature image from Document and Media in web content creation."
+	@priority = 5
+	test AddWebContentWithFeaturedImageFromDocumentsAndMedia {
+		property custom.properties = "feature.flag.LPS-180855=true";
+
+		task ("Given a user accesses to the web content editor") {
+			HeadlessSite.addSite(
+				siteName = "Site Name",
+				templateName = "Welcome",
+				templateType = "Site Initializer");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(webContentTitle = "Web Content Title");
 		}
 
-		task ("Add a display page template for Web Content Article and Basic Web Content") {
-			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-				contentType = "Web Content Article",
-				displayPageTemplateEntryName = "Display Page Name",
-				groupName = "Test Site Name",
-				subType = "Basic Web Content");
+		task ("When the user selects the From Documents and Media as Featured Image") {
+			Panel.expandPanel(panel = "Featured Image");
+
+			Select(
+				locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_TYPE",
+				value1 = "From Documents and Media");
 		}
 
-		task ("Add a Display Page Content fragment to display page template") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+		task ("Then the user cannot publish the web content without select an existing small image") {
+			Button.clickPublish();
 
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Display Page Content");
-
-			PageEditor.publish();
+			Alert.viewErrorMessage(errorMessage = "Please select an existing small image.");
 		}
 
-		task ("Mark the display page as default") {
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+		task ("When the user selects an image from Documents and Media") {
+			WebContent.addFeaturedImageFromDocumentsAndMedia(
+				dmFolderName = "Provided by Liferay",
+				imageFileName = "earth.png");
 		}
 
-		task ("Add a web content based on Basic Web Content via Headless") {
-			HeadlessWebcontent.addBasicWebContent(
-				content = "Web Content Content",
-				folderName = "WC Folder Name",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
+		task ("Then the user could publish the web content") {
+			PortletEntry.publish();
 		}
 
-		task ("View the web content assigned to the default display page") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentFolder.gotoCP(
-				folderName = "WC Folder Name",
-				webContentTitle = "WC Folder Name");
-
-			WebContentNavigator.gotoEntryMenuItem(
-				entry = "Web Content Title",
-				menuItem = "View Content");
-
-			ControlMenu.viewHeaderTitle(headerTitle = "Web Content Title");
+		task ("When the user edits the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 			AssertTextEquals(
-				index = 1,
-				locator1 = "WCD#WEB_CONTENT_CONTENT",
-				value1 = "Web Content Content");
+				locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT",
+				value1 = "earth.png");
+		}
+
+		task ("Then the user could change the selected featured image") {
+			WebContent.addFeaturedImageFromDocumentsAndMedia(
+				dmFolderName = "Provided by Liferay",
+				imageFileName = "moon.png");
+
+			PortletEntry.publish();
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			AssertTextEquals(
+				locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT",
+				value1 = "moon.png");
 		}
 	}
 
@@ -643,6 +648,176 @@ definition {
 				webContentContent = "Web Content Content",
 				webContentStatus = "Expired",
 				webContentTitle = "Web Content Title");
+		}
+	}
+
+	@description = "This is a test for LPS-182417. Can map date-time field to editable field and customize date-time format on content page"
+	@priority = 3
+	test MapDateAndTimeFieldOnContentPage {
+		task ("Given a web content with a date and time field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Date and Time",
+				fieldName = "Date and Time");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentDate = "08/06/2021 10:00 AM",
+				webContentDateFieldLabel = "Date and Time",
+				webContentTitle = "Web Content Title");
+
+			PageEditor.publish();
+		}
+
+		task ("When we have a content page with a date fragment") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Content Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+		}
+
+		task ("Then you can map the date and time field to an editable field and customize the date and time format") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				className = "",
+				fragmentName = "Date",
+				id = "element-date");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Date and Time");
+
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Custom");
+
+			Type(
+				key_fieldLabel = "Custom Format",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "dd-MM-YYYY HH:mm a");
+
+			PageEditor.clickManagementBar();
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "",
+				id = "element-date",
+				text = "06-08-2021 10:00 AM");
+		}
+	}
+
+	@description = "This is a test for LPS-182417. Can map date-time field to editable field and configure date-time format on display page"
+	@priority = 3
+	test MapDateAndTimeFieldOnDisplayPage {
+		task ("Given a web content with a date and time field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Date and Time",
+				fieldName = "Date and Time");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentDate = "08/06/2021 10:00 AM",
+				webContentDateFieldLabel = "Date and Time",
+				webContentTitle = "Web Content Title");
+
+			PortletEntry.publish();
+		}
+
+		task ("When we have a display page with a date fragment") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				subType = "WC Structure Name");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+		}
+
+		task ("Then you can map the date and time field to an editable field and customize the date and time format") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				className = "",
+				fragmentName = "Date",
+				id = "element-date");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Date and Time");
+
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Custom");
+
+			Type(
+				key_fieldLabel = "Custom Format",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "dd-MM-YYYY HH:mm a");
+
+			PageEditor.clickManagementBar();
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			WebContent.previewDisplayPageTemplate(webContentContent = "06-08-2021 10:00 AM");
 		}
 	}
 
@@ -1195,7 +1370,7 @@ definition {
 		task ("Copy the Web Content") {
 			WebContentNavigator.gotoEntryMenuItem(
 				entry = "WC WebContent 1",
-				menuItem = "Copy");
+				menuItem = "Make a Copy");
 		}
 
 		task ("Add the second web content and select the display page template in web content") {
@@ -1735,6 +1910,64 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-172129. reserved-article-id is missing from templates."
+	@priority = 4
+	test ViewReservedVariablesDisplayOnWebContent {
+		task ("Given add a web content structure and a template with reserved-article-id") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "HTML",
+				fieldName = "Rich Text");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoTemplates();
+
+			WebContentTemplates.addCP(
+				structureName = "WC Structure Name",
+				templateFile = "freemarker template.ftl",
+				templateName = "WC Template Name");
+		}
+
+		task ("When create a web content using the new structure and template") {
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentRichText = "This is a Rich Text field",
+				webContentRichTextFieldLabel = "HTML",
+				webContentTitle = "Web Content Title");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the reserved-article-id should be available on web content") {
+			task ("Add a page with a Web Content Display widget and display the Web Content article in the Web Content Display widget") {
+				JSONLayout.addPublicLayout(
+					groupName = "Test Site Name",
+					layoutName = "Web Content Display Page");
+
+				Navigator.gotoSitePage(
+					pageName = "Web Content Display Page",
+					siteName = "Test Site Name");
+
+				WidgetPages.addRecentContentWithoutSearch(assetTitle = "Web Content Title");
+			}
+
+			task ("View reserved-article-id is available on web content") {
+				for (var reservedVariables : list "reserved-article-asset-tag-names,reserved-article-author-comments,reserved-article-author-email-address,reserved-article-author-id,reserved-article-author-job-title,reserved-article-author-name,reserved-article-create-date,reserved-article-description,reserved-article-display-date,reserved-article-id, reserved-article-modified-date,reserved-article-small-image-url,reserved-article-title,reserved-article-url-title, reserved-article-version") {
+					AssertElementPresent(locator1 = "//li[contains(.,'${reservedVariables}')]//*[name()='svg'][contains(@class,'check')]");
+				}
+			}
+		}
+	}
+
 	@description = "This is a test for LPS-172561. View warning of duplicated friendly URL in web content from a site."
 	@priority = 4
 	test ViewWarningOfDuplicatedFriendlyURLInWebContentFromASite {
@@ -1771,7 +2004,7 @@ definition {
 			}
 
 			task ("Add another site") {
-				JSONGroup.addGroup(groupName = "Test Site Name 2");
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
 			}
 
 			task ("Add a web content with one friendly URL") {
@@ -1917,7 +2150,7 @@ definition {
 			}
 
 			task ("Add another site") {
-				JSONGroup.addGroup(groupName = "Test Site Name 2");
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
 			}
 
 			task ("Add a web content with three friendly URLs") {
@@ -1944,7 +2177,7 @@ definition {
 			}
 
 			task ("Add a third site") {
-				JSONGroup.addGroup(groupName = "Test Site Name 3");
+				HeadlessSite.addSite(siteName = "Test Site Name 3");
 			}
 
 			task ("Add a web content with four friendly URLs") {
@@ -1975,7 +2208,7 @@ definition {
 			}
 
 			task ("Add a forth site") {
-				JSONGroup.addGroup(groupName = "Test Site Name 4");
+				HeadlessSite.addSite(siteName = "Test Site Name 4");
 			}
 
 			task ("Add a web content with four friendly URLs") {
@@ -2113,7 +2346,7 @@ definition {
 			}
 
 			task ("Add a second site and connect it to asset library") {
-				JSONGroup.addGroup(groupName = "Test Site Name 2");
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
 
 				JSONDepot.connectSite(
 					depotName = "Test Depot Name",
@@ -2241,16 +2474,11 @@ definition {
 				groupName = "Test Site Name",
 				layoutName = "Web Content Display Page");
 
-			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Web Content Display Page",
-				widgetName = "Web Content Display");
-
 			Navigator.gotoSitePage(
 				pageName = "Web Content Display Page",
 				siteName = "Test Site Name");
 
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
+			WidgetPages.addRecentContentWithoutSearch(assetTitle = "WC WebContent Title");
 		}
 
 		task ("Add a page with an Asset Publisher widget and display the Web Content article in the Asset Publisher Widget") {
@@ -2280,20 +2508,13 @@ definition {
 			JSONLayout.addWidgetToPublicLayout(
 				groupName = "Test Site Name",
 				layoutName = "Web Content Display and Asset Publisher Page",
-				widgetName = "Web Content Display");
-
-			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Web Content Display and Asset Publisher Page",
 				widgetName = "Asset Publisher");
 
 			Navigator.gotoSitePage(
 				pageName = "Web Content Display and Asset Publisher Page",
 				siteName = "Test Site Name");
 
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
-
-			IFrame.closeFrame();
+			WidgetPages.addRecentContentWithoutSearch(assetTitle = "WC WebContent Title");
 
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "WC WebContent Title",

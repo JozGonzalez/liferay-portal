@@ -7,9 +7,13 @@ definition {
 	property testray.main.component.name = "Headless";
 
 	setUp {
+		TestCase.setUpPortalInstance();
+
 		User.firstLoginUI();
 
 		task ("Given an OAuth application with headless scopes is created on default instance") {
+			OAuth2.openOAuth2Admin();
+
 			OAuth2ForObject.addOAuth2Application();
 
 			var defaultInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
@@ -26,11 +30,19 @@ definition {
 		}
 
 		task ("And Given an OAuth application with headless scopes is created on www.able.com") {
-			OAuth2ForObject.addOAuth2Application(baseURL = "http://www.able.com:8080");
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@liferay.com");
+
+			OAuth2.openOAuth2Admin(baseURL = "http://www.able.com:8080");
+
+			OAuth2ForObject.addOAuth2Application();
 
 			var virtualInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
 				baseURL = "http://www.able.com:8080",
-				resourceCheckList = "Liferay.Headless.Portal.Instances.everything,Liferay.Object.Admin.REST.everything");
+				resourceCheckList = "Liferay.Headless.Portal.Instances.everything,Liferay.Object.Admin.REST.everything",
+				resourcePanels = "Liferay.Headless.Portal.Instances,Liferay.Object.Admin.REST");
 		}
 
 		task ("And Given objectDefinition Test with site scope and new field name is created and published in default instance") {
@@ -55,6 +67,8 @@ definition {
 	}
 
 	tearDown {
+		OAuth2.openOAuth2Admin();
+
 		var defaultInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
 			resourceCheckList = "Liferay.Headless.Portal.Instances.everything,Liferay.Object.Admin.REST.everything",
 			resourcePanels = "Liferay.Headless.Portal.Instances,Liferay.Object.Admin.REST");
@@ -65,34 +79,43 @@ definition {
 
 		OAuth2.deleteApplication(applicationName = "OAuth Application");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
+			panel = "Control Panel",
+			portlet = "Virtual Instances");
 
-		if (${testPortalInstance} == "true") {
+		PortalInstances.deleteCP(virtualHost = "www.able.com");
+
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "Ignore tests since Oauth scopes problems in LPS-169916"
-	@ignore = "true"
 	@priority = 4
 	test CanCreateObjectEntryByScopeKey {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When I use postScopeScopeKey and scopeKey to create an object entry in default instance") {
 			var defaultInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
-				resourceCheckList = "C_Test.everything",
-				resourcePanels = "C_Test");
+				resourceCheckList = "C_Test.everything,liferay-json-web-services.everything",
+				resourcePanels = "C_Test,Portal Services");
 
-			ObjectDefinitionAPI.createObjectEntryWithName(
+			CustomObjectAPI.createObjectEntryWithFields(
 				en_US_plural_label = "tests",
-				name = "Object Entry in Default Instance",
+				fieldName = "name",
+				fieldValue = "Object Entry in Default Instance",
 				scopeKey = "true",
 				token = ${defaultInstanceToken});
 		}
 
 		task ("Then the object entry created successfully") {
-			var responseToParse = ObjectDefinitionAPI.getObjectEntries(
+			var responseToParse = CustomObjectAPI.getObjectEntries(
 				en_US_plural_label = "tests",
+				scopeKey = "true",
 				token = ${defaultInstanceToken});
 
 			var actualValue = JSONUtil.getWithJSONPath(${responseToParse}, "$.totalCount");
@@ -103,18 +126,19 @@ definition {
 		}
 	}
 
-	@description = "Ignore tests since Oauth scopes problems in LPS-169916"
-	@ignore = "true"
 	@priority = 4
 	test CanCreateObjectEntryInVirtualInstance {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When I use postTest to create an object entry in www.able.com instance") {
 			var virtualInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
 				baseURL = "http://www.able.com:8080",
-				resourceCheckList = "C_Test.everything");
+				resourceCheckList = "C_Test.everything",
+				resourcePanels = "C_Test");
 
-			ObjectDefinitionAPI.createObjectEntryWithField(
+			CustomObjectAPI.createObjectEntryWithFields(
 				en_US_plural_label = "tests",
 				fieldName = "location",
 				fieldValue = "Object Entry in Virtual Instance",
@@ -136,11 +160,11 @@ definition {
 		}
 	}
 
-	@description = "Ignore tests since Oauth scopes problems in LPS-169916"
-	@ignore = "true"
 	@priority = 4
 	test CanIncludeObjectFieldInAPIExplorer {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given navigate to www.able.com:8080/o/c/tests") {
 			APIExplorer.navigateToOpenAPI(
@@ -168,6 +192,39 @@ definition {
 				locator1 = "OpenAPI#REQUEST_BODY",
 				method = "postTest",
 				value1 = "\"name\":");
+		}
+	}
+
+	@priority = 4
+	test CanScopeObjectByInstanceInExportTask {
+		property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-186620=true";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("And Given an object definition Student with a custom field is created and published on virtual instance") {
+			var virtualInstanceToken = OAuth2ForObject.createTokenWithOAuth2Scopes(
+				baseURL = "http://www.able.com:8080",
+				resourceCheckList = "Liferay.Headless.Portal.Instances.everything,Liferay.Object.Admin.REST.everything",
+				resourcePanels = "Liferay.Headless.Portal.Instances,Liferay.Object.Admin.REST");
+
+			ObjectDefinitionAPI.createAndPublishObjectDefinition(
+				en_US_label = "Student",
+				en_US_plural_label = "Students",
+				name = "Student",
+				requiredStringFieldName = "name",
+				token = ${virtualInstanceToken},
+				virtualHost = "www.able.com");
+		}
+
+		task ("When create an export task on default instance") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoExport();
+		}
+
+		task ("Then C_Student is not in the available Entity Type list") {
+			AssertTextNotPresent(value1 = "C_Student (v1_0 - Liferay Object REST)");
 		}
 	}
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.configuration;
@@ -44,6 +35,14 @@ public interface ExportImportServiceConfiguration {
 	public boolean includeAllAssetLinks();
 
 	@Meta.AD(
+		deflt = "true",
+		description = "if-checked,-then-the-generated-previews-and-thumbnails-will-be-included-during-the-staging-process",
+		name = "include-thumbnails-and-previews-during-staging",
+		required = false
+	)
+	public boolean includeThumbnailsAndPreviewsDuringStaging();
+
+	@Meta.AD(
 		deflt = "false",
 		description = "replicate-individual-deletions-by-default-help",
 		name = "replicate-individual-deletions-by-default", required = false
@@ -75,9 +74,24 @@ public interface ExportImportServiceConfiguration {
 	public boolean validateLayoutReferences();
 
 	@Meta.AD(
+		description = "validate-layout-references-whitelisted-url-pattern-help",
+		name = "validate-layout-references-whitelisted-url-pattern",
+		required = false
+	)
+	public String[] validateLayoutReferencesWhitelistedURLPatterns();
+
+	@Meta.AD(
 		deflt = "true", description = "validate-missing-references-help",
 		name = "validate-missing-references", required = false
 	)
 	public boolean validateMissingReferences();
+
+	@Meta.AD(
+		deflt = "false",
+		description = "if-checked-then-the-advanced-publication-configuration-screen-will-be-displayed-by-default-when-publishing-pages",
+		name = "show-advanced-staging-configuration-by-default",
+		required = false
+	)
+	public boolean showAdvancedStagingConfigurationByDefault();
 
 }

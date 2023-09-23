@@ -490,6 +490,209 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-9450. If a product in the open order is removed from the account visibility, the buyer cannot checkout with the product, can be redirected to the catalog page by viewing the product in both order detail and mini-cart, and no other can be added to the cart"
+	@priority = 3
+	test CanManageOpenOrderCorrectlyIfAccountVisibilityForAProductIsRemoved {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And an Account Group is created and contains Commerce Account") {
+			JSONAccountGroup.addAccountGroup(accountGroupName = "AG1");
+
+			AccountGroups.openAccountGroupsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "AG1");
+
+			AccountGroups.addAssignee(
+				accountGroupName = "AG1",
+				assigneeNames = "Commerce Account");
+		}
+
+		task ("And U-Joint's Account Groups visibility is added for AG1") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "U-Joint");
+
+			CommerceDiagram.setVisibility(
+				checkboxName = "AG1",
+				name = "Account Groups",
+				webContentTitle = "Add Account Group Relation to U-Joint");
+		}
+
+		task ("And the buyer adds U-Joint to the cart") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+		}
+
+		task ("When the admin removes Commerce Account in AG1") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			AccountGroups.openAccountGroupsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "AG1");
+
+			AccountGroups.removeAccount(accountGroupName = "Commerce Account");
+		}
+
+		task ("Then the buyer can be redirected to the catalog page by viewing the open order's U-Joint item") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "buyer@liferay.com",
+				userLoginFullName = "Buyer User");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "View");
+
+			Click(
+				key_productName = "U-Joint",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+
+			AssertLocation.assertPartialLocation(value1 = "web/minium/catalog");
+		}
+
+		task ("And the buyer can be redirected to the catalog page by viewing the mini-cart's U-Joint item") {
+			CommerceNavigator.gotoMiniCart();
+
+			Click(
+				key_cartItemName = "U-Joint",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME");
+
+			AssertLocation.assertPartialLocation(value1 = "web/minium/catalog");
+		}
+
+		task ("And the buyer can just save the order, cannot checkout") {
+			CommerceCheckout.gotoCheckoutViaMiniCart();
+
+			AssertElementPresent(
+				key_text = "Save",
+				locator1 = "Button#ANY");
+
+			AssertElementNotPresent(
+				key_text = "Checkout",
+				locator1 = "Button#ANY");
+		}
+
+		task ("And there is an error alert 'One or more products are no longer available' is shown if the buyer tries to add another product to the cart") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			Click(
+				key_productName = "Mount",
+				locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
+
+			AssertElementPresent(
+				key_itemCount = 1,
+				locator1 = "CommerceAccelerators#MINI_CART_BUTTON_DATA_BADGE_COUNT");
+
+			Alert.viewErrorMessage(errorMessage = "Danger:One or more products are no longer available.");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11355. As a user, I cannot reorder an unavailable product."
+	@priority = 5
+	test CannotReorderUnavailableProduct {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "true";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a payment method is activated") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
+		}
+
+		task ("And there is a placed order") {
+			CommerceJSONOrdersAPI._addCommerceOrder(
+				accountEntryName = "Commerce Account",
+				orderItems = "MIN55861:1",
+				orderStatus = 1,
+				paymentMethod = "money-order",
+				paymentStatus = 2);
+		}
+
+		task ("When U-Joint's Minium Channel visibility is removed") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "U-Joint");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Visibility");
+
+			Click(
+				key_entryName = "Minium Portal",
+				key_table = "Channels",
+				locator1 = "CommerceEntry#TABLE_ENTRY_DELETE_BUTTON");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the buyer asserts that U-Joint is not available in the Catalog") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceProducts.searchProduct(search = "U-Joint");
+
+			AssertElementNotPresent(locator1 = "//a[contains(text(),'U-Joint')]");
+		}
+
+		task ("When the buyer clicks on the 'Reorder' button in the placed order's details page") {
+			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
+
+			Click(
+				key_orderAuthor = "Commerce Account",
+				locator1 = "CommerceAccelerators#ORDERS_ENTRY_VIEW_BUTTON");
+
+			Click(
+				key_text = "Reorder",
+				locator1 = "Button#ANY");
+		}
+
+		task ("Then an alert message is shown") {
+			AssertTextEquals(
+				locator1 = "Message#ALERT_DISMISSIBLE",
+				value1 = "Close Error: One or more products are no longer available.");
+		}
+	}
+
 	@description = "COMMERCE-9877. A user can search orders by account name"
 	@priority = 5
 	test CanReturnOrdersBySearchForAccountName {
@@ -696,7 +899,7 @@ definition {
 				orderAuthor = "Buyer User",
 				productName = "Bushings",
 				productPrice = "18.00",
-				productQuantity = 1,
+				productQuantity = "1.00",
 				productSku = "MIN38795",
 				productUnitPrice = "18.00");
 
@@ -707,6 +910,101 @@ definition {
 			AssertElementNotPresent(
 				locator1 = "CommerceFrontStore#FS_PRODUCT_NAME",
 				value1 = "Bushings");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11913. User can search for a product and view the correct pagination for the search result in a placed order"
+	@priority = 5
+	test CanViewSearchedProductWithPaginationInPlacedOrderDetails {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "true";
+
+		task ("Given a buyer user connected to the Commerce Account") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the buyer has placed an order for seven products") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
+
+			for (var productName : list "ABS Sensor,Ball Joints,Bearings,Brake Pads,Brake Rotors,Bushings,Calipers") {
+				FrontStore.addInitializerProductToCart(
+					productName = ${productName},
+					productQuantity = 1);
+			}
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.checkout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				shippingMethod = "Standard");
+		}
+
+		task ("And the buyer can view the products and pagination results from the Placed Orders detail page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
+
+			Button.click(button = "View");
+
+			AssertTextEquals(
+				locator1 = "CP2ActivationKeys#PAGINATION_BUTTON",
+				value1 = "10 Items");
+
+			for (var productName : list "ABS Sensor,Ball Joints,Bearings,Brake Pads,Brake Rotors,Bushings,Calipers") {
+				LexiconEntry.viewEntryName(rowEntry = ${productName});
+			}
+
+			Pagination.viewResults(results = "Showing 1 to 7 of 7 entries.");
+		}
+
+		task ("When the pagination is changed to 4") {
+			Pagination.changePagination(itemsPerPage = "4 Items");
+		}
+
+		task ("Then the seven products are divided into two pages to display with pagination results") {
+			Pagination.viewResults(results = "Showing 1 to 4 of 7 entries.");
+
+			Click(locator1 = "Pagination#NEXT_LINK");
+
+			Pagination.viewResults(results = "Showing 5 to 7 of 7 entries.");
+		}
+
+		task ("When a product ABS Sensor is searched on the page") {
+			CommerceNavigator.searchEntry(entryName = "ABS Sensor");
+		}
+
+		task ("Then the pagination results are changed accordingly only for the searched product") {
+			LexiconEntry.viewEntryName(rowEntry = "ABS Sensor");
+
+			AssertTextEquals(
+				locator1 = "CP2ActivationKeys#PAGINATION_BUTTON",
+				value1 = "4 Items");
+
+			Pagination.viewResults(results = "Showing 1 to 1 of 1 entries.");
+
+			AssertElementPresent(locator1 = "Pagination#FIRST_LINK");
+
+			AssertElementNotPresent(
+				key_pageNumber = 2,
+				locator1 = "Pagination#ANY_PAGE");
 		}
 	}
 
@@ -875,7 +1173,8 @@ definition {
 	test GlobalSettingsForOrderDateConfiguration {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "SFCommerceOrders#GlobalSettingsForOrderDateConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a buyer user connected to the Commerce Account") {
 			CommerceEntry.addAccountEntryUser(
@@ -1165,6 +1464,8 @@ definition {
 			key_text = "Reorder",
 			locator1 = "Button#ANY");
 
+		Button.click(button = "Checkout");
+
 		for (var iterator : list "1,2,3,4,5") {
 			if (${iterator} == 2) {
 				Click(
@@ -1180,7 +1481,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "CommerceEntry#PAGINATION_RESULTS",
-			value1 = "Showing 1 to 2 of 2");
+			value1 = "Showing 1 to 2 of 2 entries.");
 	}
 
 	@description = "COMMERCE-6375. As a buyer, I want to be able to search for one pending order using the search bar"
@@ -1428,6 +1729,8 @@ definition {
 			productSkuList = "MIN55861",
 			warehouseName = "Italy");
 
+		var shipmentId = selenium.getText("CommerceEntry#HEADER_ID");
+
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
@@ -1448,15 +1751,15 @@ definition {
 			key_title = "Shipments",
 			locator1 = "Header#H2_TITLE");
 
-		for (var currentRow : list "status;Delivered,carrier;Test Carrier,tracking-number;Test Tracking Number") {
-			var currentColumn = StringUtil.extractFirst(${currentRow}, ";");
-			var currentValue = StringUtil.extractLast(${currentRow}, ";");
+		for (var currentRow : list "1;Delivered,3;Test Carrier,4;Test Tracking Number") {
+			var column = StringUtil.extractFirst(${currentRow}, ";");
+			var value = StringUtil.extractLast(${currentRow}, ";");
 
 			AssertTextEquals(
-				key_columnName = ${currentColumn},
-				key_tableEntry = "",
-				locator1 = "LexiconTable#TABLE_ENTRY_INFO",
-				value1 = ${currentValue});
+				key_entry = ${shipmentId},
+				key_index = ${column},
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${value});
 		}
 	}
 

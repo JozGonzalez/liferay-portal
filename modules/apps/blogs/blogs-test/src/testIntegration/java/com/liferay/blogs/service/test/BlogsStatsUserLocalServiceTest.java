@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.service.test;
@@ -19,17 +10,24 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.model.BlogsStatsUser;
 import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.service.BlogsStatsUserLocalServiceUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalServiceUtil;
+
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -217,6 +215,65 @@ public class BlogsStatsUserLocalServiceTest {
 	}
 
 	@Test
+	public void testGetOrganizationStatsUsers() throws Exception {
+		BlogsEntryLocalServiceUtil.addEntry(
+			_user1.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user1.getUserId()));
+
+		BlogsEntryLocalServiceUtil.addEntry(
+			_user2.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user2.getUserId()));
+
+		Organization organization = OrganizationTestUtil.addOrganization();
+
+		List<BlogsStatsUser> blogsStatsUsers =
+			BlogsStatsUserLocalServiceUtil.getOrganizationStatsUsers(
+				organization.getOrganizationId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			blogsStatsUsers.toString(), 0, blogsStatsUsers.size());
+
+		_userLocalService.addOrganizationUser(
+			organization.getOrganizationId(), _user1.getUserId());
+
+		blogsStatsUsers =
+			BlogsStatsUserLocalServiceUtil.getOrganizationStatsUsers(
+				organization.getOrganizationId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			blogsStatsUsers.toString(), 1, blogsStatsUsers.size());
+
+		_userLocalService.addOrganizationUser(
+			organization.getOrganizationId(), _user2.getUserId());
+
+		blogsStatsUsers =
+			BlogsStatsUserLocalServiceUtil.getOrganizationStatsUsers(
+				organization.getOrganizationId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			blogsStatsUsers.toString(), 2, blogsStatsUsers.size());
+
+		_userLocalService.unsetOrganizationUsers(
+			organization.getOrganizationId(),
+			new long[] {_user1.getUserId(), _user2.getUserId()});
+
+		blogsStatsUsers =
+			BlogsStatsUserLocalServiceUtil.getOrganizationStatsUsers(
+				organization.getOrganizationId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			blogsStatsUsers.toString(), 0, blogsStatsUsers.size());
+	}
+
+	@Test
 	public void testUpdateRatingsEntryDoesNotIncreaseBlogsStatsUserEntryEntryCount()
 		throws Exception {
 
@@ -286,5 +343,8 @@ public class BlogsStatsUserLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private User _user3;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

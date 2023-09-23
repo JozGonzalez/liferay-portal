@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.audit.storage.service.persistence.test;
@@ -123,6 +114,8 @@ public class AuditEventPersistenceTest {
 
 		AuditEvent newAuditEvent = _persistence.create(pk);
 
+		newAuditEvent.setGroupId(RandomTestUtil.nextLong());
+
 		newAuditEvent.setCompanyId(RandomTestUtil.nextLong());
 
 		newAuditEvent.setUserId(RandomTestUtil.nextLong());
@@ -159,6 +152,8 @@ public class AuditEventPersistenceTest {
 		Assert.assertEquals(
 			existingAuditEvent.getAuditEventId(),
 			newAuditEvent.getAuditEventId());
+		Assert.assertEquals(
+			existingAuditEvent.getGroupId(), newAuditEvent.getGroupId());
 		Assert.assertEquals(
 			existingAuditEvent.getCompanyId(), newAuditEvent.getCompanyId());
 		Assert.assertEquals(
@@ -223,11 +218,11 @@ public class AuditEventPersistenceTest {
 
 	protected OrderByComparator<AuditEvent> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"Audit_AuditEvent", "auditEventId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true, "eventType",
-			true, "className", true, "classPK", true, "message", true,
-			"clientHost", true, "clientIP", true, "serverName", true,
-			"serverPort", true, "sessionID", true);
+			"Audit_AuditEvent", "auditEventId", true, "groupId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "eventType", true, "className", true, "classPK", true,
+			"message", true, "clientHost", true, "clientIP", true, "serverName",
+			true, "serverPort", true, "sessionID", true);
 	}
 
 	@Test
@@ -443,6 +438,8 @@ public class AuditEventPersistenceTest {
 		long pk = RandomTestUtil.nextLong();
 
 		AuditEvent auditEvent = _persistence.create(pk);
+
+		auditEvent.setGroupId(RandomTestUtil.nextLong());
 
 		auditEvent.setCompanyId(RandomTestUtil.nextLong());
 

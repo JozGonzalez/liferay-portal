@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.service;
@@ -81,13 +72,13 @@ public class FragmentEntryLocalServiceUtil {
 	}
 
 	public static FragmentEntry copyFragmentEntry(
-			long userId, long groupId, long fragmentEntryId,
+			long userId, long groupId, long sourceFragmentEntryId,
 			long fragmentCollectionId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().copyFragmentEntry(
-			userId, groupId, fragmentEntryId, fragmentCollectionId,
+			userId, groupId, sourceFragmentEntryId, fragmentCollectionId,
 			serviceContext);
 	}
 
@@ -367,11 +358,30 @@ public class FragmentEntryLocalServiceUtil {
 	}
 
 	public static List<FragmentEntry> getFragmentEntries(
+		long groupId, long fragmentCollectionId, int status, int start, int end,
+		OrderByComparator<FragmentEntry> orderByComparator) {
+
+		return getService().getFragmentEntries(
+			groupId, fragmentCollectionId, status, start, end,
+			orderByComparator);
+	}
+
+	public static List<FragmentEntry> getFragmentEntries(
 		long groupId, long fragmentCollectionId, int start, int end,
 		OrderByComparator<FragmentEntry> orderByComparator) {
 
 		return getService().getFragmentEntries(
 			groupId, fragmentCollectionId, start, end, orderByComparator);
+	}
+
+	public static List<FragmentEntry> getFragmentEntries(
+		long groupId, long fragmentCollectionId, String name, int status,
+		int start, int end,
+		OrderByComparator<FragmentEntry> orderByComparator) {
+
+		return getService().getFragmentEntries(
+			groupId, fragmentCollectionId, name, status, start, end,
+			orderByComparator);
 	}
 
 	public static List<FragmentEntry> getFragmentEntries(
@@ -462,6 +472,13 @@ public class FragmentEntryLocalServiceUtil {
 		return getService().getTempFileNames(userId, groupId, folderName);
 	}
 
+	public static String getUniqueFragmentEntryName(
+		long groupId, long fragmentCollectionId, String name) {
+
+		return getService().getUniqueFragmentEntryName(
+			groupId, fragmentCollectionId, name);
+	}
+
 	public static com.liferay.fragment.model.FragmentEntryVersion getVersion(
 			FragmentEntry fragmentEntry, int version)
 		throws PortalException {
@@ -530,6 +547,13 @@ public class FragmentEntryLocalServiceUtil {
 	}
 
 	public static FragmentEntry updateFragmentEntry(
+			long fragmentEntryId, boolean cacheable)
+		throws PortalException {
+
+		return getService().updateFragmentEntry(fragmentEntryId, cacheable);
+	}
+
+	public static FragmentEntry updateFragmentEntry(
 			long fragmentEntryId, long previewFileEntryId)
 		throws PortalException {
 
@@ -571,6 +595,10 @@ public class FragmentEntryLocalServiceUtil {
 
 	public static FragmentEntryLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(FragmentEntryLocalService service) {
+		_service = service;
 	}
 
 	private static volatile FragmentEntryLocalService _service;

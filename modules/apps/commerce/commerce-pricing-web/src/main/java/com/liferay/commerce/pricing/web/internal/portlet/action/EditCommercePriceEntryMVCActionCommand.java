@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.web.internal.portlet.action;
@@ -84,8 +75,9 @@ public class EditCommercePriceEntryMVCActionCommand
 				addCPInstanceId);
 
 			_commercePriceEntryService.addCommercePriceEntry(
-				addCPInstanceId, commercePriceListId, cpInstance.getPrice(),
-				cpInstance.getPromoPrice(), serviceContext);
+				null, addCPInstanceId, commercePriceListId,
+				cpInstance.getPrice(), false, cpInstance.getPromoPrice(), null,
+				serviceContext);
 		}
 	}
 
@@ -169,8 +161,8 @@ public class EditCommercePriceEntryMVCActionCommand
 			long commercePriceEntryId, ActionRequest actionRequest)
 		throws Exception {
 
-		BigDecimal price = (BigDecimal)ParamUtil.getNumber(
-			actionRequest, "price", BigDecimal.ZERO);
+		boolean bulkPricing = ParamUtil.getBoolean(
+			actionRequest, "bulkPricing");
 		boolean overrideDiscount = ParamUtil.getBoolean(
 			actionRequest, "overrideDiscount");
 		BigDecimal discountLevel1 = (BigDecimal)ParamUtil.getNumber(
@@ -181,9 +173,6 @@ public class EditCommercePriceEntryMVCActionCommand
 			actionRequest, "discountLevel3", BigDecimal.ZERO);
 		BigDecimal discountLevel4 = (BigDecimal)ParamUtil.getNumber(
 			actionRequest, "discountLevel4", BigDecimal.ZERO);
-		boolean bulkPricing = ParamUtil.getBoolean(
-			actionRequest, "bulkPricing");
-
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth");
 		int displayDateDay = ParamUtil.getInteger(
@@ -221,16 +210,35 @@ public class EditCommercePriceEntryMVCActionCommand
 		boolean neverExpire = ParamUtil.getBoolean(
 			actionRequest, "neverExpire");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CommercePriceEntry.class.getName(), actionRequest);
+		BigDecimal price = (BigDecimal)ParamUtil.getNumber(
+			actionRequest, "price", BigDecimal.ZERO);
+		boolean priceOnApplication = ParamUtil.getBoolean(
+			actionRequest, "priceOnApplication");
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryService.getCommercePriceEntry(
+				commercePriceEntryId);
+
+		if (priceOnApplication) {
+			bulkPricing = commercePriceEntry.isBulkPricing();
+			overrideDiscount = !commercePriceEntry.isDiscountDiscovery();
+			discountLevel1 = commercePriceEntry.getDiscountLevel1();
+			discountLevel2 = commercePriceEntry.getDiscountLevel2();
+			discountLevel3 = commercePriceEntry.getDiscountLevel3();
+			discountLevel4 = commercePriceEntry.getDiscountLevel4();
+			price = commercePriceEntry.getPrice();
+		}
 
 		return _commercePriceEntryService.updateCommercePriceEntry(
-			commercePriceEntryId, price, !overrideDiscount, discountLevel1,
-			discountLevel2, discountLevel3, discountLevel4, bulkPricing,
+			commercePriceEntryId, bulkPricing, !overrideDiscount,
+			discountLevel1, discountLevel2, discountLevel3, discountLevel4,
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, expirationDateMonth, expirationDateDay,
 			expirationDateYear, expirationDateHour, expirationDateMinute,
-			neverExpire, serviceContext);
+			neverExpire, price, priceOnApplication,
+			commercePriceEntry.getUnitOfMeasureKey(),
+			ServiceContextFactory.getInstance(
+				CommercePriceEntry.class.getName(), actionRequest));
 	}
 
 	@Reference

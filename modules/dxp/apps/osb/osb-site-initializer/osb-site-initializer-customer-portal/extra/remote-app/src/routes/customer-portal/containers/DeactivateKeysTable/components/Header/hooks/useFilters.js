@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useState} from 'react';
@@ -17,11 +11,11 @@ import {INITIAL_FILTER} from '../../../../ActivationKeysTable/utils/constants/in
 const COMPLIMENTARY = 'Complimentary';
 const SUBSCRIPTION = 'Subscription';
 
-export default function useFilters(setFilterTerm, productName) {
+export default function useFilters(setFilterTerm, productName, baseFilter) {
 	const [filters, setFilters] = useState(INITIAL_FILTER);
 
 	useEffect(() => {
-		let initialFilter = `active eq true and startswith(productName,'${productName}')`;
+		let initialFilter = `active eq true and ${baseFilter}`;
 		let hasFilterPill = false;
 
 		if (filters.searchTerm) {
@@ -277,6 +271,7 @@ export default function useFilters(setFilterTerm, productName) {
 
 		setFilterTerm(`${initialFilter}`);
 	}, [
+		baseFilter,
 		filters.environmentTypes.value,
 		filters.expirationDate.value,
 		filters.instanceSizes.value,

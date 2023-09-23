@@ -1,31 +1,40 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Page Administration";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+	static var randomEntryName1 = StringUtil.randomString(8);
+	static var randomEntryName2 = StringUtil.randomString(8);
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			HeadlessSite.addSite(siteName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Upload two CSS extension files to Documents and Media") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Font Family",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "text/css",
 				sourceFileName = "font_family.css");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Background Color",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "text/css",
 				sourceFileName = "background_color.css");
 		}
@@ -33,35 +42,22 @@ definition {
 		task ("Get the latest version URL of two documents") {
 			var firstURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Font Family",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 			var secondURL = JSONDocument.getLatestVersionURL(
 				dmDocumentTitle = "Background Color",
-				groupName = "Test Site Name");
+				groupName = ${randomSiteName});
 		}
 
 		task ("Add two remote apps for CSS extension") {
 			JSONClientExtension.addRemoteAppEntry(
 				mainURL = ${firstURL},
-				name = "FontFamily",
+				name = ${randomEntryName1},
 				type = "themeCSS");
 
 			JSONClientExtension.addRemoteAppEntry(
 				mainURL = ${secondURL},
-				name = "BackgroundColor",
+				name = ${randomEntryName2},
 				type = "themeCSS");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ClientExtensionGeneral.tearDown();
 		}
 	}
 
@@ -72,39 +68,39 @@ definition {
 
 		task ("Given a site designer has a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of widget page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+		task ("When the site designer accesses to Basic Settings of widget page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
 
 		task ("Then the site designer could add a theme CSS Extension to widget page") {
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "FontFamily");
+				value1 = ${randomEntryName1});
 
 			PortletEntry.save();
 
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "//body",
@@ -114,10 +110,10 @@ definition {
 
 		task ("Given a site designer has a content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -128,29 +124,27 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of content page template") {
+		task ("When the site designer accesses to Basic Settings of content page template") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
 
 		task ("Then the site designer could add a theme CSS Extension to widget page") {
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "FontFamily");
+				value1 = ${randomEntryName1});
 
 			PortletEntry.save();
 
@@ -164,8 +158,8 @@ definition {
 				value1 = "\"Times New Roman\"");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of Pages") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+		task ("When the site designer accesses to Basic Settings of Pages") {
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -175,35 +169,33 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			Panel.expandPanel(panel = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
 
 		task ("Then the site designer could add a theme CSS Extension to Pages") {
-			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName2});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "BackgroundColor");
+				value1 = ${randomEntryName2});
 
 			PortletEntry.save();
 
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Content Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "//body",
@@ -212,7 +204,7 @@ definition {
 
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "//body",
@@ -233,17 +225,17 @@ definition {
 
 		task ("Given a site designer has a content page template with a theme CSS extension") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
 			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection",
 				layoutPageTemplateEntryName = "Content Page Template",
 				layoutPageTemplateStatus = "Draft",
 				layoutPageTemplateType = "Content Page Template");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -257,9 +249,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
 
@@ -271,7 +261,7 @@ definition {
 		}
 
 		task ("When the site designer adds a content page based on content page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				collectionName = "Page Template Collection",
@@ -286,14 +276,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName2});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "BackgroundColor");
+				value1 = ${randomEntryName2});
 
 			PortletEntry.save();
 
@@ -314,10 +302,10 @@ definition {
 
 		task ("Given a site designer has a master page with a theme CSS extension") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				masterPageTemplateEntryName = "Master Page Template");
 
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Master Page Template");
 
@@ -327,9 +315,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
 
@@ -341,7 +327,7 @@ definition {
 		}
 
 		task ("When the site designer adds a content page based on master page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				masterLayoutName = "Master Page Template",
@@ -355,20 +341,18 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "Theme CSS is inherited from master.");
 
-			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName2});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "BackgroundColor");
+				value1 = ${randomEntryName2});
 
 			PortletEntry.save();
 
@@ -388,7 +372,7 @@ definition {
 		}
 
 		task ("Given a site designer applies a theme CSS extension to the Pages") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			WaitForPageLoad();
 
@@ -398,13 +382,11 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			Panel.expandPanel(panel = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
+
+			Navigator.gotoBack();
 		}
 
 		task ("When the site designer adds a widget page") {
@@ -412,26 +394,26 @@ definition {
 		}
 
 		task ("Then the site designer could change the theme CSS extension of widget page") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "Theme CSS is inherited from Pages.");
 
-			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName2});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "BackgroundColor");
+				value1 = ${randomEntryName2});
 
 			PortletEntry.save();
 
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name 3",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertCssValue(
 				locator1 = "//body",
@@ -450,17 +432,17 @@ definition {
 	test ClearInheritedThemeCSSExtensionFromPageTemplate {
 		task ("Given a site designer has a content page template with a theme CSS extension") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 
 			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection",
 				layoutPageTemplateEntryName = "Content Page Template",
 				layoutPageTemplateStatus = "Draft",
 				layoutPageTemplateType = "Content Page Template");
 
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -474,9 +456,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
 
@@ -488,7 +468,7 @@ definition {
 		}
 
 		task ("When the site designer adds a content page based on content page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				collectionName = "Page Template Collection",
@@ -508,26 +488,24 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "FontFamily");
+				value1 = ${randomEntryName1});
 
 			Click(
-				key_fieldLabel = "Client Extension",
+				key_fieldLabel = "Theme CSS",
 				key_text = "trash",
 				locator1 = "Icon#ANY_ITEM_SELECTOR");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 
@@ -549,13 +527,13 @@ definition {
 	test ClearThemeCSSExtensionSelection {
 		task ("Given a site designer has a content page with a theme CSS extension") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
@@ -563,14 +541,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
+			PagesAdmin.addThemeCSSExtension(extensionName = ${randomEntryName1});
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
-				value1 = "FontFamily");
+				value1 = ${randomEntryName1});
 
 			PortletEntry.save();
 
@@ -579,7 +555,7 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to the Look and Feel settings") {
+		task ("When the site designer accesses to the Basic Settings") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
@@ -588,21 +564,19 @@ definition {
 		}
 
 		task ("Then the site designer could clear the theme CSS extension selection") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
 			Click(
-				key_fieldLabel = "Client Extension",
+				key_fieldLabel = "Theme CSS",
 				key_text = "trash",
 				locator1 = "Icon#ANY_ITEM_SELECTOR");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 

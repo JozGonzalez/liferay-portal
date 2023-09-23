@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -19,7 +10,7 @@ import {LinkOrButton} from '@clayui/shared';
 import {ManagementToolbar as FrontendManagementToolbar} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 
 import normalizeDropdownItems from '../normalize_dropdown_items';
 import ActionControls from './ActionControls';
@@ -98,6 +89,16 @@ function ManagementToolbar({
 		activeViewType?.label
 	);
 
+	const searchButtonRef = useRef();
+
+	useEffect(() => {
+		if (searchMobile) {
+			const searchButton = searchButtonRef.current;
+
+			return () => searchButton?.focus();
+		}
+	}, [searchMobile]);
+
 	return (
 		<FeatureFlagContext.Provider
 			value={{showDesignImprovements: showDesignImprovementsFF}}
@@ -152,6 +153,7 @@ function ManagementToolbar({
 				{!active && showSearch && (
 					<SearchControls
 						disabled={disabled}
+						onCloseSearchMobile={() => setSearchMobile(false)}
 						searchActionURL={searchActionURL}
 						searchData={searchData}
 						searchFormMethod={searchFormMethod}
@@ -160,14 +162,14 @@ function ManagementToolbar({
 						searchInputName={searchInputName}
 						searchMobile={searchMobile}
 						searchValue={searchValue}
-						setSearchMobile={setSearchMobile}
 					/>
 				)}
 
-				<FrontendManagementToolbar.ItemList>
+				<FrontendManagementToolbar.ItemList role="none">
 					{!active && showSearch && (
 						<SearchControls.ShowMobileButton
 							disabled={disabled}
+							ref={searchButtonRef}
 							setSearchMobile={setSearchMobile}
 						/>
 					)}

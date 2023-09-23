@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.price.list.exception.CommerceTierPriceEntryMinQuantityException;
 import com.liferay.commerce.price.list.exception.DuplicateCommerceTierPriceEntryException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceEntryException;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
@@ -22,8 +14,8 @@ import com.liferay.commerce.price.list.model.CommerceTierPriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.price.list.service.CommerceTierPriceEntryLocalService;
-import com.liferay.commerce.price.list.test.util.CommercePriceEntryTestUtil;
-import com.liferay.commerce.price.list.test.util.CommerceTierPriceEntryTestUtil;
+import com.liferay.commerce.test.util.price.list.CommercePriceEntryTestUtil;
+import com.liferay.commerce.test.util.price.list.CommerceTierPriceEntryTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -74,10 +66,10 @@ public class CommerceTierPriceEntryLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		User defaultUser = _company.getDefaultUser();
+		User guestUser = _company.getGuestUser();
 
 		_group = GroupTestUtil.addGroup(
-			_company.getCompanyId(), defaultUser.getUserId(), 0);
+			_company.getCompanyId(), guestUser.getUserId(), 0);
 	}
 
 	@After
@@ -110,7 +102,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
 				_group.getGroupId());
 
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomInt(1, 100);
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -151,7 +143,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 				_group.getGroupId());
 
 		String externalReferenceCode = RandomTestUtil.randomString();
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomInt(1, 100);
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -163,10 +155,9 @@ public class CommerceTierPriceEntryLocalServiceTest {
 		_assertTierPriceEntryAttributes(
 			commercePriceEntry, minQuantity, price, promoPrice,
 			commerceTierPriceEntry);
-		Assert.assertThat(
+		Assert.assertEquals(
 			externalReferenceCode,
-			CoreMatchers.equalTo(
-				commerceTierPriceEntry.getExternalReferenceCode()));
+			commerceTierPriceEntry.getExternalReferenceCode());
 	}
 
 	@Test
@@ -199,7 +190,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
 				_group.getGroupId());
 
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomInt(1, 100);
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -247,7 +238,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 				_group.getGroupId());
 
 		String externalReferenceCode = RandomTestUtil.randomString();
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomInt(1, 100);
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -296,7 +287,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
 				_group.getGroupId());
 
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomInt(1, 100);
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -339,7 +330,7 @@ public class CommerceTierPriceEntryLocalServiceTest {
 
 		long commercePriceEntryId = RandomTestUtil.randomLong();
 
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = RandomTestUtil.randomDouble();
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -384,7 +375,9 @@ public class CommerceTierPriceEntryLocalServiceTest {
 		_commercePriceEntryLocalService.updateExternalReferenceCode(
 			priceEntryExternalReferenceCode, commercePriceEntry);
 
-		int minQuantity = RandomTestUtil.randomInt();
+		double minQuantity = BigDecimal.valueOf(
+			RandomTestUtil.randomInt(1, 100), 0
+		).doubleValue();
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
 
@@ -394,11 +387,9 @@ public class CommerceTierPriceEntryLocalServiceTest {
 
 		CommercePriceEntry actualCommercePriceEntry =
 			_commercePriceEntryLocalService.fetchByExternalReferenceCode(
-				_group.getCompanyId(), priceEntryExternalReferenceCode);
+				priceEntryExternalReferenceCode, _group.getCompanyId());
 
-		Assert.assertThat(
-			actualCommercePriceEntry.isHasTierPrice(),
-			CoreMatchers.equalTo(Boolean.TRUE));
+		Assert.assertTrue(actualCommercePriceEntry.isHasTierPrice());
 
 		Assert.assertThat(
 			_commerceTierPriceEntryLocalService.
@@ -416,11 +407,49 @@ public class CommerceTierPriceEntryLocalServiceTest {
 			commerceTierPriceEntries.get(0));
 	}
 
+	@Test(expected = CommerceTierPriceEntryMinQuantityException.class)
+	public void testAddOrUpdateCommerceTierPriceEntry6() throws Exception {
+		frutillaRule.scenario(
+			"Adding a new Tier Price Entry where the referred Price Entry " +
+				"does not exist"
+		).given(
+			"A Price Entry"
+		).and(
+			"The minimum quantity of the entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).and(
+			"The external reference code"
+		).when(
+			"The price, promo price, external reference code"
+		).and(
+			"The minimum quantity are checked against the input data"
+		).and(
+			"commerceTierPriceEntryId, priceEntryExternalReferenceCode"
+		).and(
+			"entryExternalReferenceCode are not used"
+		).then(
+			"The result should be a CommerceTierPriceEntryMinQuantityException"
+		);
+
+		CommercePriceEntry commercePriceEntry =
+			CommercePriceEntryTestUtil.addCommercePriceEntry(
+				_group.getGroupId());
+
+		CommerceTierPriceEntryTestUtil.addOrUpdateCommerceTierPriceEntry(
+			_company.getCompanyId(), 0L,
+			commercePriceEntry.getCommercePriceEntryId(), -1,
+			RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble(), null,
+			null);
+	}
+
 	@Rule
 	public final FrutillaRule frutillaRule = new FrutillaRule();
 
 	private void _assertTierPriceEntryAttributes(
-			CommercePriceEntry commercePriceEntry, int minQuantity,
+			CommercePriceEntry commercePriceEntry, double minQuantity,
 			double price, double promoPrice,
 			CommerceTierPriceEntry commerceTierPriceEntry)
 		throws Exception {
@@ -433,14 +462,17 @@ public class CommerceTierPriceEntryLocalServiceTest {
 			CoreMatchers.equalTo(
 				actualCommercePriceEntry.getCommercePriceEntryId()));
 
-		Assert.assertThat(
-			minQuantity,
-			CoreMatchers.equalTo(commerceTierPriceEntry.getMinQuantity()));
+		BigDecimal actualMinQuantity = commerceTierPriceEntry.getMinQuantity();
+
+		Assert.assertEquals(
+			minQuantity, actualMinQuantity.doubleValue(), 0.0001);
 
 		BigDecimal actualPrice = commerceTierPriceEntry.getPrice();
-		BigDecimal actualPromoPrice = commerceTierPriceEntry.getPromoPrice();
 
 		Assert.assertEquals(price, actualPrice.doubleValue(), 0.0001);
+
+		BigDecimal actualPromoPrice = commerceTierPriceEntry.getPromoPrice();
+
 		Assert.assertEquals(promoPrice, actualPromoPrice.doubleValue(), 0.0001);
 	}
 

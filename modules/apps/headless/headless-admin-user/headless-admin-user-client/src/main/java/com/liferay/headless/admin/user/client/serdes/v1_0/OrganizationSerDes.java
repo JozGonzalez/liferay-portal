@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.client.serdes.v1_0;
@@ -29,7 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -348,6 +338,20 @@ public class OrganizationSerDes {
 			sb.append("]");
 		}
 
+		if (organization.getTreePath() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"treePath\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(organization.getTreePath()));
+
+			sb.append("\"");
+		}
+
 		if (organization.getUserAccounts() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -545,6 +549,13 @@ public class OrganizationSerDes {
 			map.put("services", String.valueOf(organization.getServices()));
 		}
 
+		if (organization.getTreePath() == null) {
+			map.put("treePath", null);
+		}
+		else {
+			map.put("treePath", String.valueOf(organization.getTreePath()));
+		}
+
 		if (organization.getUserAccounts() == null) {
 			map.put("userAccounts", null);
 		}
@@ -585,14 +596,18 @@ public class OrganizationSerDes {
 						jsonParserFieldName, "childOrganizations")) {
 
 				if (jsonParserFieldValue != null) {
-					organization.setChildOrganizations(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> OrganizationSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Organization[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Organization[] childOrganizationsArray =
+						new Organization[jsonParserFieldValues.length];
+
+					for (int i = 0; i < childOrganizationsArray.length; i++) {
+						childOrganizationsArray[i] = OrganizationSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					organization.setChildOrganizations(childOrganizationsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "comment")) {
@@ -602,14 +617,18 @@ public class OrganizationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
-					organization.setCustomFields(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> CustomFieldSerDes.toDTO((String)object)
-						).toArray(
-							size -> new CustomField[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CustomField[] customFieldsArray =
+						new CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] = CustomFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					organization.setCustomFields(customFieldsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
@@ -683,14 +702,19 @@ public class OrganizationSerDes {
 						jsonParserFieldName, "organizationAccounts")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Account[] organizationAccountsArray =
+						new Account[jsonParserFieldValues.length];
+
+					for (int i = 0; i < organizationAccountsArray.length; i++) {
+						organizationAccountsArray[i] = AccountSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
 					organization.setOrganizationAccounts(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> AccountSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Account[size]
-						));
+						organizationAccountsArray);
 				}
 			}
 			else if (Objects.equals(
@@ -713,26 +737,39 @@ public class OrganizationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "services")) {
 				if (jsonParserFieldValue != null) {
-					organization.setServices(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ServiceSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Service[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Service[] servicesArray =
+						new Service[jsonParserFieldValues.length];
+
+					for (int i = 0; i < servicesArray.length; i++) {
+						servicesArray[i] = ServiceSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					organization.setServices(servicesArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "treePath")) {
+				if (jsonParserFieldValue != null) {
+					organization.setTreePath((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "userAccounts")) {
 				if (jsonParserFieldValue != null) {
-					organization.setUserAccounts(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> UserAccountSerDes.toDTO((String)object)
-						).toArray(
-							size -> new UserAccount[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					UserAccount[] userAccountsArray =
+						new UserAccount[jsonParserFieldValues.length];
+
+					for (int i = 0; i < userAccountsArray.length; i++) {
+						userAccountsArray[i] = UserAccountSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					organization.setUserAccounts(userAccountsArray);
 				}
 			}
 		}

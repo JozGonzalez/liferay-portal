@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -68,13 +59,19 @@ if (Validator.isNotNull(backURL)) {
 							CommerceInventoryWarehouseItem commerceInventoryWarehouseItem = commerceInventoryWarehouseItemsDisplayContext.getCommerceInventoryWarehouseItem(commerceInventoryWarehouse);
 
 							long commerceInventoryWarehouseItemId = 0;
-							int quantity = 0;
+							BigDecimal quantity = BigDecimal.ZERO;
 							long mvccVersion = 0;
 
 							if (commerceInventoryWarehouseItem != null) {
 								commerceInventoryWarehouseItemId = commerceInventoryWarehouseItem.getCommerceInventoryWarehouseItemId();
-								quantity = commerceInventoryWarehouseItem.getQuantity();
+
 								mvccVersion = commerceInventoryWarehouseItem.getMvccVersion();
+
+								BigDecimal commerceInventoryWarehouseItemQuantity = commerceInventoryWarehouseItem.getQuantity();
+
+								if (commerceInventoryWarehouseItemQuantity != null) {
+									quantity = commerceInventoryWarehouseItemQuantity;
+								}
 							}
 
 							int curIndex = commerceInventoryWarehouses.indexOf(commerceInventoryWarehouse);
@@ -85,7 +82,7 @@ if (Validator.isNotNull(backURL)) {
 									<%= HtmlUtil.escape(commerceInventoryWarehouse.getName(locale)) %>
 								</td>
 								<td>
-									<aui:input id='<%= "commerceInventoryWarehouseItemQuantity" + curIndex %>' label="" name="commerceInventoryWarehouseItemQuantity" value="<%= quantity %>" wrapperCssClass="m-0" />
+									<aui:input id='<%= "commerceInventoryWarehouseItemQuantity" + curIndex %>' label="" name="commerceInventoryWarehouseItemQuantity" value="<%= quantity.intValue() %>" wrapperCssClass="m-0" />
 								</td>
 								<td class="text-center">
 									<aui:button cssClass="warehouse-save-btn" name='<%= "saveButton" + curIndex %>' primary="<%= true %>" value="save" />

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.model.listener;
@@ -27,6 +18,8 @@ import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Objects;
@@ -61,9 +54,12 @@ public class DDMStructureModelListener extends BaseModelListener<DDMStructure> {
 
 		if ((ddmStructure.getClassNameId() != _portal.getClassNameId(
 				JournalArticle.class)) ||
-			Objects.equals(
-				originalDDMStructure.getDefinition(),
-				ddmStructure.getDefinition())) {
+			(Objects.equals(
+				originalDDMStructure.getStructureKey(),
+				ddmStructure.getStructureKey()) &&
+			 Objects.equals(
+				 originalDDMStructure.getDefinition(),
+				 ddmStructure.getDefinition()))) {
 
 			return;
 		}
@@ -73,22 +69,45 @@ public class DDMStructureModelListener extends BaseModelListener<DDMStructure> {
 
 		actionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
-				Property ddmStructureKeyProperty = PropertyFactoryUtil.forName(
-					"DDMStructureKey");
+				Property ddmStructureIdProperty = PropertyFactoryUtil.forName(
+					"DDMStructureId");
 
 				dynamicQuery.add(
-					ddmStructureKeyProperty.eq(
-						originalDDMStructure.getStructureKey()));
+					ddmStructureIdProperty.eq(
+						originalDDMStructure.getStructureId()));
 			});
 		actionableDynamicQuery.setGroupId(originalDDMStructure.getGroupId());
-		actionableDynamicQuery.setPerformActionMethod(
-			(JournalArticle journalArticle) ->
+
+		ActionableDynamicQuery.PerformActionMethod<?> performActionMethod =
+			null;
+
+		if (Objects.equals(
+				originalDDMStructure.getDefinition(),
+				ddmStructure.getDefinition())) {
+
+			Indexer<JournalArticle> indexer =
+				_indexerRegistry.nullSafeGetIndexer(JournalArticle.class);
+
+			performActionMethod = (JournalArticle journalArticle) -> {
+				try {
+					indexer.reindex(journalArticle);
+				}
+				catch (Exception exception) {
+					throw new PortalException(exception);
+				}
+			};
+		}
+		else {
+			performActionMethod = (JournalArticle journalArticle) ->
 				_ddmFieldLocalService.updateDDMFormValues(
 					ddmStructure.getStructureId(), journalArticle.getId(),
 					_fieldsToDDMFormValuesConverter.convert(
 						ddmStructure,
 						_journalConverter.getDDMFields(
-							ddmStructure, journalArticle.getContent()))));
+							ddmStructure, journalArticle.getContent())));
+		}
+
+		actionableDynamicQuery.setPerformActionMethod(performActionMethod);
 
 		try {
 			actionableDynamicQuery.performActions();
@@ -103,6 +122,9 @@ public class DDMStructureModelListener extends BaseModelListener<DDMStructure> {
 
 	@Reference
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
+
+	@Reference
+	private IndexerRegistry _indexerRegistry;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;

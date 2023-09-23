@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -40,7 +31,9 @@ import com.liferay.portal.kernel.exception.SitemapChangeFrequencyException;
 import com.liferay.portal.kernel.exception.SitemapIncludeException;
 import com.liferay.portal.kernel.exception.SitemapPagePriorityException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CustomizedPages;
@@ -111,6 +104,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -122,7 +116,6 @@ import com.liferay.portal.service.base.LayoutLocalServiceBaseImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.sites.kernel.util.Sites;
-import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -242,7 +235,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
 		if (system &&
-			(Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) ||
+			((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) &&
+			  !FeatureFlagManagerUtil.isEnabled("LPS-195205")) ||
 			 Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
 			 Objects.equals(type, LayoutConstants.TYPE_CONTENT))) {
 
@@ -709,6 +703,44 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			description, type, hidden, false, friendlyURL, serviceContext);
 	}
 
+	public Layout copyLayout(
+			long userId, long groupId, boolean privateLayout,
+			Map<Locale, String> nameMap, boolean hidden, boolean system,
+			boolean copyPermissions, long sourcePlid,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		Layout sourceLayout = layoutLocalService.getLayout(sourcePlid);
+
+		UnicodeProperties sourceUnicodeProperties =
+			sourceLayout.getTypeSettingsProperties();
+
+		Layout targetLayout = layoutLocalService.addLayout(
+			userId, groupId, privateLayout, sourceLayout.getParentLayoutId(),
+			sourceLayout.getClassNameId(), sourceLayout.getClassPK(), nameMap,
+			sourceLayout.getTitleMap(), sourceLayout.getDescriptionMap(),
+			sourceLayout.getKeywordsMap(), sourceLayout.getRobotsMap(),
+			sourceLayout.getType(), sourceUnicodeProperties.toString(), hidden,
+			system, new HashMap<>(), sourceLayout.getMasterLayoutPlid(),
+			serviceContext);
+
+		if (copyPermissions) {
+			_resourceLocalService.deleteResource(
+				targetLayout.getCompanyId(), Layout.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL, targetLayout.getPlid());
+			_resourceLocalService.copyModelResources(
+				sourceLayout.getCompanyId(), Layout.class.getName(),
+				sourceLayout.getPlid(), targetLayout.getPlid());
+		}
+
+		UnicodeProperties targetUnicodeProperties =
+			targetLayout.getTypeSettingsProperties();
+
+		targetUnicodeProperties.put("published", Boolean.FALSE.toString());
+
+		return layoutLocalService.updateLayout(targetLayout);
+	}
+
 	/**
 	 * Deletes the layout, its child layouts, and its associated resources.
 	 *
@@ -767,6 +799,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		for (Layout childLayout : childLayouts) {
 			layoutLocalService.deleteLayout(childLayout, serviceContext);
 		}
+
+		LockManagerUtil.unlock(Layout.class.getName(), layout.getPlid());
 
 		// Layout friendly URLs
 
@@ -952,12 +986,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	@Override
 	public Layout fetchDefaultLayout(long groupId, boolean privateLayout) {
 		if (groupId > 0) {
-			List<Layout> layouts = layoutPersistence.findByG_P(
-				groupId, privateLayout, 0, 1);
-
-			if (!layouts.isEmpty()) {
-				return layouts.get(0);
-			}
+			return layoutPersistence.fetchByG_P_First(
+				groupId, privateLayout, null);
 		}
 
 		return null;
@@ -1125,12 +1155,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	@Override
 	public long getDefaultPlid(long groupId) {
 		if (groupId > 0) {
-			List<Layout> layouts = layoutPersistence.findByGroupId(
-				groupId, 0, 1);
+			Layout layout = layoutPersistence.fetchByGroupId_First(
+				groupId, null);
 
-			if (!layouts.isEmpty()) {
-				Layout layout = layouts.get(0);
-
+			if (layout != null) {
 				return layout.getPlid();
 			}
 		}
@@ -1980,6 +2008,14 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	@Override
 	public int getLayoutsCount(
+		long groupId, boolean privateLayout, long parentLayoutId) {
+
+		return layoutPersistence.countByG_P_P(
+			groupId, privateLayout, parentLayoutId);
+	}
+
+	@Override
+	public int getLayoutsCount(
 			long groupId, long userId, boolean privateLayout, String keywords,
 			String[] types)
 		throws PortalException {
@@ -2102,12 +2138,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			getCounterName(groupId, privateLayout));
 
 		if (nextLayoutId == 1) {
-			List<Layout> layouts = layoutPersistence.findByG_P(
-				groupId, privateLayout, 0, 1, new LayoutComparator());
+			Layout layout = layoutPersistence.fetchByG_P_First(
+				groupId, privateLayout, new LayoutComparator());
 
-			if (!layouts.isEmpty()) {
-				Layout layout = layouts.get(0);
-
+			if (layout != null) {
 				nextLayoutId = layout.getLayoutId() + 1;
 
 				counterLocalService.reset(
@@ -2907,7 +2941,6 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			groupId, privateLayout, layoutId);
 
 		layout.setModifiedDate(new Date());
-
 		layout.setThemeId(themeId);
 		layout.setColorSchemeId(colorSchemeId);
 		layout.setCss(css);
@@ -3615,7 +3648,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 				layoutPrototypeUuid, layout.getCompanyId());
 
 		try {
-			SitesUtil.applyLayoutPrototype(
+			_sites.applyLayoutPrototype(
 				layoutPrototype, layout, layoutPrototypeLinkEnabled);
 		}
 		catch (PortalException portalException) {
@@ -3981,10 +4014,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		try {
 			WorkflowThreadLocal.setEnabled(false);
 
-			SitesUtil.mergeLayoutPrototypeLayout(group, layout);
+			_sites.mergeLayoutPrototypeLayout(group, layout);
 
 			if (Validator.isNotNull(layout.getSourcePrototypeLayoutUuid())) {
-				SitesUtil.mergeLayoutSetPrototypeLayouts(group, layoutSet);
+				_sites.mergeLayoutSetPrototypeLayouts(group, layoutSet);
 			}
 		}
 		catch (CTTransactionException | PortalException exception) {
@@ -4016,10 +4049,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		boolean workflowEnabled = WorkflowThreadLocal.isEnabled();
 
 		try {
-			if (SitesUtil.isLayoutSetMergeable(group, layoutSet)) {
+			if (_sites.isLayoutSetMergeable(group, layoutSet)) {
 				WorkflowThreadLocal.setEnabled(false);
 
-				SitesUtil.mergeLayoutSetPrototypeLayouts(group, layoutSet);
+				_sites.mergeLayoutSetPrototypeLayouts(group, layoutSet);
 			}
 		}
 		catch (Exception exception) {
@@ -4081,6 +4114,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutLocalServiceImpl.class);
 
+	private static volatile Sites _sites =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			Sites.class, LayoutLocalServiceImpl.class, "_sites", false);
 	private static final ThreadLocal<Long> _virtualLayoutTargetGroupId =
 		new CentralizedThreadLocal<>(
 			LayoutLocalServiceImpl.class + "._virtualLayoutTargetGroupId",

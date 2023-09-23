@@ -1,28 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.internal.servlet;
 
 import com.liferay.commerce.checkout.helper.CommerceCheckoutStepHttpHelper;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.payment.engine.CommerceSubscriptionEngine;
 import com.liferay.commerce.payment.result.CommercePaymentResult;
+import com.liferay.commerce.payment.util.CommercePaymentHelper;
 import com.liferay.commerce.payment.util.CommercePaymentHttpHelper;
-import com.liferay.commerce.payment.util.CommercePaymentUtils;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
@@ -59,9 +50,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"osgi.http.whiteboard.context.path=/" + CommercePaymentConstants.SERVLET_PATH,
+		"osgi.http.whiteboard.context.path=/" + CommercePaymentMethodConstants.SERVLET_PATH,
 		"osgi.http.whiteboard.servlet.name=com.liferay.commerce.payment.internal.servlet.CommercePaymentServlet",
-		"osgi.http.whiteboard.servlet.pattern=/" + CommercePaymentConstants.SERVLET_PATH + "/*"
+		"osgi.http.whiteboard.servlet.pattern=/" + CommercePaymentMethodConstants.SERVLET_PATH + "/*"
 	},
 	service = Servlet.class
 )
@@ -146,9 +137,8 @@ public class CommercePaymentServlet extends HttpServlet {
 				_commercePaymentEngine.getCommercePaymentMethodType(
 					_commerceOrderId);
 
-			if ((CommercePaymentConstants.
-					COMMERCE_PAYMENT_METHOD_TYPE_OFFLINE ==
-						commercePaymentMethodType) ||
+			if ((CommercePaymentMethodConstants.TYPE_OFFLINE ==
+					commercePaymentMethodType) ||
 				(commercePaymentMethodType == -1)) {
 
 				_commercePaymentEngine.completePayment(
@@ -158,9 +148,8 @@ public class CommercePaymentServlet extends HttpServlet {
 			}
 
 			if (commercePaymentResult.isSuccess() &&
-				(CommercePaymentConstants.
-					COMMERCE_PAYMENT_METHOD_TYPE_ONLINE_STANDARD ==
-						commercePaymentMethodType)) {
+				(CommercePaymentMethodConstants.TYPE_ONLINE_STANDARD ==
+					commercePaymentMethodType)) {
 
 				if (commerceOrder.isSubscriptionOrder()) {
 					_commerceSubscriptionEngine.completeRecurringPayment(
@@ -229,7 +218,7 @@ public class CommercePaymentServlet extends HttpServlet {
 			_commerceOrderId);
 
 		if (commerceOrder.isSubscriptionOrder() &&
-			!_commercePaymentUtils.isDeliveryOnlySubscription(commerceOrder)) {
+			!_commercePaymentHelper.isDeliveryOnlySubscription(commerceOrder)) {
 
 			return _commerceSubscriptionEngine.processRecurringPayment(
 				_commerceOrderId, _nextUrl, httpServletRequest);
@@ -254,10 +243,10 @@ public class CommercePaymentServlet extends HttpServlet {
 	private CommercePaymentEngine _commercePaymentEngine;
 
 	@Reference
-	private CommercePaymentHttpHelper _commercePaymentHttpHelper;
+	private CommercePaymentHelper _commercePaymentHelper;
 
 	@Reference
-	private CommercePaymentUtils _commercePaymentUtils;
+	private CommercePaymentHttpHelper _commercePaymentHttpHelper;
 
 	@Reference
 	private CommerceSubscriptionEngine _commerceSubscriptionEngine;

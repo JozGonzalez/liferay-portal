@@ -22,18 +22,20 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -44,8 +46,13 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8152 | Test Summary: Check all applicable events trigger for unknown users (Page, Blog, Form, Web Content, Documents & Media, Social)"
 	@priority = 5
 	test CheckGeneralEventsForUnknownUser {
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix data source name is not found
+		// AC Quarantine Ticket: LRAC-13741
+
 		property proxy.server.enabled = "true";
-		property test.name.skip.portal.instance = "GeneralEvents#CheckGeneralEventsForUnknownUser";
+		property test.run.type = "single";
 
 		task ("Add widget pages") {
 			for (var layoutName : list "WebContent,Blog,Document,Form") {

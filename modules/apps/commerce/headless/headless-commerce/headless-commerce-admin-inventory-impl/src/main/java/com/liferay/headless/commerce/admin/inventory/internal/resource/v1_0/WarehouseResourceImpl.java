@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.inventory.internal.resource.v1_0;
@@ -20,7 +11,6 @@ import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemServ
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
-import com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.WarehouseDTOConverter;
 import com.liferay.headless.commerce.admin.inventory.internal.odata.entity.v1_0.WarehouseEntityModel;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
@@ -30,14 +20,18 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
+
+import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.Map;
@@ -273,9 +267,14 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 			for (WarehouseItem warehouseItem : warehouseItems) {
 				_commerceInventoryWarehouseItemService.
 					addOrUpdateCommerceInventoryWarehouseItem(
+						warehouseItem.getExternalReferenceCode(),
+						commerceInventoryWarehouse.getCompanyId(),
 						commerceInventoryWarehouse.
 							getCommerceInventoryWarehouseId(),
-						warehouseItem.getSku(), warehouseItem.getQuantity());
+						BigDecimalUtil.get(
+							warehouseItem.getQuantity(), BigDecimal.ZERO),
+						warehouseItem.getSku(),
+						warehouseItem.getUnitOfMeasureKey());
 			}
 		}
 	}
@@ -350,7 +349,10 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;
 
-	@Reference
-	private WarehouseDTOConverter _warehouseDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.converter.WarehouseDTOConverter)"
+	)
+	private DTOConverter<CommerceInventoryWarehouse, Warehouse>
+		_warehouseDTOConverter;
 
 }

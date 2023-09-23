@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.model;
@@ -45,6 +36,7 @@ public class GroupWrapper
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("creatorUserId", getCreatorUserId());
@@ -88,6 +80,13 @@ public class GroupWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long groupId = (Long)attributes.get("groupId");
@@ -484,6 +483,16 @@ public class GroupWrapper
 		boolean privateLayout, boolean controlPanel) {
 
 		return model.getDisplayURL(themeDisplay, privateLayout, controlPanel);
+	}
+
+	/**
+	 * Returns the external reference code of this group.
+	 *
+	 * @return the external reference code of this group
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -919,6 +928,11 @@ public class GroupWrapper
 	}
 
 	@Override
+	public boolean isContentSharingWithChildrenEnabled() {
+		return model.isContentSharingWithChildrenEnabled();
+	}
+
+	@Override
 	public boolean isControlPanel() {
 		return model.isControlPanel();
 	}
@@ -1213,6 +1227,16 @@ public class GroupWrapper
 		java.util.Locale defaultLocale) {
 
 		model.setDescriptionMap(descriptionMap, defaultLocale);
+	}
+
+	/**
+	 * Sets the external reference code of this group.
+	 *
+	 * @param externalReferenceCode the external reference code of this group
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**

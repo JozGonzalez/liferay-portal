@@ -3,10 +3,12 @@
 <suppressions>
 	<checkstyle>
 		<suppress checks="PersistenceCallCheck" files="asset-publisher-web/src/main/java/com/liferay/asset/publisher/web/internal/display/context/AssetPublisherDisplayContext\.java" />
+		<suppress checks="PersistenceCallCheck" files="asset-service/src/main/java/com/liferay/asset/internal/search/AssetSearcher\.java" />
 	</checkstyle>
 	<source-check>
 		<suppress checks="JavaUpgradeConnectionCheck" files="asset-entry-rel-service/src/main/java/com/liferay/asset/entry/rel/internal/upgrade/v1_0_0/AssetEntryAssetCategoryRelUpgradeProcess.java" />
 		<suppress checks="JavaVerifyUpgradeConnectionCheck" files="asset-entry-rel-service/src/main/java/com/liferay/asset/entry/rel/internal/upgrade/v1_0_0/AssetEntryAssetCategoryRelUpgradeProcess.java" />
 		<suppress checks="XMLServiceEntityNameCheck" files="asset-category-property-service/service\.xml" />
+		<suppress checks="XMLServiceEntityNameCheck" files="asset-link-service/service\.xml" />
 	</source-check>
 </suppressions>

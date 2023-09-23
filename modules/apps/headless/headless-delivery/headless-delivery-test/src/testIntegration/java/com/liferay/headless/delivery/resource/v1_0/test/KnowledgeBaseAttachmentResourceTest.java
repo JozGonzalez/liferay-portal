@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -31,10 +22,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import java.io.File;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -50,18 +43,105 @@ public class KnowledgeBaseAttachmentResourceTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		ServiceContext serviceContext = new ServiceContext();
+		_kbArticle = _addKBArticle();
+	}
 
-		serviceContext.setAddGuestPermissions(true);
-		serviceContext.setScopeGroupId(testGroup.getGroupId());
+	@Override
+	@Test
+	public void testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode()
+		throws Exception {
 
-		_kbArticle = KBArticleLocalServiceUtil.addKBArticle(
-			null,
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
-			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, null, null, null, serviceContext);
+		super.
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode();
+
+		// Nonexistent knowledge base article
+
+		KnowledgeBaseAttachment knowledgeBaseAttachment =
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment();
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					RandomTestUtil.randomString(),
+					knowledgeBaseAttachment.getExternalReferenceCode()));
+
+		// Nonexistent knowledge base attachment
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode(),
+					RandomTestUtil.randomString()));
+
+		// Knowledge base attachment associated to a different article
+
+		KBArticle prevKBArticle = _kbArticle;
+
+		_kbArticle = _addKBArticle();
+
+		KnowledgeBaseAttachment newKnowledgeBaseAttachment =
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment();
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					prevKBArticle.getExternalReferenceCode(),
+					newKnowledgeBaseAttachment.getExternalReferenceCode()));
+	}
+
+	@Override
+	@Test
+	public void testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode()
+		throws Exception {
+
+		super.
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode();
+
+		// Nonexistent knowledge base article
+
+		KnowledgeBaseAttachment knowledgeBaseAttachment =
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment();
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				getSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					RandomTestUtil.randomString(),
+					knowledgeBaseAttachment.getExternalReferenceCode()));
+
+		// Nonexistent knowledge base attachment
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				getSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode(),
+					RandomTestUtil.randomString()));
+
+		// Knowledge base attachment associated to a different article
+
+		KBArticle prevKBArticle = _kbArticle;
+
+		_kbArticle = _addKBArticle();
+
+		KnowledgeBaseAttachment newKnowledgeBaseAttachment =
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment();
+
+		assertHttpResponseStatusCode(
+			404,
+			knowledgeBaseAttachmentResource.
+				getSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCodeHttpResponse(
+					testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId(),
+					prevKBArticle.getExternalReferenceCode(),
+					newKnowledgeBaseAttachment.getExternalReferenceCode()));
 	}
 
 	@Override
@@ -117,10 +197,31 @@ public class KnowledgeBaseAttachmentResourceTest
 			testDeleteKnowledgeBaseAttachment_addKnowledgeBaseAttachment()
 		throws Exception {
 
-		return knowledgeBaseAttachmentResource.
-			postKnowledgeBaseArticleKnowledgeBaseAttachment(
-				_kbArticle.getResourcePrimKey(),
-				randomKnowledgeBaseAttachment(), getMultipartFiles());
+		return _addKnowledgeBaseAttachment();
+	}
+
+	@Override
+	protected KnowledgeBaseAttachment
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment()
+		throws Exception {
+
+		return _addKnowledgeBaseAttachment();
+	}
+
+	@Override
+	protected String
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode()
+		throws Exception {
+
+		return _kbArticle.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
 	}
 
 	@Override
@@ -144,10 +245,7 @@ public class KnowledgeBaseAttachmentResourceTest
 			testGetKnowledgeBaseAttachment_addKnowledgeBaseAttachment()
 		throws Exception {
 
-		return knowledgeBaseAttachmentResource.
-			postKnowledgeBaseArticleKnowledgeBaseAttachment(
-				_kbArticle.getResourcePrimKey(),
-				randomKnowledgeBaseAttachment(), getMultipartFiles());
+		return _addKnowledgeBaseAttachment();
 	}
 
 	@Override
@@ -155,10 +253,7 @@ public class KnowledgeBaseAttachmentResourceTest
 			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment()
 		throws Exception {
 
-		return knowledgeBaseAttachmentResource.
-			postKnowledgeBaseArticleKnowledgeBaseAttachment(
-				_kbArticle.getResourcePrimKey(),
-				randomKnowledgeBaseAttachment(), getMultipartFiles());
+		return _addKnowledgeBaseAttachment();
 	}
 
 	@Override
@@ -200,44 +295,27 @@ public class KnowledgeBaseAttachmentResourceTest
 		return testDeleteKnowledgeBaseAttachment_addKnowledgeBaseAttachment();
 	}
 
-	@Override
-	protected KnowledgeBaseAttachment
-			testPostSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment(
-				KnowledgeBaseAttachment knowledgeBaseAttachment,
-				Map<String, File> multipartFiles)
-		throws Exception {
+	private KBArticle _addKBArticle() throws Exception {
+		ServiceContext serviceContext = new ServiceContext();
 
-		return knowledgeBaseAttachmentResource.
-			postKnowledgeBaseArticleKnowledgeBaseAttachment(
-				_kbArticle.getResourcePrimKey(), knowledgeBaseAttachment,
-				multipartFiles);
+		serviceContext.setAddGuestPermissions(true);
+		serviceContext.setScopeGroupId(testGroup.getGroupId());
+
+		return KBArticleLocalServiceUtil.addKBArticle(
+			null, UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
+			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, new Date(), null, null, null, serviceContext);
 	}
 
-	@Override
-	protected KnowledgeBaseAttachment
-			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment()
+	private KnowledgeBaseAttachment _addKnowledgeBaseAttachment()
 		throws Exception {
 
 		return knowledgeBaseAttachmentResource.
 			postKnowledgeBaseArticleKnowledgeBaseAttachment(
 				_kbArticle.getResourcePrimKey(),
 				randomKnowledgeBaseAttachment(), getMultipartFiles());
-	}
-
-	@Override
-	protected String
-			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode()
-		throws Exception {
-
-		return _kbArticle.getExternalReferenceCode();
-	}
-
-	@Override
-	protected Long
-			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		return testGroup.getGroupId();
 	}
 
 	private String _read(String url) throws Exception {

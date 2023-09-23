@@ -1,0 +1,884 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SegmentEdit renders 1`] = `
+<DocumentFragment>
+  <div
+    class="segment-edit-page-root"
+  >
+    <input
+      name="undefinedactive"
+      type="hidden"
+      value="true"
+    />
+    <div
+      class="form-header"
+    >
+      <div
+        class="form-header-container container-fluid container-fluid-max-xl"
+      >
+        <div
+          class="form-header-section-left"
+        >
+          <input
+            name="undefinedname_en_US"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedkey"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedname"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <div
+            class="input-group input-localized input-localized-input"
+          >
+            <div
+              class="dropdown"
+            >
+              <button
+                aria-controls="clay-dropdown-menu-1"
+                aria-expanded="false"
+                aria-haspopup="true"
+                class="dropdown-toggle btn-monospaced btn btn-secondary"
+                data-testid="localized-dropdown-button"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-en-us"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#en-us"
+                  />
+                </svg>
+                <span
+                  class="btn-section"
+                >
+                  en-US
+                </span>
+              </button>
+            </div>
+            <div
+              class="input-group-item ml-2"
+            >
+              <input
+                aria-label="untitled-segment"
+                class="form-control field form-control-inline language-value rounded"
+                data-testid="localized-main-input"
+                placeholder="untitled-segment"
+                readonly=""
+                type="text"
+                value="Segment title"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="form-body"
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`SegmentEdit renders with edit buttons if the user has update permissions 1`] = `
+<DocumentFragment>
+  <div
+    class="segment-edit-page-root"
+  >
+    <input
+      name="undefinedactive"
+      type="hidden"
+      value="true"
+    />
+    <div
+      class="form-header"
+    >
+      <div
+        class="form-header-container container-fluid container-fluid-max-xl"
+      >
+        <div
+          class="form-header-section-left"
+        >
+          <input
+            name="undefinedname_en_US"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedkey"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedname"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <div
+            class="input-group input-localized input-localized-input"
+          >
+            <div
+              class="dropdown"
+            >
+              <button
+                aria-controls="clay-dropdown-menu-2"
+                aria-expanded="false"
+                aria-haspopup="true"
+                class="dropdown-toggle btn-monospaced btn btn-secondary"
+                data-testid="localized-dropdown-button"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-en-us"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#en-us"
+                  />
+                </svg>
+                <span
+                  class="btn-section"
+                >
+                  en-US
+                </span>
+              </button>
+            </div>
+            <div
+              class="input-group-item ml-2"
+            >
+              <input
+                aria-label="untitled-segment"
+                class="form-control field form-control-inline language-value rounded"
+                data-testid="localized-main-input"
+                placeholder="untitled-segment"
+                readonly=""
+                type="text"
+                value="Segment title"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="form-header-section-right"
+        >
+          <div
+            class="btn-group"
+          >
+            <div
+              class="btn-group-item"
+            >
+              <button
+                class="text-capitalize btn btn-sm btn-secondary"
+                type="button"
+              >
+                cancel
+              </button>
+            </div>
+            <div
+              class="btn-group-item"
+            >
+              <button
+                class="text-capitalize btn btn-sm btn-primary"
+                disabled=""
+                type="submit"
+              >
+                save
+              </button>
+            </div>
+            <div
+              class="btn-group-item"
+            >
+              <button
+                aria-label="enter-edit-mode"
+                class="btn btn-monospaced btn-outline-borderless btn-sm btn-outline-secondary"
+                role="tab"
+                title="enter-edit-mode"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-cog"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#cog"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="form-body"
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`SegmentEdit renders with given values 1`] = `
+<DocumentFragment>
+  <div
+    class="segment-edit-page-root segment-edit-page-root--with-warning"
+  >
+    <input
+      name="undefinedactive"
+      type="hidden"
+      value="true"
+    />
+    <div
+      class="form-header"
+    >
+      <div
+        class="form-header-container container-fluid container-fluid-max-xl"
+      >
+        <div
+          class="form-header-section-left"
+        >
+          <input
+            name="undefinedname_en_US"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedkey"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedname"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <div
+            class="input-group input-localized input-localized-input"
+          >
+            <div
+              class="dropdown"
+            >
+              <button
+                aria-controls="clay-dropdown-menu-4"
+                aria-expanded="false"
+                aria-haspopup="true"
+                class="dropdown-toggle btn-monospaced btn btn-secondary"
+                data-testid="localized-dropdown-button"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-en-us"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#en-us"
+                  />
+                </svg>
+                <span
+                  class="btn-section"
+                >
+                  en-US
+                </span>
+              </button>
+            </div>
+            <div
+              class="input-group-item ml-2"
+            >
+              <input
+                aria-label="untitled-segment"
+                class="form-control field form-control-inline language-value rounded"
+                data-testid="localized-main-input"
+                placeholder="untitled-segment"
+                type="text"
+                value="Segment title"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="form-header-section-right"
+        >
+          <div
+            class="btn-group"
+          >
+            <div
+              class="btn-group-item"
+            >
+              <button
+                class="text-capitalize btn btn-sm btn-secondary"
+                type="button"
+              >
+                cancel
+              </button>
+            </div>
+            <div
+              class="btn-group-item"
+            >
+              <button
+                class="text-capitalize btn btn-sm btn-primary"
+                type="submit"
+              >
+                save
+              </button>
+            </div>
+            <div
+              class="btn-group-item"
+            >
+              <button
+                aria-label="enter-view-mode"
+                class="btn btn-monospaced btn-outline-borderless btn-sm btn-outline-secondary"
+                role="tab"
+                title="enter-view-mode"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-cog"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#cog"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="form-body"
+    >
+      <div
+        class="mx-0 alert alert-dismissible alert-fluid alert-warning"
+      >
+        <div
+          class="container"
+        >
+          <div
+            class="alert-autofit-row autofit-row"
+            role="alert"
+          >
+            <div
+              class="autofit-col"
+            >
+              <div
+                class="autofit-section"
+              >
+                <span
+                  class="alert-indicator"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-warning-full"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#warning-full"
+                    />
+                  </svg>
+                </span>
+              </div>
+            </div>
+            <div
+              class="autofit-col autofit-col-expand"
+            >
+              <div
+                class="autofit-section"
+              >
+                <strong
+                  class="lead"
+                >
+                  segmentation-is-disabled
+                </strong>
+                contact-your-system-administrator-to-enable-it
+              </div>
+            </div>
+          </div>
+          <button
+            aria-label="Close"
+            class="close"
+            type="button"
+          >
+            <svg
+              class="lexicon-icon lexicon-icon-times"
+              role="presentation"
+            >
+              <use
+                xlink:href="#times"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div
+        class="contributor-builder-root h-100 editing"
+      >
+        <div
+          class="criteria-builder-section-sidebar overflow-hidden position-fixed criteria-builder-section-sidebar--with-warning"
+        >
+          <div
+            aria-label="segments-contributors-panel"
+            class="criteria-sidebar-root d-flex flex-column position-absolute"
+            role="tabpanel"
+            tabindex="-1"
+          >
+            <div
+              class="sidebar-header"
+            >
+              properties
+            </div>
+            <div
+              class="sidebar-search"
+            >
+              <div
+                class="input-group"
+              >
+                <div
+                  class="input-group-item"
+                >
+                  <input
+                    aria-label="search-properties"
+                    class="form-control input-group-inset input-group-inset-after"
+                    data-testid="search-input"
+                    placeholder="search-properties"
+                    type="text"
+                    value=""
+                  />
+                  <div
+                    class="input-group-inset-item input-group-inset-item-after"
+                  >
+                    <button
+                      aria-label="search-properties"
+                      class="btn btn-unstyled"
+                      data-testid="search-button"
+                      title="search-properties"
+                      type="button"
+                    >
+                      <svg
+                        class="lexicon-icon lexicon-icon-search"
+                        role="presentation"
+                      >
+                        <use
+                          xlink:href="#search"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="c-p-4 overflow-y-auto position-relative sidebar-collapse"
+            >
+              <div
+                aria-orientation="vertical"
+                class="panel-group"
+                role="tablist"
+              >
+                <div
+                  class="panel panel-unstyled"
+                  role="tablist"
+                >
+                  <button
+                    aria-expanded="true"
+                    class="panel-header panel-header-link collapse-icon collapse-icon-middle show btn btn-unstyled"
+                    role="tab"
+                    type="button"
+                  >
+                    <div
+                      class="c-inner"
+                      tabindex="-1"
+                    >
+                      <div
+                        class="d-flex justify-content-between text-uppercase"
+                      >
+                        First Test Values Group
+                      </div>
+                    </div>
+                    <span
+                      class="collapse-icon-closed"
+                    >
+                      <svg
+                        class="lexicon-icon lexicon-icon-angle-right"
+                        role="presentation"
+                      >
+                        <use
+                          xlink:href="#angle-right"
+                        />
+                      </svg>
+                    </span>
+                    <span
+                      class="collapse-icon-open"
+                    >
+                      <svg
+                        class="lexicon-icon lexicon-icon-angle-down"
+                        role="presentation"
+                      >
+                        <use
+                          xlink:href="#angle-down"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                  <div
+                    class="panel-collapse"
+                    role="tabpanel"
+                  >
+                    <div
+                      class="panel-body c-px-0"
+                    >
+                      <p
+                        class="c-pt-1 c-px-4 text-secondary"
+                      >
+                        inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
+                      </p>
+                      <ul
+                        class="c-pl-0"
+                      >
+                        <li
+                          class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--first-test-values-group"
+                          draggable="true"
+                          tabindex="0"
+                        >
+                          <span
+                            class="inline-item"
+                          >
+                            <svg
+                              class="lexicon-icon lexicon-icon-drag"
+                              role="presentation"
+                            >
+                              <use
+                                xlink:href="#drag"
+                              />
+                            </svg>
+                          </span>
+                          <span
+                            class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
+                          >
+                            <span
+                              class="inline-item"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-text"
+                                role="presentation"
+                              >
+                                <use
+                                  xlink:href="#text"
+                                />
+                              </svg>
+                            </span>
+                          </span>
+                          Value
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="c-pr-0 criteria-builder-section-main d-flex h-100 w-100"
+        >
+          <div
+            class="contributor-container h-100 overflow-auto position-absolute w-100"
+          >
+            <div
+              class="container-fluid container-fluid-max-xl"
+            >
+              <div
+                class="c-p-4 content-wrapper"
+              >
+                <div
+                  class="c-pb-4 sheet"
+                >
+                  <div
+                    class="c-mb-4 d-flex flex-wrap justify-content-between mb-4"
+                  >
+                    <h2
+                      class="c-mb-2 sheet-title"
+                    >
+                      conditions
+                    </h2>
+                    <div
+                      class="c-ml-2 criterion-string"
+                    >
+                      <div
+                        class="btn-group"
+                      >
+                        <div
+                          class="btn-group-item inline-item"
+                        >
+                          <span
+                            class="c-mr-4"
+                          >
+                            conditions-match
+                            <b
+                              class="c-ml-2 font-weight-bold text-dark"
+                            >
+                              x-members
+                            </b>
+                          </span>
+                          <button
+                            class="btn btn-sm btn-secondary"
+                            type="button"
+                          >
+                            view-members
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="criteria-builder-root"
+                  >
+                    <h3
+                      class="sheet-subtitle"
+                    >
+                      x-with-property-x
+                    </h3>
+                    <div
+                      class="criteria-group-root w-100 color--first-test-values-group criteria-group-item-root"
+                    >
+                      <div
+                        class="drop-zone-root position-relative"
+                      >
+                        <div
+                          class="drop-zone-target drop-zone-target-before"
+                        />
+                      </div>
+                      <div
+                        class="criterion position-relative"
+                      >
+                        <div
+                          class="criterion-row-root"
+                        >
+                          <div
+                            class="edit-container"
+                          >
+                            <div
+                              class="drag-icon"
+                              draggable="true"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-drag"
+                                role="presentation"
+                              >
+                                <use
+                                  xlink:href="#drag"
+                                />
+                              </svg>
+                            </div>
+                            <span
+                              class="c-ml-2 criterion-string"
+                            >
+                              <b
+                                class="font-weight-bold"
+                              >
+                                Value
+                              </b>
+                            </span>
+                            <select
+                              aria-label="Value: select-property-operator-option"
+                              class="form-control criterion-input operator-input"
+                            >
+                              <option
+                                value="eq"
+                              >
+                                equals
+                              </option>
+                              <option
+                                value="not-eq"
+                              >
+                                not-equals
+                              </option>
+                              <option
+                                value="contains"
+                              >
+                                contains
+                              </option>
+                              <option
+                                value="not-contains"
+                              >
+                                not-contains
+                              </option>
+                            </select>
+                            <input
+                              aria-label="Value: input-a-value"
+                              class="form-control criterion-input"
+                              data-testid="simple-string"
+                              type="text"
+                              value="value"
+                            />
+                            <button
+                              aria-label="duplicate-segment-property"
+                              class="btn-outline-borderless btn-sm c-mr-1 btn btn-monospaced btn-secondary"
+                              title="duplicate-segment-property"
+                              type="button"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-paste"
+                                role="presentation"
+                              >
+                                <use
+                                  xlink:href="#paste"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              aria-label="delete-segment-property"
+                              class="btn-outline-borderless btn-sm btn btn-monospaced btn-secondary"
+                              title="delete-segment-property"
+                              type="button"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-times-circle"
+                                role="presentation"
+                              >
+                                <use
+                                  xlink:href="#times-circle"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="drop-zone-root position-relative"
+                        >
+                          <div
+                            class="drop-zone-target"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <input
+        class="field form-control"
+        data-testid="input-id-for-backend-form"
+        id="input-id-for-backend-form"
+        name="input-id-for-backend-form"
+        readonly=""
+        type="hidden"
+        value="(value eq 'value')"
+      />
+      <input
+        id="conjunction-input-1"
+        name="conjunction-input-1"
+        readonly=""
+        type="hidden"
+        value="and"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`SegmentEdit renders without edit buttons if the user does not have update permissions 1`] = `
+<DocumentFragment>
+  <div
+    class="segment-edit-page-root"
+  >
+    <input
+      name="undefinedactive"
+      type="hidden"
+      value="true"
+    />
+    <div
+      class="form-header"
+    >
+      <div
+        class="form-header-container container-fluid container-fluid-max-xl"
+      >
+        <div
+          class="form-header-section-left"
+        >
+          <input
+            name="undefinedname_en_US"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedkey"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <input
+            name="undefinedname"
+            readonly=""
+            type="hidden"
+            value="Segment title"
+          />
+          <div
+            class="input-group input-localized input-localized-input"
+          >
+            <div
+              class="dropdown"
+            >
+              <button
+                aria-controls="clay-dropdown-menu-3"
+                aria-expanded="false"
+                aria-haspopup="true"
+                class="dropdown-toggle btn-monospaced btn btn-secondary"
+                data-testid="localized-dropdown-button"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-en-us"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#en-us"
+                  />
+                </svg>
+                <span
+                  class="btn-section"
+                >
+                  en-US
+                </span>
+              </button>
+            </div>
+            <div
+              class="input-group-item ml-2"
+            >
+              <input
+                aria-label="untitled-segment"
+                class="form-control field form-control-inline language-value rounded"
+                data-testid="localized-main-input"
+                placeholder="untitled-segment"
+                readonly=""
+                type="text"
+                value="Segment title"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="form-body"
+    />
+  </div>
+</DocumentFragment>
+`;

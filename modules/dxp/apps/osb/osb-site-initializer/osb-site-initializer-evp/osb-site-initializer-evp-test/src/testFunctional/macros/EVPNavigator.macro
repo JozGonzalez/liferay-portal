@@ -1,0 +1,31 @@
+definition {
+
+	macro assertActiveBreadcrumb {
+		AssertElementPresent(
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_ACTIVE_ENTRY",
+			value1 = ${activeItem});
+	}
+
+	macro goToNavItem {
+		Click(
+			key_tab = ${navItem},
+			locator1 = "NavTab#TAB_LINK");
+
+		WaitForPageLoad();
+	}
+
+	macro navItemNotPresent {
+		AssertElementNotPresent(
+			key_navItem = ${navItem},
+			locator1 = "NavBar#NAV_ITEM_REDIRECTION");
+	}
+
+	macro selectNewsTitle {
+		Click(
+			key_title = ${title},
+			locator1 = "EVPHome#NEWS_TITLE");
+
+		WaitForElementPresent(locator1 = "Modal#BODY");
+	}
+
+}

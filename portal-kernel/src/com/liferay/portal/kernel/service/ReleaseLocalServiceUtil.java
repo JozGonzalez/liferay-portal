@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -312,39 +303,20 @@ public class ReleaseLocalServiceUtil {
 		return getService().updateRelease(release);
 	}
 
-	public static void updateRelease(
-			String servletContextName,
-			List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
-				upgradeProcesses,
-			int buildNumber, int previousBuildNumber)
-		throws PortalException {
-
-		getService().updateRelease(
-			servletContextName, upgradeProcesses, buildNumber,
-			previousBuildNumber);
-	}
-
-	public static void updateRelease(
-			String servletContextName,
-			List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
-				upgradeProcesses,
-			java.util.Properties unfilteredPortalProperties)
-		throws Exception {
-
-		getService().updateRelease(
-			servletContextName, upgradeProcesses, unfilteredPortalProperties);
-	}
-
-	public static void updateRelease(
+	public static Release updateRelease(
 		String servletContextName, String schemaVersion,
 		String previousSchemaVersion) {
 
-		getService().updateRelease(
+		return getService().updateRelease(
 			servletContextName, schemaVersion, previousSchemaVersion);
 	}
 
 	public static ReleaseLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ReleaseLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ReleaseLocalService _service;

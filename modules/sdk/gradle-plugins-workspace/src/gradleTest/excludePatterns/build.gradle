@@ -1,0 +1,12 @@
+task runGradleTest
+
+runGradleTest {
+	doLast {
+		subprojects.each {
+			Project subProject ->
+
+			assert !subProject.path.endsWith("-service")
+			assert !subProject.path.startsWith(":themes:")
+		}
+	}
+}

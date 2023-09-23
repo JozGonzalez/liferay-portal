@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -459,6 +450,21 @@ public interface ObjectValidationRuleModel
 	public void setNameMap(Map<Locale, String> nameMap, Locale defaultLocale);
 
 	/**
+	 * Returns the output type of this object validation rule.
+	 *
+	 * @return the output type of this object validation rule
+	 */
+	@AutoEscape
+	public String getOutputType();
+
+	/**
+	 * Sets the output type of this object validation rule.
+	 *
+	 * @param outputType the output type of this object validation rule
+	 */
+	public void setOutputType(String outputType);
+
+	/**
 	 * Returns the script of this object validation rule.
 	 *
 	 * @return the script of this object validation rule
@@ -472,6 +478,27 @@ public interface ObjectValidationRuleModel
 	 * @param script the script of this object validation rule
 	 */
 	public void setScript(String script);
+
+	/**
+	 * Returns the system of this object validation rule.
+	 *
+	 * @return the system of this object validation rule
+	 */
+	public boolean getSystem();
+
+	/**
+	 * Returns <code>true</code> if this object validation rule is system.
+	 *
+	 * @return <code>true</code> if this object validation rule is system; <code>false</code> otherwise
+	 */
+	public boolean isSystem();
+
+	/**
+	 * Sets whether this object validation rule is system.
+	 *
+	 * @param system the system of this object validation rule
+	 */
+	public void setSystem(boolean system);
 
 	@Override
 	public String[] getAvailableLanguageIds();

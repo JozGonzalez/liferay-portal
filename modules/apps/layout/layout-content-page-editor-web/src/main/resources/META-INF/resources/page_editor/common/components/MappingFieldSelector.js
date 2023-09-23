@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm, {ClaySelect} from '@clayui/form';
 import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import React from 'react';
 
+import {EDITABLE_TYPE_LABELS} from '../../app/config/constants/editableTypeLabels';
 import {EDITABLE_TYPES} from '../../app/config/constants/editableTypes';
 import getSelectedField from '../../app/utils/getSelectedField';
-import {useId} from '../hooks/useId';
 
 const UNMAPPED_OPTION = {
 	label: `-- ${Liferay.Language.get('unmapped')} --`,
@@ -27,11 +19,15 @@ const UNMAPPED_OPTION = {
 };
 
 export default function MappingFieldSelector({
+	className,
 	fieldType,
 	fields,
+	label = Liferay.Language.get('field'),
+	defaultLabel,
 	onValueSelect,
 	value,
 }) {
+	const fieldTypeId = useId();
 	const mappingSelectorFieldSelectId = useId();
 
 	const hasWarnings = fields && !fields.length;
@@ -40,14 +36,15 @@ export default function MappingFieldSelector({
 
 	return (
 		<ClayForm.Group
-			className={classNames('mb-2 mt-3', {'has-warning': hasWarnings})}
+			className={classNames('mb-2 mt-3', className, {
+				'has-warning': hasWarnings,
+			})}
 			small
 		>
-			<label htmlFor={mappingSelectorFieldSelectId}>
-				{Liferay.Language.get('field')}
-			</label>
+			<label htmlFor={mappingSelectorFieldSelectId}>{label}</label>
 
 			<ClaySelect
+				aria-describedby={fieldTypeId}
 				disabled={!(fields && !!fields.length)}
 				id={mappingSelectorFieldSelectId}
 				onChange={onValueSelect}
@@ -56,7 +53,7 @@ export default function MappingFieldSelector({
 				{fields && !!fields.length && (
 					<>
 						<ClaySelect.Option
-							label={UNMAPPED_OPTION.label}
+							label={defaultLabel || UNMAPPED_OPTION.label}
 							value={UNMAPPED_OPTION.value}
 						/>
 
@@ -90,23 +87,39 @@ export default function MappingFieldSelector({
 				)}
 			</ClaySelect>
 
+			{selectedField && (
+				<p className="mt-2 text-3" id={fieldTypeId}>
+					<b>{Liferay.Language.get('field-type')}: </b>
+
+					{` ${selectedField.typeLabel}`}
+				</p>
+			)}
+
 			{hasWarnings && (
 				<ClayForm.FeedbackGroup>
 					<ClayForm.FeedbackItem>
-						{sub(
-							Liferay.Language.get(
-								'no-fields-are-available-for-x-editable'
-							),
-							[
-								EDITABLE_TYPES.backgroundImage,
-								EDITABLE_TYPES.image,
-							].includes(fieldType)
-								? Liferay.Language.get('image')
-								: Liferay.Language.get('text')
-						)}
+						{getWarningText(fieldType)}
 					</ClayForm.FeedbackItem>
 				</ClayForm.FeedbackGroup>
 			)}
 		</ClayForm.Group>
 	);
+}
+
+function getWarningText(fieldType) {
+	const fieldLabel = [
+		EDITABLE_TYPES.backgroundImage,
+		EDITABLE_TYPES.image,
+	].includes(fieldType)
+		? EDITABLE_TYPE_LABELS[EDITABLE_TYPES.image]
+		: EDITABLE_TYPES[fieldType];
+
+	if (fieldLabel) {
+		return sub(
+			Liferay.Language.get('no-fields-are-available-for-x-editable'),
+			fieldLabel
+		);
+	}
+
+	return Liferay.Language.get('no-fields-are-available-for-this-type');
 }

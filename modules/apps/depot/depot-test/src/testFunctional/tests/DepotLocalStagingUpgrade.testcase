@@ -1,10 +1,13 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Depot";
 	property testray.main.component.name = "Upgrades Lima";
 
@@ -23,7 +26,7 @@ definition {
 	test CanPublishBlogSmallImageAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
-		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishBlogSmallImageAfterUpgradeFrom73101Archive";
+		property test.assert.warning.exceptions = "false";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
 
@@ -70,7 +73,7 @@ definition {
 	test CanPublishImageInBlogContentFieldAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
-		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishImageInBlogContentFieldAfterUpgradeFrom73101Archive";
+		property test.assert.warning.exceptions = "false";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
 
@@ -120,7 +123,7 @@ definition {
 	test CanPublishImageInMGAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
-		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishImageInMGAfterUpgradeFrom73101Archive";
+		property test.assert.warning.exceptions = "false";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
 
@@ -164,13 +167,13 @@ definition {
 	test ViewDepotStagingArchive73101 {
 		property data.archive.type = "data-archive-depot-staging";
 		property portal.version = "7.3.10.1";
-		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#ViewDepotStagingArchive73101";
+		property test.assert.warning.exceptions = "false";
 
-		Upgrade.publishDMsInStagingDepot();
+		ValidateDepotUpgrade.publishDMsInStagingDepot();
 
-		Upgrade.publishWCsInStagingDepot();
+		ValidateDepotUpgrade.publishWCsInStagingDepot();
 
-		Upgrade.publishCollectionsInStagingDepot();
+		ValidateDepotUpgrade.publishCollectionsInStagingDepot();
 	}
 
 }

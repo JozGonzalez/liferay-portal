@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<Configuration strict="true">
+	<Loggers>
+		<Logger level="INFO" name="com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable" />
+	</Loggers>
+</Configuration>

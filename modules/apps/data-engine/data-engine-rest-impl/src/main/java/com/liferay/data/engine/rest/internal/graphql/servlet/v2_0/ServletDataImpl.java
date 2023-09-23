@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.graphql.servlet.v2_0;
@@ -446,6 +437,72 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							DataRecordCollectionResourceImpl.class,
 							"getSiteDataRecordCollectionByDataRecordCollectionKey"));
+
+					put(
+						"query#DataDefinition.dataRecordCollections",
+						new ObjectValuePair<>(
+							DataRecordCollectionResourceImpl.class,
+							"getDataDefinitionDataRecordCollectionsPage"));
+					put(
+						"query#DataDefinition.dataDefinitionFieldLinks",
+						new ObjectValuePair<>(
+							DataDefinitionFieldLinkResourceImpl.class,
+							"getDataDefinitionDataDefinitionFieldLinksPage"));
+					put(
+						"query#DataDefinition.dataRecordCollection",
+						new ObjectValuePair<>(
+							DataRecordCollectionResourceImpl.class,
+							"getDataDefinitionDataRecordCollection"));
+					put(
+						"query#DataRecord.collection",
+						new ObjectValuePair<>(
+							DataRecordCollectionResourceImpl.class,
+							"getDataRecordCollection"));
+					put(
+						"query#DataRecordCollection.dataRecordExport",
+						new ObjectValuePair<>(
+							DataRecordResourceImpl.class,
+							"getDataRecordCollectionDataRecordExport"));
+					put(
+						"query#DataRecordCollection.dataDefinition",
+						new ObjectValuePair<>(
+							DataDefinitionResourceImpl.class,
+							"getDataDefinition"));
+					put(
+						"query#DataDefinition.dataListViews",
+						new ObjectValuePair<>(
+							DataListViewResourceImpl.class,
+							"getDataDefinitionDataListViewsPage"));
+					put(
+						"query#DataDefinition.dataRecords",
+						new ObjectValuePair<>(
+							DataRecordResourceImpl.class,
+							"getDataDefinitionDataRecordsPage"));
+					put(
+						"query#DataRecordCollection.permissionByCurrentUser",
+						new ObjectValuePair<>(
+							DataRecordCollectionResourceImpl.class,
+							"getDataRecordCollectionPermissionByCurrentUser"));
+					put(
+						"query#DataDefinition.dataLayouts",
+						new ObjectValuePair<>(
+							DataLayoutResourceImpl.class,
+							"getDataDefinitionDataLayoutsPage"));
+					put(
+						"query#DataRecordCollection.dataRecords",
+						new ObjectValuePair<>(
+							DataRecordResourceImpl.class,
+							"getDataRecordCollectionDataRecordsPage"));
+					put(
+						"query#DataRecordCollection.permissions",
+						new ObjectValuePair<>(
+							DataRecordCollectionResourceImpl.class,
+							"getDataRecordCollectionPermissionsPage"));
+					put(
+						"query#DataDefinition.permissions",
+						new ObjectValuePair<>(
+							DataDefinitionResourceImpl.class,
+							"getDataDefinitionPermissionsPage"));
 				}
 			};
 

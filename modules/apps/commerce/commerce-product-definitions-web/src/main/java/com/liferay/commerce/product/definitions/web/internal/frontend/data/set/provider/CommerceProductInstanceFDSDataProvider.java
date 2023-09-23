@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.data.set.provider;
@@ -27,7 +18,7 @@ import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -43,6 +34,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,12 +92,13 @@ public class CommerceProductInstanceFDSDataProvider
 
 			String cpDefinitionName = cpDefinition.getName(languageId);
 
-			JSONArray keyValuesJSONArray = _jsonHelper.toJSONArray(
+			JSONArray jsonArray = CPJSONUtil.toJSONArray(
 				cpDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys);
 
-			int stockQuantity = _commerceInventoryEngine.getStockQuantity(
-				cpInstance.getCompanyId(), cpDefinition.getGroupId(),
-				cpInstance.getSku());
+			BigDecimal stockQuantity =
+				_commerceInventoryEngine.getStockQuantity(
+					cpInstance.getCompanyId(), cpDefinition.getGroupId(),
+					cpInstance.getSku(), StringPool.BLANK);
 
 			String statusDisplayStyle = StringPool.BLANK;
 
@@ -124,9 +118,9 @@ public class CommerceProductInstanceFDSDataProvider
 					HtmlUtil.escape(
 						_getOptions(
 							cpInstance.getCPDefinitionId(),
-							keyValuesJSONArray.toString(), locale)),
+							jsonArray.toString(), locale)),
 					HtmlUtil.escape(_formatPrice(cpInstance, locale)),
-					cpDefinitionName, stockQuantity,
+					cpDefinitionName, stockQuantity.intValue(),
 					new LabelField(
 						statusDisplayStyle,
 						_language.get(
@@ -172,7 +166,8 @@ public class CommerceProductInstanceFDSDataProvider
 				cpInstance.getCPInstanceId(),
 				_commerceCurrencyLocalService.getCommerceCurrency(
 					cpInstance.getCompanyId(),
-					commerceCatalog.getCommerceCurrencyCode()));
+					commerceCatalog.getCommerceCurrencyCode()),
+				StringPool.BLANK);
 
 		return commerceMoney.format(locale);
 	}
@@ -247,9 +242,6 @@ public class CommerceProductInstanceFDSDataProvider
 
 	@Reference
 	private CPInstanceService _cpInstanceService;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 	@Reference
 	private Language _language;

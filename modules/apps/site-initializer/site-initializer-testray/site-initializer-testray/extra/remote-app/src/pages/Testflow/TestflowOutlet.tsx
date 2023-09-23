@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect} from 'react';
 import {Outlet, useLocation, useParams} from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import SearchBuilder from '../../core/SearchBuilder';
 import {useFetch} from '../../hooks/useFetch';
@@ -77,10 +69,11 @@ const TestflowOutlet = () => {
 
 	const taskId = params.taskId as string;
 
-	const {data: testrayTask, mutate: mutateTask} = useFetch<TestrayTask>(
-		testrayTaskImpl.getResource(taskId),
-		{transformData: (response) => testrayTaskImpl.transformData(response)}
-	);
+	const {data: testrayTask, error, loading, mutate: mutateTask} = useFetch<
+		TestrayTask
+	>(testrayTaskImpl.getResource(taskId), {
+		transformData: (response) => testrayTaskImpl.transformData(response),
+	});
 
 	const {data: testrayTaskCaseTypes} = useFetch<
 		APIResponse<TestrayTaskCaseTypes>
@@ -94,8 +87,9 @@ const TestflowOutlet = () => {
 
 	const {data: testrayTaskUser, revalidate: revalidateTaskUser} = useFetch<
 		APIResponse<TestrayTaskUser>
-	>(`${testrayTaskImpl.getNestedObject('taskToTasksUsers', taskId)}`, {
+	>(testrayTaskUsersImpl.resource, {
 		params: {
+			filter: SearchBuilder.eq('taskId', taskId),
 			nestedFields: 'task,user',
 		},
 		transformData: (response) =>
@@ -107,11 +101,7 @@ const TestflowOutlet = () => {
 	const subTaskFilter = searchBuilder
 		.eq('taskId', taskId)
 		.and()
-		.in('dueStatus', [
-			SubTaskStatuses.IN_ANALYSIS,
-			SubTaskStatuses.MERGED,
-			SubTaskStatuses.OPEN,
-		])
+		.in('dueStatus', [SubTaskStatuses.IN_ANALYSIS, SubTaskStatuses.OPEN])
 		.build();
 
 	const {data: testraySubtasks, revalidate: revalidateSubtask} = useFetch<
@@ -124,41 +114,37 @@ const TestflowOutlet = () => {
 		},
 	});
 
-	if (!testrayTask) {
-		return null;
-	}
-
-	if (
-		[TaskStatuses.PROCESSING, TaskStatuses.OPEN].includes(
-			testrayTask.dueStatus.key as TaskStatuses
-		)
-	) {
-		return (
-			<TestflowLoading
-				mutateTask={mutateTask}
-				testrayTask={testrayTask}
-			/>
-		);
-	}
-
 	return (
-		<Outlet
-			context={{
-				data: {
-					testraySubtasks,
-					testrayTask,
-					testrayTaskCaseTypes: testrayTaskCaseTypes?.items ?? [],
-					testrayTaskUser: testrayTaskUser?.items ?? [],
-				},
-				mutate: {
-					mutateTask,
-				},
-				revalidate: {
-					revalidateSubtask,
-					revalidateTaskUser,
-				},
-			}}
-		/>
+		<PageRenderer error={error} loading={loading}>
+			{[TaskStatuses.PROCESSING, TaskStatuses.OPEN].includes(
+				(testrayTask as TestrayTask)?.dueStatus.key as TaskStatuses
+			) ? (
+				<TestflowLoading
+					mutateTask={mutateTask}
+					testrayTask={testrayTask as TestrayTask}
+				/>
+			) : (
+				<Outlet
+					context={{
+						actions: testrayTask?.actions,
+						data: {
+							testraySubtasks,
+							testrayTask,
+							testrayTaskCaseTypes:
+								testrayTaskCaseTypes?.items ?? [],
+							testrayTaskUser: testrayTaskUser?.items ?? [],
+						},
+						mutate: {
+							mutateTask,
+						},
+						revalidate: {
+							revalidateSubtask,
+							revalidateTaskUser,
+						},
+					}}
+				/>
+			)}
+		</PageRenderer>
 	);
 };
 

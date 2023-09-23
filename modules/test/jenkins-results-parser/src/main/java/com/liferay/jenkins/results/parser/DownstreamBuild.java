@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -20,10 +11,10 @@ import com.liferay.jenkins.results.parser.failure.message.generator.FailureMessa
 import com.liferay.jenkins.results.parser.failure.message.generator.GenericFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.GradleTaskFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.IntegrationTestTimeoutFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.JSUnitTestFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.LocalGitMirrorFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ModulesCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PMDFailureMessageGenerator;
-import com.liferay.jenkins.results.parser.failure.message.generator.PluginFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PluginGitIDFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVersioningFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
@@ -323,7 +314,19 @@ public class DownstreamBuild extends BaseBuild {
 	public List<TestResult> getUniqueFailureTestResults() {
 		List<TestResult> uniqueFailureTestResults = new ArrayList<>();
 
-		for (TestResult testResult : getTestResults(null)) {
+		List<TestResult> testResults = new ArrayList<>();
+
+		testResults.addAll(getTestResults(null));
+
+		List<TestResult> passedTestResults = getTestResults("PASSED");
+
+		if (isFailing() && (passedTestResults.size() == 1) &&
+			testResults.isEmpty()) {
+
+			testResults.addAll(passedTestResults);
+		}
+
+		for (TestResult testResult : testResults) {
 			if (!testResult.isFailing()) {
 				continue;
 			}
@@ -425,7 +428,19 @@ public class DownstreamBuild extends BaseBuild {
 	public List<TestResult> getUpstreamJobFailureTestResults() {
 		List<TestResult> upstreamFailureTestResults = new ArrayList<>();
 
-		for (TestResult testResult : getTestResults(null)) {
+		List<TestResult> testResults = new ArrayList<>();
+
+		testResults.addAll(getTestResults(null));
+
+		List<TestResult> passedTestResults = getTestResults("PASSED");
+
+		if (isFailing() && (passedTestResults.size() == 1) &&
+			testResults.isEmpty()) {
+
+			testResults.addAll(passedTestResults);
+		}
+
+		for (TestResult testResult : testResults) {
 			if (!testResult.isFailing()) {
 				continue;
 			}
@@ -933,9 +948,9 @@ public class DownstreamBuild extends BaseBuild {
 		//
 		new CompileFailureMessageGenerator(),
 		new IntegrationTestTimeoutFailureMessageGenerator(),
+		new JSUnitTestFailureMessageGenerator(),
 		new LocalGitMirrorFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
-		new PluginFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
 		new SemanticVersioningFailureMessageGenerator(),
 		new ServiceBuilderFailureMessageGenerator(),

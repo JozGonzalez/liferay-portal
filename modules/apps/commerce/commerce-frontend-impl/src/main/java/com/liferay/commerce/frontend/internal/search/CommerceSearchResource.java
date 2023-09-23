@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.internal.search;
@@ -18,9 +9,9 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.frontend.internal.account.CommerceAccountResource;
@@ -40,6 +31,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -117,15 +109,8 @@ public class CommerceSearchResource {
 				searchItemModels.addAll(
 					_searchAccounts(queryString, themeDisplay));
 
-				CommerceAccount commerceAccount =
-					_commerceAccountHelper.getCurrentCommerceAccount(
-						_commerceChannelLocalService.
-							getCommerceChannelGroupIdBySiteGroupId(
-								themeDisplay.getScopeGroupId()),
-						httpServletRequest);
-
 				searchItemModels.addAll(
-					_searchOrders(queryString, themeDisplay, commerceAccount));
+					_searchOrders(queryString, themeDisplay));
 			}
 
 			String url = _commerceSearchUtil.getSearchFriendlyURL(themeDisplay);
@@ -162,7 +147,7 @@ public class CommerceSearchResource {
 		throws PortalException {
 
 		PortletURL editURL = PortletProviderUtil.getPortletURL(
-			themeDisplay.getRequest(), CommerceAccount.class.getName(),
+			themeDisplay.getRequest(), AccountEntry.class.getName(),
 			PortletProvider.Action.VIEW);
 
 		if (editURL == null) {
@@ -227,7 +212,7 @@ public class CommerceSearchResource {
 
 		AccountList accountList = _commerceAccountResource.getAccountList(
 			themeDisplay.getUserId(),
-			CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID,
+			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			commerceContext.getCommerceSiteType(), queryString, 1, 5,
 			themeDisplay.getPathImage());
 
@@ -269,15 +254,14 @@ public class CommerceSearchResource {
 	}
 
 	private List<SearchItemModel> _searchOrders(
-			String queryString, ThemeDisplay themeDisplay,
-			CommerceAccount commerceAccount)
+			String queryString, ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		List<SearchItemModel> searchItemModels = new ArrayList<>();
 
 		OrderList orderList = _commerceOrderResource.getOrderList(
 			themeDisplay.getScopeGroupId(), queryString, 1, 5,
-			themeDisplay.getRequest(), commerceAccount);
+			themeDisplay.getRequest());
 
 		if (orderList.getCount() > 0) {
 			searchItemModels.add(
@@ -344,19 +328,18 @@ public class CommerceSearchResource {
 				"commerceChannelGroupId", commerceChannel.getGroupId());
 		}
 
-		long commerceAccountId = 0;
+		long accountEntryId = 0;
 
-		CommerceAccount commerceAccount =
-			_commerceAccountHelper.getCurrentCommerceAccount(
+		AccountEntry accountEntry =
+			_commerceAccountHelper.getCurrentAccountEntry(
 				commerceChannel.getGroupId(), themeDisplay.getRequest());
 
-		if (commerceAccount != null) {
-			commerceAccountId = commerceAccount.getCommerceAccountId();
+		if (accountEntry != null) {
+			accountEntryId = accountEntry.getAccountEntryId();
 
 			attributes.put(
 				"commerceAccountGroupIds",
-				_commerceAccountHelper.getCommerceAccountGroupIds(
-					commerceAccountId));
+				_accountGroupLocalService.getAccountGroupIds(accountEntryId));
 		}
 
 		searchContext.setAttributes(attributes);
@@ -376,7 +359,7 @@ public class CommerceSearchResource {
 		if (cpDataSourceResult.getLength() > 0) {
 			searchItemModels.add(
 				new SearchItemModel(
-					"label", _language.get(resourceBundle, "catalog")));
+					"label", _language.get(resourceBundle, "catalog[noun]")));
 		}
 
 		for (CPCatalogEntry cpCatalogEntry :
@@ -384,7 +367,7 @@ public class CommerceSearchResource {
 
 			searchItemModels.add(
 				_getSearchItemModel(
-					commerceAccountId, cpCatalogEntry, themeDisplay));
+					accountEntryId, cpCatalogEntry, themeDisplay));
 		}
 
 		String url = _commerceSearchUtil.getCatalogFriendlyURL(themeDisplay);
@@ -393,7 +376,7 @@ public class CommerceSearchResource {
 			url = HttpComponentsUtil.addParameter(url, "q", queryString);
 
 			SearchItemModel searchItemModel = new SearchItemModel(
-				"category", _language.get(resourceBundle, "catalog"));
+				"category", _language.get(resourceBundle, "catalog[noun]"));
 
 			searchItemModel.setUrl(url);
 
@@ -412,6 +395,9 @@ public class CommerceSearchResource {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceSearchResource.class);
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;

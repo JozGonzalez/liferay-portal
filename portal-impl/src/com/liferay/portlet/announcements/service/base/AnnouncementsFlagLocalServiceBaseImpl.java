@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.announcements.service.base;
@@ -18,6 +9,7 @@ import com.liferay.announcements.kernel.model.AnnouncementsFlag;
 import com.liferay.announcements.kernel.service.AnnouncementsFlagLocalService;
 import com.liferay.announcements.kernel.service.AnnouncementsFlagLocalServiceUtil;
 import com.liferay.announcements.kernel.service.persistence.AnnouncementsFlagPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -41,13 +33,12 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -458,14 +449,15 @@ public abstract class AnnouncementsFlagLocalServiceBaseImpl
 			"com.liferay.announcements.kernel.model.AnnouncementsFlag",
 			announcementsFlagLocalService);
 
-		_setLocalServiceUtilService(announcementsFlagLocalService);
+		AnnouncementsFlagLocalServiceUtil.setService(
+			announcementsFlagLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.announcements.kernel.model.AnnouncementsFlag");
 
-		_setLocalServiceUtilService(null);
+		AnnouncementsFlagLocalServiceUtil.setService(null);
 	}
 
 	/**
@@ -478,8 +470,23 @@ public abstract class AnnouncementsFlagLocalServiceBaseImpl
 		return AnnouncementsFlagLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<AnnouncementsFlag> getCTPersistence() {
+		return announcementsFlagPersistence;
+	}
+
+	@Override
+	public Class<AnnouncementsFlag> getModelClass() {
 		return AnnouncementsFlag.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<AnnouncementsFlag>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(announcementsFlagPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -508,23 +515,6 @@ public abstract class AnnouncementsFlagLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		AnnouncementsFlagLocalService announcementsFlagLocalService) {
-
-		try {
-			Field field =
-				AnnouncementsFlagLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, announcementsFlagLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

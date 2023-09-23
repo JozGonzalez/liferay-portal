@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -41,9 +32,10 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 <p class="text-secondary"><liferay-ui:message key="changing-the-display-page-template-will-affect-all-web-content-article-versions-even-when-saving-it-as-a-draft" /></p>
 
 <c:if test="<%= Validator.isNotNull(layoutUuid) && (articleLayout == null) %>">
-	<div class="alert alert-warning">
-		<liferay-ui:message arguments="<%= layoutUuid %>" key="this-article-is-configured-to-use-a-display-page-that-does-not-exist-on-the-current-site" />
-	</div>
+	<clay:alert
+		displayType="warning"
+		message='<%= LanguageUtil.format(request, "this-article-is-configured-to-use-a-display-page-that-does-not-exist-on-the-current-site", layoutUuid) %>'
+	/>
 </c:if>
 
 <div>

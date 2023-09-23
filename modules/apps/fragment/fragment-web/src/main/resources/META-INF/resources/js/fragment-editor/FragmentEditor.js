@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -45,11 +36,10 @@ const FragmentEditor = ({
 			draft: false,
 		},
 		autocompleteTags,
-		cacheable,
-		cacheableEnabled,
 		dataAttributes,
 		fieldTypes: availableFieldTypes,
 		fragmentCollectionId,
+		fragmentConfigurationURL,
 		fragmentEntryId,
 		htmlEditorCustomEntities,
 		initialCSS,
@@ -61,11 +51,11 @@ const FragmentEditor = ({
 		propagationEnabled,
 		readOnly,
 		showFieldTypes,
+		status,
 		urls,
 	},
 }) => {
 	const [activeTabKeyValue, setActiveTabKeyValue] = useState(0);
-	const [isCacheable, setIsCacheable] = useState(cacheable);
 	const [changesStatus, setChangesStatus] = useState(null);
 	const [configuration, setConfiguration] = useState(initialConfiguration);
 	const [css, setCss] = useState(initialCSS);
@@ -94,11 +84,9 @@ const FragmentEditor = ({
 			previousCss !== css ||
 			previousFieldTypes.length !== fieldTypes.length ||
 			previousHtml !== html ||
-			previousJs !== js ||
-			cacheable !== isCacheable
+			previousJs !== js
 		);
 	}, [
-		cacheable,
 		configuration,
 		css,
 		fieldTypes,
@@ -108,7 +96,6 @@ const FragmentEditor = ({
 		previousFieldTypes,
 		previousHtml,
 		previousJs,
-		isCacheable,
 		js,
 	]);
 
@@ -158,7 +145,6 @@ const FragmentEditor = ({
 
 			const formData = new FormData();
 
-			formData.append(`${namespace}cacheable`, isCacheable);
 			formData.append(`${namespace}configurationContent`, configuration);
 			formData.append(
 				`${namespace}cssContent`,
@@ -214,7 +200,7 @@ const FragmentEditor = ({
 					});
 				});
 		}, 500),
-		[configuration, css, fieldTypes, html, isCacheable, js]
+		[configuration, css, fieldTypes, html, js]
 	);
 
 	const previousSaveDraft = usePrevious(saveDraft);
@@ -303,38 +289,6 @@ const FragmentEditor = ({
 										</span>
 									</div>
 
-									<div className="btn-group-item custom-checkbox custom-control mb-1 mr-4 mt-1">
-										<label
-											className="lfr-portal-tooltip"
-											data-title={Liferay.Language.get(
-												'cacheable-fragment-help'
-											)}
-										>
-											<input
-												checked={isCacheable}
-												className="custom-control-input toggle-switch-check"
-												disabled={!cacheableEnabled}
-												name="cacheable"
-												onChange={(event) =>
-													setIsCacheable(
-														event.currentTarget
-															.checked
-													)
-												}
-												type="checkbox"
-												value="true"
-											/>
-
-											<span className="custom-control-label">
-												<span className="custom-control-label-text">
-													{Liferay.Language.get(
-														'cacheable'
-													)}
-												</span>
-											</span>
-										</label>
-									</div>
-
 									<div className="btn-group-item">
 										<button
 											className="btn btn-primary btn-sm"
@@ -405,7 +359,6 @@ const FragmentEditor = ({
 							css={previewData.css}
 							html={previewData.html}
 							js={previewData.js}
-							namespace={namespace}
 							urls={urls}
 						/>
 					</div>
@@ -415,16 +368,28 @@ const FragmentEditor = ({
 					<div className="fragment-editor fragment-editor__configuration">
 						<div className="sheet sheet-lg">
 							{showFieldTypes && (
-								<FieldTypeSelector
-									availableFieldTypes={availableFieldTypes}
-									description={Liferay.Language.get(
-										'specify-which-field-types-this-fragment-supports'
-									)}
-									fieldTypes={fieldTypes}
-									onChangeFieldTypes={setFieldTypes}
-									readOnly={readOnly}
-									title={Liferay.Language.get('field-types')}
-								/>
+								<>
+									<FieldTypeSelector
+										availableFieldTypes={
+											availableFieldTypes
+										}
+										description={Liferay.Language.get(
+											'specify-which-field-types-this-fragment-supports'
+										)}
+										fieldTypes={fieldTypes}
+										fragmentConfigurationURL={
+											fragmentConfigurationURL
+										}
+										onChangeFieldTypes={setFieldTypes}
+										readOnly={readOnly}
+										showFragmentConfigurationLink={
+											status !== allowedStatus.draft
+										}
+										title={Liferay.Language.get(
+											'field-types'
+										)}
+									/>
+								</>
 							)}
 
 							<ClayForm.Group>

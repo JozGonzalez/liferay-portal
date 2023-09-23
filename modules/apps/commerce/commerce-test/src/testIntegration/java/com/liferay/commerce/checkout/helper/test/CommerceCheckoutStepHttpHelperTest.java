@@ -1,26 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.checkout.helper.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.checkout.helper.CommerceCheckoutStepHttpHelper;
 import com.liferay.commerce.constants.CommerceAddressConstants;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.model.CommerceAddress;
@@ -29,7 +21,6 @@ import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressLocalService;
-import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Group;
@@ -38,10 +29,10 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -83,21 +74,22 @@ public class CommerceCheckoutStepHttpHelperTest {
 			_group.getGroupId());
 
 		_commerceChannel = _commerceChannelLocalService.addCommerceChannel(
-			null, _group.getGroupId(), "Test Channel",
+			null, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			_group.getGroupId(), "Test Channel",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				_commerceChannel.getGroupId(),
-				CommerceAccountConstants.SERVICE_NAME));
+				CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
 
 		modifiableSettings.setValue(
 			"commerceSiteType",
-			String.valueOf(CommerceAccountConstants.SITE_TYPE_B2B));
+			String.valueOf(CommerceChannelConstants.SITE_TYPE_B2B));
 
 		modifiableSettings.store();
 
@@ -114,32 +106,31 @@ public class CommerceCheckoutStepHttpHelperTest {
 	public void testIsActiveBillingAddressCommerceCheckoutStep()
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountLocalService.addBusinessCommerceAccount(
-				"Test Business Account", 0, null, null, true, null,
-				new long[] {_user.getUserId()},
-				new String[] {_user.getEmailAddress()}, _serviceContext);
+		AccountEntry accountEntry =
+			CommerceAccountTestUtil.addBusinessAccountEntry(
+				_user.getUserId(), "Test Business Account", null, null,
+				new long[] {_user.getUserId()}, null, _serviceContext);
 
 		long commerceChannelGroupId = _commerceChannel.getGroupId();
 
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				commerceAccount.getCommerceAccountId(),
+				accountEntry.getAccountEntryId(),
 				_commerceCurrency.getCommerceCurrencyId(), 0);
 
 		CommerceAddress commerceAddress = _addCommerceAddress(
-			commerceAccount.getCommerceAccountId());
+			accountEntry.getAccountEntryId());
 
 		Assert.assertTrue(
 			_commerceCheckoutStepHttpHelper.
 				isActiveBillingAddressCommerceCheckoutStep(
 					null, commerceOrder));
 
-		_commerceAccountLocalService.updateDefaultBillingAddress(
-			commerceAccount.getCommerceAccountId(), 0);
-		_commerceAccountLocalService.updateDefaultBillingAddress(
-			commerceAccount.getCommerceAccountId(), 0);
+		_accountEntryLocalService.updateDefaultBillingAddressId(
+			accountEntry.getAccountEntryId(), 0);
+		_accountEntryLocalService.updateDefaultShippingAddressId(
+			accountEntry.getAccountEntryId(), 0);
 
 		commerceOrder.setBillingAddressId(
 			commerceAddress.getCommerceAddressId());
@@ -188,7 +179,7 @@ public class CommerceCheckoutStepHttpHelperTest {
 	}
 
 	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Inject
 	private CommerceAddressLocalService _commerceAddressLocalService;
@@ -202,9 +193,6 @@ public class CommerceCheckoutStepHttpHelperTest {
 	private CommerceCheckoutStepHttpHelper _commerceCheckoutStepHttpHelper;
 
 	private CommerceCurrency _commerceCurrency;
-
-	@Inject
-	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
 
 	@Inject
 	private CommerceOrderLocalService _commerceOrderLocalService;
@@ -221,10 +209,6 @@ public class CommerceCheckoutStepHttpHelperTest {
 	private RegionLocalService _regionLocalService;
 
 	private ServiceContext _serviceContext;
-
-	@Inject
-	private SettingsFactory _settingsFactory;
-
 	private User _user;
 
 }

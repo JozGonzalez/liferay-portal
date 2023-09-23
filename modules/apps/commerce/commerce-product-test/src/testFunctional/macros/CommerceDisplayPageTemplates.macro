@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Add multiple fragments using index or position in a Display Page Template."
 	macro addFragment {
 		PageEditor.assertFragmentSidebarLoaded();
 
@@ -42,7 +41,6 @@ definition {
 		PageEditor.waitForAutoSave();
 	}
 
-	@summary = "Add Display Page Template entry and map fragments to the given fields."
 	macro addMappedDisplayPageTemplateEntry {
 		task ("Given a new ${contentType} type display page template with fragment created") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
@@ -81,6 +79,171 @@ definition {
 				locator1 = "CommerceFrontStore#COLLECTION_DISPLAY_PRODUCT_SPECIFICATION_ENTRY");
 
 			echo("The Specification ${specification} with the value ${value} is present");
+		}
+	}
+
+	macro configureProductCardFragment {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		PageEditor.clickConfigurableField(
+			fragmentName = ${fragmentName},
+			index = ${index});
+
+		Navigator.gotoNavTab(navTab = "General");
+
+		if (isSet(checkList)) {
+			for (var element : list ${checkList}) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "Show ${element}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
+		if (isSet(uncheckList)) {
+			for (var element : list ${uncheckList}) {
+				Uncheck.uncheckToggleSwitch(
+					key_toggleSwitchLabel = "Show ${element}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+	}
+
+	macro editCollectionDisplay {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		var key_fragmentName = ${fragmentName};
+		var key_index = ${index};
+
+		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+		}
+
+		if (isSet(columnNumber)) {
+			Click.clickNoWaitForVisible(
+				key_columnNumber = ${columnNumber},
+				key_elementHeader = "//div[@aria-label='${key_fragmentName}']",
+				key_position = 1,
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
+		}
+		else {
+			PageEditor.clickConfigurableField(
+				fragmentName = ${fragmentName},
+				index = ${index});
+		}
+
+		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
+			SelectFrame(value1 = "relative=top");
+		}
+
+		AssertVisible(
+			key_sidebarButton = "Browser",
+			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
+
+		Navigator.gotoNavTab(navTab = "General");
+
+		if (!(isSet(deviceType)) || (${deviceType} == "Desktop")) {
+			if (IsTextEqual(key_fieldLabel = "Collection", locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT", value1 = "")) {
+				Click(
+					key_fieldLabel = "Collection",
+					key_text = "plus",
+					locator1 = "Icon#ANY_ITEM_SELECTOR");
+			}
+			else {
+				Click(
+					key_fieldLabel = "Collection",
+					key_text = "change",
+					locator1 = "Icon#ANY_ITEM_SELECTOR");
+			}
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			if (isSet(assetListName)) {
+				NavItem.click(navItem = "Collections");
+
+				if (isSet(depotName)) {
+					Click(
+						key_breadcrumbName = "Sites and Libraries",
+						locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
+
+					Click(
+						key_groupTab = "Asset Library",
+						locator1 = "ItemSelector#NAVIGATION_GROUP_TAB");
+
+					LexiconCard.clickCardTitle(card = ${depotName});
+				}
+
+				LexiconCard.clickCardTitle(card = ${assetListName});
+
+				SelectFrameTop();
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${assetListName});
+			}
+			else if (isSet(infoListProviderName)) {
+				NavItem.click(navItem = "Collection Providers");
+
+				LexiconCard.clickCardTitle(card = ${infoListProviderName});
+
+				Refresh();
+
+				PageEditor.clickConfigurableField(
+					fragmentName = ${fragmentName},
+					index = ${index});
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${infoListProviderName});
+			}
+			else if (isSet(infoItemRelatedListProviderName)) {
+				NavItem.click(navItem = "Related Items Collection Providers");
+
+				LexiconCard.clickCardTitle(card = ${infoItemRelatedListProviderName});
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${infoItemRelatedListProviderName});
+			}
+		}
+
+		if (isSet(styleDisplay)) {
+			if ((${styleDisplay} != "Grid") && (${styleDisplay} != "Flex Row") && (${styleDisplay} != "Flex Column")) {
+				AssertElementPresent(
+					key_fieldLabel = "Style Display",
+					key_groupLabel = "Templates",
+					key_value = ${styleDisplay},
+					locator1 = "Select#GROUPED_SELECT_VALUE");
+			}
+
+			Select(
+				key_fieldLabel = "Style Display",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${styleDisplay});
+
+			PageEditor.waitForAutoSave();
+
+			AssertSelectedLabel(
+				key_fieldLabel = "Style Display",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${styleDisplay});
+
+			if (isSet(listItemStyle)) {
+				Select(
+					key_fieldLabel = "List Item Style",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${listItemStyle});
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "List Item Style",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${listItemStyle});
+			}
 		}
 	}
 
@@ -124,7 +287,6 @@ definition {
 		}
 	}
 
-	@summary = "Map a fragment to a field in a Display Page Template"
 	macro mapEditableTextToField {
 		if (${index} == 1) {
 			var contributed = "false";
@@ -159,7 +321,6 @@ definition {
 		PageEditor.waitForAutoSave();
 	}
 
-	@summary = "Map multiple fields to multiple fragments using index and position. Then publish the Display Page Template"
 	macro mapFragmentsToFields {
 		Variables.assertDefined(parameterList = "${displayPageName},${fieldsList},${fragmentName},${siteURLKey}");
 
@@ -270,21 +431,19 @@ definition {
 		}
 	}
 
-	macro viewFragmentText {
-		if (!(isSet(id))) {
-			var id = "element-text";
+	macro viewMappedFragmentsText {
+		if (!(isSet(index))) {
+			var index = 1;
 		}
 
-		AssertElementPresent(
-			key_fragmentText = ${fragmentText},
-			key_id = ${id},
-			locator1 = "CommerceEntry#ASSERT_FRAGMENTS_TEXT_IN_SF");
-	}
-
-	@summary = "Verify the multiple mapped fields’ outcome."
-	macro viewMappedFragmentsText {
 		for (var fragmentText : list ${fragmentsTextList}) {
-			CommerceDisplayPageTemplates.viewFragmentText(fragmentText = ${fragmentText});
+			AssertElementPresent(
+				index = ${index},
+				key_fragmentText = ${fragmentText},
+				key_id = "element-text",
+				locator1 = "CommerceEntry#ASSERT_FRAGMENTS_TEXT_IN_SF_N");
+
+			var index = ${index} + 1;
 		}
 	}
 

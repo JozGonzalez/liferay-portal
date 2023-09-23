@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.notification.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.constants.AccountRoleConstants;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -91,7 +83,8 @@ public class CommerceNotificationTest {
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
 		_commerceChannel = _commerceChannelLocalService.addCommerceChannel(
-			StringPool.BLANK, _group.getGroupId(),
+			StringPool.BLANK, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			_group.getGroupId(),
 			_group.getName(_serviceContext.getLanguageId()) + " Portal",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null, StringPool.BLANK,
 			_serviceContext);
@@ -123,7 +116,7 @@ public class CommerceNotificationTest {
 
 		_commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
 			_group.getGroupId(), _user.getUserId(),
-			_commerceAccount.getCommerceAccountId(),
+			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
 		_commerceNotificationHelper.sendNotifications(
@@ -152,7 +145,7 @@ public class CommerceNotificationTest {
 	public void testEmailAddressRecipient() throws Exception {
 		_user.setEmailAddress("mail@mail.com");
 
-		_userLocalService.updateUser(_user);
+		_user = _userLocalService.updateUser(_user);
 
 		_commerceNotificationTemplate =
 			CommerceNotificationTestUtil.addNotificationTemplate(
@@ -223,7 +216,7 @@ public class CommerceNotificationTest {
 
 		_commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
 			_group.getGroupId(), _user.getUserId(),
-			_commerceAccount.getCommerceAccountId(),
+			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
 		_commerceNotificationHelper.sendNotifications(
@@ -305,7 +298,7 @@ public class CommerceNotificationTest {
 			RandomTestUtil.randomString(),
 			new long[] {_serviceContext.getScopeGroupId()}, _serviceContext);
 
-		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
 			_accountAdmin.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
@@ -313,15 +306,16 @@ public class CommerceNotificationTest {
 
 		_accountAdminRole = _roleLocalService.fetchRole(
 			_group.getCompanyId(),
-			CommerceAccountConstants.ROLE_NAME_ACCOUNT_ADMINISTRATOR);
+			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR);
 
 		if (_accountAdminRole == null) {
 			_accountAdminRole = _roleLocalService.addRole(
 				_serviceContext.getUserId(), null, 0,
-				CommerceAccountConstants.ROLE_NAME_ACCOUNT_ADMINISTRATOR,
+				AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR,
 				Collections.singletonMap(
 					_serviceContext.getLocale(),
-					CommerceAccountConstants.ROLE_NAME_ACCOUNT_ADMINISTRATOR),
+					AccountRoleConstants.
+						REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR),
 				Collections.emptyMap(), RoleConstants.TYPE_SITE,
 				StringPool.BLANK, _serviceContext);
 
@@ -330,11 +324,10 @@ public class CommerceNotificationTest {
 
 		_userGroupRoleLocalService.deleteUserGroupRoles(
 			_accountAdmin.getUserId(),
-			new long[] {_commerceAccount.getCommerceAccountGroupId()});
+			new long[] {_accountEntry.getAccountEntryGroupId()});
 
 		_userGroupRoleLocalService.addUserGroupRoles(
-			_accountAdmin.getUserId(),
-			_commerceAccount.getCommerceAccountGroupId(),
+			_accountAdmin.getUserId(), _accountEntry.getAccountEntryGroupId(),
 			new long[] {_accountAdminRole.getRoleId()});
 	}
 
@@ -361,11 +354,10 @@ public class CommerceNotificationTest {
 
 		_userGroupRoleLocalService.deleteUserGroupRoles(
 			_orderManager.getUserId(),
-			new long[] {_commerceAccount.getCommerceAccountGroupId()});
+			new long[] {_accountEntry.getAccountEntryGroupId()});
 
 		_userGroupRoleLocalService.addUserGroupRoles(
-			_orderManager.getUserId(),
-			_commerceAccount.getCommerceAccountGroupId(),
+			_orderManager.getUserId(), _accountEntry.getAccountEntryGroupId(),
 			new long[] {_orderManagerRole.getRoleId()});
 	}
 
@@ -390,7 +382,7 @@ public class CommerceNotificationTest {
 	private User _accountAdmin;
 
 	private Role _accountAdminRole;
-	private CommerceAccount _commerceAccount;
+	private AccountEntry _accountEntry;
 
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;

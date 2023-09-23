@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.renderer.categorization.inputs.internal;
@@ -21,9 +12,10 @@ import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.frontend.taglib.clay.servlet.taglib.AlertTag;
-import com.liferay.info.constants.InfoItemCreatorConstants;
+import com.liferay.info.constants.InfoItemScopeConstants;
 import com.liferay.info.item.InfoItemServiceRegistry;
-import com.liferay.info.item.creator.InfoItemCreator;
+import com.liferay.info.item.provider.InfoItemCategorizationProvider;
+import com.liferay.info.item.provider.InfoItemScopeProvider;
 import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -112,13 +104,14 @@ public class TagsInputFragmentRenderer implements FragmentRenderer {
 			String className = _portal.getClassName(
 				formStyledLayoutStructureItem.getClassNameId());
 
-			InfoItemCreator<Object> infoItemCreator =
-				_infoItemServiceRegistry.getFirstInfoItemService(
-					InfoItemCreator.class, className);
+			InfoItemCategorizationProvider<Object>
+				infoItemCategorizationProvider =
+					_infoItemServiceRegistry.getFirstInfoItemService(
+						InfoItemCategorizationProvider.class, className);
 
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
-			if (!infoItemCreator.supportsCategorization()) {
+			if (!infoItemCategorizationProvider.supportsCategorization()) {
 				_writeDisabledCategorizationAlert(
 					fragmentRendererContext, httpServletRequest,
 					httpServletResponse, printWriter);
@@ -139,9 +132,13 @@ public class TagsInputFragmentRenderer implements FragmentRenderer {
 
 			assetTagsSelectorTag.setClassName(className);
 
+			InfoItemScopeProvider<Object> infoItemScopeProvider =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemScopeProvider.class, className);
+
 			if (Objects.equals(
-					infoItemCreator.getScope(),
-					InfoItemCreatorConstants.SCOPE_COMPANY)) {
+					infoItemScopeProvider.getScope(),
+					InfoItemScopeConstants.SCOPE_COMPANY)) {
 
 				ThemeDisplay themeDisplay =
 					(ThemeDisplay)httpServletRequest.getAttribute(
@@ -207,7 +204,7 @@ public class TagsInputFragmentRenderer implements FragmentRenderer {
 				_layoutPageTemplateStructureLocalService.
 					fetchLayoutPageTemplateStructure(
 						fragmentEntryLink.getGroupId(),
-						fragmentEntryLink.getPlid(), true);
+						fragmentEntryLink.getPlid());
 
 			layoutStructure = LayoutStructure.of(
 				layoutPageTemplateStructure.getData(

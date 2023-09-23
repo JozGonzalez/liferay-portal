@@ -1,96 +1,7 @@
 .portlet-search-bar {
-	.alert {
-		margin-bottom: 0;
-	}
-
-	.options-container {
-		.form-group {
-			margin-bottom: 0;
-		}
-	}
-
 	.search-bar {
 		.form-group.input-group-item {
 			margin-bottom: 0;
-		}
-	}
-
-	.search-bar-configuration-suggestions-root {
-		.form-group-autofit {
-			margin-bottom: 1rem;
-
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
-
-		.input-sets-item-root {
-			.contributor-input-set-item-header-root {
-				margin-bottom: 1rem;
-				width: 100%;
-
-				.contributor-description {
-					font-size: 14px;
-					margin-bottom: 0;
-				}
-
-				.contributor-name {
-					border-color: $secondaryL2;
-					color: $secondary;
-					margin-bottom: 4px;
-					text-transform: none;
-				}
-			}
-		}
-
-		.has-error {
-			.select-sxp-blueprint {
-				.form-control {
-					background-color: #feefef;
-					border-color: #f48989;
-				}
-			}
-		}
-
-		.select-sxp-blueprint {
-			display: flex;
-			width: 100%;
-
-			.form-control {
-				background-color: #fff;
-				border-bottom-right-radius: 0;
-				border-color: #cdced9;
-				border-right: 0;
-				border-top-right-radius: 0;
-				caret-color: transparent;
-				opacity: 1;
-				padding-right: 0;
-
-				&:focus {
-					box-shadow: none;
-				}
-
-				.loading-animation {
-					margin-bottom: 0;
-					margin-top: 0;
-				}
-			}
-
-			.btn {
-				border-bottom-left-radius: 0;
-				border-top-left-radius: 0;
-
-				&:focus {
-					box-shadow: none;
-				}
-
-				&.remove-sxp-blueprint {
-					border-bottom-right-radius: 0;
-					border-left: 0;
-					border-right: 0;
-					border-top-right-radius: 0;
-				}
-			}
 		}
 	}
 
@@ -101,14 +12,6 @@
 	.search-bar-search-select-wrapper {
 		max-width: 9.375rem;
 	}
-
-	.search-bar-with-scope {
-		.loading-animation {
-			margin-bottom: 0;
-			margin-right: 4px;
-			margin-top: 0;
-		}
-	}
 }
 
 .search-bar-suggestions-dropdown-menu {
@@ -117,25 +20,25 @@
 
 	.search-bar-suggestions-results-list {
 		.dropdown-subheader {
-			color: #6b6c7e;
+			color: var(--gray-600, $secondary);
 		}
 
 		.suggestion-item-title {
-			color: #272833;
+			color: var(--dark, $dark);
 
 			+ .suggestion-item-description {
-				color: #6b6c7e;
+				color: var(--gray-600, $secondary);
 				font-size: 0.75rem;
 			}
 		}
 	}
 
 	.search-bar-suggestions-show-more {
-		color: #0b5fff;
+		color: var(--primary, $primary);
 
 		&:hover {
-			background-color: #fff;
-			color: #004ad7;
+			background-color: var(--white, $white);
+			color: var(--primary-d2, $primary-d2);
 			text-decoration: underline;
 		}
 	}

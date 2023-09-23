@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.portlet.action;
@@ -19,7 +10,6 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -31,7 +21,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -65,24 +54,11 @@ public class GetObjectDefinitionsRelationshipsMVCResourceCommand
 			_objectRelationshipLocalService.getObjectRelationships(
 				ParamUtil.getLong(resourceRequest, "objectDefinitionId"));
 
-		List<ObjectDefinition> objectDefinitions = new ArrayList<>();
-
-		if (FeatureFlagManagerUtil.isEnabled(
-				_portal.getCompanyId(resourceRequest), "LPS-173537")) {
-
-			objectDefinitions =
+		for (ObjectDefinition objectDefinition :
 				_objectDefinitionLocalService.getObjectDefinitions(
 					_portal.getCompanyId(resourceRequest), true,
-					WorkflowConstants.STATUS_APPROVED);
-		}
-		else {
-			objectDefinitions =
-				_objectDefinitionLocalService.getObjectDefinitions(
-					_portal.getCompanyId(resourceRequest), true, false,
-					WorkflowConstants.STATUS_APPROVED);
-		}
+					WorkflowConstants.STATUS_APPROVED)) {
 
-		for (ObjectDefinition objectDefinition : objectDefinitions) {
 			objectDefinitionsJSONArray.put(
 				JSONUtil.put(
 					"externalReferenceCode",

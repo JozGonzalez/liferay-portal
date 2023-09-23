@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.graphql.mutation.v1_0;
@@ -46,6 +37,7 @@ import com.liferay.portal.workflow.metrics.rest.resource.v1_0.NodeResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessMetricResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessVersionResource;
+import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ReindexStatusResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.RoleResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.SLAResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.TaskResource;
@@ -143,6 +135,14 @@ public class Mutation {
 			processVersionResourceComponentServiceObjects;
 	}
 
+	public static void setReindexStatusResourceComponentServiceObjects(
+		ComponentServiceObjects<ReindexStatusResource>
+			reindexStatusResourceComponentServiceObjects) {
+
+		_reindexStatusResourceComponentServiceObjects =
+			reindexStatusResourceComponentServiceObjects;
+	}
+
 	public static void setRoleResourceComponentServiceObjects(
 		ComponentServiceObjects<RoleResource>
 			roleResourceComponentServiceObjects) {
@@ -230,6 +230,20 @@ public class Mutation {
 			_calendarResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			calendarResource -> calendarResource.postCalendarsPageExportBatch(
+				callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createIndexesPageExportBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_indexResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			indexResource -> indexResource.postIndexesPageExportBatch(
 				callbackURL, contentType, fieldNames));
 	}
 
@@ -522,6 +536,21 @@ public class Mutation {
 				processVersionResource.
 					postProcessProcessVersionsPageExportBatch(
 						processId, callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createReindexStatusesPageExportBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_reindexStatusResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			reindexStatusResource ->
+				reindexStatusResource.postReindexStatusesPageExportBatch(
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -963,6 +992,27 @@ public class Mutation {
 			_vulcanBatchEngineImportTaskResource);
 	}
 
+	private void _populateResourceContext(
+			ReindexStatusResource reindexStatusResource)
+		throws Exception {
+
+		reindexStatusResource.setContextAcceptLanguage(_acceptLanguage);
+		reindexStatusResource.setContextCompany(_company);
+		reindexStatusResource.setContextHttpServletRequest(_httpServletRequest);
+		reindexStatusResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		reindexStatusResource.setContextUriInfo(_uriInfo);
+		reindexStatusResource.setContextUser(_user);
+		reindexStatusResource.setGroupLocalService(_groupLocalService);
+		reindexStatusResource.setRoleLocalService(_roleLocalService);
+
+		reindexStatusResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		reindexStatusResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
 	private void _populateResourceContext(RoleResource roleResource)
 		throws Exception {
 
@@ -1057,6 +1107,8 @@ public class Mutation {
 		_processMetricResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProcessVersionResource>
 		_processVersionResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ReindexStatusResource>
+		_reindexStatusResourceComponentServiceObjects;
 	private static ComponentServiceObjects<RoleResource>
 		_roleResourceComponentServiceObjects;
 	private static ComponentServiceObjects<SLAResource>

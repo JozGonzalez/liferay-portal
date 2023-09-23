@@ -6,8 +6,8 @@
 	fill-opacity: 0.25;
 }
 
-.yui3-widget-bd {
-	height: 20px;
+#organization-name {
+	font-weight: normal;
 }
 
 .dropdown-item.focus {
@@ -16,4 +16,45 @@
 
 .dropdown-menu {
 	min-width: 90px;
+}
+
+.modal-title {
+	white-space: inherit !important;
+}
+
+.request-modal-header {
+	margin-bottom: 0 !important;
+}
+
+html:not(#__):not(#___) .cadmin .modal-body {
+	padding-bottom: 10px;
+}
+
+html:not(#__):not(#___) .cadmin .modal-footer {
+	border-top: 1px solid white;
+	padding-top: 0px;
+}
+
+html:not(#__):not(#___) .cadmin .modal-header,
+html:not(#__):not(#___) .cadmin.modal-header {
+	border-color: white;
+}
+
+html:not(#__):not(#___) .cadmin p {
+	margin: 0px 0px;
+}
+
+html:not(#__):not(#___) .cadmin .modal-header,
+html:not(#__):not(#___) .cadmin.modal-header {
+	border-color: white;
+	padding-top: 24px;
+}
+
+html:not(#__):not(#___) .cadmin textarea {
+	overflow: auto;
+	padding: 8px;
+}
+
+.yui3-widget-bd {
+	height: 20px;
 }

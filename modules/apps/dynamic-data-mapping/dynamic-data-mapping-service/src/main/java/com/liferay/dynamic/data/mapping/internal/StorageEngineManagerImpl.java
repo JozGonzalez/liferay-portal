@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal;
@@ -17,7 +8,6 @@ package com.liferay.dynamic.data.mapping.internal;
 import com.liferay.dynamic.data.mapping.exception.StorageException;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.StorageEngineManager;
-import com.liferay.dynamic.data.mapping.kernel.StorageFieldRequiredException;
 import com.liferay.dynamic.data.mapping.model.DDMContent;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
@@ -56,42 +46,37 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		try {
-			com.liferay.dynamic.data.mapping.storage.DDMFormValues
-				translatedDDMFormValues = _ddmBeanTranslator.translate(
-					ddmFormValues);
+		com.liferay.dynamic.data.mapping.storage.DDMFormValues
+			translatedDDMFormValues = _ddmBeanTranslator.translate(
+				ddmFormValues);
 
-			_validate(translatedDDMFormValues, serviceContext);
+		_validate(translatedDDMFormValues, serviceContext);
 
-			DDMStorageAdapter ddmStorageAdapter = _getDDMStorageAdapter();
+		DDMStorageAdapter ddmStorageAdapter = _getDDMStorageAdapter();
 
-			DDMStorageAdapterSaveResponse ddmStorageAdapterSaveResponse =
-				ddmStorageAdapter.save(
-					DDMStorageAdapterSaveRequest.Builder.newBuilder(
-						serviceContext.getUserId(), translatedDDMFormValues
-					).withStructureId(
-						ddmStructureId
-					).withUuid(
-						serviceContext.getUuid()
-					).withClassName(
-						DDMStorageLink.class.getName()
-					).build());
+		DDMStorageAdapterSaveResponse ddmStorageAdapterSaveResponse =
+			ddmStorageAdapter.save(
+				DDMStorageAdapterSaveRequest.Builder.newBuilder(
+					serviceContext.getUserId(), translatedDDMFormValues
+				).withStructureId(
+					ddmStructureId
+				).withUuid(
+					serviceContext.getUuid()
+				).withClassName(
+					DDMStorageLink.class.getName()
+				).build());
 
-			long primaryKey = ddmStorageAdapterSaveResponse.getPrimaryKey();
+		long primaryKey = ddmStorageAdapterSaveResponse.getPrimaryKey();
 
-			DDMStructureVersion ddmStructureVersion =
-				_ddmStructureVersionLocalService.getLatestStructureVersion(
-					ddmStructureId);
+		DDMStructureVersion ddmStructureVersion =
+			_ddmStructureVersionLocalService.getLatestStructureVersion(
+				ddmStructureId);
 
-			_ddmStorageLinkLocalService.addStorageLink(
-				_portal.getClassNameId(DDMContent.class.getName()), primaryKey,
-				ddmStructureVersion.getStructureVersionId(), serviceContext);
+		_ddmStorageLinkLocalService.addStorageLink(
+			_portal.getClassNameId(DDMContent.class.getName()), primaryKey,
+			ddmStructureVersion.getStructureVersionId(), serviceContext);
 
-			return primaryKey;
-		}
-		catch (PortalException portalException) {
-			throw _translate(portalException);
-		}
+		return primaryKey;
 	}
 
 	@Override
@@ -139,30 +124,25 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		try {
-			com.liferay.dynamic.data.mapping.storage.DDMFormValues
-				translatedDDMFormValues = _ddmBeanTranslator.translate(
-					ddmFormValues);
+		com.liferay.dynamic.data.mapping.storage.DDMFormValues
+			translatedDDMFormValues = _ddmBeanTranslator.translate(
+				ddmFormValues);
 
-			_validate(translatedDDMFormValues, serviceContext);
+		_validate(translatedDDMFormValues, serviceContext);
 
-			DDMStorageLink ddmStorageLink =
-				_ddmStorageLinkLocalService.getClassStorageLink(classPK);
+		DDMStorageLink ddmStorageLink =
+			_ddmStorageLinkLocalService.getClassStorageLink(classPK);
 
-			DDMStorageAdapter ddmStorageAdapter = _getDDMStorageAdapter();
+		DDMStorageAdapter ddmStorageAdapter = _getDDMStorageAdapter();
 
-			ddmStorageAdapter.save(
-				DDMStorageAdapterSaveRequest.Builder.newBuilder(
-					serviceContext.getUserId(), translatedDDMFormValues
-				).withStructureId(
-					ddmStorageLink.getStructureId()
-				).withPrimaryKey(
-					classPK
-				).build());
-		}
-		catch (PortalException portalException) {
-			throw _translate(portalException);
-		}
+		ddmStorageAdapter.save(
+			DDMStorageAdapterSaveRequest.Builder.newBuilder(
+				serviceContext.getUserId(), translatedDDMFormValues
+			).withStructureId(
+				ddmStorageLink.getStructureId()
+			).withPrimaryKey(
+				classPK
+			).build());
 	}
 
 	private void _deleteStorage(long storageId) throws StorageException {
@@ -177,18 +157,6 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 	private DDMStorageAdapter _getDDMStorageAdapter() {
 		return _ddmStorageAdapterRegistry.getDDMStorageAdapter(
 			StorageType.DEFAULT.toString());
-	}
-
-	private PortalException _translate(PortalException portalException) {
-		if (portalException instanceof
-				com.liferay.dynamic.data.mapping.exception.
-					StorageFieldRequiredException) {
-
-			return new StorageFieldRequiredException(
-				portalException.getMessage(), portalException.getCause());
-		}
-
-		return portalException;
 	}
 
 	private void _validate(

@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.selenium;
 
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.util.OSDetector;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.Validator;
 
 import java.util.List;
@@ -25,6 +16,8 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -98,66 +91,6 @@ public class RetryWebElementImpl extends RemoteWebElement {
 	}
 
 	@Override
-	public WebElement findElementByClassName(String using) {
-		try {
-			return _remoteWebElement.findElementByClassName(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementByClassName(using);
-		}
-	}
-
-	@Override
-	public WebElement findElementByCssSelector(String using) {
-		try {
-			return _remoteWebElement.findElementByCssSelector(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementByCssSelector(using);
-		}
-	}
-
-	@Override
-	public WebElement findElementByPartialLinkText(String using) {
-		try {
-			return _remoteWebElement.findElementByPartialLinkText(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementByPartialLinkText(using);
-		}
-	}
-
-	@Override
-	public WebElement findElementByTagName(String using) {
-		try {
-			return _remoteWebElement.findElementByTagName(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementByTagName(using);
-		}
-	}
-
-	@Override
-	public WebElement findElementByXPath(String using) {
-		try {
-			return _remoteWebElement.findElementByXPath(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementByXPath(using);
-		}
-	}
-
-	@Override
 	public List<WebElement> findElements(By by) {
 		try {
 			return _webElement.findElements(by);
@@ -170,62 +103,26 @@ public class RetryWebElementImpl extends RemoteWebElement {
 	}
 
 	@Override
-	public List<WebElement> findElementsByClassName(String using) {
+	public String getAccessibleName() {
 		try {
-			return _remoteWebElement.findElementsByClassName(using);
+			return _webElement.getAccessibleName();
 		}
 		catch (StaleElementReferenceException staleElementReferenceException) {
 			_refreshWebElement(staleElementReferenceException);
 
-			return _remoteWebElement.findElementsByClassName(using);
+			return _webElement.getAccessibleName();
 		}
 	}
 
 	@Override
-	public List<WebElement> findElementsByCssSelector(String using) {
+	public String getAriaRole() {
 		try {
-			return _remoteWebElement.findElementsByCssSelector(using);
+			return _webElement.getAriaRole();
 		}
 		catch (StaleElementReferenceException staleElementReferenceException) {
 			_refreshWebElement(staleElementReferenceException);
 
-			return _remoteWebElement.findElementsByCssSelector(using);
-		}
-	}
-
-	@Override
-	public List<WebElement> findElementsByPartialLinkText(String using) {
-		try {
-			return _remoteWebElement.findElementsByPartialLinkText(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementsByPartialLinkText(using);
-		}
-	}
-
-	@Override
-	public List<WebElement> findElementsByTagName(String using) {
-		try {
-			return _remoteWebElement.findElementsByTagName(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementsByTagName(using);
-		}
-	}
-
-	@Override
-	public List<WebElement> findElementsByXPath(String using) {
-		try {
-			return _remoteWebElement.findElementsByXPath(using);
-		}
-		catch (StaleElementReferenceException staleElementReferenceException) {
-			_refreshWebElement(staleElementReferenceException);
-
-			return _remoteWebElement.findElementsByXPath(using);
+			return _webElement.getAriaRole();
 		}
 	}
 
@@ -270,6 +167,30 @@ public class RetryWebElementImpl extends RemoteWebElement {
 	}
 
 	@Override
+	public String getDomAttribute(String name) {
+		try {
+			return _webElement.getDomAttribute(name);
+		}
+		catch (StaleElementReferenceException staleElementReferenceException) {
+			_refreshWebElement(staleElementReferenceException);
+
+			return _webElement.getDomAttribute(name);
+		}
+	}
+
+	@Override
+	public String getDomProperty(String name) {
+		try {
+			return _webElement.getDomProperty(name);
+		}
+		catch (StaleElementReferenceException staleElementReferenceException) {
+			_refreshWebElement(staleElementReferenceException);
+
+			return _webElement.getDomProperty(name);
+		}
+	}
+
+	@Override
 	public String getId() {
 		try {
 			return _remoteWebElement.getId();
@@ -294,6 +215,18 @@ public class RetryWebElementImpl extends RemoteWebElement {
 	}
 
 	@Override
+	public Rectangle getRect() {
+		try {
+			return _webElement.getRect();
+		}
+		catch (StaleElementReferenceException staleElementReferenceException) {
+			_refreshWebElement(staleElementReferenceException);
+
+			return _webElement.getRect();
+		}
+	}
+
+	@Override
 	public <X> X getScreenshotAs(OutputType<X> target)
 		throws WebDriverException {
 
@@ -304,6 +237,18 @@ public class RetryWebElementImpl extends RemoteWebElement {
 			_refreshWebElement(staleElementReferenceException);
 
 			return _webElement.getScreenshotAs(target);
+		}
+	}
+
+	@Override
+	public SearchContext getShadowRoot() {
+		try {
+			return _webElement.getShadowRoot();
+		}
+		catch (StaleElementReferenceException staleElementReferenceException) {
+			_refreshWebElement(staleElementReferenceException);
+
+			return _webElement.getShadowRoot();
 		}
 	}
 
@@ -512,8 +457,13 @@ public class RetryWebElementImpl extends RemoteWebElement {
 		_remoteWebElement = (RemoteWebElement)_webElement;
 	}
 
-	private static final int _RETRY_WAIT_TIME =
-		PropsValues.TEST_RETRY_COMMAND_WAIT_TIME;
+	private static final int _RETRY_WAIT_TIME;
+
+	static {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		_RETRY_WAIT_TIME = poshiProperties.testRetryCommandWaitTime;
+	}
 
 	private final String _locator;
 	private RemoteWebElement _remoteWebElement;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0;
@@ -28,7 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -581,14 +571,18 @@ public class InstanceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "assignees")) {
 				if (jsonParserFieldValue != null) {
-					instance.setAssignees(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> AssigneeSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Assignee[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Assignee[] assigneesArray =
+						new Assignee[jsonParserFieldValues.length];
+
+					for (int i = 0; i < assigneesArray.length; i++) {
+						assigneesArray[i] = AssigneeSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					instance.setAssignees(assigneesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "className")) {
@@ -655,14 +649,18 @@ public class InstanceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "slaResults")) {
 				if (jsonParserFieldValue != null) {
-					instance.setSlaResults(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> SLAResultSerDes.toDTO((String)object)
-						).toArray(
-							size -> new SLAResult[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					SLAResult[] slaResultsArray =
+						new SLAResult[jsonParserFieldValues.length];
+
+					for (int i = 0; i < slaResultsArray.length; i++) {
+						slaResultsArray[i] = SLAResultSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					instance.setSlaResults(slaResultsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "slaStatus")) {
@@ -680,14 +678,18 @@ public class InstanceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "transitions")) {
 				if (jsonParserFieldValue != null) {
-					instance.setTransitions(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> TransitionSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Transition[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Transition[] transitionsArray =
+						new Transition[jsonParserFieldValues.length];
+
+					for (int i = 0; i < transitionsArray.length; i++) {
+						transitionsArray[i] = TransitionSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					instance.setTransitions(transitionsArray);
 				}
 			}
 		}

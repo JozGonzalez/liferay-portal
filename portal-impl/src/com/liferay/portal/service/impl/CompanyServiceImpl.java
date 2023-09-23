@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -59,7 +50,6 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 	 * @param  webId the company's web domain
 	 * @param  virtualHost the company's virtual host name
 	 * @param  mx the company's mail domain
-	 * @param  system whether the company is the very first company (i.e., the
 	 * @param  maxUsers the max number of company users (optionally
 	 *         <code>0</code>)
 	 * @param  active whether the company is active
@@ -79,7 +69,8 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 		}
 
 		return companyLocalService.addCompany(
-			companyId, webId, virtualHost, mx, maxUsers, active);
+			companyId, webId, virtualHost, mx, maxUsers, active, null, null,
+			null, null, null, null);
 	}
 
 	/**
@@ -88,17 +79,18 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 	 * @param  webId the company's web domain
 	 * @param  virtualHost the company's virtual host name
 	 * @param  mx the company's mail domain
-	 * @param  system whether the company is the very first company (i.e., the
 	 * @param  maxUsers the max number of company users (optionally
 	 *         <code>0</code>)
 	 * @param  active whether the company is active
 	 * @return the company
 	 */
 	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
-	@Override
 	public Company addCompany(
 			String webId, String virtualHost, String mx, int maxUsers,
-			boolean active)
+			boolean active, String defaultAdminPassword,
+			String defaultAdminScreenName, String defaultAdminEmailAddress,
+			String defaultAdminFirstName, String defaultAdminMiddleName,
+			String defaultAdminLastName)
 		throws PortalException {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
@@ -108,7 +100,10 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 		}
 
 		return companyLocalService.addCompany(
-			null, webId, virtualHost, mx, maxUsers, active);
+			null, webId, virtualHost, mx, maxUsers, active,
+			defaultAdminPassword, defaultAdminScreenName,
+			defaultAdminEmailAddress, defaultAdminFirstName,
+			defaultAdminMiddleName, defaultAdminLastName);
 	}
 
 	@JSONWebService(mode = JSONWebServiceMode.IGNORE)

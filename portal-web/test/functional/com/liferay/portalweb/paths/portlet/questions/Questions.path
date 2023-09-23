@@ -16,6 +16,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COMMENT_BODY</td>
+	<td>//div[contains(@class,'questions')]//div[contains(@class,'questions-article-body')]//p[contains(.,'${key_commentBodyContent}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ASK_QUESTION_BUTTON</td>
 	<td>//*[contains(@class,'btn btn-primary') and contains(text(),'Ask Question')]</td>
 	<td></td>
@@ -57,7 +62,12 @@
 </tr>
 <tr>
 	<td>EDIT_ANSWER</td>
-	<td>//button[contains(@class,'btn btn-secondary') and contains(.,'Edit')]</td>
+	<td>//a[@class='text-reset' and contains(text(),'Edit')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDIT_COMMENT</td>
+	<td>//div[contains(@class,'questions-reply')]//a[normalize-space()='Edit']</td>
 	<td></td>
 </tr>
 <tr>
@@ -212,7 +222,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_LIST_VOTED_COUNT</td>
-	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]]//span[contains(.,'${key_count}')]</td>
+	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]][contains(.,'${key_count}')]</td>
 	<td></td>
 </tr>
 <tr>

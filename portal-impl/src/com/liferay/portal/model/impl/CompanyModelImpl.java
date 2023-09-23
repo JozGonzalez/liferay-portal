@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -81,7 +72,8 @@ public class CompanyModelImpl
 		{"legalId", Types.VARCHAR}, {"legalType", Types.VARCHAR},
 		{"sicCode", Types.VARCHAR}, {"tickerSymbol", Types.VARCHAR},
 		{"industry", Types.VARCHAR}, {"type_", Types.VARCHAR},
-		{"size_", Types.VARCHAR}
+		{"size_", Types.VARCHAR}, {"indexNameCurrent", Types.VARCHAR},
+		{"indexNameNext", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -109,10 +101,12 @@ public class CompanyModelImpl
 		TABLE_COLUMNS_MAP.put("industry", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("type_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("size_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("indexNameCurrent", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("indexNameNext", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table Company (mvccVersion LONG default 0 not null,companyId LONG not null primary key,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,webId VARCHAR(75) null,mx VARCHAR(200) null,homeURL STRING null,logoId LONG,maxUsers INTEGER,active_ BOOLEAN,name VARCHAR(75) null,legalName VARCHAR(75) null,legalId VARCHAR(75) null,legalType VARCHAR(75) null,sicCode VARCHAR(75) null,tickerSymbol VARCHAR(75) null,industry VARCHAR(75) null,type_ VARCHAR(75) null,size_ VARCHAR(75) null)";
+		"create table Company (mvccVersion LONG default 0 not null,companyId LONG not null primary key,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,webId VARCHAR(75) null,mx VARCHAR(200) null,homeURL STRING null,logoId LONG,maxUsers INTEGER,active_ BOOLEAN,name VARCHAR(75) null,legalName VARCHAR(75) null,legalId VARCHAR(75) null,legalType VARCHAR(75) null,sicCode VARCHAR(75) null,tickerSymbol VARCHAR(75) null,industry VARCHAR(75) null,type_ VARCHAR(75) null,size_ VARCHAR(75) null,indexNameCurrent VARCHAR(75) null,indexNameNext VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table Company";
 
@@ -291,6 +285,10 @@ public class CompanyModelImpl
 			attributeGetterFunctions.put("industry", Company::getIndustry);
 			attributeGetterFunctions.put("type", Company::getType);
 			attributeGetterFunctions.put("size", Company::getSize);
+			attributeGetterFunctions.put(
+				"indexNameCurrent", Company::getIndexNameCurrent);
+			attributeGetterFunctions.put(
+				"indexNameNext", Company::getIndexNameNext);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -355,6 +353,12 @@ public class CompanyModelImpl
 				"type", (BiConsumer<Company, String>)Company::setType);
 			attributeSetterBiConsumers.put(
 				"size", (BiConsumer<Company, String>)Company::setSize);
+			attributeSetterBiConsumers.put(
+				"indexNameCurrent",
+				(BiConsumer<Company, String>)Company::setIndexNameCurrent);
+			attributeSetterBiConsumers.put(
+				"indexNameNext",
+				(BiConsumer<Company, String>)Company::setIndexNameNext);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -797,6 +801,46 @@ public class CompanyModelImpl
 		_size = size;
 	}
 
+	@JSON
+	@Override
+	public String getIndexNameCurrent() {
+		if (_indexNameCurrent == null) {
+			return "";
+		}
+		else {
+			return _indexNameCurrent;
+		}
+	}
+
+	@Override
+	public void setIndexNameCurrent(String indexNameCurrent) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_indexNameCurrent = indexNameCurrent;
+	}
+
+	@JSON
+	@Override
+	public String getIndexNameNext() {
+		if (_indexNameNext == null) {
+			return "";
+		}
+		else {
+			return _indexNameNext;
+		}
+	}
+
+	@Override
+	public void setIndexNameNext(String indexNameNext) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_indexNameNext = indexNameNext;
+	}
+
 	public CompanyImpl.CompanySecurityBag getCompanySecurityBag() {
 		return null;
 	}
@@ -889,6 +933,8 @@ public class CompanyModelImpl
 		companyImpl.setIndustry(getIndustry());
 		companyImpl.setType(getType());
 		companyImpl.setSize(getSize());
+		companyImpl.setIndexNameCurrent(getIndexNameCurrent());
+		companyImpl.setIndexNameNext(getIndexNameNext());
 
 		companyImpl.resetOriginalValues();
 
@@ -930,6 +976,10 @@ public class CompanyModelImpl
 			this.<String>getColumnOriginalValue("industry"));
 		companyImpl.setType(this.<String>getColumnOriginalValue("type_"));
 		companyImpl.setSize(this.<String>getColumnOriginalValue("size_"));
+		companyImpl.setIndexNameCurrent(
+			this.<String>getColumnOriginalValue("indexNameCurrent"));
+		companyImpl.setIndexNameNext(
+			this.<String>getColumnOriginalValue("indexNameNext"));
 
 		return companyImpl;
 	}
@@ -1145,6 +1195,22 @@ public class CompanyModelImpl
 			companyCacheModel.size = null;
 		}
 
+		companyCacheModel.indexNameCurrent = getIndexNameCurrent();
+
+		String indexNameCurrent = companyCacheModel.indexNameCurrent;
+
+		if ((indexNameCurrent != null) && (indexNameCurrent.length() == 0)) {
+			companyCacheModel.indexNameCurrent = null;
+		}
+
+		companyCacheModel.indexNameNext = getIndexNameNext();
+
+		String indexNameNext = companyCacheModel.indexNameNext;
+
+		if ((indexNameNext != null) && (indexNameNext.length() == 0)) {
+			companyCacheModel.indexNameNext = null;
+		}
+
 		setCompanySecurityBag(null);
 
 		companyCacheModel._companySecurityBag = getCompanySecurityBag();
@@ -1236,6 +1302,8 @@ public class CompanyModelImpl
 	private String _industry;
 	private String _type;
 	private String _size;
+	private String _indexNameCurrent;
+	private String _indexNameNext;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1288,6 +1356,8 @@ public class CompanyModelImpl
 		_columnOriginalValues.put("industry", _industry);
 		_columnOriginalValues.put("type_", _type);
 		_columnOriginalValues.put("size_", _size);
+		_columnOriginalValues.put("indexNameCurrent", _indexNameCurrent);
+		_columnOriginalValues.put("indexNameNext", _indexNameNext);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1354,6 +1424,10 @@ public class CompanyModelImpl
 		columnBitmasks.put("type_", 524288L);
 
 		columnBitmasks.put("size_", 1048576L);
+
+		columnBitmasks.put("indexNameCurrent", 2097152L);
+
+		columnBitmasks.put("indexNameNext", 4194304L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

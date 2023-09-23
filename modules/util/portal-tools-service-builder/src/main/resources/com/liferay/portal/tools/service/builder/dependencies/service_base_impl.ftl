@@ -995,9 +995,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName} ${entity.PKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.PKVariableName});
-				}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName} ${entity.PKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.PKVariableName});
+					}
+				<#else>
+					public void add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName} ${entity.PKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.PKVariableName});
+					}
+				</#if>
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.name, [referenceEntity.PKClassName, apiPackagePath + ".model." + entity.name], []) />
 
@@ -1007,9 +1013,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.name} ${entity.variableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.variableName});
-				}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.name} ${entity.variableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.variableName});
+					}
+				<#else>
+					public void add${referenceEntity.name}${entity.name}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.name} ${entity.variableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						${referenceEntity.variableName}Persistence.add${entity.name}(${referenceEntity.PKVariableName}, ${entity.variableName});
+					}
+				</#if>
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
 
@@ -1019,9 +1031,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName}[] ${entity.pluralPKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralPKVariableName});
-				}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName}[] ${entity.pluralPKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralPKVariableName});
+					}
+				<#else>
+					public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, ${entity.PKClassName}[] ${entity.pluralPKVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralPKVariableName});
+					}
+				</#if>
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, "java.util.List<" + entity.name + ">"], []) />
 
@@ -1031,9 +1049,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, List<${entity.name}> ${entity.pluralVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralVariableName});
-				}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, List<${entity.name}> ${entity.pluralVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralVariableName});
+					}
+				<#else>
+					public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVariableName}, List<${entity.name}> ${entity.pluralVariableName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						${referenceEntity.variableName}Persistence.add${entity.pluralName}(${referenceEntity.PKVariableName}, ${entity.pluralVariableName});
+					}
+				</#if>
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "clear" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName], []) />
 
@@ -1604,7 +1628,7 @@ import org.osgi.service.component.annotations.Reference;
 				}
 			</#if>
 
-			_set${sessionTypeName}ServiceUtilService(${entity.variableName}${sessionTypeName}Service);
+			${entity.name}${sessionTypeName}ServiceUtil.setService(${entity.variableName}${sessionTypeName}Service);
 		}
 	</#if>
 
@@ -1634,7 +1658,7 @@ import org.osgi.service.component.annotations.Reference;
 
 		@Deactivate
 		protected void deactivate() {
-			_set${sessionTypeName}ServiceUtilService(null);
+			${entity.name}${sessionTypeName}ServiceUtil.setService(null);
 		}
 
 		@Override
@@ -1656,7 +1680,7 @@ import org.osgi.service.component.annotations.Reference;
 		public void setAopProxy(Object aopProxy) {
 			${entity.variableName}${sessionTypeName}Service = (${entity.name}${sessionTypeName}Service)aopProxy;
 
-			_set${sessionTypeName}ServiceUtilService(${entity.variableName}${sessionTypeName}Service);
+			${entity.name}${sessionTypeName}ServiceUtil.setService(${entity.variableName}${sessionTypeName}Service);
 		}
 	<#else>
 		public void destroy() {
@@ -1668,7 +1692,7 @@ import org.osgi.service.component.annotations.Reference;
 				</#if>
 			</#if>
 
-			_set${sessionTypeName}ServiceUtilService(null);
+			${entity.name}${sessionTypeName}ServiceUtil.setService(null);
 		}
 	</#if>
 
@@ -2042,19 +2066,6 @@ import org.osgi.service.component.annotations.Reference;
 			}
 		}
 	</#if>
-
-	private void _set${sessionTypeName}ServiceUtilService(${entity.name}${sessionTypeName}Service ${entity.variableName}${sessionTypeName}Service) {
-		try {
-			Field field = ${entity.name}${sessionTypeName}ServiceUtil.class.getDeclaredField("_service");
-
-			field.setAccessible(true);
-
-			field.set(null, ${entity.variableName}${sessionTypeName}Service);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
-	}
 
 	<#list referenceEntities as referenceEntity>
 		<#if referenceEntity.hasLocalService()>

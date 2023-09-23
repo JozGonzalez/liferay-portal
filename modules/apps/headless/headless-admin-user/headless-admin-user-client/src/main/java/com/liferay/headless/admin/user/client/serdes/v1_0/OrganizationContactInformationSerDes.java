@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.client.serdes.v1_0;
@@ -26,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -256,50 +246,69 @@ public class OrganizationContactInformationSerDes {
 
 			if (Objects.equals(jsonParserFieldName, "emailAddresses")) {
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					EmailAddress[] emailAddressesArray =
+						new EmailAddress[jsonParserFieldValues.length];
+
+					for (int i = 0; i < emailAddressesArray.length; i++) {
+						emailAddressesArray[i] = EmailAddressSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
 					organizationContactInformation.setEmailAddresses(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> EmailAddressSerDes.toDTO((String)object)
-						).toArray(
-							size -> new EmailAddress[size]
-						));
+						emailAddressesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "postalAddresses")) {
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PostalAddress[] postalAddressesArray =
+						new PostalAddress[jsonParserFieldValues.length];
+
+					for (int i = 0; i < postalAddressesArray.length; i++) {
+						postalAddressesArray[i] = PostalAddressSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
 					organizationContactInformation.setPostalAddresses(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PostalAddressSerDes.toDTO((String)object)
-						).toArray(
-							size -> new PostalAddress[size]
-						));
+						postalAddressesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "telephones")) {
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Phone[] telephonesArray =
+						new Phone[jsonParserFieldValues.length];
+
+					for (int i = 0; i < telephonesArray.length; i++) {
+						telephonesArray[i] = PhoneSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
 					organizationContactInformation.setTelephones(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PhoneSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Phone[size]
-						));
+						telephonesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "webUrls")) {
 				if (jsonParserFieldValue != null) {
-					organizationContactInformation.setWebUrls(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> WebUrlSerDes.toDTO((String)object)
-						).toArray(
-							size -> new WebUrl[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					WebUrl[] webUrlsArray =
+						new WebUrl[jsonParserFieldValues.length];
+
+					for (int i = 0; i < webUrlsArray.length; i++) {
+						webUrlsArray[i] = WebUrlSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					organizationContactInformation.setWebUrls(webUrlsArray);
 				}
 			}
 		}

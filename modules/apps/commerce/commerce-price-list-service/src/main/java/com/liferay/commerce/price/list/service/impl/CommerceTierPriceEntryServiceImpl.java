@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.impl;
@@ -53,7 +44,7 @@ public class CommerceTierPriceEntryServiceImpl
 	@Override
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			int minQuantity, ServiceContext serviceContext)
+			BigDecimal minQuantity, ServiceContext serviceContext)
 		throws PortalException {
 
 		return addCommerceTierPriceEntry(
@@ -64,7 +55,7 @@ public class CommerceTierPriceEntryServiceImpl
 	@Override
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, BigDecimal promoPrice, int minQuantity,
+			BigDecimal price, BigDecimal promoPrice, BigDecimal minQuantity,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -80,13 +71,13 @@ public class CommerceTierPriceEntryServiceImpl
 
 		return commerceTierPriceEntryLocalService.addCommerceTierPriceEntry(
 			externalReferenceCode, commercePriceEntryId, price, promoPrice,
-			minQuantity, serviceContext);
+			commercePriceEntry.isBulkPricing(), minQuantity, serviceContext);
 	}
 
 	@Override
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, int minQuantity, boolean bulkPricing,
+			BigDecimal price, BigDecimal minQuantity, boolean bulkPricing,
 			boolean discountDiscovery, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
@@ -119,7 +110,7 @@ public class CommerceTierPriceEntryServiceImpl
 	public CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			String externalReferenceCode, long commerceTierPriceEntryId,
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			int minQuantity, String priceEntryExternalReferenceCode,
+			BigDecimal minQuantity, String priceEntryExternalReferenceCode,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -153,7 +144,7 @@ public class CommerceTierPriceEntryServiceImpl
 	@Override
 	public CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			String externalReferenceCode, long commerceTierPriceEntryId,
-			long commercePriceEntryId, BigDecimal price, int minQuantity,
+			long commercePriceEntryId, BigDecimal price, BigDecimal minQuantity,
 			boolean bulkPricing, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -395,7 +386,7 @@ public class CommerceTierPriceEntryServiceImpl
 	@Override
 	public CommerceTierPriceEntry updateCommerceTierPriceEntry(
 			long commerceTierPriceEntryId, BigDecimal price,
-			BigDecimal promoPrice, int minQuantity,
+			BigDecimal promoPrice, BigDecimal minQuantity,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -412,20 +403,21 @@ public class CommerceTierPriceEntryServiceImpl
 
 		return commerceTierPriceEntryLocalService.updateCommerceTierPriceEntry(
 			commerceTierPriceEntryId, price, promoPrice, minQuantity,
-			serviceContext);
+			commercePriceEntry.isBulkPricing(), serviceContext);
 	}
 
 	@Override
 	public CommerceTierPriceEntry updateCommerceTierPriceEntry(
-			long commerceTierPriceEntryId, BigDecimal price, int minQuantity,
-			boolean bulkPricing, boolean discountDiscovery,
-			BigDecimal discountLevel1, BigDecimal discountLevel2,
-			BigDecimal discountLevel3, BigDecimal discountLevel4,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
+			long commerceTierPriceEntryId, BigDecimal price,
+			BigDecimal minQuantity, boolean bulkPricing,
+			boolean discountDiscovery, BigDecimal discountLevel1,
+			BigDecimal discountLevel2, BigDecimal discountLevel3,
+			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =

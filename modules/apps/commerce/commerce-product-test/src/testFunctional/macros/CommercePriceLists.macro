@@ -71,6 +71,92 @@ definition {
 		SelectFrameTop();
 	}
 
+	macro createTierPriceEntryDirectlyInsideProductSKU {
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(tierPriceSetting)) {
+			Click(
+				key_radioOption = ${tierPriceSetting},
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Button.clickSave();
+		}
+
+		Click(
+			key_panel = "Details",
+			locator1 = "Panel#PANEL_COLLAPSED");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Tier Price Entries");
+
+		Click(locator1 = "Button#PLUS");
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		CommerceSKUs.addPriceToSKU(price = ${price});
+
+		Type(
+			key_fieldLabel = "Minimum Quantity",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${quantity});
+
+		Button.clickSubmitButton();
+	}
+
+	macro deletePriceModifier {
+		Click(
+			key_value = ${priceModifierName},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(key_menuItem = "Delete");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro editPriceListDetails {
+		if (isSet(name)) {
+			Type(
+				key_text = "Name",
+				locator1 = "TextInput#ANY",
+				value1 = ${name});
+		}
+
+		if (isSet(currency)) {
+			Select(
+				key_fieldLabel = "Currency",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${currency});
+		}
+
+		if (isSet(priority)) {
+			Type(
+				key_text = "Priority",
+				locator1 = "TextInput#ANY",
+				value1 = ${priority});
+		}
+
+		if (isSet(parentPriceList)) {
+			Type(
+				key_label = "Parent Price List",
+				locator1 = "CommerceEntry#ANY_AUTOCOMPLETE_TEXT_FIELD",
+				value1 = ${parentPriceList});
+
+			Click(
+				key_fieldName = ${parentPriceList},
+				locator1 = "FormViewBuilder#OBJECT_FIELD_BUTTON_DROPDOWN");
+		}
+
+		if (isSet(priceType)) {
+			Select(
+				key_fieldLabel = "Price Type",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceType});
+		}
+
+		Button.clickPublish();
+	}
+
 	macro editPriceListEntryPrice {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
@@ -82,10 +168,160 @@ definition {
 		Button.clickSave();
 	}
 
+	macro editPriceModifier {
+		if (!(isSet(active))) {
+			var active = "true";
+		}
+
+		Click(
+			key_value = ${priceModifierName},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(key_menuItem = "Edit");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(modifier)) {
+			Select(
+				key_fieldLabel = "Modifier",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${modifier});
+		}
+
+		if (isSet(modifierTarget)) {
+			Select(
+				key_fieldLabel = "Target",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${modifierTarget});
+		}
+
+		if (isSet(amountValue)) {
+			Type(
+				key_fieldLabel = "Amount",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${amountValue});
+		}
+
+		if (${active} == "true") {
+			Check.checkToggleSwitch(locator1 = "ToggleSwitch#ACTIVE");
+		}
+
+		Button.clickSave();
+
+		CommerceEntry.gotoMenuTab(menuTab = ${target});
+
+		CommerceRelations.assignSingleRelationToProductsEntry(
+			entryName = ${entryName},
+			title = ${relation});
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrameTop();
+	}
+
+	macro editTierPriceEntryDirectlyInsideProductSKU {
+		SelectFrame.selectFrame(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		Click(
+			key_panel = "Details",
+			locator1 = "Panel#PANEL_COLLAPSED");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Tier Price Entries");
+
+		CommerceEntry.clickEntryDropdownMenuItem(
+			entryName = ${entryName},
+			menuItem = "Edit");
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		CommerceSKUs.addPriceToSKU(price = ${price});
+
+		Type(
+			key_fieldLabel = "Minimum Quantity",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${quantity});
+
+		Button.clickSubmitButton();
+	}
+
 	macro openPriceListsAdmin {
 		Navigator.openWithAppendToBaseURL(
 			baseURL = ${baseURL},
 			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_pricing_web_internal_portlet_CommercePriceListPortlet");
+	}
+
+	macro setOverrideDiscount {
+		Check.checkToggleSwitch(
+			key_toggleSwitchLabel = "Override Discount",
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+		for (var overrideDiscount : list ${overrideDiscounts}) {
+			var key_text = StringUtil.extractFirst(${overrideDiscount}, "-");
+			var currentValue = StringUtil.extractLast(${overrideDiscount}, "-");
+
+			Type(
+				locator1 = "TextInput#ANY",
+				value1 = ${currentValue});
+		}
+
+		Button.clickSave();
+	}
+
+	macro viewPriceListEntry {
+		if (isSet(priceListName)) {
+			AssertTextEquals(
+				locator1 = "CommerceEntry#NAME_FIELD",
+				value1 = ${priceListName});
+
+			echo("Name is OK");
+		}
+
+		if (isSet(priceListCatalog)) {
+			AssertSelectedLabel(
+				key_fieldLabel = "Catalog",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceListCatalog});
+
+			echo("Catalog is OK");
+		}
+
+		if (isSet(priceListCurrency)) {
+			AssertSelectedLabel(
+				key_fieldLabel = "Currency",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceListCurrency});
+
+			echo("Currency is OK");
+		}
+
+		if (isSet(priceListPriority)) {
+			AssertTextEquals(
+				key_text = "Priority",
+				locator1 = "TextInput#ANY",
+				value1 = ${priceListPriority});
+
+			echo("Priority is OK");
+		}
+
+		if (isSet(priceListParent)) {
+			AssertTextEquals(
+				key_label = "Parent Price List",
+				locator1 = "CommerceEntry#ANY_AUTOCOMPLETE_TEXT_FIELD",
+				value1 = ${priceListParent});
+
+			echo("Parent Price List/Promotion is OK");
+		}
+
+		if (isSet(priceListType)) {
+			AssertElementPresent(
+				key_fieldLabel = "Price Type",
+				key_value = ${priceListType},
+				locator1 = "CommerceEntry#SELECT_ASSERT_SELECTED_VALUE");
+
+			echo("Price Type is OK");
+		}
 	}
 
 }

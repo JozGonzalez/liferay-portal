@@ -1,16 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
+import {openModal} from 'frontend-js-web';
 
 function attachListener(element, eventType, callback) {
 	element?.addEventListener(eventType, callback);
@@ -22,7 +15,12 @@ function attachListener(element, eventType, callback) {
 	};
 }
 
-export default function EditKBArticle({kbArticle, namespace, publishAction}) {
+export default function EditKBArticle({
+	kbArticle,
+	namespace,
+	publishAction,
+	scheduleModalURL,
+}) {
 	const contextualSidebarButton = document.getElementById(
 		`${namespace}contextualSidebarButton`
 	);
@@ -54,27 +52,60 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 		event.currentTarget.dataset.customUrl = urlTitleInput.value !== '';
 	};
 
-	const publishButton = document.getElementById(`${namespace}publishButton`);
+	const scheduleItemOnClick = () => {
+		openScheduleModal(Liferay.Language.get('schedule-publication'));
+	};
 
-	const publishButtonOnClick = () => {
-		const workflowActionInput = document.getElementById(
-			`${namespace}workflowAction`
-		);
+	const scheduledButtonOnClick = () => {
+		openScheduleModal(Liferay.Language.get('edit-scheduled-publication'));
+	};
 
-		if (workflowActionInput) {
-			workflowActionInput.value = publishAction;
-		}
+	const openScheduleModal = (modalTitle) => {
+		const modalEventHandlers = [];
 
-		if (!kbArticle) {
-			const customUrl = urlTitleInput.dataset.customUrl;
+		openModal({
+			height: '65vh',
+			id: 'scheduleKBArticleDialog',
+			iframeBodyCssClass: '',
+			onClose: () => {
+				modalEventHandlers.forEach((eventHandler) => {
+					eventHandler.detach();
+				});
 
-			if (customUrl === 'false') {
-				urlTitleInput.value = '';
-			}
-		}
+				modalEventHandlers.splice(0, modalEventHandlers.length);
+			},
+			onOpen: () => {
+				const scheduleEventHandler = Liferay.on(
+					'scheduleKBArticle',
+					publishButtonOnClick
+				);
+
+				modalEventHandlers.push(scheduleEventHandler);
+			},
+			size: 'md',
+			title: modalTitle,
+			url: scheduleModalURL,
+		});
 	};
 
 	const form = document.getElementById(`${namespace}fm`);
+
+	let publishButton;
+	let scheduleItem;
+	let scheduledButton;
+
+	if (Liferay.FeatureFlags['LPS-188060']) {
+		publishButton = document.getElementById(`${namespace}publishItem`);
+
+		scheduledButton = document.getElementById(
+			`${namespace}scheduledButton`
+		);
+
+		scheduleItem = document.getElementById(`${namespace}scheduleItem`);
+	}
+	else {
+		publishButton = document.getElementById(`${namespace}publishButton`);
+	}
 
 	const updateMultipleKBArticleAttachments = function () {
 		const selectedFileNameContainer = document.getElementById(
@@ -98,6 +129,37 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 		selectedFileNameContainer.innerHTML = buffer.join('');
 	};
 
+	const beforeSubmit = function () {
+		document.getElementById(`${namespace}content`).value = window[
+			`${namespace}contentEditor`
+		].getHTML();
+
+		updateMultipleKBArticleAttachments();
+	};
+
+	const publishButtonOnClick = () => {
+		const workflowActionInput = document.getElementById(
+			`${namespace}workflowAction`
+		);
+
+		if (workflowActionInput) {
+			workflowActionInput.value = publishAction;
+		}
+
+		if (!kbArticle) {
+			const customUrl = urlTitleInput.dataset.customUrl;
+
+			if (customUrl === 'false') {
+				urlTitleInput.value = '';
+			}
+		}
+
+		if (Liferay.FeatureFlags['LPS-188060']) {
+			beforeSubmit();
+			submitForm(form);
+		}
+	};
+
 	const eventHandlers = [
 		attachListener(publishButton, 'click', publishButtonOnClick),
 		attachListener(
@@ -106,13 +168,18 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 			contextualSidebarButtonOnClick
 		),
 		attachListener(form, 'submit', () => {
-			document.getElementById(`${namespace}content`).value = window[
-				`${namespace}contentEditor`
-			].getHTML();
-
-			updateMultipleKBArticleAttachments();
+			beforeSubmit();
 		}),
 	];
+
+	if (Liferay.FeatureFlags['LPS-188060']) {
+		eventHandlers.push(
+			attachListener(scheduleItem, 'click', scheduleItemOnClick)
+		);
+		eventHandlers.push(
+			attachListener(scheduledButton, 'click', scheduledButtonOnClick)
+		);
+	}
 
 	if (!kbArticle) {
 		eventHandlers.push(

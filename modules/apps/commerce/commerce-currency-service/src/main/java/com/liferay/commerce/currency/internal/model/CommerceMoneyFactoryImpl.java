@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.internal.model;
@@ -104,9 +95,52 @@ public class CommerceMoneyFactoryImpl implements CommerceMoneyFactory {
 				return true;
 			}
 
+			@Override
+			public boolean isPriceOnApplication() {
+				return false;
+			}
+
 		};
 
 		return _emptyCommerceMoney;
+	}
+
+	@Override
+	public CommerceMoney priceOnApplicationCommerceMoney() {
+		if (_priceOnApplicationCommerceMoney != null) {
+			return _priceOnApplicationCommerceMoney;
+		}
+
+		_priceOnApplicationCommerceMoney = new CommerceMoney() {
+
+			@Override
+			public String format(Locale locale) throws PortalException {
+				return _commercePriceFormatter.format(BigDecimal.ZERO, locale);
+			}
+
+			@Override
+			public CommerceCurrency getCommerceCurrency() {
+				return null;
+			}
+
+			@Override
+			public BigDecimal getPrice() {
+				return BigDecimal.ZERO;
+			}
+
+			@Override
+			public boolean isEmpty() {
+				return true;
+			}
+
+			@Override
+			public boolean isPriceOnApplication() {
+				return true;
+			}
+
+		};
+
+		return _priceOnApplicationCommerceMoney;
 	}
 
 	@Activate
@@ -121,5 +155,6 @@ public class CommerceMoneyFactoryImpl implements CommerceMoneyFactory {
 	private CommercePriceFormatter _commercePriceFormatter;
 
 	private CommerceMoney _emptyCommerceMoney;
+	private CommerceMoney _priceOnApplicationCommerceMoney;
 
 }

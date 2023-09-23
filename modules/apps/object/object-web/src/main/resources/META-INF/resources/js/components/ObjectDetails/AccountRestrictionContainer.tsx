@@ -1,20 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayToggle} from '@clayui/form';
-import ClayPanel from '@clayui/panel';
-import {FormError, SingleSelect} from '@liferay/object-js-components-web';
+import {
+	FormError,
+	SingleSelect,
+	Toggle,
+} from '@liferay/object-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
@@ -22,6 +16,8 @@ import {defaultLanguageId} from '../../utils/constants';
 interface AccountRestrictionContainerProps {
 	errors: FormError<ObjectDefinition>;
 	isApproved: boolean;
+	isLinkedObjectDefinition?: boolean;
+	isRootDescendantNode: boolean;
 	objectFields: ObjectField[];
 	setValues: (values: Partial<ObjectDefinition>) => void;
 	values: Partial<ObjectDefinition>;
@@ -30,6 +26,8 @@ interface AccountRestrictionContainerProps {
 export function AccountRestrictionContainer({
 	errors,
 	isApproved,
+	isLinkedObjectDefinition,
+	isRootDescendantNode,
 	objectFields,
 	setValues,
 	values,
@@ -47,14 +45,21 @@ export function AccountRestrictionContainer({
 	);
 
 	useEffect(() => {
-		const relationshipFields = objectFields.filter(
-			(field) => field.businessType === 'Relationship'
-		);
+		const accountRelationshipFieldsResponse = objectFields.filter(
+			(field) => {
+				if (values.storageType && values.storageType !== 'default') {
+					return (
+						field.businessType === 'Integer' ||
+						field.businessType === 'LongInteger' ||
+						field.businessType === 'Text'
+					);
+				}
 
-		const accountRelationshipFieldsResponse = relationshipFields.filter(
-			(relationshipField) => {
-				return relationshipField.objectFieldSettings?.find(
-					(fieldSetting) => fieldSetting.value === 'AccountEntry'
+				return (
+					field.businessType === 'Relationship' &&
+					field.objectFieldSettings?.find(
+						(fieldSetting) => fieldSetting.value === 'AccountEntry'
+					)
 				);
 			}
 		);
@@ -108,56 +113,56 @@ export function AccountRestrictionContainer({
 	]);
 
 	return (
-		<ClayPanel
-			collapsable
-			defaultExpanded
-			displayTitle={Liferay.Language.get('account-restriction')}
-			displayType="unstyled"
-		>
-			<ClayPanel.Body>
-				<ClayToggle
-					disabled={
-						!accountRelationshipFields.length ||
-						disableAccountToggle
-					}
-					label={Liferay.Language.get('active')}
-					name="accountEntryRestricted"
-					onToggle={() =>
-						setValues({
-							accountEntryRestricted: !values.accountEntryRestricted,
-							accountEntryRestrictedObjectFieldName:
-								!values.accountEntryRestricted === false
-									? ''
-									: values.accountEntryRestrictedObjectFieldName,
-						})
-					}
-					toggled={values.accountEntryRestricted}
-				/>
+		<>
+			<Toggle
+				disabled={
+					!accountRelationshipFields.length ||
+					disableAccountToggle ||
+					isLinkedObjectDefinition ||
+					isRootDescendantNode
+				}
+				label={sub(
+					Liferay.Language.get('enable-x'),
+					Liferay.Language.get('account-restriction')
+				)}
+				name="accountEntryRestricted"
+				onToggle={() =>
+					setValues({
+						accountEntryRestricted: !values.accountEntryRestricted,
+						accountEntryRestrictedObjectFieldName:
+							!values.accountEntryRestricted === false
+								? ''
+								: values.accountEntryRestrictedObjectFieldName,
+					})
+				}
+				toggled={values.accountEntryRestricted}
+			/>
 
-				<SingleSelect<LabelValueObject>
-					disabled={
-						!accountRelationshipFields.length ||
-						!values.accountEntryRestricted ||
-						disableAccountSelect
-					}
-					error={errors.accountEntryRestrictedObjectFieldName}
-					label={Liferay.Language.get(
-						'account-entry-restricted-object-field-id'
-					)}
-					onChange={({value}) => {
-						setValues({
-							accountEntryRestrictedObjectFieldName: value,
-						});
-					}}
-					options={accountRelationshipFields}
-					required={
-						!!accountRelationshipFields.length &&
-						values.accountEntryRestricted &&
-						!disableAccountSelect
-					}
-					value={selectedAccount}
-				/>
-			</ClayPanel.Body>
-		</ClayPanel>
+			<SingleSelect<LabelValueObject>
+				disabled={
+					!accountRelationshipFields.length ||
+					!values.accountEntryRestricted ||
+					disableAccountSelect ||
+					isLinkedObjectDefinition ||
+					isRootDescendantNode
+				}
+				error={errors.accountEntryRestrictedObjectFieldName}
+				label={Liferay.Language.get(
+					'account-entry-restricted-object-field-id'
+				)}
+				onChange={({value}) => {
+					setValues({
+						accountEntryRestrictedObjectFieldName: value,
+					});
+				}}
+				options={accountRelationshipFields}
+				required={
+					!!accountRelationshipFields.length &&
+					values.accountEntryRestricted &&
+					!disableAccountSelect
+				}
+				value={selectedAccount}
+			/>
+		</>
 	);
 }

@@ -27,7 +27,7 @@
 </tr>
 <tr>
 	<td>CATEGORY_AUTOCOMPLETE_SPECIFIC</td>
-	<td>//div[contains(@class,'autocomplete-dropdown-menu')]//ul/li//button[.='${key_categoryName}']</td>
+	<td>//div[contains(@class,'dropdown-menu')]//ul/li//button[.='${key_categoryName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -68,6 +68,11 @@
 <tr>
 	<td>TAGS_REMOVE_ICON_GENERIC</td>
 	<td>//span[(contains(@class,'label-item'))]//button[contains(@class,'close')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TAGS_FRAGMENT_BY_ROW</td>
+	<td>//form//div[contains(@class,"tagsinputfragmentrenderer")][${key_tagRow}]//button</td>
 	<td></td>
 </tr>
 </tbody>

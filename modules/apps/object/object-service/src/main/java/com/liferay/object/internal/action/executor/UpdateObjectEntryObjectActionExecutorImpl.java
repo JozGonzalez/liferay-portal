@@ -1,34 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.action.executor;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.action.executor.ObjectActionExecutor;
+import com.liferay.object.constants.ObjectActionConstants;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
-import com.liferay.object.internal.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
-import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.rest.dto.v1_0.Status;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
+import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -55,7 +50,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 	@Override
 	public void execute(
-			long companyId, UnicodeProperties parametersUnicodeProperties,
+			long companyId, long objectActionId,
+			UnicodeProperties parametersUnicodeProperties,
 			JSONObject payloadJSONObject, long userId)
 		throws Exception {
 
@@ -66,7 +62,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				_execute(
-					objectDefinition,
+					objectActionId, objectDefinition,
 					GetterUtil.getLong(payloadJSONObject.getLong("classPK")),
 					_userLocalService.getUser(userId),
 					_getValues(
@@ -74,7 +70,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 						ObjectEntryVariablesUtil.getVariables(
 							_dtoConverterRegistry, objectDefinition,
 							payloadJSONObject,
-							_systemObjectDefinitionMetadataRegistry)));
+							_systemObjectDefinitionManagerRegistry)));
 
 				return null;
 			});
@@ -86,23 +82,17 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 	}
 
 	private void _execute(
-			ObjectDefinition objectDefinition, long primaryKey, User user,
-			Map<String, Object> values)
+			long objectActionId, ObjectDefinition objectDefinition,
+			long primaryKey, User user, Map<String, Object> values)
 		throws Exception {
 
-		if (objectDefinition.isSystem()) {
-			if (!FeatureFlagManagerUtil.isEnabled(
-					objectDefinition.getCompanyId(), "LPS-173537")) {
-
-				throw new UnsupportedOperationException();
-			}
-
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
-			systemObjectDefinitionMetadata.updateBaseModel(
+			systemObjectDefinitionManager.updateBaseModel(
 				primaryKey, user, values);
 
 			return;
@@ -113,12 +103,14 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 		try {
 			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
+			ObjectEntryThreadLocal.setSkipReadOnlyObjectFieldsValidation(true);
 
-			ObjectEntryManager objectEntryManager =
-				_objectEntryManagerRegistry.getObjectEntryManager(
-					objectDefinition.getStorageType());
+			DefaultObjectEntryManager defaultObjectEntryManager =
+				DefaultObjectEntryManagerProvider.provide(
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()));
 
-			objectEntryManager.updateObjectEntry(
+			defaultObjectEntryManager.updateObjectEntry(
 				new DefaultDTOConverterContext(
 					false, Collections.emptyMap(), _dtoConverterRegistry, null,
 					user.getLocale(), null, user),
@@ -126,12 +118,35 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 				new ObjectEntry() {
 					{
 						properties = values;
+
+						setStatus(
+							() -> {
+								com.liferay.object.model.ObjectEntry
+									serviceBuilderObjectEntry =
+										_objectEntryService.getObjectEntry(
+											primaryKey);
+
+								return new Status() {
+									{
+										code =
+											serviceBuilderObjectEntry.
+												getStatus();
+									}
+								};
+							});
 					}
 				});
+		}
+		catch (Exception exception) {
+			_objectActionLocalService.updateStatus(
+				objectActionId, ObjectActionConstants.STATUS_FAILED);
+
+			throw exception;
 		}
 		finally {
 			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(
 				skipObjectEntryResourcePermission);
+			ObjectEntryThreadLocal.setSkipReadOnlyObjectFieldsValidation(false);
 		}
 	}
 
@@ -150,7 +165,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 		for (ObjectField objectField :
 				_objectFieldLocalService.getObjectFields(
 					objectDefinition.getObjectDefinitionId(),
-					objectDefinition.isSystem())) {
+					objectDefinition.isUnmodifiableSystemObject())) {
 
 			if (_readOnlyObjectFieldNames.contains(objectField.getName()) ||
 				values.containsKey(objectField.getName())) {
@@ -172,10 +187,16 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
+	private ObjectActionLocalService _objectActionLocalService;
+
+	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
+
+	@Reference
+	private ObjectEntryLocalService _objectEntryService;
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;
@@ -184,8 +205,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 		new String[] {"creator", "createDate", "id", "modifiedDate", "status"});
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	@Reference
 	private UserLocalService _userLocalService;

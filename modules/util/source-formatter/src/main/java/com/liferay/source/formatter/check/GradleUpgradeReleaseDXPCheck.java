@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -22,8 +13,8 @@ import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.check.util.SourceUtil;
-import com.liferay.source.formatter.upgrade.GradleBuildFile;
-import com.liferay.source.formatter.upgrade.GradleDependency;
+import com.liferay.source.formatter.util.GradleBuildFile;
+import com.liferay.source.formatter.util.GradleDependency;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.net.HttpURLConnection;
@@ -38,7 +29,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
 /**
@@ -118,7 +108,7 @@ public class GradleUpgradeReleaseDXPCheck extends BaseFileCheck {
 
 		if (hasTest) {
 			gradleBuildFile.insertGradleDependency(
-				"testCompile", "com.liferay.portal", "release.dxp.api",
+				"testImplementation", "com.liferay.portal", "release.dxp.api",
 				upgradeToVersion);
 		}
 
@@ -171,10 +161,14 @@ public class GradleUpgradeReleaseDXPCheck extends BaseFileCheck {
 			".pom");
 	}
 
-	private Map<String, Set<String>> _readReleaseDXPDependencies(String content)
-		throws DocumentException {
+	private Map<String, Set<String>> _readReleaseDXPDependencies(
+		String content) {
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return null;
+		}
 
 		Element rootElement = document.getRootElement();
 

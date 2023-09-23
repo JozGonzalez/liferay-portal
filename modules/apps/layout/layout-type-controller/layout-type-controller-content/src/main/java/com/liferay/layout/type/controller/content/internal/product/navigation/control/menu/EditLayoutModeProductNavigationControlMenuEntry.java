@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.type.controller.content.internal.product.navigation.control.menu;
 
 import com.liferay.exportimport.kernel.staging.LayoutStaging;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
+import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
-import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -28,6 +19,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -44,6 +36,8 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.sites.kernel.util.Sites;
 import com.liferay.staging.StagingGroupHelper;
 
@@ -123,7 +117,8 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 					Collections.emptyMap(), layout.getMasterLayoutPlid(),
 					serviceContext);
 
-				draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
+				draftLayout = _layoutCopyHelper.copyLayoutContent(
+					layout, draftLayout);
 
 				_layoutLocalService.updateStatus(
 					draftLayout.getUserId(), draftLayout.getPlid(),
@@ -191,7 +186,8 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 
 		if (Objects.equals(
 				className, LayoutPageTemplateEntry.class.getName()) ||
-			!layout.isTypeContent() || !_sites.isLayoutUpdateable(layout)) {
+			(layout instanceof VirtualLayout) || !layout.isLayoutUpdateable() ||
+			!layout.isTypeContent()) {
 
 			return false;
 		}
@@ -217,19 +213,27 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			Layout layout, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		String redirect = HttpComponentsUtil.setParameter(
+		String redirect = HttpComponentsUtil.addParameters(
 			fullLayoutURL, "p_l_back_url",
-			_portal.getLayoutFullURL(layout, themeDisplay));
-
-		redirect = HttpComponentsUtil.setParameter(
-			redirect, "p_l_mode", Constants.EDIT);
+			_portal.getLayoutFullURL(layout, themeDisplay),
+			"p_l_back_url_title", layout.getName(themeDisplay.getLocale()),
+			"p_l_mode", Constants.EDIT);
 
 		long segmentsExperienceId = ParamUtil.getLong(
 			httpServletRequest, "segmentsExperienceId", -1);
 
 		if (segmentsExperienceId != -1) {
-			redirect = HttpComponentsUtil.setParameter(
-				redirect, "segmentsExperienceId", segmentsExperienceId);
+			SegmentsExperience segmentsExperience =
+				_segmentsExperienceLocalService.fetchSegmentsExperience(
+					segmentsExperienceId);
+
+			if ((segmentsExperience != null) &&
+				((layout.getPlid() == segmentsExperience.getPlid()) ||
+				 (layout.getClassPK() == segmentsExperience.getPlid()))) {
+
+				redirect = HttpComponentsUtil.setParameter(
+					redirect, "segmentsExperienceId", segmentsExperienceId);
+			}
 		}
 
 		return redirect;
@@ -258,6 +262,9 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	@Reference
 	private Sites _sites;

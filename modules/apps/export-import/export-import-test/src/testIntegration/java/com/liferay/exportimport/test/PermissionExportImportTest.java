@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.test;
@@ -36,6 +27,7 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -75,6 +67,77 @@ public class PermissionExportImportTest {
 	@Before
 	public void setUp() throws Exception {
 		UserTestUtil.setUser(TestPropsValues.getUser());
+	}
+
+	@Test
+	public void testCustomRoleWithEmptyPermissionsNotExported()
+		throws Exception {
+
+		// Export
+
+		LayoutSetPrototype exportLayoutSetPrototype =
+			LayoutTestUtil.addLayoutSetPrototype(RandomTestUtil.randomString());
+
+		Group exportGroup = exportLayoutSetPrototype.getGroup();
+
+		Layout exportLayout = LayoutTestUtil.addTypePortletLayout(
+			exportGroup, true);
+
+		String exportResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
+			exportLayout.getPlid(), _PORTLET_ID);
+
+		Role roleWithPermissions = RoleTestUtil.addRole(
+			"roleWithPermissions", RoleConstants.TYPE_REGULAR);
+
+		addPortletPermissions(
+			exportGroup, roleWithPermissions, exportResourcePrimKey);
+
+		Role roleWithoutPermissions = RoleTestUtil.addRole(
+			"roleWithoutPermissions", RoleConstants.TYPE_REGULAR);
+
+		// Add a resource permission with no action IDs. First, add a resource
+		// permission with default action IDs since resource permissions cannot
+		// be created with no action IDs. Then, set the resource permission to
+		// have no action IDs.
+
+		addPortletPermissions(
+			exportGroup, roleWithoutPermissions, exportResourcePrimKey);
+
+		addPortletPermissions(
+			exportGroup, roleWithoutPermissions, exportResourcePrimKey,
+			new String[0]);
+
+		Element portletElement = exportPortletPermissions(
+			exportGroup, exportLayout);
+
+		RoleLocalServiceUtil.deleteRole(roleWithPermissions);
+
+		RoleLocalServiceUtil.deleteRole(roleWithoutPermissions);
+
+		// Import
+
+		LayoutSetPrototype importLayoutSetPrototype =
+			LayoutTestUtil.addLayoutSetPrototype(RandomTestUtil.randomString());
+
+		Group importGroup = importLayoutSetPrototype.getGroup();
+
+		Layout importLayout = LayoutTestUtil.addTypePortletLayout(
+			importGroup, true);
+
+		importPortletPermissions(importGroup, importLayout, portletElement);
+
+		Assert.assertNotNull(
+			RoleLocalServiceUtil.fetchRole(
+				importGroup.getCompanyId(), "roleWithPermissions"));
+
+		Assert.assertNull(
+			RoleLocalServiceUtil.fetchRole(
+				importGroup.getCompanyId(), "roleWithoutPermissions"));
+
+		LayoutSetPrototypeLocalServiceUtil.deleteLayoutSetPrototype(
+			exportLayoutSetPrototype);
+		LayoutSetPrototypeLocalServiceUtil.deleteLayoutSetPrototype(
+			importLayoutSetPrototype);
 	}
 
 	@Test
@@ -129,11 +192,20 @@ public class PermissionExportImportTest {
 			Group exportGroup, Role role, String exportResourcePrimKey)
 		throws Exception {
 
+		addPortletPermissions(
+			exportGroup, role, exportResourcePrimKey, _ACTION_IDS);
+	}
+
+	protected void addPortletPermissions(
+			Group exportGroup, Role role, String exportResourcePrimKey,
+			String[] actionIds)
+		throws Exception {
+
 		ResourcePermissionServiceUtil.setIndividualResourcePermissions(
 			exportGroup.getGroupId(), TestPropsValues.getCompanyId(),
 			_PORTLET_ID, exportResourcePrimKey,
 			HashMapBuilder.put(
-				role.getRoleId(), _ACTION_IDS
+				role.getRoleId(), actionIds
 			).build());
 	}
 

@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
+EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(EditSegmentsEntryDisplayContext.class.getName());
 
 String backURL = editSegmentsEntryDisplayContext.getBackURL();
 
@@ -35,7 +26,7 @@ renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 
 <portlet:actionURL name="/segments/update_segments_entry" var="updateSegmentsEntryActionURL" />
 
-<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveSegmentsEntry();" %>'>
+<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm">
 	<aui:input name="redirect" type="hidden" value="<%= editSegmentsEntryDisplayContext.getRedirect() %>" />
 	<aui:input name="groupId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getGroupId() %>" />
 	<aui:input name="segmentsEntryId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryId() %>" />
@@ -54,9 +45,3 @@ renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 		/>
 	</div>
 </aui:form>
-
-<aui:script>
-	function <portlet:namespace />saveSegmentsEntry() {
-		submitForm(document.<portlet:namespace />editSegmentFm);
-	}
-</aui:script>

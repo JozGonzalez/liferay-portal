@@ -61,13 +61,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -78,7 +80,7 @@ definition {
 	@description = "Feature ID: LRAC-7943 | Automation ID: LRAC-10223 | Test Summary: Able to access hidden event"
 	@priority = 4
 	test CanAccessHiddenEvent {
-		property test.name.skip.portal.instance = "CustomEventsHiden#CanAccessHiddenEvent";
+		property test.run.type = "single";
 
 		var defaultEventName = "assetDepthReached";
 		var attributeList = "assetId,canonicalUrl,category,depth,pageDescription,pageKeywords,pageTitle,referrer,sessionId,title,url";
@@ -119,7 +121,7 @@ definition {
 	@description = "Feature ID: LRAC-7865 | Automation ID: LRAC-10232 | Test Summary: Hide a default event and hide a custom event"
 	@priority = 5
 	test CanHideDefaultAndCustomEvent {
-		property test.name.skip.portal.instance = "CustomEventsHiden#CanHideDefaultAndCustomEvent";
+		property test.run.type = "single";
 
 		var defaultEventName = "assetDownloaded";
 
@@ -231,7 +233,7 @@ definition {
 	@description = "Feature ID: LRAC-7865 | Automation ID: LRAC-10233 | Test Summary: Unhide a default event and unhide a custom event"
 	@priority = 5
 	test CanUnhideDefaultAndCustomEvent {
-		property test.name.skip.portal.instance = "CustomEventsHidden#CanUnhideDefaultAndCustomEvent";
+		property test.run.type = "single";
 
 		var defaultEventName = "assetDepthReached";
 
@@ -503,7 +505,7 @@ definition {
 	@description = "Feature ID: LRAC-7943 | Automation ID: LRAC-10222 | Test Summary: Check if some default events are set as hidden"
 	@priority = 5
 	test ViewIfDefaultEventsAreHidden {
-		property test.name.skip.portal.instance = "CustomEventsHiden#ViewIfDefaultEventsAreHidden";
+		property test.run.type = "single";
 
 		var defaultEventNameList = "assetDepthReached,blogDepthReached,fieldBlurred,fieldFocused,pageDepthReached,pageLoaded,pageUnloaded,posted,shared,tabBlurred,tabFocused,VOTE";
 
@@ -527,8 +529,8 @@ definition {
 			ACNavigation.openItem(itemName = "Default Events");
 		}
 
-		task ("Change the pagination to "75"") {
-			ACUtils.changePagination(itemsPerPage = 75);
+		task ("Change the pagination to "60"") {
+			ACUtils.changePagination(itemsPerPage = 60);
 		}
 
 		task ("Assert certain events hidden by default") {

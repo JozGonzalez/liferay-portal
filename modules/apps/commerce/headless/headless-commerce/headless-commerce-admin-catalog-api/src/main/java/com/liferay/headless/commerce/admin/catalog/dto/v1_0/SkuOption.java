@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.dto.v1_0;
@@ -58,18 +49,17 @@ public class SkuOption implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(SkuOption.class, json);
 	}
 
-	@DecimalMin("0")
-	@Schema(example = "31130")
-	public Long getKey() {
+	@Schema
+	public String getKey() {
 		return key;
 	}
 
-	public void setKey(Long key) {
+	public void setKey(String key) {
 		this.key = key;
 	}
 
 	@JsonIgnore
-	public void setKey(UnsafeSupplier<Long, Exception> keyUnsafeSupplier) {
+	public void setKey(UnsafeSupplier<String, Exception> keyUnsafeSupplier) {
 		try {
 			key = keyUnsafeSupplier.get();
 		}
@@ -82,21 +72,80 @@ public class SkuOption implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long key;
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String key;
 
 	@DecimalMin("0")
 	@Schema(example = "31130")
-	public Long getValue() {
+	public Long getOptionId() {
+		return optionId;
+	}
+
+	public void setOptionId(Long optionId) {
+		this.optionId = optionId;
+	}
+
+	@JsonIgnore
+	public void setOptionId(
+		UnsafeSupplier<Long, Exception> optionIdUnsafeSupplier) {
+
+		try {
+			optionId = optionIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long optionId;
+
+	@DecimalMin("0")
+	@Schema(example = "31130")
+	public Long getOptionValueId() {
+		return optionValueId;
+	}
+
+	public void setOptionValueId(Long optionValueId) {
+		this.optionValueId = optionValueId;
+	}
+
+	@JsonIgnore
+	public void setOptionValueId(
+		UnsafeSupplier<Long, Exception> optionValueIdUnsafeSupplier) {
+
+		try {
+			optionValueId = optionValueIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long optionValueId;
+
+	@Schema
+	public String getValue() {
 		return value;
 	}
 
-	public void setValue(Long value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
 	@JsonIgnore
-	public void setValue(UnsafeSupplier<Long, Exception> valueUnsafeSupplier) {
+	public void setValue(
+		UnsafeSupplier<String, Exception> valueUnsafeSupplier) {
+
 		try {
 			value = valueUnsafeSupplier.get();
 		}
@@ -109,8 +158,8 @@ public class SkuOption implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long value;
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String value;
 
 	@Override
 	public boolean equals(Object object) {
@@ -146,7 +195,31 @@ public class SkuOption implements Serializable {
 
 			sb.append("\"key\": ");
 
-			sb.append(key);
+			sb.append("\"");
+
+			sb.append(_escape(key));
+
+			sb.append("\"");
+		}
+
+		if (optionId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionId\": ");
+
+			sb.append(optionId);
+		}
+
+		if (optionValueId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionValueId\": ");
+
+			sb.append(optionValueId);
 		}
 
 		if (value != null) {
@@ -156,7 +229,11 @@ public class SkuOption implements Serializable {
 
 			sb.append("\"value\": ");
 
-			sb.append(value);
+			sb.append("\"");
+
+			sb.append(_escape(value));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -253,5 +330,7 @@ public class SkuOption implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.permission;
@@ -86,13 +77,13 @@ public class AdvancedPermissionChecker extends BasePermissionChecker {
 	@Override
 	public long[] getGuestUserRoleIds() {
 		long[] roleIds = PermissionCacheUtil.getUserGroupRoleIds(
-			defaultUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID);
+			guestUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID);
 
 		if (roleIds != null) {
 			return roleIds;
 		}
 
-		List<Role> roles = RoleLocalServiceUtil.getUserRoles(defaultUserId);
+		List<Role> roles = RoleLocalServiceUtil.getUserRoles(guestUserId);
 
 		roleIds = ListUtil.toLongArray(roles, Role.ROLE_ID_ACCESSOR);
 
@@ -108,7 +99,7 @@ public class AdvancedPermissionChecker extends BasePermissionChecker {
 		}
 
 		PermissionCacheUtil.putUserGroupRoleIds(
-			defaultUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID, roleIds);
+			guestUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID, roleIds);
 
 		return roleIds;
 	}
@@ -142,13 +133,13 @@ public class AdvancedPermissionChecker extends BasePermissionChecker {
 			return false;
 		}
 
-		boolean ownerIsDefaultUser = false;
+		boolean ownerIsGuestUser = false;
 
-		if (ownerId == defaultUserId) {
-			ownerIsDefaultUser = true;
+		if (ownerId == guestUserId) {
+			ownerIsGuestUser = true;
 		}
 
-		if (ownerIsDefaultUser) {
+		if (ownerIsGuestUser) {
 			List<String> guestUnsupportedActions;
 
 			if (name.indexOf(CharPool.PERIOD) != -1) {
@@ -170,7 +161,7 @@ public class AdvancedPermissionChecker extends BasePermissionChecker {
 		try {
 			long ownerRoleId = getOwnerRoleId();
 
-			if (ownerIsDefaultUser) {
+			if (ownerIsGuestUser) {
 				Role guestRole = RoleLocalServiceUtil.getRole(
 					companyId, RoleConstants.GUEST);
 
@@ -1248,7 +1239,7 @@ public class AdvancedPermissionChecker extends BasePermissionChecker {
 				companyId, groupId, name, primKey, actionId, resources);
 
 			return ResourceLocalServiceUtil.hasUserPermissions(
-				defaultUserId, groupId, resources, actionId,
+				guestUserId, groupId, resources, actionId,
 				_applyRoleContributors(getGuestUserRoleIds(), groupId));
 		}
 		catch (NoSuchResourcePermissionException

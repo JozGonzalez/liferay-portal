@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -32,12 +23,14 @@ export default function PagesTree({
 	items,
 	portletNamespace: namespace,
 	privateLayout,
-	selectedPlids: initialSelectedPlids,
+	selectedLayoutIds: initialSelectedLayoutIds,
 	treeId,
 }) {
 	const {changeItemSelectionURL, loadMoreItemsURL, maxPageSize} = config;
 
-	const [selectedPlids, setSelectedPlids] = useState(initialSelectedPlids);
+	const [selectedLayoutIds, setSelectedLayoutIds] = useState(
+		initialSelectedLayoutIds
+	);
 
 	const onLoadMore = useCallback(
 		(item, initialCursor = 1) => {
@@ -71,13 +64,14 @@ export default function PagesTree({
 	);
 
 	const onSelectedChange = useCallback(
-		(selected, itemId) => {
+		(selected, item) => {
 			fetch(changeItemSelectionURL, {
 				body: Liferay.Util.objectToFormData({
 					cmd: selected ? 'layoutCheck' : 'layoutUncheck',
 					doAsUserId: themeDisplay.getDoAsUserIdEncoded(),
 					groupId,
-					plid: itemId,
+					layoutId: item.layoutId,
+					plid: item.plid,
 					privateLayout,
 					recursive: true,
 					treeId: `${treeId}SelectedNode`,
@@ -85,8 +79,8 @@ export default function PagesTree({
 				method: 'post',
 			})
 				.then((response) => response.json())
-				.then((nextSelectedPlids) =>
-					setSelectedPlids(nextSelectedPlids)
+				.then((nextSelectedLayoutIds) =>
+					setSelectedLayoutIds(nextSelectedLayoutIds)
 				)
 				.catch(() => openErrorToast());
 		},
@@ -100,7 +94,7 @@ export default function PagesTree({
 				defaultItems={items}
 				onLoadMore={onLoadMore}
 				onSelectionChange={() => {}}
-				selectedKeys={new Set(selectedPlids)}
+				selectedKeys={new Set(selectedLayoutIds)}
 				selectionMode="multiple-recursive"
 				showExpanderOnHover={false}
 			>
@@ -120,7 +114,7 @@ export default function PagesTree({
 				name={`${namespace}layoutIds`}
 				readOnly
 				type="hidden"
-				value={JSON.stringify(selectedPlids)}
+				value={JSON.stringify(selectedLayoutIds)}
 			/>
 		</>
 	);
@@ -132,7 +126,7 @@ PagesTree.propTypes = {
 	items: PropTypes.array.isRequired,
 	portletNamespace: PropTypes.string.isRequired,
 	privateLayout: PropTypes.bool.isRequired,
-	selectedPlids: PropTypes.array.isRequired,
+	selectedLayoutIds: PropTypes.array.isRequired,
 	treeId: PropTypes.string.isRequired,
 };
 
@@ -145,24 +139,24 @@ function TreeItem({
 	selection,
 }) {
 	const handleKeyDown = useCallback(
-		(event, itemId) => {
+		(event, item) => {
 			if (event.keyCode === SPACE_KEYCODE) {
 				event.stopPropagation();
 
-				onSelectedChange(selection.has(itemId) ? false : true, itemId);
+				onSelectedChange(!selection.has(item.id), item);
 			}
 		},
 		[onSelectedChange, selection]
 	);
 
 	return (
-		<ClayTreeView.Item onKeyDown={(event) => handleKeyDown(event, item.id)}>
+		<ClayTreeView.Item onKeyDown={(event) => handleKeyDown(event, item)}>
 			<ClayTreeView.ItemStack>
 				<ClayCheckbox
 					aria-labelledby={getId(namespace, item.id)}
 					containerProps={{className: 'mb-0'}}
 					onChange={(event) => {
-						onSelectedChange(event.target.checked, item.id);
+						onSelectedChange(event.target.checked, item);
 					}}
 					tabIndex={-1}
 				/>
@@ -184,9 +178,7 @@ function TreeItem({
 				{(childItem) => (
 					<ClayTreeView.Item
 						expandable={childItem.hasChildren}
-						onKeyDown={(event) =>
-							handleKeyDown(event, childItem.id)
-						}
+						onKeyDown={(event) => handleKeyDown(event, childItem)}
 					>
 						<ClayCheckbox
 							aria-labelledby={getId(namespace, childItem.id)}
@@ -194,7 +186,7 @@ function TreeItem({
 							onChange={(event) =>
 								onSelectedChange(
 									event.target.checked,
-									childItem.id
+									childItem
 								)
 							}
 							tabIndex={-1}

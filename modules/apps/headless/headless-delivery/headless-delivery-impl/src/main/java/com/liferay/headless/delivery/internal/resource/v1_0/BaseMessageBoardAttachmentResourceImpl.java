@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.headless.delivery.resource.v1_0.MessageBoardAttachmentResourc
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -48,7 +41,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -346,7 +338,8 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/message-board-attachments'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Creates an attachment for the message board message. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`MessageBoardAttachment`) with the metadata."
+		description = "Creates an attachment for the message board message. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`MessageBoardAttachment`) with the metadata.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PostMessageBoardMessageMessageBoardAttachmentRequestBody.class)))
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -575,7 +568,8 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-attachments'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Creates a new attachment for the message board thread. The request body should be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`knowledgeBaseAttachment`) with the metadata."
+		description = "Creates a new attachment for the message board thread. The request body should be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`knowledgeBaseAttachment`) with the metadata.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PostMessageBoardThreadMessageBoardAttachmentRequestBody.class)))
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -799,24 +793,25 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardAttachment, Exception>
-			messageBoardAttachmentUnsafeConsumer = null;
+		UnsafeFunction
+			<MessageBoardAttachment, MessageBoardAttachment, Exception>
+				messageBoardAttachmentUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("messageBoardMessageId")) {
-				messageBoardAttachmentUnsafeConsumer = messageBoardAttachment ->
+				messageBoardAttachmentUnsafeFunction = messageBoardAttachment ->
 					postMessageBoardMessageMessageBoardAttachment(
-						Long.parseLong(
+						_parseLong(
 							(String)parameters.get("messageBoardMessageId")),
 						(MultipartBody)parameters.get("multipartBody"));
 			}
 			else if (parameters.containsKey("messageBoardThreadId")) {
-				messageBoardAttachmentUnsafeConsumer = messageBoardAttachment ->
+				messageBoardAttachmentUnsafeFunction = messageBoardAttachment ->
 					postMessageBoardThreadMessageBoardAttachment(
-						Long.parseLong(
+						_parseLong(
 							(String)parameters.get("messageBoardThreadId")),
 						(MultipartBody)parameters.get("multipartBody"));
 			}
@@ -826,21 +821,26 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 			}
 		}
 
-		if (messageBoardAttachmentUnsafeConsumer == null) {
+		if (messageBoardAttachmentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardAttachment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardAttachments, messageBoardAttachmentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardAttachments, messageBoardAttachmentUnsafeConsumer);
+				messageBoardAttachments,
+				messageBoardAttachmentUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardAttachment messageBoardAttachment :
 					messageBoardAttachments) {
 
-				messageBoardAttachmentUnsafeConsumer.accept(
+				messageBoardAttachmentUnsafeFunction.apply(
 					messageBoardAttachment);
 			}
 		}
@@ -894,12 +894,11 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 
 		if (parameters.containsKey("messageBoardMessageId")) {
 			return getMessageBoardMessageMessageBoardAttachmentsPage(
-				Long.parseLong(
-					(String)parameters.get("messageBoardMessageId")));
+				_parseLong((String)parameters.get("messageBoardMessageId")));
 		}
 		else if (parameters.containsKey("messageBoardThreadId")) {
 			return getMessageBoardThreadMessageBoardAttachmentsPage(
-				Long.parseLong((String)parameters.get("messageBoardThreadId")));
+				_parseLong((String)parameters.get("messageBoardThreadId")));
 		}
 		else {
 			throw new NotSupportedException(
@@ -939,8 +938,26 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 			"This method needs to be implemented");
 	}
 
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardAttachment>,
+			 UnsafeFunction
+				 <MessageBoardAttachment, MessageBoardAttachment, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1157,6 +1174,12 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1187,7 +1210,20 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardAttachment>,
+		 UnsafeFunction
+			 <MessageBoardAttachment, MessageBoardAttachment, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardAttachment>,
 		 UnsafeConsumer<MessageBoardAttachment, Exception>, Exception>
@@ -1212,5 +1248,27 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseMessageBoardAttachmentResourceImpl.class);
+
+	private class PostMessageBoardMessageMessageBoardAttachmentRequestBody {
+
+		public MessageBoardAttachment MessageBoardAttachment;
+
+		@io.swagger.v3.oas.annotations.media.Schema(
+			description = "File", format = "binary", type = "string"
+		)
+		public String file;
+
+	}
+
+	private class PostMessageBoardThreadMessageBoardAttachmentRequestBody {
+
+		@io.swagger.v3.oas.annotations.media.Schema(
+			description = "File", format = "binary", type = "string"
+		)
+		public String file;
+
+		public MessageBoardAttachment messageBoardAttachment;
+
+	}
 
 }

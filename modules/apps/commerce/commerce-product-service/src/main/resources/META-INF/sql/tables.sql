@@ -133,8 +133,15 @@ create table CPDefinitionLink (
 	modifiedDate DATE null,
 	CPDefinitionId LONG,
 	CProductId LONG,
+	displayDate DATE null,
+	expirationDate DATE null,
 	priority DOUBLE,
 	type_ VARCHAR(75) null,
+	lastPublishDate DATE null,
+	status INTEGER,
+	statusByUserId LONG,
+	statusByUserName VARCHAR(75) null,
+	statusDate DATE null,
 	primary key (CPDefinitionLinkId, ctCollectionId)
 );
 
@@ -169,13 +176,16 @@ create table CPDefinitionOptionRel (
 	CPOptionId LONG,
 	name STRING null,
 	description STRING null,
-	DDMFormFieldTypeName VARCHAR(75) null,
+	commerceOptionTypeKey VARCHAR(75) null,
+	infoItemServiceKey VARCHAR(255) null,
 	priority DOUBLE,
+	definedExternally BOOLEAN,
 	facetable BOOLEAN,
 	required BOOLEAN,
 	skuContributor BOOLEAN,
 	key_ VARCHAR(75) null,
 	priceType VARCHAR(75) null,
+	typeSettings TEXT null,
 	primary key (CPDefinitionOptionRelId, ctCollectionId)
 );
 
@@ -193,12 +203,13 @@ create table CPDefinitionOptionValueRel (
 	CPDefinitionOptionRelId LONG,
 	CPInstanceUuid VARCHAR(75) null,
 	CProductId LONG,
-	name STRING null,
-	priority DOUBLE,
 	key_ VARCHAR(75) null,
-	quantity INTEGER,
+	name STRING null,
 	preselected BOOLEAN,
-	price DECIMAL(30, 16) null,
+	price BIGDECIMAL null,
+	priority DOUBLE,
+	quantity BIGDECIMAL null,
+	unitOfMeasureKey VARCHAR(75) null,
 	primary key (CPDefinitionOptionValueRelId, ctCollectionId)
 );
 
@@ -242,9 +253,9 @@ create table CPInstance (
 	height DOUBLE,
 	depth DOUBLE,
 	weight DOUBLE,
-	price DECIMAL(30, 16) null,
-	promoPrice DECIMAL(30, 16) null,
-	cost DECIMAL(30, 16) null,
+	price BIGDECIMAL null,
+	promoPrice BIGDECIMAL null,
+	cost BIGDECIMAL null,
 	published BOOLEAN,
 	displayDate DATE null,
 	expirationDate DATE null,
@@ -289,6 +300,29 @@ create table CPInstanceOptionValueRel (
 	primary key (CPInstanceOptionValueRelId, ctCollectionId)
 );
 
+create table CPInstanceUOM (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	CPInstanceUOMId LONG not null,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	CPInstanceId LONG,
+	active_ BOOLEAN,
+	incrementalOrderQuantity BIGDECIMAL null,
+	key_ VARCHAR(75) null,
+	name STRING null,
+	precision_ INTEGER,
+	primary_ BOOLEAN,
+	priority DOUBLE,
+	rate BIGDECIMAL null,
+	sku VARCHAR(75) null,
+	primary key (CPInstanceUOMId, ctCollectionId)
+);
+
 create table CPMeasurementUnit (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
@@ -324,7 +358,7 @@ create table CPOption (
 	modifiedDate DATE null,
 	name STRING null,
 	description STRING null,
-	DDMFormFieldTypeName VARCHAR(75) null,
+	commerceOptionTypeKey VARCHAR(75) null,
 	facetable BOOLEAN,
 	required BOOLEAN,
 	skuContributor BOOLEAN,
@@ -433,6 +467,7 @@ create table CommerceCatalog (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
+	accountEntryId LONG,
 	name VARCHAR(75) null,
 	commerceCurrencyCode VARCHAR(75) null,
 	catalogDefaultLanguageId VARCHAR(75) null,
@@ -451,6 +486,7 @@ create table CommerceChannel (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
+	accountEntryId LONG,
 	siteGroupId LONG,
 	name VARCHAR(75) null,
 	type_ VARCHAR(75) null,

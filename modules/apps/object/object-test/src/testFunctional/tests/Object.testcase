@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -95,9 +95,10 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectAdmin.assertObjectStatus(
-			label = "Custom Object 290",
-			status = "Approved");
+		AssertTextEquals(
+			key_label = "Custom Object 290",
+			locator1 = "ObjectAdmin#OBJECT_STATUS",
+			value1 = "Approved");
 
 		ObjectAdmin.deleteObjectEntryViaUI(
 			labelName = "Custom Object 290",
@@ -134,7 +135,9 @@ definition {
 				relationshipLabel = "Relationship",
 				relationshipName = "relationship");
 
-			ObjectAdmin.assertObjectRelationshipNotPresent(relationshipLabel = "Relationship");
+			AssertElementNotPresent(
+				key_label = "Relationship",
+				locator1 = "ObjectAdmin#RELATIONSHIP_LABEL");
 		}
 	}
 
@@ -418,7 +421,9 @@ definition {
 		}
 
 		task ("Then: The label is updated successfully") {
-			CreateObject.assertObjectLabel(labelName = "Objeto Personalizado 179102");
+			AssertTextEquals(
+				locator1 = "CreateObject#OBJECT_LABEL",
+				value1 = "Objeto Personalizado 179102");
 		}
 	}
 
@@ -549,6 +554,13 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject163066");
 		}
 
+		task ("Create an Entry (via API)") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customField",
+				objectName = "CustomObject163066",
+				value = "Entry Test");
+		}
+
 		task ("Go to Custom Object and change the panel category key") {
 			ObjectAdmin.openObjectAdmin();
 
@@ -557,13 +569,6 @@ definition {
 			CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Users");
 
 			Button.clickSave();
-		}
-
-		task ("Create an Entry (via API)") {
-			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-				fieldName = "customField",
-				objectName = "CustomObject163066",
-				value = "Entry Test");
 		}
 
 		task ("Restart portal") {
@@ -579,7 +584,9 @@ definition {
 		task ("Assert the Custom Object is present in Object Admin") {
 			ObjectAdmin.openObjectAdmin();
 
-			CreateObject.assertCustomObject(labelName = "Custom Object 163066");
+			AssertElementPresent(
+				key_labelName = "Custom Object 163066",
+				locator1 = "CreateObject#OBJECT_NAME");
 		}
 
 		task ("Assert the Custom Object is present on the application menu and go to it") {
@@ -607,6 +614,8 @@ definition {
 	@description = "Verify it is possible to add an Object Entry Title Field when changing the localization on Instance Settings"
 	@priority = 4
 	test CanViewTitleFieldWhenChangeLocalization {
+		property ci.retries.disabled = "true";
+
 		task ("Given: An Account and a Custom Object with a Relationship 1toM of Account to Custom Object") {
 			JSONAccountEntry.addAccountEntry(
 				accountEntryName = "Accounts Name",
@@ -616,6 +625,16 @@ definition {
 				labelName = "Custom Object 178761",
 				objectName = "CustomObject178761",
 				pluralLabelName = "Custom Objects 178761");
+
+			// Workaround for LPS-193897
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject178761");
 
 			ObjectAdmin.addObjectRelationshipViaAPI(
 				objectName_1 = "AccountEntry",
@@ -662,7 +681,11 @@ definition {
 		}
 
 		task ("Then: The title field of System Object is present") {
-			Navigator.gotoBack();
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject178761");
+
+			WaitForElementPresent(
+				key_entry = "business",
+				locator1 = "ObjectPortlet#ENTRY_VALUE");
 
 			ObjectPortlet.viewEntry(entry = "business");
 		}

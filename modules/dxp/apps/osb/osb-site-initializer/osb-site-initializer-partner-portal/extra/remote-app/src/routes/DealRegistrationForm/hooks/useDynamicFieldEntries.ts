@@ -1,22 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useMemo} from 'react';
+import {useEffect, useMemo} from 'react';
 
 import {LiferayPicklistName} from '../../../common/enums/liferayPicklistName';
 import useGetListTypeDefinitions from '../../../common/services/liferay/list-type-definitions/useGetListTypeDefinitions';
 import useGetMyUserAccount from '../../../common/services/liferay/user-account/useGetMyUserAccount';
 import getEntriesByListTypeDefinitions from '../../../common/utils/getEntriesByListTypeDefinitions';
 
-export default function useDynamicFieldEntries() {
+export default function useDynamicFieldEntries(
+	handleSelected: (firstName?: string, lastName?: string) => void
+) {
 	const {data: userAccount} = useGetMyUserAccount();
 	const {data: listTypeDefinitions} = useGetListTypeDefinitions([
 		LiferayPicklistName.COUNTRIES,
@@ -34,10 +30,16 @@ export default function useDynamicFieldEntries() {
 		() =>
 			userAccount?.accountBriefs.map((accountBrief) => ({
 				label: accountBrief.name,
-				value: accountBrief.id,
+				value: accountBrief.externalReferenceCode,
 			})) as React.OptionHTMLAttributes<HTMLOptionElement>[],
 		[userAccount?.accountBriefs]
 	);
+
+	useEffect(() => {
+		if (userAccount?.givenName || userAccount?.familyName) {
+			handleSelected(userAccount?.givenName, userAccount?.familyName);
+		}
+	}, [handleSelected, userAccount?.familyName, userAccount?.givenName]);
 
 	const fieldEntries = useMemo(
 		() => getEntriesByListTypeDefinitions(listTypeDefinitions?.items),

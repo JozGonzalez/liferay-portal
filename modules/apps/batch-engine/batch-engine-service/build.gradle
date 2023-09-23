@@ -25,9 +25,13 @@ dependencies {
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
 	compileOnly project(":apps:batch-engine:batch-engine-api")
+	compileOnly project(":apps:depot:depot-api")
 	compileOnly project(":apps:object:object-rest-api")
+	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-odata:portal-odata-api")
+	compileOnly project(":apps:portal-vulcan:portal-vulcan-api")
 	compileOnly project(":apps:portal:portal-aop-api")
+	compileOnly project(":apps:portal:portal-instance-lifecycle-api")
 	compileOnly project(":apps:static:portal-configuration:portal-configuration-metatype-api")
 	compileOnly project(":apps:static:portal-file-install:portal-file-install-api")
 	compileOnly project(":apps:static:portal:portal-upgrade-api")
@@ -42,7 +46,7 @@ dependencies {
 	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 
-	testCompile group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
-	testCompile group: "junit", name: "junit", version: "4.13.1"
-	testCompile group: "org.skyscreamer", name: "jsonassert", version: "1.5.0"
+	testImplementation group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
+	testImplementation group: "junit", name: "junit", version: "4.13.1"
+	testImplementation group: "org.skyscreamer", name: "jsonassert", version: "1.5.0"
 }

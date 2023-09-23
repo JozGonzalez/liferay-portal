@@ -50,6 +50,11 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>showUnitOfMeasureSelector</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>size</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -109,6 +114,11 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>refreshOnRemove</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>coupon-code</name>
@@ -119,6 +129,21 @@
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>long</type>
+		</attribute>
+	</tag>
+	<tag>
+		<name>discontinued-label</name>
+		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.DiscontinuedLabelTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>CPCatalogEntry</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>namespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 	<tag>
@@ -489,6 +514,16 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>showDefaultSkuPrice</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>unitOfMeasureKey</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>product-subscription-info</name>
@@ -508,14 +543,24 @@
 		</attribute>
 	</tag>
 	<tag>
+		<name>request-quote</name>
+		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.RequestQuoteTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>CPCatalogEntry</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>namespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
 		<name>search-bar</name>
 		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.SearchBarTag</tag-class>
 		<body-content>empty</body-content>
-		<attribute>
-			<name>id</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
 	</tag>
 	<tag>
 		<name>search-results</name>

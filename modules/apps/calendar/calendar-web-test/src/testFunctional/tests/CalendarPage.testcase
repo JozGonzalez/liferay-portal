@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -64,12 +59,11 @@ definition {
 	}
 
 	@description = "LRQA-72024 - Verify that the calendar has Agenda view"
-	@ignore = "Test Stub"
 	@priority = 3
 	test CalendarHasAgendaView {
 		CalendarNavigator.gotoView(viewType = "Agenda");
 
-		CalendarPage.viewTypeOfTableView(tableType = "Mont");
+		AssertVisible(locator1 = "CalendarPage#VIEW_AGENDA_CURRENT_DAY");
 	}
 
 	@description = "LRQA-72024 - Verify that the calendar has Day view"
@@ -91,7 +85,9 @@ definition {
 	@description = "LRQA-72024 - Verify that the user can change the color of the Calendar"
 	@priority = 3
 	test CanChangeCalendarColor {
-		Calendar.tearDownColor();
+		property ci.retries.disabled = "true";
+
+		JSONCalendar.setCalendarColor(calendarName = "Test Test");
 
 		Calendar.changeColor(
 			calendarType = "My Calendars",
@@ -114,10 +110,17 @@ definition {
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
-		CalendarScheduler.viewEventColor(
-			eventBackgroundColorRgb = "(208, 219, 240)",
-			eventFontColorRgb = "(104, 142, 217)",
-			eventTitle = "Calendar Event Regular Title");
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT",
+			locator2 = "background-color",
+			value1 = "rgba(102, 140, 217, 0.7)");
+
+		AssertCssValue(
+			key_eventTitle = "Calendar Event Regular Title",
+			locator1 = "Calendar#SCHEDULER_EVENT_CONTENT",
+			locator2 = "color",
+			value1 = "rgba(39, 40, 51, 1)");
 	}
 
 	@description = "LRQA-72024 - Verify that the user can go back and forward on Calendar"
@@ -132,29 +135,31 @@ definition {
 	@description = "LRQA-72024 - Verify that the user can hide Events from a specific Calendar"
 	@priority = 3
 	test CanHideEvents {
+		property ci.retries.disabled = "true";
+
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+
 		CalendarNavigator.gotoAddEventViaMyCalendars(user = "Test Test");
 
-		CalendarEvent.editTitle(eventTitle = "Calendar Event Title1");
+		CalendarEvent.editTitle(eventTitle = "Calendar Event Title 1");
 
 		CalendarEvent.publish();
 
 		IFrame.closeFrame();
 
-		CalendarNavigator.gotoAddEventViaCurrentSite(site = "Liferay DXP");
+		CalendarNavigator.gotoAddEventViaCurrentSite(site = ${siteName});
 
-		CalendarEvent.editTitle(eventTitle = "Calendar Event Title2");
+		CalendarEvent.editTitle(eventTitle = "Calendar Event Title 2");
 
 		CalendarEvent.publish();
 
 		IFrame.closeFrame();
 
-		CalendarScheduler.selectSpecificEvent(eventTitle = "Calendar Event Title1");
+		CalendarEvent.disableEventBySiteCalendarName(calendarName = ${siteName});
 
-		CalendarScheduler.selectSpecificEvent(eventTitle = "Calendar Event Title2");
+		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "Calendar Event Title 2");
 
-		CalendarEvent.disableEventBySiteCalendarName(calendarName = "Liferay DXP");
-
-		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "Calendar Event Title2");
+		CalendarScheduler.viewSpecificEventPresent(eventTitle = "Calendar Event Title 1");
 	}
 
 	@description = "LRQA-72024 - Verify that the user can hide/show the sidebar"

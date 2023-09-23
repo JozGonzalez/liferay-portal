@@ -31,6 +31,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>URL_PATTERN</td>
+	<td>//textarea[contains(@name,'URLPatterns')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -101,7 +106,7 @@
 </tr>
 <tr>
 	<td>CONTENT_CHOOSE_CONTENT_SUBCONTENT_CHECKBOX</td>
-	<td>//h3[contains(.,'${key_contentName}')]/../..//input[contains(@data-name,'${key_subContent}')]</td>
+	<td>//div[contains(@class,'widget-content-expanded') and contains(.,'${key_contentName}')]//input[contains(@data-name,'${key_subContent}')]</td>
 	<td></td>
 </tr>
 <tr>

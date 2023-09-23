@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.client.dto.v1_0;
@@ -19,6 +10,7 @@ import com.liferay.headless.admin.user.client.serdes.v1_0.AccountSerDes;
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -99,6 +91,93 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected CustomField[] customFields;
+
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	public void setDateCreated(
+		UnsafeSupplier<Date, Exception> dateCreatedUnsafeSupplier) {
+
+		try {
+			dateCreated = dateCreatedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateCreated;
+
+	public Date getDateModified() {
+		return dateModified;
+	}
+
+	public void setDateModified(Date dateModified) {
+		this.dateModified = dateModified;
+	}
+
+	public void setDateModified(
+		UnsafeSupplier<Date, Exception> dateModifiedUnsafeSupplier) {
+
+		try {
+			dateModified = dateModifiedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateModified;
+
+	public Long getDefaultBillingAddressId() {
+		return defaultBillingAddressId;
+	}
+
+	public void setDefaultBillingAddressId(Long defaultBillingAddressId) {
+		this.defaultBillingAddressId = defaultBillingAddressId;
+	}
+
+	public void setDefaultBillingAddressId(
+		UnsafeSupplier<Long, Exception> defaultBillingAddressIdUnsafeSupplier) {
+
+		try {
+			defaultBillingAddressId =
+				defaultBillingAddressIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long defaultBillingAddressId;
+
+	public Long getDefaultShippingAddressId() {
+		return defaultShippingAddressId;
+	}
+
+	public void setDefaultShippingAddressId(Long defaultShippingAddressId) {
+		this.defaultShippingAddressId = defaultShippingAddressId;
+	}
+
+	public void setDefaultShippingAddressId(
+		UnsafeSupplier<Long, Exception>
+			defaultShippingAddressIdUnsafeSupplier) {
+
+		try {
+			defaultShippingAddressId =
+				defaultShippingAddressIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long defaultShippingAddressId;
 
 	public String getDescription() {
 		return description;
@@ -182,6 +261,48 @@ public class Account implements Cloneable, Serializable {
 
 	protected Long id;
 
+	public Long getLogoId() {
+		return logoId;
+	}
+
+	public void setLogoId(Long logoId) {
+		this.logoId = logoId;
+	}
+
+	public void setLogoId(
+		UnsafeSupplier<Long, Exception> logoIdUnsafeSupplier) {
+
+		try {
+			logoId = logoIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long logoId;
+
+	public String getLogoURL() {
+		return logoURL;
+	}
+
+	public void setLogoURL(String logoURL) {
+		this.logoURL = logoURL;
+	}
+
+	public void setLogoURL(
+		UnsafeSupplier<String, Exception> logoURLUnsafeSupplier) {
+
+		try {
+			logoURL = logoURLUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String logoURL;
+
 	public String getName() {
 		return name;
 	}
@@ -264,6 +385,28 @@ public class Account implements Cloneable, Serializable {
 
 	protected Long parentAccountId;
 
+	public PostalAddress[] getPostalAddresses() {
+		return postalAddresses;
+	}
+
+	public void setPostalAddresses(PostalAddress[] postalAddresses) {
+		this.postalAddresses = postalAddresses;
+	}
+
+	public void setPostalAddresses(
+		UnsafeSupplier<PostalAddress[], Exception>
+			postalAddressesUnsafeSupplier) {
+
+		try {
+			postalAddresses = postalAddressesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected PostalAddress[] postalAddresses;
+
 	public Integer getStatus() {
 		return status;
 	}
@@ -284,6 +427,27 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Integer status;
+
+	public String getTaxId() {
+		return taxId;
+	}
+
+	public void setTaxId(String taxId) {
+		this.taxId = taxId;
+	}
+
+	public void setTaxId(
+		UnsafeSupplier<String, Exception> taxIdUnsafeSupplier) {
+
+		try {
+			taxId = taxIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String taxId;
 
 	public Type getType() {
 		return type;
@@ -345,7 +509,8 @@ public class Account implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		BUSINESS("business"), GUEST("guest"), PERSON("person");
+		BUSINESS("business"), GUEST("guest"), PERSON("person"),
+		SUPPLIER("supplier");
 
 		public static Type create(String value) {
 			for (Type type : values()) {

@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.model.CommerceAccountGroupRel;
-import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
@@ -25,7 +17,6 @@ import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductAccountG
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -40,16 +31,16 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/product-account-group.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, ProductAccountGroupResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ProductAccountGroupResource.class
 )
 @CTAware
 public class ProductAccountGroupResourceImpl
-	extends BaseProductAccountGroupResourceImpl implements NestedFieldSupport {
+	extends BaseProductAccountGroupResourceImpl {
 
 	@Override
 	public void deleteProductAccountGroup(Long id) throws Exception {
-		_commerceAccountGroupRelService.deleteCommerceAccountGroupRel(id);
+		_accountGroupRelLocalService.deleteAccountGroupRel(id);
 	}
 
 	@Override
@@ -57,7 +48,7 @@ public class ProductAccountGroupResourceImpl
 		throws Exception {
 
 		return toProductAccountGroup(
-			_commerceAccountGroupRelService.getCommerceAccountGroupRel(id));
+			_accountGroupRelLocalService.getAccountGroupRel(id));
 	}
 
 	@Override
@@ -77,14 +68,14 @@ public class ProductAccountGroupResourceImpl
 
 		return Page.of(
 			transform(
-				_commerceAccountGroupRelService.getCommerceAccountGroupRels(
+				_accountGroupRelLocalService.getAccountGroupRels(
 					CPDefinition.class.getName(),
 					cpDefinition.getCPDefinitionId(),
 					pagination.getStartPosition(), pagination.getEndPosition(),
 					null),
 				this::toProductAccountGroup),
 			pagination,
-			_commerceAccountGroupRelService.getCommerceAccountGroupRelsCount(
+			_accountGroupRelLocalService.getAccountGroupRelsCount(
 				CPDefinition.class.getName(),
 				cpDefinition.getCPDefinitionId()));
 	}
@@ -104,39 +95,40 @@ public class ProductAccountGroupResourceImpl
 
 		return Page.of(
 			transform(
-				_commerceAccountGroupRelService.getCommerceAccountGroupRels(
+				_accountGroupRelLocalService.getAccountGroupRels(
 					CPDefinition.class.getName(),
 					cpDefinition.getCPDefinitionId(),
 					pagination.getStartPosition(), pagination.getEndPosition(),
 					null),
 				this::toProductAccountGroup),
 			pagination,
-			_commerceAccountGroupRelService.getCommerceAccountGroupRelsCount(
+			_accountGroupRelLocalService.getAccountGroupRelsCount(
 				CPDefinition.class.getName(),
 				cpDefinition.getCPDefinitionId()));
 	}
 
 	public ProductAccountGroup toProductAccountGroup(
-			CommerceAccountGroupRel commerceAccountGroupRel)
+			AccountGroupRel accountGroupRel)
 		throws Exception {
 
-		CommerceAccountGroup commerceAccountGroup =
-			commerceAccountGroupRel.getCommerceAccountGroup();
+		AccountGroup accountGroup = _accountGroupLocalService.getAccountGroup(
+			accountGroupRel.getAccountGroupId());
 
 		return new ProductAccountGroup() {
 			{
-				accountGroupId =
-					commerceAccountGroupRel.getCommerceAccountGroupId();
-				externalReferenceCode =
-					commerceAccountGroup.getExternalReferenceCode();
-				id = commerceAccountGroupRel.getCommerceAccountGroupRelId();
-				name = commerceAccountGroup.getName();
+				accountGroupId = accountGroupRel.getAccountGroupId();
+				externalReferenceCode = accountGroup.getExternalReferenceCode();
+				id = accountGroupRel.getAccountGroupRelId();
+				name = accountGroup.getName();
 			}
 		};
 	}
 
 	@Reference
-	private CommerceAccountGroupRelService _commerceAccountGroupRelService;
+	private AccountGroupLocalService _accountGroupLocalService;
+
+	@Reference
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
 	private CPDefinitionService _cpDefinitionService;

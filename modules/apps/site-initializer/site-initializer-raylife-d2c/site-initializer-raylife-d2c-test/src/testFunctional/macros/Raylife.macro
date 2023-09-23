@@ -7,61 +7,83 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Application");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Application");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Application");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Claim");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Claim");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Claim");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Document");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Document");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Document");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Goal");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Goal");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Goal");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Policy");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Policy");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Policy");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Quote Comparison");
 
-		CreateObject.assertObjectLabel(labelName = "Quote Comparison");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Quote Comparison");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Quote Retrieve");
 
-		CreateObject.assertObjectLabel(labelName = "Quote Retrieve");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Quote Retrieve");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Quote");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Quote");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Quote");
 
 		Navigator.gotoBack();
 
 		ObjectPortlet.selectCustomObject(label = "Raylife Sales Goal");
 
-		CreateObject.assertObjectLabel(labelName = "Raylife Sales Goal");
+		AssertTextEquals(
+			locator1 = "CreateObject#OBJECT_LABEL",
+			value1 = "Raylife Sales Goal");
 	}
 
 	macro clickAtButton {
 		var key_text = ${text};
 
 		Click(locator1 = "Raylife#ANY_BUTTON");
+	}
+
+	macro clickBackToEditInfo {
+		Click(locator1 = "Raylife#BACK_TO_EDIT_INFO");
 	}
 
 	macro commerceApisTearDowm {
@@ -112,25 +134,33 @@ definition {
 	}
 
 	macro formsFlow {
+		if (!(isSet(policy))) {
+			var policy = "standard";
+		}
+
 		RaylifeContactInfo.typeAllBasicsInfoFields();
 
-		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+		Raylife.clickAtButton(text = "Continue");
 
 		RaylifeBusiness.typeAllBusinessInfoFields();
 
-		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+		Raylife.clickAtButton(text = "Continue");
 
 		RaylifeEmployees.typeAllEmployeesInfoFields();
 
-		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+		Raylife.clickAtButton(text = "Continue");
 
 		RaylifeProperty.typeAllPropertyInfoFields();
 
-		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+		Raylife.clickAtButton(text = "Continue");
+
+		WaitForElementPresent(
+			locator1 = "RaylifeQuoteComparison#BUTTON_PURCHASE_THIS_POLICY",
+			policy = ${policy});
 
 		Click(
 			locator1 = "RaylifeQuoteComparison#BUTTON_PURCHASE_THIS_POLICY",
-			policy = "standard");
+			policy = ${policy});
 	}
 
 	macro selectTheQuote {

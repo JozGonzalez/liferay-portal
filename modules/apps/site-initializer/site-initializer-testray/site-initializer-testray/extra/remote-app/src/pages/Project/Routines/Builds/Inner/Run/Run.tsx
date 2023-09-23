@@ -1,18 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useParams} from 'react-router-dom';
+import ProgressBar from '~/components/ProgressBar';
 
 import Container from '../../../../../../components/Layout/Container';
 import ListView from '../../../../../../components/ListView';
@@ -80,10 +72,70 @@ const Runs = () => {
 							key: 'operatingSystem',
 							value: i18n.translate('operating-system'),
 						},
+						{
+							clickable: true,
+							key: 'caseResultFailed',
+							value: i18n.translate('failed'),
+						},
+						{
+							clickable: true,
+							key: 'caseResultBlocked',
+							value: i18n.translate('blocked'),
+						},
+						{
+							clickable: true,
+							key: 'caseResultsInProgress',
+							value: i18n.translate('in-progress'),
+						},
+						{
+							clickable: true,
+							key: 'caseResultPassed',
+							value: i18n.translate('passed'),
+						},
+						{
+							clickable: true,
+							key: 'caseResultTestFix',
+							value: i18n.translate('test-fix'),
+						},
+						{
+							clickable: true,
+							key: 'total',
+							render: (_, testrayRun) =>
+								[
+									testrayRun?.caseResultBlocked,
+									testrayRun?.caseResultFailed,
+									testrayRun?.caseResultInProgress,
+									testrayRun?.caseResultIncomplete,
+									testrayRun?.caseResultPassed,
+									testrayRun?.caseResultTestFix,
+									testrayRun?.caseResultUntested,
+								].reduce(
+									(prevCount, currentCount) =>
+										prevCount + currentCount
+								),
+							size: 'sm',
+							value: i18n.translate('total'),
+						},
+						{
+							clickable: true,
+							key: 'metrics',
+							render: (_, testrayRun) => (
+								<ProgressBar
+									items={{
+										blocked: testrayRun?.caseResultBlocked,
+										failed: testrayRun?.caseResultFailed,
+										incomplete:
+											testrayRun?.caseResultIncomplete,
+										passed: testrayRun?.caseResultPassed,
+										test_fix: testrayRun?.caseResultTestFix,
+									}}
+								/>
+							),
+							value: i18n.translate('metrics'),
+							width: '300',
+						},
 					],
-					navigateTo: (run) => {
-						return `..?runId=${run.id}`;
-					},
+					navigateTo: (run) => `..?runId=${run.id}`,
 				}}
 				transformData={(response) =>
 					testrayRunImpl.transformDataFromList(response)

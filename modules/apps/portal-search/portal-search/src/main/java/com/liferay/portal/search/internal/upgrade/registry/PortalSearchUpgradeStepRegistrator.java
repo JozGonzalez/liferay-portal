@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.upgrade.registry;
@@ -17,8 +8,8 @@ package com.liferay.portal.search.internal.upgrade.registry;
 import com.liferay.portal.configuration.persistence.upgrade.ConfigurationUpgradeStepFactory;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.util.PrefsProps;
-import com.liferay.portal.search.internal.index.configuration.IndexStatusManagerInternalConfiguration;
 import com.liferay.portal.search.internal.upgrade.v1_0_1.ReindexConfigurationUpgradeProcess;
+import com.liferay.portal.search.internal.upgrade.v1_1_0.IndexStatusManagerInternalConfigurationUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -43,12 +34,18 @@ public class PortalSearchUpgradeStepRegistrator
 			_configurationUpgradeStepFactory.createUpgradeStep(
 				"com.liferay.portal.search.internal.index." +
 					"IndexStatusManagerInternalConfiguration",
-				IndexStatusManagerInternalConfiguration.class.getName()));
+				"com.liferay.portal.search.internal.index.configuration." +
+					"IndexStatusManagerInternalConfiguration"));
 
 		registry.register(
 			"1.0.0", "1.0.1",
 			new ReindexConfigurationUpgradeProcess(
 				_configurationAdmin, _prefsProps));
+
+		registry.register(
+			"1.0.1", "1.1.0",
+			new IndexStatusManagerInternalConfigurationUpgradeProcess(
+				_configurationAdmin));
 	}
 
 	@Reference

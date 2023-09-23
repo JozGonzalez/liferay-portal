@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -46,14 +37,14 @@ if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
 	totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 }
 
-CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerceAccount();
+AccountEntry accountEntry = commerceOrderContentDisplayContext.getAccountEntry();
 
 if (commerceOrder != null) {
-	commerceAccount = commerceOrder.getCommerceAccount();
+	accountEntry = commerceOrder.getAccountEntry();
 }
 
-List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.getShippingCommerceAddresses(commerceAccount.getCommerceAccountId());
-List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(commerceAccount.getCommerceAccountId());
+List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.getShippingCommerceAddresses(accountEntry.getAccountEntryId());
+List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(accountEntry.getAccountEntryId());
 
 List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.COMMERCE_ORDER_ERROR_MESSAGES);
 
@@ -165,7 +156,7 @@ if (backURL != null) {
 			<div class="align-items-center row">
 				<div class="col-md-3">
 					<div class="commerce-order-title">
-						<%= HtmlUtil.escape(commerceAccount.getName()) %>
+						<%= HtmlUtil.escape(accountEntry.getName()) %>
 					</div>
 				</div>
 
@@ -198,7 +189,7 @@ if (backURL != null) {
 				<div class="col-md-3">
 					<dl class="commerce-list">
 						<dt><liferay-ui:message key="account-id" /></dt>
-						<dd><%= commerceAccount.getCommerceAccountId() %></dd>
+						<dd><%= accountEntry.getAccountEntryId() %></dd>
 					</dl>
 				</div>
 
@@ -262,7 +253,7 @@ if (backURL != null) {
 				<div class="commerce-panel__content">
 					<div class="row">
 						<div class="col-md-12">
-							<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) %>">
+							<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) %>">
 								<c:choose>
 									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
 										<dl class="commerce-list">
@@ -450,6 +441,10 @@ if (backURL != null) {
 			commerceOrderId="<%= commerceOrder.getCommerceOrderId() %>"
 			cssClass="btn btn-fixed btn-primary ml-3"
 		/>
+
+		<c:if test="<%= commerceOrderContentDisplayContext.isRequestQuoteButtonEnabled() %>">
+			<aui:button cssClass="btn-fixed btn-secondary ml-3 request-quote" displayType="secondary" id="requestQuote" small="<%= false %>" value='<%= LanguageUtil.get(request, "request-a-quote") %>' />
+		</c:if>
 	</div>
 </aui:form>
 
@@ -538,7 +533,13 @@ if (backURL != null) {
 
 <portlet:actionURL name="/commerce_open_order_content/edit_commerce_order" var="editCommerceOrderURL" />
 
+<%@ include file="/pending_commerce_orders/request_quote.jspf" %>
+
 <%@ include file="/pending_commerce_orders/transition.jspf" %>
+
+<liferay-frontend:component
+	module="js/view"
+/>
 
 <aui:script use="aui-base">
 	var orderTransition = A.one('#<portlet:namespace />orderTransition');

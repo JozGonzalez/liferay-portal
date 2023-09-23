@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -153,7 +144,12 @@ if (fixedHeader) {
 						<c:choose>
 							<c:when test="<%= (rowChecker != null) && (i == 0) %>">
 								<span class="sr-only">
-									<liferay-ui:message key="selected-item" />
+									<liferay-ui:message key="item-selection" />
+								</span>
+							</c:when>
+							<c:when test="<%= Validator.isNull(headerName) && (i == (headerNames.size() - 1)) %>">
+								<span class="sr-only">
+									<liferay-ui:message key="item-actions" />
 								</span>
 							</c:when>
 							<c:when test="<%= truncate %>">
@@ -267,6 +263,10 @@ if (fixedHeader) {
 						}
 					}
 
+					String rowElementId = namespace + id + "_" + row.getRowId();
+
+					request.setAttribute("liferay-ui:search-container-row:rowElementId", rowElementId);
+
 					request.setAttribute("liferay-ui:search-container-row:rowId", id.concat(StringPool.UNDERLINE.concat(row.getRowId())));
 
 					Map<String, Object> data = row.getData();
@@ -276,14 +276,7 @@ if (fixedHeader) {
 					}
 				%>
 
-					<c:choose>
-						<c:when test="<%= Validator.isNotNull(rowIdProperty) %>">
-							<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" id="<portlet:namespace /><%= id %>_<%= row.getRowId() %>" <%= AUIUtil.buildData(data) %>>
-						</c:when>
-						<c:otherwise>
-							<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" <%= AUIUtil.buildData(data) %>>
-						</c:otherwise>
-					</c:choose>
+					<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" id="<%= rowElementId %>" <%= AUIUtil.buildData(data) %>>
 
 						<%
 						for (int j = 0; j < entries.size(); j++) {
@@ -357,6 +350,7 @@ if (fixedHeader) {
 					request.removeAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
 					request.removeAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW_ENTRY);
 
+					request.removeAttribute("liferay-ui:search-container-row:rowElementId");
 					request.removeAttribute("liferay-ui:search-container-row:rowId");
 				}
 			}

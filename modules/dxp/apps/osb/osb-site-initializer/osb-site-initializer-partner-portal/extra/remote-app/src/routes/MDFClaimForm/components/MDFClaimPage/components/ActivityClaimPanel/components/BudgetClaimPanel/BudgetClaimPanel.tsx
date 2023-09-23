@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayPanel from '@clayui/panel';
@@ -15,8 +9,10 @@ import {useState} from 'react';
 
 import PRMForm from '../../../../../../../../common/components/PRMForm';
 import PRMFormik from '../../../../../../../../common/components/PRMFormik';
+import LiferayFile from '../../../../../../../../common/interfaces/liferayFile';
 import MDFClaim from '../../../../../../../../common/interfaces/mdfClaim';
 import MDFClaimBudget from '../../../../../../../../common/interfaces/mdfClaimBudget';
+import deleteDocument from '../../../../../../../../common/services/liferay/headless-delivery/deleteDocument';
 import PanelBody from '../PanelBody';
 import PanelHeader from '../PanelHeader';
 
@@ -69,12 +65,12 @@ const BudgetClaimPanel = ({
 							description="Silver Partner can claim up to 50%"
 							label="Invoice Amount"
 							name={`${budgetFieldName}.invoiceAmount`}
-							onAccept={(value: File) =>
+							onAccept={(liferayFile: LiferayFile) => {
 								setFieldValue(
 									`${budgetFieldName}.invoiceAmount`,
-									value
-								)
-							}
+									liferayFile
+								);
+							}}
 							required={budget.selected}
 						/>
 
@@ -83,12 +79,16 @@ const BudgetClaimPanel = ({
 							displayType="secondary"
 							label="Third Party Invoice"
 							name={`${budgetFieldName}.invoice`}
-							onAccept={(value: File) =>
+							onAccept={(liferayFile: LiferayFile) => {
+								if (budget.invoice?.documentId) {
+									deleteDocument(budget.invoice?.documentId);
+								}
+
 								setFieldValue(
 									`${budgetFieldName}.invoice`,
-									value
-								)
-							}
+									liferayFile
+								);
+							}}
 							outline
 							required={budget.selected}
 							small

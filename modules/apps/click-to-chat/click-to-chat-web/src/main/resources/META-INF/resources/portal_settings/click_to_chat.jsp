@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -51,7 +42,7 @@ ClickToChatConfiguration clickToChatConfiguration = (ClickToChatConfiguration)re
 
 <div class="form-group row" id="<portlet:namespace />clickToChatChatProviders">
 	<div class="col-md-6">
-		<aui:select label="chat-provider" name="chatProviderId" onchange='<%= liferayPortletResponse.getNamespace() + "onChangeClickToChatChatProviderId(event);" %>' value="<%= clickToChatConfiguration.chatProviderId() %>">
+		<aui:select id="chatProviderId" label="chat-provider" name="chatProviderId" onchange='<%= liferayPortletResponse.getNamespace() + "onChangeClickToChatChatProviderId(event);" %>' value="<%= clickToChatConfiguration.chatProviderId() %>">
 			<aui:option label="" value="" />
 
 			<%
@@ -65,10 +56,6 @@ ClickToChatConfiguration clickToChatConfiguration = (ClickToChatConfiguration)re
 			%>
 
 		</aui:select>
-
-		<aui:input checked="<%= clickToChatConfiguration.guestUsersAllowed() %>" inlineLabel="right" label='<%= LanguageUtil.get(resourceBundle, "guest-users-allowed") %>' labelCssClass="simple-toggle-switch" name="guestUsersAllowed" type="toggle-switch" value="<%= clickToChatConfiguration.guestUsersAllowed() %>" />
-
-		<aui:input checked="<%= clickToChatConfiguration.hideInControlPanel() %>" inlineLabel="right" label='<%= LanguageUtil.get(resourceBundle, "hide-in-control-panel") %>' labelCssClass="simple-toggle-switch" name="hideInControlPanel" type="toggle-switch" value="<%= clickToChatConfiguration.hideInControlPanel() %>" />
 	</div>
 
 	<div class="col-md-6">
@@ -92,8 +79,60 @@ ClickToChatConfiguration clickToChatConfiguration = (ClickToChatConfiguration)re
 	</div>
 </div>
 
+<div class="form-group hide row" id="<portlet:namespace />zendeskWebWidgetFields">
+	<div class="col-md-6">
+		<aui:input id="chatProviderKeyId" label="chat-provider-key-id" name="chatProviderKeyId" type="text" value="<%= clickToChatConfiguration.chatProviderKeyId() %>" />
+	</div>
+
+	<div class="col-md-6">
+		<aui:input id="chatProviderSecretKey" label="chat-provider-secret-key" name="chatProviderSecretKey" type="text" value="<%= clickToChatConfiguration.chatProviderSecretKey() %>" />
+	</div>
+</div>
+
+<div class="form-group row">
+	<div class="col-md-6">
+		<aui:input checked="<%= clickToChatConfiguration.guestUsersAllowed() %>" inlineLabel="right" label='<%= LanguageUtil.get(resourceBundle, "guest-users-allowed") %>' labelCssClass="simple-toggle-switch" name="guestUsersAllowed" type="toggle-switch" value="<%= clickToChatConfiguration.guestUsersAllowed() %>" />
+
+		<aui:input checked="<%= clickToChatConfiguration.hideInControlPanel() %>" inlineLabel="right" label='<%= LanguageUtil.get(resourceBundle, "hide-in-control-panel") %>' labelCssClass="simple-toggle-switch" name="hideInControlPanel" type="toggle-switch" value="<%= clickToChatConfiguration.hideInControlPanel() %>" />
+	</div>
+</div>
+
 <script>
+	document.addEventListener('DOMContentLoaded', () => {
+		<portlet:namespace />toggleClickToChatZendeskWebWidgetFields();
+	});
+
+	function <portlet:namespace />toggleClickToChatZendeskWebWidgetFields() {
+		var zendeskWebWidgetFieldsElement = document.getElementById(
+			'<portlet:namespace />zendeskWebWidgetFields'
+		);
+
+		var selectedChat = document.getElementById(
+			'<portlet:namespace />chatProviderId'
+		);
+
+		if (
+			selectedChat.value ===
+			'<%= ClickToChatConstants.CHAT_PROVIDER_ID_ZENDESK_WEB_WIDGET %>'
+		) {
+			zendeskWebWidgetFieldsElement.classList.remove('hide');
+		}
+		else {
+			document.getElementById(
+				'<portlet:namespace />chatProviderKeyId'
+			).value = '';
+
+			document.getElementById(
+				'<portlet:namespace />chatProviderSecretKey'
+			).value = '';
+
+			zendeskWebWidgetFieldsElement.classList.add('hide');
+		}
+	}
+
 	function <portlet:namespace />hideUnselectedClickToChatProviderLearnMessages() {
+		<portlet:namespace />toggleClickToChatZendeskWebWidgetFields();
+
 		var clickToChatChatProviderIdElement = document.getElementById(
 			'<portlet:namespace />chatProviderId'
 		);
@@ -127,11 +166,17 @@ ClickToChatConfiguration clickToChatConfiguration = (ClickToChatConfiguration)re
 			'<portlet:namespace />siteSettingsStrategy'
 		);
 
+		var zendeskWebWidgetFieldsElement = document.getElementById(
+			'<portlet:namespace />zendeskWebWidgetFields'
+		);
+
 		if (clickToChatSiteSettingsStrategyElement.value === 'always-override') {
 			clickToChatChatProvidersElement.classList.add('hide');
+			zendeskWebWidgetFieldsElement.classList.add('hide');
 		}
 		else {
 			clickToChatChatProvidersElement.classList.remove('hide');
+			zendeskWebWidgetFieldsElement.classList.remove('hide');
 		}
 	}
 

@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -27,9 +27,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -225,9 +225,12 @@ definition {
 		AssertLocation(value1 = "${portalURL}/web/site-name/b/blogs-entry-title");
 	}
 
-	@description = "This is a test for LPS-136790. It checks that a blog with a deleted cover image can be published using the SAP."
+	@description = "This is a test for LPS-136790. It checks that a blog with a deleted cover image can be published using the SAP. Skip the instance for performance improvement."
 	@priority = 4
 	test CanPublishDeletedCoverImageViaSAP {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		var imageId = JSONBlog.uploadBlogImage(
 			groupName = "Site Name (Staging)",
 			site = "false",
@@ -1113,9 +1116,12 @@ definition {
 			entryTitle = "New Blogs Entry Title");
 	}
 
-	@description = "This test covers LPS-154410. It ensures that an external video with a custom friendlyURL added in the Blog content field can be rendered properly on a site after its friendlyURL is edited and republished."
+	@description = "This test covers LPS-154410. It ensures that an external video with a custom friendlyURL added in the Blog content field can be rendered properly on a site after its friendlyURL is edited and republished. Skip the instance for performance improvement."
 	@priority = 5
 	test CanViewExternalVideoInContentFieldAfterFriendlyURLIsUpdated {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 
 		VideoShortcut.addCP(
@@ -1153,11 +1159,13 @@ definition {
 
 		Staging.publishToLive();
 
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "Test YouTube Video",
-			groupName = "Site Name (Staging)",
-			site = "false",
-			siteURLKey = "site-name-staging");
+		Refresh();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Test YouTube Video");
 
 		DMDocument.editFriendlyURL(
 			dmDocumentTitle = "Test YouTube Video",

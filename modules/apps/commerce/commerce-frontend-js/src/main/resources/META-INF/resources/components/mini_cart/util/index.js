@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {openToast, sub} from 'frontend-js-web';
@@ -25,126 +16,26 @@ import {
 	PRODUCT_QUANTITY_NOT_VALID_ERROR,
 } from './constants';
 
-export function parseOptions(jsonString) {
-	let options;
-
-	try {
-		options = JSON.parse(jsonString) || '';
-	}
-	catch (ignore) {
-		options = '';
-	}
-
-	return Array.isArray(options)
-		? options.map(({value}) => `${value}`).join(', ')
-		: options;
-}
-
-export function regenerateOrderDetailURL(orderUUID, siteDefaultURL) {
-	if (!orderUUID || !siteDefaultURL) {
-		throw new Error(
-			`Cannot generate a new Order Detail URL. Invalid "${
-				siteDefaultURL ? 'orderUUID' : 'siteDefaultURL'
-			}"`
-		);
-	}
-
-	const orderDetailURL = new URL(
-		`${siteDefaultURL}${ORDER_DETAILS_ENDPOINT}`
-	);
-
-	orderDetailURL.searchParams.append(
-		'p_p_id',
-		DEFAULT_ORDER_DETAILS_PORTLET_ID
-	);
-	orderDetailURL.searchParams.append('p_p_lifecycle', '0');
-	orderDetailURL.searchParams.append(
-		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_mvcRenderCommandName`,
-		'/commerce_open_order_content/edit_commerce_order'
-	);
-
-	orderDetailURL.searchParams.append(
-		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_${ORDER_UUID_PARAMETER}`,
-		orderUUID
-	);
-
-	return orderDetailURL.toString();
-}
-
-export function generateProductPageURL(
-	baseURL,
-	productRelativeURLs,
-	productURLSeparator
+export function getCorrectedQuantity(
+	productConfiguration,
+	sku,
+	cartItems,
+	precision = 0
 ) {
-	const actualLang = themeDisplay.getLanguageId();
-	let productLocalizedURL = productRelativeURLs[actualLang];
-
-	if (!productLocalizedURL) {
-		const defaultLang = themeDisplay.getDefaultLanguageId();
-		productLocalizedURL = productRelativeURLs[defaultLang];
-	}
-
-	return [baseURL, productURLSeparator, productLocalizedURL]
-		.map((url) => url.replace(/^\//, '').replace(/\/$/, ''))
-		.join('/');
-}
-
-export function summaryDataMapper({
-	itemsQuantity,
-	subtotalDiscountValueFormatted,
-	subtotalFormatted,
-	totalDiscountValueFormatted,
-	totalFormatted,
-}) {
-	return [
-		{
-			label: Liferay.Language.get('quantity'),
-			value: itemsQuantity,
-		},
-		{
-			label: Liferay.Language.get('subtotal'),
-			value: subtotalFormatted,
-		},
-		{
-			label: Liferay.Language.get('subtotal-discount'),
-			value: subtotalDiscountValueFormatted,
-		},
-		{
-			label: Liferay.Language.get('order-discount'),
-			value: totalDiscountValueFormatted,
-		},
-		{
-			label: Liferay.Language.get('total'),
-			style: 'big',
-			value: totalFormatted,
-		},
-	];
-}
-
-export function hasErrors(cartItems) {
-	return cartItems.some(({errorMessages}) => Boolean(errorMessages?.length));
-}
-
-export function getCorrectedQuantity(product, sku, cartItems, parentProduct) {
 	const {
 		allowedOrderQuantities,
 		maxOrderQuantity,
 		minOrderQuantity,
 		multipleOrderQuantity,
-	} = parentProduct
-		? parentProduct.productConfiguration
-		: product.productConfiguration;
+	} = productConfiguration;
 
 	let quantity;
 
-	if (parentProduct || !allowedOrderQuantities.length) {
+	if (!allowedOrderQuantities.length) {
 		quantity = minOrderQuantity;
 	}
 
-	const existingItem = cartItems.find(
-		(item) =>
-			item.productId === product.productId || item.sku === product.sku
-	);
+	const existingItem = cartItems.find((item) => item.sku === sku);
 
 	const lastAllowedQuantity =
 		allowedOrderQuantities[allowedOrderQuantities.length - 1];
@@ -266,6 +157,10 @@ export function getCorrectedQuantity(product, sku, cartItems, parentProduct) {
 		}
 	}
 
+	if (minOrderQuantity > maxOrderQuantity) {
+		quantity = 0;
+	}
+
 	if (multipleOrderQuantity > 1 && quantity % multipleOrderQuantity !== 0) {
 		openToast({
 			message: sub(
@@ -289,5 +184,109 @@ export function getCorrectedQuantity(product, sku, cartItems, parentProduct) {
 		});
 	}
 
-	return quantity;
+	return Number(quantity.toFixed(precision));
+}
+
+export function generateProductPageURL(
+	baseURL,
+	productRelativeURLs,
+	productURLSeparator
+) {
+	const actualLang = themeDisplay.getLanguageId();
+	let productLocalizedURL = productRelativeURLs[actualLang];
+
+	if (!productLocalizedURL) {
+		const defaultLang = themeDisplay.getDefaultLanguageId();
+		productLocalizedURL = productRelativeURLs[defaultLang];
+	}
+
+	return [baseURL, productURLSeparator, productLocalizedURL]
+		.map((url) => url.replace(/^\//, '').replace(/\/$/, ''))
+		.join('/');
+}
+
+export function hasErrors(cartItems) {
+	return cartItems.some(({errorMessages}) => Boolean(errorMessages?.length));
+}
+
+export function hasPriceOnApplication(cartItems) {
+	return cartItems.some(({price}) => price.priceOnApplication);
+}
+
+export function parseOptions(jsonString) {
+	let options;
+
+	try {
+		options = JSON.parse(jsonString) || '';
+	}
+	catch (ignore) {
+		options = '';
+	}
+
+	return Array.isArray(options)
+		? options.map(({value}) => `${value}`).join(', ')
+		: options;
+}
+
+export function regenerateOrderDetailURL(orderUUID, siteDefaultURL) {
+	if (!orderUUID || !siteDefaultURL) {
+		throw new Error(
+			`Cannot generate a new Order Detail URL. Invalid "${
+				siteDefaultURL ? 'orderUUID' : 'siteDefaultURL'
+			}"`
+		);
+	}
+
+	const orderDetailURL = new URL(
+		`${siteDefaultURL}${ORDER_DETAILS_ENDPOINT}`
+	);
+
+	orderDetailURL.searchParams.append(
+		'p_p_id',
+		DEFAULT_ORDER_DETAILS_PORTLET_ID
+	);
+	orderDetailURL.searchParams.append('p_p_lifecycle', '0');
+	orderDetailURL.searchParams.append(
+		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_mvcRenderCommandName`,
+		'/commerce_open_order_content/edit_commerce_order'
+	);
+
+	orderDetailURL.searchParams.append(
+		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_${ORDER_UUID_PARAMETER}`,
+		orderUUID
+	);
+
+	return orderDetailURL.toString();
+}
+
+export function summaryDataMapper({
+	itemsQuantity,
+	subtotalDiscountValueFormatted,
+	subtotalFormatted,
+	totalDiscountValueFormatted,
+	totalFormatted,
+}) {
+	return [
+		{
+			label: Liferay.Language.get('quantity'),
+			value: itemsQuantity,
+		},
+		{
+			label: Liferay.Language.get('subtotal'),
+			value: subtotalFormatted,
+		},
+		{
+			label: Liferay.Language.get('subtotal-discount'),
+			value: subtotalDiscountValueFormatted,
+		},
+		{
+			label: Liferay.Language.get('order-discount'),
+			value: totalDiscountValueFormatted,
+		},
+		{
+			label: Liferay.Language.get('total'),
+			style: 'big',
+			value: totalFormatted,
+		},
+	];
 }

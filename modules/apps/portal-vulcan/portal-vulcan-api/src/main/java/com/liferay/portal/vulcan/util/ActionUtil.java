@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.util;
@@ -37,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,7 +79,23 @@ public class ActionUtil {
 		try {
 			return _addAction(
 				actionName, clazz, id, methodName, modelResourcePermission,
-				null, null, parameterId, null, null, uriInfo);
+				null, null, parameterId, null, null,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo), uriInfo);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public static Map<String, String> addAction(
+		String actionName, Class<?> clazz, Long id, String methodName,
+		Object object, Long ownerId, String permissionName, Long siteId,
+		Supplier<UriBuilder> uriBuilderSupplier, UriInfo uriInfo) {
+
+		try {
+			return _addAction(
+				actionName, clazz, id, methodName, null, object, ownerId, id,
+				permissionName, siteId, uriBuilderSupplier, uriInfo);
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -106,9 +114,10 @@ public class ActionUtil {
 		UriInfo uriInfo) {
 
 		try {
-			return _addAction(
-				actionName, clazz, id, methodName, null, object, ownerId, id,
-				permissionName, siteId, uriInfo);
+			return addAction(
+				actionName, clazz, id, methodName, object, ownerId,
+				permissionName, siteId,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo), uriInfo);
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -123,7 +132,8 @@ public class ActionUtil {
 		try {
 			return _addAction(
 				actionName, clazz, id, methodName, modelResourcePermission,
-				object, null, id, null, null, uriInfo);
+				object, null, id, null, null,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo), uriInfo);
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -164,7 +174,7 @@ public class ActionUtil {
 			String actionName, Class<?> clazz, Long id, String methodName,
 			ModelResourcePermission<?> modelResourcePermission, Object object,
 			Long ownerId, Long parameterId, String permissionName, Long siteId,
-			UriInfo uriInfo)
+			Supplier<UriBuilder> uriBuilderSupplier, UriInfo uriInfo)
 		throws Exception {
 
 		if (uriInfo == null) {
@@ -221,9 +231,9 @@ public class ActionUtil {
 			}
 		}
 
-		String baseURIString = UriInfoUtil.getBasePath(uriInfo);
+		String basePath = UriInfoUtil.getBasePath(uriInfo);
 
-		if (baseURIString.contains("/graphql")) {
+		if (basePath.contains("/graphql")) {
 			String operation = null;
 			String type = null;
 
@@ -253,17 +263,26 @@ public class ActionUtil {
 		return HashMapBuilder.put(
 			"href",
 			() -> {
-				UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(uriInfo);
+				UriBuilder uriBuilder = uriBuilderSupplier.get();
 
-				return uriBuilder.path(
-					_getVersion(uriInfo)
-				).path(
-					clazz.getSuperclass(), methodName
-				).resolveTemplates(
-					_getParameterMap(
-						clazz, parameterId, methodName, siteId, uriInfo),
-					false
-				).toTemplate();
+				if (clazz.getSuperclass(
+					).isAnnotationPresent(
+						Path.class
+					)) {
+
+					uriBuilder = uriBuilder.path(clazz.getSuperclass());
+				}
+
+				uriBuilder = uriBuilder.path(clazz.getSuperclass(), methodName);
+
+				if (parameterId != null) {
+					uriBuilder = uriBuilder.resolveTemplates(
+						_getParameterMap(
+							clazz, parameterId, methodName, siteId, uriInfo),
+						false);
+				}
+
+				return uriBuilder.toTemplate();
 			}
 		).put(
 			"method", httpMethodName
@@ -376,18 +395,6 @@ public class ActionUtil {
 		}
 
 		return parameterMap;
-	}
-
-	private static String _getVersion(UriInfo uriInfo) {
-		String version = "";
-
-		List<String> matchedURIs = uriInfo.getMatchedURIs();
-
-		if (!matchedURIs.isEmpty()) {
-			version = matchedURIs.get(matchedURIs.size() - 1);
-		}
-
-		return version;
 	}
 
 	private static boolean _hasPermission(

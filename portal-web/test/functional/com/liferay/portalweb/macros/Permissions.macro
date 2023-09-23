@@ -1,12 +1,69 @@
 definition {
 
+	macro definePermissionsViaJSONAPI {
+		var groupId = JSONPermissionSetter.setGroupId(
+			groupName = ${groupName},
+			noSelenium = "true",
+			specificURL = ${specificURL});
+		var roleType = JSONPermissionSetter.setRoleType(roleType = ${roleType});
+
+		var primKey = JSONPermissionSetter.setPrimKey(roleType = ${roleType});
+		var roleId = JSONPermissionSetter.setRoleId(
+			roleTitle = ${roleTitle},
+			specificURL = ${specificURL});
+		var scope = JSONPermissionSetter.setScope(roleType = ${roleType});
+
+		if (!(isSet(portalInstanceName))) {
+			var companyId = JSONCompany.getCompanyIdNoSelenium();
+		}
+
+		var list1 = ListUtil.newListFromString(${resourceNameActionList}, ":");
+
+		var size1 = ListUtil.size(${list1});
+		var i = 0;
+
+		while (${i} != ${size1}) {
+			var resourceNameAction = ListUtil.get(${list1}, ${i});
+
+			var list2 = ListUtil.newListFromString(${resourceNameAction});
+
+			var size2 = ListUtil.size(${list2});
+			var j = 1;
+			var name = ListUtil.get(${list2}, 0);
+
+			while (${j} != ${size2}) {
+				var actionId = ListUtil.get(${list2}, ${j});
+
+				JSONPermissionAPI._addResourcePermission(
+					actionId = ${actionId},
+					companyId = ${companyId},
+					groupId = ${groupId},
+					name = ${name},
+					portalInstanceName = ${portalInstanceName},
+					primKey = ${primKey},
+					roleId = ${roleId},
+					scope = ${scope},
+					specificURL = ${specificURL});
+
+				var j = ${j} + 1;
+
+				var j = StringUtil.valueOf(${j});
+			}
+
+			var i = ${i} + 1;
+
+			var i = StringUtil.valueOf(${i});
+		}
+	}
+
 	macro definePermissionViaJSONAPI {
 		JSONPermission.addPermission(
 			actionId = ${resourceAction},
 			groupName = ${groupName},
 			name = ${resourceName},
 			roleTitle = ${roleTitle},
-			roleType = ${roleType});
+			roleType = ${roleType},
+			specificURL = ${specificURL});
 	}
 
 	macro removePermissionViaAPI {
@@ -207,7 +264,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = ${userEmailAddress});
 
-		JSONGroup.addGroup(groupName = ${siteName});
+		HeadlessSite.addSite(siteName = ${siteName});
 
 		JSONGroup.assignUserToGroup(
 			groupName = ${siteName},
@@ -252,7 +309,7 @@ definition {
 			userEmailAddress = ${userEmailAddress},
 			userScreenName = ${userScreenName});
 
-		JSONGroup.addGroup(groupName = ${siteName});
+		HeadlessSite.addSite(siteName = ${siteName});
 
 		JSONGroup.assignUserToGroup(
 			groupName = ${siteName},
@@ -302,7 +359,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = ${userEmailAddress});
 
-		JSONGroup.addGroup(groupName = ${siteName});
+		HeadlessSite.addSite(siteName = ${siteName});
 
 		JSONGroup.assignUserToGroup(
 			groupName = ${siteName},
@@ -348,7 +405,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = ${userEmailAddress});
 
-		JSONGroup.addGroup(groupName = ${siteName});
+		HeadlessSite.addSite(siteName = ${siteName});
 
 		JSONGroup.assignUserToGroup(
 			groupName = ${siteName},

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -17,6 +8,7 @@ package com.liferay.commerce.product.service;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -114,7 +106,16 @@ public class CPInstanceLocalServiceWrapper
 			int displayDateYear, int displayDateHour, int displayDateMinute,
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, String unspsc,
+			int expirationDateMinute, boolean neverExpire,
+			boolean overrideSubscriptionInfo, boolean subscriptionEnabled,
+			int subscriptionLength, String subscriptionType,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				subscriptionTypeSettingsUnicodeProperties,
+			long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+			int deliverySubscriptionLength, String deliverySubscriptionType,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				deliverySubscriptionTypeSettingsUnicodeProperties,
+			long deliveryMaxSubscriptionCycles, String unspsc,
 			boolean discontinued, String replacementCPInstanceUuid,
 			long replacementCProductId, int discontinuedDateMonth,
 			int discontinuedDateDay, int discontinuedDateYear,
@@ -127,8 +128,14 @@ public class CPInstanceLocalServiceWrapper
 			weight, price, promoPrice, cost, published, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire, unspsc,
-			discontinued, replacementCPInstanceUuid, replacementCProductId,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			overrideSubscriptionInfo, subscriptionEnabled, subscriptionLength,
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
+			maxSubscriptionCycles, deliverySubscriptionEnabled,
+			deliverySubscriptionLength, deliverySubscriptionType,
+			deliverySubscriptionTypeSettingsUnicodeProperties,
+			deliveryMaxSubscriptionCycles, unspsc, discontinued,
+			replacementCPInstanceUuid, replacementCProductId,
 			discontinuedDateMonth, discontinuedDateDay, discontinuedDateYear,
 			serviceContext);
 	}
@@ -356,6 +363,12 @@ public class CPInstanceLocalServiceWrapper
 	}
 
 	@Override
+	public CPInstance fetchCPInstance(long cProductId, String cpInstanceUuid) {
+		return _cpInstanceLocalService.fetchCPInstance(
+			cProductId, cpInstanceUuid);
+	}
+
+	@Override
 	public CPInstance fetchCPInstanceByExternalReferenceCode(
 		String externalReferenceCode, long companyId) {
 
@@ -384,6 +397,11 @@ public class CPInstanceLocalServiceWrapper
 
 		return _cpInstanceLocalService.fetchCProductInstance(
 			cProductId, cpInstanceUuid);
+	}
+
+	@Override
+	public CPInstance fetchDefaultCPInstance(long cpDefinitionId) {
+		return _cpInstanceLocalService.fetchDefaultCPInstance(cpDefinitionId);
 	}
 
 	@Override
@@ -720,10 +738,19 @@ public class CPInstanceLocalServiceWrapper
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, String unspsc, boolean discontinued,
-			String replacementCPInstanceUuid, long replacementCProductId,
-			int discontinuedDateMonth, int discontinuedDateDay,
-			int discontinuedDateYear,
+			boolean neverExpire, boolean overrideSubscriptionInfo,
+			boolean subscriptionEnabled, int subscriptionLength,
+			String subscriptionType,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				subscriptionTypeSettingsUnicodeProperties,
+			long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+			int deliverySubscriptionLength, String deliverySubscriptionType,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				deliverySubscriptionTypeSettingsUnicodeProperties,
+			long deliveryMaxSubscriptionCycles, String unspsc,
+			boolean discontinued, String replacementCPInstanceUuid,
+			long replacementCProductId, int discontinuedDateMonth,
+			int discontinuedDateDay, int discontinuedDateYear,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -733,10 +760,25 @@ public class CPInstanceLocalServiceWrapper
 			price, promoPrice, cost, published, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire, unspsc,
-			discontinued, replacementCPInstanceUuid, replacementCProductId,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			overrideSubscriptionInfo, subscriptionEnabled, subscriptionLength,
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
+			maxSubscriptionCycles, deliverySubscriptionEnabled,
+			deliverySubscriptionLength, deliverySubscriptionType,
+			deliverySubscriptionTypeSettingsUnicodeProperties,
+			deliveryMaxSubscriptionCycles, unspsc, discontinued,
+			replacementCPInstanceUuid, replacementCProductId,
 			discontinuedDateMonth, discontinuedDateDay, discontinuedDateYear,
 			serviceContext);
+	}
+
+	@Override
+	public CPInstance updateExternalReferenceCode(
+			long cpInstanceId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpInstanceLocalService.updateExternalReferenceCode(
+			cpInstanceId, externalReferenceCode);
 	}
 
 	@Override
@@ -791,6 +833,11 @@ public class CPInstanceLocalServiceWrapper
 			deliverySubscriptionType,
 			deliverySubscriptionTypeSettingsUnicodeProperties,
 			deliveryMaxSubscriptionCycles);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _cpInstanceLocalService.getBasePersistence();
 	}
 
 	@Override

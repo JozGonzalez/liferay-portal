@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.entry.processor.styles;
@@ -28,7 +19,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.uuid.PortalUUIDImpl;
@@ -61,7 +51,8 @@ public class StylesFragmentEntryProcessorTest {
 
 	@BeforeClass
 	public static void setUpClass() {
-		_setUpStylesFragmentEntryProcessor();
+		_setUpDocumentStylesFragmentEntryProcessor();
+		_setUpStylesFragmentEntryValidator();
 
 		_setUpPortalUUIDUtil();
 	}
@@ -95,13 +86,14 @@ public class StylesFragmentEntryProcessorTest {
 
 		String html = "<div data-lfr-styles><span>Test</span>Fragment</div>";
 
-		Document document = _getDocument(
-			_stylesFragmentEntryProcessor.processFragmentEntryLinkHTML(
-				fragmentEntryLink, html,
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+		Document document = _getDocument(html);
+
+		_stylesDocumentFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			fragmentEntryLink, document,
+			new DefaultFragmentEntryProcessorContext(
+				_getMockHttpServletRequest(layoutStructure), null,
+				FragmentEntryLinkConstants.EDIT,
+				LocaleUtil.getMostRelevantLocale()));
 
 		String layoutStructureItemUniqueCssClass =
 			fragmentStyledLayoutStructureItem.getUniqueCssClass();
@@ -114,10 +106,20 @@ public class StylesFragmentEntryProcessorTest {
 
 	@Test(expected = FragmentEntryContentException.class)
 	public void testValidateFragmentEntryHTMLInvalidHTML() throws Exception {
-		_stylesFragmentEntryProcessor.validateFragmentEntryHTML(
+		_stylesFragmentEntryValidator.validateFragmentEntryHTML(
 			"<div data-lfr-styles><span data-lfr-styles>Test</span>Fragment" +
 				"</div>",
-			null);
+			null, LocaleUtil.getDefault());
+	}
+
+	private static void _setUpDocumentStylesFragmentEntryProcessor() {
+		_stylesDocumentFragmentEntryProcessor =
+			new StylesDocumentFragmentEntryProcessor();
+
+		ReflectionTestUtil.setFieldValue(
+			_stylesDocumentFragmentEntryProcessor,
+			"_layoutPageTemplateStructureLocalService",
+			Mockito.mock(LayoutPageTemplateStructureLocalService.class));
 	}
 
 	private static void _setUpPortalUUIDUtil() {
@@ -126,26 +128,12 @@ public class StylesFragmentEntryProcessorTest {
 		portalUUIDUtil.setPortalUUID(new PortalUUIDImpl());
 	}
 
-	private static void _setUpStylesFragmentEntryProcessor() {
-		_stylesFragmentEntryProcessor = new StylesFragmentEntryProcessor();
-
-		_layoutPageTemplateStructureLocalService = Mockito.mock(
-			LayoutPageTemplateStructureLocalService.class);
+	private static void _setUpStylesFragmentEntryValidator() {
+		_stylesFragmentEntryValidator = new StylesFragmentEntryValidator();
 
 		ReflectionTestUtil.setFieldValue(
-			_stylesFragmentEntryProcessor,
-			"_layoutPageTemplateStructureLocalService",
-			_layoutPageTemplateStructureLocalService);
-
-		_language = Mockito.mock(Language.class);
-
-		ReflectionTestUtil.setFieldValue(
-			_stylesFragmentEntryProcessor, "_language", _language);
-
-		_portal = Mockito.mock(Portal.class);
-
-		ReflectionTestUtil.setFieldValue(
-			_stylesFragmentEntryProcessor, "_portal", _portal);
+			_stylesFragmentEntryValidator, "_language",
+			Mockito.mock(Language.class));
 	}
 
 	private Document _getDocument(String html) {
@@ -195,10 +183,8 @@ public class StylesFragmentEntryProcessorTest {
 		return httpServletRequest;
 	}
 
-	private static Language _language;
-	private static LayoutPageTemplateStructureLocalService
-		_layoutPageTemplateStructureLocalService;
-	private static Portal _portal;
-	private static StylesFragmentEntryProcessor _stylesFragmentEntryProcessor;
+	private static StylesDocumentFragmentEntryProcessor
+		_stylesDocumentFragmentEntryProcessor;
+	private static StylesFragmentEntryValidator _stylesFragmentEntryValidator;
 
 }

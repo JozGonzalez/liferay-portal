@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -73,12 +64,17 @@ if (organizationId > 0) {
 								var form = document.getElementById('<portlet:namespace />fm');
 
 								if (form) {
+									const valueJSON = JSON.parse(event.value);
+
 									var organizationId = form.querySelector(
 										'#<portlet:namespace />organizationId'
 									);
 
 									if (organizationId) {
-										organizationId.setAttribute('value', event.entityid);
+										organizationId.setAttribute(
+											'value',
+											valueJSON.organizationId
+										);
 									}
 
 									var organizationName = form.querySelector(
@@ -86,10 +82,7 @@ if (organizationId > 0) {
 									);
 
 									if (organizationName) {
-										organizationName.setAttribute(
-											'value',
-											event.entityname
-										);
+										organizationName.setAttribute('value', valueJSON.name);
 									}
 
 									Liferay.Util.toggleDisabled(
@@ -98,25 +91,11 @@ if (organizationId > 0) {
 									);
 								}
 							},
-
-							<%
-							String portletId = PortletProviderUtil.getPortletId(User.class.getName(), PortletProvider.Action.VIEW);
-							%>
-
-							selectEventName:
-								'<%= PortalUtil.getPortletNamespace(portletId) %>selectOrganization',
+							selectEventName: '<portlet:namespace />selectOrganization',
 							title:
 								'<liferay-ui:message arguments="organization" key="select-x" />',
-
-							<%
-							PortletURL selectOrganizationURL = PortletURLBuilder.create(
-								PortletProviderUtil.getPortletURL(request, Organization.class.getName(), PortletProvider.Action.BROWSE)
-							).setWindowState(
-								LiferayWindowState.POP_UP
-							).buildPortletURL();
-							%>
-
-							url: '<%= selectOrganizationURL.toString() %>',
+							url:
+								'<%= request.getAttribute(RecentBloggersWebKeys.ORGANIZATION_ITEM_SELECTOR_URL) %>',
 						});
 					}
 				);

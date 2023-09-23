@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider.test;
@@ -78,7 +69,8 @@ public class AcceptLanguageContextProviderTest {
 		CompanyTestUtil.resetCompanyLocales(
 			_company.getCompanyId(),
 			Arrays.asList(
-				LocaleUtil.BRAZIL, LocaleUtil.GERMAN, LocaleUtil.JAPAN,
+				LocaleUtil.BRAZIL, new Locale("ca", "ES", "VALENCIA"),
+				LocaleUtil.GERMAN, LocaleUtil.JAPAN, new Locale("sr_RS_latin"),
 				LocaleUtil.TAIWAN),
 			LocaleUtil.TAIWAN);
 
@@ -116,8 +108,8 @@ public class AcceptLanguageContextProviderTest {
 	}
 
 	@Test
-	public void testCreateContextWithDefaultUser() throws Exception {
-		User user = _company.getDefaultUser();
+	public void testCreateContextWithGuestUser() throws Exception {
+		User user = _company.getGuestUser();
 
 		_testCreateContext(LocaleUtil.TAIWAN, user);
 	}
@@ -132,9 +124,27 @@ public class AcceptLanguageContextProviderTest {
 				new AcceptLanguageMockHttpServletRequest(
 					user, LocaleUtil.JAPAN)));
 
-		// One partial locale
+		// One locale with variant
+
+		Locale caLocale = new Locale("ca", "ES", "VALENCIA");
 
 		AcceptLanguage acceptLanguage = _contextProvider.createContext(
+			new MockMessage(
+				new AcceptLanguageMockHttpServletRequest(user, caLocale)));
+
+		Assert.assertEquals(caLocale, acceptLanguage.getPreferredLocale());
+
+		Locale srLocale = new Locale("sr", "RS", "latin");
+
+		acceptLanguage = _contextProvider.createContext(
+			new MockMessage(
+				new AcceptLanguageMockHttpServletRequest(user, srLocale)));
+
+		Assert.assertEquals(srLocale, acceptLanguage.getPreferredLocale());
+
+		// One partial locale
+
+		acceptLanguage = _contextProvider.createContext(
 			new MockMessage(
 				new AcceptLanguageMockHttpServletRequest(
 					user, new Locale("pt", ""))));
@@ -213,7 +223,7 @@ public class AcceptLanguageContextProviderTest {
 
 			addHeader("Host", _company.getVirtualHostname());
 
-			if (!user.isDefaultUser()) {
+			if (!user.isGuestUser()) {
 				setAttribute(WebKeys.USER_ID, user.getUserId());
 			}
 

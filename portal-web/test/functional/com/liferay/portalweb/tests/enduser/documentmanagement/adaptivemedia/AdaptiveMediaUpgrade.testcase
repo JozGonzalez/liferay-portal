@@ -5,6 +5,8 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Adaptive Media";
 	property testray.main.component.name = "Upgrades Lima";
 
@@ -23,11 +25,11 @@ definition {
 		property data.archive.type = "data-archive-adaptive-media";
 		property portal.version = "7.1.10.5";
 
-		Upgrade.viewAndAddImageResolution();
+		ValidateAdaptiveMediaUpgrade.viewAndAddImageResolution();
 
-		Upgrade.editImageResolution();
+		ValidateAdaptiveMediaUpgrade.editImageResolution();
 
-		Upgrade.deleteImageResolution();
+		ValidateAdaptiveMediaUpgrade.deleteImageResolution();
 	}
 
 	@priority = 4
@@ -35,11 +37,11 @@ definition {
 		property data.archive.type = "data-archive-adaptive-media";
 		property portal.version = "7.2.10.4";
 
-		Upgrade.viewAndAddImageResolution();
+		ValidateAdaptiveMediaUpgrade.viewAndAddImageResolution();
 
-		Upgrade.editImageResolution();
+		ValidateAdaptiveMediaUpgrade.editImageResolution();
 
-		Upgrade.deleteImageResolution();
+		ValidateAdaptiveMediaUpgrade.deleteImageResolution();
 	}
 
 	@priority = 4
@@ -47,11 +49,11 @@ definition {
 		property data.archive.type = "data-archive-adaptive-media";
 		property portal.version = "7.3.10.1";
 
-		Upgrade.viewAndAddImageResolution();
+		ValidateAdaptiveMediaUpgrade.viewAndAddImageResolution();
 
-		Upgrade.editImageResolution();
+		ValidateAdaptiveMediaUpgrade.editImageResolution();
 
-		Upgrade.deleteImageResolution();
+		ValidateAdaptiveMediaUpgrade.deleteImageResolution();
 	}
 
 	@priority = 4
@@ -63,11 +65,11 @@ definition {
 
 		AdaptiveMedia.adaptRemainingImages(imageName = "Thumbnail 300x300");
 
-		Upgrade.viewAndAddImageResolution();
+		ValidateAdaptiveMediaUpgrade.viewAndAddImageResolution();
 
-		Upgrade.editImageResolution();
+		ValidateAdaptiveMediaUpgrade.editImageResolution();
 
-		Upgrade.deleteImageResolution();
+		ValidateAdaptiveMediaUpgrade.deleteImageResolution();
 	}
 
 }

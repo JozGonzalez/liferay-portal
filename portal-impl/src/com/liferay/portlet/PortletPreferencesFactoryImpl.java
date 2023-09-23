@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet;
 
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -23,7 +13,6 @@ import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
-import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -63,8 +52,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.xml.StAXReaderUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.xml.StAXReaderUtil;
 import com.liferay.portlet.portletconfiguration.util.ConfigurationPortletRequest;
 
 import java.util.ArrayList;
@@ -176,12 +165,7 @@ public class PortletPreferencesFactoryImpl
 			layout, portletId);
 
 		if (portletSetup instanceof StrictPortletPreferencesImpl) {
-			try (SafeCloseable safeCloseable =
-					CTCollectionThreadLocal.
-						setProductionModeWithSafeCloseable()) {
-
-				getLayoutPortletSetup(layout, portletId);
-			}
+			getLayoutPortletSetup(layout, portletId);
 		}
 
 		if (portlet.isInstanceable()) {
@@ -324,7 +308,7 @@ public class PortletPreferencesFactoryImpl
 
 		String doAsUserId = themeDisplay.getDoAsUserId();
 
-		if ((user != null) && !user.isDefaultUser() &&
+		if ((user != null) && !user.isGuestUser() &&
 			Validator.isNotNull(doAsUserId) &&
 			!Objects.equals(String.valueOf(userId), doAsUserId)) {
 
@@ -938,25 +922,8 @@ public class PortletPreferencesFactoryImpl
 		int ownerType = 0;
 		long plid = 0;
 
-		long masterLayoutPlid = layout.getMasterLayoutPlid();
-
-		boolean hasMasterLayoutPreferences = false;
-
-		long portletPreferencesCount =
-			PortletPreferencesLocalServiceUtil.getPortletPreferencesCount(
-				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, masterLayoutPlid,
-				portletId);
-
-		if ((masterLayoutPlid > 0) && (portletPreferencesCount > 0)) {
-			hasMasterLayoutPreferences = true;
-		}
-
-		if (hasMasterLayoutPreferences) {
-			ownerType = PortletKeys.PREFS_OWNER_TYPE_LAYOUT;
-			plid = masterLayoutPlid;
-		}
-		else if (PortletIdCodec.hasUserId(originalPortletId) &&
-				 (PortletIdCodec.decodeUserId(originalPortletId) == userId)) {
+		if (PortletIdCodec.hasUserId(originalPortletId) &&
+			(PortletIdCodec.decodeUserId(originalPortletId) == userId)) {
 
 			ownerId = userId;
 			ownerType = PortletKeys.PREFS_OWNER_TYPE_USER;
@@ -971,7 +938,21 @@ public class PortletPreferencesFactoryImpl
 		else {
 			if (portlet.isPreferencesUniquePerLayout()) {
 				ownerId = PortletKeys.PREFS_OWNER_ID_DEFAULT;
-				plid = layout.getPlid();
+
+				long masterLayoutPlid = layout.getMasterLayoutPlid();
+
+				long portletPreferencesCount =
+					PortletPreferencesLocalServiceUtil.
+						getPortletPreferencesCount(
+							PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+							masterLayoutPlid, portletId);
+
+				if ((masterLayoutPlid > 0) && (portletPreferencesCount > 0)) {
+					plid = masterLayoutPlid;
+				}
+				else {
+					plid = layout.getPlid();
+				}
 
 				if (themeDisplay != null) {
 					if (themeDisplay.isPortletEmbedded(
@@ -994,7 +975,7 @@ public class PortletPreferencesFactoryImpl
 				}
 				else {
 					if ((userId <= 0) || modeEditGuest) {
-						userId = UserLocalServiceUtil.getDefaultUserId(
+						userId = UserLocalServiceUtil.getGuestUserId(
 							layout.getCompanyId());
 					}
 
@@ -1012,7 +993,7 @@ public class PortletPreferencesFactoryImpl
 				}
 				else {
 					if ((userId <= 0) || modeEditGuest) {
-						userId = UserLocalServiceUtil.getDefaultUserId(
+						userId = UserLocalServiceUtil.getGuestUserId(
 							layout.getCompanyId());
 					}
 

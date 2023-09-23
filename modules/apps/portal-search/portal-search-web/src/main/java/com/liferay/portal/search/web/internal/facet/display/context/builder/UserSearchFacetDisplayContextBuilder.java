@@ -1,27 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.facet.display.context.builder;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
-import com.liferay.portal.kernel.theme.PortletDisplay;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
@@ -47,11 +41,9 @@ public class UserSearchFacetDisplayContextBuilder {
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
-
 		_userFacetPortletInstanceConfiguration =
-			portletDisplay.getPortletInstanceConfiguration(
-				UserFacetPortletInstanceConfiguration.class);
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				UserFacetPortletInstanceConfiguration.class, _themeDisplay);
 	}
 
 	public UserSearchFacetDisplayContext build() {
@@ -125,8 +117,12 @@ public class UserSearchFacetDisplayContextBuilder {
 		_paramValues = Collections.singletonList(paramValue);
 	}
 
-	public void setParamValues(List<String> paramValues) {
-		_paramValues = paramValues;
+	public void setParamValues(String... paramValues) {
+		_paramValues = ListUtil.fromArray(paramValues);
+	}
+
+	public void setUserLocalService(UserLocalService userLocalService) {
+		_userLocalService = userLocalService;
 	}
 
 	protected BucketDisplayContext buildBucketDisplayContext(
@@ -134,14 +130,14 @@ public class UserSearchFacetDisplayContextBuilder {
 
 		BucketDisplayContext bucketDisplayContext = new BucketDisplayContext();
 
-		String term = GetterUtil.getString(termCollector.getTerm());
+		long userId = GetterUtil.getLong(termCollector.getTerm());
 
-		bucketDisplayContext.setBucketText(term);
-		bucketDisplayContext.setFilterValue(term);
+		bucketDisplayContext.setBucketText(_getDisplayName(userId));
+		bucketDisplayContext.setFilterValue(String.valueOf(userId));
 
 		bucketDisplayContext.setFrequency(termCollector.getFrequency());
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
-		bucketDisplayContext.setSelected(isSelected(term));
+		bucketDisplayContext.setSelected(isSelected(String.valueOf(userId)));
 
 		return bucketDisplayContext;
 	}
@@ -196,7 +192,8 @@ public class UserSearchFacetDisplayContextBuilder {
 
 		BucketDisplayContext bucketDisplayContext = new BucketDisplayContext();
 
-		bucketDisplayContext.setBucketText(_paramValues.get(0));
+		bucketDisplayContext.setBucketText(
+			_getDisplayName(GetterUtil.getLong(_paramValues.get(0))));
 		bucketDisplayContext.setFilterValue(_paramValues.get(0));
 		bucketDisplayContext.setFrequency(0);
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
@@ -235,6 +232,16 @@ public class UserSearchFacetDisplayContextBuilder {
 		return false;
 	}
 
+	private String _getDisplayName(long userId) {
+		User user = _userLocalService.fetchUser(userId);
+
+		if (user == null) {
+			return "[" + userId + "]";
+		}
+
+		return user.getFullName();
+	}
+
 	private String _getFirstParamValue() {
 		if (_paramValues.isEmpty()) {
 			return StringPool.BLANK;
@@ -254,5 +261,6 @@ public class UserSearchFacetDisplayContextBuilder {
 	private final ThemeDisplay _themeDisplay;
 	private final UserFacetPortletInstanceConfiguration
 		_userFacetPortletInstanceConfiguration;
+	private UserLocalService _userLocalService;
 
 }

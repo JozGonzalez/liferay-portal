@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectValidationRule;
+import com.liferay.object.model.ObjectValidationRuleSetting;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -73,7 +66,8 @@ public interface ObjectValidationRuleLocalService
 	public ObjectValidationRule addObjectValidationRule(
 			long userId, long objectDefinitionId, boolean active, String engine,
 			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String script)
+			String outputType, String script, boolean system,
+			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
 		throws PortalException;
 
 	/**
@@ -131,11 +125,13 @@ public interface ObjectValidationRuleLocalService
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule);
+			ObjectValidationRule objectValidationRule)
+		throws PortalException;
 
 	public void deleteObjectValidationRules(Long objectDefinitionId)
 		throws PortalException;
@@ -300,6 +296,10 @@ public interface ObjectValidationRuleLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectValidationRulesCount();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getObjectValidationRulesCount(
+		long objectDefinitionId, boolean active);
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -315,11 +315,14 @@ public interface ObjectValidationRuleLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	public void unassociateObjectField(ObjectField objectField);
+
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectValidationRule updateObjectValidationRule(
 			long objectValidationRuleId, boolean active, String engine,
 			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String script)
+			String outputType, String script,
+			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
 		throws PortalException;
 
 	/**

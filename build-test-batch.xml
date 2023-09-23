@@ -7,6 +7,14 @@
 		<isset property="env.AXIS_VARIABLE" />
 	</condition>
 
+	<math
+		datatype="int"
+		operand1="${test.class.timeout.minutes}"
+		operand2="60"
+		operation="*"
+		result="test.class.timeout.seconds"
+	/>
+
 	<macrodef name="check-jenkins-console">
 		<sequential>
 			<if>
@@ -725,6 +733,98 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="get-test-project-information">
+		<attribute default="" name="test.class" />
+
+		<sequential>
+			<var name="test.name" unset="true" />
+			<var name="test.project.name" unset="true" />
+			<var name="test.project.results.dir" unset="true" />
+
+			<local name="test.class.file" />
+			<local name="test.class.file.path" />
+			<local name="test.class.java" />
+
+			<propertyregex
+				casesensitive="true"
+				input="@{test.class}"
+				property="test.class.java"
+				regexp="\.class"
+				replace="\.java"
+			/>
+
+			<first id="test.class.file">
+				<fileset
+					dir="modules"
+					excludes="**/node_modules/**"
+					includes="**/${test.class.java}"
+				/>
+			</first>
+
+			<property name="test.class.file.path" value="${toString:test.class.file}" />
+
+			<beanshell>
+				<![CDATA[
+					import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+					import java.util.Properties;
+					import java.util.regex.Matcher;
+					import java.util.regex.Pattern;
+
+					public static String getTestName(String testClassFilePath) {
+						Pattern pattern = Pattern.compile("/([^/]+)\\.java");
+
+						Matcher matcher = pattern.matcher(testClassFilePath);
+
+						if (matcher.find()) {
+							return matcher.group(1);
+						}
+
+						return null;
+					}
+
+					public static String getTestProjectName(String testClassFilePath) {
+						String projectDir = project.getProperty("project.dir");
+
+						String regex = projectDir + "/modules(\\/+.+)/src/test";
+
+						Pattern pattern = Pattern.compile(regex);
+
+						Matcher matcher = pattern.matcher(testClassFilePath);
+
+						if (matcher.find()) {
+							String testProjectName = matcher.group(1);
+
+							return testProjectName.replaceAll("/", ":");
+						}
+
+						return null;
+					}
+
+					public static String getTestProjectResultsDir(String testClassFilePath) {
+						String testProjectName = getTestProjectName(testClassFilePath);
+
+						File testProjectResultsDir = new File(project.getProperty("project.dir") + "/modules/" + testProjectName.replaceAll(":", "/") + "/test-results/");
+
+						return JenkinsResultsParserUtil.getCanonicalPath(testProjectResultsDir);
+					}
+
+					String testClassFilePath = project.getProperty("test.class.file.path");
+
+					String testProjectName = getTestProjectName(testClassFilePath);
+
+					if (testProjectName == null) {
+						throw new Exception("Unable to find corresponding project name for " + testClassFilePath + ".");
+					}
+
+					project.setProperty("test.name", getTestName(testClassFilePath));
+					project.setProperty("test.project.name", testProjectName);
+					project.setProperty("test.project.results.dir", getTestProjectResultsDir(testClassFilePath));
+				]]>
+			</beanshell>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="merge-test-results">
 		<sequential>
 			<antcall target="merge-test-results" />
@@ -800,6 +900,7 @@ mariadb.executable=${mariadb.executable}]]></echo>
 			<jar
 				destfile="@{merged.jar}"
 				update="true"
+				zip64Mode="always"
 			>
 				<fileset
 					dir="${merged-classes}"
@@ -928,7 +1029,7 @@ mariadb.executable=${mariadb.executable}]]></echo>
 			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
 
 			<if>
-				<contains string="${suite.search.engine}" substring="remote-elasticsearch7" />
+				<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
 				<then>
 					<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
 				</then>
@@ -1250,20 +1351,27 @@ app.server.type=@{app.server.type}]]></echo>
 								<echo file="${app.server.classes.portal.dir}/system-ext.properties">log.sanitizer.enabled=false</echo>
 							</sequential>
 
-							<if>
-								<resourcecount count="0" when="gt">
+							<sequential>
+								<for param="lfrbuild.file">
 									<fileset
 										dir="${project.dir}/modules"
 										includes="**/.lfrbuild-portal-deprecated"
 									/>
-								</resourcecount>
-								<then>
-									<gradle-execute dir="${project.dir}/modules" task="deploy">
-										<arg value="--parallel" />
-										<arg value="-Ddeploy.only.profile=portal-deprecated" />
-									</gradle-execute>
-								</then>
-							</if>
+									<sequential>
+										<local name="lfrbuild.dir" />
+
+										<antelope:stringutil property="lfrbuild.dir" string="@{lfrbuild.file}">
+											<antelope:replace regex="\\" replacement="/" />
+										</antelope:stringutil>
+
+										<antelope:stringutil property="lfrbuild.dir" string="${lfrbuild.dir}">
+											<antelope:replace regex="(.+)\/\.lfrbuild-portal-deprecated" replacement="$1" />
+										</antelope:stringutil>
+
+										<gradle-execute dir="${lfrbuild.dir}" task="deploy" />
+									</sequential>
+								</for>
+							</sequential>
 
 							<trycatch>
 								<try>
@@ -1307,20 +1415,27 @@ app.server.type=@{app.server.type}]]></echo>
 
 							<antcall inheritAll="false" target="prepare-system-ext-properties" />
 
-							<if>
-								<resourcecount count="0" when="gt">
+							<sequential>
+								<for param="lfrbuild.file">
 									<fileset
 										dir="${project.dir}/modules"
 										includes="**/.lfrbuild-portal-deprecated"
 									/>
-								</resourcecount>
-								<then>
-									<gradle-execute dir="${project.dir}/modules" task="deploy">
-										<arg value="--parallel" />
-										<arg value="-Ddeploy.only.profile=portal-deprecated" />
-									</gradle-execute>
-								</then>
-							</if>
+									<sequential>
+										<local name="lfrbuild.dir" />
+
+										<antelope:stringutil property="lfrbuild.dir" string="@{lfrbuild.file}">
+											<antelope:replace regex="\\" replacement="/" />
+										</antelope:stringutil>
+
+										<antelope:stringutil property="lfrbuild.dir" string="${lfrbuild.dir}">
+											<antelope:replace regex="(.+)\/\.lfrbuild-portal-deprecated" replacement="$1" />
+										</antelope:stringutil>
+
+										<gradle-execute dir="${lfrbuild.dir}" task="deploy" />
+									</sequential>
+								</for>
+							</sequential>
 
 							<for param="app.dir">
 								<path>
@@ -2394,11 +2509,15 @@ log.sanitizer.enabled=false</echo>
 
 							<lstopwatch action="start" name="test.execution.duration" />
 
-							<gradle-execute dir="modules" refreshdependencies="@{refreshdependencies}" task="testIntegration">
-								<arg value="--continue" />
-								<arg value="-Dbuild.exclude.ant.plugin=true" />
-								<arg value="-Dtest.class.group.index=${axis.variable}" />
-							</gradle-execute>
+							<for list="${test.class.group}" param="test.class">
+								<sequential>
+									<run-modules-junit-test test.class="@{test.class}" test.task="testIntegration">
+										<arg value="--continue" />
+										<arg value="-Dbuild.exclude.ant.plugin=true" />
+										<arg value="-Dtest.class.group.index=${axis.variable}" />
+									</run-modules-junit-test>
+								</sequential>
+							</for>
 
 							<lstopwatch action="total" name="test.execution.duration" />
 
@@ -2569,6 +2688,86 @@ log.sanitizer.enabled=false</echo>
 					<stop-suite-search-engine />
 				</test-tear-down>
 			</run-batch-test>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="run-modules-junit-test">
+		<attribute name="test.class" />
+		<attribute name="test.task" />
+
+		<element implicit="true" name="args" optional="true" />
+
+		<sequential>
+			<var name="test.timeout" unset="true" />
+
+			<trycatch property="test.failure.message">
+				<try>
+					<get-test-project-information test.class="@{test.class}" />
+
+					<limit failonerror="true" maxwait="${test.class.timeout.seconds}" property="test.timeout" value="FAILURE: ${test.project.name}:@{test.task} --tests ${test.name} failed to complete in ${test.class.timeout.minutes} minutes">
+						<gradle-execute dir="modules" task="${test.project.name}:@{test.task}" test.name="${test.name}">
+							<args />
+						</gradle-execute>
+					</limit>
+
+					<move
+						flatten="true"
+						todir="modules/test-results"
+					>
+						<fileset
+							dir="${test.project.results.dir}"
+							includes="**/TEST-*.xml"
+						/>
+					</move>
+				</try>
+				<catch>
+					<var name="junit.failure.message" value="" />
+
+					<if>
+						<isset property="test.timeout" />
+						<then>
+							<var name="junit.failure.message" value="${test.timeout}${line.separator}" />
+						</then>
+					</if>
+
+					<var name="junit.failure.message" value="${junit.failure.message}${test.failure.message}" />
+
+					<echo>${junit.failure.message}</echo>
+
+					<var name="junit.failure.message.element" unset="true" />
+
+					<property name="junit.failure.message" value="${test.failure.message}${test.timeout}" />
+
+					<get-junit-failure-message-element />
+
+					<local name="test.class.name" />
+
+					<propertyregex
+						input="@{test.class}"
+						override="true"
+						property="test.class.name"
+						regexp="(.*)\.class"
+						replace="\1"
+					/>
+
+					<propertyregex
+						global="true"
+						input="${test.class.name}"
+						override="true"
+						property="test.class.name"
+						regexp="/"
+						replace="."
+					/>
+
+					<generate-backend-batch-junit-report
+						junit.failure.count="1"
+						junit.failure.message.element="${junit.failure.message.element}"
+						test.class.name="${test.class.name}"
+						test.command.name="testCompile"
+						test.results.dir="modules/test-results"
+					/>
+				</catch>
+			</trycatch>
 		</sequential>
 	</macrodef>
 
@@ -3038,7 +3237,7 @@ log.sanitizer.enabled=false</echo>
 	<macrodef name="stop-suite-search-engine">
 		<sequential>
 			<if>
-				<contains string="${suite.search.engine}" substring="remote-elasticsearch7" />
+				<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
 				<then>
 					<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
 				</then>
@@ -3053,11 +3252,11 @@ log.sanitizer.enabled=false</echo>
 		</sequential>
 	</macrodef>
 
-	<target name="archived-module-smoke-jdk8">
+	<target name="archived-module-smoke-mysql57-jdk8">
 		<run-archived-module-smoke />
 	</target>
 
-	<target name="archived-modules-test-jdk8">
+	<target name="archived-modules-test-mysql57-jdk8">
 		<run-archived-modules-test />
 	</target>
 
@@ -3243,7 +3442,7 @@ information. Make sure to commit in all build-lib-versions results.
 		</run-batch-test>
 	</target>
 
-	<target name="bundle-blacklist-restart-jdk8">
+	<target name="bundle-blacklist-restart-mysql57-jdk8">
 		<run-bundle-blacklist-restart-test />
 	</target>
 
@@ -3299,7 +3498,7 @@ information. Make sure to commit in all build-lib-versions results.
 			<test-set-up>
 				<setup-test-environment />
 
-				<prepare-database-upgrade-configuration />
+				<prepare-database-upgrade-properties />
 			</test-set-up>
 		</run-batch-test>
 	</target>
@@ -3313,7 +3512,7 @@ information. Make sure to commit in all build-lib-versions results.
 		</parallel>
 	</target>
 
-	<target name="empty-osgi-core-dir-jdk8">
+	<target name="empty-osgi-core-dir-mysql57-jdk8">
 		<run-empty-osgi-core-dir-test />
 	</target>
 
@@ -3547,10 +3746,10 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
@@ -3568,10 +3767,10 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
@@ -3592,14 +3791,13 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.portal.log.assert="true"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -3617,14 +3815,13 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.portal.log.assert="true"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4172,6 +4369,26 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
+	<target name="functional-bundle-tomcat-postgresql153-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-functional-test
+			app.server.type="tomcat"
+			database.type="postgresql"
+			database.version="15.3"
+			setup.proxy="false"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.plugin.zip.url="${test.plugin.zip.url}"
+			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
 	<target name="functional-bundle-tomcat-sqlserver2017-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -4199,6 +4416,26 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="tomcat"
 			database.type="sqlserver"
 			database.version="2019"
+			setup.proxy="false"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.plugin.zip.url="${test.plugin.zip.url}"
+			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="functional-bundle-tomcat-sqlserver2022-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-functional-test
+			app.server.type="tomcat"
+			database.type="sqlserver"
+			database.version="2022"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
@@ -4501,14 +4738,13 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.portal.log.assert="true"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4526,14 +4762,37 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.portal.log.assert="true"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="functional-bundle-wildfly261-mysql57-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test
+			app.server.type="wildfly"
+			app.server.version="26.1.0"
+			database.type="mysql"
+			database.version="5.7"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.plugin.zip.url="${test.plugin.zip.url}"
+			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4610,14 +4869,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4640,14 +4899,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4692,6 +4951,10 @@ information. Make sure to commit in all format-javadoc results.
 		<antcall target="functional-bundle-tomcat-postgresql144-jdk8" />
 	</target>
 
+	<target name="functional-smoke-bundle-tomcat-postgresql153-jdk8">
+		<antcall target="functional-bundle-tomcat-postgresql153-jdk8" />
+	</target>
+
 	<target name="functional-smoke-bundle-weblogic122-mysql57-jdk8">
 		<run-functional-test
 			app.server.type="weblogic"
@@ -4702,14 +4965,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4724,14 +4987,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4746,14 +5009,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4768,14 +5031,14 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
 			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
 			test.sql.zip.url="${test.sql.zip.url}"
 		/>
 	</target>
@@ -4786,6 +5049,10 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-smoke-bundle-wildfly230-mysql57-jdk8">
 		<antcall target="functional-bundle-wildfly230-mysql57-jdk8" />
+	</target>
+
+	<target name="functional-smoke-bundle-wildfly261-mysql57-jdk8">
+		<antcall target="functional-bundle-wildfly261-mysql57-jdk8" />
 	</target>
 
 	<target name="functional-smoke-jboss73-mysql57-jdk8">
@@ -4940,6 +5207,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="14.4" test.portal.log.assert="true" />
 	</target>
 
+	<target name="functional-smoke-tomcat90-postgresql153-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat90-postgresql153-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-smoke-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" test.portal.log.assert="true" />
 	</target>
@@ -4954,6 +5229,14 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-smoke-tomcat90-sqlserver2019-jdk11_open">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2019" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat90-sqlserver2022-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat90-sqlserver2022-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-tomcat90-sybase160-jdk8">
@@ -5018,6 +5301,30 @@ information. Make sure to commit in all format-javadoc results.
 		<set-app-server-version-number app.server.type="wildfly" app.server.version="23.0.0" />
 
 		<run-functional-test app.server.type="wildfly" app.server.version="23.0.0" database.type="mariadb" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-wildfly261-mariadb104-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-wildfly261-mariadb104-jdk11_open">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-wildfly261-mariadb106-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-wildfly261-mariadb106-jdk11_open">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-suse15-tomcat90-mysql57-jdk8">
@@ -5152,6 +5459,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="14.4" />
 	</target>
 
+	<target name="functional-tomcat90-postgresql153-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
+	</target>
+
+	<target name="functional-tomcat90-postgresql153-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
+	</target>
+
 	<target name="functional-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" />
 	</target>
@@ -5166,6 +5481,14 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-tomcat90-sqlserver2019-jdk11_open">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2019" />
+	</target>
+
+	<target name="functional-tomcat90-sqlserver2022-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" />
+	</target>
+
+	<target name="functional-tomcat90-sqlserver2022-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" />
 	</target>
 
 	<target name="functional-tomcat90-sybase160-jdk8">
@@ -5312,6 +5635,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="14.4" />
 	</target>
 
+	<target name="functional-upgrade-tomcat90-postgresql153-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
+	</target>
+
+	<target name="functional-upgrade-tomcat90-postgresql153-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
+	</target>
+
 	<target name="functional-upgrade-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" />
 	</target>
@@ -5326,6 +5657,14 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-upgrade-tomcat90-sqlserver2019-jdk11_open">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2019" />
+	</target>
+
+	<target name="functional-upgrade-tomcat90-sqlserver2022-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" />
+	</target>
+
+	<target name="functional-upgrade-tomcat90-sqlserver2022-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2022" />
 	</target>
 
 	<target name="functional-upgrade-tomcat90-sybase160-jdk8">
@@ -5404,6 +5743,30 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="wildfly" app.server.version="23.0.0" database.type="mariadb" />
 	</target>
 
+	<target name="functional-upgrade-wildfly261-mariadb104-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
+	<target name="functional-upgrade-wildfly261-mariadb104-jdk11_open">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
+	<target name="functional-upgrade-wildfly261-mariadb106-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
+	<target name="functional-upgrade-wildfly261-mariadb106-jdk11_open">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
 	<target name="functional-weblogic122-mysql57-jdk8">
 		<set-app-server-version-number app.server.type="weblogic" app.server.version="12.2.1" />
 
@@ -5462,7 +5825,25 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="wildfly" app.server.version="23.0.0" database.type="mysql" />
 	</target>
 
-	<target name="functional-workspace-bundle-mysql57-jdk8">
+	<target name="functional-wildfly261-mariadb104-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
+	<target name="functional-wildfly261-mariadb106-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mariadb" />
+	</target>
+
+	<target name="functional-wildfly261-mysql57-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="26.1.0" />
+
+		<run-functional-test app.server.type="wildfly" app.server.version="26.1.0" database.type="mysql" />
+	</target>
+
+	<target name="functional-workspaces-bundle-mysql57-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-functional-test
@@ -5482,7 +5863,7 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="gogo-shell-client-jdk8">
+	<target name="gogo-shell-client-mysql57-jdk8">
 		<run-batch-test>
 			<test-action>
 				<database-test-run-test database.type="mysql" stop.app.server="true">
@@ -5537,7 +5918,7 @@ information. Make sure to commit in all format-javadoc results.
 						<dirset
 							dir="modules/sdk"
 							excludes="${gradle.plugins.test.excludes}"
-							includes="gradle-plugins*"
+							includes="${gradle.plugins.test.includes}"
 						/>
 					</path>
 					<sequential>
@@ -5569,6 +5950,20 @@ information. Make sure to commit in all format-javadoc results.
 					</sequential>
 				</for>
 			</test-action>
+			<test-tear-down>
+				<tar destfile="${project.dir}/tmp/gradle_plugins.tar">
+					<tarfileset
+						dir="${project.dir}/modules/sdk/gradle-plugins-target-platform"
+						includes="build/reports/**"
+						prefix="gradle-plugins-target-platform"
+					/>
+					<tarfileset
+						dir="${project.dir}/modules/sdk/gradle-plugins-workspace"
+						includes="build/reports/**"
+						prefix="gradle-plugins-workspace"
+					/>
+				</tar>
+			</test-tear-down>
 		</run-batch-test>
 	</target>
 
@@ -5615,7 +6010,7 @@ information. Make sure to commit in all format-javadoc results.
 		<ant antfile="build-test-batch/jsf.xml" target="jsf-jdk8" />
 	</target>
 
-	<target name="jsp-runtime-compile-jdk8">
+	<target name="jsp-runtime-compile-mysql57-jdk8">
 		<run-batch-test>
 			<test-action>
 				<database-test-run-test database.type="mysql" stop.app.server="true">
@@ -5692,27 +6087,31 @@ information. Make sure to commit in all format-javadoc results.
 		<run-legacy-database-dump database.type="sqlserver" database.version="2019" />
 	</target>
 
+	<target name="legacy-functional-bundle-tomcat-sqlserver2022">
+		<run-legacy-database-dump database.type="sqlserver" database.version="2022" />
+	</target>
+
 	<target name="legacy-functional-bundle-tomcat-sybase160">
 		<run-legacy-database-dump database.type="sybase" />
 	</target>
 
-	<target name="lpkg-container-jdk8">
+	<target name="lpkg-container-mysql57-jdk8">
 		<run-lpkg-container-test />
 	</target>
 
-	<target name="lpkg-controller-jdk8">
+	<target name="lpkg-controller-mysql57-jdk8">
 		<run-lpkg-controller-test />
 	</target>
 
-	<target name="lpkg-override-jdk8">
+	<target name="lpkg-override-mysql57-jdk8">
 		<run-lpkg-override-test />
 	</target>
 
-	<target name="lpkg-persistence-jdk8">
+	<target name="lpkg-persistence-mysql57-jdk8">
 		<run-lpkg-persistence-test />
 	</target>
 
-	<target name="lpkg-startup-jdk8">
+	<target name="lpkg-startup-mysql57-jdk8">
 		<run-lpkg-startup-test />
 	</target>
 
@@ -5802,18 +6201,50 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" />
 	</target>
 
+	<target name="modules-integration-analytics-cloud">
+		<run-batch-test>
+			<test-action>
+				<ant antfile="build-test-analytics-cloud.xml" target="start-analytics-cloud-integration" />
+			</test-action>
+
+			<test-set-up>
+				<if>
+					<isset property="TEST_CLASS_GROUP_${axis.variable}" />
+					<then>
+						<local name="test.class.group" />
+
+						<propertycopy from="TEST_CLASS_GROUP_${axis.variable}" name="test.class.group" />
+
+						<echo file="${project.dir}/test.class.file.names.properties">TEST_CLASS_GROUP_${axis.variable}=${test.class.group}</echo>
+					</then>
+					<else>
+						<antcall inheritAll="false" target="record-test-class-file-names">
+							<param name="test.class.groups.size" value="${test.batch.size}" />
+						</antcall>
+					</else>
+				</if>
+			</test-set-up>
+
+			<test-tear-down>
+				<ant antfile="build-test-analytics-cloud.xml" target="stop-analytics-cloud-integration" />
+			</test-tear-down>
+		</run-batch-test>
+	</target>
+
 	<target name="modules-integration-aws-s3-mysql57-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="aws.bucket.id" />
+			<format pattern="yyyyMMddkkmmssSSS" property="s3.bucket.id" />
 		</tstamp>
 
-		<ant antfile="build-test-aws-s3.xml" target="configure-aws-cli" />
+		<ant antfile="build-test-s3-store.xml" target="configure-aws-cli" />
 
 		<prepare-aws-s3-configuration />
 
-		<ant antfile="build-test-aws-s3.xml" target="create-s3-bucket" />
+		<ant antfile="build-test-s3-store.xml" target="create-s3-bucket">
+			<property name="aws.store.enabled" value="true" />
+		</ant>
 
 		<trycatch>
 			<try>
@@ -5825,7 +6256,9 @@ information. Make sure to commit in all format-javadoc results.
 			</try>
 
 			<finally>
-				<ant antfile="build-test-aws-s3.xml" target="delete-s3-bucket" />
+				<ant antfile="build-test-s3-store.xml" target="delete-s3-bucket">
+					<property name="aws.store.enabled" value="true" />
+				</ant>
 			</finally>
 		</trycatch>
 	</target>
@@ -6059,8 +6492,8 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.sql.zip.url="${test.sql.zip.url}"
@@ -6078,8 +6511,8 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.sql.zip.url="${test.sql.zip.url}"
@@ -6097,8 +6530,8 @@ information. Make sure to commit in all format-javadoc results.
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
 			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
 			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
 			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
 			test.sql.zip.url="${test.sql.zip.url}"
@@ -6200,6 +6633,25 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
+	<target name="modules-integration-bundle-postgresql153-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="postgresql"
+			database.version="15.3"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
 	<target name="modules-integration-bundle-sqlserver2017-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -6225,6 +6677,25 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test
 			database.type="sqlserver"
 			database.version="2019"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="modules-integration-bundle-sqlserver2022-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="sqlserver"
+			database.version="2022"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
@@ -6382,6 +6853,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test database.type="postgresql" database.version="14.4" />
 	</target>
 
+	<target name="modules-integration-postgresql153-jdk8">
+		<run-modules-integration-test database.type="postgresql" database.version="15.3" />
+	</target>
+
+	<target name="modules-integration-postgresql153-jdk11_open">
+		<run-modules-integration-test database.type="postgresql" database.version="15.3" />
+	</target>
+
 	<target name="modules-integration-project-templates-jdk8">
 		<antcall target="modules-unit-jdk8">
 			<param name="project.templates.test" value="true" />
@@ -6403,6 +6882,14 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="modules-integration-sqlserver2019-jdk11_open">
 		<run-modules-integration-test database.type="sqlserver" database.version="2019" />
+	</target>
+
+	<target name="modules-integration-sqlserver2022-jdk8">
+		<run-modules-integration-test database.type="sqlserver" database.version="2022" />
+	</target>
+
+	<target name="modules-integration-sqlserver2022-jdk11_open">
+		<run-modules-integration-test database.type="sqlserver" database.version="2022" />
 	</target>
 
 	<target name="modules-integration-sybase160-jdk8">
@@ -6533,7 +7020,7 @@ information. Make sure to commit in all format-javadoc results.
 				<if>
 					<equals arg1="${project.templates.test}" arg2="true" />
 					<then>
-						<gradle-execute dir="modules/sdk/project-templates" task="install">
+						<gradle-execute dir="modules/sdk/project-templates" task="publishToMavenLocal">
 							<arg value="--continue" />
 							<arg value="-Dbuild.exclude.ant.plugin=true" />
 							<arg if:set="project.templates.test.builds" value="-Dproject.templates.test.builds=${project.templates.test.builds}" />
@@ -6541,14 +7028,18 @@ information. Make sure to commit in all format-javadoc results.
 					</then>
 				</if>
 
-				<gradle-execute dir="modules" task="test">
-					<arg value="--continue" />
-					<arg value="-Dbuild.exclude.ant.plugin=true" />
-					<arg if:true="${run.solr.unit.tests}" value="-Dcom.liferay.portal.search.solr8.test.unit.started=true" />
-					<arg value="-Djunit.code.coverage=${test.batch.code.coverage}" />
-					<arg if:set="project.templates.test.builds" value="-Dproject.templates.test.builds=${project.templates.test.builds}" />
-					<arg value="-Dtest.class.group.index=${axis.variable}" />
-				</gradle-execute>
+				<for list="${test.class.group}" param="test.class">
+					<sequential>
+						<run-modules-junit-test test.class="@{test.class}" test.task="test">
+							<arg value="--continue" />
+							<arg value="-Dbuild.exclude.ant.plugin=true" />
+							<arg if:true="${run.solr.unit.tests}" value="-Dcom.liferay.portal.search.solr8.test.unit.started=true" />
+							<arg value="-Djunit.code.coverage=${test.batch.code.coverage}" />
+							<arg if:set="project.templates.test.builds" value="-Dproject.templates.test.builds=${project.templates.test.builds}" />
+							<arg value="-Dtest.class.group.index=${axis.variable}" />
+						</run-modules-junit-test>
+					</sequential>
+				</for>
 
 				<lstopwatch action="total" name="test.execution.duration" />
 			</test-action>
@@ -6650,7 +7141,7 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
-	<target name="patching-tool-jdk8">
+	<target name="patching-tool-mysql57-jdk8">
 		<run-batch-test>
 			<test-action>
 				<database-test-run-test database.type="mysql" stop.app.server="true">
@@ -6842,7 +7333,7 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
-	<target name="portal-license-smoke-jdk8">
+	<target name="portal-license-smoke-mysql57-jdk8">
 		<run-batch-test>
 			<test-action>
 				<database-test-run-test database.type="mysql" stop.app.server="true">
@@ -6892,7 +7383,7 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
-	<target name="portal-renamed-tomcat-in-path-jdk8">
+	<target name="portal-renamed-tomcat-in-path-mysql57-jdk8">
 		<run-batch-test>
 			<test-action>
 				<database-test-run-test database.type="mysql" stop.app.server="true">
@@ -6965,7 +7456,7 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
-	<target name="portal-second-startup-space-in-path-jdk8">
+	<target name="portal-second-startup-space-in-path-mysql57-jdk8">
 		<sequential>
 			<run-batch-test>
 				<test-action>
@@ -7047,7 +7538,7 @@ ${output.content}</echo>
 		</sequential>
 	</target>
 
-	<target name="portal-startup-space-in-path-jdk8">
+	<target name="portal-startup-space-in-path-mysql57-jdk8">
 		<propertycopy from="app.server.${app.server.type}.version" name="app.server.version" />
 
 		<sequential>
@@ -7270,15 +7761,15 @@ ${output.content}</echo>
 		<antcall target="functional-bundle-tomcat-mysql57-jdk11_open" />
 	</target>
 
-	<target name="release-osgi-state-exploded-test-jdk8">
+	<target name="release-osgi-state-exploded-test-mysql57-jdk8">
 		<run-release-osgi-state-exploded-test />
 	</target>
 
-	<target name="release-osgi-state-lpkg-change-directory-test-jdk8">
+	<target name="release-osgi-state-lpkg-change-directory-test-mysql57-jdk8">
 		<run-release-osgi-state-lpkg-change-directory-test />
 	</target>
 
-	<target name="release-osgi-state-lpkg-test-jdk8">
+	<target name="release-osgi-state-lpkg-test-mysql57-jdk8">
 		<run-release-osgi-state-lpkg-test />
 	</target>
 
@@ -7319,7 +7810,7 @@ ${output.content}</echo>
 
 								<gradle-execute dir="modules" forcedcacheenabled="false" task="@{modules.build.rest.task}">
 									<arg value="-DbuildREST.forceClientVersionDescription=false" />
-									<arg value="-DbuildREST.skipReadOnly=${build.rest.skip.read.only}" />
+									<arg value="-Dskip.read.only=${build.rest.skip.read.only}" />
 									<arg value="-Pcom.liferay.portal.tools.rest.builder.ignore.local=false" />
 								</gradle-execute>
 							</sequential>
@@ -7330,7 +7821,7 @@ ${output.content}</echo>
 
 						<gradle-execute dir="modules" forcedcacheenabled="false" task="buildREST">
 							<arg value="-DbuildREST.forceClientVersionDescription=false" />
-							<arg value="-DbuildREST.skipReadOnly=${build.rest.skip.read.only}" />
+							<arg value="-Dskip.read.only=${build.rest.skip.read.only}" />
 							<arg value="-Pcom.liferay.portal.tools.rest.builder.ignore.local=false" />
 						</gradle-execute>
 					</else>
@@ -7581,7 +8072,7 @@ tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/
 										<echo>Executing Gradle tasks: @{modules.build.service.task}</echo>
 
 										<gradle-execute dir="modules" forcedcacheenabled="false" task="@{modules.build.service.task}">
-											<arg value="-DbuildService.skipReadOnly=${build.services.skip.read.only}" />
+											<arg value="-Dskip.read.only=${build.services.skip.read.only}" />
 											<arg value="-Pcom.liferay.portal.tools.service.builder.ignore.local=false" />
 										</gradle-execute>
 									</sequential>
@@ -7688,11 +8179,13 @@ information. Make sure to commit in all build services results.
 						<antcall target="setup-yarn" />
 
 						<ant dir="portal-impl" target="format-source-current-branch">
+							<property name="check.vulnerabilities" value="true" />
 							<property name="source.auto.fix" value="false" />
 							<property name="source.fail.on.auto.fix" value="true" />
 							<property name="source.fail.on.has.warning" value="true" />
 							<property name="source.print.errors" value="false" />
 							<property name="source.use.properties" value="false" />
+							<property name="use.ci.github.access.token" value="true" />
 							<property name="validate.commit.messages" value="true" />
 						</ant>
 					</else>
@@ -8102,5 +8595,34 @@ ${output.content}</echo>
 
 	<target name="unit-jdk8_stable">
 		<antcall target="unit-jdk8" />
+	</target>
+
+	<target name="workspaces-compile-jdk8">
+		<run-batch-test>
+			<test-action>
+				<for list="${workspaces.names[workspaces-compile-jdk8]}" param="workspace.name">
+					<sequential>
+						<local name="workspace.dir" />
+
+						<property name="workspace.dir" value="${project.dir}/workspaces/@{workspace.name}" />
+
+						<if>
+							<available file="${workspace.dir}" />
+							<then>
+								<echo></echo>
+								<echo>#</echo>
+								<echo># @{workspace.name}</echo>
+								<echo>#</echo>
+								<echo></echo>
+
+								<execute dir="${workspace.dir}">
+									./gradlew build
+								</execute>
+							</then>
+						</if>
+					</sequential>
+				</for>
+			</test-action>
+		</run-batch-test>
 	</target>
 </project>

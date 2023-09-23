@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.search;
@@ -26,8 +17,10 @@ import java.io.IOException;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import org.osgi.service.component.annotations.Component;
@@ -44,8 +37,11 @@ public class SearchSearchRequestExecutorImpl
 	public SearchSearchResponse execute(
 		SearchSearchRequest searchSearchRequest) {
 
-		SearchRequest searchRequest = new SearchRequest(
-			searchSearchRequest.getIndexNames());
+		SearchRequest searchRequest = new SearchRequest();
+
+		if (searchSearchRequest.getPointInTime() == null) {
+			searchRequest.indices(searchSearchRequest.getIndexNames());
+		}
 
 		if (searchSearchRequest.isRequestCache()) {
 			searchRequest.requestCache(searchSearchRequest.isRequestCache());
@@ -63,8 +59,15 @@ public class SearchSearchRequestExecutorImpl
 			_log.trace("Search query: " + prettyPrintedRequestString);
 		}
 
-		SearchResponse searchResponse = getSearchResponse(
-			searchRequest, searchSearchRequest);
+		SearchResponse searchResponse = null;
+
+		if (searchSearchRequest.getScrollId() != null) {
+			searchResponse = _getScrollSearchResponse(searchSearchRequest);
+		}
+		else {
+			searchResponse = _getSearchResponse(
+				searchRequest, searchSearchRequest);
+		}
 
 		SearchSearchResponse searchSearchResponse = new SearchSearchResponse();
 
@@ -83,7 +86,44 @@ public class SearchSearchRequestExecutorImpl
 		return searchSearchResponse;
 	}
 
-	protected SearchResponse getSearchResponse(
+	private String _getPrettyPrintedRequestString(
+		SearchSourceBuilder searchSourceBuilder) {
+
+		try {
+			return JSONUtil.getPrettyPrintedJSONString(searchSourceBuilder);
+		}
+		catch (Exception exception) {
+			return exception.getMessage();
+		}
+	}
+
+	private SearchResponse _getScrollSearchResponse(
+		SearchSearchRequest searchSearchRequest) {
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchClientResolver.getRestHighLevelClient(
+				searchSearchRequest.getConnectionId(),
+				searchSearchRequest.isPreferLocalCluster());
+
+		SearchScrollRequest searchScrollRequest = new SearchScrollRequest(
+			searchSearchRequest.getScrollId());
+
+		if (searchSearchRequest.getScrollKeepAliveMinutes() > 0) {
+			searchScrollRequest.scroll(
+				TimeValue.timeValueMinutes(
+					searchSearchRequest.getScrollKeepAliveMinutes()));
+		}
+
+		try {
+			return restHighLevelClient.scroll(
+				searchScrollRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
+	private SearchResponse _getSearchResponse(
 		SearchRequest searchRequest, SearchSearchRequest searchSearchRequest) {
 
 		RestHighLevelClient restHighLevelClient =
@@ -97,17 +137,6 @@ public class SearchSearchRequestExecutorImpl
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
-		}
-	}
-
-	private String _getPrettyPrintedRequestString(
-		SearchSourceBuilder searchSourceBuilder) {
-
-		try {
-			return JSONUtil.getPrettyPrintedJSONString(searchSourceBuilder);
-		}
-		catch (Exception exception) {
-			return exception.getMessage();
 		}
 	}
 

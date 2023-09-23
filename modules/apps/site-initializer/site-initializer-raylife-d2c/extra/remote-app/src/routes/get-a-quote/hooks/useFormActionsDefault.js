@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 import {useCallback, useContext, useEffect, useState} from 'react';
 import {useFormContext} from 'react-hook-form';
@@ -23,6 +14,7 @@ import {
 	APPLICATION_STATUS,
 	AVAILABLE_STEPS,
 	CONTACT_INFORMATION_STEP,
+	OBJECT_MESSAGE,
 } from '../utils/constants';
 import {verifyInputAgentPage} from '../utils/contact-agent';
 import {useStepWizard} from './useStepWizard';
@@ -150,22 +142,35 @@ const useFormActions = ({
 
 		const response = await createOrUpdateRaylifeApplication(form, status);
 
-		setApplicationId(response.data.id);
+		if (response) {
+			setApplicationId(response.data.id);
 
-		const validated = _onValidation();
+			const validated = _onValidation();
 
-		if (validated) {
-			if (nextSection) {
-				setSection(nextSection);
+			if (validated) {
+				if (nextSection) {
+					setSection(nextSection);
 
-				return smoothScroll();
+					return smoothScroll();
+				}
+
+				redirectTo(RAYLIFE_PAGES.HANG_TIGHT);
 			}
 
-			redirectTo(RAYLIFE_PAGES.HANG_TIGHT);
+			return response;
 		}
 
-		return response;
-	}, [selectedStep.index, form, _onValidation, nextSection, setSection]);
+		setError('applicationObject', {
+			message: OBJECT_MESSAGE.APPLICATION.DISABLED,
+		});
+	}, [
+		selectedStep.index,
+		form,
+		setError,
+		_onValidation,
+		nextSection,
+		setSection,
+	]);
 
 	return {onNext, onPrevious, onSave};
 };

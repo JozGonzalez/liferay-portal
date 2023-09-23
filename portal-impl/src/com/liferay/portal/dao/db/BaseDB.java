@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.dao.db;
@@ -35,7 +26,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -56,6 +49,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -198,6 +192,117 @@ public abstract class BaseDB implements DB {
 		throws IOException, SQLException;
 
 	@Override
+	public void copyTableRows(
+			Connection connection, String sourceTableName,
+			String targetTableName, Map<String, String> columnNamesMap,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("insert into ");
+		sb.append(targetTableName);
+		sb.append(" (");
+
+		String[] sourceColumnNames = ArrayUtil.toStringArray(
+			columnNamesMap.keySet());
+
+		String[] targetColumnNames = TransformUtil.transform(
+			sourceColumnNames, columnNamesMap::get, String.class);
+
+		sb.append(StringUtil.merge(targetColumnNames, ", "));
+
+		sb.append(") select ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append(sourceTableName);
+			sb.append(".");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" from ");
+		sb.append(sourceTableName);
+		sb.append(" left join ");
+		sb.append(targetTableName);
+		sb.append(" on ");
+
+		String[] primaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, sourceTableName);
+
+		for (int i = 0; i < primaryKeyColumnNames.length; i++) {
+			String primaryKeyColumnName = primaryKeyColumnNames[i];
+
+			sb.append(sourceTableName);
+			sb.append(".");
+			sb.append(primaryKeyColumnName);
+			sb.append(" = ");
+			sb.append(targetTableName);
+			sb.append(".");
+			sb.append(columnNamesMap.get(primaryKeyColumnName));
+
+			if (i < (primaryKeyColumnNames.length - 1)) {
+				sb.append(" and ");
+			}
+		}
+
+		sb.append(" where ");
+		sb.append(targetTableName);
+		sb.append(".");
+		sb.append(columnNamesMap.get(primaryKeyColumnNames[0]));
+		sb.append(" IS NULL");
+
+		runSQL(sb.toString());
+	}
+
+	@Override
+	public void copyTableStructure(
+			Connection connection, String tableName, String newTableName)
+		throws Exception {
+
+		runSQL(connection, getCopyTableStructureSQL(tableName, newTableName));
+
+		addPrimaryKey(
+			connection, newTableName,
+			getPrimaryKeyColumnNames(connection, tableName));
+
+		List<IndexMetadata> indexMetadatas = new ArrayList<>();
+
+		String indexNamePrefix = StringPool.BLANK;
+
+		if (!isSupportsDuplicatedIndexName()) {
+			indexNamePrefix = "TMP_";
+		}
+
+		for (IndexMetadata indexMetadata :
+				getIndexes(connection, tableName, null, false)) {
+
+			indexMetadatas.add(
+				new IndexMetadata(
+					indexNamePrefix.concat(indexMetadata.getIndexName()),
+					newTableName, indexMetadata.isUnique(),
+					indexMetadata.getColumnNames()));
+		}
+
+		addIndexes(connection, indexMetadatas);
+	}
+
+	@Override
 	public List<IndexMetadata> dropIndexes(
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException {
@@ -215,6 +320,17 @@ public abstract class BaseDB implements DB {
 	@Override
 	public DBType getDBType() {
 		return _dbType;
+	}
+
+	@Override
+	public String getDefaultValue(String columnDef) {
+		Matcher matcher = _defaultValuePattern.matcher(columnDef);
+
+		if (matcher.find()) {
+			return matcher.group(2);
+		}
+
+		return StringUtil.trim(columnDef);
 	}
 
 	@Override
@@ -271,8 +387,13 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
-	public Integer getSQLVarcharSize(String templateType) {
-		return _sqlVarcharSizes.get(templateType);
+	public Integer getSQLTypeDecimalDigits(String templateType) {
+		return _sqlTypeDecimalDigits.get(templateType);
+	}
+
+	@Override
+	public Integer getSQLTypeSize(String templateType) {
+		return _sqlTypeSizes.get(templateType);
 	}
 
 	@Override
@@ -351,6 +472,38 @@ public abstract class BaseDB implements DB {
 		runSQL(
 			StringBundler.concat(
 				"alter table ", normalizedTableName, " drop primary key"));
+	}
+
+	@Override
+	public void renameTables(
+			Connection connection,
+			ObjectValuePair<String, String>... tableNameObjectValuePairs)
+		throws Exception {
+
+		if (tableNameObjectValuePairs.length == 0) {
+			return;
+		}
+
+		for (ObjectValuePair<String, String> tableNameObjectValuePair :
+				tableNameObjectValuePairs) {
+
+			if (tableNameObjectValuePair == null) {
+				throw new IllegalArgumentException(
+					"Table name object value pair is null");
+			}
+
+			if (Objects.isNull(tableNameObjectValuePair.getKey())) {
+				throw new IllegalArgumentException(
+					"Table name object value pair key is null");
+			}
+
+			if (Objects.isNull(tableNameObjectValuePair.getValue())) {
+				throw new IllegalArgumentException(
+					"Table name object value pair value is null");
+			}
+		}
+
+		doRenameTables(connection, tableNameObjectValuePairs);
 	}
 
 	@Override
@@ -570,6 +723,55 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
+	public AutoCloseable syncTables(
+			Connection connection, String sourceTableName,
+			String targetTableName, Map<String, String> columnNamesMap,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		String deleteTriggerName = dbInspector.normalizeName(
+			"delete_" + sourceTableName);
+
+		String[] sourcePrimaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, sourceTableName);
+
+		String[] targetPrimaryKeyColumnNames = TransformUtil.transform(
+			sourcePrimaryKeyColumnNames, columnNamesMap::get, String.class);
+
+		createSyncDeleteTrigger(
+			connection, sourceTableName, targetTableName, deleteTriggerName,
+			sourcePrimaryKeyColumnNames, targetPrimaryKeyColumnNames);
+
+		String insertTriggerName = dbInspector.normalizeName(
+			"insert_" + sourceTableName);
+		String[] sourceColumnNames = TransformUtil.transformToArray(
+			columnNamesMap.entrySet(), Map.Entry::getKey, String.class);
+		String[] targetColumnNames = TransformUtil.transformToArray(
+			columnNamesMap.entrySet(), Map.Entry::getValue, String.class);
+
+		createSyncInsertTrigger(
+			connection, sourceTableName, targetTableName, insertTriggerName,
+			sourceColumnNames, targetColumnNames, sourcePrimaryKeyColumnNames,
+			targetPrimaryKeyColumnNames, defaultValuesMap);
+
+		String updateTriggerName = dbInspector.normalizeName(
+			"update_" + sourceTableName);
+
+		createSyncUpdateTrigger(
+			connection, sourceTableName, targetTableName, updateTriggerName,
+			sourceColumnNames, targetColumnNames, sourcePrimaryKeyColumnNames,
+			targetPrimaryKeyColumnNames, defaultValuesMap);
+
+		return () -> {
+			dropTrigger(connection, sourceTableName, deleteTriggerName);
+			dropTrigger(connection, sourceTableName, insertTriggerName);
+			dropTrigger(connection, sourceTableName, updateTriggerName);
+		};
+	}
+
+	@Override
 	public void updateIndexes(
 			Connection connection, String tablesSQL, String indexesSQL,
 			boolean dropIndexes)
@@ -609,18 +811,44 @@ public abstract class BaseDB implements DB {
 			_templates.put(TEMPLATE[i], actual[i]);
 		}
 
-		String[] templateTypes = ArrayUtil.clone(TEMPLATE, 5, 15);
+		String[] templateTypes = ArrayUtil.clone(TEMPLATE, 5, 16);
 
 		for (int i = 0; i < templateTypes.length; i++) {
-			_sqlTypes.put(StringUtil.trim(templateTypes[i]), getSQLTypes()[i]);
-		}
+			String actualType = StringUtil.trim(
+				_templates.get(templateTypes[i]));
 
-		String[] sqlTypeStringAndText = ArrayUtil.clone(TEMPLATE, 12, 14);
+			String templateType = StringUtil.trim(templateTypes[i]);
 
-		for (int i = 0; i < sqlTypeStringAndText.length; i++) {
-			_sqlVarcharSizes.put(
-				StringUtil.trim(sqlTypeStringAndText[i]),
-				getSQLVarcharSizes()[i]);
+			_sqlTypes.put(templateType, getSQLTypes()[i]);
+
+			Matcher matcher = _sqlTypeDecimalDigitsPattern.matcher(actualType);
+
+			_sqlTypeDecimalDigits.put(
+				templateType,
+				matcher.matches() ? GetterUtil.getInteger(matcher.group(1)) :
+					DB.SQL_SIZE_NONE);
+
+			if (templateType.equals("DATE")) {
+				_sqlTypeSizes.put(templateType, DB.SQL_SIZE_NONE);
+
+				continue;
+			}
+			else if (templateType.equals("STRING") ||
+					 templateType.equals("TEXT")) {
+
+				_sqlTypeSizes.put(
+					templateType, getSQLVarcharSizes().get(templateType));
+
+				continue;
+			}
+
+			matcher = _sqlTypeSizePattern.matcher(actualType);
+
+			_sqlTypeSizes.put(
+				templateType,
+				matcher.matches() ?
+					GetterUtil.getInteger(matcher.group(1), DB.SQL_SIZE_NONE) :
+						DB.SQL_SIZE_NONE);
 		}
 	}
 
@@ -651,41 +879,282 @@ public abstract class BaseDB implements DB {
 	}
 
 	protected String[] buildColumnNameTokens(String line) {
-		String[] words = StringUtil.split(line, CharPool.SPACE);
+		Matcher matcher = _alterColumnNamePattern.matcher(line);
 
-		String nullable = "";
-
-		if (words.length == 7) {
-			nullable = "not null;";
+		if (!matcher.find()) {
+			throw new IllegalArgumentException(
+				"Invalid alter column name statement");
 		}
 
-		return new String[] {words[1], words[2], words[3], words[4], nullable};
-	}
+		String defaultValue = matcher.group(5);
+		String nullable = matcher.group(6);
 
-	protected String[] buildColumnTypeTokens(String line) {
-		String[] words = StringUtil.split(line, CharPool.SPACE);
-
-		String nullable = "";
-
-		if (words.length == 6) {
+		if (defaultValue != null) {
 			nullable = "not null";
 		}
-		else if (words.length == 5) {
-			nullable = "null";
-		}
-		else if (words.length == 4) {
-			if (words[3].endsWith(";")) {
-				words[3] = words[3].substring(0, words[3].length() - 1);
+		else {
+			defaultValue = StringPool.BLANK;
+
+			if (nullable == null) {
+				nullable = StringPool.BLANK;
 			}
 		}
 
-		return new String[] {words[1], words[2], "", words[3], nullable};
+		return new String[] {
+			matcher.group(1), matcher.group(2), matcher.group(3),
+			matcher.group(4), defaultValue, StringUtil.toLowerCase(nullable)
+		};
+	}
+
+	protected String[] buildColumnTypeTokens(String line) {
+		Matcher matcher = _alterColumnTypePattern.matcher(line);
+
+		if (!matcher.find()) {
+			throw new IllegalArgumentException(
+				"Invalid alter column type statement");
+		}
+
+		String defaultValue = matcher.group(4);
+		String nullable = matcher.group(5);
+
+		if (defaultValue != null) {
+			nullable = "not null";
+		}
+		else if (nullable == null) {
+			defaultValue = StringPool.BLANK;
+
+			if (nullable == null) {
+				nullable = StringPool.BLANK;
+			}
+		}
+
+		return new String[] {
+			matcher.group(1), matcher.group(2), "", matcher.group(3),
+			defaultValue, StringUtil.toLowerCase(nullable)
+		};
 	}
 
 	protected String[] buildTableNameTokens(String line) {
 		String[] words = StringUtil.split(line, CharPool.SPACE);
 
 		return new String[] {words[1], words[2]};
+	}
+
+	protected void createSyncDeleteTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after delete on ");
+		sb.append(sourceTableName);
+		sb.append(" for each row delete from ");
+		sb.append(targetTableName);
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	protected void createSyncInsertTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after insert on ");
+		sb.append(sourceTableName);
+		sb.append(" for each row insert into ");
+		sb.append(targetTableName);
+		sb.append(" (");
+		sb.append(StringUtil.merge(targetColumnNames, ", "));
+		sb.append(") values (");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(")");
+
+		runSQL(connection, sb.toString());
+	}
+
+	protected void createSyncUpdateTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" after update on ");
+		sb.append(sourceTableName);
+		sb.append(" for each row update ");
+		sb.append(targetTableName);
+		sb.append(" set ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(targetColumnNames[i]);
+			sb.append(" = ");
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("new.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = old.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	protected void doRenameTables(
+			Connection connection,
+			ObjectValuePair<String, String>... tableNameObjectValuePairs)
+		throws Exception {
+
+		if (isSupportsDDLRollback()) {
+			boolean autoCommit = connection.getAutoCommit();
+
+			try {
+				connection.setAutoCommit(false);
+
+				for (ObjectValuePair<String, String> tableNameObjectValuePair :
+						tableNameObjectValuePairs) {
+
+					runSQL(
+						connection,
+						getRenameTableSQL(
+							tableNameObjectValuePair.getKey(),
+							tableNameObjectValuePair.getValue()));
+				}
+
+				connection.commit();
+			}
+			catch (Exception exception) {
+				connection.rollback();
+
+				throw exception;
+			}
+			finally {
+				connection.setAutoCommit(autoCommit);
+			}
+		}
+		else {
+			int index = 0;
+			ObjectValuePair<String, String> tableNameObjectValuePair = null;
+
+			try {
+				while (index < tableNameObjectValuePairs.length) {
+					tableNameObjectValuePair = tableNameObjectValuePairs[index];
+
+					runSQL(
+						connection,
+						getRenameTableSQL(
+							tableNameObjectValuePair.getKey(),
+							tableNameObjectValuePair.getValue()));
+
+					index++;
+				}
+			}
+			catch (Exception exception1) {
+				_log.error(
+					StringBundler.concat(
+						"Unable to rename table ",
+						tableNameObjectValuePair.getKey(), " to ",
+						tableNameObjectValuePair.getValue(),
+						". Attempting to rollback."));
+
+				try {
+					while (index > 0) {
+						tableNameObjectValuePair =
+							tableNameObjectValuePairs[--index];
+
+						runSQL(
+							connection,
+							getRenameTableSQL(
+								tableNameObjectValuePair.getValue(),
+								tableNameObjectValuePair.getKey()));
+					}
+
+					if (_log.isInfoEnabled()) {
+						_log.info("Successfully rolled back table renames");
+					}
+				}
+				catch (Exception exception2) {
+					_log.fatal("Unable to roll back table renames", exception2);
+				}
+
+				throw exception1;
+			}
+		}
 	}
 
 	protected Set<String> dropIndexes(
@@ -771,6 +1240,21 @@ public abstract class BaseDB implements DB {
 		}
 
 		return validIndexNames;
+	}
+
+	protected void dropTrigger(
+			Connection connection, String tableName, String triggerName)
+		throws Exception {
+
+		runSQL(connection, "drop trigger " + triggerName);
+	}
+
+	protected String getCopyTableStructureSQL(
+		String tableName, String newTableName) {
+
+		return StringBundler.concat(
+			"create table ", newTableName, " as select * from ", tableName,
+			" where 1 = 0");
 	}
 
 	protected List<IndexMetadata> getIndexes(
@@ -878,13 +1362,32 @@ public abstract class BaseDB implements DB {
 		return new ArrayList<>(indexMetadatas);
 	}
 
+	protected String getRenameTableSQL(
+		String oldTableName, String newTableName) {
+
+		return StringBundler.concat(
+			"alter table ", oldTableName, " rename to ", newTableName);
+	}
+
 	protected abstract int[] getSQLTypes();
 
-	protected int[] getSQLVarcharSizes() {
-		return new int[] {-1, -1};
+	protected Map<String, Integer> getSQLVarcharSizes() {
+		return HashMapBuilder.put(
+			"STRING", SQL_SIZE_NONE
+		).put(
+			"TEXT", SQL_SIZE_NONE
+		).build();
 	}
 
 	protected abstract String[] getTemplate();
+
+	protected boolean isSupportsDDLRollback() {
+		return _SUPPORTS_DDL_ROLLBACK;
+	}
+
+	protected boolean isSupportsDuplicatedIndexName() {
+		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+	}
 
 	protected String limitColumnLength(String column, int length) {
 		return StringBundler.concat(column, "\\(", length, "\\)");
@@ -948,7 +1451,8 @@ public abstract class BaseDB implements DB {
 	};
 
 	protected static final String[] REWORD_TEMPLATE = {
-		"@table@", "@old-column@", "@new-column@", "@type@", "@nullable@"
+		"@table@", "@old-column@", "@new-column@", "@type@", "@default@",
+		"@nullable@"
 	};
 
 	protected static final int[] SQL_VARCHAR_TYPES = {
@@ -957,8 +1461,9 @@ public abstract class BaseDB implements DB {
 
 	protected static final String[] TEMPLATE = {
 		"##", "TRUE", "FALSE", "'01/01/1970'", "CURRENT_TIMESTAMP", " BLOB",
-		" SBLOB", " BOOLEAN", " DATE", " DOUBLE", " INTEGER", " LONG",
-		" STRING", " TEXT", " VARCHAR", " IDENTITY", "COMMIT_TRANSACTION"
+		" SBLOB", " BIGDECIMAL", " BOOLEAN", " DATE", " DOUBLE", " INTEGER",
+		" LONG", " STRING", " TEXT", " VARCHAR", " IDENTITY",
+		"COMMIT_TRANSACTION"
 	};
 
 	protected static final Pattern columnTypePattern = Pattern.compile(
@@ -1078,6 +1583,10 @@ public abstract class BaseDB implements DB {
 
 	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = true;
 
+	private static final boolean _SUPPORTS_DDL_ROLLBACK = true;
+
+	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = true;
+
 	private static final boolean _SUPPORTS_INLINE_DISTINCT = true;
 
 	private static final boolean _SUPPORTS_QUERYING_AFTER_EXCEPTION = true;
@@ -1088,8 +1597,16 @@ public abstract class BaseDB implements DB {
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseDB.class);
 
+	private static final Pattern _alterColumnNamePattern;
+	private static final Pattern _alterColumnTypePattern;
 	private static final Pattern _columnLengthPattern = Pattern.compile(
 		"([^,(\\s]+)\\[\\$COLUMN_LENGTH:(\\d+)\\$\\]");
+	private static final Pattern _defaultValuePattern = Pattern.compile(
+		"^(')?(\\d+|.*)\\1(::.*| )?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _sqlTypeDecimalDigitsPattern = Pattern.compile(
+		"^\\w+(?:\\(\\d+,\\s(\\d+)\\))", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _sqlTypeSizePattern = Pattern.compile(
+		"^\\w+(?:\\((\\d+).*\\))", Pattern.CASE_INSENSITIVE);
 	private static final Pattern _templatePattern;
 
 	static {
@@ -1115,13 +1632,29 @@ public abstract class BaseDB implements DB {
 		sb.setIndex(sb.index() - 1);
 
 		_templatePattern = Pattern.compile(sb.toString());
+
+		String dataTypeRegex = "(\\w+(?:\\([^\\)]+\\))?)";
+		String defaultAndNullableRegex =
+			"(?:(?:DEFAULT\\s+('?.*[^']'?)\\s+NOT\\s+NULL)|((?:NOT\\s+)?NULL))";
+
+		_alterColumnNamePattern = Pattern.compile(
+			StringBundler.concat(
+				"^ALTER_COLUMN_NAME\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+",
+				dataTypeRegex, "\\s*", defaultAndNullableRegex, "?;?$"),
+			Pattern.CASE_INSENSITIVE);
+		_alterColumnTypePattern = Pattern.compile(
+			StringBundler.concat(
+				"^ALTER_COLUMN_TYPE\\s+(\\S+)\\s+(\\S+)\\s+", dataTypeRegex,
+				"\\s*", defaultAndNullableRegex, "?;?$"),
+			Pattern.CASE_INSENSITIVE);
 	}
 
 	private final DBType _dbType;
 	private final int _majorVersion;
 	private final int _minorVersion;
+	private final Map<String, Integer> _sqlTypeDecimalDigits = new HashMap<>();
 	private final Map<String, Integer> _sqlTypes = new HashMap<>();
-	private final Map<String, Integer> _sqlVarcharSizes = new HashMap<>();
+	private final Map<String, Integer> _sqlTypeSizes = new HashMap<>();
 	private boolean _supportsStringCaseSensitiveQuery = true;
 	private final Map<String, String> _templates = new HashMap<>();
 

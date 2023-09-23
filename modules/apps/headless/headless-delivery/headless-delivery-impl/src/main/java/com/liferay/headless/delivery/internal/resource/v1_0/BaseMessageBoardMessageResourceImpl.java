@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -21,6 +12,8 @@ import com.liferay.headless.delivery.resource.v1_0.MessageBoardMessageResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -61,7 +54,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -266,11 +258,6 @@ public abstract class BaseMessageBoardMessageResourceImpl
 		MessageBoardMessage existingMessageBoardMessage =
 			getMessageBoardMessage(messageBoardMessageId);
 
-		if (messageBoardMessage.getActions() != null) {
-			existingMessageBoardMessage.setActions(
-				messageBoardMessage.getActions());
-		}
-
 		if (messageBoardMessage.getAnonymous() != null) {
 			existingMessageBoardMessage.setAnonymous(
 				messageBoardMessage.getAnonymous());
@@ -281,15 +268,8 @@ public abstract class BaseMessageBoardMessageResourceImpl
 				messageBoardMessage.getArticleBody());
 		}
 
-		if (messageBoardMessage.getDateCreated() != null) {
-			existingMessageBoardMessage.setDateCreated(
-				messageBoardMessage.getDateCreated());
-		}
-
-		if (messageBoardMessage.getDateModified() != null) {
-			existingMessageBoardMessage.setDateModified(
-				messageBoardMessage.getDateModified());
-		}
+		existingMessageBoardMessage.setCustomFields(
+			messageBoardMessage.getCustomFields());
 
 		if (messageBoardMessage.getEncodingFormat() != null) {
 			existingMessageBoardMessage.setEncodingFormat(
@@ -326,24 +306,9 @@ public abstract class BaseMessageBoardMessageResourceImpl
 				messageBoardMessage.getMessageBoardSectionId());
 		}
 
-		if (messageBoardMessage.getMessageBoardThreadId() != null) {
-			existingMessageBoardMessage.setMessageBoardThreadId(
-				messageBoardMessage.getMessageBoardThreadId());
-		}
-
 		if (messageBoardMessage.getModified() != null) {
 			existingMessageBoardMessage.setModified(
 				messageBoardMessage.getModified());
-		}
-
-		if (messageBoardMessage.getNumberOfMessageBoardAttachments() != null) {
-			existingMessageBoardMessage.setNumberOfMessageBoardAttachments(
-				messageBoardMessage.getNumberOfMessageBoardAttachments());
-		}
-
-		if (messageBoardMessage.getNumberOfMessageBoardMessages() != null) {
-			existingMessageBoardMessage.setNumberOfMessageBoardMessages(
-				messageBoardMessage.getNumberOfMessageBoardMessages());
 		}
 
 		if (messageBoardMessage.getParentMessageBoardMessageId() != null) {
@@ -354,21 +319,6 @@ public abstract class BaseMessageBoardMessageResourceImpl
 		if (messageBoardMessage.getShowAsAnswer() != null) {
 			existingMessageBoardMessage.setShowAsAnswer(
 				messageBoardMessage.getShowAsAnswer());
-		}
-
-		if (messageBoardMessage.getSiteId() != null) {
-			existingMessageBoardMessage.setSiteId(
-				messageBoardMessage.getSiteId());
-		}
-
-		if (messageBoardMessage.getStatus() != null) {
-			existingMessageBoardMessage.setStatus(
-				messageBoardMessage.getStatus());
-		}
-
-		if (messageBoardMessage.getSubscribed() != null) {
-			existingMessageBoardMessage.setSubscribed(
-				messageBoardMessage.getSubscribed());
 		}
 
 		if (messageBoardMessage.getViewableBy() != null) {
@@ -1782,6 +1732,63 @@ public abstract class BaseMessageBoardMessageResourceImpl
 			siteId, portletName, null);
 	}
 
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/{userId}/message-board-messages/activity'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the site's message board messages user's activity."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "userId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "MessageBoardMessage"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/sites/{siteId}/{userId}/message-board-messages/activity"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<MessageBoardMessage>
+			getSiteUserMessageBoardMessagesActivityPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("siteId")
+				Long siteId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("userId")
+				Long userId,
+				@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
@@ -1789,17 +1796,17 @@ public abstract class BaseMessageBoardMessageResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardMessage, Exception>
-			messageBoardMessageUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardMessage, MessageBoardMessage, Exception>
+			messageBoardMessageUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("messageBoardThreadId")) {
-				messageBoardMessageUnsafeConsumer = messageBoardMessage ->
+				messageBoardMessageUnsafeFunction = messageBoardMessage ->
 					postMessageBoardThreadMessageBoardMessage(
-						Long.parseLong(
+						_parseLong(
 							(String)parameters.get("messageBoardThreadId")),
 						messageBoardMessage);
 			}
@@ -1809,31 +1816,79 @@ public abstract class BaseMessageBoardMessageResourceImpl
 			}
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			messageBoardMessageUnsafeConsumer = messageBoardMessage ->
-				putSiteMessageBoardMessageByExternalReferenceCode(
-					messageBoardMessage.getSiteId() != null ?
-						messageBoardMessage.getSiteId() :
-							(Long)parameters.get("siteId"),
-					messageBoardMessage.getExternalReferenceCode(),
-					messageBoardMessage);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				messageBoardMessageUnsafeFunction = messageBoardMessage ->
+					putSiteMessageBoardMessageByExternalReferenceCode(
+						messageBoardMessage.getSiteId() != null ?
+							messageBoardMessage.getSiteId() :
+								(Long)parameters.get("siteId"),
+						messageBoardMessage.getExternalReferenceCode(),
+						messageBoardMessage);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				messageBoardMessageUnsafeFunction = messageBoardMessage -> {
+					MessageBoardMessage persistedMessageBoardMessage = null;
+
+					try {
+						MessageBoardMessage getMessageBoardMessage =
+							getSiteMessageBoardMessageByExternalReferenceCode(
+								messageBoardMessage.getSiteId() != null ?
+									messageBoardMessage.getSiteId() :
+										(Long)parameters.get("siteId"),
+								messageBoardMessage.getExternalReferenceCode());
+
+						persistedMessageBoardMessage = patchMessageBoardMessage(
+							getMessageBoardMessage.getId() != null ?
+								getMessageBoardMessage.getId() :
+									_parseLong(
+										(String)parameters.get(
+											"messageBoardMessageId")),
+							messageBoardMessage);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						if (parameters.containsKey("messageBoardThreadId")) {
+							persistedMessageBoardMessage =
+								postMessageBoardThreadMessageBoardMessage(
+									_parseLong(
+										(String)parameters.get(
+											"messageBoardThreadId")),
+									messageBoardMessage);
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [messageBoardThreadId, messageBoardThreadId]");
+						}
+					}
+
+					return persistedMessageBoardMessage;
+				};
+			}
 		}
 
-		if (messageBoardMessageUnsafeConsumer == null) {
+		if (messageBoardMessageUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardMessage");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardMessages, messageBoardMessageUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardMessages, messageBoardMessageUnsafeConsumer);
+				messageBoardMessages, messageBoardMessageUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardMessage messageBoardMessage :
 					messageBoardMessages) {
 
-				messageBoardMessageUnsafeConsumer.accept(messageBoardMessage);
+				messageBoardMessageUnsafeFunction.apply(messageBoardMessage);
 			}
 		}
 	}
@@ -1885,12 +1940,12 @@ public abstract class BaseMessageBoardMessageResourceImpl
 		if (parameters.containsKey("siteId")) {
 			return getSiteMessageBoardMessagesPage(
 				(Long)parameters.get("siteId"),
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
-				null, filter, pagination, sorts);
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
 		}
 		else if (parameters.containsKey("messageBoardThreadId")) {
 			return getMessageBoardThreadMessageBoardMessagesPage(
-				Long.parseLong((String)parameters.get("messageBoardThreadId")),
+				_parseLong((String)parameters.get("messageBoardThreadId")),
 				search, null, filter, pagination, sorts);
 		}
 		else {
@@ -1927,51 +1982,71 @@ public abstract class BaseMessageBoardMessageResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardMessage, Exception>
-			messageBoardMessageUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardMessage, MessageBoardMessage, Exception>
+			messageBoardMessageUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardMessageUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			messageBoardMessageUnsafeFunction =
 				messageBoardMessage -> patchMessageBoardMessage(
 					messageBoardMessage.getId() != null ?
 						messageBoardMessage.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"messageBoardMessageId")),
 					messageBoardMessage);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardMessageUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			messageBoardMessageUnsafeFunction =
 				messageBoardMessage -> putMessageBoardMessage(
 					messageBoardMessage.getId() != null ?
 						messageBoardMessage.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"messageBoardMessageId")),
 					messageBoardMessage);
 		}
 
-		if (messageBoardMessageUnsafeConsumer == null) {
+		if (messageBoardMessageUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for MessageBoardMessage");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardMessages, messageBoardMessageUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardMessages, messageBoardMessageUnsafeConsumer);
+				messageBoardMessages, messageBoardMessageUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardMessage messageBoardMessage :
 					messageBoardMessages) {
 
-				messageBoardMessageUnsafeConsumer.accept(messageBoardMessage);
+				messageBoardMessageUnsafeFunction.apply(messageBoardMessage);
 			}
 		}
+	}
+
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -2139,6 +2214,16 @@ public abstract class BaseMessageBoardMessageResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardMessage>,
+			 UnsafeFunction
+				 <MessageBoardMessage, MessageBoardMessage, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2360,6 +2445,12 @@ public abstract class BaseMessageBoardMessageResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -2390,7 +2481,19 @@ public abstract class BaseMessageBoardMessageResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardMessage>,
+		 UnsafeFunction<MessageBoardMessage, MessageBoardMessage, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardMessage>,
 		 UnsafeConsumer<MessageBoardMessage, Exception>, Exception>

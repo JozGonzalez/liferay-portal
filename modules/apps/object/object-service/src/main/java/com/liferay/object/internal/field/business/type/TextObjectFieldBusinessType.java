@@ -1,40 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
 
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
-import com.liferay.object.exception.ObjectFieldSettingNameException;
-import com.liferay.object.exception.ObjectFieldSettingValueException;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
-import com.liferay.object.field.render.ObjectFieldRenderingContext;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
-import com.liferay.petra.string.StringPool;
-import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,11 +31,14 @@ import org.osgi.service.component.annotations.Reference;
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 	service = ObjectFieldBusinessType.class
 )
-public class TextObjectFieldBusinessType implements ObjectFieldBusinessType {
+public class TextObjectFieldBusinessType extends BaseObjectFieldBusinessType {
 
 	@Override
 	public Set<String> getAllowedObjectFieldSettingsNames() {
-		return SetUtil.fromArray("maxLength", "showCounter");
+		return SetUtil.fromArray(
+			ObjectFieldSettingConstants.NAME_MAX_LENGTH,
+			ObjectFieldSettingConstants.NAME_SHOW_COUNTER,
+			ObjectFieldSettingConstants.NAME_UNIQUE_VALUES);
 	}
 
 	@Override
@@ -65,6 +49,15 @@ public class TextObjectFieldBusinessType implements ObjectFieldBusinessType {
 	@Override
 	public String getDDMFormFieldTypeName() {
 		return DDMFormFieldTypeConstants.TEXT;
+	}
+
+	@Override
+	public String getDDMFormFieldTypeName(boolean localized) {
+		if (localized) {
+			return DDMFormFieldTypeConstants.LOCALIZABLE_TEXT;
+		}
+
+		return getDDMFormFieldTypeName();
 	}
 
 	@Override
@@ -83,77 +76,38 @@ public class TextObjectFieldBusinessType implements ObjectFieldBusinessType {
 	}
 
 	@Override
-	public Map<String, Object> getProperties(
-		ObjectField objectField,
-		ObjectFieldRenderingContext objectFieldRenderingContext) {
-
-		Map<String, Object> properties = new HashMap<>();
-
-		ListUtil.isNotEmptyForEach(
-			_objectFieldSettingLocalService.getObjectFieldObjectFieldSettings(
-				objectField.getObjectFieldId()),
-			objectFieldSetting -> properties.put(
-				objectFieldSetting.getName(), objectFieldSetting.getValue()));
-
-		return properties;
-	}
-
-	@Override
 	public PropertyDefinition.PropertyType getPropertyType() {
 		return PropertyDefinition.PropertyType.TEXT;
 	}
 
 	@Override
+	public Set<String> getUnmodifiableObjectFieldSettingsNames() {
+		return SetUtil.fromArray(
+			ObjectFieldSettingConstants.NAME_UNIQUE_VALUES);
+	}
+
+	@Override
 	public void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
-		ObjectFieldBusinessType.super.validateObjectFieldSettings(
-			objectDefinitionId, objectFieldName, objectFieldSettings);
+		super.validateObjectFieldSettings(objectField, objectFieldSettings);
 
-		Map<String, String> objectFieldSettingsValues = new HashMap<>();
+		Map<String, String> objectFieldSettingsValues =
+			getObjectFieldSettingsValues(objectFieldSettings);
 
-		objectFieldSettings.forEach(
-			objectFieldSetting -> objectFieldSettingsValues.put(
-				objectFieldSetting.getName(), objectFieldSetting.getValue()));
-
-		String showCounter = objectFieldSettingsValues.get("showCounter");
-
-		if (Validator.isNull(showCounter) ||
-			StringUtil.equalsIgnoreCase(showCounter, StringPool.FALSE)) {
-
-			if (objectFieldSettingsValues.containsKey("maxLength")) {
-				throw new ObjectFieldSettingNameException.NotAllowedNames(
-					objectFieldName, Collections.singleton("maxLength"));
-			}
-		}
-		else if (StringUtil.equalsIgnoreCase(showCounter, StringPool.TRUE)) {
-			String maxLength = objectFieldSettingsValues.get("maxLength");
-
-			if (Validator.isNull(maxLength)) {
-				throw new ObjectFieldSettingValueException.
-					MissingRequiredValues(
-						objectFieldName, Collections.singleton("maxLength"));
-			}
-
-			int maxLengthInteger = GetterUtil.getInteger(maxLength);
-
-			if ((maxLengthInteger < 1) || (maxLengthInteger > 280)) {
-				throw new ObjectFieldSettingValueException.InvalidValue(
-					objectFieldName, "maxLength", maxLength);
-			}
-		}
-		else {
-			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "showCounter", showCounter);
-		}
+		validateBooleanObjectFieldSetting(
+			objectField.getName(),
+			ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
+			objectFieldSettingsValues);
+		validateRelatedObjectFieldSettings(
+			objectField, ObjectFieldSettingConstants.NAME_SHOW_COUNTER,
+			ObjectFieldSettingConstants.NAME_MAX_LENGTH,
+			objectFieldSettingsValues);
 	}
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 }

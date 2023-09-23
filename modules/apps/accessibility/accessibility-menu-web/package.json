@@ -1,0 +1,22 @@
+{
+	"dependencies": {
+		"@clayui/alert": "3.93.0",
+		"@clayui/button": "3.100.0",
+		"@clayui/form": "3.104.0",
+		"@clayui/modal": "3.104.0",
+		"@liferay/accessibility-settings-state-web": "*",
+		"@liferay/cookies-banner-web": "*",
+		"@liferay/frontend-js-state-web": "*",
+		"frontend-js-web": "*",
+		"prop-types": "15.7.2",
+		"react": "16.12.0"
+	},
+	"name": "@liferay/accessibility-menu-web",
+	"private": true,
+	"scripts": {
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix"
+	},
+	"version": "1.0.8"
+}

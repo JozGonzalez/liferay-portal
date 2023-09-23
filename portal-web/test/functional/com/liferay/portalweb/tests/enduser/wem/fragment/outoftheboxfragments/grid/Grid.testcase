@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -19,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -490,7 +491,7 @@ definition {
 
 			PageEditor.configureFragment(
 				size = "Large",
-				type = "Link");
+				style = "Link");
 
 			PageEditor.gotoStyle(fragmentName = "Button");
 
@@ -502,7 +503,7 @@ definition {
 				alignment = "center",
 				fragmentName = "Button",
 				size = "lg",
-				type = "link");
+				style = "link");
 		}
 
 		task ("Resize the modules") {
@@ -547,7 +548,7 @@ definition {
 				alignment = "center",
 				fragmentName = "Button",
 				size = "lg",
-				type = "link");
+				style = "link");
 		}
 
 		task ("Assert the width of modules in view mode") {
@@ -599,15 +600,13 @@ definition {
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
 				size = "lg",
-				type = "link");
+				style = "link");
 		}
 	}
 
 	@description = "This is a use case for LPS-146029. View the defined layout style of Grid in the non-desktop viewport."
 	@priority = 4
 	test ViewDefinedGridLayoutStyleInNonDesktopViewport {
-		property test.name.skip.portal.instance = "Grid#ViewDefinedGridLayoutStyleInNonDesktopViewport";
-
 		task ("Add a Grid to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",

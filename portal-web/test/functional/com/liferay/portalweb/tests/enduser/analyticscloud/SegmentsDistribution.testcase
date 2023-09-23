@@ -44,13 +44,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -61,8 +63,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8626 | Test Summary: Segment distribution chart can be filtered by date property"
 	@priority = 5
 	test CanDistributionChartFilteredDateProperty {
-		property analytics.cloud.upstream = "false";
-
 		task ("View AC Page as new user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
@@ -106,7 +106,7 @@ definition {
 		task ("Filter Attribute") {
 			ACNavigation.switchTab(tabName = "Distribution");
 
-			ACSegments.selectDistributionByAttribute(attribute = "createDate");
+			ACSegments.selectDistributionByAttribute(attribute = "modifiedDate");
 		}
 
 		task ("Get current date") {
@@ -278,9 +278,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8625 | Test Summary: Search the Segment Profile Distribution"
+	@ignore = "true"
 	@priority = 3
 	test CanSearchTheSegmentProfileDistribution {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var userList = "ac,dxp";
 		var emailList = "ac@liferay.com,dxp@liferay.com,userea@liferay.com";
@@ -360,9 +363,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8624 | Test Summary: Order the Segment Profile Distribution"
+	@ignore = "true"
 	@priority = 3
 	test OrderSegmentProfileDistribution {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var userList = "ac,liferay";
 		var emailList = "ac@liferay.com,liferay@liferay.com";

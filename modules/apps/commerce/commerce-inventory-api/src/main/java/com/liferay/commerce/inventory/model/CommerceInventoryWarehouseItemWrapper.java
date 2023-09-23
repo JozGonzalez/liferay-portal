@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model;
@@ -17,6 +8,8 @@ package com.liferay.commerce.inventory.model;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -59,9 +52,10 @@ public class CommerceInventoryWarehouseItemWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put(
 			"commerceInventoryWarehouseId", getCommerceInventoryWarehouseId());
-		attributes.put("sku", getSku());
 		attributes.put("quantity", getQuantity());
 		attributes.put("reservedQuantity", getReservedQuantity());
+		attributes.put("sku", getSku());
+		attributes.put("unitOfMeasureKey", getUnitOfMeasureKey());
 
 		return attributes;
 	}
@@ -132,22 +126,29 @@ public class CommerceInventoryWarehouseItemWrapper
 			setCommerceInventoryWarehouseId(commerceInventoryWarehouseId);
 		}
 
+		BigDecimal quantity = (BigDecimal)attributes.get("quantity");
+
+		if (quantity != null) {
+			setQuantity(quantity);
+		}
+
+		BigDecimal reservedQuantity = (BigDecimal)attributes.get(
+			"reservedQuantity");
+
+		if (reservedQuantity != null) {
+			setReservedQuantity(reservedQuantity);
+		}
+
 		String sku = (String)attributes.get("sku");
 
 		if (sku != null) {
 			setSku(sku);
 		}
 
-		Integer quantity = (Integer)attributes.get("quantity");
+		String unitOfMeasureKey = (String)attributes.get("unitOfMeasureKey");
 
-		if (quantity != null) {
-			setQuantity(quantity);
-		}
-
-		Integer reservedQuantity = (Integer)attributes.get("reservedQuantity");
-
-		if (reservedQuantity != null) {
-			setReservedQuantity(reservedQuantity);
+		if (unitOfMeasureKey != null) {
+			setUnitOfMeasureKey(unitOfMeasureKey);
 		}
 	}
 
@@ -249,7 +250,7 @@ public class CommerceInventoryWarehouseItemWrapper
 	 * @return the quantity of this commerce inventory warehouse item
 	 */
 	@Override
-	public int getQuantity() {
+	public BigDecimal getQuantity() {
 		return model.getQuantity();
 	}
 
@@ -259,7 +260,7 @@ public class CommerceInventoryWarehouseItemWrapper
 	 * @return the reserved quantity of this commerce inventory warehouse item
 	 */
 	@Override
-	public int getReservedQuantity() {
+	public BigDecimal getReservedQuantity() {
 		return model.getReservedQuantity();
 	}
 
@@ -271,6 +272,16 @@ public class CommerceInventoryWarehouseItemWrapper
 	@Override
 	public String getSku() {
 		return model.getSku();
+	}
+
+	/**
+	 * Returns the unit of measure key of this commerce inventory warehouse item.
+	 *
+	 * @return the unit of measure key of this commerce inventory warehouse item
+	 */
+	@Override
+	public String getUnitOfMeasureKey() {
+		return model.getUnitOfMeasureKey();
 	}
 
 	/**
@@ -409,7 +420,7 @@ public class CommerceInventoryWarehouseItemWrapper
 	 * @param quantity the quantity of this commerce inventory warehouse item
 	 */
 	@Override
-	public void setQuantity(int quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		model.setQuantity(quantity);
 	}
 
@@ -419,7 +430,7 @@ public class CommerceInventoryWarehouseItemWrapper
 	 * @param reservedQuantity the reserved quantity of this commerce inventory warehouse item
 	 */
 	@Override
-	public void setReservedQuantity(int reservedQuantity) {
+	public void setReservedQuantity(BigDecimal reservedQuantity) {
 		model.setReservedQuantity(reservedQuantity);
 	}
 
@@ -431,6 +442,16 @@ public class CommerceInventoryWarehouseItemWrapper
 	@Override
 	public void setSku(String sku) {
 		model.setSku(sku);
+	}
+
+	/**
+	 * Sets the unit of measure key of this commerce inventory warehouse item.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce inventory warehouse item
+	 */
+	@Override
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		model.setUnitOfMeasureKey(unitOfMeasureKey);
 	}
 
 	/**

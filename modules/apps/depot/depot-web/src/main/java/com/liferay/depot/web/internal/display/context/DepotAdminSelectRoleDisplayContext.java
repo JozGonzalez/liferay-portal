@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.depot.web.internal.display.context;
@@ -49,11 +40,9 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portlet.rolesadmin.search.RoleSearch;
-import com.liferay.portlet.rolesadmin.search.RoleSearchTerms;
-import com.liferay.portlet.usersadmin.search.GroupSearch;
-import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
-import com.liferay.roles.admin.kernel.util.RolesAdminUtil;
+import com.liferay.roles.admin.search.RoleSearch;
+import com.liferay.roles.admin.search.RoleSearchTerms;
+import com.liferay.site.search.GroupSearch;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -177,9 +166,7 @@ public class DepotAdminSelectRoleDisplayContext {
 				_getPortletURL(_renderRequest, _renderResponse, _user));
 
 			groupSearch.setEmptyResultsMessage("no-asset-libraries-were-found");
-			groupSearch.setResultsAndTotal(
-				_getDepotGroups(
-					(GroupSearchTerms)groupSearch.getSearchTerms()));
+			groupSearch.setResultsAndTotal(_getDepotGroups());
 
 			_groupSearch = groupSearch;
 
@@ -200,12 +187,14 @@ public class DepotAdminSelectRoleDisplayContext {
 			return TYPE;
 		}
 
-		private List<Group> _getDepotGroups(GroupSearchTerms groupSearchTerms) {
+		private List<Group> _getDepotGroups() {
 			if (_user == null) {
 				return Collections.emptyList();
 			}
 
-			if (!groupSearchTerms.hasSearchTerms()) {
+			String keywords = ParamUtil.getString(_renderRequest, "keywords");
+
+			if (Validator.isNull(keywords)) {
 				return ListUtil.filter(_user.getGroups(), Group::isDepot);
 			}
 
@@ -214,8 +203,7 @@ public class DepotAdminSelectRoleDisplayContext {
 				new long[] {
 					ClassNameLocalServiceUtil.getClassNameId(DepotEntry.class)
 				},
-				GroupConstants.ANY_PARENT_GROUP_ID,
-				groupSearchTerms.getKeywords(),
+				GroupConstants.ANY_PARENT_GROUP_ID, keywords,
 				LinkedHashMapBuilder.<String, Object>put(
 					"inherit", Boolean.FALSE
 				).put(
@@ -284,7 +272,7 @@ public class DepotAdminSelectRoleDisplayContext {
 				"groupdescriptivename",
 				_group.getDescriptiveName(_themeDisplay.getLocale())
 			).put(
-				"iconcssclass", RolesAdminUtil.getIconCssClass(role)
+				"iconcssclass", role.getIconCssClass()
 			).put(
 				"rolename", role.getTitle(_themeDisplay.getLocale())
 			).build();

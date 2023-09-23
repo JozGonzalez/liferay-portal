@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service.persistence.test;
@@ -38,6 +29,8 @@ import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
 import java.io.Serializable;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -147,16 +140,19 @@ public class CommerceInventoryBookedQuantityPersistenceTest {
 		newCommerceInventoryBookedQuantity.setModifiedDate(
 			RandomTestUtil.nextDate());
 
-		newCommerceInventoryBookedQuantity.setSku(
+		newCommerceInventoryBookedQuantity.setBookedNote(
 			RandomTestUtil.randomString());
-
-		newCommerceInventoryBookedQuantity.setQuantity(
-			RandomTestUtil.nextInt());
 
 		newCommerceInventoryBookedQuantity.setExpirationDate(
 			RandomTestUtil.nextDate());
 
-		newCommerceInventoryBookedQuantity.setBookedNote(
+		newCommerceInventoryBookedQuantity.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
+
+		newCommerceInventoryBookedQuantity.setSku(
+			RandomTestUtil.randomString());
+
+		newCommerceInventoryBookedQuantity.setUnitOfMeasureKey(
 			RandomTestUtil.randomString());
 
 		_commerceInventoryBookedQuantities.add(
@@ -195,19 +191,29 @@ public class CommerceInventoryBookedQuantityPersistenceTest {
 			Time.getShortTimestamp(
 				newCommerceInventoryBookedQuantity.getModifiedDate()));
 		Assert.assertEquals(
-			existingCommerceInventoryBookedQuantity.getSku(),
-			newCommerceInventoryBookedQuantity.getSku());
-		Assert.assertEquals(
-			existingCommerceInventoryBookedQuantity.getQuantity(),
-			newCommerceInventoryBookedQuantity.getQuantity());
+			existingCommerceInventoryBookedQuantity.getBookedNote(),
+			newCommerceInventoryBookedQuantity.getBookedNote());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingCommerceInventoryBookedQuantity.getExpirationDate()),
 			Time.getShortTimestamp(
 				newCommerceInventoryBookedQuantity.getExpirationDate()));
 		Assert.assertEquals(
-			existingCommerceInventoryBookedQuantity.getBookedNote(),
-			newCommerceInventoryBookedQuantity.getBookedNote());
+			existingCommerceInventoryBookedQuantity.getQuantity(),
+			newCommerceInventoryBookedQuantity.getQuantity());
+		Assert.assertEquals(
+			existingCommerceInventoryBookedQuantity.getSku(),
+			newCommerceInventoryBookedQuantity.getSku());
+		Assert.assertEquals(
+			existingCommerceInventoryBookedQuantity.getUnitOfMeasureKey(),
+			newCommerceInventoryBookedQuantity.getUnitOfMeasureKey());
+	}
+
+	@Test
+	public void testCountByLtExpirationDate() throws Exception {
+		_persistence.countByLtExpirationDate(RandomTestUtil.nextDate());
+
+		_persistence.countByLtExpirationDate(RandomTestUtil.nextDate());
 	}
 
 	@Test
@@ -220,19 +226,12 @@ public class CommerceInventoryBookedQuantityPersistenceTest {
 	}
 
 	@Test
-	public void testCountByLtExpirationDate() throws Exception {
-		_persistence.countByLtExpirationDate(RandomTestUtil.nextDate());
+	public void testCountByC_S_U() throws Exception {
+		_persistence.countByC_S_U(RandomTestUtil.nextLong(), "", "");
 
-		_persistence.countByLtExpirationDate(RandomTestUtil.nextDate());
-	}
+		_persistence.countByC_S_U(0L, "null", "null");
 
-	@Test
-	public void testCountByC_S() throws Exception {
-		_persistence.countByC_S(RandomTestUtil.nextLong(), "");
-
-		_persistence.countByC_S(0L, "null");
-
-		_persistence.countByC_S(0L, (String)null);
+		_persistence.countByC_S_U(0L, (String)null, (String)null);
 	}
 
 	@Test
@@ -270,8 +269,8 @@ public class CommerceInventoryBookedQuantityPersistenceTest {
 			"CIBookedQuantity", "mvccVersion", true,
 			"commerceInventoryBookedQuantityId", true, "companyId", true,
 			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "sku", true, "quantity", true,
-			"expirationDate", true, "bookedNote", true);
+			"modifiedDate", true, "bookedNote", true, "expirationDate", true,
+			"quantity", true, "sku", true, "unitOfMeasureKey", true);
 	}
 
 	@Test
@@ -552,14 +551,18 @@ public class CommerceInventoryBookedQuantityPersistenceTest {
 		commerceInventoryBookedQuantity.setModifiedDate(
 			RandomTestUtil.nextDate());
 
-		commerceInventoryBookedQuantity.setSku(RandomTestUtil.randomString());
-
-		commerceInventoryBookedQuantity.setQuantity(RandomTestUtil.nextInt());
+		commerceInventoryBookedQuantity.setBookedNote(
+			RandomTestUtil.randomString());
 
 		commerceInventoryBookedQuantity.setExpirationDate(
 			RandomTestUtil.nextDate());
 
-		commerceInventoryBookedQuantity.setBookedNote(
+		commerceInventoryBookedQuantity.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
+
+		commerceInventoryBookedQuantity.setSku(RandomTestUtil.randomString());
+
+		commerceInventoryBookedQuantity.setUnitOfMeasureKey(
 			RandomTestUtil.randomString());
 
 		_commerceInventoryBookedQuantities.add(

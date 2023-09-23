@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter;
@@ -55,6 +46,7 @@ import com.liferay.source.formatter.processor.JSSourceProcessor;
 import com.liferay.source.formatter.processor.JavaSourceProcessor;
 import com.liferay.source.formatter.processor.LDIFSourceProcessor;
 import com.liferay.source.formatter.processor.LFRBuildSourceProcessor;
+import com.liferay.source.formatter.processor.LibrarySourceProcessor;
 import com.liferay.source.formatter.processor.MarkdownSourceProcessor;
 import com.liferay.source.formatter.processor.PackageinfoSourceProcessor;
 import com.liferay.source.formatter.processor.PoshiSourceProcessor;
@@ -136,6 +128,10 @@ public class SourceFormatter {
 					ArgumentsUtil.getString(
 						arguments, "source.check.names", null),
 					StringPool.COMMA));
+			sourceFormatterArgs.setCheckVulnerabilities(
+				ArgumentsUtil.getBoolean(
+					arguments, "check.vulnerabilities",
+					SourceFormatterArgs.CHECK_VULNERABILITIES));
 			sourceFormatterArgs.setFailOnAutoFix(
 				ArgumentsUtil.getBoolean(
 					arguments, "source.fail.on.auto.fix",
@@ -156,6 +152,10 @@ public class SourceFormatter {
 				ArgumentsUtil.getBoolean(
 					arguments, "format.local.changes",
 					SourceFormatterArgs.FORMAT_LOCAL_CHANGES));
+			sourceFormatterArgs.setUseCiGithubAccessToken(
+				ArgumentsUtil.getBoolean(
+					arguments, "use.ci.github.access.token",
+					SourceFormatterArgs.USE_CI_GITHUB_ACCESS_TOKEN));
 			sourceFormatterArgs.setGitWorkingBranchName(
 				ArgumentsUtil.getString(
 					arguments, "git.working.branch.name",
@@ -352,6 +352,7 @@ public class SourceFormatter {
 		_sourceProcessors.add(new JSSourceProcessor());
 		_sourceProcessors.add(new LDIFSourceProcessor());
 		_sourceProcessors.add(new LFRBuildSourceProcessor());
+		_sourceProcessors.add(new LibrarySourceProcessor());
 		_sourceProcessors.add(new MarkdownSourceProcessor());
 		_sourceProcessors.add(new PackageinfoSourceProcessor());
 		_sourceProcessors.add(new PoshiSourceProcessor());
@@ -764,7 +765,7 @@ public class SourceFormatter {
 		}
 
 		return StringBundler.concat(
-			"Found ", index - 1, " formatting issues:\n", sb.toString());
+			"Found ", index - 1, " formatting issues:\n", sb);
 	}
 
 	private List<ExcludeSyntaxPattern> _getExcludeSyntaxPatterns(
@@ -998,7 +999,6 @@ public class SourceFormatter {
 				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/.m2/**"),
 				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/.settings/**"),
 				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/bin/**"),
-				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/build/**"),
 				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/classes/**"),
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.GLOB, "**/liferay-theme.json"),
@@ -1016,6 +1016,11 @@ public class SourceFormatter {
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.GLOB, "**/node_modules_cache/**"),
 				new ExcludeSyntaxPattern(
+					ExcludeSyntax.GLOB,
+					"**/test*/**/dependencies/*.[jlw]ar/**"),
+				new ExcludeSyntaxPattern(
+					ExcludeSyntax.GLOB, "**/test*/**/dependencies/*.zip/**"),
+				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
 					".*/frontend-theme-unstyled/.*/_unstyled/css/clay/.+"),
 				new ExcludeSyntaxPattern(
@@ -1024,10 +1029,10 @@ public class SourceFormatter {
 						"clay|lexicon)/.+"),
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
-					".*/tests?/.*/dependencies/.+\\.(jar|lar|war|zip)/.+"),
+					"^((?!/frontend-js-node-shims/src/).)*/node_modules/.*"),
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
-					"^((?!/frontend-js-node-shims/src/).)*/node_modules/.*")));
+					".*(?<!/gradle-plugins-source-formatter)/build/.*")));
 
 		_portalSource = _containsDir("portal-impl");
 
@@ -1050,7 +1055,7 @@ public class SourceFormatter {
 			parentDirName += "../";
 		}
 
-		_allFileNames = SourceFormatterUtil.scanForFiles(
+		_allFileNames = SourceFormatterUtil.scanForFileNames(
 			_sourceFormatterArgs.getBaseDirName(), new String[0],
 			new String[] {
 				"**/*.*", "**/CODEOWNERS", "**/Dockerfile", "**/packageinfo"
@@ -1134,7 +1139,10 @@ public class SourceFormatter {
 			if ((line.startsWith(StringPool.MINUS) ||
 				 line.startsWith(StringPool.PLUS)) &&
 				(line.contains("feature.flag") ||
-				 line.contains("Liferay-Site-Initializer-Feature-Flag:"))) {
+				 line.contains("FeatureFlagManagerUtil.isEnabled(") ||
+				 line.contains("Liferay-Site-Initializer-Feature-Flag:") ||
+				 line.contains("Liferay.FeatureFlags['") ||
+				 line.contains("\"featureFlag\": \""))) {
 
 				return true;
 			}
@@ -1289,7 +1297,6 @@ public class SourceFormatter {
 
 		JIRAUtil.validateJIRAProjectNames(
 			commitMessages, _getPropertyValues("jira.project.keys"));
-		JIRAUtil.validateJIRATicketIds(commitMessages, 20);
 
 		for (String commitMessage : commitMessages) {
 			for (String keyword :

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.util;
@@ -75,32 +66,7 @@ public class JournalConverterImpl implements JournalConverter {
 			DDMStructure ddmStructure, Fields ddmFields, long groupId)
 		throws Exception {
 
-		Document document = SAXReaderUtil.createDocument();
-
-		Element rootElement = document.addElement("root");
-
-		rootElement.addAttribute(
-			"available-locales", _getAvailableLocales(ddmFields));
-
-		Locale defaultLocale = ddmFields.getDefaultLocale();
-
-		if (!_language.isAvailableLocale(groupId, defaultLocale)) {
-			defaultLocale = LocaleUtil.getSiteDefault();
-		}
-
-		rootElement.addAttribute(
-			"default-locale", LocaleUtil.toLanguageId(defaultLocale));
-
-		rootElement.addAttribute("version", "1.0");
-
-		DDMFieldsCounter ddmFieldsCounter = new DDMFieldsCounter();
-
-		DDMForm ddmForm = ddmStructure.getDDMForm();
-
-		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
-			_updateDynamicElementElement(
-				ddmFields, ddmFieldsCounter, ddmFormField, rootElement, -1);
-		}
+		Document document = getDocument(ddmStructure, ddmFields, groupId);
 
 		try {
 			return XMLUtil.stripInvalidChars(document.formattedString());
@@ -145,6 +111,41 @@ public class JournalConverterImpl implements JournalConverter {
 		catch (DocumentException documentException) {
 			throw new PortalException(documentException);
 		}
+	}
+
+	@Override
+	public Document getDocument(
+			DDMStructure ddmStructure, Fields ddmFields, long groupId)
+		throws Exception {
+
+		Document document = SAXReaderUtil.createDocument();
+
+		Element rootElement = document.addElement("root");
+
+		rootElement.addAttribute(
+			"available-locales", _getAvailableLocales(ddmFields));
+
+		Locale defaultLocale = ddmFields.getDefaultLocale();
+
+		if (!_language.isAvailableLocale(groupId, defaultLocale)) {
+			defaultLocale = LocaleUtil.getSiteDefault();
+		}
+
+		rootElement.addAttribute(
+			"default-locale", LocaleUtil.toLanguageId(defaultLocale));
+
+		rootElement.addAttribute("version", "1.0");
+
+		DDMFieldsCounter ddmFieldsCounter = new DDMFieldsCounter();
+
+		DDMForm ddmForm = ddmStructure.getDDMForm();
+
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
+			_updateDynamicElementElement(
+				ddmFields, ddmFieldsCounter, ddmFormField, rootElement, -1);
+		}
+
+		return document;
 	}
 
 	private void _addDDMFields(

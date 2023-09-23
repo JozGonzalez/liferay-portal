@@ -27,13 +27,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -44,8 +46,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9018 | Test Summary: Search an Individual's Activities List with a query that won't return results"
 	@priority = 3
 	test AssertNoIndividualsActivitiesResults {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "KnownIndividualsSearch#AssertNoIndividualsActivitiesResults";
+		property test.run.type = "single";
 
 		task ("Add DM to AC Page") {
 			ACUtils.createDMAndAddToPage();
@@ -117,8 +118,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9020 | Test Summary: Search associated segment will not return results in the individual List"
 	@priority = 3
 	test AssertNoIndividualsAssociatedSegmentsResults {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "KnownIndividualsSearch#AssertNoIndividualsAssociatedSegmentsResults";
+		property test.run.type = "single";
 
 		task ("Get site assigned property name") {
 			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -251,8 +251,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9021 | Test Summary: Search associated segment will not return results in the individual overview List"
 	@priority = 3
 	test AssertNoResultsInIndividualsOverviewAssociatedSegment {
-		property analytics.cloud.upstream = "false";
-
 		task ("Get site assigned property name") {
 			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 		}
@@ -321,8 +319,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9033 | Test Summary: Case Insensitive Search"
 	@priority = 5
 	test CanCaseInsensitiveSearch {
-		property analytics.cloud.upstream = "false";
-
 		var emailList = "randy.smith@liferay.com,maria.rau@liferay.com";
 
 		task ("Get site assigned property name") {
@@ -384,9 +380,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9032 | Test Summary: Search and Clear Field"
+	@ignore = "true"
 	@priority = 1
 	test SearchAndClearField {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var usernameList = "user1,user2";
 		var emailList = "user1@liferay.com,user2@liferay.com";
@@ -447,9 +446,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9024 | Test Summary: Search an Individual's Details in the individual List"
+	@ignore = "true"
 	@priority = 4
 	test SearchIndividualDetails {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		task ("Get site assigned property name") {
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -558,9 +560,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9026 | Test Summary: Search for an Individual in the individual List"
+	@ignore = "true"
 	@priority = 4
 	test SearchIndividualList {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var emailList = "randy.smith@liferay.com,maria.rau@liferay.com";
 
@@ -653,8 +658,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9022 | Test Summary: Search an Individual's Activities List"
 	@priority = 4
 	test SearchIndividualsActivitiesList {
-		property analytics.cloud.upstream = "false";
-
 		task ("Create a Document And Media") {
 			ACUtils.createDMAndAddToPage();
 		}
@@ -794,9 +797,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9029 | Test Summary: Sort Individuals List"
+	@ignore = "true"
 	@priority = 3
 	test SortIndividualList {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var usernameList = "user1,user2,user3";
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
@@ -854,9 +860,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9030 | Test Summary: Sorting a List Returns a User to the First Page"
+	@ignore = "true"
 	@priority = 3
 	test SortingReturnsUserToFirstPage {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var usernameList = "user1,user2,user3,user4,user5,user6,user7";
 
@@ -899,24 +908,24 @@ definition {
 			ACIndividualsDashboard.goToKnownIndividualsTab();
 		}
 
-		task ("Change the pagination to "5" and view individuals in the first page") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Change the pagination to "4" and view individuals in the first page") {
+			ACUtils.changePagination(itemsPerPage = 4);
 
-			ACIndividualsDashboard.viewKnownIndividualSpecificOrder(itemName = "user1 user1,user2 user2,user3 user3,user4 user4,user5 user5");
+			ACIndividualsDashboard.viewKnownIndividualSpecificOrder(itemName = "user1 user1,user2 user2,user3 user3,user4 user4");
 
 			ACUtils.viewActivePage(pageNumber = 1);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 5 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 7 entries.");
 		}
 
 		task ("Go to the second page and view individuals") {
 			ACUtils.checkPreviousNextButton(nextButton = "true");
 
-			ACIndividualsDashboard.viewKnownIndividualSpecificOrder(itemName = "user6 user6,user7 user7");
+			ACIndividualsDashboard.viewKnownIndividualSpecificOrder(itemName = "user5 user5,user6 user6,user7 user7");
 
 			ACUtils.viewActivePage(pageNumber = 2);
 
-			ACUtils.viewResultsMessage(results = "Showing 6 to 7 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 4 to 7 of 7 entries.");
 		}
 
 		task ("Sort the table by the 'Name | Email' column header in descending order and return to the first Page") {
@@ -928,14 +937,17 @@ definition {
 
 			ACUtils.viewActivePage(pageNumber = 1);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 5 of 7 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 7 entries.");
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9031 | Test Summary: Table Pagination"
+	@ignore = "true"
 	@priority = 4
 	test TablePagination {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		var usernameList = "user1,user2,user3,user4,user5,user6";
 
@@ -978,12 +990,12 @@ definition {
 			ACIndividualsDashboard.goToKnownIndividualsTab();
 		}
 
-		task ("Change the pagination to "5" and "75"") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Change the pagination to "4" and "60"") {
+			ACUtils.changePagination(itemsPerPage = 4);
 
 			ACIndividualsDashboard.assertIndividualAttributeNotPresent(key_individualAttribute = "user6 user6");
 
-			ACUtils.changePagination(itemsPerPage = 75);
+			ACUtils.changePagination(itemsPerPage = 60);
 
 			ACIndividualsDashboard.assertIndividualAttribute(key_individualAttribute = "user6 user6");
 		}

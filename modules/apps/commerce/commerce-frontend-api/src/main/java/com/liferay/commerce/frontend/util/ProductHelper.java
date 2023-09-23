@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.util;
@@ -21,6 +12,8 @@ import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.math.BigDecimal;
+
 import java.util.Locale;
 
 /**
@@ -31,30 +24,14 @@ import java.util.Locale;
 @ProviderType
 public interface ProductHelper {
 
-	public PriceModel getMinPrice(
+	public PriceModel getMinPriceModel(
 			long cpDefinitionId, CommerceContext commerceContext, Locale locale)
 		throws PortalException;
 
-	/**
-	 * @param      cpInstanceId
-	 * @param      quantity
-	 * @param      commerceContext
-	 * @param      locale
-	 * @return
-	 *
-	 * @throws     PortalException
-	 * @deprecated As of Athanasius (7.3.x), use {@link
-	 *             #getPriceModel(long, int, CommerceContext, String, Locale)}
-	 */
-	@Deprecated
-	public PriceModel getPrice(
-			long cpInstanceId, int quantity, CommerceContext commerceContext,
-			Locale locale)
-		throws PortalException;
-
 	public PriceModel getPriceModel(
-			long cpInstanceId, int quantity, CommerceContext commerceContext,
-			String commerceOptionValuesJSON, Locale locale)
+			long cpInstanceId, String commerceOptionValuesJSON,
+			BigDecimal quantity, String unitOfMeasureKey,
+			CommerceContext commerceContext, Locale locale)
 		throws PortalException;
 
 	public ProductSettingsModel getProductSettingsModel(long cpDefinitionId)

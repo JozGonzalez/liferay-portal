@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -81,11 +81,9 @@ definition {
 			groupName = "Guest",
 			layoutName = "Similar Results Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = 1,
-			groupName = "Guest",
+		SearchPortlets.addWidgets(
 			layoutName = "Similar Results Page",
-			widgetName = "Similar Results");
+			searchPortletList = "Similar Results");
 
 		JSONLayout.addWidgetToPublicLayout(
 			column = 2,
@@ -128,11 +126,9 @@ definition {
 			groupName = "Guest",
 			layoutName = "Similar Results Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = 1,
-			groupName = "Guest",
+		SearchPortlets.addWidgets(
 			layoutName = "Similar Results Page",
-			widgetName = "Similar Results");
+			searchPortletList = "Similar Results");
 
 		JSONLayout.addWidgetToPublicLayout(
 			column = 2,
@@ -342,7 +338,7 @@ definition {
 	@priority = 4
 	test CanViewFromOtherSitesWithDocumentsWidget {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = ${siteName});
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		var count = 0;
@@ -360,11 +356,9 @@ definition {
 			groupName = "Guest",
 			layoutName = "Similar Results Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = 1,
-			groupName = "Guest",
+		SearchPortlets.addWidgets(
 			layoutName = "Similar Results Page",
-			widgetName = "Similar Results");
+			searchPortletList = "Similar Results");
 
 		JSONLayout.addWidgetToPublicLayout(
 			column = 2,
@@ -403,11 +397,9 @@ definition {
 			groupName = "Guest",
 			layoutName = "Similar Results Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = 1,
-			groupName = "Guest",
+		SearchPortlets.addWidgets(
 			layoutName = "Similar Results Page",
-			widgetName = "Similar Results");
+			searchPortletList = "Similar Results");
 
 		JSONLayout.addWidgetToPublicLayout(
 			column = 2,
@@ -436,7 +428,8 @@ definition {
 
 	@priority = 4
 	test ConfigureDocumentFrequency {
-		property test.name.skip.portal.instance = "SimilarResults#ConfigureSimilarResultsDocumentFrequency";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
@@ -804,15 +797,16 @@ definition {
 			locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE");
 	}
 
+	@priority = 3
 	test ConfigureViewInContextLinkBehavior {
-		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-			contentType = "Blogs Entry",
-			displayPageTemplateEntryName = "Blogs Display Page",
-			groupName = "Guest");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "guest");
 
-		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Blogs Display Page");
+		DisplayPageTemplatesAdmin.addDisplayPage(
+			contentType = "Blogs Entry",
+			displayPageName = "Blogs Display Page");
 
 		Button.clickPublish();
 
@@ -821,35 +815,29 @@ definition {
 			entryTitle = "Similar Results Blog 1",
 			groupName = "Guest");
 
-		JSONBlog.addEntry(
+		BlogsNavigator.openToAddEntry(siteURLKey = "guest");
+
+		BlogsEntry.addEntryContent(
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Similar Results Blog 2",
-			groupName = "Guest");
-
-		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
-
-		BlogsNavigator.gotoEditCP(entryTitle = "Similar Results Blog 2");
+			entryTitle = "Similar Results Blog 2");
 
 		WebContent.editDisplayPage(pageName = "Blogs Display Page");
 
 		PortletEntry.publish();
 
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Similar Results Page",
-			type = "content");
+		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
-		ContentPagesNavigator.openEditContentPage(
-			pageName = "Similar Results Page",
-			siteName = "Guest");
+		ContentPages.addPage(pageName = "Similar Results Page");
 
-		PageEditor.addWidget(portletName = "Blogs");
-
-		PageEditor.addWidget(
-			portletName = "Similar Results",
-			targetFragmentName = "Blogs");
+		PageEditor.addWidget(portletName = "Similar Results");
 
 		SearchPortlets.configureSimilarResults(linkBehavior = "View in Context");
+
+		Refresh();
+
+		PageEditor.addWidget(
+			portletName = "Blogs",
+			targetFragmentName = "Similar Results");
 
 		PageEditor.publish();
 
@@ -858,6 +846,20 @@ definition {
 		Click(
 			key_entryTitle = "Similar Results Blog 1",
 			locator1 = "BlogsEntry#TITLE_LINK");
+
+		if (IsElementNotPresent(key_linkResultTitle = "Similar Results Blog 2", locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE")) {
+			SearchAdministration.executeReindex();
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/guest/similar-results-page");
+
+			Click(
+				key_entryTitle = "Similar Results Blog 1",
+				locator1 = "BlogsEntry#TITLE_LINK");
+		}
+
+		WaitForElementPresent(
+			key_linkResultTitle = "Similar Results Blog 2",
+			locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE");
 
 		Click(
 			key_linkResultTitle = "Similar Results Blog 2",
@@ -984,7 +986,7 @@ definition {
 	@priority = 4
 	test ViewWithDifferentScope {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = ${siteName});
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		var count = 0;

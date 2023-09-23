@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {useDebounce} from '@clayui/shared';
+import {DateTimeRenderer} from '@liferay/frontend-data-set-web';
 import {
 	FORM_EVENT_TYPES,
 	useForm,
@@ -40,13 +32,30 @@ async function fetchOptions<T>(url: string) {
 	return (await response.json()) as T;
 }
 
-function getLabel<T extends ObjectMap<any>>(item: T, key: keyof T) {
+function getLabel<T extends ObjectMap<any>>(
+	item: T,
+	key: keyof T,
+	objectFieldBusinessType: string
+) {
 	const value = item[key];
 
 	if (typeof value !== 'object') {
+		if (objectFieldBusinessType === 'Date') {
+			return DateTimeRenderer({
+				options: {
+					format: {
+						day: 'numeric',
+						month: 'short',
+						timeZone: 'UTC',
+						year: 'numeric',
+					},
+				},
+				value: String(value),
+			});
+		}
+
 		return value ? String(value) : '';
 	}
-
 	const label =
 		(value as LocalizedValue<string>)[defaultLanguageId] ??
 		(value as {[key: string]: string})['name'] ??
@@ -59,12 +68,14 @@ function LoadingWithDebounce({
 	labelKey,
 	list,
 	loading,
+	objectFieldBusinessType,
 	onSelect,
 	searchTerm,
 }: {
 	labelKey: string;
 	list?: Item[];
 	loading?: boolean;
+	objectFieldBusinessType: string;
 	onSelect: (item: Item) => void;
 	searchTerm?: string;
 }) {
@@ -93,7 +104,7 @@ function LoadingWithDebounce({
 					key={item.id}
 					match={searchTerm}
 					onClick={() => onSelect(item)}
-					value={getLabel(item, labelKey)}
+					value={getLabel(item, labelKey, objectFieldBusinessType)}
 				/>
 			))}
 		</>
@@ -107,6 +118,7 @@ export default function ObjectRelationship({
 	labelKey = 'label',
 	name,
 	objectEntryId,
+	objectFieldBusinessType,
 	onBlur,
 	onChange,
 	onFocus,
@@ -118,7 +130,7 @@ export default function ObjectRelationship({
 	valueKey = 'value',
 	...otherProps
 }: IProps) {
-	const autocompleteRef = useRef<HTMLDivElement>(null);
+	const autocompleteRef = useRef<HTMLInputElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const [
 		{active, list, loading, searchTerm, selected, url},
@@ -253,7 +265,9 @@ export default function ObjectRelationship({
 		};
 	}, [active]);
 
-	const label = (selected && getLabel(selected, labelKey)) ?? searchTerm;
+	const label =
+		(selected && getLabel(selected, labelKey, objectFieldBusinessType)) ??
+		searchTerm;
 
 	return (
 		<FieldBase
@@ -274,7 +288,12 @@ export default function ObjectRelationship({
 
 						if (value) {
 							selected = list?.find(
-								(item) => getLabel(item, labelKey) === value
+								(item) =>
+									getLabel(
+										item,
+										labelKey,
+										objectFieldBusinessType
+									) === value
 							);
 						}
 
@@ -336,6 +355,9 @@ export default function ObjectRelationship({
 								labelKey={labelKey}
 								list={list}
 								loading={loading}
+								objectFieldBusinessType={
+									objectFieldBusinessType
+								}
 								onSelect={(selected) => {
 									onChange({
 										target: {
@@ -369,6 +391,7 @@ interface IProps {
 	labelKey?: string;
 	name: string;
 	objectEntryId: string;
+	objectFieldBusinessType: string;
 	onBlur?: React.FocusEventHandler<HTMLInputElement>;
 	onChange: (event: {target: {value: unknown}}) => void;
 	onFocus?: React.FocusEventHandler<HTMLInputElement>;

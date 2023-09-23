@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.model;
 
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedAuditedModel;
@@ -42,7 +34,8 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CommercePriceEntryModel
 	extends BaseModel<CommercePriceEntry>, CTModel<CommercePriceEntry>,
-			MVCCModel, ShardedModel, StagedAuditedModel, WorkflowedModel {
+			ExternalReferenceCodeModel, MVCCModel, ShardedModel,
+			StagedAuditedModel, WorkflowedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -121,6 +114,7 @@ public interface CommercePriceEntryModel
 	 * @return the external reference code of this commerce price entry
 	 */
 	@AutoEscape
+	@Override
 	public String getExternalReferenceCode();
 
 	/**
@@ -128,6 +122,7 @@ public interface CommercePriceEntryModel
 	 *
 	 * @param externalReferenceCode the external reference code of this commerce price entry
 	 */
+	@Override
 	public void setExternalReferenceCode(String externalReferenceCode);
 
 	/**
@@ -285,32 +280,25 @@ public interface CommercePriceEntryModel
 	public void setCProductId(long CProductId);
 
 	/**
-	 * Returns the price of this commerce price entry.
+	 * Returns the bulk pricing of this commerce price entry.
 	 *
-	 * @return the price of this commerce price entry
+	 * @return the bulk pricing of this commerce price entry
 	 */
-	public BigDecimal getPrice();
+	public boolean getBulkPricing();
 
 	/**
-	 * Sets the price of this commerce price entry.
+	 * Returns <code>true</code> if this commerce price entry is bulk pricing.
 	 *
-	 * @param price the price of this commerce price entry
+	 * @return <code>true</code> if this commerce price entry is bulk pricing; <code>false</code> otherwise
 	 */
-	public void setPrice(BigDecimal price);
+	public boolean isBulkPricing();
 
 	/**
-	 * Returns the promo price of this commerce price entry.
+	 * Sets whether this commerce price entry is bulk pricing.
 	 *
-	 * @return the promo price of this commerce price entry
+	 * @param bulkPricing the bulk pricing of this commerce price entry
 	 */
-	public BigDecimal getPromoPrice();
-
-	/**
-	 * Sets the promo price of this commerce price entry.
-	 *
-	 * @param promoPrice the promo price of this commerce price entry
-	 */
-	public void setPromoPrice(BigDecimal promoPrice);
+	public void setBulkPricing(boolean bulkPricing);
 
 	/**
 	 * Returns the discount discovery of this commerce price entry.
@@ -390,48 +378,6 @@ public interface CommercePriceEntryModel
 	public void setDiscountLevel4(BigDecimal discountLevel4);
 
 	/**
-	 * Returns the has tier price of this commerce price entry.
-	 *
-	 * @return the has tier price of this commerce price entry
-	 */
-	public boolean getHasTierPrice();
-
-	/**
-	 * Returns <code>true</code> if this commerce price entry is has tier price.
-	 *
-	 * @return <code>true</code> if this commerce price entry is has tier price; <code>false</code> otherwise
-	 */
-	public boolean isHasTierPrice();
-
-	/**
-	 * Sets whether this commerce price entry is has tier price.
-	 *
-	 * @param hasTierPrice the has tier price of this commerce price entry
-	 */
-	public void setHasTierPrice(boolean hasTierPrice);
-
-	/**
-	 * Returns the bulk pricing of this commerce price entry.
-	 *
-	 * @return the bulk pricing of this commerce price entry
-	 */
-	public boolean getBulkPricing();
-
-	/**
-	 * Returns <code>true</code> if this commerce price entry is bulk pricing.
-	 *
-	 * @return <code>true</code> if this commerce price entry is bulk pricing; <code>false</code> otherwise
-	 */
-	public boolean isBulkPricing();
-
-	/**
-	 * Sets whether this commerce price entry is bulk pricing.
-	 *
-	 * @param bulkPricing the bulk pricing of this commerce price entry
-	 */
-	public void setBulkPricing(boolean bulkPricing);
-
-	/**
 	 * Returns the display date of this commerce price entry.
 	 *
 	 * @return the display date of this commerce price entry
@@ -458,6 +404,105 @@ public interface CommercePriceEntryModel
 	 * @param expirationDate the expiration date of this commerce price entry
 	 */
 	public void setExpirationDate(Date expirationDate);
+
+	/**
+	 * Returns the has tier price of this commerce price entry.
+	 *
+	 * @return the has tier price of this commerce price entry
+	 */
+	public boolean getHasTierPrice();
+
+	/**
+	 * Returns <code>true</code> if this commerce price entry is has tier price.
+	 *
+	 * @return <code>true</code> if this commerce price entry is has tier price; <code>false</code> otherwise
+	 */
+	public boolean isHasTierPrice();
+
+	/**
+	 * Sets whether this commerce price entry is has tier price.
+	 *
+	 * @param hasTierPrice the has tier price of this commerce price entry
+	 */
+	public void setHasTierPrice(boolean hasTierPrice);
+
+	/**
+	 * Returns the price of this commerce price entry.
+	 *
+	 * @return the price of this commerce price entry
+	 */
+	public BigDecimal getPrice();
+
+	/**
+	 * Sets the price of this commerce price entry.
+	 *
+	 * @param price the price of this commerce price entry
+	 */
+	public void setPrice(BigDecimal price);
+
+	/**
+	 * Returns the price on application of this commerce price entry.
+	 *
+	 * @return the price on application of this commerce price entry
+	 */
+	public boolean getPriceOnApplication();
+
+	/**
+	 * Returns <code>true</code> if this commerce price entry is price on application.
+	 *
+	 * @return <code>true</code> if this commerce price entry is price on application; <code>false</code> otherwise
+	 */
+	public boolean isPriceOnApplication();
+
+	/**
+	 * Sets whether this commerce price entry is price on application.
+	 *
+	 * @param priceOnApplication the price on application of this commerce price entry
+	 */
+	public void setPriceOnApplication(boolean priceOnApplication);
+
+	/**
+	 * Returns the promo price of this commerce price entry.
+	 *
+	 * @return the promo price of this commerce price entry
+	 */
+	public BigDecimal getPromoPrice();
+
+	/**
+	 * Sets the promo price of this commerce price entry.
+	 *
+	 * @param promoPrice the promo price of this commerce price entry
+	 */
+	public void setPromoPrice(BigDecimal promoPrice);
+
+	/**
+	 * Returns the quantity of this commerce price entry.
+	 *
+	 * @return the quantity of this commerce price entry
+	 */
+	public BigDecimal getQuantity();
+
+	/**
+	 * Sets the quantity of this commerce price entry.
+	 *
+	 * @param quantity the quantity of this commerce price entry
+	 */
+	public void setQuantity(BigDecimal quantity);
+
+	/**
+	 * Returns the unit of measure key of this commerce price entry.
+	 *
+	 * @return the unit of measure key of this commerce price entry
+	 */
+	@AutoEscape
+	public String getUnitOfMeasureKey();
+
+	/**
+	 * Sets the unit of measure key of this commerce price entry.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce price entry
+	 */
+	public void setUnitOfMeasureKey(String unitOfMeasureKey);
 
 	/**
 	 * Returns the last publish date of this commerce price entry.

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.comment;
@@ -48,18 +39,6 @@ public class CommentUtil {
 			Comment comment, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		User commentUser = comment.getUser();
-
-		String portraitURL = StringPool.BLANK;
-
-		if (commentUser.getPortraitId() > 0) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			portraitURL = commentUser.getPortraitURL(themeDisplay);
-		}
-
 		Date createDate = comment.getCreateDate();
 
 		String dateDescription = LanguageUtil.format(
@@ -77,14 +56,7 @@ public class CommentUtil {
 				System.currentTimeMillis() - modifiedDate.getTime(), true));
 
 		return JSONUtil.put(
-			"author",
-			JSONUtil.put(
-				"fullName", commentUser.getFullName()
-			).put(
-				"portraitURL", portraitURL
-			).put(
-				"userId", commentUser.getUserId()
-			)
+			"author", _getAuthorJSONObject(comment, httpServletRequest)
 		).put(
 			"body", comment.getBody()
 		).put(
@@ -119,6 +91,41 @@ public class CommentUtil {
 
 				return serviceContext;
 			});
+	}
+
+	private static JSONObject _getAuthorJSONObject(
+			Comment comment, HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		User commentUser = comment.getUser();
+
+		if (commentUser == null) {
+			return JSONUtil.put(
+				"fullName", LanguageUtil.get(httpServletRequest, "deleted-user")
+			).put(
+				"portraitURL", StringPool.BLANK
+			).put(
+				"userId", 0L
+			);
+		}
+
+		String portraitURL = StringPool.BLANK;
+
+		if (commentUser.getPortraitId() > 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			portraitURL = commentUser.getPortraitURL(themeDisplay);
+		}
+
+		return JSONUtil.put(
+			"fullName", commentUser.getFullName()
+		).put(
+			"portraitURL", portraitURL
+		).put(
+			"userId", commentUser.getUserId()
+		);
 	}
 
 	private static int _getWorkflowAction(ActionRequest actionRequest) {

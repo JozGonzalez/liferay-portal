@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect} from 'react';
 import {Outlet, useOutletContext, useParams} from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import {useHeader} from '../../../hooks';
 import {useFetch} from '../../../hooks/useFetch';
@@ -21,8 +13,7 @@ import i18n from '../../../i18n';
 import {
 	TestrayProject,
 	TestrayRequirement,
-	getRequirementQuery,
-	getRequirementTransformData,
+	testrayRequirementsImpl,
 } from '../../../services/rest';
 import useRequirementActions from './useRequirementActions';
 
@@ -33,12 +24,12 @@ const RequirementsOutlet = () => {
 		testrayProject,
 	}: {testrayProject: TestrayProject} = useOutletContext();
 
-	const {data: testrayRequirement, mutate} = useFetch<TestrayRequirement>(
-		getRequirementQuery(requirementId),
-		{
-			transformData: getRequirementTransformData,
-		}
-	);
+	const {data: testrayRequirement, error, loading, mutate} = useFetch<
+		TestrayRequirement
+	>(testrayRequirementsImpl.getResource(requirementId as string), {
+		transformData: (response: TestrayRequirement) =>
+			testrayRequirementsImpl.transformData(response),
+	});
 
 	const {setHeaderActions, setHeading} = useHeader({
 		timeout: 100,
@@ -50,36 +41,33 @@ const RequirementsOutlet = () => {
 
 	useEffect(() => {
 		if (testrayRequirement && testrayProject) {
-			setTimeout(() => {
-				setHeading([
-					{
-						category: i18n.translate('project').toUpperCase(),
-						path: `/project/${testrayProject.id}/requirements`,
-						title: testrayProject.name,
-					},
-					{
-						category: i18n.translate('requirement').toUpperCase(),
-						path: `/project/${testrayProject.id}/requirements/${testrayRequirement.id}`,
-						title: testrayRequirement?.key,
-					},
-				]);
-			}, 0);
+			setHeading([
+				{
+					category: i18n.translate('project').toUpperCase(),
+					path: `/project/${testrayProject.id}/requirements`,
+					title: testrayProject.name,
+				},
+				{
+					category: i18n.translate('requirement').toUpperCase(),
+					path: `/project/${testrayProject.id}/requirements/${testrayRequirement.id}`,
+					title: testrayRequirement?.summary,
+				},
+			]);
 		}
 	}, [testrayProject, setHeading, testrayRequirement]);
 
-	if (testrayRequirement && testrayProject) {
-		return (
+	return (
+		<PageRenderer error={error} loading={loading}>
 			<Outlet
 				context={{
+					actions: testrayRequirement?.actions,
 					mutateTestrayRequirement: mutate,
 					testrayProject,
 					testrayRequirement,
 				}}
 			/>
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default RequirementsOutlet;

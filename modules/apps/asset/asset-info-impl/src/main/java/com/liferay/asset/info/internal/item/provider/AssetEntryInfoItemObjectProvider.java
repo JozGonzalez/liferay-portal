@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.info.internal.item.provider;
@@ -29,7 +20,13 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Jorge Ferrer
  */
-@Component(service = InfoItemObjectProvider.class)
+@Component(
+	property = {
+		"info.item.identifier=com.liferay.info.item.ClassPKInfoItemIdentifier",
+		"service.ranking:Integer=100"
+	},
+	service = InfoItemObjectProvider.class
+)
 public class AssetEntryInfoItemObjectProvider
 	implements InfoItemObjectProvider<AssetEntry> {
 
@@ -58,14 +55,6 @@ public class AssetEntryInfoItemObjectProvider
 		catch (PortalException portalException) {
 			throw new RuntimeException(portalException);
 		}
-	}
-
-	@Override
-	public AssetEntry getInfoItem(long classPK) throws NoSuchInfoItemException {
-		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
-			classPK);
-
-		return getInfoItem(infoItemIdentifier);
 	}
 
 	@Reference

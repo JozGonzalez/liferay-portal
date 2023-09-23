@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.document.library.internal.item.selector;
@@ -22,13 +13,18 @@ import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileExtensionItemSelectorCriterion;
+import com.liferay.osgi.util.service.Snapshot;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -42,15 +38,11 @@ import com.liferay.portal.search.searcher.Searcher;
 
 import java.io.IOException;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 
@@ -63,9 +55,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Alejandro Tardín
@@ -114,13 +103,14 @@ public class ContentDashboardFileExtensionItemSelectorView
 				getName(),
 			new ContentDashboardFileExtensionItemSelectorViewDisplayContext(
 				_getContentDashboardFileExtensionGroupsJSONArray(
-					servletRequest),
+					fileExtensionItemSelectorCriterion, servletRequest),
 				itemSelectedEventName));
 
 		requestDispatcher.include(servletRequest, servletResponse);
 	}
 
 	private JSONArray _getContentDashboardFileExtensionGroupsJSONArray(
+		FileExtensionItemSelectorCriterion fileExtensionItemSelectorCriterion,
 		ServletRequest servletRequest) {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)servletRequest.getAttribute(
@@ -131,39 +121,38 @@ public class ContentDashboardFileExtensionItemSelectorView
 				_fileExtensionGroupsProvider.getFileExtensionGroups();
 
 		List<String> existingFileExtensions = _getExistingFileExtensions(
-			themeDisplay.getRequest());
+			fileExtensionItemSelectorCriterion, themeDisplay.getRequest());
 
-		Stream<String> stream = existingFileExtensions.stream();
+		Set<String> otherFileExtensions = SetUtil.fromList(
+			ListUtil.filter(
+				existingFileExtensions, _fileExtensionGroupsProvider::isOther));
 
-		Set<String> otherFileExtension = stream.filter(
-			_fileExtensionGroupsProvider::isOther
-		).collect(
-			Collectors.toSet()
-		);
-
-		Stream<FileExtensionGroupsProvider.FileExtensionGroup>
-			fileExtensionGroupsStream = fileExtensionGroups.stream();
-
-		return JSONUtil.putAll(
-			fileExtensionGroupsStream.map(
-				fileExtensionGroup -> fileExtensionGroup.toJSONObject(
-					SetUtil.fromArray(
-						servletRequest.getParameterValues(
-							"checkedFileExtensions")),
-					existingFileExtensions, _dlMimeTypeDisplayContext,
-					_language, themeDisplay.getLocale(), otherFileExtension)
-			).filter(
-				Objects::nonNull
-			).toArray());
+		return JSONUtil.toJSONArray(
+			fileExtensionGroups,
+			fileExtensionGroup -> fileExtensionGroup.toJSONObject(
+				SetUtil.fromArray(
+					servletRequest.getParameterValues("checkedFileExtensions")),
+				existingFileExtensions, _dlMimeTypeDisplayContextSnapshot.get(),
+				_language, themeDisplay.getLocale(), otherFileExtensions),
+			_log);
 	}
 
 	private List<String> _getExistingFileExtensions(
+		FileExtensionItemSelectorCriterion fileExtensionItemSelectorCriterion,
 		HttpServletRequest httpServletRequest) {
 
 		SearchContext searchContext = SearchContextFactory.getInstance(
 			httpServletRequest);
 
-		searchContext.setGroupIds(new long[0]);
+		long[] selectedGroupIds =
+			fileExtensionItemSelectorCriterion.getSelectedGroupIds();
+
+		if (selectedGroupIds != null) {
+			searchContext.setGroupIds(selectedGroupIds);
+		}
+		else {
+			searchContext.setGroupIds(new long[0]);
+		}
 
 		SearchRequestBuilder searchRequestBuilder =
 			_searchRequestBuilderFactory.builder(
@@ -189,30 +178,23 @@ public class ContentDashboardFileExtensionItemSelectorView
 			(TermsAggregationResult)searchResponse.getAggregationResult(
 				"extensions");
 
-		Collection<Bucket> buckets = termsAggregationResult.getBuckets();
-
-		Stream<Bucket> stream = buckets.stream();
-
-		return stream.map(
-			bucket -> bucket.getKey()
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			termsAggregationResult.getBuckets(), Bucket::getKey);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContentDashboardFileExtensionItemSelectorView.class);
+
+	private static final Snapshot<DLMimeTypeDisplayContext>
+		_dlMimeTypeDisplayContextSnapshot = new Snapshot<>(
+			ContentDashboardFileExtensionItemSelectorView.class,
+			DLMimeTypeDisplayContext.class, null, true);
 	private static final List<ItemSelectorReturnType>
 		_supportedItemSelectorReturnTypes = Collections.singletonList(
 			new UUIDItemSelectorReturnType());
 
 	@Reference
 	private Aggregations _aggregations;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile DLMimeTypeDisplayContext _dlMimeTypeDisplayContext;
 
 	@Reference
 	private FileExtensionGroupsProvider _fileExtensionGroupsProvider;

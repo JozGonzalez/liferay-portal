@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.exportimport.data.handler;
@@ -18,6 +9,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -25,9 +17,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.journal.exception.FeedTargetLayoutFriendlyUrlException;
-import com.liferay.journal.internal.exportimport.content.processor.JournalFeedExportImportContentProcessor;
 import com.liferay.journal.internal.exportimport.creation.strategy.JournalCreationStrategy;
-import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.service.JournalFeedLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -104,8 +94,7 @@ public class JournalFeedStagedModelDataHandler
 		Element feedElement = portletDataContext.getExportDataElement(feed);
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			feed.getGroupId(), _portal.getClassNameId(JournalArticle.class),
-			feed.getDDMStructureKey(), true);
+			feed.getDDMStructureId());
 
 		if (ddmStructure != null) {
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
@@ -115,8 +104,8 @@ public class JournalFeedStagedModelDataHandler
 		else {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Unable to find DDM structure with key " +
-						feed.getDDMStructureKey());
+					"Unable to find DDM structure with id " +
+						feed.getDDMStructureId());
 			}
 		}
 
@@ -199,13 +188,13 @@ public class JournalFeedStagedModelDataHandler
 			}
 		}
 
-		Map<String, String> ddmStructureKeys =
-			(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
-				DDMStructure.class + ".ddmStructureKey");
+		Map<Long, Long> ddmStructureIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				DDMStructure.class);
 
-		String parentDDMStructureKey = MapUtil.getString(
-			ddmStructureKeys, feed.getDDMStructureKey(),
-			feed.getDDMStructureKey());
+		long parentDDMStructureId = MapUtil.getLong(
+			ddmStructureIds, feed.getDDMStructureId(),
+			feed.getDDMStructureId());
 
 		Map<String, String> ddmTemplateKeys =
 			(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
@@ -234,7 +223,7 @@ public class JournalFeedStagedModelDataHandler
 					importedFeed = _journalFeedLocalService.addFeed(
 						userId, portletDataContext.getScopeGroupId(), feedId,
 						autoFeedId, feed.getName(), feed.getDescription(),
-						parentDDMStructureKey, parentDDMTemplateKey,
+						parentDDMStructureId, parentDDMTemplateKey,
 						parentRendererDDMTemplateKey, feed.getDelta(),
 						feed.getOrderByCol(), feed.getOrderByType(),
 						feed.getTargetLayoutFriendlyUrl(),
@@ -246,7 +235,7 @@ public class JournalFeedStagedModelDataHandler
 					importedFeed = _journalFeedLocalService.updateFeed(
 						existingFeed.getGroupId(), existingFeed.getFeedId(),
 						feed.getName(), feed.getDescription(),
-						parentDDMStructureKey, parentDDMTemplateKey,
+						parentDDMStructureId, parentDDMTemplateKey,
 						parentRendererDDMTemplateKey, feed.getDelta(),
 						feed.getOrderByCol(), feed.getOrderByType(),
 						feed.getTargetLayoutFriendlyUrl(),
@@ -259,7 +248,7 @@ public class JournalFeedStagedModelDataHandler
 				importedFeed = _journalFeedLocalService.addFeed(
 					userId, portletDataContext.getScopeGroupId(), feedId,
 					autoFeedId, feed.getName(), feed.getDescription(),
-					parentDDMStructureKey, parentDDMTemplateKey,
+					parentDDMStructureId, parentDDMTemplateKey,
 					parentRendererDDMTemplateKey, feed.getDelta(),
 					feed.getOrderByCol(), feed.getOrderByType(),
 					feed.getTargetLayoutFriendlyUrl(),
@@ -306,8 +295,10 @@ public class JournalFeedStagedModelDataHandler
 	@Reference
 	private JournalCreationStrategy _journalCreationStrategy;
 
-	@Reference
-	private JournalFeedExportImportContentProcessor
+	@Reference(
+		target = "(model.class.name=com.liferay.journal.model.JournalFeed)"
+	)
+	private ExportImportContentProcessor<String>
 		_journalFeedExportImportContentProcessor;
 
 	@Reference

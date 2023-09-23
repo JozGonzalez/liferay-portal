@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.portlet.action;
@@ -27,6 +18,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -161,14 +154,17 @@ public class DownloadEntriesMVCResourceCommand implements MVCResourceCommand {
 
 			try {
 				for (FileEntry fileEntry : fileEntries) {
-					_zipFileEntry(fileEntry, StringPool.SLASH, zipWriter);
+					_zipFileEntry(
+						fileEntry, StringPool.SLASH,
+						themeDisplay.getPermissionChecker(), zipWriter);
 				}
 
 				for (FileShortcut fileShortcut : fileShortcuts) {
 					_zipFileEntry(
 						_dlAppService.getFileEntry(
 							fileShortcut.getToFileEntryId()),
-						StringPool.SLASH, zipWriter);
+						StringPool.SLASH, themeDisplay.getPermissionChecker(),
+						zipWriter);
 				}
 
 				for (Folder folder : folders) {
@@ -176,7 +172,7 @@ public class DownloadEntriesMVCResourceCommand implements MVCResourceCommand {
 						_zipFolder(
 							folder.getRepositoryId(), folder.getFolderId(),
 							StringPool.SLASH.concat(folder.getName()),
-							zipWriter);
+							themeDisplay.getPermissionChecker(), zipWriter);
 					}
 				}
 
@@ -215,7 +211,9 @@ public class DownloadEntriesMVCResourceCommand implements MVCResourceCommand {
 			long repositoryId = ParamUtil.getLong(
 				resourceRequest, "repositoryId");
 
-			_zipFolder(repositoryId, folderId, StringPool.SLASH, zipWriter);
+			_zipFolder(
+				repositoryId, folderId, StringPool.SLASH,
+				themeDisplay.getPermissionChecker(), zipWriter);
 
 			try (InputStream inputStream = new FileInputStream(
 					zipWriter.getFile())) {
@@ -270,16 +268,22 @@ public class DownloadEntriesMVCResourceCommand implements MVCResourceCommand {
 	}
 
 	private void _zipFileEntry(
-			FileEntry fileEntry, String path, ZipWriter zipWriter)
+			FileEntry fileEntry, String path,
+			PermissionChecker permissionChecker, ZipWriter zipWriter)
 		throws IOException, PortalException {
 
-		zipWriter.addEntry(
-			path + StringPool.SLASH + fileEntry.getFileName(),
-			fileEntry.getContentStream());
+		if (fileEntry.containsPermission(
+				permissionChecker, ActionKeys.DOWNLOAD)) {
+
+			zipWriter.addEntry(
+				path + StringPool.SLASH + fileEntry.getFileName(),
+				fileEntry.getContentStream());
+		}
 	}
 
 	private void _zipFolder(
-			long repositoryId, long folderId, String path, ZipWriter zipWriter)
+			long repositoryId, long folderId, String path,
+			PermissionChecker permissionChecker, ZipWriter zipWriter)
 		throws IOException, PortalException {
 
 		List<Object> foldersAndFileEntriesAndFileShortcuts =
@@ -295,17 +299,18 @@ public class DownloadEntriesMVCResourceCommand implements MVCResourceCommand {
 					folder.getRepositoryId(), folder.getFolderId(),
 					StringBundler.concat(
 						path, StringPool.SLASH, folder.getName()),
-					zipWriter);
+					permissionChecker, zipWriter);
 			}
 			else if (entry instanceof FileEntry) {
-				_zipFileEntry((FileEntry)entry, path, zipWriter);
+				_zipFileEntry(
+					(FileEntry)entry, path, permissionChecker, zipWriter);
 			}
 			else if (entry instanceof FileShortcut) {
 				FileShortcut fileShortcut = (FileShortcut)entry;
 
 				_zipFileEntry(
 					_dlAppService.getFileEntry(fileShortcut.getToFileEntryId()),
-					path, zipWriter);
+					path, permissionChecker, zipWriter);
 			}
 		}
 	}

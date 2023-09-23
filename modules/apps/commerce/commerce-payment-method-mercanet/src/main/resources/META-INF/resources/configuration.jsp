@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-MercanetGroupServiceConfiguration mercanetCommercePaymentEngineGroupServiceConfiguration = (MercanetGroupServiceConfiguration)request.getAttribute(MercanetGroupServiceConfiguration.class.getName());
+MercanetGroupServiceConfiguration mercanetGroupServiceConfiguration = (MercanetGroupServiceConfiguration)request.getAttribute(MercanetGroupServiceConfiguration.class.getName());
 %>
 
 <portlet:actionURL name="/commerce_payment_methods/edit_mercanet_commerce_payment_method_configuration" var="editCommercePaymentMethodActionURL" />
@@ -35,11 +26,19 @@ MercanetGroupServiceConfiguration mercanetCommercePaymentEngineGroupServiceConfi
 		<commerce-ui:info-box
 			title='<%= LanguageUtil.get(request, "authentication") %>'
 		>
-			<aui:input label="merchant-id" name="settings--merchantId--" value="<%= mercanetCommercePaymentEngineGroupServiceConfiguration.merchantId() %>" />
+			<aui:input label="merchant-id" name="settings--merchantId--" value="<%= mercanetGroupServiceConfiguration.merchantId() %>" />
 
-			<aui:input label="secret-key" name="settings--secretKey--" value="<%= mercanetCommercePaymentEngineGroupServiceConfiguration.secretKey() %>" />
+			<%
+			String secretKey = mercanetGroupServiceConfiguration.secretKey();
 
-			<aui:input label="key-version" name="settings--keyVersion--" value="<%= mercanetCommercePaymentEngineGroupServiceConfiguration.keyVersion() %>" />
+			if (Validator.isNotNull(secretKey)) {
+				secretKey = Portal.TEMP_OBFUSCATION_VALUE;
+			}
+			%>
+
+			<aui:input label="secret-key" name="settings--secretKey--" type="password" value="<%= secretKey %>" />
+
+			<aui:input label="key-version" name="settings--keyVersion--" value="<%= mercanetGroupServiceConfiguration.keyVersion() %>" />
 
 			<aui:select name="settings--environment--">
 
@@ -47,7 +46,7 @@ MercanetGroupServiceConfiguration mercanetCommercePaymentEngineGroupServiceConfi
 				for (String environment : MercanetCommercePaymentMethodConstants.ENVIRONMENTS) {
 				%>
 
-					<aui:option label="<%= environment %>" selected="<%= environment.equals(mercanetCommercePaymentEngineGroupServiceConfiguration.environment()) %>" value="<%= environment %>" />
+					<aui:option label="<%= environment %>" selected="<%= environment.equals(mercanetGroupServiceConfiguration.environment()) %>" value="<%= environment %>" />
 
 				<%
 				}

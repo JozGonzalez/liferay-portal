@@ -1,34 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
-import {ClayToggle} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import {Card} from '@liferay/object-js-components-web';
+import {Toggle} from '@liferay/object-js-components-web';
 import React from 'react';
 
 import './TranslationOptionsContainer.scss';
 
 interface TranslationOptionsContainerProps {
+	objectDefinition: Partial<ObjectDefinition>;
 	published: boolean;
 	setValues: (values: Partial<ObjectField>) => void;
 	values: Partial<ObjectField>;
 }
 
 export function TranslationOptionsContainer({
+	objectDefinition,
 	published,
 	setValues,
 	values,
@@ -40,7 +32,7 @@ export function TranslationOptionsContainer({
 		!values.system;
 
 	return (
-		<Card title={Liferay.Language.get('translation-options')}>
+		<>
 			{!translatableField && (
 				<ClayAlert
 					displayType="info"
@@ -57,14 +49,22 @@ export function TranslationOptionsContainer({
 			)}
 
 			<div className="lfr__objects-translation-options-container">
-				<ClayToggle
-					disabled={published || !translatableField}
-					label={Liferay.Language.get('enable-entry-translation')}
-					onToggle={() =>
+				<Toggle
+					disabled={
+						published ||
+						!translatableField ||
+						!objectDefinition.enableLocalization
+					}
+					label={Liferay.Language.get('enable-entry-translations')}
+					onToggle={(localized) =>
 						setValues({
-							enableLocalization: !values.enableLocalization,
+							localized,
+							required: Liferay.FeatureFlags['LPS-172017']
+								? !localized && values.required
+								: values.required,
 						})
 					}
+					toggled={values.localized}
 				/>
 
 				<ClayTooltipProvider>
@@ -80,6 +80,6 @@ export function TranslationOptionsContainer({
 					</span>
 				</ClayTooltipProvider>
 			</div>
-		</Card>
+		</>
 	);
 }

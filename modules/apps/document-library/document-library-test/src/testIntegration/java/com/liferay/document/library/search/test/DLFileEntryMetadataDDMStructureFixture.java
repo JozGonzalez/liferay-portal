@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.search.test;
 
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.test.util.search.FileEntryBlueprint;
@@ -24,19 +16,20 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -78,14 +71,24 @@ public class DLFileEntryMetadataDDMStructureFixture {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
 
-		DLFileEntryType type = _dlFileEntryTypeLocalService.addFileEntryType(
-			_dlFixture.getUserId(), groupId, RandomTestUtil.randomString(),
-			StringPool.BLANK, new long[] {ddmStructure.getStructureId()},
-			serviceContext);
+		DLFileEntryType dlFileEntryType =
+			_dlFileEntryTypeLocalService.addFileEntryType(
+				_dlFixture.getUserId(), groupId, ddmStructure.getStructureId(),
+				null,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), "New File Entry Type"),
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), "New File Entry Type"),
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
+				serviceContext);
 
-		_fileEntryTypes.add(type);
+		_dlFileEntryTypeLocalService.addDDMStructureLinks(
+			dlFileEntryType.getFileEntryTypeId(),
+			SetUtil.fromArray(ddmStructure.getStructureId()));
 
-		return type;
+		_fileEntryTypes.add(dlFileEntryType);
+
+		return dlFileEntryType;
 	}
 
 	protected FileEntry addFileEntry(String fileName, long fileEntryTypeId)

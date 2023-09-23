@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0;
@@ -409,6 +400,32 @@ public class SitePage implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> friendlyUrlPath_i18n;
 
+	@Schema(description = "The page ID.")
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	@JsonIgnore
+	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+		try {
+			id = idUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The page ID.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long id;
+
 	@Schema(description = "A list of keywords describing the page.")
 	public String[] getKeywords() {
 		return keywords;
@@ -471,6 +488,36 @@ public class SitePage implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected PageDefinition pageDefinition;
 
+	@Schema(description = "The page's permissions.")
+	@Valid
+	public PagePermission[] getPagePermissions() {
+		return pagePermissions;
+	}
+
+	public void setPagePermissions(PagePermission[] pagePermissions) {
+		this.pagePermissions = pagePermissions;
+	}
+
+	@JsonIgnore
+	public void setPagePermissions(
+		UnsafeSupplier<PagePermission[], Exception>
+			pagePermissionsUnsafeSupplier) {
+
+		try {
+			pagePermissions = pagePermissionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The page's permissions.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected PagePermission[] pagePermissions;
+
 	@Schema(description = "Settings of the page, such as SEO or OpenGraph.")
 	@Valid
 	public PageSettings getPageSettings() {
@@ -529,6 +576,38 @@ public class SitePage implements Serializable {
 	@GraphQLField(description = "The type of the page.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String pageType;
+
+	@Schema(description = "The parent page or null if it is a top level page.")
+	@Valid
+	public ParentSitePage getParentSitePage() {
+		return parentSitePage;
+	}
+
+	public void setParentSitePage(ParentSitePage parentSitePage) {
+		this.parentSitePage = parentSitePage;
+	}
+
+	@JsonIgnore
+	public void setParentSitePage(
+		UnsafeSupplier<ParentSitePage, Exception>
+			parentSitePageUnsafeSupplier) {
+
+		try {
+			parentSitePage = parentSitePageUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The parent page or null if it is a top level page."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ParentSitePage parentSitePage;
 
 	@Schema(
 		description = "Metadata of the page such as it's master page and template."
@@ -622,11 +701,12 @@ public class SitePage implements Serializable {
 	}
 
 	@GraphQLField(description = "The categories associated with this page.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
 
 	@Schema(
-		description = "A write-only field that adds `TaxonomyCategory` instances to the page."
+		deprecated = true,
+		description = "A write-only field that adds `TaxonomyCategory` instances to the page. Deprecated as of Cavanaugh (7.4.x), replaced by `taxonomyCategoryBriefs.taxonomyCategoryReference`"
 	)
 	public Long[] getTaxonomyCategoryIds() {
 		return taxonomyCategoryIds;
@@ -651,8 +731,9 @@ public class SitePage implements Serializable {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField(
-		description = "A write-only field that adds `TaxonomyCategory` instances to the page."
+		description = "A write-only field that adds `TaxonomyCategory` instances to the page. Deprecated as of Cavanaugh (7.4.x), replaced by `taxonomyCategoryBriefs.taxonomyCategoryReference`"
 	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long[] taxonomyCategoryIds;
@@ -962,6 +1043,16 @@ public class SitePage implements Serializable {
 			sb.append(_toJSON(friendlyUrlPath_i18n));
 		}
 
+		if (id != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"id\": ");
+
+			sb.append(id);
+		}
+
 		if (keywords != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -996,6 +1087,26 @@ public class SitePage implements Serializable {
 			sb.append(String.valueOf(pageDefinition));
 		}
 
+		if (pagePermissions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pagePermissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < pagePermissions.length; i++) {
+				sb.append(String.valueOf(pagePermissions[i]));
+
+				if ((i + 1) < pagePermissions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (pageSettings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1018,6 +1129,16 @@ public class SitePage implements Serializable {
 			sb.append(_escape(pageType));
 
 			sb.append("\"");
+		}
+
+		if (parentSitePage != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentSitePage\": ");
+
+			sb.append(String.valueOf(parentSitePage));
 		}
 
 		if (renderedPage != null) {
@@ -1264,5 +1385,7 @@ public class SitePage implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

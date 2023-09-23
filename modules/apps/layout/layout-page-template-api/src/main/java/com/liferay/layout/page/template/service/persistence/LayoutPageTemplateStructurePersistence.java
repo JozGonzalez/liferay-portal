@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.service.persistence;
@@ -536,62 +527,54 @@ public interface LayoutPageTemplateStructurePersistence
 	public int countByGroupId(long groupId);
 
 	/**
-	 * Returns the layout page template structure where groupId = &#63; and classNameId = &#63; and classPK = &#63; or throws a <code>NoSuchPageTemplateStructureException</code> if it could not be found.
+	 * Returns the layout page template structure where groupId = &#63; and plid = &#63; or throws a <code>NoSuchPageTemplateStructureException</code> if it could not be found.
 	 *
 	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param plid the plid
 	 * @return the matching layout page template structure
 	 * @throws NoSuchPageTemplateStructureException if a matching layout page template structure could not be found
 	 */
-	public LayoutPageTemplateStructure findByG_C_C(
-			long groupId, long classNameId, long classPK)
+	public LayoutPageTemplateStructure findByG_P(long groupId, long plid)
 		throws NoSuchPageTemplateStructureException;
 
 	/**
-	 * Returns the layout page template structure where groupId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the layout page template structure where groupId = &#63; and plid = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param plid the plid
 	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
 	 */
-	public LayoutPageTemplateStructure fetchByG_C_C(
-		long groupId, long classNameId, long classPK);
+	public LayoutPageTemplateStructure fetchByG_P(long groupId, long plid);
 
 	/**
-	 * Returns the layout page template structure where groupId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the layout page template structure where groupId = &#63; and plid = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param plid the plid
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
 	 */
-	public LayoutPageTemplateStructure fetchByG_C_C(
-		long groupId, long classNameId, long classPK, boolean useFinderCache);
+	public LayoutPageTemplateStructure fetchByG_P(
+		long groupId, long plid, boolean useFinderCache);
 
 	/**
-	 * Removes the layout page template structure where groupId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
+	 * Removes the layout page template structure where groupId = &#63; and plid = &#63; from the database.
 	 *
 	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param plid the plid
 	 * @return the layout page template structure that was removed
 	 */
-	public LayoutPageTemplateStructure removeByG_C_C(
-			long groupId, long classNameId, long classPK)
+	public LayoutPageTemplateStructure removeByG_P(long groupId, long plid)
 		throws NoSuchPageTemplateStructureException;
 
 	/**
-	 * Returns the number of layout page template structures where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 * Returns the number of layout page template structures where groupId = &#63; and plid = &#63;.
 	 *
 	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param plid the plid
 	 * @return the number of matching layout page template structures
 	 */
-	public int countByG_C_C(long groupId, long classNameId, long classPK);
+	public int countByG_P(long groupId, long plid);
 
 	/**
 	 * Caches the layout page template structure in the entity cache if it is enabled.

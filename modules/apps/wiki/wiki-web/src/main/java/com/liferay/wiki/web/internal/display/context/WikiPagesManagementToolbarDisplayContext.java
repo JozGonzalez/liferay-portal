@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.web.internal.display.context;
@@ -24,10 +15,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
@@ -44,7 +37,6 @@ import com.liferay.wiki.constants.WikiWebKeys;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.web.internal.display.context.helper.WikiURLHelper;
-import com.liferay.wiki.web.internal.portlet.toolbar.item.WikiPortletToolbarContributor;
 import com.liferay.wiki.web.internal.security.permission.resource.WikiPagePermission;
 
 import java.util.ArrayList;
@@ -158,8 +150,8 @@ public class WikiPagesManagementToolbarDisplayContext {
 			return null;
 		}
 
-		WikiPortletToolbarContributor wikiPortletToolbarContributor =
-			(WikiPortletToolbarContributor)_httpServletRequest.getAttribute(
+		PortletToolbarContributor wikiPortletToolbarContributor =
+			(PortletToolbarContributor)_httpServletRequest.getAttribute(
 				WikiWebKeys.WIKI_PORTLET_TOOLBAR_CONTRIBUTOR);
 
 		List<Menu> menus = wikiPortletToolbarContributor.getPortletTitleMenus(
@@ -188,6 +180,12 @@ public class WikiPagesManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
+		if (Validator.isNotNull(
+				ParamUtil.getString(_httpServletRequest, "keywords"))) {
+
+			return null;
+		}
+
 		return DropdownItemListBuilder.addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
@@ -197,10 +195,9 @@ public class WikiPagesManagementToolbarDisplayContext {
 						_httpServletRequest, "filter-by-navigation"));
 			}
 		).addGroup(
-			() -> Validator.isNull(
-				ParamUtil.getString(_httpServletRequest, "keywords")),
+			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
 			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
@@ -223,11 +220,49 @@ public class WikiPagesManagementToolbarDisplayContext {
 					).buildString());
 
 				labelItem.setCloseable(true);
-
 				labelItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, navigation));
 			}
 		).build();
+	}
+
+	public List<DropdownItem> getOrderByDropdownItems()
+		throws PortletException {
+
+		return new DropdownItemList() {
+			{
+				Map<String, String> orderColumns = HashMapBuilder.put(
+					"modifiedDate", "modified-date"
+				).put(
+					"title", "title"
+				).build();
+
+				PortletURL portletURL = _getPortletURL();
+
+				for (Map.Entry<String, String> orderByColEntry :
+						orderColumns.entrySet()) {
+
+					String orderByCol = orderByColEntry.getKey();
+
+					add(
+						dropdownItem -> {
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
+
+							PortletURL orderByPortletURL = PortletURLUtil.clone(
+								portletURL, _liferayPortletResponse);
+
+							dropdownItem.setHref(
+								orderByPortletURL, "orderByCol", orderByCol);
+
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									orderByColEntry.getValue()));
+						});
+				}
+			}
+		};
 	}
 
 	public PortletURL getSearchActionURL() {
@@ -305,12 +340,6 @@ public class WikiPagesManagementToolbarDisplayContext {
 	private List<DropdownItem> _getFilterNavigationDropdownItems()
 		throws PortletException {
 
-		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
-
-		if (Validator.isNotNull(keywords)) {
-			return null;
-		}
-
 		return new DropdownItemList() {
 			{
 				String navigation = _getNavigation();
@@ -352,45 +381,6 @@ public class WikiPagesManagementToolbarDisplayContext {
 
 	private String _getOrderByCol() {
 		return _searchContainer.getOrderByCol();
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems()
-		throws PortletException {
-
-		return new DropdownItemList() {
-			{
-				Map<String, String> orderColumns = HashMapBuilder.put(
-					"modifiedDate", "modified-date"
-				).put(
-					"title", "title"
-				).build();
-
-				PortletURL portletURL = _getPortletURL();
-
-				for (Map.Entry<String, String> orderByColEntry :
-						orderColumns.entrySet()) {
-
-					String orderByCol = orderByColEntry.getKey();
-
-					add(
-						dropdownItem -> {
-							dropdownItem.setActive(
-								orderByCol.equals(_getOrderByCol()));
-
-							PortletURL orderByPortletURL = PortletURLUtil.clone(
-								portletURL, _liferayPortletResponse);
-
-							dropdownItem.setHref(
-								orderByPortletURL, "orderByCol", orderByCol);
-
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest,
-									orderByColEntry.getValue()));
-						});
-				}
-			}
-		};
 	}
 
 	private String _getOrderByType() {

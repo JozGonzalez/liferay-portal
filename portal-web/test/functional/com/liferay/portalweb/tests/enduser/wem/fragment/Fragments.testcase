@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -35,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -55,20 +56,20 @@ definition {
 				entry = "Fragment Name",
 				item = "Edit");
 
-			var htmlSnippet = '''
-<div class="test">
-CSS
+			var htmlSnippet = '''<div class="test">
+	CSS
 </div>
 <div>
-NO CSS
-</div>
-		''';
-			var cssSnippet = '''
-.test
-{ font-size: 40px; }
-		''';
+	NO CSS
+</div>''';
+			var cssSnippet = '''.test
+{
+	font-size: 40px;
+}''';
 
 			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
+
+			FragmentsEditor.waitForAutoSave();
 
 			FragmentsEditor.typeCssEditor(content = ${cssSnippet});
 
@@ -94,24 +95,21 @@ NO CSS
 	test MarkFragmentCreatedInPortalAsCacheable {
 		property portal.acceptance = "true";
 
-		task ("Add a new fragment") {
+		task ("Mark the fragment as cacheable") {
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
 			FragmentsAdminNavigator.gotoEntryEllipsisItem(
 				entry = "Fragment Name",
-				item = "Edit");
-		}
+				item = "Mark as Cacheable");
 
-		task ("Mark the fragment as cacheable") {
-			AssertNotChecked.assertNotCheckedNotVisible(
-				checkboxName = "Cacheable",
-				locator1 = "Checkbox#ANY_CHECKBOX");
+			AssertConfirm(value1 = "Only check when developing a static fragment that does not use request handling, the CMS query API, or other dynamic features. Referencing taglibs can also warrant unchecking this feature, since they could modify content outside the template engine's generated cache.");
 
-			Check.checkNotVisible(
-				checkboxName = "Cacheable",
-				locator1 = "Checkbox#ANY_CHECKBOX");
+			Alert.viewSuccessMessage();
 
-			PortletEntry.publish();
+			LexiconCard.viewCardLabel(
+				card = "Fragment Name",
+				cardLabel = "Cached",
+				index = 2);
 		}
 	}
 
@@ -122,28 +120,31 @@ NO CSS
 			FragmentsAdmin.importCollectionFromDependenciesFolder(collectionZipFile = "fragment-collection.zip");
 		}
 
-		task ("Edit the imported fragment") {
+		task ("Mark the imported fragment as cacheable") {
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
 			FragmentsAdminNavigator.gotoEntryEllipsisItem(
 				entry = "Content",
-				item = "Edit");
+				item = "Mark as Cacheable");
+
+			AssertConfirm(value1 = "Only check when developing a static fragment that does not use request handling, the CMS query API, or other dynamic features. Referencing taglibs can also warrant unchecking this feature, since they could modify content outside the template engine's generated cache.");
+
+			Alert.viewSuccessMessage();
+
+			LexiconCard.viewCardLabel(
+				card = "Content",
+				cardLabel = "Cached",
+				index = 2);
 		}
 
-		task ("Mark the fragment as cacheable") {
+		task ("View the imported fragment without Read-Only label") {
+			FragmentsAdminNavigator.gotoEntryEllipsisItem(
+				entry = "Content",
+				item = "Edit");
+
 			AssertElementNotPresent(locator1 = "FragmentEditor#READ_ONLY_VIEW");
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				checkboxName = "Cacheable",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-
-			Check.checkNotVisible(
-				checkboxName = "Cacheable",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-
-			PortletEntry.publish();
 		}
 	}
 

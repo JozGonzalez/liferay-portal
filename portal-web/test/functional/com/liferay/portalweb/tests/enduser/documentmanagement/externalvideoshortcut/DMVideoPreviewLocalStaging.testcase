@@ -23,7 +23,7 @@ definition {
 			keepCachedAppServerData = "true",
 			nodePort = 8080);
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -35,9 +35,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -54,7 +54,8 @@ definition {
 	@refactordone
 	test CanPublishWCAfterEditingEmbeddedVideo {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DLVideoLocalStaging#CanPublishWCAfterEditingEmbeddedVideo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var entryCount : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
@@ -138,7 +139,8 @@ definition {
 	@refactordone
 	test CanRemoveVideoReferenceAfterRepublishingKBArticle {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DLVideoLocalStaging#CanRemoveVideoReferenceAfterRepublishingKBArticle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",

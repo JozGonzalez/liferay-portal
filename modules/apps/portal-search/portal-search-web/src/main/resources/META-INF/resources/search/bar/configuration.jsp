@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -48,7 +39,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 
 SearchBarPortletInstanceConfiguration searchBarPortletInstanceConfiguration = searchBarPortletDisplayContext.getSearchBarPortletInstanceConfiguration();
 
-SearchBarPortletPreferences searchBarPortletPreferences = new SearchBarPortletPreferencesImpl(java.util.Optional.ofNullable(portletPreferences));
+SearchBarPortletPreferences searchBarPortletPreferences = new SearchBarPortletPreferencesImpl(portletPreferences);
 
 String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPEN_BRACKET, StringUtil.merge(searchBarPortletInstanceConfiguration.suggestionsContributorConfigurations(), StringPool.COMMA), StringPool.CLOSE_BRACKET);
 %>
@@ -115,8 +106,8 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 
 				<aui:input label="enable-suggestions" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SUGGESTIONS_ENABLED) %>" type="checkbox" value="<%= searchBarPortletPreferences.isSuggestionsEnabled() %>" />
 
-				<div class="options-container <%= !searchBarPortletPreferences.isSuggestionsEnabled() ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />suggestionsOptionsContainer">
-					<aui:input helpMessage="character-threshold-for-displaying-suggestions-help" label="character-threshold-for-displaying-suggestions" min="0" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SUGGESTIONS_DISPLAY_THRESHOLD) %>" size="10" type="number" value="<%= searchBarPortletInstanceConfiguration.suggestionsDisplayThreshold() %>">
+				<div class="search-bar-configuration-options-container <%= !searchBarPortletPreferences.isSuggestionsEnabled() ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />suggestionsOptionsContainer">
+					<aui:input helpMessage="character-threshold-for-displaying-suggestions-help" label="character-threshold-for-displaying-suggestions" min="0" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SUGGESTIONS_DISPLAY_THRESHOLD) %>" size="10" type="number" value="<%= searchBarPortletInstanceConfiguration.suggestionsDisplayThreshold() %>" wrapperCssClass="c-mb-0">
 						<aui:validator name="min">0</aui:validator>
 					</aui:input>
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.dto.v1_0.converter;
@@ -35,6 +26,7 @@ import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.UserGroupBrief;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.EmailAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PhoneUtil;
@@ -45,7 +37,6 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -54,7 +45,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.UserBag;
-import com.liferay.portal.kernel.security.permission.UserBagFactoryUtil;
+import com.liferay.portal.kernel.security.permission.UserBagFactory;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -68,6 +59,8 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import java.util.Collection;
+
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -79,7 +72,7 @@ import org.osgi.service.component.annotations.Reference;
 		"application.name=Liferay.Headless.Admin.User",
 		"dto.class.name=com.liferay.portal.kernel.model.User", "version=v1.0"
 	},
-	service = {DTOConverter.class, UserResourceDTOConverter.class}
+	service = DTOConverter.class
 )
 public class UserResourceDTOConverter
 	implements DTOConverter<User, UserAccount> {
@@ -100,12 +93,6 @@ public class UserResourceDTOConverter
 		}
 
 		return user;
-	}
-
-	public long getUserId(String externalReferenceCode) throws Exception {
-		User user = getObject(externalReferenceCode);
-
-		return user.getUserId();
 	}
 
 	@Override
@@ -163,10 +150,8 @@ public class UserResourceDTOConverter
 						dtoConverterContext, organization, user),
 					OrganizationBrief.class);
 				siteBriefs = TransformUtil.transformToArray(
-					_groupLocalService.getGroups(
-						user.getCompanyId(),
-						GroupConstants.DEFAULT_PARENT_GROUP_ID, true),
-					group -> _toSiteBrief(dtoConverterContext, group),
+					_groupLocalService.getUserSitesGroups(user.getUserId()),
+					group -> _toSiteBrief(dtoConverterContext, group, user),
 					SiteBrief.class);
 				userAccountContactInformation =
 					new UserAccountContactInformation() {
@@ -237,23 +222,11 @@ public class UserResourceDTOConverter
 					});
 				setRoleBriefs(
 					() -> {
-						UserBag userBag = UserBagFactoryUtil.create(
+						UserBag userBag = _userBagFactory.create(
 							user.getUserId());
 
-						return TransformUtil.transformToArray(
-							userBag.getRoles(),
-							role -> {
-								if (!_roleModelResourcePermission.contains(
-										PermissionThreadLocal.
-											getPermissionChecker(),
-										role, ActionKeys.VIEW)) {
-
-									return null;
-								}
-
-								return _toRoleBrief(dtoConverterContext, role);
-							},
-							RoleBrief.class);
+						return _toRoleBriefs(
+							dtoConverterContext, userBag.getRoles());
 					});
 			}
 		};
@@ -309,11 +282,10 @@ public class UserResourceDTOConverter
 			{
 				id = organization.getOrganizationId();
 				name = organization.getName();
-				roleBriefs = TransformUtil.transformToArray(
+				roleBriefs = _toRoleBriefs(
+					dtoConverterContext,
 					_roleLocalService.getUserGroupRoles(
-						user.getUserId(), organization.getGroupId()),
-					role -> _toRoleBrief(dtoConverterContext, role),
-					RoleBrief.class);
+						user.getUserId(), organization.getGroupId()));
 			}
 		};
 	}
@@ -349,8 +321,27 @@ public class UserResourceDTOConverter
 		};
 	}
 
+	private RoleBrief[] _toRoleBriefs(
+			DTOConverterContext dtoConverterContext, Collection<Role> roles)
+		throws Exception {
+
+		return TransformUtil.transformToArray(
+			roles,
+			role -> {
+				if (!_roleModelResourcePermission.contains(
+						PermissionThreadLocal.getPermissionChecker(), role,
+						ActionKeys.VIEW)) {
+
+					return null;
+				}
+
+				return _toRoleBrief(dtoConverterContext, role);
+			},
+			RoleBrief.class);
+	}
+
 	private SiteBrief _toSiteBrief(
-			DTOConverterContext dtoConverterContext, Group group)
+			DTOConverterContext dtoConverterContext, Group group, User user)
 		throws Exception {
 
 		return new SiteBrief() {
@@ -365,6 +356,10 @@ public class UserResourceDTOConverter
 				name_i18n = LocalizedMapUtil.getI18nMap(
 					dtoConverterContext.isAcceptAllLanguages(),
 					group.getNameMap());
+				roleBriefs = _toRoleBriefs(
+					dtoConverterContext,
+					_roleLocalService.getUserGroupRoles(
+						user.getUserId(), group.getGroupId()));
 			}
 		};
 	}
@@ -408,10 +403,15 @@ public class UserResourceDTOConverter
 	private ModelResourcePermission<Role> _roleModelResourcePermission;
 
 	@Reference
-	private UserGroupLocalService _userGroupLocalService;
+	private UserBagFactory _userBagFactory;
 
 	@Reference
-	private UserGroupResourceDTOConverter _userGroupResourceDTOConverter;
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Reference(target = DTOConverterConstants.USER_GROUP_RESOURCE_DTO_CONVERTER)
+	private DTOConverter
+		<UserGroup, com.liferay.headless.admin.user.dto.v1_0.UserGroup>
+			_userGroupResourceDTOConverter;
 
 	@Reference
 	private UserLocalService _userLocalService;

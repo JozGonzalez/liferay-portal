@@ -1,31 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.chart.servlet.taglib.soy.base;
 
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
-import com.liferay.frontend.taglib.chart.internal.js.loader.modules.extender.npm.NPMResolverProvider;
 import com.liferay.frontend.taglib.chart.model.ChartConfig;
 import com.liferay.frontend.taglib.soy.servlet.taglib.TemplateRendererTag;
-import com.liferay.frontend.taglib.util.TagAccessor;
-import com.liferay.frontend.taglib.util.TagResourceHandler;
 import com.liferay.petra.string.StringPool;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
+import java.util.Set;
 
 /**
  * @author Chema Balsas
@@ -35,6 +22,8 @@ public abstract class BaseChartTag extends TemplateRendererTag {
 	public BaseChartTag(String moduleBaseName, String templateNamespace) {
 		_moduleBaseName = moduleBaseName;
 		_templateNamespace = templateNamespace;
+
+		setDependencies(Collections.emptySet());
 	}
 
 	@Override
@@ -46,22 +35,13 @@ public abstract class BaseChartTag extends TemplateRendererTag {
 			setTemplateNamespace("ClayChart.render");
 		}
 
-		_tagResourceHandler.outputNPMStyleSheet("clay-charts/lib/css/main.css");
-		_tagResourceHandler.outputNPMResource("clay-charts/lib/svg/tiles.svg");
-
 		return super.doStartTag();
 	}
 
 	@Override
 	public String getModule() {
-		NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
-
-		if (npmResolver == null) {
-			return StringPool.BLANK;
-		}
-
-		return npmResolver.resolveModuleName(
-			"clay-charts/lib/" + _moduleBaseName);
+		return StringPool.OPEN_CURLY_BRACE + _moduleBaseName +
+			"} from frontend-taglib-chart/exports/clay-charts.js";
 	}
 
 	public void setConfig(ChartConfig<?> chartConfig) {
@@ -70,33 +50,32 @@ public abstract class BaseChartTag extends TemplateRendererTag {
 		}
 	}
 
+	@Override
+	public void setDependencies(Set<String> dependencies) {
+		dependencies = new HashSet<>(dependencies);
+
+		dependencies.add(
+			"from frontend-taglib-chart/exports/clay-charts$lib$css$" +
+				"main.css.js");
+		dependencies.add(
+			"from frontend-taglib-chart/exports/clay-charts$lib$svg$" +
+				"tiles.svg.js");
+
+		super.setDependencies(dependencies);
+	}
+
 	public void setId(String id) {
 		putValue("id", id);
 	}
 
-	private PageContext _getPageContext() {
-		return pageContext;
+	@Override
+	protected void cleanUp() {
+		super.cleanUp();
+
+		setDependencies(Collections.emptySet());
 	}
 
 	private final String _moduleBaseName;
-
-	private final TagResourceHandler _tagResourceHandler =
-		new TagResourceHandler(
-			BaseChartTag.class,
-			new TagAccessor() {
-
-				@Override
-				public PageContext getPageContext() {
-					return BaseChartTag.this._getPageContext();
-				}
-
-				@Override
-				public HttpServletRequest getRequest() {
-					return BaseChartTag.this.getRequest();
-				}
-
-			});
-
 	private final String _templateNamespace;
 
 }

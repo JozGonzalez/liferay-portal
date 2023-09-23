@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Related Assets";
@@ -14,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,30 +29,19 @@ definition {
 	@priority = 4
 	test DisplayAllRelatedAssetsOnContentPage {
 		task ("Given a page designer has a displayed related assets and Web Content Display on content page") {
-			task ("Add a web content") {
-				JSONWebcontent.addWebContent(
-					content = "Web Content Content",
-					groupName = "Site Name",
-					title = "Web Content Title");
-			}
-
 			task ("Add a blogs entry") {
-				HeadlessBlog.addBlogEntry(
+				var entryId = HeadlessBlog.addBlogEntry(
 					content = "Blogs Entry Content",
 					groupName = "Site Name",
 					title = "Blogs Entry Title");
 			}
 
-			task ("Select web content as related assets in blogs entry") {
-				BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-				BlogsNavigator.gotoEditCP(entryTitle = "Blogs Entry Title");
-
-				BlogsEntry.addRelatedAsset(
-					assetTitle = "Web Content Title",
-					assetType = "Basic Web Content");
-
-				PortletEntry.publish();
+			task ("Add a web content with blogs entry as related asset") {
+				HeadlessWebcontent.addBasicWebContent(
+					content = "Web Content Content",
+					groupName = "Site Name",
+					relatedContents = "{\"contentType\": \"BlogPosting\", \"id\": ${entryId}}",
+					title = "Web Content Title");
 			}
 
 			task ("Add an Asset Publisher, Web Content Display and Related Assets on content page") {
@@ -372,10 +362,9 @@ definition {
 		}
 
 		task ("Enable staging from JSON") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Site Name");
+			Staging.openStagingAdmin(siteURLKey = "site-name");
+
+			Staging.activateStagingCP(siteName = "Site Name");
 		}
 
 		task ("Add two web content with JSON") {
@@ -462,10 +451,9 @@ definition {
 		}
 
 		task ("Enable staging from JSON") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Site Name");
+			Staging.openStagingAdmin(siteURLKey = "site-name");
+
+			Staging.activateStagingCP(siteName = "Site Name");
 		}
 
 		task ("Add a vocabulary and a category with JSON") {
@@ -512,11 +500,7 @@ definition {
 				vocabularyName = "Vocabulary Name");
 		}
 
-		task ("Add Web Content 1 as related asset for Web Contetn 2") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
-
+		task ("Add Web Content 1 as related asset for Web Content 2") {
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Web Content Title 1",
 				assetType = "Basic Web Content",
@@ -524,39 +508,40 @@ definition {
 		}
 
 		task ("Add a private page with an Asset Publisher that shows Web Content 1") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
+			JSONLayout.addPrivateLayout(
+				groupName = "Site Name (Staging)",
+				layoutName = "Private Page Name",
+				site = "false");
 
-			PagesAdmin.addPrivatePage(pageName = "Private Page Name");
+			JSONLayout.addWidgetToPrivateLayout(
+				groupName = "Site Name (Staging)",
+				layoutName = "Private Page Name",
+				site = "false",
+				widgetName = "Asset Publisher");
 
 			Navigator.gotoPrivateStagedSitePage(
 				pageName = "Private Page Name",
 				siteName = "Site Name");
-
-			Portlet.addPG(portletName = "Asset Publisher");
 
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "Web Content Title 1",
 				assetType = "Basic Web Content");
 		}
 
-		task ("Configure asset publisher template to use Fill Content one") {
-			Navigator.gotoPrivateStagedSitePage(
-				pageName = "Private Page Name",
-				siteName = "Site Name");
-
-			Portlet.gotoPortletOptions(
-				portletName = "Asset Publisher",
-				portletOption = "Configuration");
-
+		task ("Configure asset publisher template to use Full Content one") {
 			AssetPublisherPortlet.configureDisplayTemplatePG(displayTemplate = "Full Content");
 		}
 
 		task ("Add and configure related assets portlet") {
+			JSONLayout.addWidgetToPrivateLayout(
+				groupName = "Site Name (Staging)",
+				layoutName = "Private Page Name",
+				site = "false",
+				widgetName = "Related Assets");
+
 			Navigator.gotoPrivateStagedSitePage(
 				pageName = "Private Page Name",
 				siteName = "Site Name");
-
-			Portlet.addPG(portletName = "Related Assets");
 
 			AssetPublisherPortlet.configureCategoriesFilterPG(
 				categoryName = "Category Name",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.dto.v1_0.converter;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.dto.action.DTOActionProvider;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.GroupUtil;
@@ -38,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.asset.kernel.model.AssetTag",
-	service = {DTOConverter.class, KeywordDTOConverter.class}
+	service = DTOConverter.class
 )
 public class KeywordDTOConverter implements DTOConverter<AssetTag, Keyword> {
 
@@ -55,7 +47,10 @@ public class KeywordDTOConverter implements DTOConverter<AssetTag, Keyword> {
 
 		return new Keyword() {
 			{
-				actions = dtoConverterContext.getActions();
+				actions = _dtoActionProvider.getActions(
+					assetTag.getGroupId(), assetTag.getTagId(),
+					dtoConverterContext.getUriInfo(),
+					dtoConverterContext.getUserId());
 				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
 				dateCreated = assetTag.getCreateDate();
 				dateModified = assetTag.getModifiedDate();
@@ -99,6 +94,11 @@ public class KeywordDTOConverter implements DTOConverter<AssetTag, Keyword> {
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference(
+		target = "(dto.class.name=com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword)"
+	)
+	private DTOActionProvider _dtoActionProvider;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

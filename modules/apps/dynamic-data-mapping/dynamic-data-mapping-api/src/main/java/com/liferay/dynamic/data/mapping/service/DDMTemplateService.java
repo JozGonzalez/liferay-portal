@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service;
@@ -137,7 +128,7 @@ public interface DDMTemplateService extends BaseService {
 	 * extracted from the original one. This method supports defining a new name
 	 * and description.
 	 *
-	 * @param templateId the primary key of the template to be copied
+	 * @param sourceTemplateId the primary key of the template to be copied
 	 * @param nameMap the new template's locales and localized names
 	 * @param descriptionMap the new template's locales and localized
 	 descriptions
@@ -148,12 +139,12 @@ public interface DDMTemplateService extends BaseService {
 	 * @return the new template
 	 */
 	public DDMTemplate copyTemplate(
-			long templateId, Map<Locale, String> nameMap,
+			long sourceTemplateId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DDMTemplate copyTemplate(
-			long templateId, ServiceContext serviceContext)
+			long sourceTemplateId, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -163,10 +154,10 @@ public interface DDMTemplateService extends BaseService {
 	 *
 	 * @param classNameId the primary key of the class name for template's
 	 related model
-	 * @param oldClassPK the primary key of the old template's related entity
+	 * @param sourceClassPK the primary key of the old template's related entity
 	 * @param resourceClassNameId the primary key of the class name for
 	 template's resource model
-	 * @param newClassPK the primary key of the new template's related entity
+	 * @param targetClassPK the primary key of the new template's related entity
 	 * @param type the template's type. For more information, see
 	 DDMTemplateConstants in the dynamic-data-mapping-api module.
 	 * @param serviceContext the service context to be applied. Must have the
@@ -176,8 +167,8 @@ public interface DDMTemplateService extends BaseService {
 	 * @return the new template
 	 */
 	public List<DDMTemplate> copyTemplates(
-			long classNameId, long oldClassPK, long resourceClassNameId,
-			long newClassPK, String type, ServiceContext serviceContext)
+			long classNameId, long sourceClassPK, long resourceClassNameId,
+			long targetClassPK, String type, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

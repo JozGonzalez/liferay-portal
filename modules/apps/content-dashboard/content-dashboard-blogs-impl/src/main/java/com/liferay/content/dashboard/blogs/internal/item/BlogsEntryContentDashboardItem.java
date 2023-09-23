@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.blogs.internal.item;
@@ -26,6 +17,7 @@ import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemAc
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -42,9 +34,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -90,14 +79,10 @@ public class BlogsEntryContentDashboardItem
 
 	@Override
 	public List<AssetCategory> getAssetCategories(long assetVocabularyId) {
-		Stream<AssetCategory> stream = _assetCategories.stream();
-
-		return stream.filter(
+		return ListUtil.filter(
+			_assetCategories,
 			assetCategory ->
-				assetCategory.getVocabularyId() == assetVocabularyId
-		).collect(
-			Collectors.toList()
-		);
+				assetCategory.getVocabularyId() == assetVocabularyId);
 	}
 
 	@Override
@@ -115,22 +100,15 @@ public class BlogsEntryContentDashboardItem
 		HttpServletRequest httpServletRequest,
 		ContentDashboardItemAction.Type... types) {
 
-		List<ContentDashboardItemActionProvider>
-			contentDashboardItemActionProviders =
-				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviders(
-						BlogsEntry.class.getName(), types);
-
-		Stream<ContentDashboardItemActionProvider> stream =
-			contentDashboardItemActionProviders.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			_contentDashboardItemActionProviderRegistry.
+				getContentDashboardItemActionProviders(
+					BlogsEntry.class.getName(), types),
 			contentDashboardItemActionProvider -> {
 				try {
-					return Optional.ofNullable(
-						contentDashboardItemActionProvider.
-							getContentDashboardItemAction(
-								_blogsEntry, httpServletRequest));
+					return contentDashboardItemActionProvider.
+						getContentDashboardItemAction(
+							_blogsEntry, httpServletRequest);
 				}
 				catch (ContentDashboardItemActionException
 							contentDashboardItemActionException) {
@@ -138,15 +116,8 @@ public class BlogsEntryContentDashboardItem
 					_log.error(contentDashboardItemActionException);
 				}
 
-				return Optional.<ContentDashboardItemAction>empty();
-			}
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).collect(
-			Collectors.toList()
-		);
+				return null;
+			});
 	}
 
 	@Override
@@ -178,51 +149,48 @@ public class BlogsEntryContentDashboardItem
 					WorkflowConstants.getStatusLabel(
 						WorkflowConstants.STATUS_DRAFT)))) {
 
-			Optional<ContentDashboardItemActionProvider>
-				contentDashboardItemActionProviderOptional =
+			ContentDashboardItemActionProvider
+				contentDashboardItemActionProvider =
 					_contentDashboardItemActionProviderRegistry.
-						getContentDashboardItemActionProviderOptional(
+						getContentDashboardItemActionProvider(
 							BlogsEntry.class.getName(),
 							ContentDashboardItemAction.Type.EDIT);
 
-			return contentDashboardItemActionProviderOptional.map(
-				contentDashboardItemActionProvider ->
-					_toContentDashboardItemAction(
-						contentDashboardItemActionProvider, httpServletRequest)
-			).orElse(
-				null
-			);
+			if (contentDashboardItemActionProvider == null) {
+				return null;
+			}
+
+			ContentDashboardItemAction contentDashboardItemAction =
+				_toContentDashboardItemAction(
+					contentDashboardItemActionProvider, httpServletRequest);
+
+			if (contentDashboardItemAction == null) {
+				return null;
+			}
+
+			return contentDashboardItemAction;
 		}
 
-		Optional<ContentDashboardItemActionProvider>
-			viewContentDashboardItemActionProviderOptional =
+		ContentDashboardItemActionProvider
+			viewContentDashboardItemActionProvider =
 				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviderOptional(
+					getContentDashboardItemActionProvider(
 						BlogsEntry.class.getName(),
 						ContentDashboardItemAction.Type.VIEW);
 
-		return viewContentDashboardItemActionProviderOptional.map(
-			contentDashboardItemActionProvider -> _toContentDashboardItemAction(
-				contentDashboardItemActionProvider, httpServletRequest)
-		).orElseGet(
-			() -> {
-				Optional<ContentDashboardItemActionProvider>
-					editContentDashboardItemActionProviderOptional =
-						_contentDashboardItemActionProviderRegistry.
-							getContentDashboardItemActionProviderOptional(
-								BlogsEntry.class.getName(),
-								ContentDashboardItemAction.Type.EDIT);
+		if (viewContentDashboardItemActionProvider == null) {
+			return _getContentDashboardItemAction(httpServletRequest);
+		}
 
-				return editContentDashboardItemActionProviderOptional.map(
-					contentDashboardItemActionProvider ->
-						_toContentDashboardItemAction(
-							contentDashboardItemActionProvider,
-							httpServletRequest)
-				).orElse(
-					null
-				);
-			}
-		);
+		ContentDashboardItemAction viewContentDashboardItemAction =
+			_toContentDashboardItemAction(
+				viewContentDashboardItemActionProvider, httpServletRequest);
+
+		if (viewContentDashboardItemAction == null) {
+			return _getContentDashboardItemAction(httpServletRequest);
+		}
+
+		return viewContentDashboardItemAction;
 	}
 
 	@Override
@@ -264,7 +232,7 @@ public class BlogsEntryContentDashboardItem
 					locale,
 					WorkflowConstants.getStatusLabel(_blogsEntry.getStatus())),
 				null, WorkflowConstants.getStatusStyle(_blogsEntry.getStatus()),
-				_blogsEntry.getUserName(), "1.0"));
+				_blogsEntry.getStatusByUserName(), "1.0"));
 	}
 
 	@Override
@@ -274,26 +242,22 @@ public class BlogsEntryContentDashboardItem
 
 	@Override
 	public String getScopeName(Locale locale) {
-		return Optional.ofNullable(
-			_group
-		).map(
-			group -> {
-				try {
-					return Optional.ofNullable(
-						group.getDescriptiveName(locale)
-					).orElseGet(
-						() -> group.getName(locale)
-					);
-				}
-				catch (PortalException portalException) {
-					_log.error(portalException);
+		if (_group == null) {
+			return StringPool.BLANK;
+		}
 
-					return group.getName(locale);
-				}
+		try {
+			String descriptiveName = _group.getDescriptiveName(locale);
+
+			if (descriptiveName != null) {
+				return descriptiveName;
 			}
-		).orElse(
-			StringPool.BLANK
-		);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return _group.getName(locale);
 	}
 
 	@Override
@@ -331,20 +295,43 @@ public class BlogsEntryContentDashboardItem
 
 	@Override
 	public boolean isViewable(HttpServletRequest httpServletRequest) {
-		Optional<ContentDashboardItemActionProvider>
-			contentDashboardItemActionProviderOptional =
-				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviderOptional(
-						BlogsEntry.class.getName(),
-						ContentDashboardItemAction.Type.VIEW);
+		ContentDashboardItemActionProvider contentDashboardItemActionProvider =
+			_contentDashboardItemActionProviderRegistry.
+				getContentDashboardItemActionProvider(
+					BlogsEntry.class.getName(),
+					ContentDashboardItemAction.Type.VIEW);
 
-		return contentDashboardItemActionProviderOptional.map(
-			contentDashboardItemActionProvider ->
-				contentDashboardItemActionProvider.isShow(
-					_blogsEntry, httpServletRequest)
-		).orElse(
-			false
-		);
+		if (contentDashboardItemActionProvider == null) {
+			return false;
+		}
+
+		return contentDashboardItemActionProvider.isShow(
+			_blogsEntry, httpServletRequest);
+	}
+
+	private ContentDashboardItemAction _getContentDashboardItemAction(
+		HttpServletRequest httpServletRequest) {
+
+		ContentDashboardItemActionProvider
+			editContentDashboardItemActionProvider =
+				_contentDashboardItemActionProviderRegistry.
+					getContentDashboardItemActionProvider(
+						BlogsEntry.class.getName(),
+						ContentDashboardItemAction.Type.EDIT);
+
+		if (editContentDashboardItemActionProvider == null) {
+			return null;
+		}
+
+		ContentDashboardItemAction contentDashboardItemAction =
+			_toContentDashboardItemAction(
+				editContentDashboardItemActionProvider, httpServletRequest);
+
+		if (contentDashboardItemAction == null) {
+			return null;
+		}
+
+		return contentDashboardItemAction;
 	}
 
 	private ContentDashboardItemVersion _getLastContentDashboardItemVersion(

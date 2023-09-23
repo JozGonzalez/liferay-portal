@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.recommendation.info.collection.provider.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
@@ -36,6 +28,7 @@ import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.pagination.InfoPage;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -45,7 +38,6 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -90,7 +82,8 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			_group.getGroupId());
 
 		_commerceChannel = CommerceChannelLocalServiceUtil.addCommerceChannel(
-			null, _group.getGroupId(), "Test Channel",
+			null, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			_group.getGroupId(), "Test Channel",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
 
@@ -162,7 +155,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 		return StringBundler.concat(
 			"com.liferay.commerce.machine.learning.internal.recommendation.",
 			"info.collection.provider.",
-			"UserCommerceMLRecommendationRelatedInfoItemCollectionProvider");
+			"UserCommerceMLRecommendationInfoItemCollectionProvider");
 	}
 
 	@Override
@@ -189,8 +182,8 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			new ArrayList<>();
 
 		for (int i = 0; i < _ACCOUNT_COUNT; i++) {
-			CommerceAccount commerceAccount =
-				CommerceAccountTestUtil.addBusinessCommerceAccount(
+			AccountEntry accountEntry =
+				CommerceAccountTestUtil.addBusinessAccountEntry(
 					TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 					RandomTestUtil.randomString() + "@liferay.com",
 					RandomTestUtil.randomString(), _serviceContext);
@@ -221,7 +214,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 						_userCommerceMLRecommendationManager.create();
 
 					userCommerceMLRecommendation.setEntryClassPK(
-						commerceAccount.getCommerceAccountId());
+						accountEntry.getAccountEntryId());
 					userCommerceMLRecommendation.setScore(1.0F - (k / 10.0F));
 					userCommerceMLRecommendation.setRecommendedEntryClassPK(
 						recommendedCPDefinition.getCPDefinitionId());
@@ -242,6 +235,13 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 		return userCommerceMLRecommendations;
 	}
 
+	private String _getRelatedInfoItemCollectionProviderName() {
+		return StringBundler.concat(
+			"com.liferay.commerce.machine.learning.internal.recommendation.",
+			"info.collection.provider.",
+			"UserCommerceMLRecommendationRelatedInfoItemCollectionProvider");
+	}
+
 	private ServiceContext _getServiceContext(long commerceAccountId)
 		throws Exception {
 
@@ -251,9 +251,8 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, user, _group,
-			_commerceAccountLocalService.getCommerceAccount(commerceAccountId),
-			null);
+			_accountEntryLocalService.getAccountEntry(commerceAccountId),
+			_commerceCurrency, _commerceChannel, user, _group, null);
 
 		mockHttpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -270,7 +269,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			relatedInfoItemCollectionProvider =
 				infoItemServiceRegistry.getInfoItemService(
 					RelatedInfoItemCollectionProvider.class,
-					getInfoItemCollectionProviderName());
+					_getRelatedInfoItemCollectionProviderName());
 
 		Assert.assertNotNull(relatedInfoItemCollectionProvider);
 
@@ -312,7 +311,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 	private static final int _ACCOUNT_COUNT = 2;
 
 	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	private CommerceCatalog _commerceCatalog;
 	private CommerceChannel _commerceChannel;

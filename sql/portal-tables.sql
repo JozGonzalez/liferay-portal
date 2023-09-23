@@ -1,8 +1,9 @@
 create table Address (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
-	addressId LONG not null primary key,
+	addressId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -25,7 +26,8 @@ create table Address (
 	street3 VARCHAR(255) null,
 	validationDate DATE null,
 	validationStatus INTEGER,
-	zip VARCHAR(75) null
+	zip VARCHAR(75) null,
+	primary key (addressId, ctCollectionId)
 );
 
 create table AnnouncementsDelivery (
@@ -41,8 +43,9 @@ create table AnnouncementsDelivery (
 
 create table AnnouncementsEntry (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	entryId LONG not null primary key,
+	entryId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -57,17 +60,20 @@ create table AnnouncementsEntry (
 	displayDate DATE null,
 	expirationDate DATE null,
 	priority INTEGER,
-	alert BOOLEAN
+	alert BOOLEAN,
+	primary key (entryId, ctCollectionId)
 );
 
 create table AnnouncementsFlag (
 	mvccVersion LONG default 0 not null,
-	flagId LONG not null primary key,
+	ctCollectionId LONG default 0 not null,
+	flagId LONG not null,
 	companyId LONG,
 	userId LONG,
 	createDate DATE null,
 	entryId LONG,
-	value INTEGER
+	value INTEGER,
+	primary key (flagId, ctCollectionId)
 );
 
 create table AssetCategory (
@@ -131,21 +137,6 @@ create table AssetEntry (
 	width INTEGER,
 	priority DOUBLE,
 	primary key (entryId, ctCollectionId)
-);
-
-create table AssetLink (
-	mvccVersion LONG default 0 not null,
-	ctCollectionId LONG default 0 not null,
-	linkId LONG not null,
-	companyId LONG,
-	userId LONG,
-	userName VARCHAR(75) null,
-	createDate DATE null,
-	entryId1 LONG,
-	entryId2 LONG,
-	type_ INTEGER,
-	weight INTEGER,
-	primary key (linkId, ctCollectionId)
 );
 
 create table AssetTag (
@@ -221,7 +212,9 @@ create table Company (
 	tickerSymbol VARCHAR(75) null,
 	industry VARCHAR(75) null,
 	type_ VARCHAR(75) null,
-	size_ VARCHAR(75) null
+	size_ VARCHAR(75) null,
+	indexNameCurrent VARCHAR(75) null,
+	indexNameNext VARCHAR(75) null
 );
 
 create table CompanyInfo (
@@ -562,6 +555,7 @@ create table Group_ (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	groupId LONG not null,
 	companyId LONG,
 	creatorUserId LONG,
@@ -937,8 +931,9 @@ create table PasswordTracker (
 
 create table Phone (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	phoneId LONG not null primary key,
+	phoneId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -949,7 +944,8 @@ create table Phone (
 	number_ VARCHAR(75) null,
 	extension VARCHAR(75) null,
 	listTypeId LONG,
-	primary_ BOOLEAN
+	primary_ BOOLEAN,
+	primary key (phoneId, ctCollectionId)
 );
 
 create table PluginSetting (
@@ -1427,7 +1423,6 @@ create table User_ (
 	companyId LONG,
 	createDate DATE null,
 	modifiedDate DATE null,
-	defaultUser BOOLEAN,
 	contactId LONG,
 	password_ VARCHAR(75) null,
 	passwordEncrypted BOOLEAN,
@@ -1462,6 +1457,7 @@ create table User_ (
 	lockoutDate DATE null,
 	agreedToTermsOfUse BOOLEAN,
 	emailAddressVerified BOOLEAN,
+	type_ INTEGER,
 	status INTEGER,
 	primary key (userId, ctCollectionId)
 );

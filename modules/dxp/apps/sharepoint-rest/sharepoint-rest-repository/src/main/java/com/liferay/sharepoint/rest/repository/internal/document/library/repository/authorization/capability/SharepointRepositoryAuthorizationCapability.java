@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.sharepoint.rest.repository.internal.document.library.repository.authorization.capability;
@@ -45,13 +36,11 @@ public class SharepointRepositoryAuthorizationCapability
 
 	public SharepointRepositoryAuthorizationCapability(
 		TokenStore tokenStore,
-		SharepointRepositoryConfiguration
-			sharepointRepositoryOAuth2Configuration,
+		SharepointRepositoryConfiguration sharepointRepositoryConfiguration,
 		SharepointRepositoryTokenBroker sharepointOAuth2AuthorizationServer) {
 
 		_tokenStore = tokenStore;
-		_sharepointRepositoryOAuth2Configuration =
-			sharepointRepositoryOAuth2Configuration;
+		_sharepointRepositoryConfiguration = sharepointRepositoryConfiguration;
 		_sharepointOAuth2AuthorizationServer =
 			sharepointOAuth2AuthorizationServer;
 	}
@@ -80,7 +69,7 @@ public class SharepointRepositoryAuthorizationCapability
 	@Override
 	public boolean hasCustomRedirectFlow(
 			PortletRequest portletRequest, PortletResponse portletResponse)
-		throws IOException, PortalException {
+		throws PortalException {
 
 		if (_hasAuthorizationGrant(
 				PortalUtil.getHttpServletRequest(portletRequest))) {
@@ -89,7 +78,7 @@ public class SharepointRepositoryAuthorizationCapability
 		}
 
 		Token token = _tokenStore.get(
-			_sharepointRepositoryOAuth2Configuration.name(),
+			_sharepointRepositoryConfiguration.name(),
 			PortalUtil.getUserId(
 				PortalUtil.getHttpServletRequest(portletRequest)));
 
@@ -119,7 +108,7 @@ public class SharepointRepositoryAuthorizationCapability
 		}
 		else {
 			Token token = _tokenStore.get(
-				_sharepointRepositoryOAuth2Configuration.name(),
+				_sharepointRepositoryConfiguration.name(),
 				PortalUtil.getUserId(httpServletRequest));
 
 			if (token == null) {
@@ -142,18 +131,16 @@ public class SharepointRepositoryAuthorizationCapability
 		HttpServletRequest httpServletRequest, String state) {
 
 		String url =
-			_sharepointRepositoryOAuth2Configuration.
-				authorizationGrantEndpoint();
+			_sharepointRepositoryConfiguration.authorizationGrantEndpoint();
 
 		url = HttpComponentsUtil.addParameter(
-			url, "client_id",
-			_sharepointRepositoryOAuth2Configuration.clientId());
+			url, "client_id", _sharepointRepositoryConfiguration.clientId());
 
 		url = HttpComponentsUtil.addParameter(
 			url, "redirect_uri", _getRedirectURI(httpServletRequest));
 		url = HttpComponentsUtil.addParameter(url, "response_type", "code");
 		url = HttpComponentsUtil.addParameter(
-			url, "scope", _sharepointRepositoryOAuth2Configuration.scope());
+			url, "scope", _sharepointRepositoryConfiguration.scope());
 		url = HttpComponentsUtil.addParameter(url, "state", state);
 
 		return url;
@@ -188,12 +175,11 @@ public class SharepointRepositoryAuthorizationCapability
 				_sharepointOAuth2AuthorizationServer.refreshAccessToken(token);
 
 			_tokenStore.save(
-				_sharepointRepositoryOAuth2Configuration.name(), userId,
-				freshToken);
+				_sharepointRepositoryConfiguration.name(), userId, freshToken);
 		}
 		catch (AuthorizationException authorizationException) {
 			_tokenStore.delete(
-				_sharepointRepositoryOAuth2Configuration.name(), userId);
+				_sharepointRepositoryConfiguration.name(), userId);
 
 			throw authorizationException;
 		}
@@ -219,8 +205,7 @@ public class SharepointRepositoryAuthorizationCapability
 				code, _getRedirectURI(httpServletRequest));
 
 		_tokenStore.save(
-			_sharepointRepositoryOAuth2Configuration.name(), userId,
-			accessToken);
+			_sharepointRepositoryConfiguration.name(), userId, accessToken);
 
 		sharepointRepositoryRequestState.restore(
 			httpServletRequest, httpServletResponse);
@@ -260,7 +245,7 @@ public class SharepointRepositoryAuthorizationCapability
 	private final SharepointRepositoryTokenBroker
 		_sharepointOAuth2AuthorizationServer;
 	private final SharepointRepositoryConfiguration
-		_sharepointRepositoryOAuth2Configuration;
+		_sharepointRepositoryConfiguration;
 	private final TokenStore _tokenStore;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -94,29 +85,10 @@ public interface CompanyLocalService
 	 */
 	public Company addCompany(
 			Long companyId, String webId, String virtualHostname, String mx,
-			int maxUsers, boolean active)
-		throws PortalException;
-
-	/**
-	 * Adds a company.
-	 *
-	 * @param webId the the company's web domain
-	 * @param virtualHostname the company's virtual host name
-	 * @param mx the company's mail domain
-	 * @param system whether the company is the very first company (i.e.,
-	 the super company)
-	 * @param maxUsers the max number of company users (optionally
-	 <code>0</code>)
-	 * @param active whether the company is active
-	 * @return the company
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addCompany(Long, String, String, String, boolean, int,
-	 boolean)}
-	 */
-	@Deprecated
-	public Company addCompany(
-			String webId, String virtualHostname, String mx, int maxUsers,
-			boolean active)
+			int maxUsers, boolean active, String defaultAdminPassword,
+			String defaultAdminScreenName, String defaultAdminEmailAddress,
+			String defaultAdminFirstName, String defaultAdminMiddleName,
+			String defaultAdminLastName)
 		throws PortalException;
 
 	/**
@@ -129,18 +101,6 @@ public interface CompanyLocalService
 	 * @return the company with the web domain
 	 */
 	public Company checkCompany(String webId) throws PortalException;
-
-	/**
-	 * Returns the company with the web domain and mail domain.
-	 *
-	 * The method goes through a series of checks to ensure that the company
-	 * contains default users, groups, etc.
-	 *
-	 * @param webId the company's web domain
-	 * @param mx the company's mail domain
-	 * @return the company with the web domain and mail domain
-	 */
-	public Company checkCompany(String webId, String mx) throws PortalException;
 
 	/**
 	 * Checks if the company has an encryption key. It will create a key if one
@@ -573,6 +533,13 @@ public interface CompanyLocalService
 
 	@Async
 	public void updateDisplayGroupNames(long companyId) throws PortalException;
+
+	public Company updateIndexNameNext(long companyId, String indexNameNext)
+		throws PortalException;
+
+	public Company updateIndexNames(
+			long companyId, String indexNameCurrent, String indexNameNext)
+		throws PortalException;
 
 	/**
 	 * Updates the company's logo.

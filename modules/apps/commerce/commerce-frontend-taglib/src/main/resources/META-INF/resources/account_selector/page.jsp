@@ -1,38 +1,39 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/account_selector/init.jsp" %>
 
-<div class="account-selector-root" id="<%= accountSelectorId %>"></div>
+<c:choose>
+	<c:when test="<%= commerceChannelId == 0 %>">
+		<div class="alert alert-info mx-auto">
+			<liferay-ui:message key="this-site-does-not-have-a-channel" />
+		</div>
+	</c:when>
+	<c:when test="<%= !user.isGuestUser() %>">
+		<div class="account-selector-root" id="<%= accountSelectorId %>"></div>
 
-<aui:script require="commerce-frontend-js/components/account_selector/entry as accountSelector">
-	accountSelector.default(
-		'<%= accountSelectorId %>',
-		'<%= accountSelectorId %>',
-		{
-			accountEntryAllowedTypes:
-				'<%= jsonSerializer.serializeDeep(accountEntryAllowedTypes) %>',
-			commerceChannelId: '<%= commerceChannelId %>',
-			createNewOrderURL: '<%= createNewOrderURL %>',
-			currentCommerceAccount: <%= Validator.isNotNull(currentCommerceAccount) ? jsonSerializer.serializeDeep(currentCommerceAccount) : null %>,
-			currentCommerceOrder: <%= Validator.isNotNull(currentCommerceOrder) ? jsonSerializer.serializeDeep(currentCommerceOrder) : null %>,
-			refreshPageOnAccountSelected: true,
-			selectOrderURL: '<%= selectOrderURL %>',
-			setCurrentAccountURL: '<%= setCurrentAccountURL %>',
-			showOrderTypeModal: <%= showOrderTypeModal %>,
-		}
-	);
-</aui:script>
+		<aui:script require="commerce-frontend-js/components/account_selector/entry as accountSelector">
+			accountSelector.default(
+				'<%= accountSelectorId %>',
+				'<%= accountSelectorId %>',
+				{
+					accountEntryAllowedTypes:
+						'<%= jsonSerializer.serializeDeep(accountEntryAllowedTypes) %>',
+					commerceChannelId: '<%= commerceChannelId %>',
+					createNewOrderURL: '<%= createNewOrderURL %>',
+					currentCommerceAccount: <%= Validator.isNotNull(currentCommerceAccount) ? jsonSerializer.serializeDeep(currentCommerceAccount) : null %>,
+					currentCommerceOrder: <%= Validator.isNotNull(currentCommerceOrder) ? jsonSerializer.serializeDeep(currentCommerceOrder) : null %>,
+					namespace: '<%= accountSelectorId %>',
+					refreshPageOnAccountSelected: true,
+					selectOrderURL: '<%= selectOrderURL %>',
+					setCurrentAccountURL: '<%= setCurrentAccountURL %>',
+					showOrderTypeModal: <%= showOrderTypeModal %>,
+				}
+			);
+		</aui:script>
+	</c:when>
+</c:choose>

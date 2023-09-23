@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -143,7 +134,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 				<div class="col-xl-4">
 
 					<%
-					CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+					AccountEntry accountEntry = commerceOrder.getAccountEntry();
 					%>
 
 					<commerce-ui:info-box
@@ -151,14 +142,14 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 						title='<%= LanguageUtil.get(request, "account-info") %>'
 					>
 						<c:choose>
-							<c:when test="<%= Validator.isNull(commerceAccount) %>">
+							<c:when test="<%= Validator.isNull(accountEntry) %>">
 								<span class="text-muted">
 									<%= StringPool.BLANK %>
 								</span>
 							</c:when>
 							<c:otherwise>
-								<p class="mb-0"><%= commerceAccount.getName() %></p>
-								<p class="mb-0">#<%= commerceAccount.getCommerceAccountId() %></p>
+								<p class="mb-0"><%= accountEntry.getName() %></p>
+								<p class="mb-0">#<%= accountEntry.getAccountEntryId() %></p>
 							</c:otherwise>
 						</c:choose>
 					</commerce-ui:info-box>
@@ -199,7 +190,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 					CommerceAddress billingCommerceAddress = commerceOrder.getBillingAddress();
 					%>
 
-					<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) %>">
+					<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) %>">
 						<commerce-ui:info-box
 							actionLabel='<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) ? LanguageUtil.get(request, (billingCommerceAddress == null) ? "add" : "edit") : "" %>'
 							actionTargetId='<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) ? "billing-address-modal" : "" %>'
@@ -392,10 +383,16 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 				summary.default('summary', 'summary-root', {
 					apiUrl:
 						'/o/headless-commerce-admin-order/v1.0/orders/<%= commerceOrderContentDisplayContext.getCommerceOrderId() %>',
-					datasetDisplayId: '<%= CommerceOrderFDSNames.PENDING_ORDER_ITEMS %>',
+					dataSetDisplayId: '<%= CommerceOrderFDSNames.PENDING_ORDER_ITEMS %>',
 					portletId: '<%= portletDisplay.getRootPortletId() %>',
 				});
 			</aui:script>
 		</commerce-ui:panel>
 	</div>
 </div>
+
+<%@ include file="/pending_commerce_orders/request_quote.jspf" %>
+
+<liferay-frontend:component
+	module="js/view"
+/>

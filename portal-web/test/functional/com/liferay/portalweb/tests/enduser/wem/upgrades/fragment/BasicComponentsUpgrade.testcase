@@ -1,8 +1,11 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.main.component.name = "Upgrades WEM";
 
 	setUp {
@@ -22,7 +25,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.0";
 
-		Upgrade.viewEditableCardFragment();
+		ValidateFragmentsUpgrade.viewEditableCardFragment();
 	}
 
 	@description = "This is a use case for LPS-130223. The user can edit a inline text of an OOTB Card fragment after Upgrade."
@@ -32,7 +35,7 @@ definition {
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.version = "7.3.10.1";
 
-		Upgrade.viewEditableCardFragment();
+		ValidateFragmentsUpgrade.viewEditableCardFragment();
 	}
 
 }

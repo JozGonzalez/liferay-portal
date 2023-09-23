@@ -1,8 +1,11 @@
-import {Dispatch, ReactNode, SetStateAction, useState} from 'react';
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
 
-import {DashboardNavigation} from '../../components/DashboardNavigation/DashboardNavigation';
+import {ReactNode} from 'react';
+
 import {AppProps} from '../../components/DashboardTable/DashboardTable';
-import {Footer} from '../../components/Footer/Footer';
 import {Header} from '../../components/Header/Header';
 import {AppDetailsPage} from '../AppDetailsPage/AppDetailsPage';
 
@@ -16,52 +19,39 @@ export interface DashboardListItems {
 	items?: AppProps[];
 }
 
-type DashBoardPageProps = {
-	accountAppsNumber: string;
-	accountLogo: string;
-	accountTitle: string;
-	buttonMessage: string;
+interface DashBoardPageProps {
+	buttonHref?: string;
+	buttonMessage?: string;
 	children: ReactNode;
 	dashboardNavigationItems: DashboardListItems[];
 	messages: {
 		description: string;
-		emptyStateMessage: {
+		emptyStateMessage?: {
 			description1: string;
 			description2: string;
 			title: string;
 		};
 		title: string;
 	};
-	setDashboardNavigationItems: Dispatch<SetStateAction<DashboardListItems[]>>;
-};
+	onButtonClick?: () => void;
+	selectedApp?: AppProps;
+	setSelectedApp?: (value: AppProps | undefined) => void;
+}
 
 export function DashboardPage({
-	accountAppsNumber,
-	accountLogo,
-	accountTitle,
+	buttonHref,
 	buttonMessage,
 	children,
 	dashboardNavigationItems,
 	messages,
-	setDashboardNavigationItems,
+	onButtonClick,
+	selectedApp,
+	setSelectedApp,
 }: DashBoardPageProps) {
-	const [selectedApp, setSelectedApp] = useState<AppProps>();
-
 	return (
 		<div className="dashboard-page-container">
 			<div>
 				<div className="dashboard-page-body-container">
-					<DashboardNavigation
-						accountAppsNumber={accountAppsNumber}
-						accountIcon={accountLogo}
-						accountTitle={accountTitle}
-						dashboardNavigationItems={dashboardNavigationItems}
-						onSelectAppChange={setSelectedApp}
-						setDashboardNavigationItems={
-							setDashboardNavigationItems
-						}
-					/>
-
 					{selectedApp ? (
 						<AppDetailsPage
 							dashboardNavigationItems={dashboardNavigationItems}
@@ -76,11 +66,22 @@ export function DashboardPage({
 									title={messages.title}
 								/>
 
-								<a href="/create-new-app">
-									<button className="dashboard-page-body-header-button">
-										{buttonMessage}
-									</button>
-								</a>
+								{buttonMessage && (
+									<a
+										href={
+											buttonHref ? `${buttonHref}` : '#'
+										}
+									>
+										<button
+											className="dashboard-page-body-header-button"
+											onClick={() =>
+												onButtonClick && onButtonClick()
+											}
+										>
+											{buttonMessage}
+										</button>
+									</a>
+								)}
 							</div>
 
 							{children}
@@ -88,8 +89,6 @@ export function DashboardPage({
 					)}
 				</div>
 			</div>
-
-			<Footer />
 		</div>
 	);
 }

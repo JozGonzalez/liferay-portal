@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.configuration.test;
@@ -926,11 +917,11 @@ public class AMImageUpdateConfigurationTest
 			amImageConfigurationEntry1.getDescription(), "1-bis",
 			amImageConfigurationEntry1.getProperties());
 
-		AMImageConfigurationEntry nonexistantAMImageConfigurationEntry1 =
+		AMImageConfigurationEntry nonexistentAMImageConfigurationEntry1 =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertNull(nonexistantAMImageConfigurationEntry1);
+		Assert.assertNull(nonexistentAMImageConfigurationEntry1);
 
 		AMImageConfigurationEntry actualAMImageConfigurationEntry1 =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
@@ -1161,11 +1152,11 @@ public class AMImageUpdateConfigurationTest
 			amImageConfigurationEntry2.getDescription(), "2-bis",
 			amImageConfigurationEntry2.getProperties());
 
-		AMImageConfigurationEntry nonexistantAMImageConfigurationEntry2 =
+		AMImageConfigurationEntry nonexistentAMImageConfigurationEntry2 =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "2");
 
-		Assert.assertNull(nonexistantAMImageConfigurationEntry2);
+		Assert.assertNull(nonexistentAMImageConfigurationEntry2);
 
 		AMImageConfigurationEntry actualAMImageConfigurationEntry2 =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(

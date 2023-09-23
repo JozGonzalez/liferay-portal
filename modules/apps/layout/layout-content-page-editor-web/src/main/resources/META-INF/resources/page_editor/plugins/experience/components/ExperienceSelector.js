@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -24,6 +15,7 @@ import {
 	useEventListener,
 	useIsMounted,
 } from '@liferay/frontend-js-react-web';
+import {useId, useSessionState} from 'frontend-js-components-web';
 import {COOKIE_TYPES, navigate, openToast} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -32,8 +24,6 @@ import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
 import selectCanUpdateExperiences from '../../../app/selectors/selectCanUpdateExperiences';
 import selectCanUpdateSegments from '../../../app/selectors/selectCanUpdateSegments';
 import getKeyboardFocusableElements from '../../../app/utils/getKeyboardFocusableElements';
-import {useId} from '../../../common/hooks/useId';
-import {useSessionState} from '../../../common/hooks/useSessionState';
 import createExperience from '../thunks/createExperience';
 import duplicateExperience from '../thunks/duplicateExperience';
 import removeExperience from '../thunks/removeExperience';
@@ -186,12 +176,17 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 			const element = document.querySelector(
 				'.dropdown-menu__experience--active'
 			);
+			const focusableElements = getKeyboardFocusableElements(
+				selectorRef.current
+			);
 
 			element?.scrollIntoView?.({
-				behavior: 'auto',
-				block: 'center',
+				behavior: 'smooth',
+				block: 'nearest',
 				inline: 'nearest',
 			});
+
+			focusableElements[0]?.focus();
 		}
 	}, [open]);
 
@@ -202,7 +197,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 
 		element?.scrollIntoView?.({
 			behavior: 'smooth',
-			block: 'center',
+			block: 'nearest',
 			inline: 'nearest',
 		});
 	}, [
@@ -216,6 +211,17 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		'keydown',
 		(event) => {
 			if (event.key === 'Escape' && open) {
+				debouncedSetOpen(false);
+			}
+		},
+		true,
+		window
+	);
+
+	useEventListener(
+		'keyup',
+		() => {
+			if (open && !selectorRef.current.contains(document.activeElement)) {
 				debouncedSetOpen(false);
 			}
 		},
@@ -421,17 +427,6 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 				disabled={!canUpdateExperiences}
 				displayType="secondary"
 				onClick={() => debouncedSetOpen(!open)}
-				onKeyDown={(event) => {
-					if (event.key === 'Tab' && !event.shiftKey && open) {
-						event.preventDefault();
-
-						const focusableElements = getKeyboardFocusableElements(
-							selectorRef.current
-						);
-
-						focusableElements[0]?.focus();
-					}
-				}}
 				ref={buttonRef}
 				size="sm"
 				type="button"

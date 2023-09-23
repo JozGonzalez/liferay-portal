@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner;
@@ -17,12 +8,14 @@ package com.liferay.poshi.runner;
 import com.liferay.data.guard.connector.client.DataGuardClient;
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiGetterUtil;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.PoshiStackTrace;
 import com.liferay.poshi.core.PoshiValidation;
 import com.liferay.poshi.core.PoshiVariablesContext;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.GetterUtil;
-import com.liferay.poshi.core.util.PropsValues;
+import com.liferay.poshi.core.util.Validator;
+import com.liferay.poshi.runner.exception.PoshiRunnerWarningException;
 import com.liferay.poshi.runner.logger.PoshiLogger;
 import com.liferay.poshi.runner.logger.SummaryLogger;
 import com.liferay.poshi.runner.selenium.LiferaySeleniumUtil;
@@ -101,8 +94,10 @@ public class PoshiRunner {
 	public static List<String> getList() throws Exception {
 		List<String> namespacedClassCommandNames = new ArrayList<>();
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		List<String> testNames = Arrays.asList(
-			PropsValues.TEST_NAME.split("\\s*,\\s*"));
+			poshiProperties.testName.split("\\s*,\\s*"));
 
 		PoshiContext.readFiles(false);
 
@@ -114,6 +109,10 @@ public class PoshiRunner {
 			String namespace =
 				PoshiGetterUtil.getNamespaceFromNamespacedClassCommandName(
 					testName);
+
+			if (Validator.isNull(namespace)) {
+				namespace = PoshiContext.getDefaultNamespace();
+			}
 
 			if (testName.contains("#")) {
 				String classCommandName =
@@ -152,17 +151,10 @@ public class PoshiRunner {
 			PoshiGetterUtil.
 				getNamespacedClassNameFromNamespacedClassCommandName(
 					_testNamespacedClassCommandName);
+	}
 
-		_poshiLogger = new PoshiLogger(namespacedClassCommandName);
-
-		_summaryLogger = SummaryLogger.getSummaryLogger(
-			namespacedClassCommandName);
-
-		_poshiRunnerExecutor = new PoshiRunnerExecutor(
-			_poshiLogger, _summaryLogger);
-
-		_poshiStackTrace = PoshiStackTrace.getPoshiStackTrace(
-			namespacedClassCommandName);
+	public String getTestNamespacedClassCommandName() {
+		return _testNamespacedClassCommandName;
 	}
 
 	@Before
@@ -173,13 +165,20 @@ public class PoshiRunner {
 		System.out.println("###");
 		System.out.println();
 
-		PoshiContext.setTestCaseNamespacedClassCommandName(
+		_poshiLogger = new PoshiLogger(_testNamespacedClassCommandName);
+		_summaryLogger = SummaryLogger.getSummaryLogger(
 			_testNamespacedClassCommandName);
 
-		FileUtil.delete(new File(PropsValues.OUTPUT_DIR_NAME));
+		_poshiRunnerExecutor = new PoshiRunnerExecutor(
+			_poshiLogger, _summaryLogger);
+
+		_poshiStackTrace = PoshiStackTrace.getPoshiStackTrace(
+			_testNamespacedClassCommandName);
+
+		FileUtil.delete(new File(_poshiProperties.outputDirName));
 
 		try {
-			if (PropsValues.LIFERAY_DATA_GUARD_ENABLED) {
+			if (_poshiProperties.liferayDataGuardEnabled) {
 				_dataGuardClient = new DataGuardClient();
 
 				_dataGuardClient.connect();
@@ -206,44 +205,52 @@ public class PoshiRunner {
 
 			throw webDriverException;
 		}
-		catch (Throwable throwable) {
+		catch (Exception exception) {
 			LiferaySeleniumUtil.printJavaProcessStacktrace();
 
-			throw _getException(throwable);
+			_throwException(exception);
 		}
 	}
 
 	@After
 	public void tearDown() throws Throwable {
-		LiferaySeleniumUtil.writePoshiWarnings();
-
 		_summaryLogger.createSummaryReport();
 
 		try {
-			if (!PropsValues.TEST_SKIP_TEAR_DOWN) {
+			if (!_poshiProperties.testSkipTearDown) {
 				_runTearDown();
 			}
 		}
-		catch (Throwable throwable) {
-			Exception exception = _getException(throwable);
+		catch (Exception exception) {
+			PoshiRunnerException poshiRunnerException =
+				new PoshiRunnerException(exception, _poshiStackTrace);
 
-			exception.printStackTrace();
+			_poshiStackTrace.emptyStackTrace();
+
+			poshiRunnerException.printStackTrace();
+
+			PoshiRunnerWarningException.addException(
+				new PoshiRunnerWarningException(
+					"TEAR_DOWN_FAILURE: " + exception.getMessage(), exception));
 		}
 		finally {
-			if (PropsValues.PROXY_SERVER_ENABLED) {
+			if (_poshiProperties.proxyServerEnabled) {
 				ProxyUtil.stopBrowserMobProxy();
 			}
+
+			LiferaySeleniumUtil.writePoshiWarnings();
 
 			_poshiLogger.createPoshiReport();
 
 			WebDriverUtil.stopWebDriver(_testNamespacedClassCommandName);
 
+			PoshiRunnerWarningException.clear();
 			PoshiStackTrace.clear(_testNamespacedClassCommandName);
 			PoshiVariablesContext.clear(_testNamespacedClassCommandName);
 			SummaryLogger.clear(_testNamespacedClassCommandName);
 		}
 
-		if (!PropsValues.LIFERAY_DATA_GUARD_ENABLED) {
+		if (!_poshiProperties.liferayDataGuardEnabled) {
 			return;
 		}
 
@@ -270,32 +277,15 @@ public class PoshiRunner {
 
 			LiferaySeleniumUtil.assertNoPoshiWarnings();
 		}
-		catch (Throwable throwable) {
+		catch (Exception exception) {
 			LiferaySeleniumUtil.printJavaProcessStacktrace();
 
-			Exception exception = _getException(throwable);
-
-			exception.printStackTrace();
-
-			throw exception;
+			_throwException(exception);
 		}
 	}
 
 	@Rule
 	public RetryTestRule retryTestRule = new RetryTestRule();
-
-	private Exception _getException(Throwable throwable) {
-		String poshiStackTrace = _poshiStackTrace.getStackTrace(
-			throwable.getMessage());
-
-		_poshiStackTrace.emptyStackTrace();
-
-		Exception exception = new Exception(poshiStackTrace);
-
-		exception.setStackTrace(throwable.getStackTrace());
-
-		return exception;
-	}
 
 	private void _runCommand() throws Exception {
 		_poshiLogger.logNamespacedClassCommandName(
@@ -352,16 +342,31 @@ public class PoshiRunner {
 		_runNamespacedClassCommandName(_testNamespacedClassName + "#tear-down");
 	}
 
+	private void _throwException(Exception exception)
+		throws PoshiRunnerException {
+
+		PoshiRunnerException poshiRunnerException = new PoshiRunnerException(
+			exception, _poshiStackTrace);
+
+		_poshiStackTrace.emptyStackTrace();
+
+		poshiRunnerException.printStackTrace();
+
+		throw poshiRunnerException;
+	}
+
 	private static DataGuardClient _dataGuardClient;
 	private static long _dataGuardId;
 	private static int _jvmRetryCount;
+	private static final PoshiProperties _poshiProperties =
+		PoshiProperties.getPoshiProperties();
 	private static final Map<String, List<String>> _testResults =
 		new HashMap<>();
 
-	private final PoshiLogger _poshiLogger;
-	private final PoshiRunnerExecutor _poshiRunnerExecutor;
-	private final PoshiStackTrace _poshiStackTrace;
-	private final SummaryLogger _summaryLogger;
+	private PoshiLogger _poshiLogger;
+	private PoshiRunnerExecutor _poshiRunnerExecutor;
+	private PoshiStackTrace _poshiStackTrace;
+	private SummaryLogger _summaryLogger;
 	private final String _testNamespacedClassCommandName;
 	private final String _testNamespacedClassName;
 
@@ -407,7 +412,8 @@ public class PoshiRunner {
 
 						System.out.println(
 							"Retrying test attempt " + _testcaseRetryCount +
-								" of " + PropsValues.TEST_TESTCASE_MAX_RETRIES);
+								" of " +
+									_poshiProperties.testTestcaseMaxRetries);
 					}
 				}
 			}
@@ -462,7 +468,7 @@ public class PoshiRunner {
 			}
 
 			private boolean _isRetryable(Throwable throwable) {
-				if (_jvmRetryCount >= PropsValues.TEST_JVM_MAX_RETRIES) {
+				if (_jvmRetryCount >= _poshiProperties.testJVMMaxRetries) {
 					System.out.println(
 						"Test retry attempts exceeded in Poshi Runner JVM");
 
@@ -478,9 +484,9 @@ public class PoshiRunner {
 
 			private boolean _isTestcaseRetryable() {
 				if ((_testcaseRetryCount >=
-						PropsValues.TEST_TESTCASE_MAX_RETRIES) ||
-					PropsValues.TEST_SKIP_TEAR_DOWN ||
-					(PropsValues.TEST_TESTCASE_MAX_RETRIES == 0)) {
+						_poshiProperties.testTestcaseMaxRetries) ||
+					_poshiProperties.testSkipTearDown ||
+					(_poshiProperties.testTestcaseMaxRetries == 0)) {
 
 					return false;
 				}

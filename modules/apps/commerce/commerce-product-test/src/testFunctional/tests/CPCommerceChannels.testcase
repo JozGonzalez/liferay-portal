@@ -685,8 +685,13 @@ definition {
 		task ("And given the buyer has permission to view a channel's configuration") {
 			CommercePermissions.defineChannelPermissionsViaJSONAPI(
 				roleTitle = "User",
-				update = "true",
+				update = "false",
 				view = "true");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY",
+				resourceName = "com.liferay.commerce.product",
+				roleTitle = "User");
 		}
 
 		task ("When the buyer logs in and goes to the Minium channel") {
@@ -699,13 +704,18 @@ definition {
 
 			CommerceChannels.openChannelsAdmin();
 
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+			AssertTextEquals(
+				key_columnIndex = 1,
+				key_rowIndex = 1,
+				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
+				value1 = "Minium Portal");
 		}
 
 		task ("Then the buyer is unable to change the channel currency code") {
 			AssertElementNotPresent(
-				key_title = "Currency",
-				locator1 = "CommerceEntry#CATALOGS_FORM");
+				key_entryName = "Minium Portal",
+				locator1 = "CommerceNavigation#ENTRY_NAME",
+				value1 = "Minium Portal");
 		}
 	}
 
@@ -790,18 +800,9 @@ definition {
 		}
 
 		task ("When the admin selects the same order type eligibility once again") {
-			CommerceNavigator.gotoEntry(entryName = "Standard Delivery");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-			Click(
-				key_panel = "Details",
-				locator1 = "Panel#PANEL_COLLAPSED");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
-
 			CommerceEntry.setEntryEligibility(
 				orderTypesEligibility = "Order Type Test",
+				shippingOption = "Standard Delivery",
 				unpublish = "true");
 		}
 
@@ -824,7 +825,8 @@ definition {
 	@priority = 3
 	test CanPaginatePaymentAndShippingRestrictions {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CPCommerceChannels#CanPaginatePaymentAndShippingRestrictions";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the admin navigates to 'Minium Portal' channel") {
 			CommerceChannels.openChannelsAdmin();
@@ -837,9 +839,9 @@ definition {
 				CommerceEntry.gotoMenuTab(menuTab = "${tab} Restrictions");
 
 				task ("Then the admin can use pagination to change the list of countries shown on the page") {
-					Pagination.changePagination(itemsPerPage = "4 items");
+					Pagination.changePagination(itemsPerPage = "4 Items");
 
-					CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 247");
+					CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 247 entries.");
 
 					AssertElementNotPresent(
 						key_rowNumber = 5,
@@ -853,7 +855,7 @@ definition {
 
 					Click(locator1 = "ACUtils#NEXT_PAGES");
 
-					CommerceEntry.viewPaginationResults(results = "Showing 5 to 8 of 247");
+					CommerceEntry.viewPaginationResults(results = "Showing 5 to 8 of 247 entries.");
 
 					AssertElementNotPresent(
 						key_rowNumber = 5,
@@ -957,6 +959,62 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11938. The user can use an email with more than 75 characters in the To field"
+	@priority = 4
+	test CanUseLongEmailAdressInNotificationTemplates {
+		property portal.acceptance = "false";
+
+		task ("Given the user goes to the Channels Admin") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("And the user creates a new notifications template") {
+			CommerceEntry.gotoMenuTab(menuTab = "Notification Templates");
+
+			Click(locator1 = "Button#PLUS");
+
+			SelectFrameTop();
+
+			CommerceEntry.addNewNotificationTemplate(
+				entryName = "Test Notification Template",
+				fromAddress = "test@liferay.com",
+				fromName = "Test",
+				notificationType = "Order Placed");
+		}
+
+		task ("When in the field To the user place an email address with more than 75 characters") {
+			Type(
+				key_fieldLabel = "To",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "customemailadresswithmorethan75charactersintofieldonthenotificationstemplates@liferay.com");
+		}
+
+		task ("Then the Notification Template is successfully saved") {
+			Button.clickSave();
+
+			Alert.viewSuccessMessage();
+
+			Click(locator1 = "Icon#CLOSE");
+
+			SelectFrameTop();
+
+			AssertVisible(
+				key_entryName = "Test Notification Template",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+
+			CommerceNavigator.gotoEntry(entryName = "Test Notification Template");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			AssertVisible(
+				key_fieldLabel = "To",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "customemailadresswithmorethan75charactersintofieldonthenotificationstemplates@liferay.com");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10602. Verify that the user can see the channel entries only if the 'Channels > Commerce Channel: View' is present"
 	@priority = 3
 	test CanUserWithChannelViewPermissionSeeChannelEntries {
@@ -967,6 +1025,11 @@ definition {
 			CommercePermissions.defineChannelPermissionsViaJSONAPI(
 				roleTitle = "User",
 				view = "true");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY",
+				resourceName = "com.liferay.commerce.product",
+				roleTitle = "User");
 
 			CommercePermissions.defineProductPermissionsViaJSONAPI(
 				roleTitle = "User",

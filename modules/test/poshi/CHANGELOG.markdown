@@ -1,5 +1,315 @@
 # Poshi Runner Change Log
 
+## 1.0.468
+
+### Gradle
+
+* [POSHI-627](https://liferay.atlassian.net/browse/POSHI-627) - Investigate Failure in com.liferay.poshi.runner.resources.PoshiResourcesMasterTest
+
+### Other
+
+* [LPS-194477](https://liferay.atlassian.net/browse/LPS-194477) - [SF] source-formatter.properties  key should follow root source-formatter file
+
+### Utils
+
+* [POSHI-643](https://liferay.atlassian.net/browse/POSHI-643) - Replacement of secret parameters in osgi config test depdendencies
+
+### Validation
+
+* [POSHI-642](https://liferay.atlassian.net/browse/POSHI-642) - Allow isset/equals conditions to work in functions
+
+### WebDriver
+
+* [POSHI-639](https://liferay.atlassian.net/browse/POSHI-639) - As a tester, I want to configure AssertAccessible() to catch serious and critical levels only.
+
+## 1.0.466
+
+### Core
+
+* [POSHI-571](https://liferay.atlassian.net/browse/POSHI-571) - Implement Poshi Shared Scope to Improve Ci Runtimes
+* [POSHI-623](https://liferay.atlassian.net/browse/POSHI-623) - Add test.run.type=single for tests that have to be grouped individually
+
+### Gradle
+
+* [POSHI-607](https://liferay.atlassian.net/browse/POSHI-607) - Add support for chromedriver 115+
+* [POSHI-614](https://liferay.atlassian.net/browse/POSHI-614) - Create gradle task to run PoshiReportGenerator
+
+### Logger
+
+* [POSHI-371](https://liferay.atlassian.net/browse/POSHI-371) - External methods do not iterate the linkID after being called
+
+### Reports
+
+* [POSHI-613](https://liferay.atlassian.net/browse/POSHI-613) - Move report methods from PoshiContext to PoshiReportGenerator
+
+### Runner
+
+* [POSHI-28](https://liferay.atlassian.net/browse/POSHI-28) - Add a tool to give more info on macro (possibly function) usages
+
+### Script
+
+* [POSHI-549](https://liferay.atlassian.net/browse/POSHI-549) - Skip file regeneration and possibly validation for poshi resource jar files
+* [POSHI-634](https://liferay.atlassian.net/browse/POSHI-634) - Double quotes not being escaped for external methods
+
+### Utils
+
+* [POSHI-615](https://liferay.atlassian.net/browse/POSHI-615) - Escape regex in new assertTextMatches method
+* [POSHI-617](https://liferay.atlassian.net/browse/POSHI-617) - Add assertions for JSONUtil.getWithJSONPath and other JSON assertions
+
+### Validation
+
+* [POSHI-631](https://liferay.atlassian.net/browse/POSHI-631) - Throw poshi validation error when there are duplicate data-archives
+
+### WebDriver
+
+* [POSHI-575](https://liferay.atlassian.net/browse/POSHI-575) - Support Object in ListUtil
+* [POSHI-594](https://liferay.atlassian.net/browse/POSHI-594) - Add assertPartialValue method
+
+## 1.0.457
+
+### Core
+
+* [POSHI-593](https://liferay.atlassian.net/browse/POSHI-593) - java.lang.Exception in com.liferay.poshi.runner.resources.PoshiResources70xTest
+* [POSHI-609](https://liferay.atlassian.net/browse/POSHI-609) - PoshiProperties variables must also be reset when using PropsUtil.setProperties
+* [POSHI-616](https://liferay.atlassian.net/browse/POSHI-616) - Legacy Database Dumps are reading in two different dirs causing Poshi failures
+
+### Other
+
+* [LPS-181508](https://liferay.atlassian.net/browse/LPS-181508) - In order to use supported JDK versions, we need to upgrade to Gradle 7 to use newer JDK
+
+### Runner
+
+* [POSHI-612](https://liferay.atlassian.net/browse/POSHI-612) - Add a configurable timeout for individual tests in ParallelPoshiRunner
+
+### Utils
+
+* [POSHI-608](https://liferay.atlassian.net/browse/POSHI-608) - Add a way to synchronously execute calls against portal's virtual instance API's
+* [POSHI-615](https://liferay.atlassian.net/browse/POSHI-615) - Escape regex in new assertTextMatches method
+
+## 1.0.453
+
+### Core
+
+* [POSHI-562](https://liferay.atlassian.net/browse/POSHI-562) - Up PoshiContext timeout time when reading files
+
+### Other
+
+* [LPS-188134](https://liferay.atlassian.net/browse/LPS-188134) - Use of library with known vulnerability: Guava 30.1.1
+* [LPS-188912](https://liferay.atlassian.net/browse/LPS-188912) - New ant task format-source-change-copyrights
+
+### Runner
+
+* [POSHI-600](https://liferay.atlassian.net/browse/POSHI-600) - Isolate poshi error message from poshi & java stacktraces in junit result file or post parse error messages for testray
+* [POSHI-606](https://liferay.atlassian.net/browse/POSHI-606) - When tearDowns fail, they should throw a warning that should be added and denoted in testray
+
+## 1.0.450
+
+### Core
+
+* [POSHI-572](https://liferay.atlassian.net/browse/POSHI-572) - Rename console property name to liferayConsole
+* [POSHI-595](https://liferay.atlassian.net/browse/POSHI-595) - Set the instance variable associated with the poshi property for consistency
+
+### Logger
+
+* [POSHI-598](https://liferay.atlassian.net/browse/POSHI-598) - ERR_TOO_MANY_REDIRECTS happens when get resources from cdn.alloyui.com
+
+### Other
+
+* [LPS-188134](https://liferay.atlassian.net/browse/LPS-188134) - Use of library with known vulnerability: Guava 30.1.1
+
+### Runner
+
+* [POSHI-573](https://liferay.atlassian.net/browse/POSHI-573) - Rename output.log to output.txt so testray can serve the file preview correctly
+* [POSHI-597](https://liferay.atlassian.net/browse/POSHI-597) - Clear out PoshiRunnerWarningException list after one test run, and store issues per thread
+
+### Script
+
+* [POSHI-586](https://liferay.atlassian.net/browse/POSHI-586) - Add property to disable poshi script parsing exceptions in Jenkins & SF
+
+### Utils
+
+* [POSHI-567](https://liferay.atlassian.net/browse/POSHI-567) - Add StringUtil.assertEquals and JSONUtil.assertEquals
+* [POSHI-596](https://liferay.atlassian.net/browse/POSHI-596) - Can't set second variable in ListUtil.get(List<String> list, Integer index)
+
+### WebDriver
+
+* [POSHI-530](https://liferay.atlassian.net/browse/POSHI-530) - Add method to assert text match a given pattern
+* [POSHI-585](https://liferay.atlassian.net/browse/POSHI-585) - Add assertElementNotFocused method
+
+## 1.0.442
+
+### Core
+
+* [POSHI-578](https://liferay.atlassian.net/browse/POSHI-578) - Add check when generating a summary only parse into the XML when prop is set
+
+### WebDriver
+
+* [POSHI-582](https://liferay.atlassian.net/browse/POSHI-582) - org.openqa.selenium.remote.RemoteWebDriver cannot be cast to org.openqa.selenium.chrome.ChromeDriver when invoke executeCDPCommand
+
+## 1.0.440
+
+### Runner
+
+* [POSHI-580](https://liferay.atlassian.net/browse/POSHI-580) - Fix non string variable issues in selenium method invocations
+
+### WebDriver
+
+* [POSHI-564](https://liferay.atlassian.net/browse/POSHI-564) - Add assertElementFocused method to assert if an element is focused
+
+## 1.0.438
+
+### Core
+
+* [POSHI-535](https://liferay.atlassian.net/browse/POSHI-535) - Refactor PropsValues and PropsUtil so that instances of properties can be stored per thread
+
+### Gradle
+
+* [POSHI-513](https://liferay.atlassian.net/browse/POSHI-513) - Even though Chrome 100 is being ran within the legacy database dump jobs, it is not displayed clearly
+
+### IDE
+
+* [POSHI-556](https://liferay.atlassian.net/browse/POSHI-556) - Bump the version for the VCSode Poshi extension to prepare for publish
+
+### Other
+
+* [LPS-188279](https://issues.liferay.com/browse/LPS-188279) - Add HEAD support to JSONCurlUtil for Poshi
+* [LRQA-80462](https://issues.liferay.com/browse/LRQA-80462) - Deprecated methods for Copy/Paste should be replaced
+* [LRQA-80464](https://issues.liferay.com/browse/LRQA-80464) - Deprecated method "selenium.antCommand" should be replaced
+
+### Runner
+
+* [POSHI-25](https://liferay.atlassian.net/browse/POSHI-25) - Support other data structures such as a Map or JSON
+* [POSHI-553](https://liferay.atlassian.net/browse/POSHI-553) - cannot be cast to java.lang.String in com.liferay.poshi.runner.util.HttpRequestUtilTest
+* [POSHI-555](https://liferay.atlassian.net/browse/POSHI-555) - Modify PoshiRunnerExecutor and LiferaySeleniumMethod to allow for other classes
+* [POSHI-566](https://liferay.atlassian.net/browse/POSHI-566) - Test methods that use Strings in BWDI but use other objests, i.e. ints, in Poshi Script
+
+### Script
+
+* [POSHI-270](https://liferay.atlassian.net/browse/POSHI-270) - Add required and optional variables as a method signature for macro commands
+* [POSHI-546](https://liferay.atlassian.net/browse/POSHI-546) - Add required and optional variables as a method signature for function commands
+* [POSHI-547](https://liferay.atlassian.net/browse/POSHI-547) - Add and enforce metadata for macro and function commands so Poshi code is more self explanatory
+* [POSHI-558](https://liferay.atlassian.net/browse/POSHI-558) - Investigate failure in com.liferay.poshi.runner.resources.PoshiResources70xTest
+
+### Utils
+
+* [POSHI-551](https://liferay.atlassian.net/browse/POSHI-551) - Make table var to be on a new line when it is the only one parameter
+* [POSHI-554](https://liferay.atlassian.net/browse/POSHI-554) - Create new util, MapUtil, that will handle maps
+
+### Validation
+
+* [POSHI-545](https://liferay.atlassian.net/browse/POSHI-545) - Enforce summary annotation for all macros
+
+### WebDriver
+
+* [POSHI-464](https://liferay.atlassian.net/browse/POSHI-464) - Investigate usage of Chrome DevTools Protocol methods into Poshi
+* [POSHI-552](https://liferay.atlassian.net/browse/POSHI-552) - When invoke macro, the variable will override the value of variable with same name
+
+## 1.0.430
+
+### Core
+
+* [POSHI-535](https://issues.liferay.com/browse/POSHI-535) - Refactor PropsValues and PropsUtil so that instances of properties can be stored per thread
+
+### Other
+
+* [LPS-182243](https://issues.liferay.com/browse/LPS-182243) - regen changelogs in modules/sdk
+* [LPS-182545](https://issues.liferay.com/browse/LPS-182545) - Use of library with known vulnerability: JSON-java 20220320
+* [LRQA-80462](https://issues.liferay.com/browse/LRQA-80462) - Deprecated methods for Copy/Paste should be replaced
+
+### Runner
+
+* [POSHI-510](https://issues.liferay.com/browse/POSHI-510) - When running Poshi tests in parallel, the output should be written to a log file
+* [POSHI-529](https://issues.liferay.com/browse/POSHI-529) - Namespace context is not stored when using poshi resources
+* [POSHI-538](https://issues.liferay.com/browse/POSHI-538) - Fix bug when reading in supported dirs with reappearing paths
+
+### WebDriver
+
+* [POSHI-532](https://issues.liferay.com/browse/POSHI-532) - Global variable returns null when invoke StringUtil method
+
+## 1.0.426
+
+### Gradle
+
+* [POSHI-494](https://issues.liferay.com/browse/POSHI-494) - formatSource task is scaning all code from my project, not the poshi standalone code only.
+
+### Testing
+
+* [POSHI-523](https://issues.liferay.com/browse/POSHI-523) - Investigate reading of Poshi Files in unit tests
+
+### WebDriver
+
+* [POSHI-230](https://issues.liferay.com/browse/POSHI-230) - Update to WebDriver 4
+* [POSHI-521](https://issues.liferay.com/browse/POSHI-521) - Reimplement shadow root compatibility using WebDriver 4
+* [POSHI-524](https://issues.liferay.com/browse/POSHI-524) - Update axe core version
+* [POSHI-526](https://issues.liferay.com/browse/POSHI-526) - Fix our webdriver implemention to work with Chrome 111+
+
+## 1.0.422
+
+### Core
+
+* [POSHI-516](https://issues.liferay.com/browse/POSHI-516) - Fix bug when setting a var to a method that passes in a value that contains an '='
+
+### Testing
+
+* [POSHI-515](https://issues.liferay.com/browse/POSHI-515) - Add unit tests for poshi resource jars
+
+## 1.0.420
+
+### Core
+
+* [POSHI-511](https://issues.liferay.com/browse/POSHI-511) - Fix bug with VarMacro Invocation being match incorrectly
+
+### Feature Request
+
+* [LRCI-970](https://issues.liferay.com/browse/LRCI-970) - As a test engineer, it should be simpler to specify which tests run on virtual instances or not
+
+### Gradle
+
+* [POSHI-508](https://issues.liferay.com/browse/POSHI-508) - Add parallel poshi test running capability to poshi gradle plugin
+
+### Other
+
+* [LPS-174314](https://issues.liferay.com/browse/LPS-174314) - [SF] Use passed in var to avoid any possible errors
+* [POSHI-509](https://issues.liferay.com/browse/POSHI-509) - Poshi script was not formatted correctly in com.liferay.poshi.core.elements.PoshiElementFactoryTest
+* [LRCI-3516](https://issues.liferay.com/browse/LRCI-3516) - Add the ability to create a set of Poshi Queries that can be run against a different test base dir name
+* [LRQA-80009](https://issues.liferay.com/browse/LRQA-80009) - Poshi sintax error in testMissingSemicolonMacro
+
+### Prose
+
+* [POSHI-291](https://issues.liferay.com/browse/POSHI-291) - Add compatibility between Poshi Prose and Poshi Script
+
+### Script
+
+* [POSHI-484](https://issues.liferay.com/browse/POSHI-484) - Fix parsing of macros that are then set into a var
+
+### Testing
+
+* [POSHI-501](https://issues.liferay.com/browse/POSHI-501) - Add unit tests for poshi script parser error handling
+
+### Utils
+
+* [POSHI-489](https://issues.liferay.com/browse/POSHI-489) - AntCommand times out without error when used to start or stop server on certain app servers
+* [POSHI-506](https://issues.liferay.com/browse/POSHI-506) - Client extension tests will need more flexibility to run bash scripts
+
+### Validation
+
+* [POSHI-388](https://issues.liferay.com/browse/POSHI-388) - Validate description tags to contain no elements
+* [POSHI-465](https://issues.liferay.com/browse/POSHI-465) - Add validation for quotes in for loops
+* [POSHI-477](https://issues.liferay.com/browse/POSHI-477) - Give clearer error message when using a function that doesnt exist
+* [POSHI-483](https://issues.liferay.com/browse/POSHI-483) - Add validation for multiline strings in @description property
+* [POSHI-493](https://issues.liferay.com/browse/POSHI-493) - Improve the error messasges from poshi standalone
+* [POSHI-495](https://issues.liferay.com/browse/POSHI-495) - [Poshi Standalone] Error for missing ; is not clear
+* [POSHI-497](https://issues.liferay.com/browse/POSHI-497) - [Poshi Standalone] Default.Open function fails if the URL start with /
+
+### WebDriver
+
+* [POSHI-434](https://issues.liferay.com/browse/POSHI-434) - Support press more special keys
+* [POSHI-475](https://issues.liferay.com/browse/POSHI-475) - Add parallelized Poshi functionality
+* [POSHI-500](https://issues.liferay.com/browse/POSHI-500) - Add method to maximize window size
+* [POSHI-504](https://issues.liferay.com/browse/POSHI-504) - Add getHtmlNodeText into Liferay Selenium
+* [POSHI-507](https://issues.liferay.com/browse/POSHI-507) - Encode URLs when being passed into Open
+* [POSHI-512](https://issues.liferay.com/browse/POSHI-512) - Fix behavior for LiferaySelenium.isTestName
+
 ## 1.0.405
 
 ### Gradle

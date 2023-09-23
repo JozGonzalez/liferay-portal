@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -22,9 +16,12 @@ import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
 import Search from '../../common/components/TableHeader/Search';
 import {DealRegistrationColumnKey} from '../../common/enums/dealRegistrationColumnKey';
+import {ObjectActionName} from '../../common/enums/objectActionName';
+import {PermissionActionType} from '../../common/enums/permissionActionType';
 import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePagination from '../../common/hooks/usePagination';
+import usePermissionActions from '../../common/hooks/usePermissionActions';
 import {DealRegistrationListItem} from '../../common/interfaces/dealRegistrationListItem';
 import {Liferay} from '../../common/services/liferay';
 import getDoubleParagraph from '../../common/utils/getDoubleParagraph';
@@ -40,21 +37,38 @@ interface IProps {
 }
 const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 	const {filters, filtersTerm, onFilter} = useFilters();
+
 	const [isVisibleModal, setIsVisibleModal] = useState(false);
 	const [modalContent, setModalContent] = useState<DealRegistrationItem>({});
+
 	const {observer, onClose} = useModal({
 		onClose: () => setIsVisibleModal(false),
 	});
+
 	const pagination = usePagination();
+
+	const siteURL = useLiferayNavigate();
+
 	const {data, isValidating} = useGetListItemsFromDealRegistration(
 		pagination.activePage,
 		pagination.activeDelta,
 		filtersTerm,
 		sort
 	);
+
+	const actions = usePermissionActions(ObjectActionName.DEAL_REGISTRATION);
+
 	const filteredData = data.items && getFilteredItems(data.items);
-	const siteURL = useLiferayNavigate();
+
 	const columns = [
+		{
+			columnKey: DealRegistrationColumnKey.PARTNER_ACCOUNT_NAME,
+			label: 'Partner Account Name',
+		},
+		{
+			columnKey: DealRegistrationColumnKey.PARTNER_NAME,
+			label: 'Partner Name',
+		},
 		{
 			columnKey: DealRegistrationColumnKey.ACCOUNT_NAME,
 			label: 'Account Name',
@@ -80,10 +94,12 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 			label: 'Status',
 		},
 	];
+
 	const handleCustomClickOnRow = (item: DealRegistrationItem) => {
 		setIsVisibleModal(true);
 		setModalContent(item);
 	};
+
 	const getModal = () => {
 		return (
 			<Modal observer={observer} size="lg">
@@ -91,6 +107,7 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 			</Modal>
 		);
 	};
+
 	const getTable = (totalCount: number, items?: DealRegistrationItem[]) => {
 		if (items) {
 			if (!totalCount) {
@@ -157,26 +174,29 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 				</div>
 
 				<div>
-					{!!filteredData?.length && (
-						<CSVLink
-							className="btn btn-secondary mb-2 mb-lg-0 mr-2"
-							data={filteredData}
-							filename="Partner Deal Registration.csv"
-						>
-							Export Deal Registrations
-						</CSVLink>
-					)}
+					{!!filteredData?.length &&
+						actions?.includes(PermissionActionType.EXPORT) && (
+							<CSVLink
+								className="btn btn-secondary mb-2 mb-lg-0 mr-2"
+								data={filteredData}
+								filename="Partner Deal Registration.csv"
+							>
+								Export Deal Registrations
+							</CSVLink>
+						)}
 
-					<ClayButton
-						className="mb-2 mb-lg-0 mr-2"
-						onClick={() =>
-							Liferay.Util.navigate(
-								`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
-							)
-						}
-					>
-						Register New Deal
-					</ClayButton>
+					{actions?.includes(PermissionActionType.CREATE) && (
+						<ClayButton
+							className="mb-2 mb-lg-0 mr-2"
+							onClick={() =>
+								Liferay.Util.navigate(
+									`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
+								)
+							}
+						>
+							Register New Deal
+						</ClayButton>
+					)}
 				</div>
 			</TableHeader>
 

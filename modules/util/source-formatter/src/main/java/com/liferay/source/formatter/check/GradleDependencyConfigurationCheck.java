@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -31,26 +22,104 @@ public class GradleDependencyConfigurationCheck extends BaseFileCheck {
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
-		if ((!isModulesApp(absolutePath, false) &&
-			 !absolutePath.contains("/third-party/")) ||
-			!_hasBNDFile(absolutePath) ||
-			GradleSourceUtil.isSpringBootExecutable(content)) {
-
-			return content;
-		}
-
 		List<String> blocks = GradleSourceUtil.getDependenciesBlocks(content);
 
 		for (String dependencies : blocks) {
-			content = _formatDependencies(absolutePath, content, dependencies);
+			if (isModulesApp(absolutePath, false) &&
+				_hasBNDFile(absolutePath) &&
+				!GradleSourceUtil.isSpringBootExecutable(content)) {
+
+				content = _formatDependencies(content, dependencies);
+			}
+
+			if (absolutePath.contains("/third-party/")) {
+				content = _fixTransitive(content, dependencies);
+			}
+
+			if (isAttributeValue(
+					_CHECK_API_DEPENDENCIES_KEY, absolutePath, true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "compile", "api");
+			}
+
+			if (isAttributeValue(
+					_CHECK_RUNTIME_ONLY_DEPENDENCIES_KEY, absolutePath, true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "runtime", "runtimeOnly");
+			}
+
+			if (isAttributeValue(
+					_CHECK_TEST_IMPLEMENTATION_DEPENDENCIES_KEY, absolutePath,
+					true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "testCompile", "testImplementation");
+			}
+
+			if (isAttributeValue(
+					_CHECK_TEST_INTEGRATION_IMPLEMENTATION_DEPENDENCIES_KEY,
+					absolutePath, true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "testIntegrationCompile",
+					"testIntegrationImplementation");
+			}
+
+			if (isAttributeValue(
+					_CHECK_TEST_INTEGRATION_RUNTIME_ONLY_DEPENDENCIES_KEY,
+					absolutePath, true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "testIntegrationRuntime",
+					"testIntegrationRuntimeOnly");
+			}
+
+			if (isAttributeValue(
+					_CHECK_TEST_RUNTIME_ONLY_DEPENDENCIES_KEY, absolutePath,
+					true)) {
+
+				content = _fixConfigurations(
+					content, dependencies, "testRuntime", "testRuntimeOnly");
+			}
 		}
 
 		return content;
 	}
 
-	private String _formatDependencies(
-		String absolutePath, String content, String dependencies) {
+	private String _fixConfigurations(
+		String content, String dependencies, String oldConfiguration,
+		String newConfiguration) {
 
+		int x = dependencies.indexOf("\n");
+		int y = dependencies.lastIndexOf("\n");
+
+		if (x == y) {
+			return content;
+		}
+
+		dependencies = dependencies.substring(x, y + 1);
+
+		for (String oldDependency : StringUtil.splitLines(dependencies)) {
+			String newDependency = oldDependency;
+
+			String configuration = GradleSourceUtil.getConfiguration(
+				oldDependency);
+
+			if (configuration.equals(oldConfiguration)) {
+				newDependency = StringUtil.replaceFirst(
+					oldDependency, oldConfiguration, newConfiguration);
+			}
+
+			content = StringUtil.replaceFirst(
+				content, oldDependency, newDependency);
+		}
+
+		return content;
+	}
+
+	private String _fixTransitive(String content, String dependencies) {
 		int x = dependencies.indexOf("\n");
 		int y = dependencies.lastIndexOf("\n");
 
@@ -65,27 +134,48 @@ public class GradleDependencyConfigurationCheck extends BaseFileCheck {
 				oldDependency);
 			String newDependency = oldDependency;
 
-			if (!absolutePath.contains("/third-party/")) {
-				if (configuration.equals("compile")) {
-					newDependency = StringUtil.replaceFirst(
-						oldDependency, "compile", "compileOnly");
-				}
-				else if (configuration.equals("compileOnly")) {
-					newDependency = StringUtil.removeSubstrings(
-						oldDependency, "transitive: false, ",
-						"transitive: true,");
-				}
-			}
-			else {
-				if (configuration.equals("compileOnly") &&
-					!oldDependency.contains("transitive: false")) {
+			if (configuration.equals("compileOnly") &&
+				!oldDependency.contains("transitive: false")) {
 
-					newDependency = oldDependency + ", transitive: false";
-				}
-			}
+				newDependency = oldDependency + ", transitive: false";
 
-			content = StringUtil.replaceFirst(
-				content, oldDependency, newDependency);
+				content = StringUtil.replaceFirst(
+					content, oldDependency, newDependency);
+			}
+		}
+
+		return content;
+	}
+
+	private String _formatDependencies(String content, String dependencies) {
+		int x = dependencies.indexOf("\n");
+		int y = dependencies.lastIndexOf("\n");
+
+		if (x == y) {
+			return content;
+		}
+
+		dependencies = dependencies.substring(x, y + 1);
+
+		for (String oldDependency : StringUtil.splitLines(dependencies)) {
+			String configuration = GradleSourceUtil.getConfiguration(
+				oldDependency);
+			String newDependency = oldDependency;
+
+			if (configuration.equals("compile")) {
+				newDependency = StringUtil.replaceFirst(
+					oldDependency, "compile", "compileOnly");
+
+				content = StringUtil.replaceFirst(
+					content, oldDependency, newDependency);
+			}
+			else if (configuration.equals("compileOnly")) {
+				newDependency = StringUtil.removeSubstrings(
+					oldDependency, "transitive: false, ", "transitive: true,");
+
+				content = StringUtil.replaceFirst(
+					content, oldDependency, newDependency);
+			}
 		}
 
 		return content;
@@ -102,5 +192,25 @@ public class GradleDependencyConfigurationCheck extends BaseFileCheck {
 
 		return file.exists();
 	}
+
+	private static final String _CHECK_API_DEPENDENCIES_KEY =
+		"checkAPIDependencies";
+
+	private static final String _CHECK_RUNTIME_ONLY_DEPENDENCIES_KEY =
+		"checkRuntimeOnlyDependencies";
+
+	private static final String _CHECK_TEST_IMPLEMENTATION_DEPENDENCIES_KEY =
+		"checkTestImplementationDependencies";
+
+	private static final String
+		_CHECK_TEST_INTEGRATION_IMPLEMENTATION_DEPENDENCIES_KEY =
+			"checkTestIntegrationImplementationDependencies";
+
+	private static final String
+		_CHECK_TEST_INTEGRATION_RUNTIME_ONLY_DEPENDENCIES_KEY =
+			"checkTestIntegrationRuntimeOnlyDependencies";
+
+	private static final String _CHECK_TEST_RUNTIME_ONLY_DEPENDENCIES_KEY =
+		"checkTestRuntimeOnlyDependencies";
 
 }

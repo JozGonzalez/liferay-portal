@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.impl;
@@ -21,9 +12,9 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.object.configuration.ObjectConfiguration;
 import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedException;
 import com.liferay.object.exception.ObjectEntryCountException;
-import com.liferay.object.internal.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -96,7 +87,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
 			_checkPortletResourcePermission(
-				groupId, objectDefinitionId, ObjectActionKeys.ADD_OBJECT_ENTRY,
+				ObjectActionKeys.ADD_OBJECT_ENTRY, groupId, objectDefinitionId,
 				values);
 		}
 
@@ -118,7 +109,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 		if (objectEntry == null) {
 			_checkPortletResourcePermission(
-				groupId, objectDefinitionId, ObjectActionKeys.ADD_OBJECT_ENTRY,
+				ObjectActionKeys.ADD_OBJECT_ENTRY, groupId, objectDefinitionId,
 				values);
 		}
 		else {
@@ -152,9 +143,11 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	public ObjectEntry deleteObjectEntry(long objectEntryId)
 		throws PortalException {
 
-		_checkPermission(
-			ActionKeys.DELETE,
-			objectEntryLocalService.getObjectEntry(objectEntryId));
+		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+			_checkPermission(
+				ActionKeys.DELETE,
+				objectEntryLocalService.getObjectEntry(objectEntryId));
+		}
 
 		return objectEntryLocalService.deleteObjectEntry(objectEntryId);
 	}
@@ -170,6 +163,26 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 		_checkPermission(ActionKeys.DELETE, objectEntry);
 
 		return objectEntryLocalService.deleteObjectEntry(objectEntry);
+	}
+
+	@Override
+	public ObjectEntry fetchManyToOneObjectEntry(
+			long groupId, long objectRelationshipId, long primaryKey)
+		throws PortalException {
+
+		ObjectEntry objectEntry =
+			objectEntryLocalService.fetchManyToOneObjectEntry(
+				groupId, objectRelationshipId, primaryKey);
+
+		if ((objectEntry != null) &&
+			!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+
+			objectEntryService.checkModelResourcePermission(
+				objectEntry.getObjectDefinitionId(),
+				objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+		}
+
+		return objectEntry;
 	}
 
 	@Override
@@ -189,18 +202,20 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	@Override
 	public List<ObjectEntry> getManyToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, boolean reverse, int start, int end)
+			boolean related, boolean reverse, String search, int start, int end)
 		throws PortalException {
 
 		List<ObjectEntry> objectEntries =
 			objectEntryLocalService.getManyToManyObjectEntries(
 				groupId, objectRelationshipId, primaryKey, related, reverse,
-				start, end);
+				search, start, end);
 
-		for (ObjectEntry objectEntry : objectEntries) {
-			objectEntryService.checkModelResourcePermission(
-				objectEntry.getObjectDefinitionId(),
-				objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+			for (ObjectEntry objectEntry : objectEntries) {
+				objectEntryService.checkModelResourcePermission(
+					objectEntry.getObjectDefinitionId(),
+					objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+			}
 		}
 
 		return objectEntries;
@@ -209,11 +224,12 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	@Override
 	public int getManyToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, boolean reverse)
+			boolean related, boolean reverse, String search)
 		throws PortalException {
 
 		return objectEntryLocalService.getManyToManyObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, related, reverse);
+			groupId, objectRelationshipId, primaryKey, related, reverse,
+			search);
 	}
 
 	@Override
@@ -261,17 +277,20 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	@Override
 	public List<ObjectEntry> getOneToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, int start, int end)
+			boolean related, String search, int start, int end)
 		throws PortalException {
 
 		List<ObjectEntry> objectEntries =
 			objectEntryLocalService.getOneToManyObjectEntries(
-				groupId, objectRelationshipId, primaryKey, related, start, end);
+				groupId, objectRelationshipId, primaryKey, related, search,
+				start, end);
 
-		for (ObjectEntry objectEntry : objectEntries) {
-			objectEntryService.checkModelResourcePermission(
-				objectEntry.getObjectDefinitionId(),
-				objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+			for (ObjectEntry objectEntry : objectEntries) {
+				objectEntryService.checkModelResourcePermission(
+					objectEntry.getObjectDefinitionId(),
+					objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+			}
 		}
 
 		return objectEntries;
@@ -280,11 +299,11 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	@Override
 	public int getOneToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related)
+			boolean related, String search)
 		throws PortalException {
 
 		return objectEntryLocalService.getOneToManyObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, related);
+			groupId, objectRelationshipId, primaryKey, related, search);
 	}
 
 	@Override
@@ -410,7 +429,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	}
 
 	private void _checkPortletResourcePermission(
-			long groupId, long objectDefinitionId, String actionId,
+			String actionId, long groupId, long objectDefinitionId,
 			Map<String, Serializable> values)
 		throws PortalException {
 
@@ -544,7 +563,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	private void _validateSubmissionLimit(long objectDefinitionId, User user)
 		throws PortalException {
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			return;
 		}
 

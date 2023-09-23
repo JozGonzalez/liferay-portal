@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.exportimport.data.handler;
@@ -34,8 +25,10 @@ import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.lar.ThemeExporter;
 import com.liferay.exportimport.lar.ThemeImporter;
-import com.liferay.layout.internal.exportimport.staged.model.repository.StagedLayoutSetStagedModelRepository;
+import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.layout.internal.exportimport.staged.model.repository.StagedLayoutSetStagedModelRepositoryUtil;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -61,7 +54,7 @@ import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ColorSchemeFactory;
+import com.liferay.portal.kernel.util.ColorSchemeFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -86,8 +79,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -191,7 +182,7 @@ public class StagedLayoutSetStagedModelDataHandler
 		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
 
 		StagedLayoutSet existingStagedLayoutSet =
-			_stagedLayoutSetStagedModelRepository.fetchExistingLayoutSet(
+			StagedLayoutSetStagedModelRepositoryUtil.fetchExistingLayoutSet(
 				portletDataContext.getScopeGroupId(),
 				layoutSet.isPrivateLayout());
 
@@ -296,11 +287,11 @@ public class StagedLayoutSetStagedModelDataHandler
 					portletDataContext.getLayoutSetPrototypeUuid(),
 					portletDataContext.getCompanyId());
 
-		List<Layout> layoutSetLayouts = _layoutLocalService.getLayouts(
-			portletDataContext.getGroupId(),
-			portletDataContext.isPrivateLayout());
+		for (Layout layout :
+				_layoutLocalService.getLayouts(
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout())) {
 
-		for (Layout layout : layoutSetLayouts) {
 			if (Validator.isNull(layout.getSourcePrototypeLayoutUuid())) {
 				continue;
 			}
@@ -338,17 +329,9 @@ public class StagedLayoutSetStagedModelDataHandler
 			return;
 		}
 
-		List<Layout> previousLayouts = _layoutLocalService.getLayouts(
-			portletDataContext.getGroupId(),
-			portletDataContext.isPrivateLayout());
-
-		Stream<Element> layoutElementsStream = layoutElements.stream();
-
-		List<String> sourceLayoutUuids = layoutElementsStream.map(
-			layoutElement -> layoutElement.attributeValue("uuid")
-		).collect(
-			Collectors.toList()
-		);
+		List<String> sourceLayoutUuids = TransformUtil.transform(
+			layoutElements,
+			layoutElement -> layoutElement.attributeValue("uuid"));
 
 		if (_log.isDebugEnabled() && !sourceLayoutUuids.isEmpty()) {
 			_log.debug("Delete missing layouts");
@@ -360,7 +343,11 @@ public class StagedLayoutSetStagedModelDataHandler
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		for (Layout layout : previousLayouts) {
+		for (Layout layout :
+				_layoutLocalService.getLayouts(
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout())) {
+
 			if (!sourceLayoutUuids.contains(layout.getUuid()) &&
 				!layoutPlids.containsValue(layout.getPlid())) {
 
@@ -406,13 +393,11 @@ public class StagedLayoutSetStagedModelDataHandler
 
 		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
 
-		List<ClientExtensionEntryRel> clientExtensionEntryRels =
-			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
-				_portal.getClassNameId(LayoutSet.class),
-				layoutSet.getLayoutSetId());
-
 		for (ClientExtensionEntryRel clientExtensionEntryRel :
-				clientExtensionEntryRels) {
+				_clientExtensionEntryRelLocalService.
+					getClientExtensionEntryRels(
+						_portal.getClassNameId(LayoutSet.class),
+						layoutSet.getLayoutSetId())) {
 
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
 				portletDataContext, stagedLayoutSet, clientExtensionEntryRel,
@@ -488,11 +473,11 @@ public class StagedLayoutSetStagedModelDataHandler
 				group.getGroupId(), portletDataContext.isPrivateLayout());
 		}
 
-		List<StagedModel> stagedModels =
-			_stagedLayoutSetStagedModelRepository.fetchChildrenStagedModels(
-				portletDataContext, stagedLayoutSet);
+		for (StagedModel stagedModel :
+				StagedLayoutSetStagedModelRepositoryUtil.
+					fetchChildrenStagedModels(
+						portletDataContext, stagedLayoutSet)) {
 
-		for (StagedModel stagedModel : stagedModels) {
 			Layout layout = (Layout)stagedModel;
 
 			if (!ArrayUtil.contains(layoutIds, layout.getLayoutId())) {
@@ -613,7 +598,7 @@ public class StagedLayoutSetStagedModelDataHandler
 				_themeFactory.getDefaultRegularThemeId(
 					stagedLayoutSet.getCompanyId()));
 			layoutSet.setColorSchemeId(
-				_colorSchemeFactory.getDefaultRegularColorSchemeId());
+				ColorSchemeFactoryUtil.getDefaultRegularColorSchemeId());
 			layoutSet.setCss(StringPool.BLANK);
 
 			return;
@@ -679,10 +664,9 @@ public class StagedLayoutSetStagedModelDataHandler
 	private boolean _hasSkippedSiblingLayout(
 		Element layoutElement, Map<Long, List<String>> siblingActionsMap) {
 
-		long parentLayoutId = GetterUtil.getLong(
-			layoutElement.attributeValue("layout-parent-layout-id"));
-
-		List<String> actions = siblingActionsMap.get(parentLayoutId);
+		List<String> actions = siblingActionsMap.get(
+			GetterUtil.getLong(
+				layoutElement.attributeValue("layout-parent-layout-id")));
 
 		if (actions.contains(Constants.SKIP)) {
 			return true;
@@ -1005,7 +989,7 @@ public class StagedLayoutSetStagedModelDataHandler
 
 			layout.setPriority(newLayoutPriority);
 
-			_layoutLocalService.updateLayout(layout);
+			layout = _layoutLocalService.updateLayout(layout);
 
 			parentLayoutIds.add(layout.getParentLayoutId());
 		}
@@ -1061,22 +1045,18 @@ public class StagedLayoutSetStagedModelDataHandler
 			Map<String, ThemeSetting> themeSettings =
 				importedTheme.getConfigurableSettings();
 
-			Set<Map.Entry<String, ThemeSetting>> themeSettingsEntries =
-				themeSettings.entrySet();
+			Map<String, String> defaultsMap = new HashMap<>();
 
-			Stream<Map.Entry<String, ThemeSetting>> themeSettingsEntriesStream =
-				themeSettingsEntries.stream();
+			for (Map.Entry<String, ThemeSetting> entry :
+					themeSettings.entrySet()) {
 
-			Map<String, String> defaultsMap =
-				themeSettingsEntriesStream.collect(
-					Collectors.toMap(
-						entry -> ThemeSettingImpl.namespaceProperty(
-							"regular", entry.getKey()),
-						entry -> {
-							ThemeSetting themeSetting = entry.getValue();
+				ThemeSetting themeSetting = entry.getValue();
 
-							return themeSetting.getValue();
-						}));
+				defaultsMap.put(
+					ThemeSettingImpl.namespaceProperty(
+						"regular", entry.getKey()),
+					themeSetting.getValue());
+			}
 
 			defaultsMap.put(Sites.SHOW_SITE_NAME, Boolean.TRUE.toString());
 			defaultsMap.put("javascript", null);
@@ -1119,9 +1099,6 @@ public class StagedLayoutSetStagedModelDataHandler
 		_clientExtensionEntryRelLocalService;
 
 	@Reference
-	private ColorSchemeFactory _colorSchemeFactory;
-
-	@Reference
 	private DLAppService _dlAppService;
 
 	@Reference(target = "(content.processor.type=DLReferences)")
@@ -1162,8 +1139,10 @@ public class StagedLayoutSetStagedModelDataHandler
 	@Reference
 	private Sites _sites;
 
-	@Reference
-	private StagedLayoutSetStagedModelRepository
+	@Reference(
+		target = "(model.class.name=com.liferay.layout.set.model.adapter.StagedLayoutSet)"
+	)
+	private StagedModelRepository<StagedLayoutSet>
 		_stagedLayoutSetStagedModelRepository;
 
 	@Reference

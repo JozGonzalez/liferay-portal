@@ -1,21 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.scheduler.quartz.internal.job;
 
-import com.liferay.portal.kernel.cluster.ClusterExecutor;
-import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,13 +13,7 @@ import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.scheduler.JobState;
 import com.liferay.portal.kernel.scheduler.JobStateSerializeUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
-import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.MethodHandler;
-import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsKeys;
 
 import java.util.Map;
 
@@ -38,8 +21,6 @@ import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
 
 /**
  * @author Michael C. Han
@@ -57,20 +38,12 @@ public class MessageSenderJob implements Job {
 		}
 	}
 
-	public void setClusterExecutor(ClusterExecutor clusterExecutor) {
-		_clusterExecutor = clusterExecutor;
-	}
-
 	public void setJSONFactory(JSONFactory jsonFactory) {
 		_jsonFactory = jsonFactory;
 	}
 
 	public void setMessageBus(MessageBus messageBus) {
 		_messageBus = messageBus;
-	}
-
-	public void setProps(Props props) {
-		_props = props;
 	}
 
 	private void _execute(JobExecutionContext jobExecutionContext)
@@ -102,50 +75,16 @@ public class MessageSenderJob implements Job {
 		StorageType storageType = StorageType.valueOf(
 			jobDataMap.getString(SchedulerEngine.STORAGE_TYPE));
 
-		if (jobExecutionContext.getNextFireTime() == null) {
-			JobKey jobKey = jobDetail.getKey();
-
-			if (GetterUtil.getBoolean(
-					_props.get(PropsKeys.CLUSTER_LINK_ENABLED)) &&
-				(storageType == StorageType.MEMORY_CLUSTERED)) {
-
-				_notifyClusterMember(jobKey, storageType);
-			}
-
-			Scheduler scheduler = jobExecutionContext.getScheduler();
-
-			scheduler.deleteJob(jobKey);
-		}
-
 		message.put(SchedulerEngine.JOB_STATE, jobState);
 		message.put(SchedulerEngine.STORAGE_TYPE, storageType);
 
 		_messageBus.sendMessage(destinationName, message);
 	}
 
-	private void _notifyClusterMember(JobKey jobKey, StorageType storageType)
-		throws Exception {
-
-		MethodHandler methodHandler = new MethodHandler(
-			_deleteJobMethodKey, jobKey.getName(), jobKey.getGroup(),
-			storageType);
-
-		ClusterRequest clusterRequest = ClusterRequest.createMulticastRequest(
-			methodHandler, true);
-
-		_clusterExecutor.execute(clusterRequest);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		MessageSenderJob.class);
 
-	private static final MethodKey _deleteJobMethodKey = new MethodKey(
-		SchedulerEngineHelperUtil.class, "delete", String.class, String.class,
-		StorageType.class);
-
-	private ClusterExecutor _clusterExecutor;
 	private JSONFactory _jsonFactory;
 	private MessageBus _messageBus;
-	private Props _props;
 
 }

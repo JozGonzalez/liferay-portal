@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -33,7 +24,13 @@ export default function PagesTree({
 	selectedLayoutId,
 	selectedLayoutPath,
 }) {
-	const {loadMoreItemsURL, maxPageSize, moveItemURL, namespace} = config;
+	const {
+		isLayoutSetPrototype,
+		loadMoreItemsURL,
+		maxPageSize,
+		moveItemURL,
+		namespace,
+	} = config;
 
 	const onLoadMore = useCallback(
 		(item) => {
@@ -104,7 +101,7 @@ export default function PagesTree({
 	}, []);
 
 	return (
-		<div className="pages-tree">
+		<div className="mx-3 pages-tree">
 			<ClayTreeView
 				defaultItems={items}
 				displayType="dark"
@@ -122,6 +119,7 @@ export default function PagesTree({
 					<TreeItem
 						config={config}
 						expand={expand}
+						isLayoutSetPrototype={isLayoutSetPrototype}
 						item={item}
 						load={load}
 						namespace={namespace}
@@ -140,9 +138,25 @@ PagesTree.propTypes = {
 	selectedLayoutId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
-function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
+function TreeItem({
+	config,
+	expand,
+	isSiteTemplate,
+	item,
+	load,
+	namespace,
+	selectedLayoutId,
+}) {
 	const stackAnchorRef = useRef(null);
 	const itemAnchorRef = useRef(null);
+
+	const warningMessage = isSiteTemplate
+		? Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-a-site-using-this-site-template'
+		  )
+		: Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-the-site-template'
+		  );
 
 	return (
 		<ClayTreeView.Item
@@ -198,7 +212,8 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 				{(item) => (
 					<ClayTreeView.Item
 						actions={
-							!config.stagingEnabled && (
+							!config.stagingEnabled &&
+							item.actions && (
 								<ClayDropDownWithItems
 									items={normalizeActions(
 										item.actions,
@@ -232,15 +247,33 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 						<div className="align-items-center d-flex pl-2">
 							{item.regularURL ? (
 								<a
-									className="flex-grow-1 text-decoration-none text-truncate w-100"
-									data-tooltip-floating="true"
+									aria-label={
+										Liferay.FeatureFlags['LPS-174417'] &&
+										item.hasDuplicatedFriendlyURL
+											? `${item.name}. ${warningMessage}`
+											: item.name
+									}
+									className="flex-grow-1 text-decoration-none text-truncate-inline"
 									href={item.regularURL}
 									ref={itemAnchorRef}
 									tabIndex="-1"
 									target={item.target}
-									title={item.name}
 								>
-									{item.name}
+									<span
+										className="text-truncate"
+										data-title={item.name}
+									>
+										{item.name}
+									</span>
+
+									{Liferay.FeatureFlags['LPS-174417'] &&
+									item.hasDuplicatedFriendlyURL ? (
+										<ClayIcon
+											className="align-self-center flex-shrink-0 icon-warning lfr-portal-tooltip"
+											data-title={warningMessage}
+											symbol="warning-full"
+										/>
+									) : null}
 								</a>
 							) : (
 								<span>{item.name}</span>

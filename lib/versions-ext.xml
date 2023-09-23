@@ -117,6 +117,18 @@
 				</licenses>
 			</library>
 			<library>
+				<file-name>lib/development/asm-commons.jar</file-name>
+				<version>7.0</version>
+				<project-name>ASM</project-name>
+				<project-url>http://asm.ow2.io</project-url>
+				<licenses>
+					<license>
+						<license-name>ASM License</license-name>
+						<license-url>http://asm.ow2.org/license.html</license-url>
+					</license>
+				</licenses>
+			</library>
+			<library>
 				<file-name>lib/development/asm-tree.jar</file-name>
 				<version>7.0</version>
 				<project-name>ASM</project-name>
@@ -178,7 +190,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/catalina.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -190,7 +202,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/com.liferay.jenkins.results.parser.jar</file-name>
-				<version>1.0.1179</version>
+				<version>1.0.1224</version>
 				<project-name>Liferay Jenkins Results Parser</project-name>
 				<licenses>
 					<license>
@@ -201,7 +213,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/com.liferay.poshi.core.jar</file-name>
-				<version>1.0.96</version>
+				<version>1.0.116</version>
 				<project-name>Liferay Poshi Core</project-name>
 				<licenses>
 					<license>
@@ -308,7 +320,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/freemarker.jar</file-name>
-				<version>2.3.29.LIFERAY-PATCHED-4</version>
+				<version>2.3.29.LIFERAY-PATCHED-5</version>
 				<project-name>FreeMarker</project-name>
 				<project-url>http://www.freemarker.org</project-url>
 				<licenses>
@@ -320,7 +332,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/guava.jar</file-name>
-				<version>30.1.1-jre</version>
+				<version>32.0.1-jre</version>
 				<project-name>Guava</project-name>
 				<project-url>https://opensource.google.com/projects/guava</project-url>
 				<licenses>
@@ -356,8 +368,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/hsql.jar</file-name>
-				<version>2.7.1</version>
-				<classifier>jdk8</classifier>
+				<version>2.7.1.LIFERAY-PATCHED-1</version>
 				<project-name>HSQL Database Engine</project-name>
 				<project-url>http://hsqldb.org</project-url>
 				<licenses>
@@ -432,7 +443,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/jasper.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -617,7 +628,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/mariadb.jar</file-name>
-				<version>2.7.4</version>
+				<version>3.2.0</version>
 				<project-name>MariaDB Connector/J</project-name>
 				<project-url>https://downloads.mariadb.org/connector-java</project-url>
 				<licenses>
@@ -665,7 +676,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/mysql.jar</file-name>
-				<version>8.0.29</version>
+				<version>8.0.32</version>
 				<project-name>MySQL Connector/J</project-name>
 				<project-url>http://www.mysql.com/products/connector/j</project-url>
 				<licenses>
@@ -894,7 +905,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/spring-instrument.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -924,7 +935,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/spring-test.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -951,7 +962,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/tomcat-api.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -963,7 +974,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/tomcat-coyote.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -975,7 +986,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/tomcat-util.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -987,7 +998,7 @@
 			</library>
 			<library>
 				<file-name>lib/development/tomcat-util-scan.jar</file-name>
-				<version>9.0.71</version>
+				<version>9.0.80</version>
 				<project-name>Tomcat</project-name>
 				<project-url>http://tomcat.apache.org</project-url>
 				<licenses>
@@ -1074,7 +1085,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/commons-logging.jar</file-name>
-				<version>1.2</version>
+				<version>1.2.LIFERAY-PATCHED-2</version>
 				<project-name>Commons Logging</project-name>
 				<project-url>http://commons.apache.org/logging</project-url>
 				<licenses>
@@ -1239,7 +1250,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/json-java.jar</file-name>
-				<version>20220320</version>
+				<version>20230227</version>
 				<project-name>JSON in Java</project-name>
 				<project-url>https://github.com/douglascrockford/JSON-java</project-url>
 				<licenses>
@@ -1349,7 +1360,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-aop.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1364,7 +1375,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-beans.jar</file-name>
-				<version>5.2.22.LIFERAY-PATCHED-1</version>
+				<version>5.2.24.LIFERAY-PATCHED-1</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1379,7 +1390,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-context.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1394,7 +1405,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-core.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1409,7 +1420,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-expression.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1424,7 +1435,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-jdbc.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1439,7 +1450,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-orm.jar</file-name>
-				<version>5.2.22.LIFERAY-PATCHED-1</version>
+				<version>5.2.24.LIFERAY-PATCHED-1</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1454,7 +1465,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-tx.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>
@@ -1469,7 +1480,7 @@
 			</library>
 			<library>
 				<file-name>lib/portal/spring-web.jar</file-name>
-				<version>5.2.22</version>
+				<version>5.2.24</version>
 				<project-name>Spring</project-name>
 				<project-url>http://www.springframework.org</project-url>
 				<licenses>

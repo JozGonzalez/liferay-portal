@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.dto.v1_0;
@@ -146,6 +137,34 @@ public class Field implements Serializable {
 	protected String helpText;
 
 	@Schema
+	public String getHelpTextLocalized() {
+		return helpTextLocalized;
+	}
+
+	public void setHelpTextLocalized(String helpTextLocalized) {
+		this.helpTextLocalized = helpTextLocalized;
+	}
+
+	@JsonIgnore
+	public void setHelpTextLocalized(
+		UnsafeSupplier<String, Exception> helpTextLocalizedUnsafeSupplier) {
+
+		try {
+			helpTextLocalized = helpTextLocalizedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String helpTextLocalized;
+
+	@Schema
 	public String getLabel() {
 		return label;
 	}
@@ -172,6 +191,34 @@ public class Field implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String label;
+
+	@Schema
+	public String getLabelLocalized() {
+		return labelLocalized;
+	}
+
+	public void setLabelLocalized(String labelLocalized) {
+		this.labelLocalized = labelLocalized;
+	}
+
+	@JsonIgnore
+	public void setLabelLocalized(
+		UnsafeSupplier<String, Exception> labelLocalizedUnsafeSupplier) {
+
+		try {
+			labelLocalized = labelLocalizedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String labelLocalized;
 
 	@Schema
 	public String getName() {
@@ -336,6 +383,20 @@ public class Field implements Serializable {
 			sb.append("\"");
 		}
 
+		if (helpTextLocalized != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"helpTextLocalized\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(helpTextLocalized));
+
+			sb.append("\"");
+		}
+
 		if (label != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -346,6 +407,20 @@ public class Field implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(label));
+
+			sb.append("\"");
+		}
+
+		if (labelLocalized != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"labelLocalized\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(labelLocalized));
 
 			sb.append("\"");
 		}
@@ -482,5 +557,7 @@ public class Field implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.partition.test.util;
@@ -29,6 +20,8 @@ import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.db.partition.DBPartition;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -39,7 +32,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PortalInstances;
+import com.liferay.portal.util.PropsUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -63,7 +58,8 @@ public abstract class BaseDBPartitionTestCase {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
-			new AssumeTestRule("assume"), new LiferayIntegrationTestRule());
+			new AssumeTestRule("assume"), new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	public static void assume() {
 		db = DBManagerUtil.getDB();
@@ -138,10 +134,11 @@ public abstract class BaseDBPartitionTestCase {
 			return;
 		}
 
+		PropsUtil.set(
+			"database.partition.enabled", _originalDatabasePartitionEnabled);
+
 		ReflectionTestUtil.setFieldValue(
 			DBInitUtil.class, "_dataSource", _currentDataSource);
-		ReflectionTestUtil.setFieldValue(
-			DBPartitionUtil.class, "_DATABASE_PARTITION_ENABLED", false);
 		ReflectionTestUtil.setFieldValue(
 			DBPartitionUtil.class, "_DATABASE_PARTITION_SCHEMA_NAME_PREFIX",
 			StringPool.BLANK);
@@ -172,18 +169,20 @@ public abstract class BaseDBPartitionTestCase {
 	protected static void enableDBPartition() throws Exception {
 		CompanyThreadLocal.setCompanyId(PortalInstances.getDefaultCompanyId());
 
-		_dbPartitionEnabled = GetterUtil.getBoolean(
-			_props.get("database.partition.enabled"));
+		_dbPartitionEnabled = DBPartition.isPartitionEnabled();
 
 		if (_dbPartitionEnabled) {
 			return;
 		}
 
-		ReflectionTestUtil.setFieldValue(
-			DBPartitionUtil.class, "_DATABASE_PARTITION_ENABLED", true);
+		_originalDatabasePartitionEnabled = PropsUtil.get(
+			"database.partition.enabled");
+
+		PropsUtil.set("database.partition.enabled", "true");
+
 		ReflectionTestUtil.setFieldValue(
 			DBPartitionUtil.class, "_DATABASE_PARTITION_SCHEMA_NAME_PREFIX",
-			_DB_PARTITION_SCHEMA_NAME_PREFIX);
+			_DATABASE_PARTITION_SCHEMA_NAME_PREFIX);
 		ReflectionTestUtil.setFieldValue(
 			DBPartitionUtil.class, "_DATABASE_PARTITION_THREAD_POOL_ENABLED",
 			true);
@@ -229,7 +228,7 @@ public abstract class BaseDBPartitionTestCase {
 				"_DATABASE_PARTITION_SCHEMA_NAME_PREFIX") + companyId;
 		}
 
-		return _DB_PARTITION_SCHEMA_NAME_PREFIX + companyId;
+		return _DATABASE_PARTITION_SCHEMA_NAME_PREFIX + companyId;
 	}
 
 	protected static void insertPartitionRequiredData() throws Exception {
@@ -241,9 +240,9 @@ public abstract class BaseDBPartitionTestCase {
 						"insert into Company (companyId, webId) values (?, ?)");
 				PreparedStatement preparedStatement2 =
 					connection.prepareStatement(
-						"insert into User_ (userId, companyId, defaultUser, " +
-							"screenName, emailAddress, languageId, " +
-								"timeZoneId) values (?, ?, ?, ?, ?, ?, ?)")) {
+						"insert into User_ (userId, companyId, screenName, " +
+							"emailAddress, languageId, timeZoneId, type_) " +
+								"values (?, ?, ?, ?, ?, ?, ?)")) {
 
 				preparedStatement1.setLong(1, companyId);
 				preparedStatement1.setString(2, "Test" + companyId);
@@ -252,11 +251,11 @@ public abstract class BaseDBPartitionTestCase {
 
 				preparedStatement2.setLong(1, 1);
 				preparedStatement2.setLong(2, companyId);
-				preparedStatement2.setBoolean(3, true);
-				preparedStatement2.setString(4, "Test");
-				preparedStatement2.setString(5, "test@test.com");
-				preparedStatement2.setString(6, "en_US");
-				preparedStatement2.setString(7, "UTC");
+				preparedStatement2.setString(3, "Test");
+				preparedStatement2.setString(4, "test@test.com");
+				preparedStatement2.setString(5, "en_US");
+				preparedStatement2.setString(6, "UTC");
+				preparedStatement2.setInt(7, UserConstants.TYPE_GUEST);
 
 				preparedStatement2.executeUpdate();
 			}
@@ -264,6 +263,12 @@ public abstract class BaseDBPartitionTestCase {
 	}
 
 	protected static void removeDBPartitions(boolean migrate) throws Exception {
+		removeDBPartitions(COMPANY_IDS, migrate);
+	}
+
+	protected static void removeDBPartitions(long[] companyIds, boolean migrate)
+		throws Exception {
+
 		CurrentConnection defaultCurrentConnection =
 			CurrentConnectionUtil.getCurrentConnection();
 
@@ -271,13 +276,14 @@ public abstract class BaseDBPartitionTestCase {
 			CurrentConnection currentConnection = dataSource -> connection;
 
 			ReflectionTestUtil.setFieldValue(
-				DBPartitionUtil.class, "_DATABASE_PARTITION_MIGRATE_ENABLED",
-				migrate);
-			ReflectionTestUtil.setFieldValue(
 				CurrentConnectionUtil.class, "_currentConnection",
 				currentConnection);
 
-			for (long companyId : COMPANY_IDS) {
+			ReflectionTestUtil.setFieldValue(
+				DBPartitionUtil.class, "_DATABASE_PARTITION_MIGRATE_ENABLED",
+				migrate);
+
+			for (long companyId : companyIds) {
 				DBPartitionUtil.removeDBPartition(companyId);
 			}
 		}
@@ -285,6 +291,9 @@ public abstract class BaseDBPartitionTestCase {
 			ReflectionTestUtil.setFieldValue(
 				CurrentConnectionUtil.class, "_currentConnection",
 				defaultCurrentConnection);
+			ReflectionTestUtil.setFieldValue(
+				DBPartitionUtil.class, "_DATABASE_PARTITION_MIGRATE_ENABLED",
+				_DATABASE_PARTITION_MIGRATE_ENABLED);
 		}
 	}
 
@@ -364,13 +373,18 @@ public abstract class BaseDBPartitionTestCase {
 		};
 	}
 
-	private static final String _DB_PARTITION_SCHEMA_NAME_PREFIX =
+	private static final boolean _DATABASE_PARTITION_MIGRATE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get("database.partition.migrate.enabled"));
+
+	private static final String _DATABASE_PARTITION_SCHEMA_NAME_PREFIX =
 		"lpartitiontest_";
 
 	private static final DataSource _currentDataSource =
 		ReflectionTestUtil.getFieldValue(DBInitUtil.class, "_dataSource");
 	private static boolean _dbPartitionEnabled;
 	private static LazyConnectionDataSourceProxy _lazyConnectionDataSourceProxy;
+	private static String _originalDatabasePartitionEnabled;
 
 	@Inject
 	private static Props _props;

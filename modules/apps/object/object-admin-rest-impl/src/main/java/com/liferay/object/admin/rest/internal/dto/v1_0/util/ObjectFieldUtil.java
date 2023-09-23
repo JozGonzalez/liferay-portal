@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.dto.v1_0.util;
@@ -25,7 +16,6 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -142,6 +132,7 @@ public class ObjectFieldUtil {
 	}
 
 	public static com.liferay.object.model.ObjectField toObjectField(
+		boolean enableLocalization,
 		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ObjectField objectField,
 		ObjectFieldLocalService objectFieldLocalService,
@@ -174,12 +165,6 @@ public class ObjectFieldUtil {
 			getDBType(
 				objectField.getDBTypeAsString(),
 				objectField.getTypeAsString()));
-
-		if (Validator.isNotNull(objectField.getDefaultValue())) {
-			serviceBuilderObjectField.setDefaultValue(
-				objectField.getDefaultValue());
-		}
-
 		serviceBuilderObjectField.setIndexed(
 			GetterUtil.getBoolean(objectField.getIndexed()));
 		serviceBuilderObjectField.setIndexedAsKeyword(
@@ -188,16 +173,32 @@ public class ObjectFieldUtil {
 			objectField.getIndexedLanguageId());
 		serviceBuilderObjectField.setLabelMap(
 			LocalizedMapUtil.getLocalizedMap(objectField.getLabel()));
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-172017") &&
+			(Objects.equals(
+				ObjectField.BusinessType.LONG_TEXT,
+				objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.RICH_TEXT,
+				 objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.TEXT,
+				 objectField.getBusinessType()))) {
+
+			serviceBuilderObjectField.setLocalized(
+				GetterUtil.getBoolean(
+					objectField.getLocalized(), enableLocalization));
+		}
+
 		serviceBuilderObjectField.setName(objectField.getName());
 		serviceBuilderObjectField.setObjectFieldSettings(
-			TransformUtil.transformToList(
-				objectField.getObjectFieldSettings(),
-				objectFieldSetting ->
-					ObjectFieldSettingUtil.toObjectFieldSetting(
-						objectField.getBusinessTypeAsString(),
-						listTypeDefinitionId, objectFieldSetting,
-						objectFieldSettingLocalService,
-						objectFilterLocalService)));
+			ObjectFieldSettingUtil.toObjectFieldSettings(
+				listTypeDefinitionId, objectField,
+				objectFieldSettingLocalService, objectFilterLocalService));
+		serviceBuilderObjectField.setReadOnly(
+			objectField.getReadOnlyAsString());
+		serviceBuilderObjectField.setReadOnlyConditionExpression(
+			objectField.getReadOnlyConditionExpression());
 		serviceBuilderObjectField.setRequired(
 			GetterUtil.getBoolean(objectField.getRequired()));
 

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -80,10 +81,21 @@ definition {
 		}
 
 		task ("Take down the File Size of image resolution") {
+			PageEditor.gotoConfiguration(fragmentName = "Image");
+
+			PageEditor.gotoImageSource(
+				fragmentName = "Image",
+				id = "image-square");
+
 			var fileSizeAuto = PageEditor.getFileSizeOfSelectedImageResolution();
 		}
 
 		task ("Select the Preview-1000x0 image resolution") {
+			WaitForElementPresent(
+				key_fieldLabel = "Resolution",
+				key_value = "Preview-1000x0",
+				locator1 = "Select#GENERIC_SELECT_VALUE");
+
 			Select(
 				key_fieldLabel = "Resolution",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
@@ -103,9 +115,7 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthManual},
-				expected = 1000);
+			StringUtil.assertEquals(1000, ${widthManual});
 		}
 
 		task ("Assert the File Size become smaller than automatic selection") {
@@ -188,9 +198,7 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthManual},
-				expected = 300);
+			StringUtil.assertEquals(300, ${widthManual});
 		}
 
 		task ("Assert the File Size become smaller than automatic selection") {
@@ -233,13 +241,9 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 5464);
+			StringUtil.assertEquals(5464, ${width});
 
-			TestUtils.assertEquals(
-				actual = ${fileSizeDesktop},
-				expected = 4405);
+			StringUtil.assertEquals(4405, ${fileSizeDesktop});
 		}
 
 		task ("Change to the Tablet viewport") {
@@ -250,17 +254,21 @@ definition {
 			WaitForElementPresent(
 				key_deviceType = "Tablet",
 				locator1 = "PageEditor#DEVICE_TYPE_ACTIVE");
+
+			WaitForElementNotPresent(locator1 = "PageEditor#VIEWPORT_LOADING_ANIMATION");
 		}
 
 		task ("Take down the Width and File Size of image resolution in Tablet viewport") {
+			Navigator.gotoNavTab(navTab = "General");
+
+			Navigator.gotoNavTab(navTab = "Styles");
+
 			var fileSizeTablet = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
 
 		task ("Assert the Width of selected image resolution is 1000px") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 1000);
+			StringUtil.assertEquals(1000, ${width});
 		}
 
 		task ("Assert the File Size become smaller than Desktop viewport") {
@@ -301,13 +309,9 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 5464);
+			StringUtil.assertEquals(5464, ${width});
 
-			TestUtils.assertEquals(
-				actual = ${fileSizeDesktop},
-				expected = 4405);
+			StringUtil.assertEquals(4405, ${fileSizeDesktop});
 		}
 
 		task ("Change to the Portrait Phone viewport") {
@@ -326,9 +330,7 @@ definition {
 		}
 
 		task ("Assert the Width of selected image resolution is 1000px") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 1000);
+			StringUtil.assertEquals(1000, ${width});
 		}
 
 		task ("Assert the File Size become smaller than Desktop viewport") {
@@ -453,6 +455,8 @@ definition {
 		}
 
 		task ("Mapping an image with width greater than 2000px to background image of Banner Center") {
+			SetWindowSize.maximizeWindow();
+
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Mapping",
 				entryTitle = "high_resolution_photo.jpg",
@@ -476,26 +480,26 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 5464);
+			StringUtil.assertEquals(5464, ${width});
 
-			TestUtils.assertEquals(
-				actual = ${fileSizeDesktop},
-				expected = 4405);
+			StringUtil.assertEquals(4405, ${fileSizeDesktop});
 		}
 
 		task ("Change to the Portrait Phone viewport") {
-			Click(
-				key_deviceType = "Portrait Phone",
-				locator1 = "PageEditor#DEVICE_TYPE");
+			PageEditor.switchViewport(deviceType = "Portrait Phone");
 
-			WaitForElementPresent(
-				key_deviceType = "Portrait Phone",
-				locator1 = "PageEditor#DEVICE_TYPE_ACTIVE");
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+
+			PageEditor.viewContainerStyle(backgroundImage = "high_resolution_photo\.jpg");
+
+			SelectFrameTop();
 		}
 
 		task ("Take down the Width and File Size of image resolution in Portrait Phone viewport") {
+			Navigator.gotoNavTab(navTab = "General");
+
+			Navigator.gotoNavTab(navTab = "Styles");
+
 			var fileSizePortraitPhone = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
@@ -507,9 +511,7 @@ definition {
 		}
 
 		task ("Assert the Width of selected image resolution is 1000px") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 1000);
+			StringUtil.assertEquals(1000, ${width});
 		}
 
 		task ("Assert the File Size become smaller than Desktop viewport") {
@@ -607,6 +609,8 @@ definition {
 		}
 
 		task ("Mapping an image with width greater than 2000px to background image of Container") {
+			SetWindowSize.maximizeWindow();
+
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Mapping",
 				entryTitle = "high_resolution_photo.jpg",
@@ -636,26 +640,26 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 5464);
+			StringUtil.assertEquals(5464, ${width});
 
-			TestUtils.assertEquals(
-				actual = ${fileSizeDesktop},
-				expected = 4405);
+			StringUtil.assertEquals(4405, ${fileSizeDesktop});
 		}
 
 		task ("Change to the Tablet viewport") {
-			Click(
-				key_deviceType = "Tablet",
-				locator1 = "PageEditor#DEVICE_TYPE");
+			PageEditor.switchViewport(deviceType = "Tablet");
 
-			WaitForElementPresent(
-				key_deviceType = "Tablet",
-				locator1 = "PageEditor#DEVICE_TYPE_ACTIVE");
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+
+			PageEditor.viewContainerStyle(backgroundImage = "high_resolution_photo\.jpg");
+
+			SelectFrameTop();
 		}
 
 		task ("Take down the Width and File Size of image resolution in Tablet viewport") {
+			Navigator.gotoNavTab(navTab = "General");
+
+			Navigator.gotoNavTab(navTab = "Styles");
+
 			var fileSizeTablet = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
@@ -667,9 +671,7 @@ definition {
 		}
 
 		task ("Assert the Width of selected image resolution is 1000px") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 1000);
+			StringUtil.assertEquals(1000, ${width});
 		}
 
 		task ("Assert the File Size become smaller than Desktop viewport") {
@@ -802,9 +804,7 @@ definition {
 		}
 
 		task ("Assert the Width of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthLandscapePhone},
-				expected = 650);
+			StringUtil.assertEquals(650, ${widthLandscapePhone});
 		}
 
 		task ("Assert the File Size of image resolution shown") {
@@ -867,9 +867,7 @@ definition {
 		}
 
 		task ("Assert the Width of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthTablet},
-				expected = 650);
+			StringUtil.assertEquals(650, ${widthTablet});
 		}
 
 		task ("Assert the File Size of image resolution shown") {
@@ -946,9 +944,7 @@ definition {
 		}
 
 		task ("Assert the Width of selected image resolution is 800px") {
-			TestUtils.assertEquals(
-				actual = ${widthTablet},
-				expected = 800);
+			StringUtil.assertEquals(800, ${widthTablet});
 		}
 
 		task ("Assert the File Size become smaller than Desktop viewport") {
@@ -1000,13 +996,9 @@ definition {
 		}
 
 		task ("Assert the Width and File Size of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${width},
-				expected = 5464);
+			StringUtil.assertEquals(5464, ${width});
 
-			TestUtils.assertEquals(
-				actual = ${fileSize},
-				expected = 4405);
+			StringUtil.assertEquals(4405, ${fileSize});
 		}
 	}
 
@@ -1073,9 +1065,7 @@ definition {
 		}
 
 		task ("Assert the Width of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthTablet},
-				expected = 500);
+			StringUtil.assertEquals(500, ${widthTablet});
 		}
 
 		task ("Assert the File Size of image resolution shown") {
@@ -1101,7 +1091,7 @@ definition {
 		}
 
 		task ("Add an Image fragment to page") {
-			TestUtils.maximizeWindow();
+			SetWindowSize.maximizeWindow();
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -1151,9 +1141,7 @@ definition {
 		}
 
 		task ("Assert the Width of image resolution equal with orignal image") {
-			TestUtils.assertEquals(
-				actual = ${widthTablet},
-				expected = 650);
+			StringUtil.assertEquals(650, ${widthTablet});
 		}
 
 		task ("Assert the File Size of image resolution shown") {

@@ -1,31 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.security.permission.resource;
 
 import com.liferay.change.tracking.model.CTCollectionTemplate;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Preston Crary
  */
-@Component(service = {})
 public class CTCollectionTemplatePermission {
 
 	public static boolean contains(
@@ -33,7 +21,10 @@ public class CTCollectionTemplatePermission {
 			CTCollectionTemplate ctCollectionTemplate, String actionId)
 		throws PortalException {
 
-		return _ctCollectionTemplateModelResourcePermission.contains(
+		ModelResourcePermission<CTCollectionTemplate> modelResourcePermission =
+			_ctCollectionTemplateModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, ctCollectionTemplate, actionId);
 	}
 
@@ -42,21 +33,18 @@ public class CTCollectionTemplatePermission {
 			String actionId)
 		throws PortalException {
 
-		return _ctCollectionTemplateModelResourcePermission.contains(
+		ModelResourcePermission<CTCollectionTemplate> modelResourcePermission =
+			_ctCollectionTemplateModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, ctCollectionTemplateId, actionId);
 	}
 
-	@Reference(
-		target = "(model.class.name=com.liferay.change.tracking.model.CTCollectionTemplate)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
-		ModelResourcePermission<CTCollectionTemplate> modelResourcePermission) {
-
-		_ctCollectionTemplateModelResourcePermission = modelResourcePermission;
-	}
-
-	private static ModelResourcePermission<CTCollectionTemplate>
-		_ctCollectionTemplateModelResourcePermission;
+	private static final Snapshot<ModelResourcePermission<CTCollectionTemplate>>
+		_ctCollectionTemplateModelResourcePermissionSnapshot = new Snapshot<>(
+			CTCollectionTemplatePermission.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.change.tracking.model." +
+				"CTCollectionTemplate)");
 
 }

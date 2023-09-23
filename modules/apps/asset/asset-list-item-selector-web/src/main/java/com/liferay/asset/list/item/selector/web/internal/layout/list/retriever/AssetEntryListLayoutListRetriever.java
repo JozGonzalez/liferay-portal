@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.item.selector.web.internal.layout.list.retriever;
@@ -19,17 +10,22 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
+import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalService;
 import com.liferay.info.filter.CategoriesInfoFilter;
 import com.liferay.info.filter.InfoFilter;
 import com.liferay.info.filter.KeywordsInfoFilter;
 import com.liferay.info.filter.TagsInfoFilter;
+import com.liferay.info.pagination.InfoPage;
 import com.liferay.info.pagination.Pagination;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.layout.list.retriever.ClassedModelListObjectReference;
 import com.liferay.layout.list.retriever.LayoutListRetriever;
 import com.liferay.layout.list.retriever.LayoutListRetrieverContext;
+import com.liferay.layout.list.retriever.SegmentsEntryLayoutListRetriever;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,10 +42,19 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = LayoutListRetriever.class)
 public class AssetEntryListLayoutListRetriever
 	implements LayoutListRetriever
-		<InfoListItemSelectorReturnType, ClassedModelListObjectReference> {
+		<InfoListItemSelectorReturnType, ClassedModelListObjectReference>,
+			   SegmentsEntryLayoutListRetriever
+				   <ClassedModelListObjectReference> {
 
 	@Override
-	public List<Object> getList(
+	public long getDefaultVariationSegmentsEntryId(
+		ClassedModelListObjectReference classedModelListObjectReference) {
+
+		return SegmentsEntryConstants.ID_DEFAULT;
+	}
+
+	@Override
+	public InfoPage<?> getInfoPage(
 		ClassedModelListObjectReference classedModelListObjectReference,
 		LayoutListRetrieverContext layoutListRetrieverContext) {
 
@@ -58,7 +63,9 @@ public class AssetEntryListLayoutListRetriever
 				classedModelListObjectReference.getClassPK());
 
 		if (assetListEntry == null) {
-			return Collections.emptyList();
+			return InfoPage.of(
+				Collections.emptyList(),
+				layoutListRetrieverContext.getPagination(), 0);
 		}
 
 		long[] segmentsEntryIds =
@@ -82,41 +89,31 @@ public class AssetEntryListLayoutListRetriever
 				_getKeywords(layoutListRetrieverContext), StringPool.BLANK,
 				pagination.getStart(), pagination.getEnd());
 
+		long[] finalSegmentsEntryIds = segmentsEntryIds;
+
 		if (Objects.equals(
 				AssetEntry.class.getName(),
 				assetListEntry.getAssetEntryType())) {
 
-			return Collections.unmodifiableList(assetEntries);
+			return InfoPage.of(
+				Collections.unmodifiableList(assetEntries),
+				layoutListRetrieverContext.getPagination(),
+				() -> _assetListAssetEntryProvider.getAssetEntriesCount(
+					assetListEntry, finalSegmentsEntryIds,
+					_getAssetCategoryIds(layoutListRetrieverContext),
+					_getAssetTagNames(layoutListRetrieverContext),
+					_getKeywords(layoutListRetrieverContext),
+					StringPool.BLANK));
 		}
 
-		return _toAssetObjects(assetEntries);
-	}
-
-	@Override
-	public int getListCount(
-		ClassedModelListObjectReference classedModelListObjectReference,
-		LayoutListRetrieverContext layoutListRetrieverContext) {
-
-		AssetListEntry assetListEntry =
-			_assetListEntryLocalService.fetchAssetListEntry(
-				classedModelListObjectReference.getClassPK());
-
-		if (assetListEntry == null) {
-			return 0;
-		}
-
-		long[] segmentsEntryIds =
-			layoutListRetrieverContext.getSegmentsEntryIds();
-
-		if (segmentsEntryIds == null) {
-			segmentsEntryIds = new long[] {0};
-		}
-
-		return _assetListAssetEntryProvider.getAssetEntriesCount(
-			assetListEntry, segmentsEntryIds,
-			_getAssetCategoryIds(layoutListRetrieverContext),
-			_getAssetTagNames(layoutListRetrieverContext),
-			_getKeywords(layoutListRetrieverContext), StringPool.BLANK);
+		return InfoPage.of(
+			_toAssetObjects(assetEntries),
+			layoutListRetrieverContext.getPagination(),
+			() -> _assetListAssetEntryProvider.getAssetEntriesCount(
+				assetListEntry, finalSegmentsEntryIds,
+				_getAssetCategoryIds(layoutListRetrieverContext),
+				_getAssetTagNames(layoutListRetrieverContext),
+				_getKeywords(layoutListRetrieverContext), StringPool.BLANK));
 	}
 
 	@Override
@@ -124,6 +121,28 @@ public class AssetEntryListLayoutListRetriever
 		ClassedModelListObjectReference classedModelListObjectReference) {
 
 		return _supportedInfoFilters;
+	}
+
+	@Override
+	public boolean hasSegmentsEntryVariation(
+		ClassedModelListObjectReference classedModelListObjectReference,
+		long segmentsEntryId) {
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.fetchAssetListEntry(
+				classedModelListObjectReference.getClassPK());
+
+		if ((assetListEntry != null) &&
+			Validator.isNotNull(
+				_assetListEntrySegmentsEntryRelLocalService.
+					fetchAssetListEntrySegmentsEntryRel(
+						assetListEntry.getAssetListEntryId(),
+						segmentsEntryId))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private long[][] _getAssetCategoryIds(
@@ -187,5 +206,9 @@ public class AssetEntryListLayoutListRetriever
 
 	@Reference
 	private AssetListEntryLocalService _assetListEntryLocalService;
+
+	@Reference
+	private AssetListEntrySegmentsEntryRelLocalService
+		_assetListEntrySegmentsEntryRelLocalService;
 
 }

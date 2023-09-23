@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -57,7 +48,7 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		if (!absolutePath.endsWith("/source-formatter/README.markdown")) {
 			return content;
@@ -71,12 +62,17 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 
 		String checksInformation = content.substring(x + 1);
 
-		String newChecksInformation = _getChecksInformation(
-			absolutePath, _getCheckInfoMap());
+		try {
+			String newChecksInformation = _getChecksInformation(
+				absolutePath, _getCheckInfoMap());
 
-		if (!checksInformation.equals(newChecksInformation)) {
-			return StringUtil.replaceLast(
-				content, checksInformation, newChecksInformation);
+			if (!checksInformation.equals(newChecksInformation)) {
+				return StringUtil.replaceLast(
+					content, checksInformation, newChecksInformation);
+			}
+		}
+		catch (DocumentException documentException) {
+			return content;
 		}
 
 		return content;
@@ -142,6 +138,10 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 
 		Document document = SourceUtil.readXML(checkstyleConfigurationContent);
 
+		if (document == null) {
+			throw new DocumentException();
+		}
+
 		return _addCheckstyleChecks(
 			checkInfoMap, document.getRootElement(), sourceProcessorName);
 	}
@@ -156,6 +156,10 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 
 		Document document = SourceUtil.readXML(
 			sourceChecksConfigurationContent);
+
+		if (document == null) {
+			throw new DocumentException();
+		}
 
 		Element rootElement = document.getRootElement();
 

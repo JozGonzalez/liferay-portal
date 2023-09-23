@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.google.docs.internal.helper;
@@ -90,16 +81,16 @@ public class GoogleDocsDLFileEntryTypeHelper {
 		serviceContext.setAddGuestPermissions(true);
 		serviceContext.setScopeGroupId(_company.getGroupId());
 
-		long defaultUserId = _userLocalService.getDefaultUserId(
+		long guestUserId = _userLocalService.getGuestUserId(
 			_company.getCompanyId());
 
-		serviceContext.setUserId(defaultUserId);
+		serviceContext.setUserId(guestUserId);
 
 		Class<?> clazz = getClass();
 
 		_defaultDDMStructureHelper.addDDMStructures(
-			defaultUserId, _company.getGroupId(),
-			_dlFileEntryMetadataClassNameId, clazz.getClassLoader(),
+			guestUserId, _company.getGroupId(), _dlFileEntryMetadataClassNameId,
+			clazz.getClassLoader(),
 			"com/liferay/document/library/google/docs/internal/util" +
 				"/dependencies/google-docs-metadata-structure.xml",
 			serviceContext);
@@ -111,15 +102,13 @@ public class GoogleDocsDLFileEntryTypeHelper {
 		ddmStructure.setNameMap(_updateNameMap(ddmStructure.getNameMap()));
 		ddmStructure.setType(DDMStructureConstants.TYPE_AUTO);
 
-		_ddmStructureLocalService.updateDDMStructure(ddmStructure);
-
-		return ddmStructure;
+		return _ddmStructureLocalService.updateDDMStructure(ddmStructure);
 	}
 
 	private void _addGoogleDocsDLFileEntryType(long ddmStructureId)
 		throws Exception {
 
-		long defaultUserId = _userLocalService.getDefaultUserId(
+		long guestUserId = _userLocalService.getGuestUserId(
 			_company.getCompanyId());
 
 		Map<Locale, String> descriptionMap = new HashMap<>();
@@ -129,10 +118,10 @@ public class GoogleDocsDLFileEntryTypeHelper {
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
 		serviceContext.setScopeGroupId(_company.getGroupId());
-		serviceContext.setUserId(defaultUserId);
+		serviceContext.setUserId(guestUserId);
 
 		_dlFileEntryTypeLocalService.addFileEntryType(
-			defaultUserId, _company.getGroupId(), ddmStructureId,
+			guestUserId, _company.getGroupId(), ddmStructureId,
 			GoogleDocsConstants.DL_FILE_ENTRY_TYPE_KEY,
 			_getGoogleDriveShortcutNameMap(LanguageUtil.getAvailableLocales()),
 			descriptionMap,

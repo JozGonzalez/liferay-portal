@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.resource.v1_0.UserAccountResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.UserAccountSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -239,6 +229,20 @@ public abstract class BaseUserAccountResourceTestCase {
 				deleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
 					testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
 					userAccount.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userAccountResource.
+				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
+					testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					userAccount.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userAccountResource.
+				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
+					testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					userAccount.getExternalReferenceCode()));
 	}
 
 	protected String
@@ -255,6 +259,120 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode()
+		throws Exception {
+
+		UserAccount postUserAccount =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount();
+
+		UserAccount getUserAccount =
+			userAccountResource.
+				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
+					testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					postUserAccount.getExternalReferenceCode());
+
+		assertEquals(postUserAccount, getUserAccount);
+		assertValid(getUserAccount);
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected UserAccount
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode()
+		throws Exception {
+
+		UserAccount userAccount =
+			testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount();
+
+		Assert.assertTrue(
+			equals(
+				userAccount,
+				UserAccountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountByExternalReferenceCodeUserAccountByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"accountExternalReferenceCode",
+											"\"" +
+												testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode() +
+													"\"");
+
+										put(
+											"externalReferenceCode",
+											"\"" +
+												userAccount.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountByExternalReferenceCodeUserAccountByExternalReferenceCode"))));
+	}
+
+	protected String
+			testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantAccountExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountByExternalReferenceCodeUserAccountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountExternalReferenceCode",
+									irrelevantAccountExternalReferenceCode);
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UserAccount
+			testGraphQLGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount()
+		throws Exception {
+
+		return testGraphQLUserAccount_addUserAccount();
 	}
 
 	@Test
@@ -403,45 +521,40 @@ public abstract class BaseUserAccountResourceTestCase {
 	public void testGetAccountUserAccountsByExternalReferenceCodePageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAccountUserAccountsByExternalReferenceCodePageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAccountUserAccountsByExternalReferenceCodePageWithFilterStringContains()
+		throws Exception {
 
-		String externalReferenceCode =
-			testGetAccountUserAccountsByExternalReferenceCodePage_getExternalReferenceCode();
-
-		UserAccount userAccount1 =
-			testGetAccountUserAccountsByExternalReferenceCodePage_addUserAccount(
-				externalReferenceCode, randomUserAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserAccount userAccount2 =
-			testGetAccountUserAccountsByExternalReferenceCodePage_addUserAccount(
-				externalReferenceCode, randomUserAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> page =
-				userAccountResource.
-					getAccountUserAccountsByExternalReferenceCodePage(
-						externalReferenceCode, null,
-						getFilterString(entityField, "eq", userAccount1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userAccount1),
-				(List<UserAccount>)page.getItems());
-		}
+		testGetAccountUserAccountsByExternalReferenceCodePageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAccountUserAccountsByExternalReferenceCodePageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAccountUserAccountsByExternalReferenceCodePageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountUserAccountsByExternalReferenceCodePageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountUserAccountsByExternalReferenceCodePageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetAccountUserAccountsByExternalReferenceCodePageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -464,7 +577,7 @@ public abstract class BaseUserAccountResourceTestCase {
 				userAccountResource.
 					getAccountUserAccountsByExternalReferenceCodePage(
 						externalReferenceCode, null,
-						getFilterString(entityField, "eq", userAccount1),
+						getFilterString(entityField, operator, userAccount1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -954,43 +1067,37 @@ public abstract class BaseUserAccountResourceTestCase {
 	public void testGetAccountUserAccountsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAccountUserAccountsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAccountUserAccountsPageWithFilterStringContains()
+		throws Exception {
 
-		Long accountId = testGetAccountUserAccountsPage_getAccountId();
-
-		UserAccount userAccount1 =
-			testGetAccountUserAccountsPage_addUserAccount(
-				accountId, randomUserAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserAccount userAccount2 =
-			testGetAccountUserAccountsPage_addUserAccount(
-				accountId, randomUserAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> page =
-				userAccountResource.getAccountUserAccountsPage(
-					accountId, null,
-					getFilterString(entityField, "eq", userAccount1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userAccount1),
-				(List<UserAccount>)page.getItems());
-		}
+		testGetAccountUserAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAccountUserAccountsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAccountUserAccountsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountUserAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountUserAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAccountUserAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1011,7 +1118,7 @@ public abstract class BaseUserAccountResourceTestCase {
 			Page<UserAccount> page =
 				userAccountResource.getAccountUserAccountsPage(
 					accountId, null,
-					getFilterString(entityField, "eq", userAccount1),
+					getFilterString(entityField, operator, userAccount1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1332,6 +1439,130 @@ public abstract class BaseUserAccountResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountUserAccount() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserAccount userAccount = testDeleteAccountUserAccount_addUserAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			userAccountResource.deleteAccountUserAccountHttpResponse(
+				testDeleteAccountUserAccount_getAccountId(),
+				userAccount.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userAccountResource.getAccountUserAccountHttpResponse(
+				testDeleteAccountUserAccount_getAccountId(),
+				userAccount.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userAccountResource.getAccountUserAccountHttpResponse(
+				testDeleteAccountUserAccount_getAccountId(), 0L));
+	}
+
+	protected Long testDeleteAccountUserAccount_getAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected UserAccount testDeleteAccountUserAccount_addUserAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAccountUserAccount() throws Exception {
+		UserAccount postUserAccount =
+			testGetAccountUserAccount_addUserAccount();
+
+		UserAccount getUserAccount = userAccountResource.getAccountUserAccount(
+			testGetAccountUserAccount_getAccountId(), postUserAccount.getId());
+
+		assertEquals(postUserAccount, getUserAccount);
+		assertValid(getUserAccount);
+	}
+
+	protected Long testGetAccountUserAccount_getAccountId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected UserAccount testGetAccountUserAccount_addUserAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountUserAccount() throws Exception {
+		UserAccount userAccount =
+			testGraphQLGetAccountUserAccount_addUserAccount();
+
+		Assert.assertTrue(
+			equals(
+				userAccount,
+				UserAccountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountUserAccount",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"accountId",
+											testGraphQLGetAccountUserAccount_getAccountId());
+
+										put(
+											"userAccountId",
+											userAccount.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/accountUserAccount"))));
+	}
+
+	protected Long testGraphQLGetAccountUserAccount_getAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountUserAccountNotFound() throws Exception {
+		Long irrelevantAccountId = RandomTestUtil.randomLong();
+		Long irrelevantUserAccountId = RandomTestUtil.randomLong();
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountUserAccount",
+						new HashMap<String, Object>() {
+							{
+								put("accountId", irrelevantAccountId);
+								put("userAccountId", irrelevantUserAccountId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UserAccount testGraphQLGetAccountUserAccount_addUserAccount()
+		throws Exception {
+
+		return testGraphQLUserAccount_addUserAccount();
+	}
+
+	@Test
 	public void testGetMyUserAccount() throws Exception {
 		UserAccount postUserAccount = testGetMyUserAccount_addUserAccount();
 
@@ -1484,44 +1715,39 @@ public abstract class BaseUserAccountResourceTestCase {
 	public void testGetOrganizationUserAccountsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetOrganizationUserAccountsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetOrganizationUserAccountsPageWithFilterStringContains()
+		throws Exception {
 
-		String organizationId =
-			testGetOrganizationUserAccountsPage_getOrganizationId();
-
-		UserAccount userAccount1 =
-			testGetOrganizationUserAccountsPage_addUserAccount(
-				organizationId, randomUserAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserAccount userAccount2 =
-			testGetOrganizationUserAccountsPage_addUserAccount(
-				organizationId, randomUserAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> page =
-				userAccountResource.getOrganizationUserAccountsPage(
-					organizationId, null,
-					getFilterString(entityField, "eq", userAccount1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userAccount1),
-				(List<UserAccount>)page.getItems());
-		}
+		testGetOrganizationUserAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetOrganizationUserAccountsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetOrganizationUserAccountsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrganizationUserAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetOrganizationUserAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetOrganizationUserAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1543,7 +1769,7 @@ public abstract class BaseUserAccountResourceTestCase {
 			Page<UserAccount> page =
 				userAccountResource.getOrganizationUserAccountsPage(
 					organizationId, null,
-					getFilterString(entityField, "eq", userAccount1),
+					getFilterString(entityField, operator, userAccount1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1859,41 +2085,37 @@ public abstract class BaseUserAccountResourceTestCase {
 	public void testGetSiteUserAccountsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSiteUserAccountsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSiteUserAccountsPageWithFilterStringContains()
+		throws Exception {
 
-		Long siteId = testGetSiteUserAccountsPage_getSiteId();
-
-		UserAccount userAccount1 = testGetSiteUserAccountsPage_addUserAccount(
-			siteId, randomUserAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserAccount userAccount2 = testGetSiteUserAccountsPage_addUserAccount(
-			siteId, randomUserAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> page =
-				userAccountResource.getSiteUserAccountsPage(
-					siteId, null,
-					getFilterString(entityField, "eq", userAccount1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userAccount1),
-				(List<UserAccount>)page.getItems());
-		}
+		testGetSiteUserAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSiteUserAccountsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSiteUserAccountsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteUserAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteUserAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteUserAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1912,7 +2134,7 @@ public abstract class BaseUserAccountResourceTestCase {
 			Page<UserAccount> page =
 				userAccountResource.getSiteUserAccountsPage(
 					siteId, null,
-					getFilterString(entityField, "eq", userAccount1),
+					getFilterString(entityField, operator, userAccount1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -2176,37 +2398,36 @@ public abstract class BaseUserAccountResourceTestCase {
 	public void testGetUserAccountsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetUserAccountsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetUserAccountsPageWithFilterStringContains()
+		throws Exception {
 
-		UserAccount userAccount1 = testGetUserAccountsPage_addUserAccount(
-			randomUserAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserAccount userAccount2 = testGetUserAccountsPage_addUserAccount(
-			randomUserAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> page = userAccountResource.getUserAccountsPage(
-				null, getFilterString(entityField, "eq", userAccount1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userAccount1),
-				(List<UserAccount>)page.getItems());
-		}
+		testGetUserAccountsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetUserAccountsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetUserAccountsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetUserAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetUserAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetUserAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -2221,7 +2442,7 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<UserAccount> page = userAccountResource.getUserAccountsPage(
-				null, getFilterString(entityField, "eq", userAccount1),
+				null, getFilterString(entityField, operator, userAccount1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -3177,14 +3398,19 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -3620,14 +3846,16 @@ public abstract class BaseUserAccountResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -3657,18 +3885,18 @@ public abstract class BaseUserAccountResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -3695,17 +3923,93 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("additionalName")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getAdditionalName()));
-			sb.append("'");
+			Object object = userAccount.getAdditionalName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("alternateName")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getAlternateName()));
-			sb.append("'");
+			Object object = userAccount.getAlternateName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3742,9 +4046,47 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("currentPassword")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getCurrentPassword()));
-			sb.append("'");
+			Object object = userAccount.getCurrentPassword();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3755,9 +4097,47 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("dashboardURL")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getDashboardURL()));
-			sb.append("'");
+			Object object = userAccount.getDashboardURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3828,49 +4208,277 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("emailAddress")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getEmailAddress()));
-			sb.append("'");
+			Object object = userAccount.getEmailAddress();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = userAccount.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("familyName")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getFamilyName()));
-			sb.append("'");
+			Object object = userAccount.getFamilyName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("givenName")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getGivenName()));
-			sb.append("'");
+			Object object = userAccount.getGivenName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("honorificPrefix")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getHonorificPrefix()));
-			sb.append("'");
+			Object object = userAccount.getHonorificPrefix();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("honorificSuffix")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getHonorificSuffix()));
-			sb.append("'");
+			Object object = userAccount.getHonorificSuffix();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3881,17 +4489,93 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("image")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getImage()));
-			sb.append("'");
+			Object object = userAccount.getImage();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("jobTitle")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getJobTitle()));
-			sb.append("'");
+			Object object = userAccount.getJobTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3935,9 +4619,47 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getName()));
-			sb.append("'");
+			Object object = userAccount.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3948,17 +4670,93 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 
 		if (entityFieldName.equals("password")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getPassword()));
-			sb.append("'");
+			Object object = userAccount.getPassword();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("profileURL")) {
-			sb.append("'");
-			sb.append(String.valueOf(userAccount.getProfileURL()));
-			sb.append("'");
+			Object object = userAccount.getProfileURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

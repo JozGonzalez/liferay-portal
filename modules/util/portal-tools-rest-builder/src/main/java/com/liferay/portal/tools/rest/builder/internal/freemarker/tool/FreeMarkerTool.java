@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -30,6 +23,7 @@ import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parse
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.ResourceOpenAPIParser;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.ResourceTestCaseOpenAPIParser;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.Application;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Components;
@@ -104,6 +98,10 @@ public class FreeMarkerTool {
 		return false;
 	}
 
+	public String[] distinct(String[] array) {
+		return ArrayUtil.distinct(array);
+	}
+
 	public boolean generateBatch(
 		ConfigYAML configYAML, String javaDataType,
 		List<JavaMethodSignature> javaMethodSignatures, String schemaName) {
@@ -123,6 +121,22 @@ public class FreeMarkerTool {
 		}
 
 		return false;
+	}
+
+	public String getActionName(String propertyName) {
+		if (StringUtil.equals(propertyName, "delete")) {
+			return ActionKeys.DELETE;
+		}
+		else if (StringUtil.equals(propertyName, "get")) {
+			return ActionKeys.VIEW;
+		}
+		else if (StringUtil.equals(propertyName, "update") ||
+				 StringUtil.equals(propertyName, "replace")) {
+
+			return ActionKeys.UPDATE;
+		}
+
+		return null;
 	}
 
 	public Map<String, Schema> getAllSchemas(
@@ -567,6 +581,13 @@ public class FreeMarkerTool {
 		return null;
 	}
 
+	public Map<String, Schema> getMultipartBodySchemas(
+		JavaMethodSignature javaMethodSignature) {
+
+		return ResourceOpenAPIParser.getMultipartBodySchemas(
+			javaMethodSignature);
+	}
+
 	public String getObjectFieldStringValue(String type, Object value) {
 		if (value instanceof Date) {
 			if (type.equals("Date")) {
@@ -716,6 +737,13 @@ public class FreeMarkerTool {
 		return ResourceOpenAPIParser.getMethodAnnotations(javaMethodSignature);
 	}
 
+	public String getResourceMethodName(
+		List<JavaMethodSignature> javaMethodSignatures, String propertyName) {
+
+		return ResourceOpenAPIParser.getResourceMethodName(
+			javaMethodSignatures, propertyName);
+	}
+
 	public String getResourceParameters(
 		List<JavaMethodParameter> javaMethodParameters, OpenAPIYAML openAPIYAML,
 		Operation operation, boolean annotation) {
@@ -808,6 +836,13 @@ public class FreeMarkerTool {
 
 		return ResourceOpenAPIParser.
 			getVulcanBatchImplementationUpdateStrategies(javaMethodSignatures);
+	}
+
+	public Map<String, String> getWritableDTOProperties(
+		ConfigYAML configYAML, OpenAPIYAML openAPIYAML, Schema schema) {
+
+		return DTOOpenAPIParser.getProperties(
+			configYAML, true, openAPIYAML, schema);
 	}
 
 	public boolean hasHTTPMethod(
@@ -1052,11 +1087,7 @@ public class FreeMarkerTool {
 	}
 
 	public boolean isVersionCompatible(ConfigYAML configYAML, int version) {
-		if (configYAML.getCompatibilityVersion() >= version) {
-			return true;
-		}
-
-		return false;
+		return ConfigUtil.isVersionCompatible(configYAML, version);
 	}
 
 	private static DateFormat _getDateFormat(String pattern) {

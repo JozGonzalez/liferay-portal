@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service;
@@ -46,16 +37,17 @@ public class KBArticleServiceUtil {
 			String externalReferenceCode, String portletId,
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			String title, String urlTitle, String content, String description,
-			String[] sections, String sourceURL, java.util.Date expirationDate,
-			java.util.Date reviewDate, String[] selectedFileNames,
+			String[] sections, String sourceURL, java.util.Date displayDate,
+			java.util.Date expirationDate, java.util.Date reviewDate,
+			String[] selectedFileNames,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addKBArticle(
 			externalReferenceCode, portletId, parentResourceClassNameId,
 			parentResourcePrimKey, title, urlTitle, content, description,
-			sections, sourceURL, expirationDate, reviewDate, selectedFileNames,
-			serviceContext);
+			sections, sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, serviceContext);
 	}
 
 	public static int addKBArticlesMarkdown(
@@ -77,6 +69,13 @@ public class KBArticleServiceUtil {
 		getService().addTempAttachment(
 			groupId, resourcePrimKey, fileName, tempFolderName, inputStream,
 			mimeType);
+	}
+
+	public static int countKBArticlesByKeywords(
+		long groupId, String keywords, int status) {
+
+		return getService().countKBArticlesByKeywords(
+			groupId, keywords, status);
 	}
 
 	public static KBArticle deleteKBArticle(long resourcePrimKey)
@@ -235,6 +234,13 @@ public class KBArticleServiceUtil {
 			groupId, resourcePrimKeys, status, orderByComparator);
 	}
 
+	public static List<KBArticle> getKBArticlesByKeywords(
+		long groupId, String keywords, int status, int start, int end) {
+
+		return getService().getKBArticlesByKeywords(
+			groupId, keywords, status, start, end);
+	}
+
 	public static int getKBArticlesCount(
 		long groupId, long parentResourcePrimKey, int status) {
 
@@ -375,15 +381,16 @@ public class KBArticleServiceUtil {
 	public static KBArticle updateKBArticle(
 			long resourcePrimKey, String title, String content,
 			String description, String[] sections, String sourceURL,
-			java.util.Date expirationDate, java.util.Date reviewDate,
-			String[] selectedFileNames, long[] removeFileEntryIds,
+			java.util.Date displayDate, java.util.Date expirationDate,
+			java.util.Date reviewDate, String[] selectedFileNames,
+			long[] removeFileEntryIds,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateKBArticle(
 			resourcePrimKey, title, content, description, sections, sourceURL,
-			expirationDate, reviewDate, selectedFileNames, removeFileEntryIds,
-			serviceContext);
+			displayDate, expirationDate, reviewDate, selectedFileNames,
+			removeFileEntryIds, serviceContext);
 	}
 
 	public static void updateKBArticlesPriorities(
@@ -396,6 +403,10 @@ public class KBArticleServiceUtil {
 
 	public static KBArticleService getService() {
 		return _service;
+	}
+
+	public static void setService(KBArticleService service) {
+		_service = service;
 	}
 
 	private static volatile KBArticleService _service;

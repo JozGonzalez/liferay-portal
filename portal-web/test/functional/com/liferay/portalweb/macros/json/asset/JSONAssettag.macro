@@ -1,19 +1,15 @@
 definition {
 
-	@summary = "Add a basic tag"
 	macro addTag {
-		if (!(isSet(staging))) {
-			Variables.assertDefined(parameterList = "${groupName},${tagName}");
+		Variables.assertDefined(parameterList = ${tagName});
 
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		if (!(isSet(groupId))) {
 			var groupId = JSONAssettagSetter.setGroupId(
 				groupName = ${groupName},
-				site = ${site});
-		}
-		else {
-			Variables.assertDefined(parameterList = "${groupKey},${tagName}");
-
-			var groupId = JSONStagingSetter.setGroupId(
-				groupKey = ${groupKey},
 				site = ${site});
 		}
 
@@ -22,7 +18,6 @@ definition {
 			tagName = ${tagName});
 	}
 
-	@summary = "Get a basic tag ID"
 	macro getTagId {
 		Variables.assertDefined(parameterList = "${groupName},${tagName}");
 

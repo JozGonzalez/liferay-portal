@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.settings.web.internal.portlet.action;
@@ -194,7 +185,7 @@ public class EditCompanyMVCActionCommand extends BaseFormMVCActionCommand {
 			logoBytes = FileUtil.getBytes(fileEntry.getContentStream());
 		}
 
-		User defaultUser = _userLocalService.getDefaultUser(companyId);
+		User guestUser = _userLocalService.getGuestUser(companyId);
 
 		List<Address> addresses = _usersAdmin.getAddresses(actionRequest);
 
@@ -290,9 +281,9 @@ public class EditCompanyMVCActionCommand extends BaseFormMVCActionCommand {
 			actionRequest, "size", company.getSize());
 
 		String languageId = ParamUtil.getString(
-			actionRequest, "languageId", defaultUser.getLanguageId());
+			actionRequest, "languageId", guestUser.getLanguageId());
 		String timeZoneId = ParamUtil.getString(
-			actionRequest, "timeZoneId", defaultUser.getTimeZoneId());
+			actionRequest, "timeZoneId", guestUser.getTimeZoneId());
 
 		_companyService.updateCompany(
 			companyId, virtualHostname, mx, homeURL, !deleteLogo, logoBytes,

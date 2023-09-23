@@ -1,40 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
+import ClayList from '@clayui/list';
 import classNames from 'classnames';
-import {fetch, navigate, openToast} from 'frontend-js-web';
+import {fetch, navigate} from 'frontend-js-web';
 import React, {useRef, useState} from 'react';
 
-import {TFDSView} from '../FDSViews';
-import RequiredMark from '../RequiredMark';
-
-interface IDetailsProps {
-	fdsView: TFDSView;
-	fdsViewsAPIURL: string;
-	fdsViewsURL: string;
-	namespace: string;
-}
+import {API_URL} from '../Constants';
+import {IFDSViewSectionProps} from '../FDSView';
+import RequiredMark from '../components/RequiredMark';
+import openDefaultFailureToast from '../utils/openDefaultFailureToast';
+import openDefaultSuccessToast from '../utils/openDefaultSuccessToast';
 
 const Details = ({
 	fdsView,
-	fdsViewsAPIURL,
 	fdsViewsURL,
 	namespace,
-}: IDetailsProps) => {
+	onFDSViewUpdate,
+}: IFDSViewSectionProps) => {
 	const [labelValidationError, setLabelValidationError] = useState(false);
 
 	const fdsViewDescriptionRef = useRef<HTMLInputElement>(null);
@@ -46,24 +35,28 @@ const Details = ({
 			label: fdsViewLabelRef.current?.value,
 		};
 
-		const response = await fetch(`${fdsViewsAPIURL}/${fdsView.id}`, {
-			body: JSON.stringify(body),
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-			},
-			method: 'PATCH',
-		});
+		const response = await fetch(
+			`${API_URL.FDS_VIEWS}/by-external-reference-code/${fdsView.externalReferenceCode}`,
+			{
+				body: JSON.stringify(body),
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+				},
+				method: 'PATCH',
+			}
+		);
+
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
 
 		const responseJSON = await response.json();
 
 		if (responseJSON?.id) {
-			openToast({
-				message: Liferay.Language.get(
-					'your-request-completed-successfully'
-				),
-				type: 'success',
-			});
+			openDefaultSuccessToast();
 
 			const controlMenuHeaderTitles = document.getElementsByClassName(
 				'control-menu-level-1-heading'
@@ -74,14 +67,10 @@ const Details = ({
 					fdsViewLabelRef.current?.value ?? ''
 				);
 			}
+			onFDSViewUpdate(responseJSON);
 		}
 		else {
-			openToast({
-				message: Liferay.Language.get(
-					'your-request-failed-to-complete'
-				),
-				type: 'danger',
-			});
+			openDefaultFailureToast();
 		}
 	};
 
@@ -140,6 +129,68 @@ const Details = ({
 						type="text"
 					/>
 				</ClayForm.Group>
+			</ClayLayout.SheetSection>
+
+			<ClayLayout.SheetSection className="mb-4">
+				<h3 className="sheet-subtitle">
+					{Liferay.Language.get('rest-information')}
+				</h3>
+
+				<ClayList className="flex-row flex-wrap">
+					<ClayList.Item className="border-0 col-12 col-sm-6" flex>
+						<ClayList.ItemField className="justify-content-center">
+							<ClayIcon symbol="api-web" />
+						</ClayList.ItemField>
+
+						<ClayList.ItemField expand>
+							<ClayList.ItemTitle>
+								{Liferay.Language.get('application')}
+							</ClayList.ItemTitle>
+
+							<ClayList.ItemText>
+								{
+									fdsView.fdsEntryFDSViewRelationship
+										.restApplication
+								}
+							</ClayList.ItemText>
+						</ClayList.ItemField>
+					</ClayList.Item>
+
+					<ClayList.Item className="border-0 col-12 col-sm-6" flex>
+						<ClayList.ItemField className="justify-content-center">
+							<ClayIcon symbol="diagram" />
+						</ClayList.ItemField>
+
+						<ClayList.ItemField>
+							<ClayList.ItemTitle>
+								{Liferay.Language.get('schema')}
+							</ClayList.ItemTitle>
+
+							<ClayList.ItemText>
+								{fdsView.fdsEntryFDSViewRelationship.restSchema}
+							</ClayList.ItemText>
+						</ClayList.ItemField>
+					</ClayList.Item>
+
+					<ClayList.Item className="border-0 col-12" flex>
+						<ClayList.ItemField className="justify-content-center">
+							<ClayIcon symbol="nodes" />
+						</ClayList.ItemField>
+
+						<ClayList.ItemField>
+							<ClayList.ItemTitle>
+								{Liferay.Language.get('endpoint')}
+							</ClayList.ItemTitle>
+
+							<ClayList.ItemText>
+								{
+									fdsView.fdsEntryFDSViewRelationship
+										.restEndpoint
+								}
+							</ClayList.ItemText>
+						</ClayList.ItemField>
+					</ClayList.Item>
+				</ClayList>
 			</ClayLayout.SheetSection>
 
 			<ClayLayout.SheetFooter>

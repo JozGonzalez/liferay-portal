@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.journal.internal.info.item.test;
@@ -32,7 +23,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -201,6 +191,7 @@ public class JournalArticleAnalyticsReportsInfoItemTest {
 			themeDisplay.setLayoutSet(layout.getLayoutSet());
 
 			themeDisplay.setRequest(mockHttpServletRequest);
+			themeDisplay.setScopeGroupId(_group.getGroupId());
 			themeDisplay.setSiteGroupId(_group.getGroupId());
 
 			mockHttpServletRequest.setAttribute(
@@ -305,7 +296,9 @@ public class JournalArticleAnalyticsReportsInfoItemTest {
 		).build();
 	}
 
-	@Inject(filter = "component.name=*.JournalArticleAnalyticsReportsInfoItem")
+	@Inject(
+		filter = "component.name=com.liferay.analytics.reports.journal.internal.info.item.JournalArticleAnalyticsReportsInfoItem"
+	)
 	private AnalyticsReportsInfoItem<JournalArticle> _analyticsReportsInfoItem;
 
 	@Inject
@@ -317,9 +310,6 @@ public class JournalArticleAnalyticsReportsInfoItemTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	@Inject
-	private LayoutLocalService _layoutLocalService;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

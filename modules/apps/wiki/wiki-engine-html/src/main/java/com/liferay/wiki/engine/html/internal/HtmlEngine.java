@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.engine.html.internal;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -53,7 +45,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  * @author Zsigmond Rab
  */
-@Component(service = WikiEngine.class)
+@Component(
+	configurationPid = "com.liferay.wiki.configuration.WikiGroupServiceConfiguration",
+	service = WikiEngine.class
+)
 public class HtmlEngine extends BaseWikiEngine {
 
 	@Override
@@ -94,7 +89,10 @@ public class HtmlEngine extends BaseWikiEngine {
 	}
 
 	@Activate
-	protected void activate() {
+	protected void activate(Map<String, Object> properties) {
+		_wikiGroupServiceConfiguration = ConfigurableUtil.createConfigurable(
+			WikiGroupServiceConfiguration.class, properties);
+
 		_friendlyURLMapping =
 			Portal.FRIENDLY_URL_SEPARATOR + _friendlyURLMapper.getMapping();
 
@@ -196,7 +194,6 @@ public class HtmlEngine extends BaseWikiEngine {
 	)
 	private ServletContext _servletContext;
 
-	@Reference
 	private WikiGroupServiceConfiguration _wikiGroupServiceConfiguration;
 
 	@Reference

@@ -17,7 +17,9 @@
 		<field name="classPK" type="long" />
 		<field name="priority" type="double" />
 		<field name="sentDate" type="Date" />
-		<field name="subject" type="String" />
+		<field name="subject" type="String">
+			<hint-collection name="CLOB" />
+		</field>
 		<field name="type" type="String" />
 		<field name="status" type="int" />
 	</model>
@@ -67,12 +69,16 @@
 		<field localized="true" name="body" type="String">
 			<hint-collection name="CLOB" />
 		</field>
-		<field name="description" type="String" />
+		<field name="description" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 		<field name="editorType" type="String" />
 		<field localized="true" name="name" type="String" />
 		<field name="recipientType" type="String" />
 		<field localized="true" name="subject" type="String" />
-		<field name="type" type="String" />
+		<field name="type" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 	</model>
 	<model name="com.liferay.notification.model.NotificationTemplateAttachment">
 		<field name="mvccVersion" type="long" />

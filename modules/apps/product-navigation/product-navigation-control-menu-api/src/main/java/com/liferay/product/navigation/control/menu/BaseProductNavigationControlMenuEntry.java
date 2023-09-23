@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.control.menu;
@@ -17,6 +8,7 @@ package com.liferay.product.navigation.control.menu;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.SessionClicks;
 
 import java.io.IOException;
 
@@ -111,6 +103,20 @@ public abstract class BaseProductNavigationControlMenuEntry
 	}
 
 	@Override
+	public boolean isPanelStateOpen(
+		HttpServletRequest httpServletRequest, String key) {
+
+		String panelState = SessionClicks.get(
+			httpServletRequest, key, "closed");
+
+		if (Objects.equals(panelState, "open")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isShow(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
@@ -120,6 +126,13 @@ public abstract class BaseProductNavigationControlMenuEntry
 	@Override
 	public boolean isUseDialog() {
 		return false;
+	}
+
+	@Override
+	public void setPanelState(
+		HttpServletRequest httpServletRequest, String key, String panelState) {
+
+		SessionClicks.put(httpServletRequest, key, panelState);
 	}
 
 }

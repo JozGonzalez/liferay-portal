@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.antivirus.async.store.test;
@@ -43,6 +34,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
@@ -132,7 +124,7 @@ public class AsyncAntivirusDLStoreTest {
 			new MockAntivirusScanner(() -> calledScan.set(true)), null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 1, true,
+			1, "0 0/1 * * * ?", true,
 			() -> {
 				_messageBus.sendMessage(
 					AntivirusAsyncDestinationNames.ANTIVIRUS,
@@ -171,7 +163,18 @@ public class AsyncAntivirusDLStoreTest {
 
 		_registerService(
 			AntivirusAsyncRetryScheduler.class,
-			message -> calledSchedule.set(true),
+			new AntivirusAsyncRetryScheduler() {
+
+				@Override
+				public void schedule(Message message) {
+					calledSchedule.set(true);
+				}
+
+				@Override
+				public void unschedule(Message message) {
+				}
+
+			},
 			MapUtil.singletonDictionary(Constants.SERVICE_RANKING, 100));
 		_registerService(
 			AntivirusScanner.class,
@@ -183,7 +186,7 @@ public class AsyncAntivirusDLStoreTest {
 			null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 1, true,
+			1, "0 0/1 * * * ?", true,
 			() -> {
 				DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 
@@ -226,7 +229,7 @@ public class AsyncAntivirusDLStoreTest {
 			null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 1, true,
+			1, "0 0/1 * * * ?", true,
 			() -> {
 				DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 
@@ -262,7 +265,7 @@ public class AsyncAntivirusDLStoreTest {
 			new MockAntivirusScanner(() -> calledScan.set(true)), null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 1, true,
+			1, "0 0/1 * * * ?", true,
 			() -> {
 				DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 
@@ -306,7 +309,7 @@ public class AsyncAntivirusDLStoreTest {
 			null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 1, true,
+			1, "0 0/1 * * * ?", true,
 			() -> {
 				DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 
@@ -339,7 +342,18 @@ public class AsyncAntivirusDLStoreTest {
 
 		_registerService(
 			AntivirusAsyncRetryScheduler.class,
-			message -> calledSchedule.incrementAndGet(),
+			new AntivirusAsyncRetryScheduler() {
+
+				@Override
+				public void schedule(Message message) {
+					calledSchedule.incrementAndGet();
+				}
+
+				@Override
+				public void unschedule(Message message) {
+				}
+
+			},
 			MapUtil.singletonDictionary(Constants.SERVICE_RANKING, 100));
 		_registerService(
 			AntivirusScanner.class,
@@ -354,7 +368,7 @@ public class AsyncAntivirusDLStoreTest {
 			null);
 
 		_withAsyncAntivirusConfiguration(
-			1, 10, false,
+			1, "0 0/10 * * * ?", false,
 			() -> {
 				DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 
@@ -421,8 +435,7 @@ public class AsyncAntivirusDLStoreTest {
 			MapUtil.singletonDictionary(Constants.SERVICE_RANKING, -100));
 		_registerService(
 			AntivirusAsyncRetryScheduler.class,
-			message -> {
-			},
+			ProxyFactory.newDummyInstance(AntivirusAsyncRetryScheduler.class),
 			MapUtil.singletonDictionary(Constants.SERVICE_RANKING, 100));
 		_registerService(
 			AntivirusScanner.class,
@@ -447,7 +460,7 @@ public class AsyncAntivirusDLStoreTest {
 			MapUtil.singletonDictionary(Constants.SERVICE_RANKING, 100));
 
 		_withAsyncAntivirusConfiguration(
-			5, 10, true,
+			5, "0 0/10 * * * ?", true,
 			() -> {
 				AntivirusAsyncStatisticsManagerMBean
 					antivirusAsyncStatisticsManagerMBean =
@@ -530,7 +543,7 @@ public class AsyncAntivirusDLStoreTest {
 	}
 
 	private void _withAsyncAntivirusConfiguration(
-			int maximumQueueSize, int retryInterval, boolean sync,
+			int maximumQueueSize, String retryCronExpression, boolean sync,
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
@@ -540,7 +553,7 @@ public class AsyncAntivirusDLStoreTest {
 					HashMapDictionaryBuilder.<String, Object>put(
 						"maximumQueueSize", maximumQueueSize
 					).put(
-						"retryInterval", retryInterval
+						"retryCronExpression", retryCronExpression
 					).build())) {
 
 			if (sync) {

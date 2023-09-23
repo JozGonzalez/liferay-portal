@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
@@ -24,15 +15,14 @@ import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -50,7 +40,6 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -103,22 +92,19 @@ public class DLFileEntryTypeServiceTest {
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType1 = DLFileEntryTypeServiceUtil.addFileEntryType(
-			_group.getGroupId(), StringUtil.randomString(),
-			StringUtil.randomString(),
-			new long[] {ddmStructure1.getStructureId()},
+			_group.getGroupId(), ddmStructure1.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		DDMStructure ddmStructure2 = DDMStructureTestUtil.addStructure(
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType2 = DLFileEntryTypeServiceUtil.addFileEntryType(
-			_group.getGroupId(), StringUtil.randomString(),
-			StringUtil.randomString(),
-			new long[] {ddmStructure2.getStructureId()},
+			_group.getGroupId(), ddmStructure2.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
-
-		_dlFileEntryTypes = DLFileEntryTypeLocalServiceUtil.getFileEntryTypes(
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(_group.getGroupId()));
 	}
 
 	@Test
@@ -131,16 +117,14 @@ public class DLFileEntryTypeServiceTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(new DDMForm()));
-
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		DLFileEntryTypeServiceUtil.addFileEntryType(
-			_group.getGroupId(), StringUtil.randomString(),
-			StringUtil.randomString(),
-			new long[] {ddmStructure.getStructureId()}, serviceContext);
+			_group.getGroupId(), ddmStructure.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			serviceContext);
 
 		Assert.assertEquals(
 			fileEntryTypesCount + 1,
@@ -163,10 +147,9 @@ public class DLFileEntryTypeServiceTest {
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		serviceContext.setAttribute(
-			"ddmForm",
-			DDMBeanTranslatorUtil.translate(
-				ddmFormDeserializerDeserializeResponse.getDDMForm()));
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			DLFileEntryMetadata.class.getName(),
+			ddmFormDeserializerDeserializeResponse.getDDMForm());
 
 		User user = TestPropsValues.getUser();
 
@@ -175,19 +158,18 @@ public class DLFileEntryTypeServiceTest {
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
 				TestPropsValues.getUserId(), _group.getGroupId(),
-				"Test Structure", StringPool.BLANK, new long[0],
+				ddmStructure.getStructureId(), null,
+				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
 				serviceContext);
 
-		List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
-			ddmStructures = dlFileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			dlFileEntryType);
 
 		Assert.assertEquals(ddmStructures.toString(), 1, ddmStructures.size());
 
-		com.liferay.dynamic.data.mapping.kernel.DDMStructure firstDDMStructure =
-			ddmStructures.get(0);
-
-		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
-			firstDDMStructure.getStructureId());
+		ddmStructure = ddmStructures.get(0);
 
 		Locale[] availableLocales = LocaleUtil.fromLanguageIds(
 			ddmStructure.getAvailableLanguageIds());
@@ -273,8 +255,11 @@ public class DLFileEntryTypeServiceTest {
 
 			DLFileEntryType dlFileEntryType =
 				DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-					TestPropsValues.getUserId(), _group.getGroupId(), name,
-					description, new long[] {ddmStructure.getStructureId()},
+					TestPropsValues.getUserId(), _group.getGroupId(),
+					ddmStructure.getStructureId(), null,
+					Collections.singletonMap(LocaleUtil.US, name),
+					Collections.singletonMap(LocaleUtil.US, description),
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
 					serviceContext);
 
 			Assert.assertEquals(
@@ -308,17 +293,20 @@ public class DLFileEntryTypeServiceTest {
 
 			DLFileEntryType dlFileEntryType =
 				DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-					TestPropsValues.getUserId(), group.getGroupId(), name,
-					description, new long[] {ddmStructure.getStructureId()},
+					TestPropsValues.getUserId(), group.getGroupId(),
+					ddmStructure.getStructureId(), null,
+					Collections.singletonMap(LocaleUtil.US, name),
+					Collections.singletonMap(LocaleUtil.US, description),
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
 					serviceContext);
 
 			name = RandomTestUtil.randomString();
 			description = RandomTestUtil.randomString();
 
 			DLFileEntryTypeLocalServiceUtil.updateFileEntryType(
-				TestPropsValues.getUserId(),
-				dlFileEntryType.getFileEntryTypeId(), name, description,
-				new long[] {ddmStructure.getStructureId()}, serviceContext);
+				dlFileEntryType.getFileEntryTypeId(),
+				Collections.singletonMap(LocaleUtil.US, name),
+				Collections.singletonMap(LocaleUtil.US, description));
 
 			dlFileEntryType = DLFileEntryTypeLocalServiceUtil.getFileEntryType(
 				dlFileEntryType.getFileEntryTypeId());
@@ -350,9 +338,6 @@ public class DLFileEntryTypeServiceTest {
 			Collections.singleton(LocaleUtil.getDefault()));
 		ddmForm.setDefaultLocale(LocaleUtil.getDefault());
 
-		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(ddmForm));
-
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeServiceUtil.addFileEntryType(
 				_group.getGroupId(), ddmStructure.getStructureId(), null,
@@ -362,20 +347,16 @@ public class DLFileEntryTypeServiceTest {
 					LocaleUtil.US, StringUtil.randomString()),
 				serviceContext);
 
-		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(new DDMForm()));
-
-		long[] ddmStructureIds = _getDDMStructureIds(dlFileEntryType);
-
 		DLFileEntryTypeServiceUtil.updateFileEntryType(
-			dlFileEntryType.getFileEntryTypeId(), StringUtil.randomString(),
-			StringUtil.randomId(), ddmStructureIds, serviceContext);
+			dlFileEntryType.getFileEntryTypeId(),
+			Collections.singletonMap(LocaleUtil.US, StringUtil.randomString()),
+			Collections.singletonMap(LocaleUtil.US, StringUtil.randomString()));
 
 		dlFileEntryType = DLFileEntryTypeServiceUtil.getFileEntryType(
 			dlFileEntryType.getFileEntryTypeId());
 
-		List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
-			ddmStructures = dlFileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			dlFileEntryType);
 
 		Assert.assertEquals(ddmStructures.toString(), 1, ddmStructures.size());
 	}
@@ -389,25 +370,6 @@ public class DLFileEntryTypeServiceTest {
 			"File should be of file entry type " +
 				dlFileEntryType.getFileEntryTypeId(),
 			dlFileEntryType.getPrimaryKey(), dlFileEntry.getFileEntryTypeId());
-	}
-
-	private long[] _getDDMStructureIds(DLFileEntryType dlFileEntryType) {
-		List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
-			ddmStructures = dlFileEntryType.getDDMStructures();
-
-		long[] ddmStructureIds = new long[ddmStructures.size()];
-
-		int i = 0;
-
-		for (com.liferay.dynamic.data.mapping.kernel.DDMStructure ddmStructure :
-				ddmStructures) {
-
-			ddmStructureIds[i] = ddmStructure.getStructureId();
-
-			i++;
-		}
-
-		return ddmStructureIds;
 	}
 
 	private ServiceContext _getFolderServiceContext(
@@ -446,7 +408,6 @@ public class DLFileEntryTypeServiceTest {
 	@DeleteAfterTestRun
 	private DLFileEntryType _dlFileEntryType2;
 
-	private List<DLFileEntryType> _dlFileEntryTypes;
 	private Folder _folder;
 
 	@DeleteAfterTestRun

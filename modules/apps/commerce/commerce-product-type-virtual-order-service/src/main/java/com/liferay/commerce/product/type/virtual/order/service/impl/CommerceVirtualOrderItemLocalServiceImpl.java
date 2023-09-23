@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.order.service.impl;
 
+import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceSubscriptionEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting;
-import com.liferay.commerce.product.type.virtual.order.exception.CommerceVirtualOrderItemException;
 import com.liferay.commerce.product.type.virtual.order.exception.CommerceVirtualOrderItemFileEntryIdException;
 import com.liferay.commerce.product.type.virtual.order.exception.CommerceVirtualOrderItemUrlException;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
@@ -88,9 +79,6 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 		if (Validator.isNotNull(url)) {
 			fileEntryId = 0;
 		}
-		else {
-			url = null;
-		}
 
 		_validate(fileEntryId, url);
 
@@ -151,6 +139,14 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 						commerceOrderItem.getCPDefinitionId());
 		}
 
+		if (cpDefinitionVirtualSetting == null) {
+			return commerceVirtualOrderItemLocalService.
+				addCommerceVirtualOrderItem(
+					commerceOrderItemId, 0, null,
+					CommerceOrderConstants.ORDER_STATUS_COMPLETED, 0, 0, 0,
+					serviceContext);
+		}
+
 		return commerceVirtualOrderItemLocalService.addCommerceVirtualOrderItem(
 			commerceOrderItemId, cpDefinitionVirtualSetting.getFileEntryId(),
 			cpDefinitionVirtualSetting.getUrl(),
@@ -194,6 +190,15 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 
 		return commerceVirtualOrderItemPersistence.fetchByCommerceOrderItemId(
 			commerceOrderItemId);
+	}
+
+	@Override
+	public CommerceVirtualOrderItem
+		fetchCommerceVirtualOrderItemByCommerceOrderItemId(
+			long commerceOrderItemId, boolean useFinderCache) {
+
+		return commerceVirtualOrderItemPersistence.fetchByCommerceOrderItemId(
+			commerceOrderItemId, useFinderCache);
 	}
 
 	@Override
@@ -316,9 +321,6 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 		if (Validator.isNotNull(url)) {
 			fileEntryId = 0;
 		}
-		else {
-			url = null;
-		}
 
 		_validate(fileEntryId, url);
 
@@ -375,11 +377,11 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 			return new Date(Long.MIN_VALUE);
 		}
 
-		User defaultUser = _userLocalService.getDefaultUser(
+		User guestUser = _userLocalService.getGuestUser(
 			commerceVirtualOrderItem.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(
-			defaultUser.getTimeZone());
+			guestUser.getTimeZone());
 
 		calendar.setTimeInMillis(calendar.getTimeInMillis() + duration);
 
@@ -443,10 +445,7 @@ public class CommerceVirtualOrderItemLocalServiceImpl
 					noSuchFileEntryException);
 			}
 		}
-		else if ((fileEntryId <= 0) && Validator.isNull(url)) {
-			throw new CommerceVirtualOrderItemException();
-		}
-		else if (Validator.isNull(url)) {
+		else if ((fileEntryId < 0) && Validator.isNull(url)) {
 			throw new CommerceVirtualOrderItemUrlException();
 		}
 	}

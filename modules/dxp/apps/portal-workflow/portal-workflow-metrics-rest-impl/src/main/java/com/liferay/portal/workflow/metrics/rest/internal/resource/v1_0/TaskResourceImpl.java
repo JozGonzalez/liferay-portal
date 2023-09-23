@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -25,6 +16,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.search.aggregation.AggregationResult;
 import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.aggregation.bucket.Bucket;
 import com.liferay.portal.search.aggregation.bucket.FilterAggregation;
 import com.liferay.portal.search.aggregation.bucket.FilterAggregationResult;
 import com.liferay.portal.search.aggregation.bucket.Order;
@@ -39,6 +31,7 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.TermsQuery;
@@ -63,17 +56,14 @@ import com.liferay.portal.workflow.metrics.rest.internal.resource.exception.NoSu
 import com.liferay.portal.workflow.metrics.rest.internal.resource.helper.ResourceHelper;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.TaskResource;
 import com.liferay.portal.workflow.metrics.search.index.TaskWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -108,8 +98,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 		searchSearchRequest.setQuery(
 			_createTasksBooleanQuery(
 				processId, taskId,
@@ -118,29 +108,27 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		searchSearchRequest.setSize(1);
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::parallelStream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> TaskUtil.toTask(
-				document, _language, contextAcceptLanguage.getPreferredLocale(),
-				_portal,
-				ResourceBundleUtil.getModuleAndPortalResourceBundle(
-					contextAcceptLanguage.getPreferredLocale(),
-					TaskResourceImpl.class),
-				_userLocalService::fetchUser)
-		).orElseThrow(
-			() -> new NoSuchTaskException(
-				"No task exists with the task ID " + taskId)
-		);
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
+
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			throw new NoSuchTaskException(
+				"No task exists with the task ID " + taskId);
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		return TaskUtil.toTask(
+			searchHit.getDocument(), _language,
+			contextAcceptLanguage.getPreferredLocale(), _portal,
+			ResourceBundleUtil.getModuleAndPortalResourceBundle(
+				contextAcceptLanguage.getPreferredLocale(),
+				TaskResourceImpl.class),
+			_userLocalService::fetchUser);
 	}
 
 	@Override
@@ -244,42 +232,36 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		int taskCount = _getTaskCount(searchSearchResponse);
 
-		if (taskCount > 0) {
-			if (pagination == null) {
-				return Page.of(
-					Stream.of(
-						searchSearchResponse.getAggregationResultsMap()
-					).map(
-						aggregationResultsMap ->
-							(TermsAggregationResult)aggregationResultsMap.get(
-								"name")
-					).map(
-						TermsAggregationResult::getBuckets
-					).flatMap(
-						Collection::stream
-					).map(
-						bucket -> TaskUtil.toTask(
-							_language, bucket.getKey(),
-							ResourceBundleUtil.getModuleAndPortalResourceBundle(
-								contextAcceptLanguage.getPreferredLocale(),
-								TaskResourceImpl.class))
-					).collect(
-						Collectors.toList()
-					));
-			}
-
-			return Page.of(
-				_getTasks(
-					taskBulkSelection.getAssigneeIds(),
-					taskBulkSelection.getInstanceIds(), pagination,
-					taskBulkSelection.getProcessId(),
-					taskBulkSelection.getSlaStatuses(),
-					searchSearchResponse.getCount(),
-					taskBulkSelection.getTaskNames()),
-				pagination, taskCount);
+		if (taskCount <= 0) {
+			return Page.of(Collections.emptyList());
 		}
 
-		return Page.of(Collections.emptyList());
+		if (pagination == null) {
+			Map<String, AggregationResult> aggregationResultsMap =
+				searchSearchResponse.getAggregationResultsMap();
+
+			TermsAggregationResult termsAggregationResult =
+				(TermsAggregationResult)aggregationResultsMap.get("name");
+
+			return Page.of(
+				transform(
+					termsAggregationResult.getBuckets(),
+					bucket -> TaskUtil.toTask(
+						_language, bucket.getKey(),
+						ResourceBundleUtil.getModuleAndPortalResourceBundle(
+							contextAcceptLanguage.getPreferredLocale(),
+							TaskResourceImpl.class))));
+		}
+
+		return Page.of(
+			_getTasks(
+				taskBulkSelection.getAssigneeIds(),
+				taskBulkSelection.getInstanceIds(), pagination,
+				taskBulkSelection.getProcessId(),
+				taskBulkSelection.getSlaStatuses(),
+				searchSearchResponse.getCount(),
+				taskBulkSelection.getTaskNames()),
+			pagination, taskCount);
 	}
 
 	private BooleanQuery _createAssigneeIdsTermsBooleanQuery(
@@ -293,13 +275,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			TermsQuery termsQuery = _queries.terms("assigneeIds");
 
 			termsQuery.addValues(
-				Stream.of(
-					ArrayUtil.toArray(contextUser.getRoleIds())
-				).map(
-					String::valueOf
-				).toArray(
-					Object[]::new
-				));
+				transform(
+					ArrayUtil.toArray(contextUser.getRoleIds()),
+					String::valueOf, Object.class));
 
 			shouldBooleanQuery.addMustQueryClauses(
 				termsQuery,
@@ -314,15 +292,16 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			TermsQuery termsQuery = _queries.terms("assigneeIds");
 
 			termsQuery.addValues(
-				Stream.of(
-					assigneeIds
-				).filter(
-					assigneeId -> assigneeId > 0
-				).map(
-					String::valueOf
-				).toArray(
-					Object[]::new
-				));
+				transform(
+					assigneeIds,
+					assigneeId -> {
+						if (assigneeId <= 0) {
+							return null;
+						}
+
+						return String.valueOf(assigneeId);
+					},
+					Object.class));
 
 			shouldBooleanQuery.addMustQueryClauses(
 				termsQuery,
@@ -366,8 +345,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		slaTaskResultsBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT));
 		slaTaskResultsBooleanQuery.addMustQueryClauses(
 			_createSLATaskResultsBooleanQuery(instanceIds, processId));
 
@@ -376,8 +355,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		tasksBooleanQuery.addFilterQueryClauses(
 			_queries.term(
 				"_index",
-				_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
 		tasksBooleanQuery.addMustQueryClauses(
 			_createTasksBooleanQuery(assigneeIds, instanceIds, processId));
 
@@ -436,13 +415,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		TermsQuery termsQuery = _queries.terms("instanceId");
 
 		termsQuery.addValues(
-			Stream.of(
-				instanceIds
-			).map(
-				String::valueOf
-			).toArray(
-				Object[]::new
-			));
+			transform(instanceIds, String::valueOf, Object.class));
 
 		return booleanQuery.addMustQueryClauses(termsQuery);
 	}
@@ -551,10 +524,10 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 				ListUtil.fromArray(slaStatuses),
 				ListUtil.fromArray(taskNames)));
 		searchSearchRequest.setIndexNames(
-			_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()),
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT,
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 		searchSearchRequest.setQuery(
 			_createBooleanQuery(assigneeIds, instanceIds, processId));
 
@@ -583,40 +556,38 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 		searchSearchRequest.setQuery(
 			_createTasksBooleanQuery(
 				processId,
 				_resourceHelper.getLatestProcessVersion(
 					contextCompany.getCompanyId(), processId)));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getAggregationResultsMap
-		).map(
-			aggregationResultsMap ->
-				(TermsAggregationResult)aggregationResultsMap.get("name")
-		).map(
-			TermsAggregationResult::getBuckets
-		).flatMap(
-			Collection::stream
-		).map(
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		Map<String, AggregationResult> aggregationResultsMap =
+			searchSearchResponse.getAggregationResultsMap();
+
+		TermsAggregationResult termsAggregationResult =
+			(TermsAggregationResult)aggregationResultsMap.get("name");
+
+		return transform(
+			termsAggregationResult.getBuckets(),
 			bucket -> TaskUtil.toTask(
 				_language, bucket.getKey(),
 				ResourceBundleUtil.getModuleAndPortalResourceBundle(
 					contextAcceptLanguage.getPreferredLocale(),
-					TaskResourceImpl.class))
-		).collect(
-			Collectors.toList()
-		);
+					TaskResourceImpl.class)));
 	}
 
 	private List<Task> _getTasks(
 		Long[] assigneeIds, Long[] instanceIds, Pagination pagination,
 		Long processId, String[] slaStatuses, long taskCount,
 		String[] taskNames) {
+
+		List<Task> tasks = new LinkedList<>();
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
@@ -630,8 +601,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			"index",
 			_queries.term(
 				"_index",
-				_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-					contextCompany.getCompanyId())));
+				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
 
 		indexFilterAggregation.addChildAggregation(
 			_aggregations.topHits("topHits"));
@@ -653,51 +624,50 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.setIndexNames(
-			_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()),
-			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT,
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_TASK);
 
 		searchSearchRequest.setQuery(
 			_createBooleanQuery(assigneeIds, instanceIds, processId));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getAggregationResultsMap
-		).map(
-			aggregationResultsMap ->
-				(TermsAggregationResult)aggregationResultsMap.get(
-					"instanceIdTaskId")
-		).map(
-			TermsAggregationResult::getBuckets
-		).flatMap(
-			Collection::stream
-		).map(
-			bucket -> (FilterAggregationResult)bucket.getChildAggregationResult(
-				"index")
-		).map(
-			filterAggregationResult ->
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		Map<String, AggregationResult> aggregationResultsMap =
+			searchSearchResponse.getAggregationResultsMap();
+
+		TermsAggregationResult termsAggregationResult =
+			(TermsAggregationResult)aggregationResultsMap.get(
+				"instanceIdTaskId");
+
+		for (Bucket bucket : termsAggregationResult.getBuckets()) {
+			FilterAggregationResult filterAggregationResult =
+				(FilterAggregationResult)bucket.getChildAggregationResult(
+					"index");
+
+			TopHitsAggregationResult topHitsAggregationResult =
 				(TopHitsAggregationResult)
-					filterAggregationResult.getChildAggregationResult("topHits")
-		).map(
-			TopHitsAggregationResult::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getSourcesMap
-		).map(
-			sourcesMap -> TaskUtil.toTask(
-				_language, contextAcceptLanguage.getPreferredLocale(), _portal,
-				ResourceBundleUtil.getModuleAndPortalResourceBundle(
-					contextAcceptLanguage.getPreferredLocale(),
-					TaskResourceImpl.class),
-				sourcesMap, _userLocalService::fetchUser)
-		).collect(
-			Collectors.toCollection(LinkedList::new)
-		);
+					filterAggregationResult.getChildAggregationResult(
+						"topHits");
+
+			SearchHits searchHits = topHitsAggregationResult.getSearchHits();
+
+			tasks.addAll(
+				transform(
+					searchHits.getSearchHits(),
+					searchHit -> TaskUtil.toTask(
+						_language, contextAcceptLanguage.getPreferredLocale(),
+						_portal,
+						ResourceBundleUtil.getModuleAndPortalResourceBundle(
+							contextAcceptLanguage.getPreferredLocale(),
+							TaskResourceImpl.class),
+						searchHit.getSourcesMap(),
+						_userLocalService::fetchUser)));
+		}
+
+		return tasks;
 	}
 
 	private AddTaskRequest _toAddTaskRequest(Long processId, Task task) {
@@ -759,6 +729,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private Aggregations _aggregations;
 
 	@Reference
+	private IndexNameBuilder _indexNameBuilder;
+
+	@Reference
 	private Language _language;
 
 	@Reference
@@ -776,19 +749,11 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	@Reference
 	private SearchRequestExecutor _searchRequestExecutor;
 
-	@Reference(target = "(workflow.metrics.index.entity.name=sla-task-result)")
-	private WorkflowMetricsIndexNameBuilder
-		_slaTaskResultWorkflowMetricsIndexNameBuilder;
-
 	@Reference
 	private Sorts _sorts;
 
 	@Reference
 	private TaskWorkflowMetricsIndexer _taskWorkflowMetricsIndexer;
-
-	@Reference(target = "(workflow.metrics.index.entity.name=task)")
-	private WorkflowMetricsIndexNameBuilder
-		_taskWorkflowMetricsIndexNameBuilder;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.cluster.multiple.internal;
@@ -37,6 +28,8 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -134,14 +127,14 @@ public class ClusterMasterExecutorImpl implements ClusterMasterExecutor {
 	}
 
 	@Activate
-	protected synchronized void activate() {
+	protected synchronized void activate(BundleContext bundleContext) {
 		if (!_clusterExecutorImpl.isEnabled()) {
 			return;
 		}
 
-		_clusterEventListener = new ClusterMasterTokenClusterEventListener();
-
-		_clusterExecutorImpl.addClusterEventListener(_clusterEventListener);
+		_serviceRegistration = bundleContext.registerService(
+			ClusterEventListener.class,
+			new ClusterMasterTokenClusterEventListener(), null);
 
 		ClusterNode localClusterNode =
 			_clusterExecutorImpl.getLocalClusterNode();
@@ -155,12 +148,12 @@ public class ClusterMasterExecutorImpl implements ClusterMasterExecutor {
 
 	@Deactivate
 	protected void deactivate() {
-		if (_clusterEventListener != null) {
-			_clusterExecutorImpl.removeClusterEventListener(
-				_clusterEventListener);
+		if (_serviceRegistration != null) {
+			_serviceRegistration.unregister();
+
+			_serviceRegistration = null;
 		}
 
-		_clusterEventListener = null;
 		_enabled = false;
 		_localClusterNodeId = null;
 	}
@@ -245,8 +238,6 @@ public class ClusterMasterExecutorImpl implements ClusterMasterExecutor {
 
 	private static volatile boolean _master;
 
-	private ClusterEventListener _clusterEventListener;
-
 	@Reference
 	private ClusterExecutorImpl _clusterExecutorImpl;
 
@@ -254,6 +245,7 @@ public class ClusterMasterExecutorImpl implements ClusterMasterExecutor {
 		_clusterMasterTokenTransitionListeners = new HashSet<>();
 	private boolean _enabled;
 	private volatile String _localClusterNodeId;
+	private ServiceRegistration<ClusterEventListener> _serviceRegistration;
 
 	private class ClusterMasterTokenClusterEventListener
 		implements ClusterEventListener {

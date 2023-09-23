@@ -1,9 +1,14 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayForm, {ClayInput} from '@clayui/form';
 
 import {FieldBase} from '../FieldBase';
 
 import './LicensePriceCard.scss';
-import unitedStatesIcon from '../../assets/icons/united-states.svg';
+import unitedStatesIcon from '../../assets/icons/united_states_icon.svg';
 import {useAppContext} from '../../manage-app-state/AppManageState';
 import {TYPES} from '../../manage-app-state/actionTypes';
 

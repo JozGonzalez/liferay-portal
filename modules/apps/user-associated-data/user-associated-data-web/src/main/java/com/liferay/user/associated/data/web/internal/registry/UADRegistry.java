@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.registry;
@@ -96,6 +87,16 @@ public class UADRegistry {
 		return _uadDisplayServiceTrackerMap.getService(key);
 	}
 
+	public UADDisplay<?> getUADDisplayByObject(Object object) {
+		for (UADDisplay<?> uadDisplay : getUADDisplays()) {
+			if (uadDisplay.isTypeEntity(object)) {
+				return uadDisplay;
+			}
+		}
+
+		return null;
+	}
+
 	public Collection<UADDisplay<?>> getUADDisplays() {
 		return _uadDisplayServiceTrackerMap.values();
 	}
@@ -112,7 +113,7 @@ public class UADRegistry {
 			return null;
 		}
 
-		return new UADHierarchyDisplay(uadHierarchyDeclaration);
+		return new UADHierarchyDisplay(uadHierarchyDeclaration, this);
 	}
 
 	@Activate
@@ -164,17 +165,17 @@ public class UADRegistry {
 		Collection<UADAnonymizer<?>> uadAnonymizers,
 		Collection<UADDisplay<?>> uadDisplayList) {
 
-		List<Class<?>> uadDisplayTypeClasses = new ArrayList<>();
+		List<String> uadDisplayTypeKeys = new ArrayList<>();
 
 		for (UADDisplay<?> uadDisplay : uadDisplayList) {
-			uadDisplayTypeClasses.add(uadDisplay.getTypeClass());
+			uadDisplayTypeKeys.add(uadDisplay.getTypeKey());
 		}
 
 		List<UADAnonymizer<?>> nonreviewableUADAnonymizers = new ArrayList<>(
 			uadAnonymizers);
 
 		for (UADAnonymizer<?> uadAnonymizer : uadAnonymizers) {
-			if (uadDisplayTypeClasses.contains(uadAnonymizer.getTypeClass())) {
+			if (uadDisplayTypeKeys.contains(uadAnonymizer.getTypeKey())) {
 				nonreviewableUADAnonymizers.remove(uadAnonymizer);
 			}
 		}
@@ -190,11 +191,8 @@ public class UADRegistry {
 			bundleContext, clazz, null,
 			ServiceReferenceMapperFactory.create(
 				bundleContext,
-				(uadComponent, emitter) -> {
-					Class<?> uadClass = uadComponent.getTypeClass();
-
-					emitter.emit(uadClass.getName());
-				}));
+				(uadComponent, emitter) -> emitter.emit(
+					uadComponent.getTypeKey())));
 	}
 
 	private <T> ServiceTrackerMap<String, T>

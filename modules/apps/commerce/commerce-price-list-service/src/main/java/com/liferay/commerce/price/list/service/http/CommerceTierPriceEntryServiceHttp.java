@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.http;
@@ -54,7 +45,7 @@ public class CommerceTierPriceEntryServiceHttp {
 			addCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, long commercePriceEntryId,
 				java.math.BigDecimal price, java.math.BigDecimal promoPrice,
-				int minQuantity,
+				java.math.BigDecimal minQuantity,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -101,7 +92,8 @@ public class CommerceTierPriceEntryServiceHttp {
 			addCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long commercePriceEntryId, java.math.BigDecimal price,
-				java.math.BigDecimal promoPrice, int minQuantity,
+				java.math.BigDecimal promoPrice,
+				java.math.BigDecimal minQuantity,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -148,8 +140,8 @@ public class CommerceTierPriceEntryServiceHttp {
 			addCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long commercePriceEntryId, java.math.BigDecimal price,
-				int minQuantity, boolean bulkPricing, boolean discountDiscovery,
-				java.math.BigDecimal discountLevel1,
+				java.math.BigDecimal minQuantity, boolean bulkPricing,
+				boolean discountDiscovery, java.math.BigDecimal discountLevel1,
 				java.math.BigDecimal discountLevel2,
 				java.math.BigDecimal discountLevel3,
 				java.math.BigDecimal discountLevel4, int displayDateMonth,
@@ -210,7 +202,8 @@ public class CommerceTierPriceEntryServiceHttp {
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long commerceTierPriceEntryId, long commercePriceEntryId,
 				java.math.BigDecimal price, java.math.BigDecimal promoPrice,
-				int minQuantity, String priceEntryExternalReferenceCode,
+				java.math.BigDecimal minQuantity,
+				String priceEntryExternalReferenceCode,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -258,7 +251,7 @@ public class CommerceTierPriceEntryServiceHttp {
 			addOrUpdateCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long commerceTierPriceEntryId, long commercePriceEntryId,
-				java.math.BigDecimal price, int minQuantity,
+				java.math.BigDecimal price, java.math.BigDecimal minQuantity,
 				boolean bulkPricing, boolean discountDiscovery,
 				java.math.BigDecimal discountLevel1,
 				java.math.BigDecimal discountLevel2,
@@ -801,7 +794,7 @@ public class CommerceTierPriceEntryServiceHttp {
 			updateCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, long commerceTierPriceEntryId,
 				java.math.BigDecimal price, java.math.BigDecimal promoPrice,
-				int minQuantity,
+				java.math.BigDecimal minQuantity,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -847,7 +840,7 @@ public class CommerceTierPriceEntryServiceHttp {
 	public static com.liferay.commerce.price.list.model.CommerceTierPriceEntry
 			updateCommerceTierPriceEntry(
 				HttpPrincipal httpPrincipal, long commerceTierPriceEntryId,
-				java.math.BigDecimal price, int minQuantity,
+				java.math.BigDecimal price, java.math.BigDecimal minQuantity,
 				boolean bulkPricing, boolean discountDiscovery,
 				java.math.BigDecimal discountLevel1,
 				java.math.BigDecimal discountLevel2,
@@ -957,38 +950,39 @@ public class CommerceTierPriceEntryServiceHttp {
 	private static final Class<?>[] _addCommerceTierPriceEntryParameterTypes0 =
 		new Class[] {
 			long.class, java.math.BigDecimal.class, java.math.BigDecimal.class,
-			int.class, com.liferay.portal.kernel.service.ServiceContext.class
+			java.math.BigDecimal.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _addCommerceTierPriceEntryParameterTypes1 =
 		new Class[] {
 			String.class, long.class, java.math.BigDecimal.class,
-			java.math.BigDecimal.class, int.class,
+			java.math.BigDecimal.class, java.math.BigDecimal.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _addCommerceTierPriceEntryParameterTypes2 =
 		new Class[] {
-			String.class, long.class, java.math.BigDecimal.class, int.class,
-			boolean.class, boolean.class, java.math.BigDecimal.class,
+			String.class, long.class, java.math.BigDecimal.class,
+			java.math.BigDecimal.class, boolean.class, boolean.class,
 			java.math.BigDecimal.class, java.math.BigDecimal.class,
-			java.math.BigDecimal.class, int.class, int.class, int.class,
+			java.math.BigDecimal.class, java.math.BigDecimal.class, int.class,
 			int.class, int.class, int.class, int.class, int.class, int.class,
-			int.class, boolean.class,
+			int.class, int.class, int.class, boolean.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
 		_addOrUpdateCommerceTierPriceEntryParameterTypes3 = new Class[] {
 			String.class, long.class, long.class, java.math.BigDecimal.class,
-			java.math.BigDecimal.class, int.class, String.class,
-			com.liferay.portal.kernel.service.ServiceContext.class
+			java.math.BigDecimal.class, java.math.BigDecimal.class,
+			String.class, com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
 		_addOrUpdateCommerceTierPriceEntryParameterTypes4 = new Class[] {
 			String.class, long.class, long.class, java.math.BigDecimal.class,
-			int.class, boolean.class, boolean.class, java.math.BigDecimal.class,
+			java.math.BigDecimal.class, boolean.class, boolean.class,
 			java.math.BigDecimal.class, java.math.BigDecimal.class,
-			java.math.BigDecimal.class, int.class, int.class, int.class,
+			java.math.BigDecimal.class, java.math.BigDecimal.class, int.class,
 			int.class, int.class, int.class, int.class, int.class, int.class,
-			int.class, boolean.class, String.class,
+			int.class, int.class, int.class, boolean.class, String.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
@@ -1033,12 +1027,13 @@ public class CommerceTierPriceEntryServiceHttp {
 	private static final Class<?>[]
 		_updateCommerceTierPriceEntryParameterTypes16 = new Class[] {
 			long.class, java.math.BigDecimal.class, java.math.BigDecimal.class,
-			int.class, com.liferay.portal.kernel.service.ServiceContext.class
+			java.math.BigDecimal.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
 		_updateCommerceTierPriceEntryParameterTypes17 = new Class[] {
-			long.class, java.math.BigDecimal.class, int.class, boolean.class,
-			boolean.class, java.math.BigDecimal.class,
+			long.class, java.math.BigDecimal.class, java.math.BigDecimal.class,
+			boolean.class, boolean.class, java.math.BigDecimal.class,
 			java.math.BigDecimal.class, java.math.BigDecimal.class,
 			java.math.BigDecimal.class, int.class, int.class, int.class,
 			int.class, int.class, int.class, int.class, int.class, int.class,

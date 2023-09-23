@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.bar.portlet.shared.search;
@@ -31,13 +22,11 @@ import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortle
 import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferences;
 import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferencesImpl;
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,7 +47,7 @@ public class SearchBarPortletSharedSearchContributor
 
 		SearchBarPortletPreferences searchBarPortletPreferences =
 			new SearchBarPortletPreferencesImpl(
-				portletSharedSearchSettings.getPortletPreferencesOptional());
+				portletSharedSearchSettings.getPortletPreferences());
 
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getFederatedSearchRequestBuilder(
@@ -123,7 +112,7 @@ public class SearchBarPortletSharedSearchContributor
 
 	private SearchScope _getDefaultSearchScope() {
 		SearchBarPortletPreferences searchBarPortletPreferences =
-			new SearchBarPortletPreferencesImpl(Optional.empty());
+			new SearchBarPortletPreferencesImpl(null);
 
 		SearchScopePreference searchScopePreference =
 			searchBarPortletPreferences.getSearchScopePreference();
@@ -174,15 +163,14 @@ public class SearchBarPortletSharedSearchContributor
 			return searchScopePreference.getSearchScope();
 		}
 
-		Optional<String> optional =
-			portletSharedSearchSettings.getParameterOptional(
-				searchBarPortletPreferences.getScopeParameterName());
+		String scopeParameterValue = portletSharedSearchSettings.getParameter(
+			searchBarPortletPreferences.getScopeParameterName());
 
-		return optional.map(
-			SearchScope::getSearchScope
-		).orElseGet(
-			this::_getDefaultSearchScope
-		);
+		if (scopeParameterValue == null) {
+			return _getDefaultSearchScope();
+		}
+
+		return SearchScope.getSearchScope(scopeParameterValue);
 	}
 
 	private boolean _isLuceneSyntax(
@@ -208,18 +196,18 @@ public class SearchBarPortletSharedSearchContributor
 
 		portletSharedSearchSettings.setKeywordsParameterName(parameterName);
 
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchSettings.getParameterOptional(
-				parameterName),
-			value -> {
-				Keywords keywords = new Keywords(value);
+		String parameterValue = portletSharedSearchSettings.getParameter(
+			parameterName);
 
-				searchRequestBuilder.queryString(keywords.getKeywords());
+		if (parameterValue != null) {
+			Keywords keywords = new Keywords(parameterValue);
 
-				if (_isLuceneSyntax(searchBarPortletPreferences, keywords)) {
-					_setLuceneSyntax(searchRequestBuilder);
-				}
-			});
+			searchRequestBuilder.queryString(keywords.getKeywords());
+
+			if (_isLuceneSyntax(searchBarPortletPreferences, keywords)) {
+				_setLuceneSyntax(searchRequestBuilder);
+			}
+		}
 	}
 
 	private void _setLuceneSyntax(SearchRequestBuilder searchRequestBuilder) {

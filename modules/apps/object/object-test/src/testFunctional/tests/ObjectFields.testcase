@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -47,13 +47,15 @@ definition {
 
 		ObjectField.checkLimitCharacters();
 
-		ObjectField.assertValueOnLimitCharacters(maxValue = 65000);
+		AssertElementPresent(
+			key_maxValue = 65000,
+			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 	}
 
 	@description = "Verify that all fields from the related object are displayed when adding filters for the long integer fields to select data from the object"
 	@priority = 4
 	test AllFieldsFromRelatedObjectAreDisplayedWhenFilteringLongIntegerFields {
-		task ("Given: Two custom objects created with long integer fields and relationship with each other") {
+		task ("Given two custom objects created with long integer fields and relationship with each other") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 1",
 				objectName = "CustomObject1",
@@ -92,7 +94,7 @@ definition {
 				relationshipType = "manyToMany");
 		}
 
-		task ("And Given: The custom object with a relationship has a layout created") {
+		task ("And given the custom object with a relationship has a layout created") {
 			ObjectAdmin.addObjectLayoutViaAPI(
 				layoutName = "Layout Name",
 				objectName = "CustomObject1");
@@ -103,7 +105,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -148,7 +150,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("When: An entry is added and the filter is set in the view entry page") {
+		task ("When an entry is added and the filter is set in the view entry page") {
 			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 				fieldName = "customObjectField",
 				objectName = "CustomObject1",
@@ -162,7 +164,7 @@ definition {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject1");
 		}
 
-		task ("Then: The related filtered entry is shown") {
+		task ("Then the related filtered entry is shown") {
 			ObjectCustomViews.clickOnFilterOnEntries();
 
 			ObjectCustomViews.defineDateOnFilter(
@@ -547,7 +549,7 @@ definition {
 		property custom.properties = "feature.flag.LPS-164948=true";
 		property portal.acceptance = "true";
 
-		task ("Given: A System Object") {
+		task ("Given a System Object") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectSystemObject(label = "Commerce Order");
@@ -555,14 +557,14 @@ definition {
 			ObjectAdmin.goToFieldsTab();
 		}
 
-		task ("When: A formula field on system objects is created") {
+		task ("When a formula field on system objects is created") {
 			ObjectAdmin.addObjectFieldViaUI(
 				fieldLabel = "Custom Formula Field",
 				fieldType = "Formula",
 				formulaFieldOption = "Decimal");
 		}
 
-		task ("Then: The formula field is present") {
+		task ("Then the formula field is present") {
 			ObjectAdmin.assertObjectField(
 				fieldLabel = "Custom Formula Field",
 				fieldType = "Formula");
@@ -573,6 +575,8 @@ definition {
 	@priority = 5
 	test CanCreateObjectEntryWithEveryField {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Picklist and create new Picklist and item") {
 			ApplicationsMenu.gotoPortlet(
@@ -974,6 +978,66 @@ definition {
 		}
 	}
 
+	@description = "LPS-179803 - Verify the field in an object entry is removed when the user deletes a custom field that was added before the initial publication"
+	@priority = 5
+	test CanDeleteOriginalFieldFromEntry {
+		property portal.acceptance = "true";
+
+		task ("Given a custom object with two custom fields and an object entry") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 187082",
+				objectName = "CustomObject187082",
+				pluralLabelName = "Custom Objects 187082");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Integer",
+				fieldLabelName = "Custom Integer",
+				fieldName = "customObjectFieldA",
+				fieldType = "Integer",
+				isRequired = "false",
+				objectName = "CustomObject187082");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "LongInteger",
+				fieldLabelName = "Custom Long Integer",
+				fieldName = "customObjectFieldB",
+				fieldType = "Long",
+				isRequired = "false",
+				objectName = "CustomObject187082");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject187082");
+
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldList = "customObjectFieldA/18,customObjectFieldB/187082187082",
+				objectName = "CustomObject187082",
+				scope = "company");
+		}
+
+		task ("When a custom field is deleted") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 187082");
+
+			ObjectAdmin.goToFieldsTab();
+
+			Click(
+				key_entry = "Custom Long Integer",
+				locator1 = "ObjectPortlet#ENTRY_KEBAB_MENU");
+
+			ClickNoError(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
+
+			Button.clickDelete();
+		}
+
+		task ("Then the custom field is removed from the object entry") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject187082");
+
+			AssertElementNotPresent(
+				key_column = "Custom Long Integer",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
+		}
+	}
+
 	@description = "LPS-148112 - Verify if turn off the 'Show files' option on field settings"
 	@priority = 4
 	test CanDisableShowFilesOptionOnFieldSettings {
@@ -1085,12 +1149,61 @@ definition {
 		}
 	}
 
+	@description = "LPS-170122 - Verify the field value cannot be changed when the ready-only property condition is false"
+	@priority = 4
+	test CanEditConditionalReadOnlyFieldWhenConditionIsFalse {
+		task ("Given an object definition") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				pluralLabelName = "Custom Objects");
+		}
+
+		task ("And given a rich text field with the read-only property set as conditional with an expression") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "RichText",
+				fieldLabelName = "Custom Field",
+				fieldName = "customField",
+				fieldType = "Clob",
+				isReadOnly = "conditional",
+				isRequired = "false",
+				objectName = "CustomObject",
+				readOnlyExpression = "customField == 'Test'");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+		}
+
+		task ("And given an object entry that makes the conditional expression false") {
+			Navigator.openURL();
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject");
+
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customField",
+				objectName = "CustomObject",
+				value = "Entry Test");
+		}
+
+		task ("When the entry is being edited") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject");
+
+			ObjectPortlet.viewEntryDetails(entry = "Entry Test");
+		}
+
+		task ("Then it's possible to edit the field's value") {
+			AssertEditable(
+				key_fieldLabel = "Custom Field",
+				locator1 = "FormFields#RICH_TEXT_CONTENT",
+				value = "Entry Test");
+		}
+	}
+
 	@description = "LPS-164948 - Verify the Formula Field can be edited in a Custom Object"
 	@priority = 4
 	test CanEditFormulaFieldOnCustomObject {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: a Custom Obejct with Formula Field") {
+		task ("Given a Custom Obejct with Formula Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176842",
 				objectName = "CustomObject176842",
@@ -1107,7 +1220,7 @@ definition {
 				outputOption = "Decimal");
 		}
 
-		task ("When: the Formula Field is edited") {
+		task ("When the Formula Field is edited") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 176842");
@@ -1117,14 +1230,14 @@ definition {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field");
 
 			ObjectField.editFormulaField(
-				formulaScript = "id + id",
+				formulaScript = "customInteger / customInteger1",
 				newContent = "Custom Formula Field Updated",
 				newTypeFormula = "Integer");
 
 			Button.clickSave();
 		}
 
-		task ("Then: the Formula Field is edited") {
+		task ("Then the Formula Field is edited") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field Update");
 
 			AssertElementPresent(
@@ -1135,7 +1248,7 @@ definition {
 			AssertValue(
 				key_labelName = "Formula Builder",
 				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
-				value1 = "id / id");
+				value1 = "customInteger / customInteger1");
 		}
 	}
 
@@ -1144,7 +1257,7 @@ definition {
 	test CanEditFormulaFieldOnSystemObject {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: a System Object with a formula field") {
+		task ("Given a System Object with a formula field") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Formula",
 				fieldLabelName = "Custom Formula Field",
@@ -1156,7 +1269,7 @@ definition {
 				outputOption = "Decimal");
 		}
 
-		task ("When: the Formula Field is edited") {
+		task ("When the Formula Field is edited") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectSystemObject(label = "Commerce Order");
@@ -1173,7 +1286,7 @@ definition {
 			Button.clickSave();
 		}
 
-		task ("Then: the Formula Field have been edited") {
+		task ("Then the Formula Field have been edited") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field Update");
 
 			AssertElementPresent(
@@ -1330,30 +1443,133 @@ definition {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject161889");
 
 			for (var columnName : list ${listMetaData}) {
-				ObjectPortlet.assertEntryColumnPresent(column = ${columnName});
+				AssertElementPresent(
+					key_column = ${columnName},
+					locator1 = "ObjectPortlet#ENTRY_COLUMN");
 			}
 		}
 
 		task ("Click on arrows and assert the entries change the position") {
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = "Entry A",
-				position = 1);
+			AssertElementPresent(
+				key_entryName = "Entry A",
+				key_position = 1,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = "Entry B",
-				position = 2);
+			AssertElementPresent(
+				key_entryName = "Entry B",
+				key_position = 2,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
 			Click(
 				key_orderColumn = "Create Date",
 				locator1 = "ObjectPortlet#ARROW_ORDER_COLUMN");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = "Entry B",
-				position = 1);
+			AssertElementPresent(
+				key_entryName = "Entry B",
+				key_position = 1,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = "Entry A",
-				position = 2);
+			AssertElementPresent(
+				key_entryName = "Entry A",
+				key_position = 2,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
+		}
+	}
+
+	@description = "LPS-164948 - Verify that the user can use Formula Field with Email Notification"
+	@priority = 4
+	test CanFormulaFieldBeUsedWithEmailNotification {
+		property custom.properties = "feature.flag.LPS-164948=true";
+		property test.smtp.server.enabled = "true";
+
+		task ("Given a notification template related to Custom Object that contains a Notification action") {
+			Notifications.goToNotificationTemplateAdmin();
+
+			ObjectNotifications.addNewNotificationTemplate(
+				emailBody = "Email Body",
+				entryTo = "test@liferay.com",
+				fromAddress = "test@liferay.com",
+				fromName = "Test Test",
+				name = "Email Template",
+				notificationType = "Email",
+				subject = "Subject Test");
+
+			PortletEntry.save();
+
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 176849",
+				objectName = "CustomObject176849",
+				pluralLabelName = "Custom Objects 176849");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Integer",
+				fieldLabelName = "Custom Integer 1",
+				fieldName = "customInteger1",
+				fieldType = "Integer",
+				isRequired = "false",
+				objectName = "CustomObject176849");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Formula",
+				fieldLabelName = "Custom Formula Field",
+				fieldName = "customFormulaField",
+				fieldType = "String",
+				formulaScript = "customInteger1 + customInteger1",
+				isRequired = "false",
+				objectName = "CustomObject176849",
+				outputOption = "Integer");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176849");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 176849");
+
+			ObjectAdmin.goToActionsTab();
+
+			ObjectAdmin.addObjectActionViaUI(
+				actionLabel = "Notification action when entry is added",
+				actionName = "notificationActionWhenEntryIsAdded",
+				active = "true",
+				inputExpression = "customFormulaField == 30",
+				notificationName = "Email Template",
+				thenAction = "Notification",
+				whenAction = "On After Add");
+		}
+
+		task ("When an entry is added and the formula value is 30") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customInteger1",
+				objectName = "CustomObject176849",
+				value = 15);
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject176849");
+
+			AssertElementPresent(
+				key_entry = 30,
+				locator1 = "ObjectPortlet#ENTRY_VALUE");
+		}
+
+		task ("Then the action is triggered and the notification is sent") {
+			MockMock.viewMail(
+				asset = "Subject Test",
+				content = "Email Body",
+				recipient = "test@liferay",
+				sender = "Test Test",
+				subject = "Subject Test");
+		}
+
+		task ("And then the status on custom action works successfully") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 176849");
+
+			ObjectAdmin.goToActionsTab();
+
+			ObjectAdmin.assertObjectActions(
+				actionActive = "Yes",
+				actionLabel = "Notification action when entry is added",
+				status = "Success");
 		}
 	}
 
@@ -1416,8 +1632,9 @@ definition {
 	@priority = 4
 	test CanManageFormulaFieldWithCustomAction {
 		property custom.properties = "feature.flag.LPS-164948=true";
+		property test.liferay.virtual.instance = "false";
 
-		task ("Given: a Custom Object with a Formula Field and action") {
+		task ("Given a custom object with a Formula Field and action") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176847",
 				objectName = "CustomObject176847",
@@ -1459,7 +1676,7 @@ definition {
 				whenAction = "On After Add");
 		}
 
-		task ("When: the entry is added") {
+		task ("When the entry is added") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject176847");
 
 			LexiconEntry.gotoAdd();
@@ -1475,7 +1692,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("Then: the action is triggered successfully") {
+		task ("Then the action is triggered successfully") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 176847");
@@ -1494,7 +1711,7 @@ definition {
 	test CanManageFormulaFieldWithLayout {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: a Custom Object with a Formula Field") {
+		task ("Given a custom object with a formula field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176844",
 				objectName = "CustomObject176844",
@@ -1523,7 +1740,7 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176844");
 		}
 
-		task ("Given: a layout to the Custom Object") {
+		task ("Given a layout to the Custom Object") {
 			ObjectAdmin.addObjectLayoutViaAPI(
 				layoutName = "Layout Name",
 				objectName = "CustomObject176844");
@@ -1534,7 +1751,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -1549,7 +1766,7 @@ definition {
 			Button.clickSave();
 		}
 
-		task ("When: the value of the fields is added") {
+		task ("When the value of the fields is added") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject176844");
 
 			LexiconEntry.gotoAdd();
@@ -1565,8 +1782,10 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("Then: assert the value of Formula Field") {
-			ObjectAdmin.viewFieldValueDisabled(fieldValue = 5555);
+		task ("Then assert the value of Formula Field") {
+			AssertElementPresent(
+				key_fieldValue = 5555,
+				locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 		}
 	}
 
@@ -1575,7 +1794,7 @@ definition {
 	test CanManageFormulaFieldWithView {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: a Custom Object with a Formula Field") {
+		task ("Given a Custom Object with a Formula Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 177428",
 				objectName = "CustomObject177428",
@@ -1604,7 +1823,7 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject177428");
 		}
 
-		task ("And given: a view to the object is created") {
+		task ("And given a view to the object is created") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 177428");
@@ -1624,7 +1843,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("When: the value of the fields is added") {
+		task ("When the value of the fields is added") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject177428");
 
 			LexiconEntry.gotoAdd();
@@ -1640,7 +1859,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("Then: the value of Formula Field should be automatically updated") {
+		task ("Then the value of Formula Field should be automatically updated") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject177428");
 
 			ObjectPortlet.viewEntry(entry = 12340);
@@ -1650,7 +1869,9 @@ definition {
 	@description = "LPS-164948 - Verify that formula fields can be mapped on the page builder framework"
 	@priority = 4
 	test CanMappedFormulaFieldOnPages {
-		task ("Given: a Custom Object with a Formula Field and show widget actived") {
+		property custom.properties = "feature.flag.LPS-164948=true";
+
+		task ("Given a Custom Object with a Formula Field and show widget actived") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176851",
 				objectName = "CustomObject176851",
@@ -1680,12 +1901,12 @@ definition {
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 176851");
 
-			Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+			Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 			PortletEntry.publish();
 		}
 
-		task ("And given: a page with Custom Object") {
+		task ("And given a page with Custom Object") {
 			Navigator.openURL();
 
 			ProductMenu.gotoPortlet(
@@ -1708,7 +1929,7 @@ definition {
 				portletName = "Custom Objects 176851");
 		}
 
-		task ("When: the value of the fields is added in the page") {
+		task ("When the value of the fields is added in the page") {
 			LexiconEntry.gotoAdd();
 
 			ObjectPortlet.typeCustomField(
@@ -1722,8 +1943,12 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("Then: the page shows the Formula Field value") {
+		task ("Then the page shows the Formula Field value") {
 			Navigator.gotoPage(pageName = "Formula Page");
+
+			while ((IsElementNotPresent(entry = 1234, locator1 = "ObjectPortlet#ENTRY_VALUE")) && (maxIterations = "5")) {
+				Refresh();
+			}
 
 			ObjectPortlet.viewEntry(entry = 1234);
 		}
@@ -1767,7 +1992,7 @@ definition {
 	@description = "LPS-161887 - Verify that it's not possible to create an Object without adding a field."
 	@priority = 5
 	test CannotCreateEmptyObject {
-		task ("Given: an object without an field is created") {
+		task ("Given an object without an field is created") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object",
 				objectName = "CustomObject",
@@ -1791,9 +2016,112 @@ definition {
 		task ("And the Object that was created is show with Draft") {
 			ObjectAdmin.openObjectAdmin();
 
-			ObjectAdmin.assertObjectStatus(
-				label = "Custom Object",
-				status = "Draft");
+			AssertTextEquals(
+				key_label = "Custom Object",
+				locator1 = "ObjectAdmin#OBJECT_STATUS",
+				value1 = "Draft");
+		}
+	}
+
+	@description = "LPS-179803 - Verify the user cannot delete the only custom field in an object definition"
+	@priority = 5
+	test CannotDeleteSoleCustomField {
+		property portal.acceptance = "true";
+
+		task ("Given a custom object with a custom field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				pluralLabelName = "Custom Objects");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Attachment",
+				fieldLabelName = "Custom Attachment",
+				fieldName = "customAttachment",
+				fieldType = "Long",
+				fileSource = "userComputer",
+				isRequired = "false",
+				objectName = "CustomObject");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+		}
+
+		task ("When the user attempts to delete the custom field") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Delete");
+		}
+
+		task ("Then a message is seen stating the custom field cannot be deleted and the custom field isn't deleted") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "Modal#BODY",
+				value1 = "\"Custom Attachment\" is the only field of the published object definition and cannot be deleted.");
+
+			Button.click(button = "Done");
+
+			AssertElementPresent(
+				key_name = "Custom Attachment",
+				locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
+		}
+	}
+
+	@description = "LPS-170122 - Verify the field value cannot be changed when the ready-only property condition is true"
+	@priority = 5
+	test CannotEditConditionalReadOnlyFieldWhenConditionIsTrue {
+		property custom.properties = "feature.flag.LPS-170122=true";
+
+		task ("Given an object definition") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				pluralLabelName = "Custom Objects");
+		}
+
+		task ("And given a long text field with the the read-only property set as conditional with an expression") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "LongText",
+				fieldLabelName = "Custom Field",
+				fieldName = "customField",
+				fieldType = "Clob",
+				isReadOnly = "conditional",
+				isRequired = "false",
+				objectName = "CustomObject",
+				readOnlyExpression = "customField == 'Entry Test'");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+		}
+
+		task ("And given an object entry that makes the conditional expression true") {
+			Navigator.openURL();
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject");
+
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customField",
+				objectName = "CustomObject",
+				value = "Entry Test");
+		}
+
+		task ("When the entry is being edited") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject");
+
+			ObjectPortlet.viewEntryDetails(entry = "Entry Test");
+		}
+
+		task ("Then it's not possible to edit the field's value") {
+			AssertNotEditable(
+				key_optionName = "Entry Test",
+				locator1 = "ObjectAdmin#VIEW_FIELD_LONG_TEXT_DISABLED");
 		}
 	}
 
@@ -1823,6 +2151,65 @@ definition {
 			AssertElementPresent(locator1 = "ObjectField#NAME_FIELD_DISABLED");
 
 			AssertElementPresent(locator1 = "ObjectField#TYPE_FIELD_DISABLED");
+		}
+	}
+
+	@description = "LPS-170122 - Verify the field value cannot be changed when the ready-only property is set to true (via UI)"
+	@priority = 4
+	test CannotEditReadOnlyFieldWhenTrue {
+		property custom.properties = "feature.flag.LPS-170122=true";
+
+		task ("Given a custom object with a text field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 189496",
+				objectName = "CustomObject189496",
+				pluralLabelName = "Custom Objects 189496");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Text Field",
+				fieldName = "customTextField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject189496");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject189496");
+		}
+
+		task ("And given an object entry") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customTextField",
+				objectName = "CustomObject189496",
+				value = "Entry Test");
+		}
+
+		task ("And given the read-only property is set to true on text field (via UI)") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 189496");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.goToFieldsDetails(label = "Text Field");
+
+			Click(locator1 = "ObjectAdmin#SIDEBAR_ADVANCED_TAB");
+
+			ObjectAdmin.clickFieldsSearchableSectionRadioOption(radioOption = "True");
+
+			CreateObject.saveObject();
+		}
+
+		task ("When viewing the added entry") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject189496");
+
+			ObjectPortlet.viewEntryDetails(entry = "Entry Test");
+		}
+
+		task ("Then it's not possible to edit the field's value") {
+			AssertNotEditable(
+				key_indexNumber = 1,
+				key_text = "Text Field",
+				locator1 = "TextInput#ANY_N");
 		}
 	}
 
@@ -2006,9 +2393,13 @@ definition {
 		}
 
 		task ("Then the ERC field shouldn't be seen") {
-			ObjectPortlet.assertEntryColumnNotPresent(column = "External Reference Code");
+			AssertElementNotPresent(
+				key_column = "External Reference Code",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
 
-			ObjectPortlet.assertEntryColumnNotPresent(column = "ERC");
+			AssertElementNotPresent(
+				key_column = "ERC",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
 		}
 	}
 
@@ -2038,7 +2429,9 @@ definition {
 
 		ObjectField.checkLimitCharacters();
 
-		ObjectField.assertValueOnLimitCharacters(maxValue = 280);
+		AssertElementPresent(
+			key_maxValue = 280,
+			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 
 		ObjectField.typeValueOnLimitCharacters(newValue = 281);
 
@@ -2046,7 +2439,9 @@ definition {
 			key_maxValue = 281,
 			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 
-		ObjectField.assertValueOnLimitCharacters(maxValue = 28);
+		AssertElementPresent(
+			key_maxValue = 28,
+			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 	}
 
 	@description = "LPS-148112 - Verify that attchment field is working fine to the selecting Request Files: Directly from User's Computer when 'Show files' option is off"
@@ -2060,6 +2455,10 @@ definition {
 			scope = "site");
 
 		ObjectAdmin.openObjectAdmin();
+
+		WaitForElementPresent(
+			key_entry = "Custom Object 153414",
+			locator1 = "ObjectPortlet#ENTRY_VALUE");
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 153414");
 
@@ -2091,6 +2490,66 @@ definition {
 		AssertElementNotPresent(
 			key_dmFolderName = "CustomObject153414",
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE");
+	}
+
+	@description = "LPS-176828 - Verify that the Formula Builder has same structure as Expression Builder and contains only the principal math operations"
+	@priority = 5
+	test CanSeeAllOperations {
+		property custom.properties = "feature.flag.LPS-164948=true";
+
+		task ("Given a custom object with a formula field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 176828",
+				objectName = "CustomObject",
+				pluralLabelName = "Custom Objects 176828");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 176828");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Formula Field",
+				fieldType = "Formula",
+				formulaFieldOption = "Decimal");
+		}
+
+		task ("When using the Formula Builder for the formula field") {
+			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field");
+
+			Click(
+				key_text = "code",
+				locator1 = "Icon#ANY");
+		}
+
+		task ("Then the Formula Builder contains the principal math operations") {
+			SelectFrame(locator1 = "Modal#BODY");
+
+			AssertElementPresent(
+				key_tabName = "Divided By",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+
+			AssertElementPresent(
+				key_tabName = "Minus",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+
+			AssertElementPresent(
+				key_tabName = "Plus",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+
+			AssertElementPresent(
+				key_tabName = "Times",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+
+			AssertElementNotPresent(
+				key_tabName = "And",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+
+			AssertElementNotPresent(
+				key_tabName = "Or",
+				locator1 = "ObjectAdmin#FORMULA_BUILDER_OPERATORS");
+		}
 	}
 
 	@description = "LPS-162177 - Verify the ERC element is included in Actions - Expression Builder"
@@ -2196,7 +2655,7 @@ definition {
 	test CanSeeHelpTextOnFormulaBuilder {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: A System Object") {
+		task ("Given a System Object") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectSystemObject(label = "Commerce Order");
@@ -2204,7 +2663,7 @@ definition {
 			ObjectAdmin.goToFieldsTab();
 		}
 
-		task ("When: A formula field on system objects is created") {
+		task ("When a formula field on system objects is created") {
 			ObjectAdmin.addObjectFieldViaUI(
 				fieldLabel = "Custom Formula Field",
 				fieldType = "Formula",
@@ -2213,7 +2672,7 @@ definition {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field");
 		}
 
-		task ("Then: Formula Builder has a help text") {
+		task ("Then formula Builder has a help text") {
 			AssertElementPresent(
 				key_helpText = "Use expressions to create a condition. Click on the button to expand the expression input area.",
 				locator1 = "ObjectField#HELP_TEXT");
@@ -2249,7 +2708,9 @@ definition {
 
 			CreateObject.saveObject();
 
-			CreateObject.assertTitleFieldIsSelected(fieldLabel = "External Reference Code");
+			AssertElementPresent(
+				locator1 = "CreateObject#TITLE_FIELD",
+				value1 = "External Reference Code");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject162184");
 		}
@@ -2285,7 +2746,9 @@ definition {
 			ObjectPortlet.viewEntry(entry = "Entry Test");
 
 			for (var columnName : list "Custom Field,External Reference Code") {
-				ObjectPortlet.assertEntryColumnPresent(column = ${columnName});
+				AssertElementPresent(
+					key_column = ${columnName},
+					locator1 = "ObjectPortlet#ENTRY_COLUMN");
 			}
 		}
 	}
@@ -2358,32 +2821,87 @@ definition {
 		task ("Go to Custom Object entries and assert that the column ERC is present") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject162181");
 
-			ObjectPortlet.assertEntryColumnPresent(column = "External Reference Code");
+			AssertElementPresent(
+				key_column = "External Reference Code",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
 		}
 
 		var entryOne = selenium.getText("ObjectCustomViews#CUSTOM_FIELD_VALUE_ONE");
 		var entryTwo = selenium.getText("ObjectCustomViews#CUSTOM_FIELD_VALUE_TWO");
 
 		task ("Click on arrows and assert the entries change the position") {
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = ${entryOne},
-				position = 1);
+			AssertElementPresent(
+				key_entryName = ${entryOne},
+				key_position = 1,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = ${entryTwo},
-				position = 2);
+			AssertElementPresent(
+				key_entryName = ${entryTwo},
+				key_position = 2,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
 			Click(
 				key_orderColumn = "External Reference Code",
 				locator1 = "ObjectPortlet#ARROW_ORDER_COLUMN");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = ${entryTwo},
-				position = 1);
+			AssertElementPresent(
+				key_entryName = ${entryTwo},
+				key_position = 1,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
 
-			ObjectCustomViews.viewFieldsEntryByPosition(
-				entryName = ${entryOne},
-				position = 2);
+			AssertElementPresent(
+				key_entryName = ${entryOne},
+				key_position = 2,
+				locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
+		}
+	}
+
+	@description = "LPS-148112 - Verify attachments uploaded from the user's computer can be stored in a folder in Documents and Media when the object scope is by company"
+	@priority = 3
+	test CanStoreAttachmentsinDocumentsAndMedia {
+		task ("Given a custom object scoped by company") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 182078",
+				objectName = "CustomObject182078",
+				pluralLabelName = "Custom Objects 182078");
+		}
+
+		task ("And given an attachment field with Show Files in Documents and Media activated") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Attachment",
+				fieldLabelName = "Custom Attachment From Computer",
+				fieldName = "customAttachmentFromComputer",
+				fieldType = "Long",
+				fileSource = "userComputer",
+				isRequired = "false",
+				objectName = "CustomObject182078",
+				showFilesInDocumentsAndMedia = "true");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject182078");
+		}
+
+		task ("And given an object entry with an attachment") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject182078");
+
+			ObjectAutoGenerated.addAttachment(fileName = "LiferayLogo.png");
+
+			PortletEntry.save();
+		}
+
+		task ("When the user navigates to Documents and Media in the global site") {
+			ApplicationsMenu.gotoSite(site = "Global");
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Documents and Media");
+		}
+
+		task ("Then a folder is seen that contains the attachment from the object entry") {
+			DMNavigator.gotoFolder(dmFolderName = "CustomObject182078");
+
+			DMDocument.viewStatus(
+				dmDocumentStatus = "Approved",
+				dmDocumentTitle = "LiferayLogo");
 		}
 	}
 
@@ -2392,7 +2910,7 @@ definition {
 	test CanSystemAndCustomObjectRelatedWithFormulaField {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: add a custom object with a custom field, and create a one-to-many relationship with the User object") {
+		task ("Given add a custom object with a custom field, and create a one-to-many relationship with the User object") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176852",
 				objectName = "CustomObject176852",
@@ -2408,7 +2926,7 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176852");
 		}
 
-		task ("And given: add a Formula field to the User object with a title field on the object") {
+		task ("And given add a Formula field to the User object with a title field on the object") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Formula",
 				fieldLabelName = "Custom Formula Field",
@@ -2428,7 +2946,7 @@ definition {
 			CreateObject.saveObject();
 		}
 
-		task ("When: go to Custom Object and add the relationship field entry") {
+		task ("When go to Custom Object and add the relationship field entry") {
 			var userId = JSONUserAPI._getUserIds();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject176852");
@@ -2440,7 +2958,7 @@ definition {
 				newEntry = ${userId});
 		}
 
-		task ("Then: assert the custom object entry is added") {
+		task ("Then assert the custom object entry is added") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject176852");
 
 			ObjectPortlet.viewEntry(entry = ${userId});
@@ -2492,7 +3010,7 @@ definition {
 	@description = "LPS-162190 - Verify that it's possible to update the layout of a System Object"
 	@priority = 5
 	test CanUpdateLayoutInSystemObject {
-		task ("Given: A custom object with a Layout") {
+		task ("Given a custom object with a Layout") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 162190",
 				objectName = "CustomObject162190",
@@ -2511,14 +3029,14 @@ definition {
 				objectName = "CustomObject162190");
 		}
 
-		task ("When: Add field on created Layout and edit the name") {
+		task ("When add field on created Layout and edit the name") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 162190");
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			SelectFrame(locator1 = "IFrame#IFRAME");
 
@@ -2539,7 +3057,7 @@ definition {
 			Button.clickSave();
 		}
 
-		task ("Then: The Layout can be updated") {
+		task ("Then the Layout can be updated") {
 			Refresh();
 
 			AssertTextEquals(
@@ -2647,7 +3165,9 @@ definition {
 
 			ObjectPortlet.viewEntry(entry = "Entry Test");
 
-			ObjectPortlet.assertEntryColumnPresent(column = "External Reference Code");
+			AssertElementPresent(
+				key_column = "External Reference Code",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
 		}
 	}
 
@@ -2733,8 +3253,9 @@ definition {
 	@priority = 5
 	test CanUseERCFieldWithGroovyScript {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
 
-		task ("Given: An object with a field is created") {
+		task ("Given an object with a field is created") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 162178",
 				objectName = "CustomObject162178",
@@ -2751,7 +3272,7 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject162178");
 		}
 
-		task ("And: Add a Custom Validation using a Groovy Script") {
+		task ("And add a Custom Validation using a Groovy Script") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 162178");
@@ -2775,7 +3296,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("When: Create Custom View, mark Custom View as default, go to View Builder and add ERC") {
+		task ("When create Custom View, mark Custom View as default, go to View Builder and add ERC") {
 			ObjectCustomViews.goToViewsTab();
 
 			ObjectCustomViews.addObjectViewViaUI(viewName = "Custom Views");
@@ -2791,7 +3312,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("Then: Assert the error message display") {
+		task ("Then assert the error message display") {
 			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 				fieldName = "customObjectField",
 				objectName = "CustomObject162178",
@@ -2801,7 +3322,9 @@ definition {
 
 			ObjectPortlet.viewEntry(entry = "Entry Test");
 
-			ObjectPortlet.assertEntryColumnPresent(column = "External Reference Code");
+			AssertElementPresent(
+				key_column = "External Reference Code",
+				locator1 = "ObjectPortlet#ENTRY_COLUMN");
 
 			var externalReferenceCodeId = selenium.getText("//div[contains(@class,'dnd-tbody')]//*[contains(text(),'Entry Test')]/parent::div/following-sibling::div//a");
 
@@ -2813,6 +3336,103 @@ definition {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
+		}
+	}
+
+	@description = "LPS-164948 - Verify the user can validate Formula Fields with a Custom Validation"
+	@priority = 4
+	test CanValidateFormulaField {
+		property custom.properties = "feature.flag.LPS-164948=true";
+
+		task ("Given a custom object with two integer fields and a formula field summing the integer field values") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 176853",
+				objectName = "CustomObject176853",
+				pluralLabelName = "Custom Objects 176853");
+
+			for (var valueField : list "1,2") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Integer",
+					fieldLabelName = "Custom Integer ${valueField}",
+					fieldName = "customInteger${valueField}",
+					fieldType = "Integer",
+					isRequired = "false",
+					objectName = "CustomObject176853");
+			}
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Formula",
+				fieldLabelName = "Custom Formula Field",
+				fieldName = "customFormulaField",
+				fieldType = "String",
+				formulaScript = "customInteger1 + customInteger2",
+				isRequired = "false",
+				objectName = "CustomObject176853",
+				outputOption = "Integer");
+		}
+
+		task ("When a Custom Validation is created to limit Formula Field value to 50 or less") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 176853");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.goToValidationsTab();
+
+			ObjectCustomValidation.addObjectValidation(
+				validationName = "Custom Validation Formula Plus",
+				validationType = "Expression Builder");
+
+			ObjectCustomValidation.gotoCustomValidation(validationName = "Custom Validation Formula Plus");
+
+			ObjectCustomValidation.activeValidation();
+
+			ObjectCustomValidation.gotoTab(tabName = "Conditions");
+
+			ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "customFormulaField <= 50");
+
+			ObjectCustomValidation.addErrorMessage(errorMessage = "The sum must be less than or equal to 50");
+
+			PortletEntry.save();
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176853");
+		}
+
+		task ("Then only object entries where the Formula Field value is less than or equal to 50 are created") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject176853");
+
+			LexiconEntry.gotoAdd();
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Integer 1",
+				entry = 25);
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Integer 2",
+				entry = 25);
+
+			PortletEntry.save();
+
+			Navigator.gotoBack();
+
+			ObjectPortlet.viewEntry(entry = 50);
+
+			LexiconEntry.gotoAdd();
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Integer 1",
+				entry = 30);
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Integer 2",
+				entry = 30);
+
+			Button.click(button = "Save");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR",
+				value1 = "The sum must be less than or equal to 50");
 		}
 	}
 
@@ -2988,7 +3608,9 @@ definition {
 		Click(locator1 = "ObjectAdmin#OBJECT_FIELDS_PICKLIST");
 
 		for (var numberPicklist : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21") {
-			ObjectAdmin.viewPicklistOptionsOnFields(optionName = "Custom Picklist ${numberPicklist}");
+			AssertElementPresent(
+				key_optionName = "Custom Picklist ${numberPicklist}",
+				locator1 = "ObjectAdmin#VIEW_PICKLIST_OPTIONS");
 		}
 	}
 
@@ -3084,9 +3706,13 @@ definition {
 
 		ObjectField.checkLimitCharacters();
 
-		ObjectField.assertHelpText(helpText = "Set the maximum number of characters accepted. This value cannot be less than 1 or greater than 280");
+		AssertElementPresent(
+			key_helpText = "Set the maximum number of characters accepted. This value cannot be less than 1 or greater than 280",
+			locator1 = "ObjectField#HELP_TEXT");
 
-		ObjectField.assertValueOnLimitCharacters(maxValue = 280);
+		AssertElementPresent(
+			key_maxValue = 280,
+			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 
 		ObjectField.save();
 
@@ -3096,9 +3722,13 @@ definition {
 
 		ObjectField.checkLimitCharacters();
 
-		ObjectField.assertHelpText(helpText = "Set the maximum number of characters accepted. This value cannot be less than 1 or greater than 65,000");
+		AssertElementPresent(
+			key_helpText = "Set the maximum number of characters accepted. This value cannot be less than 1 or greater than 65,000",
+			locator1 = "ObjectField#HELP_TEXT");
 
-		ObjectField.assertValueOnLimitCharacters(maxValue = 65000);
+		AssertElementPresent(
+			key_maxValue = 65000,
+			locator1 = "ObjectField#MAXIMUM_NUMBER_CHARACTERS_OPTION");
 
 		ObjectField.save();
 
@@ -3259,7 +3889,7 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
+				kebabOption = "Edit",
 				objectLabel = "Layout Test");
 
 			ObjectAdmin.markLayoutAsDefault();
@@ -3422,7 +4052,7 @@ definition {
 	test FormulaFieldIsNotSearchable {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: a Custom Object with two fields") {
+		task ("Given a custom object with two fields") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176845",
 				objectName = "CustomObject176845",
@@ -3449,7 +4079,7 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176845");
 		}
 
-		task ("When: an entry is added and the user searches the Formula field") {
+		task ("When an entry is added and the user searches the Formula field") {
 			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 				fieldName = "customInteger1",
 				objectName = "CustomObject176845",
@@ -3460,7 +4090,7 @@ definition {
 			Search.searchCP(searchTerm = 13579);
 		}
 
-		task ("Then: the Formula field is not searchable") {
+		task ("Then the Formula field is not searchable") {
 			AssertElementNotPresent(
 				fieldType = 13579,
 				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_TYPE");
@@ -3472,38 +4102,45 @@ definition {
 	test FormulaFieldsIsNotMandatory {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: an Object with formula field") {
+		task ("Given an Object with formula field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176829 ",
 				objectName = "CustomObject176829",
 				pluralLabelName = "Custom Objects 176829");
 
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Formula",
+				fieldLabelName = "Custom Formula Field",
+				fieldName = "customFormulaField",
+				fieldType = "String",
+				formulaScript = "",
+				isRequired = "false",
+				objectName = "CustomObject176829",
+				outputOption = "Decimal");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176829");
+		}
+
+		task ("When view the formula field details (mandatory option is unavailable)") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Custom Object 176829");
 
 			ObjectAdmin.goToFieldsTab();
 
-			ObjectAdmin.addObjectFieldViaUI(
-				fieldLabel = "Custom Formula 176829",
-				fieldType = "Formula",
-				formulaFieldOption = "Decimal");
-
-			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject176829");
-		}
-
-		task ("When: view the formula field details (mandatory option is unavailable)") {
-			ObjectAdmin.goToFieldsDetails(label = "Custom Formula 176829");
+			ObjectAdmin.goToFieldsDetails(label = "Custom Formula Field");
 
 			AssertElementNotPresent(locator1 = "ObjectField#MANDATORY_TOGGLE");
 		}
 
-		task ("Then: assert that is the entry is not required") {
+		task ("Then assert that is the entry is not required") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject176829");
 
 			LexiconEntry.gotoAdd();
 
-			AssertElementNotPresent(locator1 = "Icon#ASTERISK");
+			AssertElementNotPresent(
+				key_fieldName = "Formula Builder",
+				locator1 = "ObjectField#MANDATORY_FIELD");
 
 			PortletEntry.save();
 		}
@@ -3641,7 +4278,7 @@ definition {
 	@description = "Verify that the Is Not Equals to operator is available when adding filters for the integer fields to select data from the object"
 	@priority = 4
 	test IsEqualToIsAvailableForIntegerFields {
-		task ("Given: A custom object with an integer field type") {
+		task ("Given a custom object with an integer field type") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object",
 				objectName = "CustomObject",
@@ -3673,7 +4310,7 @@ definition {
 				relationship = "Relationship");
 		}
 
-		task ("When: A new filter is created with the custom integer field with Is Equal To selected") {
+		task ("When a new filter is created with the custom integer field with Is Equal To selected") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Aggregation");
 
 			ObjectCustomViews.addNewAggregationFilterViaUI(
@@ -3682,7 +4319,7 @@ definition {
 				filterValue = 1);
 		}
 
-		task ("Then: The new filter is created") {
+		task ("Then the new filter is created") {
 			ObjectCustomViews.assertPresentEntriesOnFilters(
 				filterBy = "Custom Integer",
 				filterValue = 1);
@@ -3692,7 +4329,7 @@ definition {
 	@description = "Verify that the Is Equals to operator is available when adding filters for the long integer fields to select data from the object"
 	@priority = 4
 	test IsEqualToIsAvailableForLongIntegerFields {
-		task ("Given: A custom object with a long integer field type") {
+		task ("Given a custom object with a long integer field type") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object",
 				objectName = "CustomObject",
@@ -3724,7 +4361,7 @@ definition {
 				relationship = "Relationship");
 		}
 
-		task ("When: A new filter is created with the custom long integer field with Is Equal To selected") {
+		task ("When a new filter is created with the custom long integer field with Is Equal To selected") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Aggregation");
 
 			ObjectCustomViews.addNewAggregationFilterViaUI(
@@ -3733,7 +4370,7 @@ definition {
 				filterValue = 1);
 		}
 
-		task ("Then: The new filter is created") {
+		task ("Then the new filter is created") {
 			ObjectCustomViews.assertPresentEntriesOnFilters(
 				filterBy = "Custom Long Integer",
 				filterValue = 1);
@@ -3743,7 +4380,7 @@ definition {
 	@description = "Verify that the Is Not Equals to operator is available when adding filters for the long integer fields to select data from the object"
 	@priority = 4
 	test IsNotEqualToIsAvailableForLongIntegerFields {
-		task ("Given: A custom object with a long integer field type") {
+		task ("Given a custom object with a long integer field type") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object",
 				objectName = "CustomObject",
@@ -3775,7 +4412,7 @@ definition {
 				relationship = "Relationship");
 		}
 
-		task ("When: A new filter is created with the custom long integer field with Is Not Equal To selected") {
+		task ("When a new filter is created with the custom long integer field with Is Not Equal To selected") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Aggregation");
 
 			ObjectCustomViews.addNewAggregationFilterViaUI(
@@ -3784,7 +4421,7 @@ definition {
 				filterValue = 1);
 		}
 
-		task ("Then: The new filter is created") {
+		task ("Then the new filter is created") {
 			ObjectCustomViews.assertPresentEntriesOnFilters(
 				filterBy = "Custom Long Integer",
 				filterValue = 1);
@@ -3794,7 +4431,8 @@ definition {
 	@description = "LPS-143065 - Change the Maximum File Size to 0 (zero) and verify if the Maximum File Size is now set by the System configurations"
 	@priority = 4
 	test MaximumFileSizeIsSetBySystemConfigurationsWhenZero {
-		property test.name.skip.portal.instance = "ObjectFields#MaximumFileSizeIsSetBySystemConfigurationsWhenZero";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 151561",
@@ -3849,7 +4487,7 @@ definition {
 	test OutputFieldIsRequiredOnFormulaField {
 		property custom.properties = "feature.flag.LPS-164948=true";
 
-		task ("Given: an Object") {
+		task ("Given an Object") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 176823",
 				objectName = "CustomObject176823",
@@ -3862,7 +4500,7 @@ definition {
 			ObjectAdmin.goToFieldsTab();
 		}
 
-		task ("When: managing a Formula Field") {
+		task ("When managing a Formula Field") {
 			ObjectAdmin.addObjectFieldViaUI(
 				fieldLabel = "Custom Formula",
 				fieldType = "Formula",
@@ -3871,7 +4509,7 @@ definition {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Formula");
 		}
 
-		task ("Then: the output field is a mandatory field") {
+		task ("Then the output field is a mandatory field") {
 			AssertElementPresent(
 				key_fieldName = "Output",
 				locator1 = "ObjectField#MANDATORY_FIELD");
@@ -3881,7 +4519,7 @@ definition {
 	@description = "Verify that the Range - Start/End operator is available when adding filters for the date fields to select date from the object"
 	@priority = 4
 	test RangeIsAvailableForDateFields {
-		task ("Given: A custom object with a date field type") {
+		task ("Given a custom object with a date field type") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object",
 				objectName = "CustomObject",
@@ -3912,16 +4550,16 @@ definition {
 				relationship = "Relationship");
 		}
 
-		task ("When: A new filter is created with the custom date field with range selected") {
+		task ("When a new filter is created with the custom date field with range selected") {
 			ObjectAdmin.goToFieldsDetails(label = "Custom Aggregation");
 
 			ObjectCustomViews.addNewAggregationFilterViaUI(
-				dateValueList = "2000-01-01, 2001-01-01",
+				dateValueList = "01-01-2000, 01-01-2001",
 				filterBy = "Custom Date",
 				filterType = "Range");
 		}
 
-		task ("Then: The new filter is created") {
+		task ("Then the new filter is created") {
 			ObjectCustomViews.assertPresentEntriesOnFilters(
 				filterBy = "Custom Date",
 				filterValue = "2000-01-01, 2001-01-01");
@@ -3950,7 +4588,9 @@ definition {
 
 		Button.clickSave();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Request Files");
+		AssertElementPresent(
+			key_fieldLabel = "Request Files",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-148112 - Verify if field called Storage Folder have a default value"
@@ -4040,7 +4680,9 @@ definition {
 
 		Button.clickSave();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Storage Folder");
+		AssertElementPresent(
+			key_fieldLabel = "Storage Folder",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 }

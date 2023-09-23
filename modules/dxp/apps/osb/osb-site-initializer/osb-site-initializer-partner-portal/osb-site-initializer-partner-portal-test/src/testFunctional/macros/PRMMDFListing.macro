@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Verify if the MDF is visible on listing page"
 	macro viewOnList {
 		var key_rowName = ${key_rowNumber};
 
@@ -53,10 +52,10 @@ definition {
 				locator1 = "PRMMDFListing#LISTING_TABLE");
 		}
 
-		if (isSet(amountClaimed)) {
+		if (isSet(totalClaimAmount)) {
 			AssertVisible(
 				key_rowNumber = 8,
-				key_rowValue = ${amountClaimed},
+				key_rowValue = ${totalClaimAmount},
 				locator1 = "PRMMDFListing#LISTING_TABLE");
 		}
 

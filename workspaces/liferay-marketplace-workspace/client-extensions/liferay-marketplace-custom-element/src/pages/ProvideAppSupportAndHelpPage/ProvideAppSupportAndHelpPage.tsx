@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {Header} from '../../components/Header/Header';
 import {Input} from '../../components/Input/Input';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
@@ -41,7 +46,7 @@ export function ProvideAppSupportAndHelpPage({
 
 			<Section
 				label="App Support and help"
-				tooltip="More info"
+				tooltip="Define the support and help references. Users can access these resources pre and post purchase to find out more information about your app or solution."
 				tooltipText="More Info"
 			>
 				<Input
@@ -113,7 +118,8 @@ export function ProvideAppSupportAndHelpPage({
 								id: appInstallationGuideURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
+							type:
+								TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
 						})
 					}
 					placeholder="http:// Enter app name"
@@ -154,15 +160,14 @@ export function ProvideAppSupportAndHelpPage({
 					}
 
 					if (publisherWebsiteURL?.value) {
-						const publisherWebsiteURLSpecificationId =
-							await saveSpecification(
-								appId,
-								appProductId,
-								publisherWebsiteURL?.id,
-								'publisherWebsiteURL',
-								'Publisher Web site URL',
-								publisherWebsiteURL?.value
-							);
+						const publisherWebsiteURLSpecificationId = await saveSpecification(
+							appId,
+							appProductId,
+							publisherWebsiteURL?.id,
+							'publisherWebsiteURL',
+							'Publisher Web site URL',
+							publisherWebsiteURL?.value
+						);
 
 						if (publisherWebsiteURLSpecificationId !== -1) {
 							dispatch({
@@ -184,15 +189,14 @@ export function ProvideAppSupportAndHelpPage({
 						}
 					}
 					if (appUsageTermsURL?.value) {
-						const appUsageTermsURLSpecificationId =
-							await saveSpecification(
-								appId,
-								appProductId,
-								appUsageTermsURL?.id,
-								'appUsageTermsURL',
-								'App Usage Terms URL',
-								appUsageTermsURL?.value
-							);
+						const appUsageTermsURLSpecificationId = await saveSpecification(
+							appId,
+							appProductId,
+							appUsageTermsURL?.id,
+							'appUsageTermsURL',
+							'App Usage Terms URL',
+							appUsageTermsURL?.value
+						);
 
 						if (appUsageTermsURLSpecificationId !== -1) {
 							dispatch({
@@ -214,15 +218,14 @@ export function ProvideAppSupportAndHelpPage({
 						}
 					}
 					if (appDocumentationURL?.value) {
-						const appDocumentationURLSpecificationId =
-							await saveSpecification(
-								appId,
-								appProductId,
-								appDocumentationURL?.id,
-								'appDocumentationURL',
-								'App Documentation URL',
-								appDocumentationURL?.value
-							);
+						const appDocumentationURLSpecificationId = await saveSpecification(
+							appId,
+							appProductId,
+							appDocumentationURL?.id,
+							'appDocumentationURL',
+							'App Documentation URL',
+							appDocumentationURL?.value
+						);
 
 						if (appDocumentationURLSpecificationId !== -1) {
 							dispatch({
@@ -244,15 +247,14 @@ export function ProvideAppSupportAndHelpPage({
 						}
 					}
 					if (appInstallationGuideURL?.value) {
-						const appInstallationGuideURLSpecificationId =
-							await saveSpecification(
-								appId,
-								appProductId,
-								appInstallationGuideURL?.id,
-								'appInstallationGuideURL',
-								'App Installation Guide URL',
-								appInstallationGuideURL?.value
-							);
+						const appInstallationGuideURLSpecificationId = await saveSpecification(
+							appId,
+							appProductId,
+							appInstallationGuideURL?.id,
+							'appInstallationGuideURL',
+							'App Installation Guide URL',
+							appInstallationGuideURL?.value
+						);
 
 						if (appInstallationGuideURLSpecificationId !== -1) {
 							dispatch({
@@ -260,7 +262,8 @@ export function ProvideAppSupportAndHelpPage({
 									id: appInstallationGuideURLSpecificationId,
 									value: appInstallationGuideURL.value,
 								},
-								type: TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
+								type:
+									TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
 							});
 						}
 						else {
@@ -269,7 +272,8 @@ export function ProvideAppSupportAndHelpPage({
 									id: appInstallationGuideURL?.id,
 									value: appInstallationGuideURL.value,
 								},
-								type: TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
+								type:
+									TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
 							});
 						}
 					}

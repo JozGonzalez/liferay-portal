@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.persistence.impl;
@@ -59,7 +50,6 @@ import com.liferay.portlet.documentlibrary.model.impl.DLFileEntryTypeModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -720,21 +710,21 @@ public class DLFileEntryTypePersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			DLFileEntryType.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			DLFileEntryType.class);
 
 		if (result instanceof DLFileEntryType) {
 			DLFileEntryType dlFileEntryType = (DLFileEntryType)result;
@@ -744,6 +734,15 @@ public class DLFileEntryTypePersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						DLFileEntryType.class,
+						dlFileEntryType.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2941,21 +2940,21 @@ public class DLFileEntryTypePersistenceImpl
 	public DLFileEntryType fetchByG_DDI(
 		long groupId, long dataDefinitionId, boolean useFinderCache) {
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			DLFileEntryType.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, dataDefinitionId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByG_DDI, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			DLFileEntryType.class);
 
 		if (result instanceof DLFileEntryType) {
 			DLFileEntryType dlFileEntryType = (DLFileEntryType)result;
@@ -2965,6 +2964,15 @@ public class DLFileEntryTypePersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						DLFileEntryType.class,
+						dlFileEntryType.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3179,21 +3187,21 @@ public class DLFileEntryTypePersistenceImpl
 
 		fileEntryTypeKey = Objects.toString(fileEntryTypeKey, "");
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			DLFileEntryType.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, fileEntryTypeKey};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByG_F, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			DLFileEntryType.class);
 
 		if (result instanceof DLFileEntryType) {
 			DLFileEntryType dlFileEntryType = (DLFileEntryType)result;
@@ -3204,6 +3212,15 @@ public class DLFileEntryTypePersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						DLFileEntryType.class,
+						dlFileEntryType.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -4251,17 +4268,18 @@ public class DLFileEntryTypePersistenceImpl
 	 *
 	 * @param pk the primary key of the document library file entry type
 	 * @param dlFolderPK the primary key of the document library folder
+	 * @return <code>true</code> if an association between the document library file entry type and the document library folder was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addDLFolder(long pk, long dlFolderPK) {
+	public boolean addDLFolder(long pk, long dlFolderPK) {
 		DLFileEntryType dlFileEntryType = fetchByPrimaryKey(pk);
 
 		if (dlFileEntryType == null) {
-			dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
+			return dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk, dlFolderPK);
 		}
 		else {
-			dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
+			return dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
 				dlFileEntryType.getCompanyId(), pk, dlFolderPK);
 		}
 	}
@@ -4271,20 +4289,21 @@ public class DLFileEntryTypePersistenceImpl
 	 *
 	 * @param pk the primary key of the document library file entry type
 	 * @param dlFolder the document library folder
+	 * @return <code>true</code> if an association between the document library file entry type and the document library folder was added; <code>false</code> if they were already associated
 	 */
 	@Override
-	public void addDLFolder(
+	public boolean addDLFolder(
 		long pk, com.liferay.document.library.kernel.model.DLFolder dlFolder) {
 
 		DLFileEntryType dlFileEntryType = fetchByPrimaryKey(pk);
 
 		if (dlFileEntryType == null) {
-			dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
+			return dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
 				CompanyThreadLocal.getCompanyId(), pk,
 				dlFolder.getPrimaryKey());
 		}
 		else {
-			dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
+			return dlFileEntryTypeToDLFolderTableMapper.addTableMapping(
 				dlFileEntryType.getCompanyId(), pk, dlFolder.getPrimaryKey());
 		}
 	}
@@ -4294,9 +4313,10 @@ public class DLFileEntryTypePersistenceImpl
 	 *
 	 * @param pk the primary key of the document library file entry type
 	 * @param dlFolderPKs the primary keys of the document library folders
+	 * @return <code>true</code> if at least one association between the document library file entry type and the document library folders was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addDLFolders(long pk, long[] dlFolderPKs) {
+	public boolean addDLFolders(long pk, long[] dlFolderPKs) {
 		long companyId = 0;
 
 		DLFileEntryType dlFileEntryType = fetchByPrimaryKey(pk);
@@ -4308,8 +4328,15 @@ public class DLFileEntryTypePersistenceImpl
 			companyId = dlFileEntryType.getCompanyId();
 		}
 
-		dlFileEntryTypeToDLFolderTableMapper.addTableMappings(
-			companyId, pk, dlFolderPKs);
+		long[] addedKeys =
+			dlFileEntryTypeToDLFolderTableMapper.addTableMappings(
+				companyId, pk, dlFolderPKs);
+
+		if (addedKeys.length > 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -4317,13 +4344,14 @@ public class DLFileEntryTypePersistenceImpl
 	 *
 	 * @param pk the primary key of the document library file entry type
 	 * @param dlFolders the document library folders
+	 * @return <code>true</code> if at least one association between the document library file entry type and the document library folders was added; <code>false</code> if they were all already associated
 	 */
 	@Override
-	public void addDLFolders(
+	public boolean addDLFolders(
 		long pk,
 		List<com.liferay.document.library.kernel.model.DLFolder> dlFolders) {
 
-		addDLFolders(
+		return addDLFolders(
 			pk,
 			ListUtil.toLongArray(
 				dlFolders,
@@ -4675,31 +4703,15 @@ public class DLFileEntryTypePersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "fileEntryTypeKey"}, false);
 
-		_setDLFileEntryTypeUtilPersistence(this);
+		DLFileEntryTypeUtil.setPersistence(this);
 	}
 
 	public void destroy() {
-		_setDLFileEntryTypeUtilPersistence(null);
+		DLFileEntryTypeUtil.setPersistence(null);
 
 		EntityCacheUtil.removeCache(DLFileEntryTypeImpl.class.getName());
 
 		TableMapperFactory.removeTableMapper("DLFileEntryTypes_DLFolders");
-	}
-
-	private void _setDLFileEntryTypeUtilPersistence(
-		DLFileEntryTypePersistence dlFileEntryTypePersistence) {
-
-		try {
-			Field field = DLFileEntryTypeUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, dlFileEntryTypePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@BeanReference(type = DLFolderPersistence.class)

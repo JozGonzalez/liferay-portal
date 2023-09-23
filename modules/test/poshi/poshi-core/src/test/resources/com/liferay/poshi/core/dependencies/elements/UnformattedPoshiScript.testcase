@@ -48,11 +48,12 @@ definition {
 
 			ListUtil.add(${orderID}, ${orderIDs});
 
+			var pages = selenium.getElementValue("//tr[td[contains(@class,'line-content')][contains(.,'textAlign = \"right\"')]]/td[contains(@class,'line-number')]");
+
+
 			var camelCase = StringUtil.replace("${camelCase}", " ", "");
 
 			var payload = StringUtil.replace("${payload}", "${payload}", "${payload}}");
-
-			var parameters = JSONUtil2._addJSONObject(JSON = ${parameters}, key = "virtualHost", value = "\"${virtualHost}\"");
 
 			ProductMenu.gotoPortlet(
 				category = "Content",
@@ -78,6 +79,8 @@ definition {
 		}
 
 		var portalInstanceIds = StringUtil.regexReplaceAll("${portalInstanceIds}", "[\[\]\"]", "");
+
+		StringUtil.assertEquals("\"Row 1\": \"Column 1\"", ${data});
 	}
 
 	@priority = "5"

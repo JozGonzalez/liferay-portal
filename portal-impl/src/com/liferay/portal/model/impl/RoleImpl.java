@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -40,6 +32,32 @@ public class RoleImpl extends RoleBaseImpl {
 		}
 
 		return name;
+	}
+
+	@Override
+	public String getIconCssClass() {
+		String iconCssClass = StringPool.BLANK;
+
+		String roleName = getName();
+		int roleType = getType();
+
+		if (roleName.equals(RoleConstants.GUEST)) {
+			iconCssClass = "user";
+		}
+		else if (roleType == RoleConstants.TYPE_ORGANIZATION) {
+			iconCssClass = "globe";
+		}
+		else if (roleType == RoleConstants.TYPE_REGULAR) {
+			iconCssClass = "user";
+		}
+		else if (roleType == RoleConstants.TYPE_SITE) {
+			iconCssClass = "globe";
+		}
+		else if (isTeam()) {
+			iconCssClass = "community";
+		}
+
+		return iconCssClass;
 	}
 
 	@Override

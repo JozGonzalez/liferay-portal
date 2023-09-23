@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -24,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -96,7 +96,7 @@ definition {
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
 
 		DataEngine.assertFieldRepeated(
-			fieldName = "RichText",
+			fieldName = "Rich Text",
 			index = 2);
 
 		Click(
@@ -194,7 +194,9 @@ definition {
 			structureName = "WC Structure Name",
 			webContentTitle = "WebContent Title");
 
-		Click(locator1 = "Button#PUBLISH");
+		Click(
+			key_text = "Publish",
+			locator1 = "Button#ANY");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "TextInput#REQUIRED_ALERT",
@@ -217,7 +219,7 @@ definition {
 		DataEngine.addRepeatableField(fieldLabel = "Rich Text");
 
 		DataEngine.assertFieldRepeated(
-			fieldName = "RichText",
+			fieldName = "Rich Text",
 			index = 2);
 	}
 

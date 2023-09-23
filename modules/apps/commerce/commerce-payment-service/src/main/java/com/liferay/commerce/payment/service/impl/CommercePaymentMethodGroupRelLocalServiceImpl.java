@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.service.impl;
@@ -88,17 +79,15 @@ public class CommercePaymentMethodGroupRelLocalServiceImpl
 	@Override
 	public CommercePaymentMethodGroupRel addCommercePaymentMethodGroupRel(
 			long userId, long groupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, File imageFile,
-			String engineKey, double priority, boolean active)
+			Map<Locale, String> descriptionMap, boolean active, File imageFile,
+			String paymentIntegrationKey, double priority, String typeSettings)
 		throws PortalException {
-
-		// Commerce payment method
 
 		if ((imageFile != null) && !imageFile.exists()) {
 			imageFile = null;
 		}
 
-		_validate(nameMap, engineKey);
+		_validate(nameMap, paymentIntegrationKey);
 
 		CommercePaymentMethodGroupRel commercePaymentMethodGroupRel =
 			commercePaymentMethodGroupRelPersistence.create(
@@ -112,17 +101,19 @@ public class CommercePaymentMethodGroupRelLocalServiceImpl
 		commercePaymentMethodGroupRel.setUserId(user.getUserId());
 		commercePaymentMethodGroupRel.setUserName(user.getFullName());
 
-		commercePaymentMethodGroupRel.setNameMap(nameMap);
+		commercePaymentMethodGroupRel.setActive(active);
 		commercePaymentMethodGroupRel.setDescriptionMap(descriptionMap);
+		commercePaymentMethodGroupRel.setNameMap(nameMap);
 
 		if (imageFile != null) {
 			commercePaymentMethodGroupRel.setImageId(
 				counterLocalService.increment());
 		}
 
-		commercePaymentMethodGroupRel.setEngineKey(engineKey);
+		commercePaymentMethodGroupRel.setPaymentIntegrationKey(
+			paymentIntegrationKey);
 		commercePaymentMethodGroupRel.setPriority(priority);
-		commercePaymentMethodGroupRel.setActive(active);
+		commercePaymentMethodGroupRel.setTypeSettings(typeSettings);
 
 		commercePaymentMethodGroupRel =
 			commercePaymentMethodGroupRelPersistence.update(
@@ -215,10 +206,10 @@ public class CommercePaymentMethodGroupRelLocalServiceImpl
 
 	@Override
 	public CommercePaymentMethodGroupRel fetchCommercePaymentMethodGroupRel(
-		long groupId, String engineKey) {
+		long groupId, String paymentIntegrationKey) {
 
-		return commercePaymentMethodGroupRelPersistence.fetchByG_E(
-			groupId, engineKey);
+		return commercePaymentMethodGroupRelPersistence.fetchByG_P(
+			groupId, paymentIntegrationKey);
 	}
 
 	@Override
@@ -244,11 +235,11 @@ public class CommercePaymentMethodGroupRelLocalServiceImpl
 
 	@Override
 	public CommercePaymentMethodGroupRel getCommercePaymentMethodGroupRel(
-			long groupId, String engineKey)
+			long groupId, String paymentIntegrationKey)
 		throws NoSuchPaymentMethodGroupRelException {
 
-		return commercePaymentMethodGroupRelPersistence.findByG_E(
-			groupId, engineKey);
+		return commercePaymentMethodGroupRelPersistence.findByG_P(
+			groupId, paymentIntegrationKey);
 	}
 
 	@Override
@@ -383,8 +374,8 @@ public class CommercePaymentMethodGroupRelLocalServiceImpl
 				counterLocalService.increment());
 		}
 
-		commercePaymentMethodGroupRel.setPriority(priority);
 		commercePaymentMethodGroupRel.setActive(active);
+		commercePaymentMethodGroupRel.setPriority(priority);
 
 		commercePaymentMethodGroupRel =
 			commercePaymentMethodGroupRelPersistence.update(

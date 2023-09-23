@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.service.http;
@@ -187,8 +178,8 @@ public class ClientExtensionEntryServiceHttp {
 
 	public static com.liferay.client.extension.model.ClientExtensionEntry
 			fetchClientExtensionEntryByExternalReferenceCode(
-				HttpPrincipal httpPrincipal, long companyId,
-				String externalReferenceCode)
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -198,7 +189,7 @@ public class ClientExtensionEntryServiceHttp {
 				_fetchClientExtensionEntryByExternalReferenceCodeParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, externalReferenceCode);
+				methodKey, externalReferenceCode, companyId);
 
 			Object returnObj = null;
 
@@ -334,7 +325,7 @@ public class ClientExtensionEntryServiceHttp {
 			new Class[] {long.class, String.class};
 	private static final Class<?>[]
 		_fetchClientExtensionEntryByExternalReferenceCodeParameterTypes3 =
-			new Class[] {long.class, String.class};
+			new Class[] {String.class, long.class};
 	private static final Class<?>[] _getClientExtensionEntryParameterTypes4 =
 		new Class[] {long.class};
 	private static final Class<?>[] _updateClientExtensionEntryParameterTypes5 =

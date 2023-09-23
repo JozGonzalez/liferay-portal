@@ -1,22 +1,20 @@
+@import 'atlas-variables';
+
 .criteria-sidebar-root {
 	background-color: $white;
-	border-left: 1px solid $mainLighten74;
-	display: flex;
-	flex-direction: column;
+	border-left: 1px solid $gray-300;
 	min-height: 100%;
-	position: absolute;
 	right: 0;
 	width: $sidebarWidth;
 
 	.sidebar-header,
-	.sidebar-collapse-header,
+	.panel-header,
 	.empty-message {
 		font-weight: 600;
 	}
 
 	.sidebar-header,
 	.sidebar-search,
-	.sidebar-collapse-header,
 	.empty-message {
 		padding: 1rem 1.5rem;
 	}
@@ -25,88 +23,19 @@
 		flex-basis: 0;
 		flex-grow: 1;
 		flex-shrink: 1;
-		min-height: 100%;
-		overflow-y: auto;
-		position: relative;
-	}
-
-	.sidebar-collapse-groups,
-	.empty-message {
-		height: 100%;
-		position: relative;
-	}
-
-	.sidebar-collapse-groups {
-		display: flex;
-		flex-flow: column nowrap;
-		margin-bottom: 0;
-		padding-left: 0;
-	}
-
-	.sidebar-collapse-item {
-		cursor: pointer;
-		display: flex;
-		flex-direction: column;
-		transition: flex-grow $segmentsTransition;
-		will-change: flex-grow;
-
-		&.active {
-			flex-grow: 1;
-		}
-	}
-
-	.sidebar-collapse-header {
-		color: $main;
-		display: flex;
-		font-size: 0.875rem;
-		justify-content: space-between;
-		position: relative;
-		text-decoration: none;
-		text-transform: uppercase;
-		word-wrap: break-word;
-
-		.badge {
-			margin-left: auto;
-			margin-right: 0.8rem;
-		}
-
-		.lexicon-icon {
-			transition: transform $segmentsTransition;
-			will-change: transform;
-
-			&.active {
-				transform: rotate(90deg);
-			}
-		}
-
-		&:after {
-			border-top: 1px solid $mainLighten52;
-			bottom: 0;
-			content: '';
-			left: 1.5rem;
-			position: absolute;
-			right: 1.5rem;
-		}
-	}
-
-	.sidebar-collapse-body {
-		overflow-y: auto;
+		overflow-x: hidden;
 	}
 
 	.criteria-sidebar-item-root {
-		align-items: center;
 		background-color: $white;
 		border-left: 3px solid transparent;
-		display: flex;
 		font-size: 0.875rem;
-		margin: 0.25rem 0;
-		padding: 0.5rem 1rem 0.5rem 0.5rem;
 		transition: $segmentsTransition;
 		transition-property: border-color, opacity;
 		will-change: border-color, opacity;
 
 		.lexicon-icon-drag {
-			color: $mainLighten52;
+			color: $secondary-l1;
 			opacity: 0;
 			transition: opacity $segmentsTransition;
 			will-change: opacity;
@@ -125,7 +54,7 @@
 		}
 
 		&:hover {
-			border-color: $chartBlue;
+			border-color: $blue;
 			cursor: grab;
 
 			@include generatePropertyGroupLoop(
@@ -134,15 +63,5 @@
 				'color--'
 			);
 		}
-	}
-
-	.criteria-sidebar-item-type {
-		margin: 0 0.5rem;
-	}
-
-	.empty-message {
-		align-items: center;
-		display: flex;
-		justify-content: center;
 	}
 }

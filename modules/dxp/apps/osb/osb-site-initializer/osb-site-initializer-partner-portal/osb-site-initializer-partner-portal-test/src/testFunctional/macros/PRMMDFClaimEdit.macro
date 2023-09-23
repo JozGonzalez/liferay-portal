@@ -1,0 +1,78 @@
+definition {
+
+	macro buttonIsNotVisible {
+		AssertElementNotPresent(locator1 = "PRMMDFClaim#EDIT_BUTTON");
+	}
+
+	macro buttonIsVisible {
+		AssertElementPresent(locator1 = "PRMMDFClaim#EDIT_BUTTON");
+	}
+
+	macro editActivity {
+		if (!(isSet(activityIndex))) {
+			var activityIndex = 0;
+		}
+
+		if (!(isSet(budgetIndex))) {
+			var budgetIndex = 0;
+		}
+
+		Click(
+			key_activityName = ${activityName},
+			locator1 = "PRMMDFClaimEdit#ACTIVITY_NAME");
+
+		Click(
+			key_fieldName = "activities[${activityIndex}].budgets[${budgetIndex}].selected",
+			locator1 = "PRMMDFClaimEdit#BUDGET_COLLAPSE");
+
+		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+			key_fieldName = "activities[${activityIndex}].budgets[${budgetIndex}].invoice",
+			locator1 = "PRMMDFClaimEdit#UPLOAD_FIELD",
+			value1 = ${newAttachment});
+
+		if (isSet(newInvoiceAmount)) {
+			Type(
+				key_fieldName = "activities[${activityIndex}].budgets[${budgetIndex}].invoiceAmount",
+				locator1 = "PRMMDFRequest#TEXT_FIELD",
+				value1 = ${newInvoiceAmount});
+		}
+	}
+
+	macro editClaim {
+		if (!(isSet(activityIndex))) {
+			var activityIndex = 0;
+		}
+
+		if (!(isSet(budgetIndex))) {
+			var budgetIndex = 0;
+		}
+
+		if (isSet(newAttachment) || isSet(newInvoiceAmount)) {
+			PRMMDFClaimEdit.editActivity(
+				activityIndex = ${activityIndex},
+				activityName = ${activityName},
+				budgetIndex = ${budgetIndex},
+				newAttachment = ${newAttachment},
+				newInvoiceAmount = ${newInvoiceAmount});
+		}
+
+		if (isSet(newActivityIndex)) {
+			PRMMDFClaim.fillActivityFields(
+				activityIndex = ${newActivityIndex},
+				budgetIndex = ${newBudgetIndex},
+				listLeads = ${newListLeads},
+				thirdInvoice = ${newThirdInvoice});
+		}
+
+		Button.clickSubmitButton();
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro gotoClaimViaUI {
+		Click(
+			key_claimId = ${claimId},
+			locator1 = "PRMMDFClaim#VIEW_CLAIM_BUTTON");
+	}
+
+}

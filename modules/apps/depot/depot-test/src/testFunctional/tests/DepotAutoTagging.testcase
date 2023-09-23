@@ -17,9 +17,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test AutoTagCanBeReplacedInDocument {
-		property test.name.skip.portal.instance = "DepotAutoTagging#AutoTagCanBeReplacedInDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -83,7 +84,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanDeleteAutotaggedWebContent {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDeleteAutotaggedWebContent";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -101,6 +103,10 @@ definition {
 
 		Panel.expandPanel(panel = "Categorization");
 
+		ScrollWebElementIntoView(
+			key_panel = "Schedule",
+			locator1 = "Panel#PANEL");
+
 		AssetCategorization.viewTag(tagName = "dxp");
 
 		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
@@ -114,7 +120,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanDisableAtInstanceScope {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableAtInstanceScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.disableAutoTagging(disableAutoTaggingFor = "Instance Settings");
 
@@ -137,7 +144,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanDisableAtSystemScope {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableAtSystemScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.disableAutoTagging(disableAutoTaggingFor = "System Settings");
 
@@ -160,7 +168,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanDisableForImage {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForImage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableTensorFlow();
 
@@ -188,7 +197,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanDisableForTextDocument {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForTextDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -218,7 +228,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanDisableForWebContent {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForWebContent";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -248,7 +259,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test ImageCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#ImageCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableTensorFlow();
 
@@ -282,7 +294,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test TextDocumentCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#TextDocumentCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -308,7 +321,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test WebContentCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#WebContentCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -325,6 +339,10 @@ definition {
 			webContentTitle = "Digital Transformation or Digital Experience");
 
 		Panel.expandPanel(panel = "Categorization");
+
+		ScrollWebElementIntoView(
+			key_panel = "Schedule",
+			locator1 = "Panel#PANEL");
 
 		AssetCategorization.viewTag(tagName = "dxp");
 	}

@@ -1,25 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.search;
 
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -30,7 +21,6 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.search.DDMStructureIndexer;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
@@ -67,17 +57,6 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 				return;
 			}
 
-			String[] ddmStructureKeys = new String[ddmStructureIds.size()];
-
-			for (int i = 0; i < ddmStructureIds.size(); i++) {
-				long ddmStructureId = ddmStructureIds.get(i);
-
-				DDMStructure ddmStructure =
-					ddmStructureLocalService.getDDMStructure(ddmStructureId);
-
-				ddmStructureKeys[i] = ddmStructure.getStructureKey();
-			}
-
 			ActionableDynamicQuery actionableDynamicQuery =
 				journalArticleResourceLocalService.getActionableDynamicQuery();
 
@@ -102,11 +81,11 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 						RestrictionsFactoryUtil.eqProperty(
 							"journalArticle.groupId", "this.groupId"));
 
-					Property ddmStructureKey = PropertyFactoryUtil.forName(
-						"DDMStructureKey");
+					Property ddmStructureIdProperty =
+						PropertyFactoryUtil.forName("DDMStructureId");
 
 					journalArticleDynamicQuery.add(
-						ddmStructureKey.in(ddmStructureKeys));
+						ddmStructureIdProperty.in(ddmStructureIds));
 
 					if (!isIndexAllArticleVersions()) {
 						Property statusProperty = PropertyFactoryUtil.forName(
@@ -127,11 +106,13 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 						resourcePrimKeyProperty.in(journalArticleDynamicQuery));
 				});
 			actionableDynamicQuery.setPerformActionMethod(
-				(JournalArticleResource article) -> {
+				(JournalArticleResource journalArticleResource) -> {
+					JournalArticle journalArticle =
+						_journalArticleLocalService.fetchLatestArticle(
+							journalArticleResource.getResourcePrimKey());
+
 					try {
-						indexer.reindex(
-							indexer.getClassName(),
-							article.getResourcePrimKey());
+						indexer.reindex(journalArticle);
 					}
 					catch (Exception exception) {
 						throw new PortalException(exception);
@@ -167,9 +148,6 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 	protected ConfigurationProvider configurationProvider;
 
 	@Reference
-	protected DDMStructureLocalService ddmStructureLocalService;
-
-	@Reference
 	protected IndexerRegistry indexerRegistry;
 
 	@Reference
@@ -181,5 +159,8 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 
 	@Reference
 	private IndexStatusManager _indexStatusManager;
+
+	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
 
 }

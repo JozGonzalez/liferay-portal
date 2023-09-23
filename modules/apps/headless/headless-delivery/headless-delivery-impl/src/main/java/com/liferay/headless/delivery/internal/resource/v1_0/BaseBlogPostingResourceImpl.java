@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -21,7 +12,9 @@ import com.liferay.headless.delivery.resource.v1_0.BlogPostingResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -62,7 +55,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -219,7 +211,7 @@ public abstract class BaseBlogPostingResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/blog-postings/{blogPostingId}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/blog-postings/{blogPostingId}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "relatedContents": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the blog post using only the fields received in the request body. Any other fields are left untouched. Returns the updated blog post."
@@ -250,10 +242,6 @@ public abstract class BaseBlogPostingResourceImpl
 
 		BlogPosting existingBlogPosting = getBlogPosting(blogPostingId);
 
-		if (blogPosting.getActions() != null) {
-			existingBlogPosting.setActions(blogPosting.getActions());
-		}
-
 		if (blogPosting.getAlternativeHeadline() != null) {
 			existingBlogPosting.setAlternativeHeadline(
 				blogPosting.getAlternativeHeadline());
@@ -263,13 +251,7 @@ public abstract class BaseBlogPostingResourceImpl
 			existingBlogPosting.setArticleBody(blogPosting.getArticleBody());
 		}
 
-		if (blogPosting.getDateCreated() != null) {
-			existingBlogPosting.setDateCreated(blogPosting.getDateCreated());
-		}
-
-		if (blogPosting.getDateModified() != null) {
-			existingBlogPosting.setDateModified(blogPosting.getDateModified());
-		}
+		existingBlogPosting.setCustomFields(blogPosting.getCustomFields());
 
 		if (blogPosting.getDatePublished() != null) {
 			existingBlogPosting.setDatePublished(
@@ -278,11 +260,6 @@ public abstract class BaseBlogPostingResourceImpl
 
 		if (blogPosting.getDescription() != null) {
 			existingBlogPosting.setDescription(blogPosting.getDescription());
-		}
-
-		if (blogPosting.getEncodingFormat() != null) {
-			existingBlogPosting.setEncodingFormat(
-				blogPosting.getEncodingFormat());
 		}
 
 		if (blogPosting.getExternalReferenceCode() != null) {
@@ -303,15 +280,6 @@ public abstract class BaseBlogPostingResourceImpl
 			existingBlogPosting.setKeywords(blogPosting.getKeywords());
 		}
 
-		if (blogPosting.getNumberOfComments() != null) {
-			existingBlogPosting.setNumberOfComments(
-				blogPosting.getNumberOfComments());
-		}
-
-		if (blogPosting.getSiteId() != null) {
-			existingBlogPosting.setSiteId(blogPosting.getSiteId());
-		}
-
 		if (blogPosting.getTaxonomyCategoryIds() != null) {
 			existingBlogPosting.setTaxonomyCategoryIds(
 				blogPosting.getTaxonomyCategoryIds());
@@ -329,7 +297,7 @@ public abstract class BaseBlogPostingResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/blog-postings/{blogPostingId}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/blog-postings/{blogPostingId}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "relatedContents": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the blog post with the information sent in the request body. Any missing fields are deleted, unless they are required."
@@ -895,7 +863,7 @@ public abstract class BaseBlogPostingResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/blog-postings' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/blog-postings' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "relatedContents": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new blog post."
@@ -1078,7 +1046,7 @@ public abstract class BaseBlogPostingResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}' -d $'{"alternativeHeadline": ___, "articleBody": ___, "customFields": ___, "datePublished": ___, "description": ___, "externalReferenceCode": ___, "friendlyUrlPath": ___, "headline": ___, "image": ___, "keywords": ___, "relatedContents": ___, "taxonomyCategoryIds": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the site's blog post with the given external reference code, or creates it if it not exists."
@@ -1307,14 +1275,15 @@ public abstract class BaseBlogPostingResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<BlogPosting, Exception> blogPostingUnsafeConsumer = null;
+		UnsafeFunction<BlogPosting, BlogPosting, Exception>
+			blogPostingUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("siteId")) {
-				blogPostingUnsafeConsumer = blogPosting -> postSiteBlogPosting(
+				blogPostingUnsafeFunction = blogPosting -> postSiteBlogPosting(
 					(Long)parameters.get("siteId"), blogPosting);
 			}
 			else {
@@ -1323,27 +1292,72 @@ public abstract class BaseBlogPostingResourceImpl
 			}
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			blogPostingUnsafeConsumer =
-				blogPosting -> putSiteBlogPostingByExternalReferenceCode(
-					blogPosting.getSiteId() != null ? blogPosting.getSiteId() :
-						(Long)parameters.get("siteId"),
-					blogPosting.getExternalReferenceCode(), blogPosting);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				blogPostingUnsafeFunction =
+					blogPosting -> putSiteBlogPostingByExternalReferenceCode(
+						blogPosting.getSiteId() != null ?
+							blogPosting.getSiteId() :
+								(Long)parameters.get("siteId"),
+						blogPosting.getExternalReferenceCode(), blogPosting);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				blogPostingUnsafeFunction = blogPosting -> {
+					BlogPosting persistedBlogPosting = null;
+
+					try {
+						BlogPosting getBlogPosting =
+							getSiteBlogPostingByExternalReferenceCode(
+								blogPosting.getSiteId() != null ?
+									blogPosting.getSiteId() :
+										(Long)parameters.get("siteId"),
+								blogPosting.getExternalReferenceCode());
+
+						persistedBlogPosting = patchBlogPosting(
+							getBlogPosting.getId() != null ?
+								getBlogPosting.getId() :
+									_parseLong(
+										(String)parameters.get(
+											"blogPostingId")),
+							blogPosting);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						if (parameters.containsKey("siteId")) {
+							persistedBlogPosting = postSiteBlogPosting(
+								(Long)parameters.get("siteId"), blogPosting);
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [siteId]");
+						}
+					}
+
+					return persistedBlogPosting;
+				};
+			}
 		}
 
-		if (blogPostingUnsafeConsumer == null) {
+		if (blogPostingUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for BlogPosting");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				blogPostings, blogPostingUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				blogPostings, blogPostingUnsafeConsumer);
+				blogPostings, blogPostingUnsafeFunction::apply);
 		}
 		else {
 			for (BlogPosting blogPosting : blogPostings) {
-				blogPostingUnsafeConsumer.accept(blogPosting);
+				blogPostingUnsafeFunction.apply(blogPosting);
 			}
 		}
 	}
@@ -1431,40 +1445,53 @@ public abstract class BaseBlogPostingResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<BlogPosting, Exception> blogPostingUnsafeConsumer = null;
+		UnsafeFunction<BlogPosting, BlogPosting, Exception>
+			blogPostingUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			blogPostingUnsafeConsumer = blogPosting -> patchBlogPosting(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			blogPostingUnsafeFunction = blogPosting -> patchBlogPosting(
 				blogPosting.getId() != null ? blogPosting.getId() :
-					Long.parseLong((String)parameters.get("blogPostingId")),
+					_parseLong((String)parameters.get("blogPostingId")),
 				blogPosting);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			blogPostingUnsafeConsumer = blogPosting -> putBlogPosting(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			blogPostingUnsafeFunction = blogPosting -> putBlogPosting(
 				blogPosting.getId() != null ? blogPosting.getId() :
-					Long.parseLong((String)parameters.get("blogPostingId")),
+					_parseLong((String)parameters.get("blogPostingId")),
 				blogPosting);
 		}
 
-		if (blogPostingUnsafeConsumer == null) {
+		if (blogPostingUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for BlogPosting");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				blogPostings, blogPostingUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				blogPostings, blogPostingUnsafeConsumer);
+				blogPostings, blogPostingUnsafeFunction::apply);
 		}
 		else {
 			for (BlogPosting blogPosting : blogPostings) {
-				blogPostingUnsafeConsumer.accept(blogPosting);
+				blogPostingUnsafeFunction.apply(blogPosting);
 			}
 		}
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1632,6 +1659,15 @@ public abstract class BaseBlogPostingResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<BlogPosting>,
+			 UnsafeFunction<BlogPosting, BlogPosting, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1851,6 +1887,12 @@ public abstract class BaseBlogPostingResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1881,7 +1923,19 @@ public abstract class BaseBlogPostingResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<BlogPosting>,
+		 UnsafeFunction<BlogPosting, BlogPosting, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<BlogPosting>, UnsafeConsumer<BlogPosting, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

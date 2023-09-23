@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.fido2.credential.service.persistence.impl;
@@ -46,7 +37,6 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -1982,30 +1972,14 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"userId", "credentialKeyHash"}, false);
 
-		_setMFAFIDO2CredentialEntryUtilPersistence(this);
+		MFAFIDO2CredentialEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setMFAFIDO2CredentialEntryUtilPersistence(null);
+		MFAFIDO2CredentialEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(MFAFIDO2CredentialEntryImpl.class.getName());
-	}
-
-	private void _setMFAFIDO2CredentialEntryUtilPersistence(
-		MFAFIDO2CredentialEntryPersistence mfaFIDO2CredentialEntryPersistence) {
-
-		try {
-			Field field = MFAFIDO2CredentialEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, mfaFIDO2CredentialEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

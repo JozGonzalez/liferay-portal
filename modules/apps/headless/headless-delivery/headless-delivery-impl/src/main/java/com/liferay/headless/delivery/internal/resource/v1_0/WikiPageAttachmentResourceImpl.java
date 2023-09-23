@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -157,7 +148,7 @@ public class WikiPageAttachmentResourceImpl
 				contextUser.getUserId(), WikiPage.class.getName(),
 				wikiPage.getResourcePrimKey(), WikiConstants.SERVICE_NAME,
 				folder.getFolderId(), binaryFile.getInputStream(),
-				binaryFile.getFileName(), binaryFile.getFileName(), false));
+				binaryFile.getFileName(), binaryFile.getContentType(), true));
 	}
 
 	private WikiPageAttachment _toWikiPageAttachment(FileEntry fileEntry)
@@ -165,9 +156,8 @@ public class WikiPageAttachmentResourceImpl
 
 		return new WikiPageAttachment() {
 			{
-				contentUrl = _dlURLHelper.getPreviewURL(
-					fileEntry, fileEntry.getFileVersion(), null, "", false,
-					false);
+				contentUrl = _portletFileRepository.getPortletFileEntryURL(
+					null, fileEntry, null);
 				contentValue = ContentValueUtil.toContentValue(
 					"contentValue", fileEntry::getContentStream,
 					contextUriInfo);

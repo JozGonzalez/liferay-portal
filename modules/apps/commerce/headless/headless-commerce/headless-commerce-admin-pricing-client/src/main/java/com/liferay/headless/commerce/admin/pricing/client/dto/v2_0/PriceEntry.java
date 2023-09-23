@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
@@ -465,6 +456,27 @@ public class PriceEntry implements Cloneable, Serializable {
 
 	protected Long priceListId;
 
+	public Boolean getPriceOnApplication() {
+		return priceOnApplication;
+	}
+
+	public void setPriceOnApplication(Boolean priceOnApplication) {
+		this.priceOnApplication = priceOnApplication;
+	}
+
+	public void setPriceOnApplication(
+		UnsafeSupplier<Boolean, Exception> priceOnApplicationUnsafeSupplier) {
+
+		try {
+			priceOnApplication = priceOnApplicationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean priceOnApplication;
+
 	public Product getProduct() {
 		return product;
 	}
@@ -485,6 +497,27 @@ public class PriceEntry implements Cloneable, Serializable {
 	}
 
 	protected Product product;
+
+	public BigDecimal getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(BigDecimal quantity) {
+		this.quantity = quantity;
+	}
+
+	public void setQuantity(
+		UnsafeSupplier<BigDecimal, Exception> quantityUnsafeSupplier) {
+
+		try {
+			quantity = quantityUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected BigDecimal quantity;
 
 	public Sku getSku() {
 		return sku;
@@ -567,6 +600,27 @@ public class PriceEntry implements Cloneable, Serializable {
 	}
 
 	protected TierPrice[] tierPrices;
+
+	public String getUnitOfMeasureKey() {
+		return unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		this.unitOfMeasureKey = unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(
+		UnsafeSupplier<String, Exception> unitOfMeasureKeyUnsafeSupplier) {
+
+		try {
+			unitOfMeasureKey = unitOfMeasureKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String unitOfMeasureKey;
 
 	@Override
 	public PriceEntry clone() throws CloneNotSupportedException {

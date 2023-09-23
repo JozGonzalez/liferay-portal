@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.scheduler.quartz.internal;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -43,6 +34,7 @@ import com.liferay.portal.scheduler.quartz.internal.job.MessageSenderJob;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -52,9 +44,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import org.quartz.Calendar;
 import org.quartz.JobBuilder;
@@ -62,6 +51,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.JobPersistenceException;
+import org.quartz.ListenerManager;
 import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerContext;
@@ -71,6 +61,7 @@ import org.quartz.TriggerUtils;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.jdbcjobstore.UpdateLockRowSemaphore;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.listeners.SchedulerListenerSupport;
 import org.quartz.spi.OperableTrigger;
 
 /**
@@ -393,38 +384,11 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 		try {
 			_persistedScheduler.start();
 
-			initJobState();
-
 			_memoryScheduler.start();
 		}
 		catch (Exception exception) {
 			throw new SchedulerException(
 				"Unable to start scheduler", exception);
-		}
-	}
-
-	@Override
-	public void unschedule(
-			String jobName, String groupName, StorageType storageType)
-		throws SchedulerException {
-
-		try {
-			Scheduler scheduler = _getScheduler(storageType);
-
-			jobName = _fixMaxLength(jobName, _jobNameMaxLength, storageType);
-			groupName = _fixMaxLength(
-				groupName, _groupNameMaxLength, storageType);
-
-			JobKey jobKey = new JobKey(jobName, groupName);
-
-			unschedule(scheduler, jobKey);
-		}
-		catch (Exception exception) {
-			throw new SchedulerException(
-				StringBundler.concat(
-					"Unable to unschedule job {jobName=", jobName,
-					", groupName=", groupName, "}"),
-				exception);
 		}
 	}
 
@@ -467,6 +431,13 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 
 	@Activate
 	protected void activate() {
+		_descriptionMaxLength = GetterUtil.getInteger(
+			_props.get(PropsKeys.SCHEDULER_DESCRIPTION_MAX_LENGTH), 120);
+		_groupNameMaxLength = GetterUtil.getInteger(
+			_props.get(PropsKeys.SCHEDULER_GROUP_NAME_MAX_LENGTH), 80);
+		_jobNameMaxLength = GetterUtil.getInteger(
+			_props.get(PropsKeys.SCHEDULER_JOB_NAME_MAX_LENGTH), 80);
+
 		_schedulerEngineEnabled = GetterUtil.getBoolean(
 			_props.get(PropsKeys.SCHEDULER_ENABLED));
 
@@ -523,6 +494,24 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 			return null;
 		}
 
+		String jobName = jobKey.getName();
+		String groupName = jobKey.getGroup();
+
+		Trigger trigger = scheduler.getTrigger(
+			new TriggerKey(jobName, groupName));
+
+		if (trigger == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to find trigger for job (" + jobKey +
+						"), will delete it");
+			}
+
+			scheduler.deleteJob(jobKey);
+
+			return null;
+		}
+
 		SchedulerResponse schedulerResponse = new SchedulerResponse();
 
 		JobDataMap jobDataMap = jobDetail.getJobDataMap();
@@ -541,20 +530,6 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 		schedulerResponse.setStorageType(
 			StorageType.valueOf(
 				jobDataMap.getString(SchedulerEngine.STORAGE_TYPE)));
-
-		String jobName = jobKey.getName();
-		String groupName = jobKey.getGroup();
-
-		TriggerKey triggerKey = new TriggerKey(jobName, groupName);
-
-		Trigger trigger = scheduler.getTrigger(triggerKey);
-
-		if (trigger == null) {
-			schedulerResponse.setGroupName(groupName);
-			schedulerResponse.setJobName(jobName);
-
-			return schedulerResponse;
-		}
 
 		message.put(SchedulerEngine.END_TIME, trigger.getEndTime());
 		message.put(
@@ -593,35 +568,6 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 		}
 
 		return schedulerResponses;
-	}
-
-	protected void initJobState() throws Exception {
-		List<String> groupNames = _persistedScheduler.getJobGroupNames();
-
-		for (String groupName : groupNames) {
-			Set<JobKey> jobKeys = _persistedScheduler.getJobKeys(
-				GroupMatcher.jobGroupEquals(groupName));
-
-			for (JobKey jobKey : jobKeys) {
-				Trigger trigger = _persistedScheduler.getTrigger(
-					new TriggerKey(jobKey.getName(), jobKey.getGroup()));
-
-				if (trigger != null) {
-					continue;
-				}
-
-				if (_schedulerEngineHelper != null) {
-					JobDetail jobDetail = _persistedScheduler.getJobDetail(
-						jobKey);
-
-					_schedulerEngineHelper.auditSchedulerJobs(
-						getMessage(jobDetail.getJobDataMap()),
-						TriggerState.EXPIRED);
-				}
-
-				_persistedScheduler.deleteJob(jobKey);
-			}
-		}
 	}
 
 	protected void schedule(
@@ -672,62 +618,6 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 					objectAlreadyExistsException);
 			}
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setProps(Props props) {
-		_props = props;
-
-		_descriptionMaxLength = GetterUtil.getInteger(
-			_props.get(PropsKeys.SCHEDULER_DESCRIPTION_MAX_LENGTH), 120);
-
-		_groupNameMaxLength = GetterUtil.getInteger(
-			_props.get(PropsKeys.SCHEDULER_GROUP_NAME_MAX_LENGTH), 80);
-
-		_jobNameMaxLength = GetterUtil.getInteger(
-			_props.get(PropsKeys.SCHEDULER_JOB_NAME_MAX_LENGTH), 80);
-	}
-
-	protected void unschedule(Scheduler scheduler, JobKey jobKey)
-		throws Exception {
-
-		JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-
-		if (jobDetail == null) {
-			return;
-		}
-
-		TriggerKey triggerKey = new TriggerKey(
-			jobKey.getName(), jobKey.getGroup());
-
-		Trigger trigger = scheduler.getTrigger(triggerKey);
-
-		if (trigger == null) {
-			return;
-		}
-
-		JobDataMap jobDataMap = jobDetail.getJobDataMap();
-
-		JobState jobState = _getJobState(jobDataMap);
-
-		jobState.setTriggerDate(SchedulerEngine.END_TIME, new Date());
-		jobState.setTriggerDate(
-			SchedulerEngine.FINAL_FIRE_TIME, trigger.getPreviousFireTime());
-		jobState.setTriggerDate(SchedulerEngine.NEXT_FIRE_TIME, null);
-		jobState.setTriggerDate(
-			SchedulerEngine.PREVIOUS_FIRE_TIME, trigger.getPreviousFireTime());
-		jobState.setTriggerDate(
-			SchedulerEngine.START_TIME, trigger.getStartTime());
-
-		jobState.setTriggerState(TriggerState.UNSCHEDULED);
-
-		jobDataMap.put(
-			SchedulerEngine.JOB_STATE,
-			JobStateSerializeUtil.serialize(jobState));
-
-		scheduler.unscheduleJob(triggerKey);
-
-		scheduler.addJob(jobDetail, true);
 	}
 
 	protected void update(
@@ -838,10 +728,13 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 
 		SchedulerContext schedulerContext = scheduler.getContext();
 
-		schedulerContext.put("clusterExecutor", _clusterExecutor);
 		schedulerContext.put("jSONFactory", _jsonFactory);
 		schedulerContext.put("messageBus", _messageBus);
-		schedulerContext.put("props", _props);
+
+		ListenerManager listenerManager = scheduler.getListenerManager();
+
+		listenerManager.addSchedulerListener(
+			new SchedulerListenerImpl(scheduler));
 
 		return scheduler;
 	}
@@ -874,8 +767,10 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 	private static final Log _log = LogFactoryUtil.getLog(
 		QuartzSchedulerEngine.class);
 
-	@Reference
-	private ClusterExecutor _clusterExecutor;
+	private static final Snapshot<SchedulerEngineHelper>
+		_schedulerEngineHelperSnapshot = new Snapshot<>(
+			QuartzSchedulerEngine.class, SchedulerEngineHelper.class, null,
+			true);
 
 	private int _descriptionMaxLength;
 	private int _groupNameMaxLength;
@@ -890,6 +785,8 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 	private MessageBus _messageBus;
 
 	private Scheduler _persistedScheduler;
+
+	@Reference
 	private Props _props;
 
 	@Reference(
@@ -899,11 +796,75 @@ public class QuartzSchedulerEngine implements SchedulerEngine {
 
 	private volatile boolean _schedulerEngineEnabled;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile SchedulerEngineHelper _schedulerEngineHelper;
+	private class SchedulerListenerImpl extends SchedulerListenerSupport {
+
+		public void jobPaused(JobKey jobKey) {
+			_audit(jobKey, TriggerState.PAUSED);
+		}
+
+		public void jobResumed(JobKey jobKey) {
+			_audit(jobKey, TriggerState.NORMAL);
+		}
+
+		public void jobScheduled(Trigger trigger) {
+			_audit(trigger.getJobKey(), TriggerState.NORMAL);
+		}
+
+		public void triggerFinalized(Trigger trigger) {
+			JobKey jobKey = trigger.getJobKey();
+
+			_audit(jobKey, TriggerState.COMPLETE);
+
+			try {
+				JobDetail jobDetail = _scheduler.getJobDetail(jobKey);
+
+				JobDataMap jobDataMap = jobDetail.getJobDataMap();
+
+				SchedulerEngineHelper schedulerEngineHelper =
+					_schedulerEngineHelperSnapshot.get();
+
+				schedulerEngineHelper.delete(
+					jobKey.getName(), jobKey.getGroup(),
+					StorageType.valueOf(
+						jobDataMap.getString(SchedulerEngine.STORAGE_TYPE)));
+			}
+			catch (Exception exception) {
+				_log.error("Unable to delete job " + jobKey, exception);
+			}
+		}
+
+		private SchedulerListenerImpl(Scheduler scheduler) {
+			_scheduler = scheduler;
+		}
+
+		private void _audit(JobKey jobKey, TriggerState triggerState) {
+			SchedulerEngineHelper schedulerEngineHelper =
+				_schedulerEngineHelperSnapshot.get();
+
+			if (schedulerEngineHelper == null) {
+				return;
+			}
+
+			try {
+				JobDetail jobDetail = _scheduler.getJobDetail(jobKey);
+
+				JobDataMap jobDataMap = jobDetail.getJobDataMap();
+
+				Message message = new Message();
+
+				message.setValues(new HashMap<>(jobDataMap.getWrappedMap()));
+
+				schedulerEngineHelper.auditSchedulerJobs(message, triggerState);
+			}
+			catch (Exception exception) {
+				_log.error(
+					"Unable to send audit message for scheduler job " + jobKey,
+					exception);
+			}
+		}
+
+		private final Scheduler _scheduler;
+
+	}
 
 }

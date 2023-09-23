@@ -1,40 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.resource;
 
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.extension.ExtensionProviderRegistry;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
+import com.liferay.portal.vulcan.extension.util.ExtensionUtil;
 import com.liferay.portal.vulcan.internal.configuration.util.ConfigurationUtil;
-import com.liferay.portal.vulcan.internal.extension.EntityExtensionHandler;
-import com.liferay.portal.vulcan.internal.extension.util.ExtensionUtil;
 import com.liferay.portal.vulcan.openapi.DTOProperty;
 import com.liferay.portal.vulcan.openapi.OpenAPIContext;
 import com.liferay.portal.vulcan.openapi.OpenAPISchemaFilter;
@@ -42,6 +33,8 @@ import com.liferay.portal.vulcan.openapi.contributor.OpenAPIContributor;
 import com.liferay.portal.vulcan.resource.OpenAPIResource;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import io.swagger.v3.core.converter.AnnotatedType;
+import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.core.filter.OpenAPISpecFilter;
 import io.swagger.v3.core.filter.SpecFilter;
@@ -77,6 +70,9 @@ import io.swagger.v3.oas.models.tags.Tag;
 
 import java.net.URI;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -87,7 +83,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,7 +94,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -108,7 +102,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
-import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
@@ -152,6 +145,15 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 		throws Exception {
 
 		return getOpenAPI(null, null, resourceClasses, type, uriInfo);
+	}
+
+	@Override
+	public Map<String, Schema> getSchemas(Class<?> entityClass) {
+		return new HashMap<>(
+			ModelConverters.getInstance(
+			).readAll(
+				new AnnotatedType(entityClass)
+			));
 	}
 
 	@Override
@@ -369,13 +371,34 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 	protected void activate(BundleContext bundleContext)
 		throws InvalidSyntaxException {
 
-		Filter filter = bundleContext.createFilter(
-			"(" + JaxrsWhiteboardConstants.JAX_RS_RESOURCE + "=true)");
+		_entityClassNameServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, null,
+				"(" + JaxrsWhiteboardConstants.JAX_RS_RESOURCE + "=true)",
+				new PropertyServiceReferenceMapper<>("component.name"),
+				new ServiceTrackerCustomizer<Object, String>() {
 
-		_serviceTracker = new ServiceTracker<>(
-			bundleContext, filter, new JaxRsResourceTrackerCustomizer());
+					@Override
+					public String addingService(
+						ServiceReference<Object> serviceReference) {
 
-		_serviceTracker.open();
+						return (String)serviceReference.getProperty(
+							"entity.class.name");
+					}
+
+					@Override
+					public void modifiedService(
+						ServiceReference<Object> serviceReference,
+						String entityClassName) {
+					}
+
+					@Override
+					public void removedService(
+						ServiceReference<Object> serviceReference,
+						String entityClassName) {
+					}
+
+				});
 
 		_trackedOpenAPIContributors = ServiceTrackerListFactory.open(
 			bundleContext, OpenAPIContributor.class);
@@ -383,8 +406,9 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 
 	@Deactivate
 	protected void deactivate() {
-		_serviceTracker.close();
 		_trackedOpenAPIContributors.close();
+
+		_entityClassNameServiceTrackerMap.close();
 	}
 
 	private static String _getUpdatedReference(
@@ -518,13 +542,8 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 			return UriInfoUtil.getBasePath(uriInfo);
 		}
 
-		UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(uriInfo);
-
-		uriBuilder.host(_portal.getForwardedHost(httpServletRequest));
-
-		if (_portal.isSecure(httpServletRequest)) {
-			uriBuilder.scheme(Http.HTTPS);
-		}
+		UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(
+			httpServletRequest, uriInfo);
 
 		return String.valueOf(uriBuilder.build());
 	}
@@ -533,8 +552,9 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 		Set<String> classNames = new HashSet<>();
 
 		for (Class<?> resourceClass : resourceClasses) {
-			String entryClassName = _entityClassNames.get(
-				resourceClass.getName());
+			String entryClassName =
+				_entityClassNameServiceTrackerMap.getService(
+					resourceClass.getName());
 
 			if (entryClassName != null) {
 				classNames.add(entryClassName);
@@ -729,7 +749,9 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 
 			openAPIContext = new OpenAPIContext();
 
+			openAPIContext.setBaseURL(uri.toString());
 			openAPIContext.setPath(uri.getPath());
+			openAPIContext.setUriInfo(uriInfo);
 			openAPIContext.setVersion(
 				StringUtil.extractFirst(uriInfo.getPath(), StringPool.SLASH));
 		}
@@ -1120,6 +1142,24 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 					schema.setFormat("date");
 					schema.setType("string");
 				}
+				else if (type.equals("DateTime")) {
+					schema.setFormat("date-time");
+					schema.setType("string");
+
+					if ((dtoProperty.getExtensions() != null) &&
+						StringUtil.equals(
+							MapUtil.getString(
+								dtoProperty.getExtensions(), "x-timeStorage"),
+							"useInputAsEntered")) {
+
+						LocalDateTime localDateTime = LocalDateTime.now();
+
+						schema.setExample(
+							localDateTime.format(
+								DateTimeFormatter.ofPattern(
+									"yyyy-MM-dd'T'HH:mm:ss.SSS")));
+					}
+				}
 				else if (type.equals("Double")) {
 					schema.setFormat("double");
 					schema.setType("number");
@@ -1397,51 +1437,11 @@ public class OpenAPIResourceImpl implements OpenAPIResource {
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
 
-	private final Map<String, String> _entityClassNames =
-		new ConcurrentHashMap<>();
+	private ServiceTrackerMap<String, String> _entityClassNameServiceTrackerMap;
 
 	@Reference
 	private ExtensionProviderRegistry _extensionProviderRegistry;
 
-	@Reference
-	private Portal _portal;
-
-	private ServiceTracker<?, ?> _serviceTracker;
 	private ServiceTrackerList<OpenAPIContributor> _trackedOpenAPIContributors;
-
-	private class JaxRsResourceTrackerCustomizer
-		implements ServiceTrackerCustomizer<Object, String> {
-
-		@Override
-		public String addingService(ServiceReference<Object> serviceReference) {
-			String componentName = (String)serviceReference.getProperty(
-				"component.name");
-			String entityClassName = (String)serviceReference.getProperty(
-				"entity.class.name");
-
-			if (Validator.isNull(componentName) ||
-				Validator.isNull(entityClassName)) {
-
-				return null;
-			}
-
-			_entityClassNames.put(componentName, entityClassName);
-
-			return componentName;
-		}
-
-		@Override
-		public void modifiedService(
-			ServiceReference<Object> serviceReference, String componentName) {
-		}
-
-		@Override
-		public void removedService(
-			ServiceReference<Object> serviceReference, String componentName) {
-
-			_entityClassNames.remove(componentName);
-		}
-
-	}
 
 }

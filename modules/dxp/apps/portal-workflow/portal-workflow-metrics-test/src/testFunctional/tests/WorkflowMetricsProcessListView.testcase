@@ -9,7 +9,7 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		User.firstLoginPG();
 
@@ -22,9 +22,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -34,7 +34,9 @@ definition {
 	test CanSearchBySimilarWords {
 		WorkflowMetricsProcessListView.metricsWorkflowSearch(workflowSearchName = "Single Ap");
 
-		WorkflowMetrics.assertWorkflowProcessPresent(workflowProcessName = "Single Approver");
+		AssertElementPresent(
+			key_workflowProcessName = "Single Approver",
+			locator1 = "WorkflowMetrics#METRICS_WORKFLOW_PROCESS_NAME");
 	}
 
 	@description = "LPS-88573 - Verify that the Clear All option cleans the search results"
@@ -55,53 +57,34 @@ definition {
 	@description = "LPS-86638 - Verify that the pagination button indicates the selected page, even when there is only 1 page"
 	@priority = 3
 	test PaginationButtonIndicatesSelectedPage {
-		property test.name.skip.portal.instance = "WorkflowMetricsProcessListView#PaginationButtonIndicatesSelectedPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
 
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 1");
+		for (var newWorkflow : list "1,2,3") {
+			Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow ${newWorkflow}");
 
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
+			ProcessBuilderKaleoDesignerReact.addConnector(
+				connectorIn = "end",
+				connectorLabel = "Start-End Connector",
+				connectorOut = "start",
+				key_direction = "right");
 
-		PortletEntry.publish();
+			PortletEntry.publish();
 
-		Navigator.gotoBack();
-
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 2");
-
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
-
-		PortletEntry.publish();
-
-		Navigator.gotoBack();
-
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 3");
-
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
-
-		PortletEntry.publish();
-
-		Navigator.gotoBack();
+			Navigator.gotoBack();
+		}
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Metrics");
+
+		ACLoading.waitForLoadingComplete();
 
 		WorkflowMetricsProcessListView.assertPaginationComponentPresent(pageNumberList = 1);
 	}
@@ -109,48 +92,27 @@ definition {
 	@description = "LPS-86638 - Verify that pagination follows in asc/desc sequence"
 	@priority = 3
 	test PaginationFollowsAscDescSequence {
-		property test.name.skip.portal.instance = "WorkflowMetricsProcessListView#PaginationFollowsAscDescSequence";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
 
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 1");
+		for (var newWorkflow : list "1,2,3") {
+			Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow ${newWorkflow}");
 
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
+			ProcessBuilderKaleoDesignerReact.addConnector(
+				connectorIn = "end",
+				connectorLabel = "Start-End Connector",
+				connectorOut = "start",
+				key_direction = "right");
 
-		PortletEntry.publish();
+			PortletEntry.publish();
 
-		Navigator.gotoBack();
-
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 2");
-
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
-
-		PortletEntry.publish();
-
-		Navigator.gotoBack();
-
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow 3");
-
-		ProcessBuilderKaleoDesignerReact.addConnector(
-			connectorIn = "end",
-			connectorLabel = "Start-End Connector",
-			connectorOut = "start",
-			key_direction = "right");
-
-		PortletEntry.publish();
-
-		Navigator.gotoBack();
+			Navigator.gotoBack();
+		}
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -169,7 +131,8 @@ definition {
 	@description = "LPS-86638 - Verify that the pagination component is displayed when the table has 5 items or more"
 	@priority = 3
 	test PaginationIsDisplayedWhenTableHas5Items {
-		property test.name.skip.portal.instance = "WorkflowMetricsProcessListView#PaginationIsDisplayedWhenTableHas5Items";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -247,7 +210,8 @@ definition {
 	@description = "LPS-88573 - Verify that once an order option is made by the user, this definition should be saved by the system during the user stay in the Metrics context, even when the user makes a search query, reloads the page"
 	@priority = 3
 	test SavedOrderOptionStaysInMetricsContext {
-		property test.name.skip.portal.instance = "WorkflowMetricsProcessListView#SavedOrderOptionStaysInMetricsContext";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Single Approver A");
 
@@ -374,7 +338,8 @@ definition {
 	@description = "LPS-88573 - Verify that the table entries are ordered by Overdue, from biggest to the smaller value, by default"
 	@priority = 3
 	test TableIsOrderedByOverdueDesc {
-		property test.name.skip.portal.instance = "WorkflowMetricsProcessListView#TableIsOrderedByOverdueDesc";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Test Workflow");
 

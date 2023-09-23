@@ -1,32 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
-
-import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
 
 import {
 	ColorPicker,
 	DEFAULT_TOKEN_LABEL,
-} from '../../../common/components/ColorPicker/ColorPicker';
+	convertRGBtoHex,
+} from '@liferay/layout-js-components-web';
+import PropTypes from 'prop-types';
+import React, {useEffect, useMemo, useState} from 'react';
+
 import {useStyleBook} from '../../../plugins/page_design_options/hooks/useStyleBook';
 import {ConfigurationFieldPropTypes} from '../../../prop_types/index';
 import {useActiveItemId} from '../../contexts/ControlsContext';
 import {useGlobalContext} from '../../contexts/GlobalContext';
 import {useSelector} from '../../contexts/StoreContext';
 import selectCanDetachTokenValues from '../../selectors/selectCanDetachTokenValues';
-import {convertRGBtoHex} from '../../utils/convertRGBtoHex';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
+import {getResetLabelByViewport} from '../../utils/getResetLabelByViewport';
 import {ColorPaletteField} from './ColorPaletteField';
 
 export function ColorPickerField({field, isCustomStyle, onValueSelect, value}) {
@@ -38,6 +30,11 @@ export function ColorPickerField({field, isCustomStyle, onValueSelect, value}) {
 		(state) => state.selectedViewportSize
 	);
 	const {tokenValues} = useStyleBook();
+
+	const restoreButtonLabel = useMemo(
+		() => getResetLabelByViewport(selectedViewportSize),
+		[selectedViewportSize]
+	);
 
 	useEffect(() => {
 		if (!field.cssProperty) {
@@ -71,6 +68,7 @@ export function ColorPickerField({field, isCustomStyle, onValueSelect, value}) {
 
 	return Object.keys(tokenValues).length ? (
 		<ColorPicker
+			activeItemId={activeItemId}
 			canDetachTokenValues={canDetachTokenValues}
 			defaultTokenLabel={
 				computedValue ? computedValue : DEFAULT_TOKEN_LABEL
@@ -78,6 +76,7 @@ export function ColorPickerField({field, isCustomStyle, onValueSelect, value}) {
 			defaultTokenValue={computedValue}
 			field={field}
 			onValueSelect={onValueSelect}
+			restoreButtonLabel={restoreButtonLabel}
 			selectedViewportSize={selectedViewportSize}
 			showLabel={isCustomStyle}
 			tokenValues={tokenValues}

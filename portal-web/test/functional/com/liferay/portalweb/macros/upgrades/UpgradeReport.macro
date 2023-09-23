@@ -1,0 +1,38 @@
+definition {
+
+	macro getAutoUpgradeReportFileContent {
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+		var fileContentReport = FileUtil.read("${liferayHome}/reports/upgrade_report.info");
+
+		return ${fileContentReport};
+	}
+
+	macro getUpgradeExecutionTime {
+		var upgradeRunTimeReport = RegexUtil.replace(${reportFileContent}, "Execution time: (.*[0-9])", 1);
+
+		return ${upgradeRunTimeReport};
+	}
+
+	macro getUpgradeReportFileContent {
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+		var fileContentReport = FileUtil.read("${liferayHome}/tools/portal-tools-db-upgrade-client/reports/upgrade_report.info");
+
+		return ${fileContentReport};
+	}
+
+	macro printUpgradeExecutionTime {
+		if (${upgradeType} == "auto") {
+			var reportFileContent = UpgradeReport.getAutoUpgradeReportFileContent();
+		}
+		else if (${upgradeType} == "client") {
+			var reportFileContent = UpgradeReport.getUpgradeReportFileContent();
+		}
+
+		var upgradeRunTimeReport = UpgradeReport.getUpgradeExecutionTime(reportFileContent = ${reportFileContent});
+
+		echo("Upgrade execution time is ${upgradeRunTimeReport} seconds");
+	}
+
+}

@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import DealRegistration from '../../../common/interfaces/dealRegistration';
@@ -22,27 +16,18 @@ export default async function createDealRegistrationProxyAPI(
 	);
 
 	if (dtoLeadSFResponse.externalReferenceCode) {
-		const dtoLeadQualificationSFResponse = await createDealRegistration(
-			ResourceName.LEAD_QUALIFICATIONS_SALESFORCE,
+		const dtoLeadProjectSFResponse = await createDealRegistration(
+			ResourceName.PROJECT_SALESFORCE,
 			values,
 			dtoLeadSFResponse.externalReferenceCode
 		);
 
-		if (dtoLeadQualificationSFResponse) {
-			const dtoProjectSFResponse = await createDealRegistration(
-				ResourceName.PROJECT_SALESFORCE,
+		if (dtoLeadProjectSFResponse) {
+			await createDealRegistration(
+				ResourceName.LEAD_NOTIFICATION,
 				values,
-				dtoLeadSFResponse.externalReferenceCode,
-				dtoLeadQualificationSFResponse.externalReferenceCode
+				dtoLeadSFResponse.externalReferenceCode
 			);
-
-			if (dtoProjectSFResponse) {
-				await createDealRegistration(
-					ResourceName.LEAD_NOTIFICATION,
-					values,
-					dtoLeadSFResponse.externalReferenceCode
-				);
-			}
 		}
 	}
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.portlet.action;
@@ -21,6 +12,8 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.web.internal.constants.PublicationRoleConstants;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -59,6 +52,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.portlet.PortletException;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
@@ -79,6 +73,18 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class InviteUsersMVCResourceCommand
 	extends BaseTransactionalMVCResourceCommand {
+
+	@Override
+	public boolean serveResource(
+			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+		throws PortletException {
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
+
+			return super.serveResource(resourceRequest, resourceResponse);
+		}
+	}
 
 	@Override
 	protected void doTransactionalCommand(
@@ -148,7 +154,7 @@ public class InviteUsersMVCResourceCommand
 			Map<Locale, String> nameMap = null;
 
 			if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
-				userId = themeDisplay.getDefaultUserId();
+				userId = themeDisplay.getGuestUserId();
 				className = null;
 				classPK = 0;
 				nameMap = new HashMap<>();
@@ -262,7 +268,7 @@ public class InviteUsersMVCResourceCommand
 
 		if (role == null) {
 			role = _roleLocalService.addRole(
-				themeDisplay.getDefaultUserId(), null, 0, name, null, null,
+				themeDisplay.getGuestUserId(), null, 0, name, null, null,
 				RoleConstants.TYPE_PUBLICATIONS, null, null);
 
 			for (String actionId : _getModelResourceActions(roleValue)) {

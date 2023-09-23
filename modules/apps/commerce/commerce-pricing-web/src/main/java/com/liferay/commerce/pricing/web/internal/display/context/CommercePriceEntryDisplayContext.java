@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.web.internal.display.context;
@@ -17,6 +8,7 @@ package com.liferay.commerce.pricing.web.internal.display.context;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
@@ -49,6 +41,7 @@ public class CommercePriceEntryDisplayContext
 
 	public CommercePriceEntryDisplayContext(
 		CommerceCatalogService commerceCatalogService,
+		CommercePriceEntryLocalService commercePriceEntryLocalService,
 		CommercePriceEntryService commercePriceEntryService,
 		ModelResourcePermission<CommercePriceList>
 			commercePriceListModelResourcePermission,
@@ -59,6 +52,7 @@ public class CommercePriceEntryDisplayContext
 			commerceCatalogService, commercePriceListModelResourcePermission,
 			commercePriceListService, httpServletRequest);
 
+		_commercePriceEntryLocalService = commercePriceEntryLocalService;
 		_commercePriceEntryService = commercePriceEntryService;
 	}
 
@@ -82,9 +76,10 @@ public class CommercePriceEntryDisplayContext
 		CommercePriceList commercePriceList = getCommercePriceList();
 
 		CommercePriceEntry instanceBaseCommercePriceEntry =
-			_commercePriceEntryService.getInstanceBaseCommercePriceEntry(
+			_commercePriceEntryLocalService.getInstanceBaseCommercePriceEntry(
 				commercePriceEntry.getCPInstanceUuid(),
-				commercePriceList.getType());
+				commercePriceList.getType(),
+				commercePriceEntry.getUnitOfMeasureKey());
 
 		if (instanceBaseCommercePriceEntry == null) {
 			return StringPool.DASH;
@@ -192,6 +187,8 @@ public class CommercePriceEntryDisplayContext
 		CommercePriceEntryDisplayContext.class);
 
 	private CommercePriceEntry _commercePriceEntry;
+	private final CommercePriceEntryLocalService
+		_commercePriceEntryLocalService;
 	private final CommercePriceEntryService _commercePriceEntryService;
 
 }

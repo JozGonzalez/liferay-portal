@@ -1,27 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
 
-import com.liferay.document.library.kernel.exception.NoSuchFileException;
-import com.liferay.document.library.kernel.store.DLStoreRequest;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.ImageTypeException;
-import com.liferay.portal.kernel.exception.NoSuchImageException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.image.ImageToolUtil;
@@ -31,6 +20,7 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.portal.service.base.ImageLocalServiceBaseImpl;
 
@@ -50,42 +40,23 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
 	@Override
 	public Image deleteImage(long imageId) throws PortalException {
-		try {
-			if (imageId <= 0) {
-				return null;
-			}
-
-			Image image = getImage(imageId);
-
-			if (image == null) {
-				return null;
-			}
-
-			imagePersistence.remove(image);
-
-			String fileName = _getFileName(image.getImageId(), image.getType());
-
-			try {
-				DLStoreUtil.deleteFile(
-					image.getCompanyId(), _REPOSITORY_ID, fileName);
-			}
-			catch (NoSuchFileException noSuchFileException) {
-				throw new NoSuchImageException(noSuchFileException);
-			}
-
-			return image;
-		}
-		catch (NoSuchImageException noSuchImageException) {
-
-			// DLHook throws NoSuchImageException if the file no longer
-			// exists. See LPS-30430. This exception can be ignored.
-
-			if (_log.isWarnEnabled()) {
-				_log.warn(noSuchImageException);
-			}
-
+		if (imageId <= 0) {
 			return null;
 		}
+
+		Image image = getImage(imageId);
+
+		if (image == null) {
+			return null;
+		}
+
+		imagePersistence.remove(image);
+
+		_store.deleteDirectory(
+			image.getCompanyId(), _REPOSITORY_ID,
+			_getFileName(image.getImageId(), image.getType()));
+
+		return image;
 	}
 
 	@Override
@@ -118,6 +89,28 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
 			return null;
 		}
+	}
+
+	@Override
+	public InputStream getImageInputStream(
+			long companyId, long imageId, String type)
+		throws PortalException {
+
+		String fileName = _getFileName(imageId, type);
+
+		if (_store.hasFile(
+				companyId, _REPOSITORY_ID, fileName, Store.VERSION_DEFAULT)) {
+
+			return _store.getFileAsStream(
+				companyId, _REPOSITORY_ID, fileName, StringPool.BLANK);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Get image " + imageId + " from the default company");
+		}
+
+		return _store.getFileAsStream(
+			0, _REPOSITORY_ID, fileName, StringPool.BLANK);
 	}
 
 	@Override
@@ -266,26 +259,22 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 			GroupThreadLocal.getGroupId(), fileName,
 			MimeTypesUtil.getContentType(fileName), bytes);
 
-		if (DLStoreUtil.hasFile(
-				image.getCompanyId(), _REPOSITORY_ID, fileName)) {
+		if (_store.hasFile(
+				image.getCompanyId(), _REPOSITORY_ID, fileName,
+				Store.VERSION_DEFAULT)) {
 
-			DLStoreUtil.deleteFile(
+			_store.deleteDirectory(
 				image.getCompanyId(), _REPOSITORY_ID, fileName);
 		}
 
-		DLStoreUtil.addFile(
-			DLStoreRequest.builder(
-				image.getCompanyId(), _REPOSITORY_ID, fileName
-			).className(
-				image.getModelClassName()
-			).classPK(
-				image.getImageId()
-			).size(
-				image.getSize()
-			).validateFileExtension(
-				true
-			).build(),
-			bytes);
+		try (InputStream inputStream = new UnsyncByteArrayInputStream(bytes)) {
+			_store.addFile(
+				image.getCompanyId(), _REPOSITORY_ID, fileName,
+				Store.VERSION_DEFAULT, inputStream);
+		}
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
+		}
 
 		image = imagePersistence.update(image);
 
@@ -385,5 +374,10 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ImageLocalServiceImpl.class);
+
+	private static volatile Store _store =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			Store.class, ImageLocalServiceImpl.class, "_store",
+			"(default=true)", true);
 
 }

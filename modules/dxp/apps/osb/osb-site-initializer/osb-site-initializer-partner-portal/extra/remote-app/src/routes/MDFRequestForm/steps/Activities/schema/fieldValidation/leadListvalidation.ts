@@ -1,15 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {array, string} from 'yup';
+import {array, number, string} from 'yup';
 
 const leadListFieldsValidation = {
 	detailsLeadFollowUp: string().when('leadGenerated', {
@@ -25,14 +19,20 @@ const leadListFieldsValidation = {
 		then: (schema) => schema.min(1, 'Required'),
 	}),
 	leadGenerated: string().required('Required'),
-	targetOfLeads: string().when('leadGenerated', {
-		is: (leadGenerated: string) => leadGenerated === 'true',
-		then: (schema) =>
-			schema
-				.max(255, 'You have exceeded the character limit')
-				.trim()
-				.required('Required'),
-	}),
+
+	targetOfLeads: number()
+		.typeError('The input must be a number')
+		.when('leadGenerated', {
+			is: (leadGenerated: string) => leadGenerated === 'true',
+			then: (schema) =>
+				schema
+					.min(1, 'Required')
+					.max(
+						9999999,
+						'The value cannot be greater than 9,999,999.99'
+					)
+					.required('Required'),
+		}),
 };
 
 export default leadListFieldsValidation;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -160,25 +151,25 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static DLFileEntry copyFileEntry(
-			long userId, long groupId, long repositoryId, long fileEntryId,
-			long destFolderId, String fileName,
+			long userId, long groupId, long repositoryId,
+			long sourceFileEntryId, long targetFolderId, String fileName,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().copyFileEntry(
-			userId, groupId, repositoryId, fileEntryId, destFolderId, fileName,
-			serviceContext);
+			userId, groupId, repositoryId, sourceFileEntryId, targetFolderId,
+			fileName, serviceContext);
 	}
 
 	public static void copyFileEntryMetadata(
 			long companyId, long fileEntryTypeId, long fileEntryId,
-			long fromFileVersionId, long toFileVersionId,
+			long sourceFileVersionId, long targetFileVersionId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		getService().copyFileEntryMetadata(
-			companyId, fileEntryTypeId, fileEntryId, fromFileVersionId,
-			toFileVersionId, serviceContext);
+			companyId, fileEntryTypeId, fileEntryId, sourceFileVersionId,
+			targetFileVersionId, serviceContext);
 	}
 
 	/**
@@ -729,6 +720,12 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getFileEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	public static Map<Long, Long> getFileEntryTypeIds(
+		long companyId, long[] groupIds, String treePath) {
+
+		return getService().getFileEntryTypeIds(companyId, groupIds, treePath);
+	}
+
 	public static List<DLFileEntry> getGroupFileEntries(
 		long groupId, int start, int end) {
 
@@ -1007,6 +1004,10 @@ public class DLFileEntryLocalServiceUtil {
 
 	public static DLFileEntryLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(DLFileEntryLocalService service) {
+		_service = service;
 	}
 
 	private static volatile DLFileEntryLocalService _service;

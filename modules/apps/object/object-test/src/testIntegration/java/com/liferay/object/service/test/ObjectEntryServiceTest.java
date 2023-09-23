@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -88,11 +79,11 @@ public class ObjectEntryServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_adminUser = TestPropsValues.getUser();
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
-			_objectDefinitionLocalService,
+			false, _objectDefinitionLocalService,
 			Arrays.asList(
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -131,7 +122,7 @@ public class ObjectEntryServiceTest {
 				ServiceContextTestUtil.getServiceContext(
 					TestPropsValues.getGroupId(), _adminUser.getUserId())));
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
 
@@ -139,7 +130,7 @@ public class ObjectEntryServiceTest {
 
 		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -157,7 +148,7 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
 
 		_setUser(_user);
 
@@ -168,7 +159,7 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
 	}
 
 	@Test
@@ -211,13 +202,13 @@ public class ObjectEntryServiceTest {
 
 		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
 
-		ObjectEntry defaultUserObjectEntry = _addObjectEntry(_defaultUser);
+		ObjectEntry guestUserObjectEntry = _addObjectEntry(_guestUser);
 
-		_assertPrincipalException(ActionKeys.VIEW, defaultUserObjectEntry);
+		_assertPrincipalException(ActionKeys.VIEW, guestUserObjectEntry);
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -255,7 +246,9 @@ public class ObjectEntryServiceTest {
 		_objectDefinition.setAccountEntryRestrictedObjectFieldId(
 			objectRelationship.getObjectFieldId2());
 
-		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
 			TestPropsValues.getUserId(),
@@ -403,7 +396,7 @@ public class ObjectEntryServiceTest {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	private User _adminUser;
-	private User _defaultUser;
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;

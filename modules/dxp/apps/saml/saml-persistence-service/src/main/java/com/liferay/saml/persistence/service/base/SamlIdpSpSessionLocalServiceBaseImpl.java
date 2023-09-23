@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.service.base;
@@ -46,8 +37,6 @@ import com.liferay.saml.persistence.service.SamlIdpSpSessionLocalServiceUtil;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpSessionPersistence;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -398,7 +387,7 @@ public abstract class SamlIdpSpSessionLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		SamlIdpSpSessionLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -413,7 +402,8 @@ public abstract class SamlIdpSpSessionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		samlIdpSpSessionLocalService = (SamlIdpSpSessionLocalService)aopProxy;
 
-		_setLocalServiceUtilService(samlIdpSpSessionLocalService);
+		SamlIdpSpSessionLocalServiceUtil.setService(
+			samlIdpSpSessionLocalService);
 	}
 
 	/**
@@ -455,23 +445,6 @@ public abstract class SamlIdpSpSessionLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		SamlIdpSpSessionLocalService samlIdpSpSessionLocalService) {
-
-		try {
-			Field field =
-				SamlIdpSpSessionLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, samlIdpSpSessionLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

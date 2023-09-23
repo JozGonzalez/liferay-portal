@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.exportimport.data.handler.test;
@@ -21,6 +12,7 @@ import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.adapter.StagedExpandoColumn;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryRegistryUtil;
@@ -45,17 +37,18 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.odata.normalizer.Normalizer;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.CriteriaSerializer;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
 import com.liferay.segments.model.SegmentsEntry;
+import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -89,6 +82,22 @@ public class SegmentsEntryStagedModelDataHandlerTest
 					StagedExpandoColumn.class.getName());
 	}
 
+	@After
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+
+		if (_importedSegmentsEntry != null) {
+			_segmentsEntryLocalService.deleteSegmentsEntry(
+				_importedSegmentsEntry.getSegmentsEntryId());
+		}
+
+		if (_segmentsEntry != null) {
+			_segmentsEntryLocalService.deleteSegmentsEntry(
+				_segmentsEntry.getSegmentsEntryId());
+		}
+	}
+
 	@Test
 	public void testExportImportSegmentsEntryWithEntityFieldCustomField()
 		throws Exception {
@@ -112,12 +121,12 @@ public class SegmentsEntryStagedModelDataHandlerTest
 			"(customField/%s eq '%s')", _encodeName(expandoColumn),
 			columnValue);
 
-		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+		_segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 			stagingGroup.getGroupId(), _getCriteria(filterString),
 			User.class.getName());
 
 		StagedModelDataHandlerUtil.exportStagedModel(
-			portletDataContext, segmentsEntry);
+			portletDataContext, _segmentsEntry);
 
 		_expandoColumnLocalService.deleteColumn(expandoColumn.getColumnId());
 
@@ -141,16 +150,16 @@ public class SegmentsEntryStagedModelDataHandlerTest
 			stagedExpandoColumns.get(0);
 
 		SegmentsEntry exportedSegmentsEntry =
-			(SegmentsEntry)readExportedStagedModel(segmentsEntry);
+			(SegmentsEntry)readExportedStagedModel(_segmentsEntry);
 
 		StagedModelDataHandlerUtil.importStagedModel(
 			portletDataContext, exportedSegmentsEntry);
 
-		SegmentsEntry importedSegmentsEntry = (SegmentsEntry)getStagedModel(
-			segmentsEntry.getUuid(), liveGroup);
+		_importedSegmentsEntry = (SegmentsEntry)getStagedModel(
+			_segmentsEntry.getUuid(), liveGroup);
 
 		String importedFilterString = _getFilterString(
-			importedSegmentsEntry.getCriteriaObj());
+			_importedSegmentsEntry.getCriteriaObj());
 
 		Assert.assertEquals(
 			String.format(
@@ -176,12 +185,12 @@ public class SegmentsEntryStagedModelDataHandlerTest
 		String filterString = String.format(
 			"(teamIds eq '%s')", team.getTeamId());
 
-		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+		_segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 			stagingGroup.getGroupId(), _getCriteria(filterString),
 			User.class.getName());
 
 		StagedModelDataHandlerUtil.exportStagedModel(
-			portletDataContext, segmentsEntry);
+			portletDataContext, _segmentsEntry);
 
 		initImport();
 
@@ -194,16 +203,16 @@ public class SegmentsEntryStagedModelDataHandlerTest
 			team.getUuid(), liveGroup.getGroupId());
 
 		SegmentsEntry exportedSegmentsEntry =
-			(SegmentsEntry)readExportedStagedModel(segmentsEntry);
+			(SegmentsEntry)readExportedStagedModel(_segmentsEntry);
 
 		StagedModelDataHandlerUtil.importStagedModel(
 			portletDataContext, exportedSegmentsEntry);
 
-		SegmentsEntry importedSegmentsEntry = (SegmentsEntry)getStagedModel(
-			segmentsEntry.getUuid(), liveGroup);
+		_importedSegmentsEntry = (SegmentsEntry)getStagedModel(
+			_segmentsEntry.getUuid(), liveGroup);
 
 		String importedFilterString = _getFilterString(
-			importedSegmentsEntry.getCriteriaObj());
+			_importedSegmentsEntry.getCriteriaObj());
 
 		Assert.assertEquals(
 			String.format("(teamIds eq '%s')", importedTeam.getTeamId()),
@@ -306,6 +315,12 @@ public class SegmentsEntryStagedModelDataHandlerTest
 
 	@DeleteAfterTestRun
 	private ExpandoTable _expandoTable;
+
+	private SegmentsEntry _importedSegmentsEntry;
+	private SegmentsEntry _segmentsEntry;
+
+	@Inject
+	private SegmentsEntryLocalService _segmentsEntryLocalService;
 
 	private StagedModelRepository<StagedExpandoColumn> _stagedModelRepository;
 

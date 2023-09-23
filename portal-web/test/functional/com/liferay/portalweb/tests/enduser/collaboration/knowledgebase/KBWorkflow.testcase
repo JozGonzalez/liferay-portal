@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,11 +31,13 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-68599."
+	@description = "This is a use case for LPS-68599. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanAddCommentToWorkflowSubmission {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -111,10 +113,6 @@ definition {
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title",
 			kbStatus = "Pending");
-
-		KBArticle.viewInfoPanel(
-			kbArticleTitle = "Knowledge Base Article Title",
-			workflowStatus = "PENDING");
 	}
 
 	@priority = 4
@@ -188,7 +186,7 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
-		KBArticle.gotoSuggestionsNavigationCP();
+		KBArticle.openPageTreePanel(section = "Suggestions");
 
 		KBArticleSuggestion.gotoSuggestionStatusNew(suggestionCount = 1);
 
@@ -196,7 +194,9 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title",
 			kbSuggestionBody = "Knowledge Base Article Suggestion");
 
-		KBArticle.gotoSuggestionsNavigationCP();
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Suggestions");
 
 		KBArticleSuggestion.viewPG(
 			kbSuggestionBody = "Knowledge Base Article Suggestion",
@@ -207,7 +207,9 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title",
 			kbSuggestionBody = "Knowledge Base Article Suggestion");
 
-		KBArticle.gotoSuggestionsNavigationCP();
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Suggestions");
 
 		KBArticleSuggestion.viewPG(
 			kbSuggestionBody = "Knowledge Base Article Suggestion",
@@ -218,7 +220,7 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
-		KBArticle.gotoSuggestionsNavigationCP();
+		KBArticle.openPageTreePanel(section = "Suggestions");
 
 		KBArticleSuggestion.viewNoSuggestions();
 	}

@@ -1,20 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.web.internal.portlet.action;
 
+import com.google.re2j.Pattern;
+import com.google.re2j.PatternSyntaxException;
+
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -23,9 +19,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
+import com.liferay.redirect.model.RedirectPatternEntry;
 import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
@@ -57,13 +55,14 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 
 			_redirectPatternConfigurationProvider.updatePatternStrings(
 				themeDisplay.getScopeGroupId(),
-				_getPatternStrings(actionRequest));
+				_getRedirectPatternEntries(actionRequest));
 		}
-		catch (ConfigurationModelListenerException
-					configurationModelListenerException) {
+		catch (ConfigurationModelListenerException | PatternSyntaxException
+					exception) {
 
-			SessionErrors.add(
-				actionRequest, configurationModelListenerException.getClass());
+			_log.error(exception);
+
+			SessionErrors.add(actionRequest, "redirectPatternInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
@@ -72,10 +71,10 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	private Map<String, String> _getPatternStrings(
+	private List<RedirectPatternEntry> _getRedirectPatternEntries(
 		ActionRequest actionRequest) {
 
-		Map<String, String> patternStrings = new LinkedHashMap<>();
+		List<RedirectPatternEntry> redirectPatternEntries = new ArrayList<>();
 
 		Map<String, String[]> parameterMap = actionRequest.getParameterMap();
 
@@ -100,13 +99,33 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 				destinationURL = destinationURLs[0];
 			}
 
-			if ((patternString != null) && (destinationURL != null)) {
-				patternStrings.put(patternString, destinationURL);
+			String userAgent = _getUserAgent(parameterMap, i);
+
+			if ((patternString != null) && (destinationURL != null) &&
+				(userAgent != null)) {
+
+				redirectPatternEntries.add(
+					new RedirectPatternEntry(
+						Pattern.compile(patternString), destinationURL,
+						userAgent));
 			}
 		}
 
-		return patternStrings;
+		return redirectPatternEntries;
 	}
+
+	private String _getUserAgent(Map<String, String[]> parameterMap, int i) {
+		String[] userAgents = parameterMap.get("userAgent_" + i);
+
+		if ((userAgents.length != 0) && Validator.isNotNull(userAgents[0])) {
+			return userAgents[0];
+		}
+
+		return null;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditRedirectPatternsMVCActionCommand.class);
 
 	@Reference
 	private RedirectPatternConfigurationProvider

@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -77,13 +71,13 @@ export default function PageToolbar({
 	tab,
 	tabs,
 	title,
+	titleAndDescriptionEdited,
 	titleI18n,
 }) {
 	const {availableLanguages, defaultLocale, locale} = useContext(
 		ThemeContext
 	);
 
-	const [edited, setEdited] = useState(false);
 	const [modalFieldFocus, setModalFieldFocus] = useState('title');
 	const [modalVisible, setModalVisible] = useState(false);
 
@@ -104,12 +98,6 @@ export default function PageToolbar({
 		setModalVisible(true);
 	};
 
-	const _handleSubmit = (value) => {
-		setEdited(true);
-
-		onTitleAndDescriptionChange(value);
-	};
-
 	return (
 		<div className="page-toolbar-root">
 			<ClayToolbar
@@ -124,11 +112,11 @@ export default function PageToolbar({
 									disabled={disableTitleAndDescriptionModal}
 									displayLocale={displayLocale}
 									fieldFocus={modalFieldFocus}
-									initialDescription={descriptionI18n}
-									initialTitle={titleI18n}
+									initialDescriptionI18n={descriptionI18n}
+									initialTitleI18n={titleI18n}
 									observer={observer}
 									onClose={onClose}
-									onSubmit={_handleSubmit}
+									onSubmit={onTitleAndDescriptionChange}
 								/>
 							)}
 
@@ -172,7 +160,7 @@ export default function PageToolbar({
 										onClick={_handleClickEdit('title')}
 									>
 										<div className="entry-title text-truncate">
-											{(!edited
+											{(!titleAndDescriptionEdited
 												? title
 												: titleI18n[displayLocale]) || (
 												<span className="entry-title-blank">
@@ -205,14 +193,14 @@ export default function PageToolbar({
 												className="entry-description text-truncate"
 												data-tooltip-align="bottom"
 												title={
-													!edited
+													!titleAndDescriptionEdited
 														? description
 														: descriptionI18n[
 																displayLocale
 														  ]
 												}
 											>
-												{(!edited
+												{(!titleAndDescriptionEdited
 													? description
 													: descriptionI18n[
 															displayLocale
@@ -315,5 +303,6 @@ PageToolbar.propTypes = {
 	tab: PropTypes.string,
 	tabs: PropTypes.object,
 	title: PropTypes.string,
+	titleAndDescriptionEdited: PropTypes.bool,
 	titleI18n: PropTypes.object,
 };

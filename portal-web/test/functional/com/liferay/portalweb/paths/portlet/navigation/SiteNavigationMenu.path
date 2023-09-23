@@ -11,23 +11,38 @@
 
 <tbody>
 <tr>
+	<td>DRAG_PREVIEW_LABEL</td>
+	<td>//div[contains(@class,'drag-preview__label')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DRAG_PREVIEW_BORDER</td>
+	<td>//div[contains(@class,'drag-preview__border')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ITEM_ENTRY</td>
 	<td>//div[contains(@class,'MenuItem')]//p[contains(@class,'card-title')][normalize-space()='${key_itemName}']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ITEM_ENTRY_CLOSE</td>
-	<td>//div[contains(@class,'MenuItem')]//p[contains(@class,'card-title')][normalize-space()='${key_itemName}']/parent::div/following-sibling::div//*[name()='svg'][contains(@class,'circle')]</td>
+	<td>ITEM_ENTRY_BODY</td>
+	<td>//div[contains(@role,'menuitem')][.//p[contains(@class,'card-title')][normalize-space()='${key_itemName}']]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ITEM_ENTRY_DRAG_ICON</td>
-	<td>//div[contains(@class,'MenuItem')][.//p[contains(@class,'card-title')][normalize-space()='${key_sourceItemName}']]//div[contains(@draggable,'true')]</td>
+	<td>//div[contains(@class,'MenuItem')][.//p[contains(@class,'card-title')][normalize-space()='${key_sourceItemName}']]//div[contains(@draggable,'true')]//button[contains(@title,'Move') or contains(@data-restore-title,'Move')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ITEM_ENTRY_ADD_ICON</td>
+	<td>//div[contains(@class,'MenuItem')][.//p[contains(@class,'card-title')][normalize-space()='${key_itemName}']]//button[contains(@title,'Add item ${key_relationship}') or contains(@data-restore-title,'Add item ${key_relationship}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ITEM_ENTRY_N</td>
-	<td>xpath=(//div[contains(@class,'MenuItem')])[${key_index}]</td>
+	<td>xpath=(//p[contains(@class,'card-title')])[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -52,7 +67,7 @@
 </tr>
 <tr>
 	<td>SCOPE_COG</td>
-	<td>//div[contains(@class,'scope-selector')]//*[*[name()='svg'][contains(@class,'lexicon-icon-cog')]]</td>
+	<td>//div[contains(@class,'dropdown')]//button[contains(@class,'dropdown-toggle')]//*[*[name()='svg'][contains(@class,'lexicon-icon-cog')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -62,7 +77,7 @@
 </tr>
 <tr>
 	<td>SIDEBAR_ITEM_NAME</td>
-	<td>//div[contains(@class,'sidebar-header')]//p[contains(.,'${key_itemName}')]</td>
+	<td>//div[contains(@class,'sidebar-header')]//p[contains(@class,'component-title')]//span[normalize-space()='${key_itemName}']</td>
 	<td></td>
 </tr>
 <tr>

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<project basedir="." name="portal-test-liferay-sample-workspace" xmlns:antelope="antlib:ise.antelope.tasks">
+	<property name="workspace.name" value="liferay-sample-workspace" />
+
+	<import file="build-test-workspace.xml" />
+
+	<target name="start-liferay-sample-etc-cron">
+		<condition else="default" property="virtual.instance.id" value="${virtual.instance.id}">
+			<isset property="virtual.instance.id" />
+		</condition>
+
+		<start-spring-boot-client-extension
+			spring.boot.application.name="SampleSpringBootApplication"
+			virtual.instance.id="${virtual.instance.id}"
+			workspace.client.extension.name="liferay-sample-etc-cron"
+		/>
+	</target>
+
+	<target name="start-liferay-sample-etc-spring-boot">
+		<condition else="default" property="virtual.instance.id" value="${virtual.instance.id}">
+			<isset property="virtual.instance.id" />
+		</condition>
+
+		<start-spring-boot-client-extension
+			spring.boot.application.name="SampleSpringBootApplication"
+			virtual.instance.id="${virtual.instance.id}"
+			wait.for.ready="true"
+			workspace.client.extension.name="liferay-sample-etc-spring-boot"
+		/>
+	</target>
+
+	<target name="start-workspace">
+		<deploy-workspace-client-extensions />
+
+		<antcall target="start-liferay-sample-etc-cron" />
+
+		<antcall target="start-liferay-sample-etc-spring-boot" />
+	</target>
+
+	<target name="stop-liferay-sample-etc-cron">
+		<stop-spring-boot-client-extension spring.boot.application.name="SampleSpringBootApplication" />
+	</target>
+
+	<target name="stop-liferay-sample-etc-spring-boot">
+		<stop-spring-boot-client-extension spring.boot.application.name="SampleSpringBootApplication" />
+	</target>
+
+	<target name="stop-workspace">
+		<antcall target="stop-liferay-sample-etc-cron" />
+
+		<antcall target="stop-liferay-sample-etc-spring-boot" />
+
+		<undeploy-workspace-client-extensions />
+	</target>
+</project>

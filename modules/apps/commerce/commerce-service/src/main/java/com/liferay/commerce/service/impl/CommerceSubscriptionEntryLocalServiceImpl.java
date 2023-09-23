@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.impl;
@@ -23,9 +14,6 @@ import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceSubscriptionEntry;
 import com.liferay.commerce.notification.util.CommerceNotificationHelper;
-import com.liferay.commerce.product.service.CPDefinitionLocalService;
-import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPSubscriptionType;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.service.base.CommerceSubscriptionEntryLocalServiceBaseImpl;
@@ -114,13 +102,6 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
-		CPSubscriptionType cpSubscriptionType =
-			_cpSubscriptionTypeRegistry.getCPSubscriptionType(subscriptionType);
-
-		CPSubscriptionType deliveryCPSubscriptionType =
-			_cpSubscriptionTypeRegistry.getCPSubscriptionType(
-				deliverySubscriptionType);
-
 		long commerceSubscriptionEntryId = counterLocalService.increment();
 
 		CommerceSubscriptionEntry commerceSubscriptionEntry =
@@ -138,8 +119,6 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 		commerceSubscriptionEntry.setCurrentCycle(1);
 		commerceSubscriptionEntry.setMaxSubscriptionCycles(
 			maxSubscriptionCycles);
-		commerceSubscriptionEntry.setSubscriptionTypeSettingsProperties(
-			subscriptionTypeSettingsUnicodeProperties);
 		commerceSubscriptionEntry.setLastIterationDate(new Date());
 		commerceSubscriptionEntry.setDeliverySubscriptionLength(
 			deliverySubscriptionLength);
@@ -148,9 +127,10 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 		commerceSubscriptionEntry.setDeliveryCurrentCycle(1);
 		commerceSubscriptionEntry.setDeliveryMaxSubscriptionCycles(
 			deliveryMaxSubscriptionCycles);
-		commerceSubscriptionEntry.setDeliverySubscriptionTypeSettingsProperties(
-			deliverySubscriptionTypeSettingsUnicodeProperties);
 		commerceSubscriptionEntry.setDeliveryLastIterationDate(new Date());
+
+		CPSubscriptionType cpSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(subscriptionType);
 
 		if (cpSubscriptionType != null) {
 			commerceSubscriptionEntry.setSubscriptionStatus(
@@ -163,12 +143,24 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 				cpSubscriptionType.getSubscriptionStartDate(
 					user.getTimeZone(),
 					subscriptionTypeSettingsUnicodeProperties));
+			commerceSubscriptionEntry.
+				setSubscriptionTypeSettingsUnicodeProperties(
+					cpSubscriptionType.
+						getSubscriptionTypeSettingsUnicodeProperties(
+							subscriptionTypeSettingsUnicodeProperties));
 		}
 		else {
 			commerceSubscriptionEntry.setSubscriptionStatus(
 				CommerceSubscriptionEntryConstants.
 					SUBSCRIPTION_STATUS_INACTIVE);
+			commerceSubscriptionEntry.
+				setSubscriptionTypeSettingsUnicodeProperties(
+					subscriptionTypeSettingsUnicodeProperties);
 		}
+
+		CPSubscriptionType deliveryCPSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(
+				deliverySubscriptionType);
 
 		if (deliveryCPSubscriptionType != null) {
 			commerceSubscriptionEntry.setDeliverySubscriptionStatus(
@@ -181,11 +173,19 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 				deliveryCPSubscriptionType.getSubscriptionStartDate(
 					user.getTimeZone(),
 					deliverySubscriptionTypeSettingsUnicodeProperties));
+			commerceSubscriptionEntry.
+				setDeliverySubscriptionTypeSettingsUnicodeProperties(
+					deliveryCPSubscriptionType.
+						getDeliverySubscriptionTypeSettingsUnicodeProperties(
+							deliverySubscriptionTypeSettingsUnicodeProperties));
 		}
 		else {
 			commerceSubscriptionEntry.setDeliverySubscriptionStatus(
 				CommerceSubscriptionEntryConstants.
 					SUBSCRIPTION_STATUS_INACTIVE);
+			commerceSubscriptionEntry.
+				setDeliverySubscriptionTypeSettingsUnicodeProperties(
+					deliverySubscriptionTypeSettingsUnicodeProperties);
 		}
 
 		return commerceSubscriptionEntryPersistence.update(
@@ -330,7 +330,7 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 				user.getTimeZone(),
 				commerceSubscriptionEntry.getDeliverySubscriptionLength(),
 				commerceSubscriptionEntry.
-					getDeliverySubscriptionTypeSettingsProperties(),
+					getDeliverySubscriptionTypeSettingsUnicodeProperties(),
 				commerceSubscriptionEntry.getDeliveryNextIterationDate());
 
 		commerceSubscriptionEntry.setDeliveryNextIterationDate(
@@ -396,7 +396,7 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 				user.getTimeZone(),
 				commerceSubscriptionEntry.getSubscriptionLength(),
 				commerceSubscriptionEntry.
-					getSubscriptionTypeSettingsProperties(),
+					getSubscriptionTypeSettingsUnicodeProperties(),
 				commerceSubscriptionEntry.getNextIterationDate());
 
 		commerceSubscriptionEntry.setNextIterationDate(
@@ -518,9 +518,29 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 			deliverySubscriptionStatus,
 			commerceSubscriptionEntry.getDeliverySubscriptionStatus());
 
+		CPSubscriptionType cpSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(subscriptionType);
+
+		if (cpSubscriptionType != null) {
+			subscriptionTypeSettingsUnicodeProperties =
+				cpSubscriptionType.getSubscriptionTypeSettingsUnicodeProperties(
+					subscriptionTypeSettingsUnicodeProperties);
+		}
+
+		CPSubscriptionType deliveryCPSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(
+				deliverySubscriptionType);
+
+		if (deliveryCPSubscriptionType != null) {
+			deliverySubscriptionTypeSettingsUnicodeProperties =
+				deliveryCPSubscriptionType.
+					getDeliverySubscriptionTypeSettingsUnicodeProperties(
+						deliverySubscriptionTypeSettingsUnicodeProperties);
+		}
+
 		commerceSubscriptionEntry.setSubscriptionLength(subscriptionLength);
 		commerceSubscriptionEntry.setSubscriptionType(subscriptionType);
-		commerceSubscriptionEntry.setSubscriptionTypeSettingsProperties(
+		commerceSubscriptionEntry.setSubscriptionTypeSettingsUnicodeProperties(
 			subscriptionTypeSettingsUnicodeProperties);
 		commerceSubscriptionEntry.setMaxSubscriptionCycles(
 			maxSubscriptionCycles);
@@ -542,8 +562,9 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 			deliverySubscriptionLength);
 		commerceSubscriptionEntry.setDeliverySubscriptionType(
 			deliverySubscriptionType);
-		commerceSubscriptionEntry.setDeliverySubscriptionTypeSettingsProperties(
-			deliverySubscriptionTypeSettingsUnicodeProperties);
+		commerceSubscriptionEntry.
+			setDeliverySubscriptionTypeSettingsUnicodeProperties(
+				deliverySubscriptionTypeSettingsUnicodeProperties);
 		commerceSubscriptionEntry.setDeliveryMaxSubscriptionCycles(
 			deliveryMaxSubscriptionCycles);
 		commerceSubscriptionEntry.setDeliverySubscriptionStatus(
@@ -594,7 +615,7 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 				user.getTimeZone(),
 				commerceSubscriptionEntry.getSubscriptionLength(),
 				commerceSubscriptionEntry.
-					getSubscriptionTypeSettingsProperties(),
+					getSubscriptionTypeSettingsUnicodeProperties(),
 				lastIterationDate);
 
 		commerceSubscriptionEntry.setNextIterationDate(
@@ -818,16 +839,7 @@ public class CommerceSubscriptionEntryLocalServiceImpl
 		CommerceSubscriptionEntryLocalServiceImpl.class);
 
 	@Reference
-	private CommerceChannelLocalService _commerceChannelLocalService;
-
-	@Reference
 	private CommerceNotificationHelper _commerceNotificationHelper;
-
-	@Reference
-	private CPDefinitionLocalService _cpDefinitionLocalService;
-
-	@Reference
-	private CPInstanceLocalService _cpInstanceLocalService;
 
 	@Reference
 	private CPSubscriptionTypeRegistry _cpSubscriptionTypeRegistry;

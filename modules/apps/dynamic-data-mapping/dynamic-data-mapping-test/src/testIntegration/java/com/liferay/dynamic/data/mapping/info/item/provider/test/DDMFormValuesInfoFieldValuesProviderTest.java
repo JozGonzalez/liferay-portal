@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.info.item.provider.test;
@@ -21,7 +12,6 @@ import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFiel
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
@@ -254,9 +244,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 
 		List<InfoFieldValue<InfoLocalizedValue<Object>>> infoFieldValues =
 			_ddmFormValuesInfoFieldValuesProvider.getInfoFieldValues(
-				journalArticle,
-				_ddmBeanTranslator.translate(
-					journalArticle.getDDMFormValues()));
+				journalArticle, journalArticle.getDDMFormValues());
 
 		Assert.assertEquals(
 			infoFieldValues.toString(), 1, infoFieldValues.size());
@@ -275,8 +263,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 	private DDMFormField _createDDMFormField(
 		boolean multiple, Map<String, String> optionsMap, String type) {
 
-		DDMFormField ddmFormField = new DDMFormField(
-			RandomTestUtil.randomString(10), type);
+		DDMFormField ddmFormField = new DDMFormField("name", type);
 
 		ddmFormField.setDataType("text");
 		ddmFormField.setIndexType("text");
@@ -306,9 +293,6 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 
 	@Inject
 	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
-
-	@Inject
-	private DDMBeanTranslator _ddmBeanTranslator;
 
 	@Inject
 	private DDMFormValuesInfoFieldValuesProvider

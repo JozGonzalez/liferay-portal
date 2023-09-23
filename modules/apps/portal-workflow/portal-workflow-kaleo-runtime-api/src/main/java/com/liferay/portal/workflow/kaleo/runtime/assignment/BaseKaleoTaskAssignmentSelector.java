@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.assignment;
@@ -18,6 +9,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.workflow.kaleo.KaleoTaskAssignmentFactory;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment;
+import com.liferay.portal.workflow.kaleo.runtime.constants.AssigneeConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,18 +32,24 @@ public abstract class BaseKaleoTaskAssignmentSelector
 
 		List<KaleoTaskAssignment> kaleoTaskAssignments = new ArrayList<>();
 
-		User user = (User)results.get(USER_ASSIGNMENT);
+		if (results.get(AssigneeConstants.ROLES) != null) {
+			getRoleKaleoTaskAssignments(
+				(List<Role>)results.get(AssigneeConstants.ROLES),
+				kaleoTaskAssignments);
 
-		if (user != null) {
-			KaleoTaskAssignment kaleoTaskAssignment =
-				getUserKaleoTaskAssignment(user);
-
-			kaleoTaskAssignments.add(kaleoTaskAssignment);
+			return kaleoTaskAssignments;
 		}
-		else {
-			List<Role> roles = (List<Role>)results.get(ROLES_ASSIGNMENT);
 
-			getRoleKaleoTaskAssignments(roles, kaleoTaskAssignments);
+		if (results.get(AssigneeConstants.USER) != null) {
+			kaleoTaskAssignments.add(
+				getUserKaleoTaskAssignment(
+					(User)results.get(AssigneeConstants.USER)));
+
+			return kaleoTaskAssignments;
+		}
+
+		for (User user : (List<User>)results.get(AssigneeConstants.USERS)) {
+			kaleoTaskAssignments.add(getUserKaleoTaskAssignment(user));
 		}
 
 		return kaleoTaskAssignments;
@@ -84,10 +82,6 @@ public abstract class BaseKaleoTaskAssignmentSelector
 
 		return kaleoTaskAssignment;
 	}
-
-	protected static final String ROLES_ASSIGNMENT = "roles";
-
-	protected static final String USER_ASSIGNMENT = "user";
 
 	@Reference
 	protected KaleoTaskAssignmentFactory kaleoTaskAssignmentFactory;

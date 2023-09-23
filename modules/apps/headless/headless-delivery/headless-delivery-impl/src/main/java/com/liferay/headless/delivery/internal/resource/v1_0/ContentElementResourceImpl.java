@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.search.AssetSearcherFactory;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.util.AssetHelper;
 import com.liferay.headless.delivery.dto.v1_0.ContentElement;
@@ -22,6 +14,7 @@ import com.liferay.headless.delivery.internal.odata.entity.v1_0.ContentElementEn
 import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.change.tracking.CTAware;
+import com.liferay.portal.kernel.search.BaseSearcher;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -44,7 +37,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
-import com.liferay.portlet.asset.util.AssetSearcher;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,20 +85,18 @@ public class ContentElementResourceImpl extends BaseContentElementResourceImpl {
 
 		Map<String, Facet> facets = searchContext.getFacets();
 
-		AssetSearcher assetSearcher =
-			(AssetSearcher)AssetSearcher.getInstance();
-
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
 		assetEntryQuery.setGroupIds(new long[] {siteId});
 
-		assetSearcher.setAssetEntryQuery(assetEntryQuery);
+		BaseSearcher baseSearcher = _assetSearcherFactory.createBaseSearcher(
+			assetEntryQuery);
 
 		return Page.of(
 			new HashMap<>(), transform(facets.values(), FacetUtil::toFacet),
 			transform(
 				_assetHelper.getAssetEntries(
-					assetSearcher.search(searchContext)),
+					baseSearcher.search(searchContext)),
 				this::_toContentElement),
 			pagination,
 			_assetHelper.searchCount(searchContext, assetEntryQuery));
@@ -237,6 +227,9 @@ public class ContentElementResourceImpl extends BaseContentElementResourceImpl {
 
 	@Reference
 	private AssetHelper _assetHelper;
+
+	@Reference
+	private AssetSearcherFactory _assetSearcherFactory;
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.model.impl;
@@ -86,7 +77,7 @@ public class CommerceTierPriceEntryModelImpl
 		{"promoPrice", Types.DECIMAL}, {"discountDiscovery", Types.BOOLEAN},
 		{"discountLevel1", Types.DECIMAL}, {"discountLevel2", Types.DECIMAL},
 		{"discountLevel3", Types.DECIMAL}, {"discountLevel4", Types.DECIMAL},
-		{"minQuantity", Types.INTEGER}, {"displayDate", Types.TIMESTAMP},
+		{"minQuantity", Types.DECIMAL}, {"displayDate", Types.TIMESTAMP},
 		{"expirationDate", Types.TIMESTAMP},
 		{"lastPublishDate", Types.TIMESTAMP}, {"status", Types.INTEGER},
 		{"statusByUserId", Types.BIGINT}, {"statusByUserName", Types.VARCHAR},
@@ -115,7 +106,7 @@ public class CommerceTierPriceEntryModelImpl
 		TABLE_COLUMNS_MAP.put("discountLevel2", Types.DECIMAL);
 		TABLE_COLUMNS_MAP.put("discountLevel3", Types.DECIMAL);
 		TABLE_COLUMNS_MAP.put("discountLevel4", Types.DECIMAL);
-		TABLE_COLUMNS_MAP.put("minQuantity", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("minQuantity", Types.DECIMAL);
 		TABLE_COLUMNS_MAP.put("displayDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("expirationDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
@@ -126,7 +117,7 @@ public class CommerceTierPriceEntryModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceTierPriceEntry (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceTierPriceEntryId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commercePriceEntryId LONG,price DECIMAL(30, 16) null,promoPrice DECIMAL(30, 16) null,discountDiscovery BOOLEAN,discountLevel1 DECIMAL(30, 16) null,discountLevel2 DECIMAL(30, 16) null,discountLevel3 DECIMAL(30, 16) null,discountLevel4 DECIMAL(30, 16) null,minQuantity INTEGER,displayDate DATE null,expirationDate DATE null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (commerceTierPriceEntryId, ctCollectionId))";
+		"create table CommerceTierPriceEntry (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceTierPriceEntryId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commercePriceEntryId LONG,price BIGDECIMAL null,promoPrice BIGDECIMAL null,discountDiscovery BOOLEAN,discountLevel1 BIGDECIMAL null,discountLevel2 BIGDECIMAL null,discountLevel3 BIGDECIMAL null,discountLevel4 BIGDECIMAL null,minQuantity BIGDECIMAL null,displayDate DATE null,expirationDate DATE null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (commerceTierPriceEntryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CommerceTierPriceEntry";
@@ -453,7 +444,7 @@ public class CommerceTierPriceEntryModelImpl
 					CommerceTierPriceEntry::setDiscountLevel4);
 			attributeSetterBiConsumers.put(
 				"minQuantity",
-				(BiConsumer<CommerceTierPriceEntry, Integer>)
+				(BiConsumer<CommerceTierPriceEntry, BigDecimal>)
 					CommerceTierPriceEntry::setMinQuantity);
 			attributeSetterBiConsumers.put(
 				"displayDate",
@@ -843,12 +834,12 @@ public class CommerceTierPriceEntryModelImpl
 
 	@JSON
 	@Override
-	public int getMinQuantity() {
+	public BigDecimal getMinQuantity() {
 		return _minQuantity;
 	}
 
 	@Override
-	public void setMinQuantity(int minQuantity) {
+	public void setMinQuantity(BigDecimal minQuantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
@@ -861,9 +852,8 @@ public class CommerceTierPriceEntryModelImpl
 	 *             #getColumnOriginalValue(String)}
 	 */
 	@Deprecated
-	public int getOriginalMinQuantity() {
-		return GetterUtil.getInteger(
-			this.<Integer>getColumnOriginalValue("minQuantity"));
+	public BigDecimal getOriginalMinQuantity() {
+		return getColumnOriginalValue("minQuantity");
 	}
 
 	@JSON
@@ -1241,7 +1231,7 @@ public class CommerceTierPriceEntryModelImpl
 		commerceTierPriceEntryImpl.setDiscountLevel4(
 			this.<BigDecimal>getColumnOriginalValue("discountLevel4"));
 		commerceTierPriceEntryImpl.setMinQuantity(
-			this.<Integer>getColumnOriginalValue("minQuantity"));
+			this.<BigDecimal>getColumnOriginalValue("minQuantity"));
 		commerceTierPriceEntryImpl.setDisplayDate(
 			this.<Date>getColumnOriginalValue("displayDate"));
 		commerceTierPriceEntryImpl.setExpirationDate(
@@ -1264,15 +1254,8 @@ public class CommerceTierPriceEntryModelImpl
 	public int compareTo(CommerceTierPriceEntry commerceTierPriceEntry) {
 		int value = 0;
 
-		if (getMinQuantity() < commerceTierPriceEntry.getMinQuantity()) {
-			value = -1;
-		}
-		else if (getMinQuantity() > commerceTierPriceEntry.getMinQuantity()) {
-			value = 1;
-		}
-		else {
-			value = 0;
-		}
+		value = getMinQuantity().compareTo(
+			commerceTierPriceEntry.getMinQuantity());
 
 		if (value != 0) {
 			return value;
@@ -1553,7 +1536,7 @@ public class CommerceTierPriceEntryModelImpl
 	private BigDecimal _discountLevel2;
 	private BigDecimal _discountLevel3;
 	private BigDecimal _discountLevel4;
-	private int _minQuantity;
+	private BigDecimal _minQuantity;
 	private Date _displayDate;
 	private Date _expirationDate;
 	private Date _lastPublishDate;

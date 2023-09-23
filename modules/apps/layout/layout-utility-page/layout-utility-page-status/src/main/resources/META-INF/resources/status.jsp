@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,9 +12,11 @@
 >
 
 	<%
-	StatusDisplayContext statusDisplayContext = new StatusDisplayContext(request);
+	int status = GetterUtil.getInteger(request.getAttribute("status_code"));
 
-	int status = ParamUtil.getInteger(request, "status");
+	if (status == 0) {
+		status = ParamUtil.getInteger(request, "status");
+	}
 
 	if (status > 0) {
 		response.setStatus(status);
@@ -32,9 +25,10 @@
 
 	<c:choose>
 		<c:when test="<%= SessionErrors.contains(request, PrincipalException.getNestedClasses()) %>">
-			<h3 class="alert alert-danger">
-				<liferay-ui:message key="forbidden" />
-			</h3>
+			<clay:alert
+				displayType="danger"
+				message="forbidden"
+			/>
 
 			<liferay-ui:message key="you-do-not-have-permission-to-access-the-requested-resource" />
 
@@ -43,9 +37,10 @@
 			<code class="lfr-url-error"><%= statusDisplayContext.getEscapedURL(themeDisplay) %></code>
 		</c:when>
 		<c:when test="<%= SessionErrors.contains(request, PortalException.class.getName()) || SessionErrors.contains(request, SystemException.class.getName()) %>">
-			<h3 class="alert alert-danger">
-				<liferay-ui:message key="internal-server-error" />
-			</h3>
+			<clay:alert
+				displayType="danger"
+				message="internal-server-error"
+			/>
 
 			<liferay-ui:message key="an-error-occurred-while-accessing-the-requested-resource" />
 
@@ -54,9 +49,10 @@
 			<code class="lfr-url-error"><%= statusDisplayContext.getEscapedURL(themeDisplay) %></code>
 		</c:when>
 		<c:when test="<%= SessionErrors.contains(request, TransformException.class.getName()) %>">
-			<h3 class="alert alert-danger">
-				<liferay-ui:message key="internal-server-error" />
-			</h3>
+			<clay:alert
+				displayType="danger"
+				message="internal-server-error"
+			/>
 
 			<liferay-ui:message key="an-error-occurred-while-processing-the-requested-resource" />
 
@@ -79,9 +75,10 @@
 				type="<%= LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND %>"
 			>
 				<div class="container pb-3 pt-3">
-					<h3 class="alert alert-danger">
-						<liferay-ui:message key="not-found" />
-					</h3>
+					<clay:alert
+						displayType="danger"
+						message="not-found"
+					/>
 
 					<liferay-ui:message key="the-requested-resource-could-not-be-found" />
 
@@ -91,10 +88,32 @@
 				</div>
 			</liferay-layout:render-layout-utility-page-entry>
 		</c:when>
+		<c:when test="<%= status == HttpServletResponse.SC_INTERNAL_SERVER_ERROR %>">
+			<liferay-layout:render-layout-utility-page-entry
+				type="<%= LayoutUtilityPageEntryConstants.TYPE_SC_INTERNAL_SERVER_ERROR %>"
+			>
+				<clay:alert
+					displayType="danger"
+					message="internal-server-error"
+				/>
+
+				<liferay-ui:message key="an-error-occurred-while-accessing-the-requested-resource" />
+
+				<br /><br />
+
+				<code class="lfr-url-error"><%= statusDisplayContext.getEscapedURL(themeDisplay) %></code>
+
+				<%
+				statusDisplayContext.logSessionErrors();
+				%>
+
+			</liferay-layout:render-layout-utility-page-entry>
+		</c:when>
 		<c:otherwise>
-			<h3 class="alert alert-danger">
-				<liferay-ui:message key="internal-server-error" />
-			</h3>
+			<clay:alert
+				displayType="danger"
+				message="internal-server-error"
+			/>
 
 			<liferay-ui:message key="an-error-occurred-while-accessing-the-requested-resource" />
 

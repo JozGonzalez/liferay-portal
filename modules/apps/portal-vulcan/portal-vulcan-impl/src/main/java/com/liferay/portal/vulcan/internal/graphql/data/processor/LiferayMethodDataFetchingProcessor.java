@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.graphql.data.processor;
@@ -41,6 +32,7 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
 import com.liferay.portal.vulcan.graphql.contributor.GraphQLContributor;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 import com.liferay.portal.vulcan.internal.accept.language.AcceptLanguageImpl;
@@ -49,13 +41,13 @@ import com.liferay.portal.vulcan.internal.graphql.util.GraphQLUtil;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.AggregationContextProvider;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.ContextProviderUtil;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.FilterContextProvider;
-import com.liferay.portal.vulcan.internal.jaxrs.context.provider.SortContextProvider;
 import com.liferay.portal.vulcan.internal.jaxrs.validation.ValidationUtil;
 import com.liferay.portal.vulcan.internal.multipart.MultipartUtil;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.GroupUtil;
+import com.liferay.portal.vulcan.util.SortUtil;
 
 import graphql.annotations.processor.util.NamingKit;
 import graphql.annotations.processor.util.ReflectionKit;
@@ -433,7 +425,9 @@ public class LiferayMethodDataFetchingProcessor {
 
 				field.setAccessible(true);
 
-				field.set(instance, _vulcanBatchEngineImportTaskResource);
+				field.set(
+					instance,
+					_vulcanBatchEngineImportTaskResourceFactory.create());
 			}
 			else {
 				Map<String, String[]> parameterMap = new HashMap<>(
@@ -488,9 +482,12 @@ public class LiferayMethodDataFetchingProcessor {
 					BiFunction<Object, String, Sort[]> sortsBiFunction =
 						(resource, sortsString) -> {
 							try {
-								return _getSorts(
-									acceptLanguage,
-									_getEntityModel(resource, parameterMap),
+								EntityModel entityModel = _getEntityModel(
+									resource, parameterMap);
+
+								return SortUtil.getSorts(
+									acceptLanguage, entityModel,
+									_sortParserProvider.provide(entityModel),
 									sortsString);
 							}
 							catch (Exception exception) {
@@ -647,17 +644,6 @@ public class LiferayMethodDataFetchingProcessor {
 		return null;
 	}
 
-	private Sort[] _getSorts(
-		AcceptLanguage acceptLanguage, EntityModel entityModel,
-		String sortsString) {
-
-		SortContextProvider sortContextProvider = new SortContextProvider(
-			_language, _portal, _sortParserProvider);
-
-		return sortContextProvider.createContext(
-			acceptLanguage, entityModel, sortsString);
-	}
-
 	private Field _getThisField(Class<?> clazz) {
 		try {
 			return clazz.getDeclaredField("this$0");
@@ -717,8 +703,8 @@ public class LiferayMethodDataFetchingProcessor {
 	private SortParserProvider _sortParserProvider;
 
 	@Reference
-	private VulcanBatchEngineImportTaskResource
-		_vulcanBatchEngineImportTaskResource;
+	private VulcanBatchEngineImportTaskResourceFactory
+		_vulcanBatchEngineImportTaskResourceFactory;
 
 	private class GraphQLContributorServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer

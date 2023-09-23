@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.mapper;
 
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
+import com.liferay.fragment.entry.processor.editable.element.constants.ActionEditableElementConstants;
 import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
@@ -23,9 +15,11 @@ import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.headless.delivery.dto.v1_0.ActionExecutionResult;
 import com.liferay.headless.delivery.dto.v1_0.ClassPKReference;
 import com.liferay.headless.delivery.dto.v1_0.Fragment;
 import com.liferay.headless.delivery.dto.v1_0.FragmentField;
+import com.liferay.headless.delivery.dto.v1_0.FragmentFieldAction;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldBackgroundImage;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldHTML;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldImage;
@@ -40,7 +34,11 @@ import com.liferay.headless.delivery.dto.v1_0.FragmentMappedValue;
 import com.liferay.headless.delivery.dto.v1_0.FragmentStyle;
 import com.liferay.headless.delivery.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.dto.v1_0.Mapping;
+import com.liferay.headless.delivery.dto.v1_0.NoneActionExecutionResult;
+import com.liferay.headless.delivery.dto.v1_0.NotificationActionExecutionResult;
 import com.liferay.headless.delivery.dto.v1_0.PageFragmentInstanceDefinition;
+import com.liferay.headless.delivery.dto.v1_0.SitePageActionExecutionResult;
+import com.liferay.headless.delivery.dto.v1_0.URLActionExecutionResult;
 import com.liferay.headless.delivery.dto.v1_0.WidgetInstance;
 import com.liferay.headless.delivery.internal.dto.v1_0.mapper.util.FragmentMappedValueUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.mapper.util.LocalizedValueUtil;
@@ -149,9 +147,8 @@ public class PageFragmentInstanceDefinitionMapper {
 				fragmentViewports =
 					pageFragmentInstanceDefinitionFragmentViewports;
 				indexed = fragmentStyledLayoutStructureItem.isIndexed();
+				name = fragmentStyledLayoutStructureItem.getName();
 				widgetInstances = _getWidgetInstances(fragmentEntryLink);
-
-				setName(fragmentStyledLayoutStructureItem::getName);
 			}
 		};
 	}
@@ -314,7 +311,7 @@ public class PageFragmentInstanceDefinitionMapper {
 				_getTextFragmentFields(
 					EditableFragmentEntryProcessorUtil.getEditableTypes(
 						fragmentEntryLink.getHtml()),
-					jsonObject, saveMapping));
+					jsonObject, saveInlineContent, saveMapping));
 		}
 
 		return fragmentFields.toArray(new FragmentField[0]);
@@ -344,7 +341,7 @@ public class PageFragmentInstanceDefinitionMapper {
 
 	private List<FragmentField> _getTextFragmentFields(
 		Map<String, String> editableTypes, JSONObject jsonObject,
-		boolean saveMapping) {
+		boolean saveInlineContent, boolean saveMapping) {
 
 		List<FragmentField> fragmentFields = new ArrayList<>();
 
@@ -353,7 +350,8 @@ public class PageFragmentInstanceDefinitionMapper {
 		for (String textId : textIds) {
 			fragmentFields.add(
 				_toFragmentField(
-					editableTypes, jsonObject, saveMapping, textId));
+					editableTypes, jsonObject, saveInlineContent, saveMapping,
+					textId));
 		}
 
 		return fragmentFields;
@@ -378,6 +376,108 @@ public class PageFragmentInstanceDefinitionMapper {
 		}
 
 		return widgetInstances.toArray(new WidgetInstance[0]);
+	}
+
+	private ActionExecutionResult _toActionExecutionResult(
+		JSONObject jsonObject, boolean saveInlineContent, boolean saveMapping) {
+
+		if (jsonObject == null) {
+			return null;
+		}
+
+		String interaction = jsonObject.getString("interaction", null);
+
+		if (interaction.equals(
+				ActionEditableElementConstants.INTERACTION_NONE)) {
+
+			return new ActionExecutionResult() {
+				{
+					type = ActionExecutionResult.Type.NONE;
+					value = new NoneActionExecutionResult() {
+						{
+							reload = jsonObject.getBoolean("reload");
+						}
+					};
+				}
+			};
+		}
+		else if (interaction.equals(
+					ActionEditableElementConstants.INTERACTION_NOTIFICATION)) {
+
+			return new ActionExecutionResult() {
+				{
+					type = ActionExecutionResult.Type.NOTIFICATION;
+
+					setValue(
+						() -> {
+							if (!saveInlineContent || !jsonObject.has("text")) {
+								return null;
+							}
+
+							return new NotificationActionExecutionResult() {
+								{
+									reload = jsonObject.getBoolean("reload");
+									text = _toFragmentInlineValue(
+										jsonObject.getJSONObject("text"));
+								}
+							};
+						});
+				}
+			};
+		}
+		else if (interaction.equals(
+					ActionEditableElementConstants.INTERACTION_PAGE)) {
+
+			return new ActionExecutionResult() {
+				{
+					type = ActionExecutionResult.Type.PAGE;
+
+					setValue(
+						() -> {
+							if (!saveMapping || !jsonObject.has("page")) {
+								return null;
+							}
+
+							JSONObject pageJSONObject =
+								jsonObject.getJSONObject("page");
+
+							return new SitePageActionExecutionResult() {
+								{
+									itemReference =
+										FragmentMappedValueUtil.
+											toLayoutClassFieldsReference(
+												pageJSONObject);
+								}
+							};
+						});
+				}
+			};
+		}
+		else if (interaction.equals(
+					ActionEditableElementConstants.INTERACTION_URL)) {
+
+			return new ActionExecutionResult() {
+				{
+					type = ActionExecutionResult.Type.URL;
+
+					setValue(
+						() -> {
+							if (!saveInlineContent || !jsonObject.has("url")) {
+								return null;
+							}
+
+							return new URLActionExecutionResult() {
+								{
+									url = _toFragmentInlineValue(
+										jsonObject.getJSONObject("url"));
+								}
+							};
+						});
+				}
+			};
+		}
+
+		return null;
 	}
 
 	private Map<String, ClassPKReference> _toClassPKReferences(
@@ -435,7 +535,8 @@ public class PageFragmentInstanceDefinitionMapper {
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className);
+				InfoItemObjectProvider.class, className,
+				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 		if ((infoItemFieldValuesProvider == null) ||
 			(infoItemObjectProvider == null)) {
@@ -505,7 +606,7 @@ public class PageFragmentInstanceDefinitionMapper {
 			return null;
 		}
 
-		if (JSONUtil.isValid(alt)) {
+		if (JSONUtil.isJSONObject(alt)) {
 			JSONObject localizedJSONObject = configJSONObject.getJSONObject(
 				"alt");
 
@@ -531,7 +632,7 @@ public class PageFragmentInstanceDefinitionMapper {
 
 	private FragmentField _toFragmentField(
 		Map<String, String> editableTypes, JSONObject jsonObject,
-		boolean saveMapping, String textId) {
+		boolean saveInlineContent, boolean saveMapping, String textId) {
 
 		JSONObject textJSONObject = jsonObject.getJSONObject(textId);
 
@@ -543,6 +644,11 @@ public class PageFragmentInstanceDefinitionMapper {
 					() -> {
 						String type = editableTypes.getOrDefault(
 							textId, "text");
+
+						if (Objects.equals(type, "action")) {
+							return _toFragmentFieldAction(
+								textJSONObject, saveInlineContent, saveMapping);
+						}
 
 						if (Objects.equals(type, "html")) {
 							return _toFragmentFieldHTML(
@@ -556,6 +662,66 @@ public class PageFragmentInstanceDefinitionMapper {
 
 						return _toFragmentFieldText(
 							textJSONObject, saveMapping);
+					});
+			}
+		};
+	}
+
+	private FragmentFieldAction _toFragmentFieldAction(
+		JSONObject jsonObject, boolean saveInlineContent, boolean saveMapping) {
+
+		JSONObject configJSONObject = jsonObject.getJSONObject("config");
+
+		if (configJSONObject == null) {
+			return null;
+		}
+
+		return new FragmentFieldAction() {
+			{
+				onError = _toActionExecutionResult(
+					configJSONObject.getJSONObject("onError"),
+					saveInlineContent, saveMapping);
+				onSuccess = _toActionExecutionResult(
+					configJSONObject.getJSONObject("onSuccess"),
+					saveInlineContent, saveMapping);
+
+				setAction(
+					() -> {
+						JSONObject mappedActionJSONObject =
+							configJSONObject.getJSONObject("mappedAction");
+
+						if (!FragmentMappedValueUtil.isSaveFragmentMappedValue(
+								mappedActionJSONObject, saveMapping)) {
+
+							return null;
+						}
+
+						return _toFragmentMappedValue(
+							null, mappedActionJSONObject);
+					});
+
+				setText(
+					() -> {
+						if (FragmentMappedValueUtil.isSaveFragmentMappedValue(
+								jsonObject, saveMapping)) {
+
+							return _toFragmentMappedValue(
+								_toDefaultMappingValue(jsonObject, null),
+								jsonObject);
+						}
+
+						Map<String, String> localizedValues =
+							LocalizedValueUtil.toLocalizedValues(jsonObject);
+
+						if (MapUtil.isEmpty(localizedValues)) {
+							return null;
+						}
+
+						return new FragmentInlineValue() {
+							{
+								value_i18n = localizedValues;
+							}
+						};
 					});
 			}
 		};
@@ -757,6 +923,14 @@ public class PageFragmentInstanceDefinitionMapper {
 							});
 					}
 				};
+			}
+		};
+	}
+
+	private FragmentInlineValue _toFragmentInlineValue(JSONObject jsonObject) {
+		return new FragmentInlineValue() {
+			{
+				value_i18n = LocalizedValueUtil.toLocalizedValues(jsonObject);
 			}
 		};
 	}

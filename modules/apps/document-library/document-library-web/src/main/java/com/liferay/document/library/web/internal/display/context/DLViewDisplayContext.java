@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context;
@@ -25,12 +16,12 @@ import com.liferay.document.library.web.internal.display.context.helper.DLReques
 import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.FolderItemSelectorReturnType;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.folder.criterion.FolderItemSelectorCriterion;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -41,7 +32,6 @@ import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.util.comparator.AssetVocabularyGroupLocalizedTitleComparator;
@@ -101,6 +91,20 @@ public class DLViewDisplayContext {
 			}
 		).setParameter(
 			"repositoryId", _dlAdminDisplayContext.getRepositoryId()
+		).buildString();
+	}
+
+	public String getCopyURL() {
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/document_library/copy_folder"
+		).setRedirect(
+			_getRedirect()
+		).setParameter(
+			"sourceFolderId", getFolderId()
+		).setParameter(
+			"sourceRepositoryId", getRepositoryId()
 		).buildString();
 	}
 
@@ -180,23 +184,44 @@ public class DLViewDisplayContext {
 		).buildString();
 	}
 
-	public String getSelectCategoriesURL()
-		throws PortalException, WindowStateException {
+	public String getSelectAssetCategoriesURL() throws PortletException {
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(_getCurrentPortletURL(), _renderResponse)
+		).setParameter(
+			"assetCategoryId", (String)null
+		).buildString();
+	}
+
+	public String getSelectAssetTagsURL() throws PortletException {
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(_getCurrentPortletURL(), _renderResponse)
+		).setParameter(
+			"assetTagId", (String)null
+		).buildString();
+	}
+
+	public String getSelectCategoriesURL() {
+		ItemSelector itemSelector =
+			(ItemSelector)_httpServletRequest.getAttribute(
+				ItemSelector.class.getName());
+
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_httpServletRequest, AssetCategory.class.getName(),
-				PortletProvider.Action.BROWSE)
-		).setParameter(
-			"eventName", _renderResponse.getNamespace() + "selectCategories"
-		).setParameter(
-			"selectedCategories", "{selectedCategories}"
-		).setParameter(
-			"singleSelect", "{singleSelect}"
-		).setParameter(
-			"vocabularyIds", "{vocabularyIds}"
-		).setWindowState(
-			LiferayWindowState.POP_UP
+			itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_renderRequest),
+				themeDisplay.getScopeGroup(), themeDisplay.getScopeGroupId(),
+				_renderResponse.getNamespace() + "selectCategories",
+				itemSelectorCriterion)
 		).buildString();
 	}
 
@@ -418,17 +443,11 @@ public class DLViewDisplayContext {
 	}
 
 	private long _getFileEntryTypeId() {
-		return ParamUtil.getLong(_httpServletRequest, "fileEntryTypeId", -1);
+		return _dlAdminDisplayContext.getFileEntryTypeId();
 	}
 
 	private String _getNavigation() {
-		if (_navigation != null) {
-			return _navigation;
-		}
-
-		_navigation = ParamUtil.getString(_httpServletRequest, "navigation");
-
-		return _navigation;
+		return _dlAdminDisplayContext.getNavigation();
 	}
 
 	private String _getRedirect() {
@@ -441,7 +460,6 @@ public class DLViewDisplayContext {
 	private final DLPortletInstanceSettingsHelper
 		_dlPortletInstanceSettingsHelper;
 	private final HttpServletRequest _httpServletRequest;
-	private String _navigation;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 

@@ -1,6 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
@@ -14,7 +15,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
@@ -22,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -118,6 +119,8 @@ definition {
 	@refactordone
 	test CanApproveWCArticle {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -349,6 +352,9 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanApproveWCInFolder {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONWebcontent.addFolder(
 			folderName = "WC Folder Name",
 			groupName = "Test Depot Name",
@@ -452,6 +458,9 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanRejectAndResubmitImage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
@@ -495,11 +504,19 @@ definition {
 
 		Workflow.gotoPreviewEdit();
 
+		Button.clickCheckOut();
+
+		Workflow.gotoPreviewEdit();
+
 		DMDocument.editDocument(
 			dmDocumentFile = "Document_2.jpg",
 			dmDocumentTitle = "Document_2.jpg");
 
-		Button.clickSubmitForWorkflow();
+		AssertClick(
+			locator1 = "Button#SAVE_AND_CHECKIN",
+			value1 = "Save and Check In");
+
+		PortletEntry.save();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -568,6 +585,9 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanRejectAndResubmitWC {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.constants;
@@ -36,6 +27,9 @@ public class CPActionKeys {
 	public static final String MANAGE_COMMERCE_PRODUCT_ATTACHMENTS =
 		"MANAGE_COMMERCE_PRODUCT_ATTACHMENTS";
 
+	public static final String MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY =
+		"MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY";
+
 	public static final String MANAGE_COMMERCE_PRODUCT_IMAGES =
 		"MANAGE_COMMERCE_PRODUCT_IMAGES";
 
@@ -45,6 +39,9 @@ public class CPActionKeys {
 	public static final String MANAGE_COMMERCE_PRODUCT_TAX_CATEGORIES =
 		"MANAGE_COMMERCE_PRODUCT_TAX_CATEGORIES";
 
+	public static final String VIEW_COMMERCE_CATALOGS =
+		"VIEW_COMMERCE_CATALOGS";
+
 	public static final String VIEW_COMMERCE_CHANNELS =
 		"VIEW_COMMERCE_CHANNELS";
 
@@ -53,6 +50,9 @@ public class CPActionKeys {
 
 	public static final String VIEW_COMMERCE_PRODUCT_IMAGES =
 		"VIEW_COMMERCE_PRODUCT_IMAGES";
+
+	public static final String VIEW_COMMERCE_PRODUCT_TAX_CATEGORIES =
+		"VIEW_COMMERCE_PRODUCT_TAX_CATEGORIES";
 
 	public static final String VIEW_PRICE = "VIEW_PRICE";
 

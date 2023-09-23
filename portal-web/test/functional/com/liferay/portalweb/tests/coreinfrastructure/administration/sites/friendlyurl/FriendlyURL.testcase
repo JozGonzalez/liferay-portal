@@ -11,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +30,9 @@ definition {
 	@description = "If virtual.hosts.strict.access=true is set, do not redirect to a default instance if there is no associated company"
 	@priority = 4
 	test DoNotRedirectToDefaultInstanceWithNoCompany {
-		property custom.properties = "virtual.hosts.strict.access=true";
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com${line.separator}virtual.hosts.strict.access=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
@@ -54,15 +56,85 @@ definition {
 	@description = "If virtual.hosts.strict.access=true is not set, redirect to a default instance even if there is no associated company"
 	@priority = 3
 	test RedirectToDefaultInstanceWithNoCompany {
-		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		Navigator.gotoPage(
+			baseURL = "http://www.able.com:8080",
+			pageName = "Home");
 
 		AssertTextNotPresent(
 			locator1 = "//body",
 			value1 = "Unknown Virtual Hostname: www.able.com");
 
-		AssertLocation(value1 = "http://www.able.com:8080/web/guest");
+		AssertLocation(value1 = "http://www.able.com:8080/web/guest/home");
 
 		Smoke.viewWelcomeContentPage();
+	}
+
+	@description = "This is a use case for LPS-163426. Verify redirection to localized friendly URL's when using a virtual host."
+	@priority = 4
+	test RedirectToLocalizedFriendlyURLWithVirtualHost {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given two pages on a site") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 1");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 2");
+		}
+
+		task ("And given the second page has a language selector widget") {
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 2",
+				widgetName = "Language Selector");
+		}
+
+		task ("And given the second page has localized friendly URL's for English and Hungarian") {
+			PagesAdmin.openToConfigurePublicPage(
+				groupName = "Test Site Name",
+				layoutName = "Page 2",
+				site = "true",
+				siteURLKey = "test-site-name");
+
+			PagesAdmin.addLocalizedFriendlyURL(
+				friendlyURLLocalizedList = "en-US",
+				localizedFriendlyURLList = "/english/testurl",
+				localizedNameList = "Page 2");
+
+			PagesAdmin.addLocalizedFriendlyURL(
+				friendlyURLLocalizedList = "hu-HU",
+				localizedFriendlyURLList = "/magyar/testurl ",
+				localizedNameList = "Page 2");
+		}
+
+		task ("When the user signs in to a virtual host and navigates to the second page") {
+			Navigator.gotoSitePage(
+				baseURL = "http://www.able.com:8080",
+				pageName = "Page 2",
+				siteName = "Test Site Name");
+		}
+
+		task ("Then the user is redirected to the page via the English friendly URL") {
+			AssertLocation.assertPartialLocation(value1 = "/web/test-site-name/english/testurl");
+		}
+
+		task ("When the user changes the language to Hungarian") {
+			LanguagePortlet.selectLanguagePG(
+				locale = "hu-HU",
+				textIcon = "magyar-Magyarország");
+		}
+
+		task ("Then the user is redirected to the page via the Hungarial friendly URL") {
+			AssertLocation.assertPartialLocation(value1 = "/web/test-site-name/magyar/testurl");
+		}
 	}
 
 	@description = "This is a test for LPS-162714. Checks that Web Content FriendlyURL special characters like éöő are not escaped"
@@ -83,7 +155,8 @@ definition {
 	@description = "This is a use case for LPS-161024. Verify uppercase virtual host names added to a site's url are converted to lowercase."
 	@priority = 3
 	test UppercaseVirtualHostNamesConvertedToLowercase {
-		property test.name.skip.portal.instance = "FriendlyURL#UppercaseVirtualHostNamesConvertedToLowercase";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When an uppercase virtual host is added to a site url") {
 			Site.openSiteSettingsAdmin(siteURLKey = "test-site-name");
@@ -130,7 +203,7 @@ definition {
 
 		Type(
 			inputFieldId = "friendlyURL",
-			locator1 = "TextInput#INPUT_ID",
+			locator1 = "TextInput#TEXT_INPUT_ID",
 			value1 = "/teszt-page");
 
 		Button.clickSave();
@@ -167,10 +240,11 @@ definition {
 	@priority = 4
 	test ViewFriendlyURLWithSharedLocalesButDifferentLanguages {
 		property custom.properties = "locale.prepend.friendly.url.style=2${line.separator}locales.enabled=en_US,fr_FR,fr_CA";
-		property test.name.skip.portal.instance = "FriendlyURL#ViewFriendlyURLWithSharedLocalesButDifferentLanguages";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var siteName : list "USA Site Name,France Site Name,Canada Site Name") {
-			JSONGroup.addGroup(groupName = ${siteName});
+			HeadlessSite.addSite(siteName = ${siteName});
 
 			JSONLayout.addPublicLayout(
 				groupName = ${siteName},
@@ -271,7 +345,7 @@ definition {
 			ContentPages.viewFragmentImage(
 				fragmentName = "image",
 				id = "image-square",
-				image = "tree.png");
+				image = "tree-png");
 		}
 
 		task ("Change the locale to Chinese") {
@@ -289,7 +363,7 @@ definition {
 			ContentPages.viewFragmentImage(
 				fragmentName = "image",
 				id = "image-square",
-				image = "tree.png");
+				image = "tree-png");
 		}
 
 		task ("Change the locale to Portuguese") {
@@ -307,7 +381,7 @@ definition {
 			ContentPages.viewFragmentImage(
 				fragmentName = "image",
 				id = "image-square",
-				image = "tree.png");
+				image = "tree-png");
 		}
 
 		task ("Change the locale to French") {
@@ -325,7 +399,7 @@ definition {
 			ContentPages.viewFragmentImage(
 				fragmentName = "image",
 				id = "image-square",
-				image = "tree.png");
+				image = "tree-png");
 		}
 
 		task ("Change the locale to English") {

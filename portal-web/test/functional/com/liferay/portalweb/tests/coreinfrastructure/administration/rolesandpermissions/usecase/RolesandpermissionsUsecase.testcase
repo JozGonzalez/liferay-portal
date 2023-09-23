@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -86,7 +86,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-157219. It ensures a user can only view the portlets he has permissions from applications menu."
-	@priority = 3
+	@priority = 4
 	test CanOnlyViewPortletsWithPermissionsGranted {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -144,7 +144,9 @@ definition {
 				userLoginEmailAddress = "userea@liferay.com",
 				userLoginFullName = "userfn userln");
 
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
+			// Workaround for LPS-190847
+
+			SiteTemplatesNavigator.gotoSiteTemplatesPageViaUI(
 				pageName = "Home",
 				siteName = ${siteName},
 				siteTemplateName = "Site Template Name");
@@ -179,7 +181,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-148855. The default site role shouldn't be inherited by Guest."
-	@priority = 5
+	@priority = 4
 	test DefaultSiteRoleIsNotInheritedByGuestUser {
 		task ("Assign default site to a new regular Role") {
 			JSONRole.addRegularRole(
@@ -192,7 +194,7 @@ definition {
 		}
 
 		task ("Add the DM portlet with a file to a public page on a new site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -237,6 +239,9 @@ definition {
 
 	@priority = 4
 	test EditTeamPermissions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
 			resourceName = 90,
@@ -305,6 +310,10 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -406,9 +415,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124190."
-	@priority = 3
+	@priority = 4
 	test ExportRoleWithSiteAssignee {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONRole.addRegularRole(
 			roleKey = "Web Content Comment Reviewer",
@@ -472,7 +481,8 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.app.includes = "bookmarks";
 		property portal.release = "false";
-		property test.name.skip.portal.instance = "RolesandpermissionsUsecase#GroupScopePermissionCheck";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -553,6 +563,10 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
+		Site.openSiteSettingsAdmin(siteURLKey = "google.com-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		User.openUsersAdmin();
 
 		User.editUserSiteCP(
@@ -602,7 +616,7 @@ definition {
 			userEmailAddress = "test@liferay.com");
 	}
 
-	@priority = 3
+	@priority = 4
 	test NoGuestRolePermissionsFromPrivateLayout {
 		property custom.properties = "permissions.check.guest.enabled=false";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -779,6 +793,10 @@ definition {
 			User.editPasswordCP(
 				userEmailAddress = "userea${userNumber}@liferay.com",
 				userScreenName = "usersn${userNumber}");
+
+			Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 			ApplicationsMenu.gotoPortlet(
 				category = "Users",
@@ -1322,6 +1340,8 @@ definition {
 	@priority = 4
 	test ViewRegRolePermissionsDefaultView {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Roles Regrole Name",
@@ -1386,6 +1406,10 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",

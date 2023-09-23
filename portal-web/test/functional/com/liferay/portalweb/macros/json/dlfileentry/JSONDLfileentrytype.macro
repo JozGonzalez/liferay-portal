@@ -1,14 +1,14 @@
 definition {
 
-	@summary = "Get a fileEntryTypeId from dlFileEntryType"
 	macro _getFileEntryTypeId {
 		Variables.assertDefined(parameterList = "${fileEntryTypeName},${groupId}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupIds=[${groupId}]
 		''';
 
@@ -21,15 +21,15 @@ definition {
 		return ${fileEntryTypeId};
 	}
 
-	@summary = "Get fileEntryTypeId of dlFileEntryTypes in specific group."
 	macro _getFileEntryTypeIds {
 		Variables.assertDefined(parameterList = ${groupId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupIds=[${groupId}]
 		''';
 

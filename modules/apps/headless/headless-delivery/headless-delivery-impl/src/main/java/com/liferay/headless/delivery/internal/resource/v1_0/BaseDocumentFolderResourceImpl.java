@@ -1,25 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.DefaultValue;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
+import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -60,7 +53,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -496,6 +488,52 @@ public abstract class BaseDocumentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/document-folders/rated-by-me'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document folders rated by the user."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/document-folders/rated-by-me"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<DocumentFolder> getAssetLibraryDocumentFoldersRatedByMePage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
@@ -656,24 +694,8 @@ public abstract class BaseDocumentFolderResourceImpl
 		DocumentFolder existingDocumentFolder = getDocumentFolder(
 			documentFolderId);
 
-		if (documentFolder.getActions() != null) {
-			existingDocumentFolder.setActions(documentFolder.getActions());
-		}
-
-		if (documentFolder.getAssetLibraryKey() != null) {
-			existingDocumentFolder.setAssetLibraryKey(
-				documentFolder.getAssetLibraryKey());
-		}
-
-		if (documentFolder.getDateCreated() != null) {
-			existingDocumentFolder.setDateCreated(
-				documentFolder.getDateCreated());
-		}
-
-		if (documentFolder.getDateModified() != null) {
-			existingDocumentFolder.setDateModified(
-				documentFolder.getDateModified());
-		}
+		existingDocumentFolder.setCustomFields(
+			documentFolder.getCustomFields());
 
 		if (documentFolder.getDescription() != null) {
 			existingDocumentFolder.setDescription(
@@ -689,28 +711,9 @@ public abstract class BaseDocumentFolderResourceImpl
 			existingDocumentFolder.setName(documentFolder.getName());
 		}
 
-		if (documentFolder.getNumberOfDocumentFolders() != null) {
-			existingDocumentFolder.setNumberOfDocumentFolders(
-				documentFolder.getNumberOfDocumentFolders());
-		}
-
-		if (documentFolder.getNumberOfDocuments() != null) {
-			existingDocumentFolder.setNumberOfDocuments(
-				documentFolder.getNumberOfDocuments());
-		}
-
 		if (documentFolder.getParentDocumentFolderId() != null) {
 			existingDocumentFolder.setParentDocumentFolderId(
 				documentFolder.getParentDocumentFolderId());
-		}
-
-		if (documentFolder.getSiteId() != null) {
-			existingDocumentFolder.setSiteId(documentFolder.getSiteId());
-		}
-
-		if (documentFolder.getSubscribed() != null) {
-			existingDocumentFolder.setSubscribed(
-				documentFolder.getSubscribed());
 		}
 
 		if (documentFolder.getViewableBy() != null) {
@@ -804,6 +807,156 @@ public abstract class BaseDocumentFolderResourceImpl
 			vulcanBatchEngineImportTaskResource.putImportTask(
 				DocumentFolder.class.getName(), callbackURL, object)
 		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/my-rating'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the document folder's rating and returns a 204 if the operation succeeded."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/document-folders/{documentFolderId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteDocumentFolderMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/my-rating'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document folder's rating."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/document-folders/{documentFolderId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Rating getDocumentFolderMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId)
+		throws Exception {
+
+		return new Rating();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/my-rating' -d $'{"ratingValue": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a new rating for the document folder, by the user who authenticated the request."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/document-folders/{documentFolderId}/my-rating")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Rating postDocumentFolderMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId,
+			Rating rating)
+		throws Exception {
+
+		return new Rating();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/my-rating' -d $'{"ratingValue": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Replaces the rating with the information sent in the request body. Any missing fields are deleted, unless they are required."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/document-folders/{documentFolderId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Rating putDocumentFolderMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId,
+			Rating rating)
+		throws Exception {
+
+		return new Rating();
 	}
 
 	/**
@@ -1522,6 +1675,50 @@ public abstract class BaseDocumentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/document-folders/rated-by-me'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document folders rated by the user."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "DocumentFolder")
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/document-folders/rated-by-me")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<DocumentFolder> getSiteDocumentFoldersRatedByMePage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents-folder/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
@@ -1661,20 +1858,20 @@ public abstract class BaseDocumentFolderResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DocumentFolder, Exception> documentFolderUnsafeConsumer =
-			null;
+		UnsafeFunction<DocumentFolder, DocumentFolder, Exception>
+			documentFolderUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("assetLibraryId")) {
-				documentFolderUnsafeConsumer =
+				documentFolderUnsafeFunction =
 					documentFolder -> postAssetLibraryDocumentFolder(
 						(Long)parameters.get("assetLibraryId"), documentFolder);
 			}
 			else if (parameters.containsKey("siteId")) {
-				documentFolderUnsafeConsumer =
+				documentFolderUnsafeFunction =
 					documentFolder -> postSiteDocumentFolder(
 						(Long)parameters.get("siteId"), documentFolder);
 			}
@@ -1684,19 +1881,23 @@ public abstract class BaseDocumentFolderResourceImpl
 			}
 		}
 
-		if (documentFolderUnsafeConsumer == null) {
+		if (documentFolderUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for DocumentFolder");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				documentFolders, documentFolderUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				documentFolders, documentFolderUnsafeConsumer);
+				documentFolders, documentFolderUnsafeFunction::apply);
 		}
 		else {
 			for (DocumentFolder documentFolder : documentFolders) {
-				documentFolderUnsafeConsumer.accept(documentFolder);
+				documentFolderUnsafeFunction.apply(documentFolder);
 			}
 		}
 	}
@@ -1748,14 +1949,14 @@ public abstract class BaseDocumentFolderResourceImpl
 		if (parameters.containsKey("assetLibraryId")) {
 			return getAssetLibraryDocumentFoldersPage(
 				(Long)parameters.get("assetLibraryId"),
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
-				null, filter, pagination, sorts);
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
 		}
 		else if (parameters.containsKey("siteId")) {
 			return getSiteDocumentFoldersPage(
 				(Long)parameters.get("siteId"),
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
-				null, filter, pagination, sorts);
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
 		}
 		else {
 			throw new NotSupportedException(
@@ -1791,43 +1992,62 @@ public abstract class BaseDocumentFolderResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DocumentFolder, Exception> documentFolderUnsafeConsumer =
-			null;
+		UnsafeFunction<DocumentFolder, DocumentFolder, Exception>
+			documentFolderUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			documentFolderUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			documentFolderUnsafeFunction =
 				documentFolder -> patchDocumentFolder(
 					documentFolder.getId() != null ? documentFolder.getId() :
-						Long.parseLong(
-							(String)parameters.get("documentFolderId")),
+						_parseLong((String)parameters.get("documentFolderId")),
 					documentFolder);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			documentFolderUnsafeConsumer = documentFolder -> putDocumentFolder(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			documentFolderUnsafeFunction = documentFolder -> putDocumentFolder(
 				documentFolder.getId() != null ? documentFolder.getId() :
-					Long.parseLong((String)parameters.get("documentFolderId")),
+					_parseLong((String)parameters.get("documentFolderId")),
 				documentFolder);
 		}
 
-		if (documentFolderUnsafeConsumer == null) {
+		if (documentFolderUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for DocumentFolder");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				documentFolders, documentFolderUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				documentFolders, documentFolderUnsafeConsumer);
+				documentFolders, documentFolderUnsafeFunction::apply);
 		}
 		else {
 			for (DocumentFolder documentFolder : documentFolders) {
-				documentFolderUnsafeConsumer.accept(documentFolder);
+				documentFolderUnsafeFunction.apply(documentFolder);
 			}
 		}
+	}
+
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1995,6 +2215,15 @@ public abstract class BaseDocumentFolderResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<DocumentFolder>,
+			 UnsafeFunction<DocumentFolder, DocumentFolder, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2215,6 +2444,12 @@ public abstract class BaseDocumentFolderResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -2245,7 +2480,19 @@ public abstract class BaseDocumentFolderResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<DocumentFolder>,
+		 UnsafeFunction<DocumentFolder, DocumentFolder, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<DocumentFolder>, UnsafeConsumer<DocumentFolder, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

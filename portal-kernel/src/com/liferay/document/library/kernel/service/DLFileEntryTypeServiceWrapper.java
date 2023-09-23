@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -48,43 +39,6 @@ public class DLFileEntryTypeServiceWrapper
 		return _dlFileEntryTypeService.addFileEntryType(
 			groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
 			descriptionMap, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DLFileEntryType addFileEntryType(
-			long groupId, String fileEntryTypeKey,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _dlFileEntryTypeService.addFileEntryType(
-			groupId, fileEntryTypeKey, nameMap, descriptionMap, ddmStructureIds,
-			serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DLFileEntryType addFileEntryType(
-			long groupId, String name, String description,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _dlFileEntryTypeService.addFileEntryType(
-			groupId, name, description, ddmStructureIds, serviceContext);
 	}
 
 	@Override
@@ -210,42 +164,6 @@ public class DLFileEntryTypeServiceWrapper
 
 		return _dlFileEntryTypeService.updateFileEntryType(
 			fileEntryTypeId, nameMap, descriptionMap);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	@Override
-	public void updateFileEntryType(
-			long fileEntryTypeId,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_dlFileEntryTypeService.updateFileEntryType(
-			fileEntryTypeId, nameMap, descriptionMap, ddmStructureIds,
-			serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	@Override
-	public void updateFileEntryType(
-			long fileEntryTypeId, String name, String description,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_dlFileEntryTypeService.updateFileEntryType(
-			fileEntryTypeId, name, description, ddmStructureIds,
-			serviceContext);
 	}
 
 	@Override

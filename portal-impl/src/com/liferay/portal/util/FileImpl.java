@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -28,11 +19,9 @@ import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PwdGenerator;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
-import com.liferay.portal.kernel.util.TextExtractor;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -325,17 +314,6 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	@Override
 	public boolean exists(String fileName) {
 		return exists(new File(fileName));
-	}
-
-	@Override
-	public String extractText(InputStream inputStream) {
-		return extractText(inputStream, -1);
-	}
-
-	@Override
-	public String extractText(InputStream inputStream, int maxStringLength) {
-		return TextExtractorHolder._textExtractor.extractText(
-			inputStream, maxStringLength);
 	}
 
 	@Override
@@ -980,14 +958,5 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	private static final Log _log = LogFactoryUtil.getLog(FileImpl.class);
 
 	private static final FileImpl _fileImpl = new FileImpl();
-
-	private static class TextExtractorHolder {
-
-		private static volatile TextExtractor _textExtractor =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				TextExtractor.class, TextExtractorHolder.class,
-				"_textExtractor", true);
-
-	}
 
 }

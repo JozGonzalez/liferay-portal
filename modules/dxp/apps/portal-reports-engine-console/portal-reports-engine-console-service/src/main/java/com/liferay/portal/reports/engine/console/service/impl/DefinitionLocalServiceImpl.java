@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.reports.engine.console.service.impl;
 
-import com.liferay.document.library.kernel.store.DLStoreRequest;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -160,8 +150,15 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 			long companyId, String attachmentsDirectory)
 		throws PortalException {
 
-		DLStoreUtil.deleteDirectory(
+		_store.deleteDirectory(
 			companyId, CompanyConstants.SYSTEM, attachmentsDirectory);
+	}
+
+	@Override
+	public String[] getAttachmentsFileNames(Definition definition) {
+		return _store.getFileNames(
+			definition.getCompanyId(), CompanyConstants.SYSTEM,
+			definition.getAttachmentsDir());
 	}
 
 	@Override
@@ -236,7 +233,7 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 		if (Validator.isNotNull(fileName) && (inputStream != null)) {
 			long companyId = definition.getCompanyId();
 
-			DLStoreUtil.deleteDirectory(
+			_store.deleteDirectory(
 				companyId, CompanyConstants.SYSTEM,
 				definition.getAttachmentsDir());
 
@@ -268,13 +265,9 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 		String fileLocation = StringBundler.concat(
 			directoryName, StringPool.SLASH, fileName);
 
-		DLStoreUtil.addFile(
-			DLStoreRequest.builder(
-				companyId, CompanyConstants.SYSTEM, fileLocation
-			).className(
-				this
-			).build(),
-			inputStream);
+		_store.addFile(
+			companyId, CompanyConstants.SYSTEM, fileLocation,
+			Store.VERSION_DEFAULT, inputStream);
 	}
 
 	private void _validate(Map<Locale, String> nameMap) throws PortalException {
@@ -289,6 +282,9 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference(target = "(default=true)")
+	private Store _store;
 
 	@Reference
 	private UserLocalService _userLocalService;

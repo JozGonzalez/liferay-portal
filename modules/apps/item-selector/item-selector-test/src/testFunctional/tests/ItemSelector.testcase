@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,7 +35,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanAddBlogsImageViaURL {
-		property test.name.skip.portal.instance = "ItemSelector#AddBlogsImageViaURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -74,7 +75,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanChangeSelectedPageForNavigationMenu {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		for (var i : list "1,2") {
 			JSONLayout.addPublicLayout(
@@ -119,7 +120,7 @@ definition {
 			site = "false",
 			title = "Web Content From Depot");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Site",
@@ -164,7 +165,7 @@ definition {
 	@priority = 4
 	test CanDisplaySitePaginationCorrectly {
 		for (var i : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20") {
-			JSONGroup.addGroup(groupName = "Site Name ${i}");
+			HeadlessSite.addSite(siteName = "Site Name ${i}");
 		}
 
 		BlogsNavigator.openToAddEntry(siteURLKey = "guest");
@@ -190,7 +191,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanFilterByCurrentSite {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -351,7 +352,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanFilterWCByCurrentSite {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -471,6 +472,7 @@ definition {
 		ItemSelector.gotoItemSelectorViaCKEditor(video = "true");
 
 		ItemSelector.addVideoFromURL(
+			invalidURL = "true",
 			navTab = "URL",
 			unpublish = "true",
 			videoSourceURL = "https://youtu.be/IxNczRyywXYtest");
@@ -478,6 +480,7 @@ definition {
 		ItemSelector.previewEmbeddedVideo(invalidURL = "https://www.youtube.com");
 
 		ItemSelector.addVideoFromURL(
+			invalidURL = "true",
 			navTab = "URL",
 			unpublish = "true",
 			videoSourceURL = "https://www.youtube.com/watch?v=test");
@@ -485,6 +488,7 @@ definition {
 		ItemSelector.previewEmbeddedVideo(invalidURL = "https://www.youtube.com");
 
 		ItemSelector.addVideoFromURL(
+			invalidURL = "true",
 			navTab = "URL",
 			unpublish = "true",
 			videoSourceURL = "https://vimeo.com/test");
@@ -492,6 +496,7 @@ definition {
 		ItemSelector.previewEmbeddedVideo(invalidURL = "https://player.vimeo.com");
 
 		ItemSelector.addVideoFromURL(
+			invalidURL = "true",
 			navTab = "URL",
 			unpublish = "true",
 			videoSourceURL = "https://www.facebook.com/Cristiano/videos/test");
@@ -499,6 +504,7 @@ definition {
 		ItemSelector.previewEmbeddedVideo(invalidURL = "https://www.facebook.com");
 
 		ItemSelector.addVideoFromURL(
+			invalidURL = "true",
 			navTab = "URL",
 			unpublish = "true",
 			videoSourceURL = "https://test.com/test");
@@ -539,7 +545,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CannotViewWCDraftViaFilterResults {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -588,9 +594,10 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanPreviewFacebookVideo {
-		property test.name.skip.portal.instance = "ItemSelector#PreviewFacebookVideo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -666,7 +673,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanPreviewSVG {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -690,9 +697,10 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanPreviewTwitchVideo {
-		property test.name.skip.portal.instance = "ItemSelector#PreviewTwitchVideo";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -834,7 +842,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanSelectBackgroundImageForFragment {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -930,7 +938,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewCorrectFilterResultsInSpecificBreadcrumb {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -988,6 +996,54 @@ definition {
 		LexiconEntry.viewNoEntry(rowEntry = "WC WebContent From Site");
 	}
 
+	@description = "The user should see horizontal nav tabs when less than and equal 5 nav items appear on item selector modal."
+	@priority = 4
+	test HorizontalNavItemsShowsWhenNotMoreThan5Items {
+		property osgi.module.configuration.file.names = "com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration.config";
+		property osgi.module.configurations = "blacklistBundleSymbolicNames=[\"com.liferay.document.library.item.selector.web\" ]";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Content Page Name",
+			type = "content");
+
+		ContentPagesNavigator.openEditContentPage(
+			pageName = "Content Page Name",
+			siteName = "Site Name");
+
+		PageEditor.addFragment(
+			collectionName = "Content Display",
+			fragmentName = "Content Display");
+
+		PageEditor.editContentDisplay(
+			fragmentName = "Content Display",
+			navItemStyle = "horizontal",
+			navTab = "Web Content");
+
+		OSGiConfig.deployOSGiConfigFile(
+			osgiConfigFileName = "com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration.config",
+			osgiConfigs = "blacklistBundleSymbolicNames=[\"com.liferay.knowledge.base.web\" ]");
+
+		OSGiConfig.waitForOSGiConfig();
+
+		WaitForConsoleTextPresent(value1 = "STOPPED com.liferay.knowledge.base.web");
+
+		Navigator.openURL();
+
+		ContentPagesNavigator.openEditContentPage(
+			pageName = "Content Page Name",
+			siteName = "Site Name");
+
+		PageEditor.editContentDisplay(
+			fragmentName = "Content Display",
+			navItemStyle = "horizontal",
+			navTab = "Web Content");
+	}
+
 	// Ignored until LPS-159228 implemented
 
 	@description = "This ensures that the location info of depot web content can be viewed through WCD on a connected site."
@@ -995,7 +1051,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewCorrectWCLocationInfo {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1040,7 +1096,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewDocumentsCorrectLocationInfo {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1107,7 +1163,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewFolderImageViaFilterResults {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1144,7 +1200,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewFolderWCViaFilterResults {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1207,7 +1263,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewVideoThumbnailsViaWC {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1271,7 +1327,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test FilePaginationDisplaysCorrectCount {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		for (var documentTitle : list "Document_1,Document_2,Document_3,Document_4,Commerce_Black,Commerce_White") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1317,7 +1373,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test FilePaginationForFilteredResultsDisplaysCorrectCount {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1423,11 +1479,11 @@ definition {
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		JSONGroup.addGroup(
-			groupName = "Site A",
-			membershipType = "Private");
+		HeadlessSite.addSite(
+			membershipType = "Private",
+			siteName = "Site A");
 
-		JSONGroup.addGroup(groupName = "Site X");
+		HeadlessSite.addSite(siteName = "Site X");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1471,6 +1527,33 @@ definition {
 		LexiconCard.viewCardPresent(card = "Site X");
 
 		LexiconCard.viewCardNotPresent(card = "Site A");
+	}
+
+	@description = "The user should see vertical nav items when more than 5 nav items appear on item selector modal."
+	@priority = 4
+	test VerticalNavItemsShowsWhenMoreThan5Items {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Content Page Name",
+			type = "content");
+
+		ContentPagesNavigator.openEditContentPage(
+			pageName = "Content Page Name",
+			siteName = "Site Name");
+
+		PageEditor.addFragment(
+			collectionName = "Content Display",
+			fragmentName = "Content Display");
+
+		PageEditor.editContentDisplay(
+			fragmentName = "Content Display",
+			navItemStyle = "vertical",
+			navTab = "Web Content");
 	}
 
 }

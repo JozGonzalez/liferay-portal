@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service;
@@ -25,8 +16,11 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -83,6 +77,7 @@ public interface CPDefinitionGroupedEntryLocalService
 	public CPDefinitionGroupedEntry addCPDefinitionGroupedEntry(
 		CPDefinitionGroupedEntry cpDefinitionGroupedEntry);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinitionGroupedEntry addCPDefinitionGroupedEntry(
 			long cpDefinitionId, long entryCProductId, double priority,
 			int quantity, ServiceContext serviceContext)
@@ -266,6 +261,12 @@ public interface CPDefinitionGroupedEntryLocalService
 		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+			long companyId, long cpDefinitionId, String keywords, int start,
+			int end, Sort sort)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionGroupedEntry>
 		getCPDefinitionGroupedEntriesByCPDefinitionId(long cpDefinitionId);
 
@@ -307,6 +308,11 @@ public interface CPDefinitionGroupedEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCPDefinitionGroupedEntriesCount(long cpDefinitionId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCPDefinitionGroupedEntriesCount(
+			long companyId, long cpDefinitionId, String keywords)
+		throws PortalException;
 
 	/**
 	 * Returns the cp definition grouped entry with the primary key.
@@ -362,6 +368,16 @@ public interface CPDefinitionGroupedEntryLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<CPDefinitionGroupedEntry>
+			searchCPDefinitionGroupedEntries(SearchContext searchContext)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int searchCPDefinitionGroupedEntriesCount(
+			SearchContext searchContext)
+		throws PortalException;
+
 	/**
 	 * Updates the cp definition grouped entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -376,6 +392,7 @@ public interface CPDefinitionGroupedEntryLocalService
 	public CPDefinitionGroupedEntry updateCPDefinitionGroupedEntry(
 		CPDefinitionGroupedEntry cpDefinitionGroupedEntry);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinitionGroupedEntry updateCPDefinitionGroupedEntry(
 			long cpDefinitionGroupedEntryId, double priority, int quantity)
 		throws PortalException;

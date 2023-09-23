@@ -1,18 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bulk.rest.client.json;
+
+import java.math.BigDecimal;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -123,13 +115,13 @@ public abstract class BaseJSONParser<T> {
 
 		Object[] objects = (Object[])_readValue();
 
-		return Stream.of(
-			objects
-		).map(
-			object -> parseToDTO((String)object)
-		).toArray(
-			size -> createDTOArray(size)
-		);
+		T[] dtos = createDTOArray(objects.length);
+
+		for (int i = 0; i < dtos.length; i++) {
+			dtos[i] = parseToDTO((String)objects[i]);
+		}
+
+		return dtos;
 	}
 
 	public Map<String, Object> parseToMap(String json) {
@@ -191,6 +183,16 @@ public abstract class BaseJSONParser<T> {
 	protected abstract void setField(
 		T dto, String jsonParserFieldName, Object jsonParserFieldValue);
 
+	protected BigDecimal[] toBigDecimals(Object[] objects) {
+		BigDecimal[] bigdecimals = new BigDecimal[objects.length];
+
+		for (int i = 0; i < bigdecimals.length; i++) {
+			bigdecimals[i] = new BigDecimal(objects[i].toString());
+		}
+
+		return bigdecimals;
+	}
+
 	protected Date toDate(String string) {
 		try {
 			return _dateFormat.parse(string);
@@ -202,33 +204,33 @@ public abstract class BaseJSONParser<T> {
 	}
 
 	protected Date[] toDates(Object[] objects) {
-		return Stream.of(
-			objects
-		).map(
-			object -> toDate((String)object)
-		).toArray(
-			size -> new Date[size]
-		);
+		Date[] dates = new Date[objects.length];
+
+		for (int i = 0; i < dates.length; i++) {
+			dates[i] = toDate((String)objects[i]);
+		}
+
+		return dates;
 	}
 
 	protected Integer[] toIntegers(Object[] objects) {
-		return Stream.of(
-			objects
-		).map(
-			object -> Integer.valueOf(object.toString())
-		).toArray(
-			size -> new Integer[size]
-		);
+		Integer[] integers = new Integer[objects.length];
+
+		for (int i = 0; i < integers.length; i++) {
+			integers[i] = Integer.valueOf(objects[i].toString());
+		}
+
+		return integers;
 	}
 
 	protected Long[] toLongs(Object[] objects) {
-		return Stream.of(
-			objects
-		).map(
-			object -> Long.valueOf(object.toString())
-		).toArray(
-			size -> new Long[size]
-		);
+		Long[] longs = new Long[objects.length];
+
+		for (int i = 0; i < longs.length; i++) {
+			longs[i] = Long.valueOf(objects[i].toString());
+		}
+
+		return longs;
 	}
 
 	protected String toString(Date date) {
@@ -236,13 +238,13 @@ public abstract class BaseJSONParser<T> {
 	}
 
 	protected String[] toStrings(Object[] objects) {
-		return Stream.of(
-			objects
-		).map(
-			String.class::cast
-		).toArray(
-			size -> new String[size]
-		);
+		String[] strings = new String[objects.length];
+
+		for (int i = 0; i < strings.length; i++) {
+			strings[i] = (String)objects[i];
+		}
+
+		return strings;
 	}
 
 	private void _assertLastChar(char c) {

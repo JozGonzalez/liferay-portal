@@ -1,21 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import escape from 'lodash.escape';
 import groupBy from 'lodash.groupby';
 import isEqual from 'lodash.isequal';
-import unescape from 'lodash.unescape';
 
 import DynamicSelect from './DynamicSelect';
 import BREAKPOINTS from './breakpoints';
@@ -201,7 +190,22 @@ Liferay.Util.disableEsc = () => {
 	}
 };
 
-Liferay.Util.escape = escape;
+const htmlEscapes = {
+	'"': '&quot;',
+	'&': '&amp;',
+	"'": '&#39;',
+	'<': '&lt;',
+	'>': '&gt;',
+};
+
+const reUnescapedHtml = /[&<>"']/g;
+const reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+
+Liferay.Util.escape = (string) => {
+	return string && reHasUnescapedHtml.test(string)
+		? string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr])
+		: string || '';
+};
 Liferay.Util.escapeHTML = escapeHTML;
 Liferay.Util.fetch = fetch;
 
@@ -329,7 +333,27 @@ Liferay.Util.toggleBoxes = toggleBoxes;
 Liferay.Util.toggleControls = toggleControls;
 Liferay.Util.toggleRadio = toggleRadio;
 Liferay.Util.toggleSelectBox = toggleSelectBox;
-Liferay.Util.unescape = unescape;
+
+const htmlUnescapes = {
+	'&#39;': "'",
+	'&amp;': '&',
+	'&gt;': '>',
+	'&lt;': '<',
+	'&quot;': '"',
+};
+
+const reEscapedHtml = /&(?:amp|lt|gt|quot|#(0+)?39);/g;
+const reHasEscapedHtml = RegExp(reEscapedHtml.source);
+
+Liferay.Util.unescape = (string) => {
+	return string && reHasEscapedHtml.test(string)
+		? string.replace(
+				reEscapedHtml,
+				(entity) => htmlUnescapes[entity] || "'"
+		  )
+		: string || '';
+};
+
 Liferay.Util.unescapeHTML = unescapeHTML;
 
 Liferay.Util.Cookie = Cookie;

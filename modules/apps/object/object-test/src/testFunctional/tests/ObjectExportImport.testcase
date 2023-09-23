@@ -14,10 +14,261 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "LPS-142175 - Verify the field values persist for object entries with 100 fields"
+	@priority = 3
+	test AssertFieldValuesPersist {
+		task ("Given a custom object with 100 fields") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 187390",
+				objectName = "CustomObject187390",
+				pluralLabelName = "Custom Objects 187390");
+
+			for (var textIndex : list "Simple,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Text",
+					fieldLabelName = "Text ${textIndex}",
+					fieldName = "text${textIndex}",
+					fieldType = "String",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var integerIndex : list "Simple,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Integer",
+					fieldLabelName = "Integer ${integerIndex}",
+					fieldName = "integer${integerIndex}",
+					fieldType = "Integer",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var precisionDecimalIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "PrecisionDecimal",
+					fieldLabelName = "Precision Decimal ${precisionDecimalIndex}",
+					fieldName = "precisionDecimal${precisionDecimalIndex}",
+					fieldType = "BigDecimal",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var booleanIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Boolean",
+					fieldLabelName = "Boolean ${booleanIndex}",
+					fieldName = "boolean${booleanIndex}",
+					fieldType = "Boolean",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var dateIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Date",
+					fieldLabelName = "Date ${dateIndex}",
+					fieldName = "date${dateIndex}",
+					fieldType = "Date",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var dateTimeIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "DateTime",
+					fieldLabelName = "DateTime ${dateTimeIndex}",
+					fieldName = "dateTime${dateTimeIndex}",
+					fieldType = "DateTime",
+					isRequired = "false",
+					objectName = "CustomObject187390",
+					timeStorageOption = "convertToUTC");
+			}
+
+			for (var longTextIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "LongText",
+					fieldLabelName = "LongText ${longTextIndex}",
+					fieldName = "longText${longTextIndex}",
+					fieldType = "Clob",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var decimalIndex : list "Simple,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Decimal",
+					fieldLabelName = "Decimal ${decimalIndex}",
+					fieldName = "decimal${decimalIndex}",
+					fieldType = "Double",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var longIntegerIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "LongInteger",
+					fieldLabelName = "LongInteger ${longIntegerIndex}",
+					fieldName = "longInteger${longIntegerIndex}",
+					fieldType = "Long",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			for (var richTextIndex : list "Label,A,B,C,D,E,F,G,H,I") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "RichText",
+					fieldLabelName = "RichText ${richTextIndex}",
+					fieldName = "richText${richTextIndex}",
+					fieldType = "Clob",
+					isRequired = "false",
+					objectName = "CustomObject187390");
+			}
+
+			Picklist.addPicklistViaAPI(picklistName = "Status");
+
+			for (var statusName : list "open,review,closed") {
+				Picklist.addPicklistItemViaAPI(
+					itemKey = ${statusName},
+					itemName = ${statusName},
+					picklistName = "Status");
+			}
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 187390");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Picklist",
+				fieldPicklist = "Status",
+				fieldType = "Picklist");
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Picklist State Manager",
+				fieldPicklist = "Status",
+				fieldType = "Picklist",
+				itemName = "open",
+				markAsState = "true");
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Multiselect Picklist",
+				fieldPicklist = "Status",
+				fieldType = "Multiselect Picklist");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject187390");
+		}
+
+		task ("And given the object definition is exported") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectExportImport.exportObject(
+				objectLabel = "Custom Object 187390",
+				objectName = "CustomObject187390");
+		}
+
+		task ("And given the object definition is deleted in portal") {
+			ObjectAdmin.deleteObjectViaAPI(objectName = "CustomObject187390");
+		}
+
+		task ("And given the object definition is imported") {
+			ObjectExportImport.importObject(
+				objectFileName = "ImportedObjectWith100Fields",
+				objectName = "CustomObject187390");
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 187390");
+
+			ObjectAdmin.publishObjectViaUI();
+		}
+
+		task ("When the user creates an object entry with each field type filled") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject187390");
+
+			LexiconEntry.gotoAdd();
+
+			ObjectPortlet.typeCustomField(
+				customField = "Text Simple",
+				entry = "Simple text");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Integer Simple",
+				entry = 24680);
+
+			ObjectPortlet.typeCustomField(
+				customField = "Precision Decimal Label",
+				entry = "1.23");
+
+			Click.clickAtNotVisible(locator1 = "ObjectAdmin#ENTRY_BOOLEAN_CHECKBOX");
+
+			Type(
+				locator1 = "ObjectPortlet#VIEW_EMPTY_LABEL_IN_DATE_ENTRY",
+				value1 = "01/01/2024");
+
+			Type(
+				locator1 = "ObjectPortlet#VIEW_EMPTY_LABEL_IN_DATE_TIME_ENTRY",
+				value1 = "10/10/2024 08:00 AM");
+
+			FormViewBuilder.editClobText(fieldLong = "Long text test");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Decimal Simple",
+				entry = "13.579");
+
+			ObjectPortlet.typeCustomField(
+				customField = "LongInteger Label",
+				entry = 1234567890);
+
+			ObjectAutoGenerated.typeAndSelectTextOnRichText(text = "Rich text test");
+
+			Click(locator1 = "ObjectAdmin#ENTRY_CHOOSE_OPTIONS_MULTIPICKLIST");
+
+			for (var picklistOption : list "review,closed") {
+				MenuItem.clickNoError(menuItem = ${picklistOption});
+			}
+
+			PortletEntry.save();
+		}
+
+		task ("Then the field values persists on the page and on the table") {
+			for (var values : list "Simple text,24680,1.23,13.579,1234567890,open,01/01/2024,10/10/2024 08:00 AM") {
+				AssertElementPresent(
+					fieldLabel = ${values},
+					locator1 = "CreateObject#FIELD_VALUE");
+			}
+
+			AssertElementPresent(
+				checkboxName = "Boolean",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+
+			AssertElementPresent(
+				key_clobType = "Long text test",
+				locator1 = "ObjectAdmin#VIEW_CLOB_TYPE_TEXT_ENTRY");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+			ObjectAutoGenerated.assertFormatTypeOnRichText(
+				richText = "Rich text test",
+				specificType = ".",
+				type = "p");
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject187390");
+
+			for (var asserts : list "Simple text,24680,1.23,Yes,Long text test,13.579,Yes,1234567890,Rich text test,open") {
+				ObjectPortlet.viewEntry(entry = ${asserts});
+			}
+
+			ObjectPortlet.viewEntry(entry = "review, closed");
+
+			ObjectPortlet.viewEntry(entry = "Jan 1, 2024");
+
+			ObjectPortlet.viewEntry(entry = "Oct 10, 2024, 8:00 AM");
 		}
 	}
 
@@ -29,7 +280,7 @@ definition {
 
 		Click(locator1 = "ObjectAdmin#KEBAB_MENU");
 
-		MenuItem.click(menuItem = "Import");
+		MenuItem.click(menuItem = "Import Object Definition");
 
 		var filePath = TestCase.getDependenciesDirPath(fileName = "ImportedSimpleObject.json");
 
@@ -41,7 +292,9 @@ definition {
 
 		AssertElementNotPresent(locator1 = "IFrame#MODAL_BODY");
 
-		CreateObject.assertCustomObjectNotPresent(labelName = "Imported Simple Object");
+		AssertElementNotPresent(
+			key_labelName = "Imported Simple Object",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-142175 - Verify it is possible to clear the JSON file on the import dialog"
@@ -51,7 +304,7 @@ definition {
 
 		Click(locator1 = "ObjectAdmin#KEBAB_MENU");
 
-		MenuItem.click(menuItem = "Import");
+		MenuItem.click(menuItem = "Import Object Definition");
 
 		var filePath = TestCase.getDependenciesDirPath(fileName = "ImportedSimpleObject.json");
 
@@ -163,7 +416,9 @@ definition {
 				objectFileName = "ImportedObjectWithCustomViews",
 				objectName = "ImportedObjectWithCustomViews170541");
 
-			CreateObject.assertCustomObject(labelName = "Imported Object With Custom Views");
+			AssertElementPresent(
+				key_labelName = "Imported Object With Custom Views",
+				locator1 = "CreateObject#OBJECT_NAME");
 		}
 
 		task ("Then the imported object with custom views can be exported") {
@@ -183,7 +438,21 @@ definition {
 				objectFileName = "ImportedObjectWithState",
 				objectName = "ImportedObjectWithState170543");
 
-			CreateObject.assertCustomObject(labelName = "Imported Object With State");
+			AssertElementPresent(
+				key_labelName = "Imported Object With State",
+				locator1 = "CreateObject#OBJECT_NAME");
+		}
+
+		task ("Then the state is present on the object") {
+			ObjectPortlet.selectCustomObject(label = "Imported Object With State");
+
+			ObjectAdmin.goToStateManagerTab();
+
+			ObjectAdmin.goToFieldsDetails(label = "Field Picklist");
+
+			AssertElementPresent(
+				key_stateName = "PicklistItemTest",
+				locator1 = "ObjectAdmin#VIEW_STATE_NAME");
 		}
 
 		task ("Then the imported object with state can be exported") {
@@ -203,7 +472,9 @@ definition {
 				objectFileName = "ImportedObjectWithValidation",
 				objectName = "ImportedObjectWithValidation170542");
 
-			CreateObject.assertCustomObject(labelName = "Imported Object With Validation");
+			AssertElementPresent(
+				key_labelName = "Imported Object With Validation",
+				locator1 = "CreateObject#OBJECT_NAME");
 		}
 
 		task ("Then the imported object with validation can be exported") {
@@ -224,7 +495,9 @@ definition {
 			objectFileName = "ImportedSimpleObject",
 			objectName = "ImportedSimpleObject146358");
 
-		CreateObject.assertCustomObject(labelName = "Imported Simple Object");
+		AssertElementPresent(
+			key_labelName = "Imported Simple Object",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-142175 - Verify it is possible to maintain Fields after importing an Object"
@@ -234,7 +507,9 @@ definition {
 			objectFileName = "ImportedObjectWithField",
 			objectName = "ImportedObjectWithField146361");
 
-		CreateObject.assertCustomObject(labelName = "Imported Object With Field");
+		AssertElementPresent(
+			key_labelName = "Imported Object With Field",
+			locator1 = "CreateObject#OBJECT_NAME");
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Field");
 
@@ -252,7 +527,9 @@ definition {
 			objectFileName = "ImportedObjectWithLayout",
 			objectName = "ImportedObjectWithLayout146360");
 
-		CreateObject.assertCustomObject(labelName = "Imported Object With Layout");
+		AssertElementPresent(
+			key_labelName = "Imported Object With Layout",
+			locator1 = "CreateObject#OBJECT_NAME");
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Layout");
 
@@ -271,7 +548,9 @@ definition {
 		}
 
 		task ("Then assert the imported file is present") {
-			CreateObject.assertCustomObject(labelName = "Imported Object With Action");
+			AssertElementPresent(
+				key_labelName = "Imported Object With Action",
+				locator1 = "CreateObject#OBJECT_NAME");
 		}
 	}
 
@@ -286,13 +565,15 @@ definition {
 			objectFileName = "ImportedSimpleObject",
 			objectName = "ImportedSimpleObject146367B");
 
-		CreateObject.assertCustomObjectWithIndex(
-			index = 1,
-			labelName = "Imported Simple Object");
+		AssertElementPresent(
+			key_index = 1,
+			key_labelName = "Imported Simple Object",
+			locator1 = "CreateObject#OBJECT_NAME_INDEX");
 
-		CreateObject.assertCustomObjectWithIndex(
-			index = 2,
-			labelName = "Imported Simple Object");
+		AssertElementPresent(
+			key_index = 2,
+			key_labelName = "Imported Simple Object",
+			locator1 = "CreateObject#OBJECT_NAME_INDEX");
 	}
 
 	@description = "LPS-142175 - Verify it's possible to maintain Scope after importing an Object"
@@ -302,7 +583,9 @@ definition {
 			objectFileName = "ImportedObjectWithScope",
 			objectName = "ImportedObjectWithScope146370");
 
-		CreateObject.assertCustomObject(labelName = "Imported Object With Scope");
+		AssertElementPresent(
+			key_labelName = "Imported Object With Scope",
+			locator1 = "CreateObject#OBJECT_NAME");
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Scope");
 
@@ -311,7 +594,7 @@ definition {
 			value1 = "Company");
 
 		AssertTextEquals(
-			locator1 = "CreateObject#PANEL_CATEGORY_KEY",
+			locator1 = "CreateObject#PANEL_LINK",
 			value1 = "Control Panel > Object");
 	}
 
@@ -322,13 +605,17 @@ definition {
 			objectFileName = "ImportedObjectWithRelationship",
 			objectName = "ImportedObjectWithRelationship146359");
 
-		CreateObject.assertCustomObject(labelName = "Imported Object With Relationship");
+		AssertElementPresent(
+			key_labelName = "Imported Object With Relationship",
+			locator1 = "CreateObject#OBJECT_NAME");
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Relationship");
 
 		ObjectAdmin.gotoRelationshipsTab();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-142175 - Verify it is possible to publish an imported custom object"
@@ -339,7 +626,9 @@ definition {
 			objectFileName = "ImportedObjectWithField",
 			objectName = "ImportedObjectWithField146365");
 
-		CreateObject.assertCustomObject(labelName = "Imported Object With Field");
+		AssertElementPresent(
+			key_labelName = "Imported Object With Field",
+			locator1 = "CreateObject#OBJECT_NAME");
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Field");
 
@@ -347,9 +636,10 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectAdmin.assertObjectStatus(
-			label = "Imported Object With Field",
-			status = "Approved");
+		AssertTextEquals(
+			key_label = "Imported Object With Field",
+			locator1 = "ObjectAdmin#OBJECT_STATUS",
+			value1 = "Approved");
 	}
 
 	@description = "LPS-142175 - Verify that an imported custom object is created with Draft Status"
@@ -359,11 +649,14 @@ definition {
 			objectFileName = "ImportedSimpleObject",
 			objectName = "ImportedSimpleObject146363");
 
-		CreateObject.assertCustomObject(labelName = "Imported Simple Object");
+		AssertElementPresent(
+			key_labelName = "Imported Simple Object",
+			locator1 = "CreateObject#OBJECT_NAME");
 
-		ObjectAdmin.assertObjectStatus(
-			label = "Imported Simple Object",
-			status = "Draft");
+		AssertTextEquals(
+			key_label = "Imported Simple Object",
+			locator1 = "ObjectAdmin#OBJECT_STATUS",
+			value1 = "Draft");
 	}
 
 }

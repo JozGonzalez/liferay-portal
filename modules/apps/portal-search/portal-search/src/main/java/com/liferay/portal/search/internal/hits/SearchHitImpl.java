@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.hits;
@@ -73,6 +64,11 @@ public class SearchHitImpl implements SearchHit, Serializable {
 	}
 
 	@Override
+	public Object[] getSortValues() {
+		return _sortValues;
+	}
+
+	@Override
 	public Map<String, Object> getSourcesMap() {
 		return _sourcesMap;
 	}
@@ -88,6 +84,7 @@ public class SearchHitImpl implements SearchHit, Serializable {
 		_id = searchHitImpl._id;
 		_matchedQueries = searchHitImpl._matchedQueries;
 		_score = searchHitImpl._score;
+		_sortValues = searchHitImpl._sortValues;
 		_version = searchHitImpl._version;
 
 		_highlightFieldsMap.putAll(searchHitImpl._highlightFieldsMap);
@@ -177,6 +174,13 @@ public class SearchHitImpl implements SearchHit, Serializable {
 		}
 
 		@Override
+		public SearchHitBuilder sortValues(Object[] sortValues) {
+			_searchHitImpl._setSortValues(sortValues);
+
+			return this;
+		}
+
+		@Override
 		public SearchHitBuilder version(long version) {
 			_searchHitImpl._setVersion(version);
 
@@ -215,6 +219,10 @@ public class SearchHitImpl implements SearchHit, Serializable {
 		_score = score;
 	}
 
+	private void _setSortValues(Object[] sortValues) {
+		_sortValues = sortValues;
+	}
+
 	private void _setVersion(long version) {
 		_version = version;
 	}
@@ -226,6 +234,7 @@ public class SearchHitImpl implements SearchHit, Serializable {
 	private String _id;
 	private String[] _matchedQueries = new String[0];
 	private float _score;
+	private Object[] _sortValues;
 	private final Map<String, Object> _sourcesMap = new LinkedHashMap<>();
 	private long _version;
 

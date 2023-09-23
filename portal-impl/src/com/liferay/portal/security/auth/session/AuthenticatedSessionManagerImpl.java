@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.auth.session;
@@ -41,11 +32,9 @@ import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.liveusers.LiveUsers;
@@ -207,26 +196,12 @@ public class AuthenticatedSessionManagerImpl
 			idCookie.setMaxAge(-1);
 		}
 
-		boolean secure = httpServletRequest.isSecure();
-
-		if (secure && !PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS &&
-			!StringUtil.equalsIgnoreCase(
-				Http.HTTPS, PropsValues.WEB_SERVER_PROTOCOL)) {
-
-			Boolean httpsInitial = (Boolean)httpSession.getAttribute(
-				WebKeys.HTTPS_INITIAL);
-
-			if ((httpsInitial == null) || !httpsInitial.booleanValue()) {
-				secure = false;
-			}
-		}
-
 		CookiesManagerUtil.addCookie(
 			CookiesConstants.CONSENT_TYPE_NECESSARY, companyIdCookie,
-			httpServletRequest, httpServletResponse, secure);
+			httpServletRequest, httpServletResponse);
 		CookiesManagerUtil.addCookie(
 			CookiesConstants.CONSENT_TYPE_NECESSARY, idCookie,
-			httpServletRequest, httpServletResponse, secure);
+			httpServletRequest, httpServletResponse);
 
 		if (rememberMe) {
 			Cookie loginCookie = new Cookie(CookiesConstants.NAME_LOGIN, login);
@@ -240,7 +215,7 @@ public class AuthenticatedSessionManagerImpl
 
 			CookiesManagerUtil.addCookie(
 				CookiesConstants.CONSENT_TYPE_FUNCTIONAL, loginCookie,
-				httpServletRequest, httpServletResponse, secure);
+				httpServletRequest, httpServletResponse);
 
 			Cookie passwordCookie = new Cookie(
 				CookiesConstants.NAME_PASSWORD,
@@ -255,7 +230,7 @@ public class AuthenticatedSessionManagerImpl
 
 			CookiesManagerUtil.addCookie(
 				CookiesConstants.CONSENT_TYPE_FUNCTIONAL, passwordCookie,
-				httpServletRequest, httpServletResponse, secure);
+				httpServletRequest, httpServletResponse);
 
 			Cookie rememberMeCookie = new Cookie(
 				CookiesConstants.NAME_REMEMBER_ME, Boolean.TRUE.toString());
@@ -269,7 +244,7 @@ public class AuthenticatedSessionManagerImpl
 
 			CookiesManagerUtil.addCookie(
 				CookiesConstants.CONSENT_TYPE_FUNCTIONAL, rememberMeCookie,
-				httpServletRequest, httpServletResponse, secure);
+				httpServletRequest, httpServletResponse);
 		}
 	}
 

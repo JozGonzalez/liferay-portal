@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.service.persistence.test;
@@ -147,6 +138,9 @@ public class LayoutClassedModelUsagePersistenceTest {
 
 		newLayoutClassedModelUsage.setClassPK(RandomTestUtil.nextLong());
 
+		newLayoutClassedModelUsage.setClassedModelExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newLayoutClassedModelUsage.setContainerKey(
 			RandomTestUtil.randomString());
 
@@ -199,6 +193,10 @@ public class LayoutClassedModelUsagePersistenceTest {
 		Assert.assertEquals(
 			existingLayoutClassedModelUsage.getClassPK(),
 			newLayoutClassedModelUsage.getClassPK());
+		Assert.assertEquals(
+			existingLayoutClassedModelUsage.
+				getClassedModelExternalReferenceCode(),
+			newLayoutClassedModelUsage.getClassedModelExternalReferenceCode());
 		Assert.assertEquals(
 			existingLayoutClassedModelUsage.getContainerKey(),
 			newLayoutClassedModelUsage.getContainerKey());
@@ -261,6 +259,16 @@ public class LayoutClassedModelUsagePersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_CN_CMERC() throws Exception {
+		_persistence.countByC_CN_CMERC(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_CN_CMERC(0L, 0L, "null");
+
+		_persistence.countByC_CN_CMERC(0L, 0L, (String)null);
+	}
+
+	@Test
 	public void testCountByC_CN_CT() throws Exception {
 		_persistence.countByC_CN_CT(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -289,14 +297,27 @@ public class LayoutClassedModelUsagePersistenceTest {
 	}
 
 	@Test
-	public void testCountByCN_CPK_CK_CT_P() throws Exception {
-		_persistence.countByCN_CPK_CK_CT_P(
+	public void testCountByC_CN_CMERC_T() throws Exception {
+		_persistence.countByC_CN_CMERC_T(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "",
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_CN_CMERC_T(0L, 0L, "null", 0);
+
+		_persistence.countByC_CN_CMERC_T(0L, 0L, (String)null, 0);
+	}
+
+	@Test
+	public void testCountByCN_CPK_CMERC_CK_CT_P() throws Exception {
+		_persistence.countByCN_CPK_CMERC_CK_CT_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "", "",
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
-		_persistence.countByCN_CPK_CK_CT_P(0L, 0L, "null", 0L, 0L);
+		_persistence.countByCN_CPK_CMERC_CK_CT_P(
+			0L, 0L, "null", "null", 0L, 0L);
 
-		_persistence.countByCN_CPK_CK_CT_P(0L, 0L, (String)null, 0L, 0L);
+		_persistence.countByCN_CPK_CMERC_CK_CT_P(
+			0L, 0L, (String)null, (String)null, 0L, 0L);
 	}
 
 	@Test
@@ -332,7 +353,8 @@ public class LayoutClassedModelUsagePersistenceTest {
 			"LayoutClassedModelUsage", "mvccVersion", true, "ctCollectionId",
 			true, "uuid", true, "layoutClassedModelUsageId", true, "groupId",
 			true, "companyId", true, "createDate", true, "modifiedDate", true,
-			"classNameId", true, "classPK", true, "containerKey", true,
+			"classNameId", true, "classPK", true,
+			"classedModelExternalReferenceCode", true, "containerKey", true,
 			"containerType", true, "plid", true, "type", true,
 			"lastPublishDate", true);
 	}
@@ -652,6 +674,11 @@ public class LayoutClassedModelUsagePersistenceTest {
 				layoutClassedModelUsage, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "classPK"));
 		Assert.assertEquals(
+			layoutClassedModelUsage.getClassedModelExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				layoutClassedModelUsage, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "cmExternalReferenceCode"));
+		Assert.assertEquals(
 			layoutClassedModelUsage.getContainerKey(),
 			ReflectionTestUtil.invoke(
 				layoutClassedModelUsage, "getColumnOriginalValue",
@@ -693,6 +720,9 @@ public class LayoutClassedModelUsagePersistenceTest {
 		layoutClassedModelUsage.setClassNameId(RandomTestUtil.nextLong());
 
 		layoutClassedModelUsage.setClassPK(RandomTestUtil.nextLong());
+
+		layoutClassedModelUsage.setClassedModelExternalReferenceCode(
+			RandomTestUtil.randomString());
 
 		layoutClassedModelUsage.setContainerKey(RandomTestUtil.randomString());
 

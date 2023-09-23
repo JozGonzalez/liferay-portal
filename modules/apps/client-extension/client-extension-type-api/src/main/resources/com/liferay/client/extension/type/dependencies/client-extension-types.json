@@ -59,6 +59,62 @@
 	},
 	{
 		"description": "This is a description.",
+		"name": "fdsCellRenderer",
+		"properties": [
+			{
+				"name": "description",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "name",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "https://www.liferay.com",
+				"name": "sourceCodeURL",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "type",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "",
+				"name": "url",
+				"type": "CETProperty.Type.URL"
+			}
+		]
+	},
+	{
+		"description": "This is a description.",
+		"name": "fdsFilter",
+		"properties": [
+			{
+				"name": "description",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "name",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "https://www.liferay.com",
+				"name": "sourceCodeURL",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "type",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "",
+				"name": "url",
+				"type": "CETProperty.Type.URL"
+			}
+		]
+	},
+	{
+		"description": "This is a description.",
 		"name": "globalCSS",
 		"properties": [
 			{
@@ -153,6 +209,39 @@
 				"default": "false",
 				"name": "instanceable",
 				"type": "CETProperty.Type.Boolean"
+			}
+		]
+	},
+	{
+		"description": "This is a description.",
+		"name": "jsImportMapsEntry",
+		"properties": [
+			{
+				"name": "description",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "name",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "https://www.liferay.com",
+				"name": "sourceCodeURL",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"name": "type",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "",
+				"name": "bareSpecifier",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "",
+				"name": "url",
+				"type": "CETProperty.Type.URL"
 			}
 		]
 	},

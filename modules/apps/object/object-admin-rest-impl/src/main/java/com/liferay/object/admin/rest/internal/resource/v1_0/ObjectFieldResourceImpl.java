@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
@@ -18,12 +9,13 @@ import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
-import com.liferay.object.admin.rest.internal.dto.v1_0.converter.ObjectFieldDTOConverter;
+import com.liferay.object.admin.rest.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldSettingUtil;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectFieldEntityModel;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.exception.ObjectFieldLocalizedException;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
@@ -37,9 +29,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -58,11 +50,10 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/object-field.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, ObjectFieldResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ObjectFieldResource.class
 )
-public class ObjectFieldResourceImpl
-	extends BaseObjectFieldResourceImpl implements NestedFieldSupport {
+public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 
 	@Override
 	public void deleteObjectField(Long objectFieldId) throws Exception {
@@ -136,6 +127,34 @@ public class ObjectFieldResourceImpl
 			throw new UnsupportedOperationException();
 		}
 
+		if (Validator.isNotNull(objectField.getLocalized()) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-172017")) {
+
+			throw new ObjectFieldLocalizedException();
+		}
+
+		com.liferay.object.model.ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectDefinitionId);
+
+		boolean localized = false;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-172017") &&
+			(Objects.equals(
+				ObjectField.BusinessType.LONG_TEXT,
+				objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.RICH_TEXT,
+				 objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.TEXT,
+				 objectField.getBusinessType()))) {
+
+			localized = GetterUtil.getBoolean(
+				objectField.getLocalized(),
+				objectDefinition.isEnableLocalization());
+		}
+
 		return _toObjectField(
 			_objectFieldService.addCustomObjectField(
 				objectField.getExternalReferenceCode(),
@@ -146,25 +165,23 @@ public class ObjectFieldResourceImpl
 				ObjectFieldUtil.getDBType(
 					objectField.getDBTypeAsString(),
 					objectField.getTypeAsString()),
-				objectField.getDefaultValue(),
 				GetterUtil.getBoolean(objectField.getIndexed()),
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
 				LocalizedMapUtil.getLocalizedMap(objectField.getLabel()),
-				objectField.getName(), objectField.getRequired(),
+				localized, objectField.getName(),
+				objectField.getReadOnlyAsString(),
+				objectField.getReadOnlyConditionExpression(),
+				objectField.getRequired(),
 				GetterUtil.getBoolean(objectField.getState()),
-				transformToList(
-					objectField.getObjectFieldSettings(),
-					objectFieldSetting ->
-						ObjectFieldSettingUtil.toObjectFieldSetting(
-							objectField.getBusinessTypeAsString(),
-							ObjectFieldUtil.addListTypeDefinition(
-								contextUser.getCompanyId(),
-								_listTypeDefinitionLocalService,
-								_listTypeEntryLocalService, objectField,
-								contextUser.getUserId()),
-							objectFieldSetting, _objectFieldSettingLocalService,
-							_objectFilterLocalService))));
+				ObjectFieldSettingUtil.toObjectFieldSettings(
+					ObjectFieldUtil.addListTypeDefinition(
+						contextUser.getCompanyId(),
+						_listTypeDefinitionLocalService,
+						_listTypeEntryLocalService, objectField,
+						contextUser.getUserId()),
+					objectField, _objectFieldSettingLocalService,
+					_objectFilterLocalService)));
 	}
 
 	@Override
@@ -204,28 +221,34 @@ public class ObjectFieldResourceImpl
 		return _toObjectField(
 			_objectFieldService.updateObjectField(
 				objectField.getExternalReferenceCode(), objectFieldId,
-				ObjectFieldUtil.getListTypeDefinitionId(
-					contextUser.getCompanyId(), _listTypeDefinitionLocalService,
-					objectField),
+				objectField.getListTypeDefinitionId(),
 				objectField.getBusinessTypeAsString(),
 				ObjectFieldUtil.getDBType(
 					objectField.getDBTypeAsString(),
 					objectField.getTypeAsString()),
-				objectField.getDefaultValue(),
 				GetterUtil.getBoolean(objectField.getIndexed()),
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
 				LocalizedMapUtil.getLocalizedMap(objectField.getLabel()),
-				objectField.getName(), objectField.getRequired(),
+				GetterUtil.getBoolean(objectField.getLocalized()),
+				objectField.getName(), objectField.getReadOnlyAsString(),
+				objectField.getReadOnlyConditionExpression(),
+				objectField.getRequired(),
 				GetterUtil.getBoolean(objectField.getState()),
-				transformToList(
-					objectField.getObjectFieldSettings(),
-					objectFieldSetting ->
-						ObjectFieldSettingUtil.toObjectFieldSetting(
-							objectField.getBusinessTypeAsString(),
-							objectField.getListTypeDefinitionId(),
-							objectFieldSetting, _objectFieldSettingLocalService,
-							_objectFilterLocalService))));
+				ObjectFieldSettingUtil.toObjectFieldSettings(
+					objectField.getListTypeDefinitionId(), objectField,
+					_objectFieldSettingLocalService,
+					_objectFilterLocalService)));
+	}
+
+	@Override
+	protected void preparePatch(
+		ObjectField objectField, ObjectField existingObjectField) {
+
+		if (objectField.getObjectFieldSettings() != null) {
+			existingObjectField.setObjectFieldSettings(
+				objectField.getObjectFieldSettings());
+		}
 	}
 
 	private Page<ObjectField> _getObjectFieldsPage(
@@ -291,21 +314,13 @@ public class ObjectFieldResourceImpl
 			com.liferay.object.model.ObjectField objectField)
 		throws Exception {
 
-		boolean updateable =
-			(!objectDefinition.isApproved() && !objectDefinition.isSystem()) ||
-			Objects.equals(
-				objectDefinition.getExtensionDBTableName(),
-				objectField.getDBTableName());
-
 		return _objectFieldDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				false,
 				HashMapBuilder.put(
 					"delete",
 					() -> {
-						if (!updateable ||
-							Validator.isNotNull(
-								objectField.getRelationshipType()) ||
+						if (!objectField.isDeletionAllowed() ||
 							objectField.isSystem()) {
 
 							return null;
@@ -327,7 +342,12 @@ public class ObjectFieldResourceImpl
 				).put(
 					"update",
 					() -> {
-						if (!updateable) {
+						if ((objectDefinition.isApproved() ||
+							 objectDefinition.isUnmodifiableSystemObject()) &&
+							!Objects.equals(
+								objectDefinition.getExtensionDBTableName(),
+								objectField.getDBTableName())) {
+
 							return null;
 						}
 
@@ -365,8 +385,9 @@ public class ObjectFieldResourceImpl
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
-	@Reference
-	private ObjectFieldDTOConverter _objectFieldDTOConverter;
+	@Reference(target = DTOConverterConstants.OBJECT_FIELD_DTO_CONVERTER)
+	private DTOConverter<com.liferay.object.model.ObjectField, ObjectField>
+		_objectFieldDTOConverter;
 
 	@Reference
 	private ObjectFieldService _objectFieldService;

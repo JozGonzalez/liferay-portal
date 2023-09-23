@@ -1,0 +1,69 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies.upgrade;
+
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalService;
+
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+/**
+ * @author Nícolas Moura
+ */
+@Component(
+	service = UpgradeJavaAssetEntryAssetCategoriesCheck.class
+)
+public class UpgradeJavaAssetEntryAssetCategoriesCheck {
+
+	public void method(
+		long assetCategoryId, AssetCategory assetCategory,
+		long[] assetCategoryIds, List<AssetCategory> assetCategories,
+		long entryId) {
+
+		for (AssetCategory assetCategory : assetCategories) {
+			_assetEntryAssetCategoryRelLocalService.addAssetEntryAssetCategoryRel(
+				entryId, assetCategory.getCategoryId());
+		}
+
+		for (long assetCategoryId : assetCategoryIds) {
+			_assetEntryAssetCategoryRelLocalService.addAssetEntryAssetCategoryRel(
+				entryId, assetCategoryId);
+		}
+
+		_assetEntryAssetCategoryRelLocalService.addAssetEntryAssetCategoryRel(
+			entryId, assetCategory.getCategoryId());
+
+		_assetEntryAssetCategoryRelLocalService.addAssetEntryAssetCategoryRel(
+			entryId, assetCategoryId);
+
+		for (AssetCategory assetCategory : assetCategories) {
+			_assetEntryAssetCategoryRelLocalService.deleteAssetEntryAssetCategoryRel(
+				entryId, assetCategory.getCategoryId());
+		}
+
+		for (long assetCategoryId : assetCategoryIds) {
+			_assetEntryAssetCategoryRelLocalService.deleteAssetEntryAssetCategoryRel(
+				entryId, assetCategoryId);
+		}
+
+		_assetEntryAssetCategoryRelLocalService.deleteAssetEntryAssetCategoryRel(
+			entryId, assetCategory.getCategoryId());
+
+		_assetEntryAssetCategoryRelLocalService.deleteAssetEntryAssetCategoryRel(
+			entryId, assetCategoryId);
+	}
+
+	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+
+	@Reference
+	private AssetEntryAssetCategoryRelLocalService
+		_assetEntryAssetCategoryRelLocalService;
+
+}

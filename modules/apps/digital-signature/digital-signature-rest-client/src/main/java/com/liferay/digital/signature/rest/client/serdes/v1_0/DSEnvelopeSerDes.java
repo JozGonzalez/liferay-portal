@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.digital.signature.rest.client.serdes.v1_0;
@@ -27,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -366,26 +356,34 @@ public class DSEnvelopeSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "dsDocument")) {
 				if (jsonParserFieldValue != null) {
-					dsEnvelope.setDsDocument(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> DSDocumentSerDes.toDTO((String)object)
-						).toArray(
-							size -> new DSDocument[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					DSDocument[] dsDocumentArray =
+						new DSDocument[jsonParserFieldValues.length];
+
+					for (int i = 0; i < dsDocumentArray.length; i++) {
+						dsDocumentArray[i] = DSDocumentSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					dsEnvelope.setDsDocument(dsDocumentArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dsRecipient")) {
 				if (jsonParserFieldValue != null) {
-					dsEnvelope.setDsRecipient(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> DSRecipientSerDes.toDTO((String)object)
-						).toArray(
-							size -> new DSRecipient[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					DSRecipient[] dsRecipientArray =
+						new DSRecipient[jsonParserFieldValues.length];
+
+					for (int i = 0; i < dsRecipientArray.length; i++) {
+						dsRecipientArray[i] = DSRecipientSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					dsEnvelope.setDsRecipient(dsRecipientArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "emailBlurb")) {

@@ -1,22 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.cache.internal.dao.orm;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cluster.ClusterExecutor;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
@@ -31,11 +26,20 @@ import java.io.Serializable;
 
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Tina Tian
@@ -46,6 +50,27 @@ public class EntityCacheImplTest {
 	@Rule
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+
+		_finderCacheServiceRegistration = bundleContext.registerService(
+			FinderCache.class, _finderCacheImpl, null);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_finderCacheServiceRegistration.unregister();
+
+		_frameworkUtilMockedStatic.close();
+	}
 
 	@Before
 	public void setUp() {
@@ -78,16 +103,18 @@ public class EntityCacheImplTest {
 			ProxyFactory.newDummyInstance(ClusterExecutor.class));
 		ReflectionTestUtil.setFieldValue(
 			entityCacheImpl, "_multiVMPool", multiVMPool);
+
 		ReflectionTestUtil.setFieldValue(entityCacheImpl, "_props", _props);
 
-		FinderCacheImpl finderCacheImpl = new FinderCacheImpl();
-
 		ReflectionTestUtil.setFieldValue(
-			entityCacheImpl, "_finderCacheImpl", finderCacheImpl);
+			_finderCacheImpl, "_multiVMPool", multiVMPool);
 		ReflectionTestUtil.setFieldValue(
-			finderCacheImpl, "_multiVMPool", multiVMPool);
+			_finderCacheImpl, "_serviceTrackerMap",
+			ServiceTrackerMapFactory.openSingleValueMap(
+				SystemBundleUtil.getBundleContext(), ArgumentsResolver.class,
+				"class.name"));
 
-		entityCacheImpl.activate();
+		entityCacheImpl.activate(_bundleContext);
 
 		PortalCache<?, ?> portalCache = entityCacheImpl.getPortalCache(
 			EntityCacheImplTest.class);
@@ -121,7 +148,7 @@ public class EntityCacheImplTest {
 				new MultiVMPoolInvocationHandler(_classLoader, serialized)));
 		ReflectionTestUtil.setFieldValue(entityCacheImpl, "_props", _props);
 
-		entityCacheImpl.activate();
+		entityCacheImpl.activate(_bundleContext);
 
 		entityCacheImpl.putResult(EntityCacheImplTest.class, 12345, _nullModel);
 
@@ -130,6 +157,15 @@ public class EntityCacheImplTest {
 			entityCacheImpl.getResult(EntityCacheImplTest.class, 12345));
 	}
 
+	private static final FinderCacheImpl _finderCacheImpl =
+		new FinderCacheImpl();
+	private static ServiceRegistration<FinderCache>
+		_finderCacheServiceRegistration;
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
+
+	private final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
 	private ClassLoader _classLoader;
 	private Serializable _nullModel;
 	private Props _props;

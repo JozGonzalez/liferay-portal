@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content and Application Templates";
@@ -12,16 +13,15 @@ definition {
 
 		HeadlessSite.addSite(siteName = "Test Site Name");
 
-		JSONStaging.enableLocalStaging(
-			branchingPrivate = "false",
-			branchingPublic = "false",
-			groupName = "Test Site Name");
+		Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+		Staging.activateStagingCP(siteName = "Test Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -72,12 +72,7 @@ definition {
 	@priority = 4
 	@uitest
 	test ViewTemplateEditorSidebarPanel {
-		task ("Enable Staging Model") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
-		}
+		property timeout.explicit.wait = "10";
 
 		task ("Add a widget template for Asset Publisher") {
 			ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name-staging");
@@ -85,8 +80,6 @@ definition {
 			ApplicationDisplayTemplates.addADTWithFieldEntryCP(
 				fieldName = "Asset Entry",
 				portletName = "Asset Publisher");
-
-			Alert.viewSuccessMessage();
 
 			ApplicationDisplayTemplates.viewTemplate(adtType = "Asset Publisher");
 		}

@@ -1,26 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
+import ClayIcon from '@clayui/icon';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
 import FrontendDataSetContext from '../../FrontendDataSetContext';
 import {triggerAction} from '../../utils/actionItems/index';
 
-function CreationMenu({primaryItems}) {
+const EMPTY_STATE_BUTTON_PROPS = {
+	'aria-label': undefined,
+	'className': undefined,
+	'displayType': 'secondary',
+	'title': undefined,
+};
+
+const DropDown = ({inEmptyState, primaryItems}) => {
 	const frontendDataSetContext = useContext(FrontendDataSetContext);
 
 	const {loadData} = frontendDataSetContext;
@@ -28,54 +28,71 @@ function CreationMenu({primaryItems}) {
 	const [active, setActive] = useState(false);
 
 	return (
+		<ClayDropDown
+			active={active}
+			onActiveChange={setActive}
+			trigger={
+				<ClayButton
+					aria-label={Liferay.Language.get('new')}
+					className="nav-btn nav-btn-monospaced"
+					title={Liferay.Language.get('new')}
+					{...(inEmptyState ? EMPTY_STATE_BUTTON_PROPS : {})}
+				>
+					{inEmptyState ? (
+						Liferay.Language.get('new')
+					) : (
+						<ClayIcon symbol="plus" />
+					)}
+				</ClayButton>
+			}
+		>
+			<ClayDropDown.ItemList>
+				{primaryItems.map((item, i) => (
+					<ClayDropDown.Item
+						key={i}
+						onClick={(event) => {
+							event.preventDefault();
+
+							setActive(false);
+
+							item.onClick?.({
+								loadData,
+							});
+
+							if (item.href || item.target) {
+								triggerAction(item, frontendDataSetContext);
+							}
+						}}
+					>
+						{item.label}
+					</ClayDropDown.Item>
+				))}
+			</ClayDropDown.ItemList>
+		</ClayDropDown>
+	);
+};
+
+function CreationMenu({inEmptyState, primaryItems}) {
+	const frontendDataSetContext = useContext(FrontendDataSetContext);
+
+	const {loadData} = frontendDataSetContext;
+
+	return (
 		primaryItems?.length > 0 && (
-			<ul className="navbar-nav">
+			<ul
+				className={classNames('navbar-nav', {
+					'd-inline-flex': inEmptyState,
+				})}
+			>
 				<li className="nav-item">
 					{primaryItems.length > 1 ? (
-						<ClayDropDown
-							active={active}
-							onActiveChange={setActive}
-							trigger={
-								<ClayButtonWithIcon
-									aria-label={Liferay.Language.get('new')}
-									className="nav-btn nav-btn-monospaced"
-									symbol="plus"
-									title={Liferay.Language.get('new')}
-								/>
-							}
-						>
-							<ClayDropDown.ItemList>
-								{primaryItems.map((item, i) => (
-									<ClayDropDown.Item
-										key={i}
-										onClick={(event) => {
-											event.preventDefault();
-
-											setActive(false);
-
-											item.onClick?.({
-												loadData,
-											});
-
-											if (item.href || item.target) {
-												triggerAction(
-													item,
-													frontendDataSetContext
-												);
-											}
-										}}
-									>
-										{item.label}
-									</ClayDropDown.Item>
-								))}
-							</ClayDropDown.ItemList>
-						</ClayDropDown>
+						<DropDown
+							inEmptyState={inEmptyState}
+							primaryItems={primaryItems}
+						/>
 					) : (
-						<ClayButtonWithIcon
-							aria-label={
-								primaryItems[0].label ??
-								Liferay.Language.get('new')
-							}
+						<ClayButton
+							aria-label={primaryItems[0].label}
 							className="nav-btn nav-btn-monospaced"
 							data-tooltip-align="top"
 							onClick={() => {
@@ -89,12 +106,15 @@ function CreationMenu({primaryItems}) {
 									triggerAction(item, frontendDataSetContext);
 								}
 							}}
-							symbol="plus"
-							title={
-								primaryItems[0].label ??
-								Liferay.Language.get('new')
-							}
-						/>
+							title={primaryItems[0].label}
+							{...(inEmptyState ? EMPTY_STATE_BUTTON_PROPS : {})}
+						>
+							{inEmptyState ? (
+								primaryItems[0].label
+							) : (
+								<ClayIcon symbol="plus" />
+							)}
+						</ClayButton>
 					)}
 				</li>
 			</ul>

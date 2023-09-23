@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.feature.flag.web.internal.display;
 
-import com.liferay.feature.flag.web.internal.model.FeatureFlag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.feature.flag.FeatureFlag;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -46,7 +37,7 @@ public class FeatureFlagsManagementToolbarDisplayContext
 
 	public static final Filter[] FILTERS = {
 		new Filter(
-			"enabled", new String[] {"enabled", "disabled"},
+			"status", "filter-by-status", new String[] {"enabled", "disabled"},
 			(featureFlag, currentValue) -> {
 				if ((currentValue == null) ||
 					Objects.equals(currentValue, "all")) {
@@ -132,16 +123,14 @@ public class FeatureFlagsManagementToolbarDisplayContext
 		DropdownItemList dropdownItemList = new DropdownItemList();
 
 		for (Filter filter : FILTERS) {
-			dropdownItemList.addGroup(
-				dropdownGroupItem -> dropdownGroupItem.setLabel(
-					langGet("filter-by-x", filter.getName())));
+			DropdownItemList filterDropdownItemList = new DropdownItemList();
 
 			String currentValue = filter.getCurrentValue(httpServletRequest);
 
 			PortletURL portletURL = getPortletURL();
 
 			for (String value : filter.getValues()) {
-				dropdownItemList.add(
+				filterDropdownItemList.add(
 					dropdownItem -> {
 						dropdownItem.setActive(
 							Objects.equals(currentValue, value));
@@ -150,6 +139,12 @@ public class FeatureFlagsManagementToolbarDisplayContext
 						dropdownItem.setLabel(langGet(value));
 					});
 			}
+
+			dropdownItemList.addGroup(
+				dropdownGroupItem -> {
+					dropdownGroupItem.setDropdownItems(filterDropdownItemList);
+					dropdownGroupItem.setLabel(langGet(filter.getLabel()));
+				});
 		}
 
 		return dropdownItemList;
@@ -163,16 +158,21 @@ public class FeatureFlagsManagementToolbarDisplayContext
 	public static class Filter {
 
 		public Filter(
-			String name, String[] values,
+			String name, String label, String[] values,
 			BiPredicate<FeatureFlag, String> biPredicate) {
 
 			_name = name;
+			_label = label;
 			_values = values;
 			_biPredicate = biPredicate;
 		}
 
 		public String getCurrentValue(HttpServletRequest httpServletRequest) {
 			return ParamUtil.get(httpServletRequest, getParameterName(), "all");
+		}
+
+		public String getLabel() {
+			return _label;
 		}
 
 		public String getName() {
@@ -204,6 +204,7 @@ public class FeatureFlagsManagementToolbarDisplayContext
 		}
 
 		private final BiPredicate<FeatureFlag, String> _biPredicate;
+		private final String _label;
 		private final String _name;
 		private final String[] _values;
 

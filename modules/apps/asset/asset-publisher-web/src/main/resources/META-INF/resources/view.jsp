@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -94,7 +85,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 <c:choose>
 	<c:when test="<%= ListUtil.isNotEmpty(assetPublisherDisplayContext.getAssetEntryResults()) %>">
 		<c:choose>
-			<c:when test="<%= ArrayUtil.contains(assetPublisherDisplayContext.getDisplayStyles(), assetPublisherDisplayContext.getDisplayStyle()) || StringUtil.startsWith(assetPublisherDisplayContext.getDisplayStyle(), PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX) %>">
+			<c:when test="<%= ArrayUtil.contains(assetPublisherDisplayContext.getDisplayStyles(), assetPublisherDisplayContext.getDisplayStyle()) || StringUtil.startsWith(assetPublisherDisplayContext.getDisplayStyle(), PortletDisplayTemplateConstants.DISPLAY_STYLE_PREFIX) %>">
 				<liferay-util:include page="/view_asset_entry_list.jsp" servletContext="<%= application %>" />
 			</c:when>
 			<c:otherwise>
@@ -122,16 +113,20 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 
 			</c:if>
 
-			<div class="alert alert-info text-center">
+			<clay:alert
+				displayType="info"
+			>
 				<c:choose>
 					<c:when test="<%= assetPublisherDisplayContext.isSelectionStyleAssetList() && (assetPublisherDisplayContext.fetchAssetListEntry() == null) && Validator.isNull(assetPublisherDisplayContext.getInfoListProviderKey()) && !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
-						<div>
-							<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
-						</div>
+						<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 
-						<div>
-							<aui:a href="javascript:void(0);" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-a-collection-to-make-it-visible" /></aui:a>
-						</div>
+						<clay:button
+							cssClass="align-baseline border-0 p-0"
+							displayType="link"
+							label="select-a-collection-to-make-it-visible"
+							onClick="<%= portletDisplay.getURLConfigurationJS() %>"
+							small="<%= true %>"
+						/>
 					</c:when>
 					<c:when test="<%= !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
 						<liferay-ui:message key="there-are-no-results" />
@@ -140,7 +135,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 						<liferay-ui:message key="there-are-no-related-assets" />
 					</c:otherwise>
 				</c:choose>
-			</div>
+			</clay:alert>
 		</liferay-ddm:template-renderer>
 	</c:otherwise>
 </c:choose>

@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.upgrade.util;
 
+import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -48,13 +41,25 @@ public class UpgradeProcessUtil {
 			return languageId;
 		}
 
-		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				"select languageId from User_ where companyId = ? and " +
-					"defaultUser = ?")) {
+		try (Connection connection = DataAccess.getConnection()) {
+			DBInspector dbInspector = new DBInspector(connection);
+			String sql = "select languageId from User_ where companyId = ?";
 
-			preparedStatement.setLong(1, companyId);
-			preparedStatement.setBoolean(2, true);
+			PreparedStatement preparedStatement = null;
+
+			if (dbInspector.hasColumn("User_", "defaultUser")) {
+				preparedStatement = connection.prepareStatement(
+					sql + " and defaultUser = ?");
+
+				preparedStatement.setLong(1, companyId);
+				preparedStatement.setBoolean(2, Boolean.TRUE);
+			}
+			else {
+				preparedStatement = connection.prepareStatement(
+					sql + " and type_ = " + UserConstants.TYPE_GUEST);
+
+				preparedStatement.setLong(1, companyId);
+			}
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
@@ -67,6 +72,13 @@ public class UpgradeProcessUtil {
 
 				return LocaleUtil.toLanguageId(LocaleUtil.US);
 			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return LocaleUtil.toLanguageId(LocaleUtil.US);
 		}
 	}
 

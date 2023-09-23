@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.journal.internal.exportimport.data.handler.test;
@@ -35,6 +26,7 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.util.JournalContent;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -196,8 +188,10 @@ public class AMJournalArticleStagedModelDataHandlerTest
 	public void testExportSucceedsWithInvalidReferences() throws Exception {
 		int invalidFileEntryId = 9999999;
 
-		JournalArticle journalArticle = _addJournalArticle(
-			_getContent(_getImgTag(invalidFileEntryId)), _getServiceContext());
+		JournalArticle journalArticle = _withPortletImportEnabled(
+			() -> _addJournalArticle(
+				_getContent(_getImgTag(invalidFileEntryId)),
+				_getServiceContext()));
 
 		initExport();
 
@@ -306,7 +300,7 @@ public class AMJournalArticleStagedModelDataHandlerTest
 			true, 0, titleMap, null, titleMap, content,
 			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
 			1, 1, 1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true,
-			false, null, null, null, null, serviceContext);
+			false, 0, 0, null, null, null, null, serviceContext);
 	}
 
 	private void _assertContentEquals(
@@ -438,6 +432,24 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		sb.setIndex(sb.index() - 1);
 
 		return _getContent(sb.toString());
+	}
+
+	private JournalArticle _withPortletImportEnabled(
+			UnsafeSupplier<JournalArticle, Exception> unsafeSupplier)
+		throws Exception {
+
+		boolean portletImportInProcess =
+			ExportImportThreadLocal.isPortletImportInProcess();
+
+		try {
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			return unsafeSupplier.get();
+		}
+		finally {
+			ExportImportThreadLocal.setPortletImportInProcess(
+				portletImportInProcess);
+		}
 	}
 
 	private static final String _AM_JOURNAL_CONFIG_UUID = "journal-config";

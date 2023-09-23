@@ -1,20 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.service;
 
+import com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link AnalyticsDeleteMessageLocalService}.
@@ -49,20 +44,17 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @return the analytics delete message that was added
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		addAnalyticsDeleteMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-				analyticsDeleteMessage) {
+	public AnalyticsDeleteMessage addAnalyticsDeleteMessage(
+		AnalyticsDeleteMessage analyticsDeleteMessage) {
 
 		return _analyticsDeleteMessageLocalService.addAnalyticsDeleteMessage(
 			analyticsDeleteMessage);
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		addAnalyticsDeleteMessage(
-			long companyId, java.util.Date createDate, String className,
-			long classPK, long userId) {
+	public AnalyticsDeleteMessage addAnalyticsDeleteMessage(
+		long companyId, java.util.Date createDate, String className,
+		long classPK, long userId) {
 
 		return _analyticsDeleteMessageLocalService.addAnalyticsDeleteMessage(
 			companyId, createDate, className, classPK, userId);
@@ -75,8 +67,8 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @return the new analytics delete message
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		createAnalyticsDeleteMessage(long analyticsDeleteMessageId) {
+	public AnalyticsDeleteMessage createAnalyticsDeleteMessage(
+		long analyticsDeleteMessageId) {
 
 		return _analyticsDeleteMessageLocalService.createAnalyticsDeleteMessage(
 			analyticsDeleteMessageId);
@@ -105,10 +97,8 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @return the analytics delete message that was removed
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		deleteAnalyticsDeleteMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-				analyticsDeleteMessage) {
+	public AnalyticsDeleteMessage deleteAnalyticsDeleteMessage(
+		AnalyticsDeleteMessage analyticsDeleteMessage) {
 
 		return _analyticsDeleteMessageLocalService.deleteAnalyticsDeleteMessage(
 			analyticsDeleteMessage);
@@ -126,8 +116,8 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @throws PortalException if a analytics delete message with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-			deleteAnalyticsDeleteMessage(long analyticsDeleteMessageId)
+	public AnalyticsDeleteMessage deleteAnalyticsDeleteMessage(
+			long analyticsDeleteMessageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsDeleteMessageLocalService.deleteAnalyticsDeleteMessage(
@@ -251,8 +241,8 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		fetchAnalyticsDeleteMessage(long analyticsDeleteMessageId) {
+	public AnalyticsDeleteMessage fetchAnalyticsDeleteMessage(
+		long analyticsDeleteMessageId) {
 
 		return _analyticsDeleteMessageLocalService.fetchAnalyticsDeleteMessage(
 			analyticsDeleteMessageId);
@@ -273,8 +263,8 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @throws PortalException if a analytics delete message with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-			getAnalyticsDeleteMessage(long analyticsDeleteMessageId)
+	public AnalyticsDeleteMessage getAnalyticsDeleteMessage(
+			long analyticsDeleteMessageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsDeleteMessageLocalService.getAnalyticsDeleteMessage(
@@ -293,29 +283,24 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @return the range of analytics delete messages
 	 */
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage>
-			getAnalyticsDeleteMessages(int start, int end) {
+	public java.util.List<AnalyticsDeleteMessage> getAnalyticsDeleteMessages(
+		int start, int end) {
 
 		return _analyticsDeleteMessageLocalService.getAnalyticsDeleteMessages(
 			start, end);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage>
-			getAnalyticsDeleteMessages(
-				long companyId, java.util.Date modifiedDate, int start,
-				int end) {
+	public java.util.List<AnalyticsDeleteMessage> getAnalyticsDeleteMessages(
+		long companyId, java.util.Date modifiedDate, int start, int end) {
 
 		return _analyticsDeleteMessageLocalService.getAnalyticsDeleteMessages(
 			companyId, modifiedDate, start, end);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage>
-			getAnalyticsDeleteMessages(long companyId, int start, int end) {
+	public java.util.List<AnalyticsDeleteMessage> getAnalyticsDeleteMessages(
+		long companyId, int start, int end) {
 
 		return _analyticsDeleteMessageLocalService.getAnalyticsDeleteMessages(
 			companyId, start, end);
@@ -387,13 +372,36 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 	 * @return the analytics delete message that was updated
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-		updateAnalyticsDeleteMessage(
-			com.liferay.analytics.message.storage.model.AnalyticsDeleteMessage
-				analyticsDeleteMessage) {
+	public AnalyticsDeleteMessage updateAnalyticsDeleteMessage(
+		AnalyticsDeleteMessage analyticsDeleteMessage) {
 
 		return _analyticsDeleteMessageLocalService.updateAnalyticsDeleteMessage(
 			analyticsDeleteMessage);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _analyticsDeleteMessageLocalService.getBasePersistence();
+	}
+
+	@Override
+	public CTPersistence<AnalyticsDeleteMessage> getCTPersistence() {
+		return _analyticsDeleteMessageLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<AnalyticsDeleteMessage> getModelClass() {
+		return _analyticsDeleteMessageLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<AnalyticsDeleteMessage>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return _analyticsDeleteMessageLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.memberships.web.internal.display.context;
@@ -19,17 +10,27 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.organizations.item.selector.OrganizationItemSelectorCriterion;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.OrganizationModel;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.memberships.web.internal.util.GroupUtil;
 
@@ -123,13 +124,7 @@ public class OrganizationsManagementToolbarDisplayContext
 
 					dropdownItem.putData(
 						"selectOrganizationsURL",
-						PortletURLBuilder.createRenderURL(
-							liferayPortletResponse
-						).setMVCPath(
-							"/select_organizations.jsp"
-						).setWindowState(
-							LiferayWindowState.POP_UP
-						).buildString());
+						_getOrganizationItemSelectorURL());
 					dropdownItem.setLabel(
 						LanguageUtil.get(httpServletRequest, "add"));
 				}
@@ -194,13 +189,52 @@ public class OrganizationsManagementToolbarDisplayContext
 	}
 
 	@Override
-	protected String[] getNavigationKeys() {
-		return new String[] {"all"};
-	}
-
-	@Override
 	protected String[] getOrderByKeys() {
 		return new String[] {"name", "type"};
+	}
+
+	private long _getGroupId() {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		return ParamUtil.getLong(
+			httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
+	}
+
+	private String _getOrganizationItemSelectorURL() {
+		ItemSelector itemSelector =
+			(ItemSelector)httpServletRequest.getAttribute(
+				ItemSelector.class.getName());
+
+		OrganizationItemSelectorCriterion organizationItemSelectorCriterion =
+			new OrganizationItemSelectorCriterion();
+
+		organizationItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new UUIDItemSelectorReturnType());
+		organizationItemSelectorCriterion.setMultiSelection(true);
+		organizationItemSelectorCriterion.setSelectedOrganizationIds(
+			_getSelectedOrganizationIds());
+
+		return String.valueOf(
+			itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+				liferayPortletResponse.getNamespace() + "selectOrganization",
+				organizationItemSelectorCriterion));
+	}
+
+	private long[] _getSelectedOrganizationIds() {
+		long groupId = _getGroupId();
+
+		long[] selectedOrganizationIds = TransformUtil.transformToLongArray(
+			OrganizationLocalServiceUtil.getGroupOrganizations(groupId),
+			OrganizationModel::getOrganizationId);
+
+		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+		return ArrayUtil.append(
+			selectedOrganizationIds, group.getOrganizationId());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

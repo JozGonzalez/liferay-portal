@@ -17,9 +17,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -29,7 +29,8 @@ definition {
 	test AssertCompanyLogsIsolated {
 		property portal.acceptance = "true";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "CompanyLogging#AssertCompanyLogsIsolated";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var portalInstanceName : list "www.able.com,www.baker.com") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -49,7 +50,8 @@ definition {
 	@priority = 4
 	test CannotViewDeletedCompanyLog {
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "CompanyLogging#CannotViewDeletedCompanyLog";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a log exists for a company") {
 			CompanyLogging.openServerLogsAdmin();
@@ -127,7 +129,8 @@ definition {
 	@priority = 4
 	test GetAllCompanyLogs {
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "CompanyLogging#GetAllCompanyLogs";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given two new virtual instances are created") {
 			for (var portalInstanceName : list "www.able.com,www.baker.com") {
@@ -170,7 +173,8 @@ definition {
 	test GetCompanyAdminLogs {
 		property portal.acceptance = "true";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "CompanyLogging#GetCompanyAdminLogs";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a new instance is created") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -231,7 +235,8 @@ definition {
 	@priority = 4
 	test GetCompanyAdminLogsFromDifferentCompany {
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "CompanyLogging#GetCompanyAdminLogsFromDifferentCompany";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a new instance is created") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -317,9 +322,11 @@ definition {
 		}
 
 		task ("When the user navigates to the company logs portlet") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "userea@liferay.com",
-				userLoginFullName = "userfn userln");
+			User.logoutPG();
+
+			User.firstLoginUI(
+				password = "test",
+				userEmailAddress = "userea@liferay.com");
 
 			CompanyLogging.openServerLogsAdmin();
 		}

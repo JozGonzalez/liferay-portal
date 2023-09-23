@@ -3,8 +3,15 @@ definition {
 	macro _createTaxonomyCategory {
 		var portalURL = JSONCompany.getPortalURL();
 
+		if (isSet(parentTaxonomyCategoryId)) {
+			var api = "taxonomy-categories/${parentTaxonomyCategoryId}/taxonomy-categories";
+		}
+		else {
+			var api = "taxonomy-vocabularies/${taxonomyVocabularyId}/taxonomy-categories";
+		}
+
 		var curl = '''
-			${portalURL}/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/${taxonomyVocabularyId}/taxonomy-categories \
+			${portalURL}/o/headless-admin-taxonomy/v1.0/${api} \
 				-u test@liferay.com:test \
 				-H Content-Type: application/json \
 				-d {
@@ -18,39 +25,8 @@ definition {
 		return ${curl};
 	}
 
-	macro _curlTaxonomyCategoryByErc {
-		Variables.assertDefined(parameterList = "${externalReferenceCode},${taxonomyVocabularyId}");
-
-		var portalURL = JSONCompany.getPortalURL();
-
-		var curl = '''
-			${portalURL}/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/${taxonomyVocabularyId}/taxonomy-categories/by-external-reference-code/${externalReferenceCode} \
-				-u test@liferay.com:test \
-				-H Content-Type: application/json \
-				-H accept: application/json \
-		''';
-
-		return ${curl};
-	}
-
-	macro _getTaxonomyCategory {
-		Variables.assertDefined(parameterList = ${taxonomyCategoryId});
-
-		var portalURL = JSONCompany.getPortalURL();
-
-		var curl = '''
-			${portalURL}/o/headless-admin-taxonomy/v1.0/taxonomy-categories/${taxonomyCategoryId} \
-				-u test@liferay.com:test \
-				-H Content-Type: application/json \
-		''';
-
-		var curl = JSONCurlUtil.get(${curl});
-
-		return ${curl};
-	}
-
 	macro createTaxonomyCategory {
-		Variables.assertDefined(parameterList = "${taxonomyVocabularyId},${name}");
+		Variables.assertDefined(parameterList = ${name});
 
 		if (!(isSet(externalReferenceCode))) {
 			var externalReferenceCode = "";
@@ -59,61 +35,33 @@ definition {
 		var response = TaxonomyCategoryAPI._createTaxonomyCategory(
 			externalReferenceCode = ${externalReferenceCode},
 			name = ${name},
+			parentTaxonomyCategoryId = ${parentTaxonomyCategoryId},
 			taxonomyVocabularyId = ${taxonomyVocabularyId});
 
 		return ${response};
 	}
 
-	macro deleteTaxonomyCategoryByErc {
-		var curl = TaxonomyCategoryAPI._curlTaxonomyCategoryByErc(
+	macro staticTaxonomyCategoryId {
+		Variables.assertDefined(parameterList = ${name});
+
+		var response = TaxonomyCategoryAPI.createTaxonomyCategory(
 			externalReferenceCode = ${externalReferenceCode},
+			name = ${name},
+			parentTaxonomyCategoryId = ${parentTaxonomyCategoryId},
 			taxonomyVocabularyId = ${taxonomyVocabularyId});
 
-		var response = JSONCurlUtil.delete(${curl});
+		var taxonomyCategoryId = JSONPathUtil.getIdValue(response = ${response});
 
-		return ${response};
-	}
+		if (isSet(parentTaxonomyCategoryId)) {
+			static var staticChildTaxonomyCategoryId = ${taxonomyCategoryId};
 
-	macro getTaxonomyCategory {
-		var getTaxonomyCategoryDetails = TaxonomyCategoryAPI._getTaxonomyCategory(taxonomyCategoryId = ${taxonomyCategoryId});
+			return ${staticChildTaxonomyCategoryId};
+		}
+		else {
+			static var staticTaxonomyCategoryId = ${taxonomyCategoryId};
 
-		return ${getTaxonomyCategoryDetails};
-	}
-
-	macro getTaxonomyCategoryByErc {
-		var curl = TaxonomyCategoryAPI._curlTaxonomyCategoryByErc(
-			externalReferenceCode = ${externalReferenceCode},
-			taxonomyVocabularyId = ${taxonomyVocabularyId});
-
-		var response = JSONCurlUtil.get(${curl});
-
-		return ${response};
-	}
-
-	macro setUpGlobalResponse {
-		var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = "Test Depot Name");
-
-		var response = TaxonomyVocabularyAPI.createTaxonomyVocabulary(
-			assetLibraryId = ${assetLibraryId},
-			groupName = "Guest",
-			name = "Vocabulary Name");
-
-		static var responseOfCreated = ${response};
-
-		return ${responseOfCreated};
-	}
-
-	macro updateTaxonomyCategoryByErc {
-		var curl = TaxonomyCategoryAPI._curlTaxonomyCategoryByErc(
-			externalReferenceCode = ${externalReferenceCode},
-			taxonomyVocabularyId = ${taxonomyVocabularyId});
-		var body = '''-d {"name": "${name}"}''';
-
-		var curl = StringUtil.add(${curl}, ${body}, " ");
-
-		var response = JSONCurlUtil.put(${curl});
-
-		return ${response};
+			return ${staticTaxonomyCategoryId};
+		}
 	}
 
 }

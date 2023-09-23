@@ -11,106 +11,173 @@ definition {
 	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
-
-			Testray.addTR2Site(siteName = ${testSiteName});
 		}
 
-		task ("Go to Testray") {
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
+
+		task ("Go to the Testray Site") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
+		}
+
+		task ("Go to manage user page") {
+			TestrayDropdown.selectOptionSidebar(
+				buttonOption = "Manage",
+				menuItem = "Manage Users");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		Testray.tearDownCP();
+		task ("Delete Testray Site and Client Extensions") {
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.testrayApisTearDown();
-
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "This is a test for LPS-162987 - Verify if as an Administrador can change his Role"
-	@ignore = "true"
+	@description = "Story ID: LPS-173531 | Test Summary: Verify that as an administrator can add and delete a new user"
 	@priority = 5
-	test CanChangeRole {
+	test AdminCanAddAndDeleteNewUser {
+		task ("Given that the administrator add a user") {
+			TestrayManageUser.addUser(
+				rePassword = "test1",
+				rolePermissionList = "Testray User",
+				userEmailAddressEdit = "userfirst@liferay.com",
+				userFirstNameEdit = "changedfirstname",
+				userLastNameEdit = "Updateln",
+				userPassword = "test1",
+				userScreenNameEdit = "testscreen");
+		}
 
-		// TODO LPS-162987 CanChangeRole pending implementation
+		task ("And can see the user created in the table") {
+			Testray.viewTableEntryList(listEntry = "changedfirstname Updateln");
+		}
 
+		task ("When the administrator delete the user") {
+			Testray.clickTableEntry(tableEntry = "changedfirstname Updateln");
+
+			TestrayManageUser.deleteUser();
+		}
+
+		task ("Then can not see the user in the table") {
+			Refresh();
+
+			Testray.viewTableEntryListNotPresent(listEntry = "changedfirstname Updateln");
+		}
 	}
 
-	@description = "This is a test for LPS-162986 - Verify if as an User can edit account information"
+	@description = "Story ID: LPS-173531 | Test Summary: Verify if as an Administrator I should be able to filter manage users by name"
+	@priority = 4
+	test AdminCanFilterUsersByName {
+		task ("Given that have two users present in the table") {
+			Testray.viewTableEntryList(listEntry = "User User,Test Test");
+		}
+
+		task ("When the user filter a user by name") {
+			TestrayFilter.filterResults(
+				fieldType = "input",
+				inputFieldLabel = "Name",
+				inputValue = "User User");
+		}
+
+		task ("Then can see the user in the table") {
+			Testray.viewTableEntryList(listEntry = "User User");
+		}
+
+		task ("And can not longer see the user 'Test' in the table") {
+			Testray.viewTableEntryListNotPresent(listEntry = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-173531 | Test Summary: Verify if as an Administrator I should not see manage users that don't exist when I try filtering for them"
+	@priority = 3
+	test AdminCanNotFilterForNonExistentUsers {
+		task ("Given that the user is present") {
+			Testray.viewTableEntryList(listEntry = "Test Test");
+		}
+
+		task ("When filtering a user by his non-existent name") {
+			TestrayFilter.filterResults(
+				fieldType = "input",
+				inputFieldLabel = "Name",
+				inputValue = "Test 2");
+		}
+
+		task ("Then the user is not present in the table") {
+			Testray.viewTableEntryListNotPresent(listEntry = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-149551 | Test Summary: Verify if as an User can edit account information"
 	@priority = 4
 	test CanEditAccountInformation {
-		task ("Given that the user change the account informations") {
-			TestrayLayout.manageAccountSidebar(valueName = "Manage Account");
+		task ("Given that go to the user created") {
+			Testray.clickTableEntry(tableEntry = "user@testray.com");
+		}
 
+		task ("When the user change the account informations") {
 			TestrayManageUser.editUserInformation(
-				userEmailAddressEdit = "test@liferay.com",
+				userEmailAddressEdit = "user@testray.com",
 				userFirstNameEdit = "changedfirstname",
 				userLastNameEdit = "Updateln",
 				userScreenNameEdit = "testscreen");
 
 			Testray.checkSuccessAlertAppearsAndDisappears();
-
-			TestrayLayout.clickManageOnSidebar();
-
-			TestrayManage.selectOptionsManage(itemValue = "Manage Users");
-
-			TestrayContextMenu.clickContextMenuProjects(name = "changedfirstname Updateln");
-
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Edit");
 		}
 
-		task ("Then the account information is displayed in Manage Users and Manage Account") {
-			TestrayManageUser.viewUserInfomation(
-				emailAddress = "test@liferay.com",
-				firstName = "changedfirstname",
-				lastName = "Updateln",
-				screenName = "testscreen");
+		task ("And go to user changed") {
+			Testray.clickTableEntry(tableEntry = "changedfirstname Updateln");
+		}
 
-			TestrayLayout.manageAccountSidebar(valueName = "Manage Account");
-
+		task ("Then can see the new informations to the account") {
 			TestrayManageUser.viewUserInfomation(
-				emailAddress = "test@liferay.com",
+				emailAddress = "user@testray.com",
 				firstName = "changedfirstname",
 				lastName = "Updateln",
 				screenName = "testscreen");
 		}
 	}
 
-	@description = "This is a test for LPS-165997 - Verify if as an administrator I cannot save roles without the select options"
-	@priority = 4
+	@description = "Story ID: LPS-164964 | Test Summary: Verify if as an administrator I cannot save roles without the select options"
+	@priority = 3
 	test CanNotSaveRolesWithoutOptions {
-		task ("Given that the user tries to save roles without options selected") {
-			TestrayLayout.manageAccountSidebar(valueName = "Manage Account");
+		task ("Given that go to the created user") {
+			Testray.clickTableEntry(tableEntry = "test@liferay.com");
+		}
 
-			TestrayManageUser.changeRole(roleName = "Administrator");
+		task ("And the user deselects all roles") {
+			TestrayManageUser.selectRolesPermissions(rolePermissionList = "Administrator,Power User,User");
+		}
 
-			TestrayManageUser.changeRole(roleName = "Power User");
-
-			TestrayManageUser.changeRole(roleName = "User");
-
+		task ("When the user tries to save roles without options selected") {
 			Button.clickSave();
 		}
 
-		task ("Then the error message should appear") {
+		task ("Then the error message appear") {
 			Alert.viewErrorMessage(errorMessage = "Please, select one or more roles.");
 		}
 	}
 
-	@description = "This is a test for LPS-168192 - Verify that the user can not edit informations of user if all the required fields are not filled in"
-	@priority = 3
+	@description = "Story ID: LPS-149551 | Test Summary: Verify that the user can not edit informations of user if all the required fields are not filled in"
+	@priority = 2
 	test CanViewFieldRequired {
-		task ("Given that the user tries to created account without informations") {
-			TestrayLayout.manageAccountSidebar(valueName = "Manage Account");
+		task ("Given that go to the created user") {
+			Testray.clickTableEntry(tableEntry = "lead@testray.com");
+		}
 
+		task ("When the user tries to created account without informations") {
 			TestrayManageUser.editUserInformation(
 				userEmailAddressEdit = "",
 				userFirstNameEdit = "",
@@ -118,7 +185,7 @@ definition {
 				userScreenNameEdit = "");
 		}
 
-		task ("Then a warning message is displayed") {
+		task ("Then a warning message is displayed in the required fields") {
 			Testray.viewErrorMessage(
 				fieldLabel = "First Name",
 				warningMessage = "This field is required.");

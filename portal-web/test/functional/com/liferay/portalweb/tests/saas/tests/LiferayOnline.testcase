@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +36,8 @@ definition {
 	test AddLiferayWelcomeSiteVirtualInstanceWithInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddLiferayWelcomeSiteVirtualInstanceWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance Liferay Site with the Liferay Site Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -59,7 +60,8 @@ definition {
 	@priority = 4
 	test AddLiferayWelcomeSiteWithInitializer {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddLiferayWelcomeSiteWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Sites and add a new one") {
 			ApplicationsMenu.gotoPortlet(
@@ -90,7 +92,8 @@ definition {
 	test AddVirtualInstanceWithDefaultInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.baker.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddVirtualInstanceWithDefaultInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance able.com with a blank Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -116,7 +119,8 @@ definition {
 	test AddVirtualInstanceWithInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddVirtualInstanceWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance raylife.com with the Masterclass Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -140,7 +144,8 @@ definition {
 	@description = "This is a test for LPS-151826 related with LPS-135077. Raylife AP initializer is not deployed and is not shown on inicializer list"
 	@priority = 4
 	test CannotSelectInitializerWithoutDeployRaylifeAP {
-		property test.name.skip.portal.instance = "LiferayOnline#CannotSelectInitializerWithoutDeployRaylifeAP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Gogo Shell Admin and Stop Raylife Module") {
 			GogoShell.openGogoShellAdmin();
@@ -186,7 +191,8 @@ definition {
 	@description = "This is a test for LPS-135077. Raylife D2C initializer is not deployed and is not shown on inicializer list"
 	@priority = 4
 	test CannotSelectInitializerWithoutDeployRaylifeD2C {
-		property test.name.skip.portal.instance = "LiferayOnline#CannotSelectInitializerWithoutDeployRaylifeD2C";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Gogo Shell Admin and Stop Raylife Module") {
 			GogoShell.openGogoShellAdmin();
@@ -233,7 +239,8 @@ definition {
 	@priority = 4
 	test CreateTeamExtranetVirtualInstanceByAPI {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
-		property test.name.skip.portal.instance = "LiferayOnline#CreateTeamExtranetVirtualInstanceByAPI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create Virtual Instance by Json") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -340,8 +347,10 @@ definition {
 	@description = "This is a test for LPS-148448. Search bar is available in Team Extranet Virtual instance and it works"
 	@priority = 3
 	test SearchBarWorkingInTeamExtranetVirtualInstanceByAPI {
+		property ci.retries.disabled = "true";
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
-		property test.name.skip.portal.instance = "LiferayOnline#SearchBarWorkingInTeamExtranetVirtualInstanceByAPI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create Virtual Instance by Json") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -360,11 +369,11 @@ definition {
 		}
 
 		task ("Assert the Search Bar presence") {
-			AssertElementPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+			AssertElementPresent(locator1 = "TeamExtranet#EMBEDDED_SEARCH_BAR");
 		}
 
 		task ("Search for Careers in Search Bar to get results") {
-			SearchPortlets.searchEmbedded(searchTerm = "careers");
+			TeamExtranet.searchEmbedded(searchTerm = "careers");
 
 			SearchResultPortlet.viewSearchResults(
 				searchAssetTitle = "Careers",
@@ -372,7 +381,7 @@ definition {
 		}
 
 		task ("Search for texs in Search Bar to not get results") {
-			SearchPortlets.searchEmbedded(searchTerm = "texs");
+			TeamExtranet.searchEmbedded(searchTerm = "texs");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",

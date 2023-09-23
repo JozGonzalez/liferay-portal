@@ -1,4 +1,5 @@
 {
+	"externalReferenceCode": "ee2c4088-1d12-922f-e326-288dfbb4f943",
 	"label": {
 		"en_US": "MDF Claim Budget"
 	},
@@ -7,6 +8,7 @@
 		{
 			"DBType": "String",
 			"businessType": "Text",
+			"externalReferenceCode": "0ef6d668-9723-ee13-8628-9d7688b66ead",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
@@ -15,34 +17,12 @@
 			"name": "invoiceAmount",
 			"required": false,
 			"type": "String"
-		},
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"label": {
-				"en_US": "Expense Name"
-			},
-			"name": "expenseName",
-			"required": false,
-			"type": "String"
-		},
-		{
-			"DBType": "Boolean",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"label": {
-				"en_US": "Selected"
-			},
-			"name": "selected",
-			"required": false,
-			"type": "Boolean"
 		}
 	],
 	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "MDF Claim Budgets"
 	},
+	"portlet": true,
 	"scope": "company"
 }

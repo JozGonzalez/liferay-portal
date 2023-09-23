@@ -1,10 +1,13 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "false";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Online Editing";
 	property testray.main.component.name = "Upgrades Lima";
 
@@ -22,6 +25,7 @@ definition {
 	test ViewOneDriveDocumentsArchive72101 {
 		property data.archive.type = "data-archive-onedrive";
 		property portal.version = "7.2.10.1";
+		property test.assert.warning.exceptions = "false";
 
 		OneDrive.goToOneDrive();
 
@@ -29,17 +33,17 @@ definition {
 			OneDrive.deleteDocument(dmDocumentTitle = "${dmDocumentType} Title After Upgrade");
 		}
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Excel");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Excel");
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "PowerPoint");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "PowerPoint");
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Word");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Word");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "Excel");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "Excel");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "PowerPoint");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "PowerPoint");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "Word");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "Word");
 	}
 
 	@priority = 5
@@ -53,17 +57,17 @@ definition {
 			OneDrive.deleteDocument(dmDocumentTitle = "${dmDocumentType} Title After Upgrade");
 		}
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Excel");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Excel");
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "PowerPoint");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "PowerPoint");
 
-		Upgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Word");
+		ValidateOnlineEditingUpgrade.viewAndDeleteOneDriveDocument(dmDocumentTypeName = "Word");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "Excel");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "Excel");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "PowerPoint");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "PowerPoint");
 
-		Upgrade.addOneDriveDocument(dmDocumentTypeName = "Word");
+		ValidateOnlineEditingUpgrade.addOneDriveDocument(dmDocumentTypeName = "Word");
 	}
 
 }

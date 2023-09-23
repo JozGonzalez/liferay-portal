@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
@@ -24,6 +15,7 @@ const DEFAULT_MASTER_LAYOUT_PLID = '0';
 export default function MasterLayoutConfiguration({
 	changeMasterLayoutURL,
 	editMasterLayoutURL,
+	isReadOnly,
 	masterLayoutName: initialMasterLayoutName,
 	masterLayoutPlid: initialMasterLayoutPlid,
 	portletNamespace,
@@ -34,6 +26,10 @@ export default function MasterLayoutConfiguration({
 	});
 
 	const handleChangeMasterButtonClick = () => {
+		if (isReadOnly) {
+			return;
+		}
+
 		openSelectionModal({
 			iframeBodyCssClass: '',
 			onSelect(selectedItem) {
@@ -61,13 +57,17 @@ export default function MasterLayoutConfiguration({
 			return;
 		}
 
+		const sheet = themeContainer.closest('.sheet');
+
 		if (masterLayout.plid === DEFAULT_MASTER_LAYOUT_PLID) {
-			themeContainer.classList.remove('hide');
-			themeContainer.removeAttribute('aria-hidden');
+			sheet.classList.remove('hide');
+
+			sheet.removeAttribute('aria-hidden');
 		}
 		else {
-			themeContainer.classList.add('hide');
-			themeContainer.setAttribute('aria-hidden', 'true');
+			sheet.classList.add('hide');
+
+			sheet.setAttribute('aria-hidden', 'true');
 		}
 	}, [masterLayout.plid, portletNamespace]);
 
@@ -79,14 +79,17 @@ export default function MasterLayoutConfiguration({
 				value={masterLayout.plid}
 			/>
 
-			<h3 className="sheet-subtitle">{Liferay.Language.get('master')}</h3>
+			<label htmlFor={`${portletNamespace}masterLayout`}>
+				{Liferay.Language.get('master')}
+			</label>
 
 			{editMasterLayoutURL &&
 			masterLayout.plid &&
 			masterLayout.plid !== DEFAULT_MASTER_LAYOUT_PLID ? (
 				<div className="d-flex">
-					<ClayForm.Group className="flex-grow-1 mb-0">
+					<ClayForm.Group className="c-mb-0 flex-grow-1">
 						<ClayInput
+							id={`${portletNamespace}masterLayout`}
 							onClick={handleChangeMasterButtonClick}
 							readOnly
 							value={masterLayout.name}
@@ -96,7 +99,8 @@ export default function MasterLayoutConfiguration({
 					<ClayLink
 						aria-label={Liferay.Language.get('edit-master')}
 						button={{monospaced: true}}
-						className="ml-2"
+						className="c-ml-2"
+						disabled={isReadOnly}
 						displayType="secondary"
 						href={editMasterLayoutURL}
 					>
@@ -105,7 +109,8 @@ export default function MasterLayoutConfiguration({
 
 					<ClayButtonWithIcon
 						aria-label={Liferay.Language.get('change-master')}
-						className="ml-2"
+						className="c-ml-2"
+						disabled={isReadOnly}
 						displayType="secondary"
 						onClick={handleChangeMasterButtonClick}
 						symbol="change"
@@ -113,8 +118,9 @@ export default function MasterLayoutConfiguration({
 				</div>
 			) : (
 				<div className="d-flex">
-					<ClayForm.Group className="flex-grow-1 mb-0">
+					<ClayForm.Group className="c-mb-0 flex-grow-1">
 						<ClayInput
+							id={`${portletNamespace}masterLayout`}
 							onClick={handleChangeMasterButtonClick}
 							readOnly
 							value={masterLayout.name}
@@ -123,10 +129,11 @@ export default function MasterLayoutConfiguration({
 
 					<ClayButtonWithIcon
 						aria-label={Liferay.Language.get('change-master')}
-						className="ml-2"
+						className="c-ml-2"
+						disabled={isReadOnly}
 						displayType="secondary"
 						onClick={handleChangeMasterButtonClick}
-						symbol="plus"
+						symbol="change"
 					/>
 				</div>
 			)}

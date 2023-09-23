@@ -9,16 +9,12 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		Refresh();
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,8 +25,6 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanAddMultipleArticles {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		for (var kbCount : list "1,2,3") {
 			JSONKnowledgeBase.addkBArticle(
 				groupName = "Guest",
@@ -98,8 +92,9 @@ definition {
 	@description = "This test covers LPS-171314. It ensures that the expiration label for Knowledge Base article works."
 	@priority = 4
 	test CanEnableArticleExpirationLabel {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}feature.flag.LPS-165476=true";
-		property test.name.skip.portal.instance = "KBAdmin#CanEnableArticleExpirationLabel";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the Notification Date is changed to 2 weeks") {
 			KBNavigator.openToConfigInSystemSettings(portlet = "System Service");
@@ -158,10 +153,10 @@ definition {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.moveArticleCP(
-			kbArticleCurrentParent = "Home",
+			destinationItem = "Knowledge Base Article Title Parent",
 			kbArticleTitle = "Knowledge Base Article Title Child");
 
-		KBArticle.selectParentArticleCP(kbArticleTitle = "Knowledge Base Article Title Parent");
+		Alert.reloadPageAfterSuccessMessage(successMessage = "Your request completed successfully.");
 
 		KBArticle.gotoViaKBAdminCP(
 			hasChildArticle = "true",
@@ -172,10 +167,11 @@ definition {
 			kbChildArticleTitle = "Knowledge Base Article Title Child");
 
 		KBArticle.moveArticleCP(
-			kbArticleCurrentParent = "Knowledge Base Article Title Parent",
-			kbArticleTitle = "Knowledge Base Article Title Child");
+			destinationItem = "Home",
+			kbArticleTitle = "Knowledge Base Article Title Child",
+			navigationPane = "true");
 
-		KBFolder.selectParentCP(kbFolderName = "Home");
+		Alert.reloadPageAfterSuccessMessage(successMessage = "Your request completed successfully.");
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -200,10 +196,10 @@ definition {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.moveArticleCP(
-			kbArticleCurrentParent = "Home",
+			destinationItem = "Knowledge Base Article Title Parent",
 			kbArticleTitle = "Knowledge Base Article Title Child");
 
-		KBArticle.selectParentArticleCP(kbArticleTitle = "Knowledge Base Article Title Parent");
+		Alert.reloadPageAfterSuccessMessage(successMessage = "Your request completed successfully.");
 
 		KBArticle.gotoViaKBAdminCP(
 			hasChildArticle = "true",
@@ -217,8 +213,6 @@ definition {
 	@description = "This test ensures that users can view article in the table view."
 	@priority = 5
 	test CanViewArticleInTableView {
-		property custom.properties = "feature.flag.LPS-169675=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -252,8 +246,6 @@ definition {
 	@description = "This test ensures that users can view folder in the table view."
 	@priority = 5
 	test CanViewFolderInTableView {
-		property custom.properties = "feature.flag.LPS-169675=true";
-
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
 			kbFolderDescription = "KB Folder Description",
@@ -261,11 +253,13 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
+		LexiconEntry.viewActiveDisplayStyle(displayStyle = "list");
+
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		KBAdmin.viewEntryInTableView(
 			kbEntryTitle = "KB Folder",
-			tableColumnContents = "KB Folder,,0,0,--,Seconds Ago,",
+			tableColumnContents = "KB Folder,--,0,0,--,Seconds Ago,",
 			tableColumnNames = "title,status,num-of-kb-folders,num-of-kb-articles,views,modified-date");
 
 		JSONKnowledgeBase.addkBArticle(
@@ -291,7 +285,7 @@ definition {
 	@description = "This test covers LPS-171314. It ensures that the expiration label is displayed when the Notification Date is reached."
 	@priority = 4
 	test ExpirationNotificationShowsWhenNotificationDateIsReached {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}feature.flag.LPS-165476=true";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
 
 		task ("Given the Knowledge Base article is created with the expiration date of 1 week and 2 minutes in the future") {
 			KBAdmin.openKBAdmin(siteURLKey = "guest");
@@ -299,7 +293,6 @@ definition {
 			KBArticle.addCP(
 				enableExpirationDate = "true",
 				extendedMinutes = 2,
-				getExpirationDateByPortal = "true",
 				kbArticleContent = "Knowledge Base Article Content",
 				kbArticleTitle = "Knowledge Base Article Title",
 				notificationDate = 7);

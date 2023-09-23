@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service.http;
@@ -208,6 +199,224 @@ public class AccountEntryOrganizationRelServiceHttp {
 		}
 	}
 
+	public static com.liferay.account.model.AccountEntryOrganizationRel
+			fetchAccountEntryOrganizationRel(
+				HttpPrincipal httpPrincipal, long accountEntryOrganizationRelId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountEntryOrganizationRelServiceUtil.class,
+				"fetchAccountEntryOrganizationRel",
+				_fetchAccountEntryOrganizationRelParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryOrganizationRelId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.account.model.AccountEntryOrganizationRel)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.account.model.AccountEntryOrganizationRel
+			fetchAccountEntryOrganizationRel(
+				HttpPrincipal httpPrincipal, long accountEntryId,
+				long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountEntryOrganizationRelServiceUtil.class,
+				"fetchAccountEntryOrganizationRel",
+				_fetchAccountEntryOrganizationRelParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId, organizationId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.account.model.AccountEntryOrganizationRel)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.account.model.AccountEntryOrganizationRel
+			getAccountEntryOrganizationRel(
+				HttpPrincipal httpPrincipal, long accountEntryId,
+				long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountEntryOrganizationRelServiceUtil.class,
+				"getAccountEntryOrganizationRel",
+				_getAccountEntryOrganizationRelParameterTypes6);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId, organizationId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.account.model.AccountEntryOrganizationRel)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.account.model.AccountEntryOrganizationRel>
+				getAccountEntryOrganizationRels(
+					HttpPrincipal httpPrincipal, long accountEntryId, int start,
+					int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountEntryOrganizationRelServiceUtil.class,
+				"getAccountEntryOrganizationRels",
+				_getAccountEntryOrganizationRelsParameterTypes7);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List
+				<com.liferay.account.model.AccountEntryOrganizationRel>)
+					returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static int getAccountEntryOrganizationRelsCount(
+			HttpPrincipal httpPrincipal, long accountEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountEntryOrganizationRelServiceUtil.class,
+				"getAccountEntryOrganizationRelsCount",
+				_getAccountEntryOrganizationRelsCountParameterTypes8);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	private static Log _log = LogFactoryUtil.getLog(
 		AccountEntryOrganizationRelServiceHttp.class);
 
@@ -226,6 +435,26 @@ public class AccountEntryOrganizationRelServiceHttp {
 	private static final Class<?>[]
 		_deleteAccountEntryOrganizationRelsParameterTypes3 = new Class[] {
 			long.class, long[].class
+		};
+	private static final Class<?>[]
+		_fetchAccountEntryOrganizationRelParameterTypes4 = new Class[] {
+			long.class
+		};
+	private static final Class<?>[]
+		_fetchAccountEntryOrganizationRelParameterTypes5 = new Class[] {
+			long.class, long.class
+		};
+	private static final Class<?>[]
+		_getAccountEntryOrganizationRelParameterTypes6 = new Class[] {
+			long.class, long.class
+		};
+	private static final Class<?>[]
+		_getAccountEntryOrganizationRelsParameterTypes7 = new Class[] {
+			long.class, int.class, int.class
+		};
+	private static final Class<?>[]
+		_getAccountEntryOrganizationRelsCountParameterTypes8 = new Class[] {
+			long.class
 		};
 
 }

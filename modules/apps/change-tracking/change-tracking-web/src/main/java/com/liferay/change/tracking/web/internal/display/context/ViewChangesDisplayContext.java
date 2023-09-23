@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.display.context;
@@ -26,9 +17,9 @@ import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
+import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
 import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
-import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.display.CTModelDisplayRendererAdapter;
 import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
 import com.liferay.change.tracking.web.internal.scheduler.ScheduledPublishInfo;
@@ -36,13 +27,15 @@ import com.liferay.change.tracking.web.internal.security.permission.resource.CTC
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -56,6 +49,7 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -158,6 +152,10 @@ public class ViewChangesDisplayContext {
 	}
 
 	public Map<String, Object> getReactData() throws Exception {
+		if (_reactData != null) {
+			return _reactData;
+		}
+
 		JSONObject contextViewJSONObject = null;
 
 		CTClosure ctClosure = null;
@@ -169,8 +167,24 @@ public class ViewChangesDisplayContext {
 			(ctEntriesCount <= _ctConfiguration.contextViewLimitCount())) {
 
 			try {
-				ctClosure = _ctClosureFactory.create(
-					_ctCollection.getCtCollectionId());
+				if (_ctConfiguration.contextViewIncludeProduction()) {
+					ctClosure = _ctClosureFactory.create(
+						_ctCollection.getCtCollectionId());
+				}
+				else {
+					ctClosure = _ctClosureFactory.create(
+						_ctCollection.getCtCollectionId(),
+						new HashSet<>(
+							_ctEntryLocalService.dslQuery(
+								DSLQueryFactoryUtil.selectDistinct(
+									CTEntryTable.INSTANCE.modelClassNameId
+								).from(
+									CTEntryTable.INSTANCE
+								).where(
+									CTEntryTable.INSTANCE.ctCollectionId.eq(
+										_ctCollection.getCtCollectionId())
+								))));
+				}
 			}
 			catch (Exception exception) {
 				contextViewJSONObject = JSONUtil.put(
@@ -267,7 +281,7 @@ public class ViewChangesDisplayContext {
 			}
 		}
 
-		return HashMapBuilder.<String, Object>put(
+		_reactData = HashMapBuilder.<String, Object>put(
 			"changes",
 			() -> {
 				JSONArray changesJSONArray = JSONFactoryUtil.createJSONArray();
@@ -543,21 +557,27 @@ public class ViewChangesDisplayContext {
 			}
 		).put(
 			"moveChangesURL",
-			PortletURLBuilder.createActionURL(
-				_renderResponse
-			).setActionName(
-				"/change_tracking/move_changes"
-			).setRedirect(
-				PortletURLBuilder.createRenderURL(
+			() -> {
+				if (!FeatureFlagManagerUtil.isEnabled("LPS-171364")) {
+					return null;
+				}
+
+				return PortletURLBuilder.createActionURL(
 					_renderResponse
 				).setMVCRenderCommandName(
-					"/change_tracking/view_changes"
+					"/change_tracking/view_move_changes"
+				).setRedirect(
+					PortletURLBuilder.createRenderURL(
+						_renderResponse
+					).setMVCRenderCommandName(
+						"/change_tracking/view_changes"
+					).setParameter(
+						"ctCollectionId", _ctCollection.getCtCollectionId()
+					).buildString()
 				).setParameter(
 					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).buildString()
-			).setParameter(
-				"ctCollectionId", _ctCollection.getCtCollectionId()
-			).buildString()
+				).buildString();
+			}
 		).put(
 			"name", _ctCollection.getName()
 		).put(
@@ -655,6 +675,8 @@ public class ViewChangesDisplayContext {
 					"schedule", true
 				).buildString();
 			}
+		).put(
+			"showAllItemsEnabled", _ctConfiguration.showAllItemsEnabled()
 		).put(
 			"showHideableFromURL", showHideable
 		).put(
@@ -770,6 +792,8 @@ public class ViewChangesDisplayContext {
 		).put(
 			"usersFromURL", ParamUtil.getString(_renderRequest, "users")
 		).build();
+
+		return _reactData;
 	}
 
 	private JSONObject _getContextViewJSONObject(
@@ -1084,6 +1108,10 @@ public class ViewChangesDisplayContext {
 				).put(
 					"modelKey", modelInfo._modelKey
 				).put(
+					"movable",
+					_ctDisplayRendererRegistry.isMovable(
+						model, modelClassNameId)
+				).put(
 					"title",
 					_getTitle(
 						CTConstants.CT_COLLECTION_ID_PRODUCTION,
@@ -1103,7 +1131,7 @@ public class ViewChangesDisplayContext {
 					_ctDisplayRendererRegistry.getCTSQLMode(
 						ctCollectionId, ctEntry);
 
-				T model = null;
+				T model;
 
 				try {
 					if ((ctCollectionId == _ctCollection.getCtCollectionId()) &&
@@ -1119,6 +1147,9 @@ public class ViewChangesDisplayContext {
 
 						if (ctModelMap != null) {
 							model = ctModelMap.get(classPK);
+						}
+						else {
+							model = null;
 						}
 					}
 					else {
@@ -1177,7 +1208,21 @@ public class ViewChangesDisplayContext {
 				modelInfo._ctEntry = true;
 
 				modelInfo._jsonObject = JSONUtil.put(
-					"changeType", ctEntry.getChangeType()
+					"changeType",
+					() -> {
+						if (model instanceof WorkflowedModel) {
+							WorkflowedModel workflowedModel =
+								(WorkflowedModel)model;
+
+							if (workflowedModel.getStatus() ==
+									WorkflowConstants.STATUS_IN_TRASH) {
+
+								return CTConstants.CT_CHANGE_TYPE_DELETION;
+							}
+						}
+
+						return ctEntry.getChangeType();
+					}
 				).put(
 					"ctEntryId", ctEntry.getCtEntryId()
 				).put(
@@ -1190,6 +1235,10 @@ public class ViewChangesDisplayContext {
 					"modelKey", modelInfo._modelKey
 				).put(
 					"modifiedTime", modifiedDate.getTime()
+				).put(
+					"movable",
+					_ctDisplayRendererRegistry.isMovable(
+						model, modelClassNameId)
 				).put(
 					"timeDescription",
 					_language.getTimeDescription(
@@ -1277,6 +1326,7 @@ public class ViewChangesDisplayContext {
 	private final Portal _portal;
 	private final PublicationsDisplayContext _publicationsDisplayContext;
 	private final PublishScheduler _publishScheduler;
+	private Map<String, Object> _reactData;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private final ThemeDisplay _themeDisplay;

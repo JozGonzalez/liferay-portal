@@ -1,50 +1,58 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.graphql.dto.v1_0;
 
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.entry.util.ObjectEntryDTOConverterUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
-import com.liferay.object.rest.internal.odata.entity.v1_0.ObjectEntryEntityModel;
+import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryRelatedObjectsResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryResourceImpl;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
-import com.liferay.object.rest.petra.sql.dsl.expression.FilterPredicateFactory;
+import com.liferay.object.rest.odata.entity.v1_0.provider.EntityModelProvider;
 import com.liferay.object.scope.ObjectScopeProvider;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
+import com.liferay.portal.vulcan.extension.ExtensionProviderRegistry;
+import com.liferay.portal.vulcan.extension.util.ExtensionUtil;
 import com.liferay.portal.vulcan.graphql.dto.GraphQLDTOContributor;
 import com.liferay.portal.vulcan.graphql.dto.GraphQLDTOProperty;
 import com.liferay.portal.vulcan.graphql.dto.v1_0.Creator;
+import com.liferay.portal.vulcan.jaxrs.extension.ExtendedEntity;
 import com.liferay.portal.vulcan.list.type.ListEntry;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+
+import java.io.Serializable;
 
 import java.lang.reflect.Method;
 
@@ -57,6 +65,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Javier de Arcos
@@ -65,12 +75,16 @@ public class ObjectDefinitionGraphQLDTOContributor
 	implements GraphQLDTOContributor<Map<String, Object>, Map<String, Object>> {
 
 	public static ObjectDefinitionGraphQLDTOContributor of(
-		FilterPredicateFactory filterPredicateFactory,
+		EntityModelProvider entityModelProvider,
+		ExtensionProviderRegistry extensionProviderRegistry,
 		ObjectDefinition objectDefinition,
+		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryManager objectEntryManager,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
-		ObjectScopeProvider objectScopeProvider) {
+		ObjectScopeProvider objectScopeProvider,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		List<GraphQLDTOProperty> graphQLDTOProperties = new ArrayList<>();
 
@@ -156,13 +170,14 @@ public class ObjectDefinitionGraphQLDTOContributor
 
 		return new ObjectDefinitionGraphQLDTOContributor(
 			objectDefinition.getCompanyId(),
-			new ObjectEntryEntityModel(objectFields), filterPredicateFactory,
-			graphQLDTOProperties,
+			entityModelProvider.getEntityModel(objectDefinition),
+			extensionProviderRegistry, graphQLDTOProperties,
 			StringUtil.removeSubstring(
 				objectDefinition.getPKObjectFieldName(), "c_"),
-			objectDefinition, objectEntryManager, objectScopeProvider,
+			objectDefinition, objectDefinitionLocalService, objectEntryManager,
+			objectRelationshipLocalService, objectScopeProvider,
 			relationshipGraphQLDTOProperties, objectDefinition.getShortName(),
-			objectDefinition.getName());
+			systemObjectDefinitionManagerRegistry, objectDefinition.getName());
 	}
 
 	@Override
@@ -178,7 +193,10 @@ public class ObjectDefinitionGraphQLDTOContributor
 
 	@Override
 	public boolean deleteDTO(long id) throws Exception {
-		_objectEntryManager.deleteObjectEntry(_objectDefinition, id);
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(_objectEntryManager);
+
+		defaultObjectEntryManager.deleteObjectEntry(_objectDefinition, id);
 
 		return true;
 	}
@@ -198,8 +216,11 @@ public class ObjectDefinitionGraphQLDTOContributor
 			DTOConverterContext dtoConverterContext, long id)
 		throws Exception {
 
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(_objectEntryManager);
+
 		return _toMap(
-			_objectEntryManager.getObjectEntry(
+			defaultObjectEntryManager.getObjectEntry(
 				dtoConverterContext, _objectDefinition, id));
 	}
 
@@ -213,10 +234,8 @@ public class ObjectDefinitionGraphQLDTOContributor
 			(Long)dtoConverterContext.getAttribute("companyId"),
 			_objectDefinition,
 			(String)dtoConverterContext.getAttribute("scopeKey"), aggregation,
-			dtoConverterContext, pagination,
-			_filterPredicateFactory.create(
-				(String)dtoConverterContext.getAttribute("filter"),
-				_objectDefinition.getObjectDefinitionId()),
+			dtoConverterContext,
+			(String)dtoConverterContext.getAttribute("filter"), pagination,
 			search, sorts);
 
 		return Page.of(
@@ -255,24 +274,20 @@ public class ObjectDefinitionGraphQLDTOContributor
 			return null;
 		}
 
-		String relationshipIdName = null;
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(_objectEntryManager);
 
-		ObjectEntry objectEntry = _objectEntryManager.getObjectEntry(
+		ObjectEntry objectEntry = defaultObjectEntryManager.getObjectEntry(
 			dtoConverterContext, _objectDefinition, id);
 
 		Map<String, Object> properties = objectEntry.getProperties();
 
-		for (String key : properties.keySet()) {
-			if (key.contains(relationshipName)) {
-				relationshipIdName = key;
+		String objectRelationshipObjectFieldName =
+			_getObjectRelationshipObjectFieldName(properties, relationshipName);
 
-				break;
-			}
-		}
-
-		if (relationshipIdName == null) {
+		if (Validator.isNull(objectRelationshipObjectFieldName)) {
 			Page<ObjectEntry> page =
-				_objectEntryManager.getObjectEntryRelatedObjectEntries(
+				defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
 					dtoConverterContext, _objectDefinition, id,
 					relationshipName,
 					Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS));
@@ -281,29 +296,63 @@ public class ObjectDefinitionGraphQLDTOContributor
 				page.getItems(), itemObjectEntry -> _toMap(itemObjectEntry));
 		}
 
-		Object relationshipId = properties.get(relationshipIdName);
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.
+				getObjectRelationshipByObjectDefinitionId(
+					_objectDefinition.getObjectDefinitionId(),
+					relationshipName);
 
-		if (!(relationshipId instanceof Long)) {
-			return null;
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectRelationship.getObjectDefinitionId1());
+
+		long relatedObjectEntryId = MapUtil.getLong(
+			properties, objectRelationshipObjectFieldName);
+
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
+						objectDefinition.getName());
+
+			return (T)_toExtendedEntity(
+				dtoConverterContext, objectDefinition, relatedObjectEntryId,
+				systemObjectDefinitionManager);
 		}
 
 		return (T)_toMap(
-			_objectEntryManager.fetchObjectEntry(
-				dtoConverterContext, null, (long)relationshipId),
-			relationshipIdName);
+			defaultObjectEntryManager.fetchObjectEntry(
+				dtoConverterContext, objectDefinition, relatedObjectEntryId),
+			objectRelationshipObjectFieldName);
 	}
 
 	@Override
-	public Class<?> getResourceClass() {
-		return ObjectEntryResourceImpl.class;
+	public Class<?> getResourceClass(Operation operation) {
+		ObjectValuePair<Class<?>, String> objectValuePair =
+			_objectValuePairs.get(operation);
+
+		if (objectValuePair == null) {
+			return null;
+		}
+
+		return objectValuePair.getKey();
 	}
 
 	@Override
 	public Method getResourceMethod(Operation operation) {
-		for (Method method : ObjectEntryResourceImpl.class.getMethods()) {
-			if (Objects.equals(
-					method.getName(), _resourceMethods.get(operation))) {
+		ObjectValuePair<Class<?>, String> objectValuePair =
+			_objectValuePairs.get(operation);
 
+		if (objectValuePair == null) {
+			return null;
+		}
+
+		Class<?> clazz = objectValuePair.getKey();
+
+		String methodName = objectValuePair.getValue();
+
+		for (Method method : clazz.getMethods()) {
+			if (Objects.equals(method.getName(), methodName)) {
 				return method;
 			}
 		}
@@ -332,33 +381,98 @@ public class ObjectDefinitionGraphQLDTOContributor
 			long id)
 		throws Exception {
 
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(_objectEntryManager);
+
 		return _toMap(
-			_objectEntryManager.updateObjectEntry(
+			defaultObjectEntryManager.updateObjectEntry(
 				dtoConverterContext, _objectDefinition, id,
 				_toObjectEntry(dto)));
 	}
 
 	private ObjectDefinitionGraphQLDTOContributor(
 		long companyId, EntityModel entityModel,
-		FilterPredicateFactory filterPredicateFactory,
+		ExtensionProviderRegistry extensionProviderRegistry,
 		List<GraphQLDTOProperty> graphQLDTOProperties, String idName,
 		ObjectDefinition objectDefinition,
+		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryManager objectEntryManager,
+		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectScopeProvider objectScopeProvider,
 		List<GraphQLDTOProperty> relationshipGraphQLDTOProperties,
-		String resourceName, String typeName) {
+		String resourceName,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry,
+		String typeName) {
 
 		_companyId = companyId;
 		_entityModel = entityModel;
-		_filterPredicateFactory = filterPredicateFactory;
+		_extensionProviderRegistry = extensionProviderRegistry;
 		_graphQLDTOProperties = graphQLDTOProperties;
 		_idName = idName;
 		_objectDefinition = objectDefinition;
+		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryManager = objectEntryManager;
+		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_objectScopeProvider = objectScopeProvider;
 		_relationshipGraphQLDTOProperties = relationshipGraphQLDTOProperties;
 		_resourceName = resourceName;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 		_typeName = typeName;
+	}
+
+	private String _getObjectRelationshipObjectFieldName(
+		Map<String, Object> properties, String relationshipName) {
+
+		for (Map.Entry<String, Object> entry : properties.entrySet()) {
+			Matcher matcher = _relationshipIdNamePattern.matcher(
+				entry.getKey());
+			String key = entry.getKey();
+
+			if (matcher.matches() && key.contains(relationshipName) &&
+				(entry.getValue() instanceof Long)) {
+
+				return key;
+			}
+		}
+
+		return null;
+	}
+
+	private ExtendedEntity _toExtendedEntity(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition, long relatedObjectEntryId,
+			SystemObjectDefinitionManager systemObjectDefinitionManager)
+		throws Exception {
+
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(_objectEntryManager);
+
+		Object systemObjectEntry =
+			defaultObjectEntryManager.getSystemObjectEntry(
+				dtoConverterContext, objectDefinition, relatedObjectEntryId);
+
+		Map<String, Serializable> nestedFieldsRelatedProperties = null;
+
+		DTOConverter<BaseModel<?>, ?> dtoConverter =
+			ObjectEntryDTOConverterUtil.getDTOConverter(
+				dtoConverterContext.getDTOConverterRegistry(),
+				systemObjectDefinitionManager);
+
+		EntityExtensionHandler entityExtensionHandler =
+			ExtensionUtil.getEntityExtensionHandler(
+				dtoConverter.getExternalDTOClassName(),
+				objectDefinition.getCompanyId(), _extensionProviderRegistry);
+
+		if (entityExtensionHandler != null) {
+			nestedFieldsRelatedProperties =
+				entityExtensionHandler.getExtendedProperties(
+					objectDefinition.getCompanyId(), systemObjectEntry);
+		}
+
+		return ExtendedEntity.extend(
+			systemObjectEntry, nestedFieldsRelatedProperties, null);
 	}
 
 	private Map<String, Object> _toMap(ObjectEntry objectEntry) {
@@ -408,21 +522,36 @@ public class ObjectDefinitionGraphQLDTOContributor
 		return objectEntry;
 	}
 
-	private static final Map<Operation, String> _resourceMethods =
-		HashMapBuilder.<Operation, String>put(
-			Operation.CREATE, "postObjectEntry"
-		).put(
-			Operation.DELETE, "deleteObjectEntry"
-		).put(
-			Operation.GET, "getObjectEntry"
-		).put(
-			Operation.GET_RELATIONSHIP,
-			"getCurrentObjectEntriesObjectRelationshipNamePage"
-		).put(
-			Operation.LIST, "getObjectEntriesPage"
-		).put(
-			Operation.UPDATE, "putObjectEntry"
-		).build();
+	private static final Map<Operation, ObjectValuePair<Class<?>, String>>
+		_objectValuePairs =
+			HashMapBuilder.<Operation, ObjectValuePair<Class<?>, String>>put(
+				Operation.CREATE,
+				new ObjectValuePair<>(
+					ObjectEntryResourceImpl.class, "postObjectEntry")
+			).put(
+				Operation.DELETE,
+				new ObjectValuePair<>(
+					ObjectEntryResourceImpl.class, "deleteObjectEntry")
+			).put(
+				Operation.GET,
+				new ObjectValuePair<>(
+					ObjectEntryResourceImpl.class, "getObjectEntry")
+			).put(
+				Operation.GET_RELATIONSHIP,
+				new ObjectValuePair<>(
+					ObjectEntryRelatedObjectsResourceImpl.class,
+					"getCurrentObjectEntriesObjectRelationshipNamePage")
+			).put(
+				Operation.LIST,
+				new ObjectValuePair<>(
+					ObjectEntryResourceImpl.class, "getObjectEntriesPage")
+			).put(
+				Operation.UPDATE,
+				new ObjectValuePair<>(
+					ObjectEntryResourceImpl.class, "putObjectEntry")
+			).build();
+	private static final Pattern _relationshipIdNamePattern = Pattern.compile(
+		"r_.+_.+Id");
 	private static final Map<String, Class<?>> _typedClasses =
 		HashMapBuilder.<String, Class<?>>put(
 			"BigDecimal", BigDecimal.class
@@ -444,14 +573,19 @@ public class ObjectDefinitionGraphQLDTOContributor
 
 	private final long _companyId;
 	private final EntityModel _entityModel;
-	private final FilterPredicateFactory _filterPredicateFactory;
+	private final ExtensionProviderRegistry _extensionProviderRegistry;
 	private final List<GraphQLDTOProperty> _graphQLDTOProperties;
 	private final String _idName;
 	private final ObjectDefinition _objectDefinition;
+	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryManager _objectEntryManager;
+	private final ObjectRelationshipLocalService
+		_objectRelationshipLocalService;
 	private final ObjectScopeProvider _objectScopeProvider;
 	private final List<GraphQLDTOProperty> _relationshipGraphQLDTOProperties;
 	private final String _resourceName;
+	private final SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 	private final String _typeName;
 
 }

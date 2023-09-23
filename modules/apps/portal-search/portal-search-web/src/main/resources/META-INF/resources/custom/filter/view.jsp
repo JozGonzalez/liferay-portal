@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -20,8 +11,7 @@
 
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
-taglib uri="http://liferay.com/tld/ddm" prefix="liferay-ddm" %><%@
-taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
+taglib uri="http://liferay.com/tld/ddm" prefix="liferay-ddm" %>
 
 <%@ page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
@@ -56,19 +46,11 @@ CustomFilterPortletInstanceConfiguration customFilterPortletInstanceConfiguratio
 			displayStyleGroupId="<%= customFilterDisplayContext.getDisplayStyleGroupId() %>"
 			entries="<%= new ArrayList<CustomFilterDisplayContext>() %>"
 		>
-			<liferay-ui:panel-container
-				extended="<%= true %>"
-				id='<%= liferayPortletResponse.getNamespace() + "filterCustomPanelContainer" %>'
-				markupView="lexicon"
-				persistState="<%= true %>"
-			>
-				<liferay-ui:panel
-					collapsible="<%= true %>"
-					cssClass="search-facet"
-					id='<%= liferayPortletResponse.getNamespace() + "filterCustomPanel" %>'
-					markupView="lexicon"
-					persistState="<%= true %>"
-					title="<%= HtmlUtil.escapeAttribute(customFilterDisplayContext.getHeading()) %>"
+			<clay:panel-group>
+				<clay:panel
+					collapseClassNames="search-facet"
+					displayTitle="<%= HtmlUtil.escapeAttribute(customFilterDisplayContext.getHeading()) %>"
+					expanded="<%= true %>"
 				>
 					<aui:input cssClass="custom-filter-value-input" data-qa-id="customFilterValueInput" disabled="<%= customFilterDisplayContext.isImmutable() %>" id="<%= liferayPortletResponse.getNamespace() + StringUtil.randomId() %>" label="" name="<%= HtmlUtil.escapeAttribute(customFilterDisplayContext.getParameterName()) %>" useNamespace="<%= false %>" value="<%= HtmlUtil.escapeAttribute(customFilterDisplayContext.getFilterValue()) %>" />
 
@@ -81,12 +63,12 @@ CustomFilterPortletInstanceConfiguration customFilterPortletInstanceConfiguratio
 						small="<%= true %>"
 						type="submit"
 					/>
-				</liferay-ui:panel>
-			</liferay-ui:panel-container>
+
+					<aui:script use="liferay-search-custom-filter">
+						new Liferay.Search.CustomFilter(A.one('#<portlet:namespace />fm'));
+					</aui:script>
+				</clay:panel>
+			</clay:panel-group>
 		</liferay-ddm:template-renderer>
 	</aui:form>
-
-	<aui:script use="liferay-search-custom-filter">
-		new Liferay.Search.CustomFilter(A.one('#<portlet:namespace />fm'));
-	</aui:script>
 </c:if>

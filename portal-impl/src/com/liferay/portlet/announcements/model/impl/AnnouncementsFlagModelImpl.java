@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.announcements.model.impl;
@@ -72,10 +63,10 @@ public class AnnouncementsFlagModelImpl
 	public static final String TABLE_NAME = "AnnouncementsFlag";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"flagId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"createDate", Types.TIMESTAMP}, {"entryId", Types.BIGINT},
-		{"value", Types.INTEGER}
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"flagId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
+		{"entryId", Types.BIGINT}, {"value", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -83,6 +74,7 @@ public class AnnouncementsFlagModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("flagId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -92,7 +84,7 @@ public class AnnouncementsFlagModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AnnouncementsFlag (mvccVersion LONG default 0 not null,flagId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,entryId LONG,value INTEGER)";
+		"create table AnnouncementsFlag (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,flagId LONG not null,companyId LONG,userId LONG,createDate DATE null,entryId LONG,value INTEGER,primary key (flagId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table AnnouncementsFlag";
 
@@ -260,6 +252,8 @@ public class AnnouncementsFlagModelImpl
 			attributeGetterFunctions.put(
 				"mvccVersion", AnnouncementsFlag::getMvccVersion);
 			attributeGetterFunctions.put(
+				"ctCollectionId", AnnouncementsFlag::getCtCollectionId);
+			attributeGetterFunctions.put(
 				"flagId", AnnouncementsFlag::getFlagId);
 			attributeGetterFunctions.put(
 				"companyId", AnnouncementsFlag::getCompanyId);
@@ -292,6 +286,10 @@ public class AnnouncementsFlagModelImpl
 				"mvccVersion",
 				(BiConsumer<AnnouncementsFlag, Long>)
 					AnnouncementsFlag::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<AnnouncementsFlag, Long>)
+					AnnouncementsFlag::setCtCollectionId);
 			attributeSetterBiConsumers.put(
 				"flagId",
 				(BiConsumer<AnnouncementsFlag, Long>)
@@ -336,6 +334,21 @@ public class AnnouncementsFlagModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -540,6 +553,7 @@ public class AnnouncementsFlagModelImpl
 			new AnnouncementsFlagImpl();
 
 		announcementsFlagImpl.setMvccVersion(getMvccVersion());
+		announcementsFlagImpl.setCtCollectionId(getCtCollectionId());
 		announcementsFlagImpl.setFlagId(getFlagId());
 		announcementsFlagImpl.setCompanyId(getCompanyId());
 		announcementsFlagImpl.setUserId(getUserId());
@@ -559,6 +573,8 @@ public class AnnouncementsFlagModelImpl
 
 		announcementsFlagImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		announcementsFlagImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		announcementsFlagImpl.setFlagId(
 			this.<Long>getColumnOriginalValue("flagId"));
 		announcementsFlagImpl.setCompanyId(
@@ -662,6 +678,8 @@ public class AnnouncementsFlagModelImpl
 
 		announcementsFlagCacheModel.mvccVersion = getMvccVersion();
 
+		announcementsFlagCacheModel.ctCollectionId = getCtCollectionId();
+
 		announcementsFlagCacheModel.flagId = getFlagId();
 
 		announcementsFlagCacheModel.companyId = getCompanyId();
@@ -744,6 +762,7 @@ public class AnnouncementsFlagModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _flagId;
 	private long _companyId;
 	private long _userId;
@@ -780,6 +799,7 @@ public class AnnouncementsFlagModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("flagId", _flagId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
@@ -801,17 +821,19 @@ public class AnnouncementsFlagModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("flagId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("flagId", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("companyId", 8L);
 
-		columnBitmasks.put("createDate", 16L);
+		columnBitmasks.put("userId", 16L);
 
-		columnBitmasks.put("entryId", 32L);
+		columnBitmasks.put("createDate", 32L);
 
-		columnBitmasks.put("value", 64L);
+		columnBitmasks.put("entryId", 64L);
+
+		columnBitmasks.put("value", 128L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

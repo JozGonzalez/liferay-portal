@@ -1,5 +1,50 @@
 definition {
 
+	macro _addCommerceSpecificationGroup {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(specificationGroupDescription))) {
+			var specificationGroupDescription = "";
+		}
+
+		if (!(isSet(specificationGroupKey))) {
+			var specificationGroupKey = CommerceUtilities.convertStringToKey(string = ${specificationGroupTitle});
+		}
+
+		if (!(isSet(specificationGroupPriority))) {
+			var specificationGroupPriority = 0;
+		}
+
+		if (isSet(specificationGroupTitle)) {
+			var specificationGroupTitle = ${specificationGroupTitle};
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"description": {
+						"en_US": "${specificationGroupDescription}"
+					},
+					"key": "${specificationGroupKey}",
+					"priority": ${specificationGroupPriority},
+					"title": {
+						"en_US": "${specificationGroupTitle}"
+					}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
 	macro _deleteAllCommerceSpecificationGroups {
 		var baseURL = ${baseURL};
 
@@ -15,9 +60,11 @@ definition {
 			for (var specificationGroupId : list ${specificationGroupIds}) {
 				echo("Deleting Commerce specification group with id: ${specificationGroupId}");
 
+				var userLoginInfo = JSONUtil2.formatJSONUser();
+
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories/${specificationGroupId} \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-H 'accept: application/json' \
 				''';
 
@@ -43,9 +90,11 @@ definition {
 			var specificationGroupsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories?pageSize=${specificationGroupsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -61,9 +110,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 

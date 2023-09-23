@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.processor;
@@ -38,8 +29,7 @@ public interface SegmentsExperienceRequestProcessor {
 	 * @param  httpServletRequest the servlet request
 	 * @param  httpServletResponse the servlet response
 	 * @param  groupId the primary key of the group
-	 * @param  classNameId the entity's class name ID
-	 * @param  classPK the primary key of the entity
+	 * @param  plid the primary key of the layout
 	 * @param  segmentsExperienceIds the primary keys of the user's active
 	 *         segment experiences
 	 * @return the processed IDs of segments experiences that will be actually
@@ -48,8 +38,8 @@ public interface SegmentsExperienceRequestProcessor {
 	 */
 	public long[] getSegmentsExperienceIds(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, long groupId,
-			long classNameId, long classPK, long[] segmentsExperienceIds)
+			HttpServletResponse httpServletResponse, long groupId, long plid,
+			long[] segmentsExperienceIds)
 		throws PortalException;
 
 	/**
@@ -59,8 +49,7 @@ public interface SegmentsExperienceRequestProcessor {
 	 * @param  httpServletRequest the servlet request
 	 * @param  httpServletResponse the servlet response
 	 * @param  groupId the primary key of the group
-	 * @param  classNameId the entity's class name ID
-	 * @param  classPK the primary key of the entity
+	 * @param  plid the primary key of the layout
 	 * @param  segmentsEntryIds the primary keys of the user's active segment
 	 *         entries
 	 * @param  segmentsExperienceIds the primary keys of the user's active
@@ -71,9 +60,8 @@ public interface SegmentsExperienceRequestProcessor {
 	 */
 	public long[] getSegmentsExperienceIds(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, long groupId,
-			long classNameId, long classPK, long[] segmentsEntryIds,
-			long[] segmentsExperienceIds)
+			HttpServletResponse httpServletResponse, long groupId, long plid,
+			long[] segmentsEntryIds, long[] segmentsExperienceIds)
 		throws PortalException;
 
 }

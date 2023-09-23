@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -37,11 +28,11 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 		<aui:input helpMessage="privacy-policy-url-help" name="privacyPolicyURL" />
 	</c:if>
 
-	<aui:select helpMessage="client-authentication-method-help" label="Client Authentication Method" name="clientAuthenticationMethod" required="<%= true %>">
-		<aui:option label="Client Secret Post" value="client_secret_post" />
-		<aui:option label="None" value="none" />
-		<aui:option label="Client Secret JWT" value="client_secret_jwt" />
-		<aui:option label="Private Key JWT" value="private_key_jwt" />
+	<aui:select helpMessage="client-authentication-method-help" label="client-authentication-method" name="clientAuthenticationMethod" required="<%= true %>">
+		<aui:option label="client-secret-basic-or-post" value="client_secret_post" />
+		<aui:option label="none" value="none" />
+		<aui:option label="client-secret-jwt" value="client_secret_jwt" />
+		<aui:option label="private-key-jwt" value="private_key_jwt" />
 	</aui:select>
 
 	<aui:input helpMessage="json-web-key-set-help" label="JSON Web Key Set" name="jwks" style="min-height: 100px;" type="textarea" />
@@ -210,23 +201,28 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 						selectUserButton.addEventListener('click', (event) => {
 							Liferay.Util.openSelectionModal({
 								onSelect: function (event) {
+									const item = JSON.parse(event.value);
+
 									A.one('#<portlet:namespace />clientCredentialUserId').val(
-										event.userid
+										item.id
 									);
 									A.one('#<portlet:namespace />clientCredentialUserName').val(
-										event.screenname
+										item.name
 									);
 								},
+								selectEventName: '<portlet:namespace />selectUsers',
 
 								<%
-								SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayContext(request, renderRequest, renderResponse);
+								ItemSelector itemSelector = (ItemSelector)request.getAttribute(ItemSelector.class.getName());
+
+								UserOAuth2ItemSelectorCriterion userOAuth2ItemSelectorCriterion = new UserOAuth2ItemSelectorCriterion();
+
+								userOAuth2ItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new UUIDItemSelectorReturnType());
 								%>
 
-								selectEventName:
-									'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
 								title: '<liferay-ui:message key="users" />',
 								url:
-									'<%= HtmlUtil.escapeJS(String.valueOf(selectUsersDisplayContext.getPortletURL())) %>',
+									'<%= HtmlUtil.escapeJS(String.valueOf(itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(request), liferayPortletResponse.getNamespace() + "selectUsers", userOAuth2ItemSelectorCriterion))) %>',
 							});
 						});
 					}

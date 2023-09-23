@@ -5,8 +5,8 @@ dependencies {
 	compileOnly group: "javax.portlet", name: "portlet-api", version: "3.0.1"
 	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
+	compileOnly project(":apps:account:account-api")
 	compileOnly project(":apps:asset:asset-taglib")
-	compileOnly project(":apps:commerce:commerce-account-api")
 	compileOnly project(":apps:commerce:commerce-frontend-api")
 	compileOnly project(":apps:commerce:commerce-frontend-taglib")
 	compileOnly project(":apps:commerce:commerce-media-api")
@@ -24,6 +24,7 @@ dependencies {
 	compileOnly project(":apps:item-selector:item-selector-criteria-api")
 	compileOnly project(":apps:item-selector:item-selector-taglib")
 	compileOnly project(":apps:layout:layout-item-selector-api")
+	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:static:portal-configuration:portal-configuration-metatype-api")
 	compileOnly project(":apps:upload:upload-api")
 	compileOnly project(":core:petra:petra-function")

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -35,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -115,9 +116,7 @@ definition {
 				attribute = "height",
 				element = "//div[contains(@id,'fragment-')]/div[contains(@class,'textarea')]//textarea[contains(@id,'textarea')]");
 
-			TestUtils.assertEquals(
-				actual = ${height},
-				expected = "64px");
+			StringUtil.assertEquals("64px", ${height});
 		}
 
 		task ("When the pages designer leaves the Number of Lines empty") {
@@ -131,9 +130,7 @@ definition {
 				attribute = "height",
 				element = "//div[contains(@id,'fragment-')]/div[contains(@class,'textarea')]//textarea[contains(@id,'textarea')]");
 
-			TestUtils.assertEquals(
-				actual = ${height},
-				expected = "64px");
+			StringUtil.assertEquals("64px", ${height});
 		}
 	}
 

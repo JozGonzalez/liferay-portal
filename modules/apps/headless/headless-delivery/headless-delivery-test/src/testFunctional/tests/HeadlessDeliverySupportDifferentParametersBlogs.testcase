@@ -3,6 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Blogs";
 	property testray.main.component.name = "Lima Headless";
 
 	setUp {
@@ -12,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 
@@ -32,7 +33,7 @@ definition {
 		}
 
 		task ("When with curl I request GET getSiteBlogPostingsPage with siteId and restrictFields equal all fields except id field") {
-			var response = BlogPostingAPI.getBlogPostingsbyDifferentParameters(
+			var response = BlogPostingAPI.getBlogPostings(
 				parameter = "restrictFields",
 				restrictFieldsValue = "aggregateRating,alternativeHeadline,articleBody,creator,customFields,dateCreated,dateModified,datePublished,description,encodingFormat,externalReferenceCode,friendlyUrlPath,headline,image,keywords,numberOfComments,relatedContents,renderedContents,siteId,taxonomyCategoryBriefs,x-class-name,facets,actions");
 		}

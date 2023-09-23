@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import EventEmitter from './events/EventEmitter';
@@ -331,6 +322,8 @@ SideNavigation.prototype = {
 	_bindUI() {
 		this._subscribeClickTrigger();
 
+		this._subscribeReducedMotion();
+
 		this._subscribeClickSidenavClose();
 	},
 
@@ -548,7 +541,9 @@ SideNavigation.prototype = {
 						}
 					}
 
-					addClass(container, 'sidenav-transition');
+					if (!this.isReducedMotion()) {
+						addClass(container, 'sidenav-transition');
+					}
 
 					setStyles(content, {
 						'padding-right': px(paddingRight),
@@ -625,7 +620,9 @@ SideNavigation.prototype = {
 							? options.width + options.gutter - contentMargin
 							: options.width + options.gutter;
 
-					addClass(container, 'sidenav-transition');
+					if (!this.isReducedMotion()) {
+						addClass(container, 'sidenav-transition');
+					}
 
 					setStyles(content, {
 						'padding-right': px(paddingRight),
@@ -808,12 +805,27 @@ SideNavigation.prototype = {
 		}
 	},
 
+	_subscribeReducedMotion() {
+		const instance = this;
+
+		Liferay.Loader.require('frontend-js-web/index', ({isReducedMotion}) => {
+			instance.isReducedMotion = isReducedMotion;
+		});
+	},
+
 	_subscribeSidenavTransitionEnd(element, fn) {
-		setTimeout(() => {
+		if (this.isReducedMotion()) {
 			removeClass(element, 'sidenav-transition');
 
 			fn();
-		}, SideNavigation.TRANSITION_DURATION);
+		}
+		else {
+			setTimeout(() => {
+				removeClass(element, 'sidenav-transition');
+
+				fn();
+			}, SideNavigation.TRANSITION_DURATION);
+		}
 	},
 
 	clearHeight() {
@@ -978,16 +990,20 @@ SideNavigation.prototype = {
 				instance._focusTrigger();
 			});
 
+			const isReducedMotion = instance.isReducedMotion();
+
 			if (hasClass(content, openClass)) {
 				setClasses(content, {
 					[closedClass]: true,
 					[openClass]: false,
-					'sidenav-transition': true,
+					'sidenav-transition': !isReducedMotion,
 				});
 			}
 
-			addClass(container, 'sidenav-transition');
-			addClass(toggler, 'sidenav-transition');
+			if (!isReducedMotion) {
+				addClass(container, 'sidenav-transition');
+				addClass(toggler, 'sidenav-transition');
+			}
 
 			setClasses(container, {
 				[closedClass]: true,
@@ -1269,20 +1285,22 @@ SideNavigation.prototype = {
 				this._focusNavigation();
 			});
 
+			const isReducedMotion = instance.isReducedMotion();
+
 			setClasses(content, {
 				[closedClass]: false,
 				[openClass]: true,
-				'sidenav-transition': true,
+				'sidenav-transition': !isReducedMotion,
 			});
 			setClasses(container, {
 				[closedClass]: false,
 				[openClass]: true,
-				'sidenav-transition': true,
+				'sidenav-transition': !isReducedMotion,
 			});
 			setClasses(toggler, {
 				'active': true,
 				[openClass]: true,
-				'sidenav-transition': true,
+				'sidenav-transition': !isReducedMotion,
 			});
 		}
 	},
@@ -1392,8 +1410,10 @@ SideNavigation.prototype = {
 			}
 		}
 
-		addClass(container, 'sidenav-transition');
-		addClass(toggler, 'sidenav-transition');
+		if (!instance.isReducedMotion()) {
+			addClass(container, 'sidenav-transition');
+			addClass(toggler, 'sidenav-transition');
+		}
 
 		if (closed) {
 			instance.showSidenav();

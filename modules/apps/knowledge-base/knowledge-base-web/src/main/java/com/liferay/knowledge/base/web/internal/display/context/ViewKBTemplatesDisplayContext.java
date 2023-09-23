@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.display.context;
@@ -28,7 +19,6 @@ import com.liferay.knowledge.base.web.internal.util.KBDropdownItemsProvider;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -85,6 +75,16 @@ public class ViewKBTemplatesDisplayContext {
 		return Collections.emptyList();
 	}
 
+	public String getDeleteKBTemplatesURL() {
+		return PortletURLBuilder.createActionURL(
+			_liferayPortletResponse
+		).setActionName(
+			"/knowledge_base/delete_kb_templates"
+		).setRedirect(
+			_currentURL
+		).buildString();
+	}
+
 	public String getEditKBTemplateURL(KBTemplate kbTemplate) {
 		return PortletURLBuilder.createRenderURL(
 			_liferayPortletResponse
@@ -139,7 +139,7 @@ public class ViewKBTemplatesDisplayContext {
 		throws PortalException {
 
 		return new KBTemplatesManagementToolbarDisplayContext(
-			_getDeleteKBTemplatesURL(), _httpServletRequest,
+			getDeleteKBTemplatesURL(), _httpServletRequest,
 			_liferayPortletRequest, _liferayPortletResponse,
 			getSearchContainer());
 	}
@@ -201,23 +201,11 @@ public class ViewKBTemplatesDisplayContext {
 	public boolean hasKBTemplates() throws PortalException {
 		SearchContainer<KBTemplate> searchContainer = getSearchContainer();
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-156421") ||
-			searchContainer.hasResults() || searchContainer.isSearch()) {
-
+		if (searchContainer.hasResults() || searchContainer.isSearch()) {
 			return true;
 		}
 
 		return false;
-	}
-
-	private String _getDeleteKBTemplatesURL() {
-		return PortletURLBuilder.createActionURL(
-			_liferayPortletResponse
-		).setActionName(
-			"/knowledge_base/delete_kb_templates"
-		).setRedirect(
-			_currentURL
-		).buildString();
 	}
 
 	private RowChecker _getRowChecker() {

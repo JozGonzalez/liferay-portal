@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -744,7 +735,7 @@ public class GitHubDevSyncUtil {
 
 		sb.append("Deleted ");
 		sb.append(String.valueOf(remoteGitBranches.size()));
-		sb.append(" GitHub-dev branches:\n");
+		sb.append(" GitHub dev branches:\n");
 
 		for (RemoteGitBranch remoteGitBranch : remoteGitBranches) {
 			sb.append("    ");
@@ -755,7 +746,7 @@ public class GitHubDevSyncUtil {
 		}
 
 		NotificationUtil.sendEmail(
-			sb.toString(), "jenkins", "GitHub-dev branches deleted",
+			sb.toString(), "jenkins", "GitHub dev branches deleted",
 			"peter.yoo@liferay.com");
 	}
 
@@ -1532,6 +1523,12 @@ public class GitHubDevSyncUtil {
 		GitWorkingDirectory gitWorkingDirectory, String cacheBranchName,
 		List<GitRemote> gitHubDevGitRemotesWithCacheBranch) {
 
+		List<GitRemote> gitRemotesWithoutCacheBranch = getGitHubDevGitRemotes(
+			gitWorkingDirectory);
+
+		gitRemotesWithoutCacheBranch.removeAll(
+			gitHubDevGitRemotesWithCacheBranch);
+
 		while (!gitHubDevGitRemotesWithCacheBranch.isEmpty()) {
 			GitRemote gitHubDevGitRemote = getRandomGitRemote(
 				gitHubDevGitRemotesWithCacheBranch);
@@ -1543,7 +1540,30 @@ public class GitHubDevSyncUtil {
 					gitWorkingDirectory.getRemoteGitBranch(
 						cacheBranchName, gitHubDevGitRemote, true);
 
-				gitWorkingDirectory.fetch(cachedRemoteGitBranch, 1);
+				LocalGitBranch cachedLocalGitBranch = gitWorkingDirectory.fetch(
+					cachedRemoteGitBranch, 1);
+
+				if (!gitRemotesWithoutCacheBranch.isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+
+					for (GitRemote gitRemoteWithoutCacheBranch :
+							gitRemotesWithoutCacheBranch) {
+
+						sb.append("    ");
+						sb.append(gitRemoteWithoutCacheBranch.getHostname());
+						sb.append("\n");
+					}
+
+					System.out.println(
+						JenkinsResultsParserUtil.combine(
+							"Pushing ", cacheBranchName,
+							" to the following GitHub-dev nodes because they ",
+							"do not have it.\n", sb.toString()));
+
+					pushToAllRemotes(
+						true, cachedLocalGitBranch, cacheBranchName,
+						gitRemotesWithoutCacheBranch);
+				}
 
 				return cachedRemoteGitBranch;
 			}

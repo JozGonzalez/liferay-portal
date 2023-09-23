@@ -1,29 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.settings.FallbackKeys;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.settings.ParameterMapSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 
 import java.util.Map;
@@ -31,13 +20,13 @@ import java.util.Map;
 /**
  * @author Adolfo Pérez
  */
-@Settings.Config(settingsIds = DLConstants.SERVICE_NAME)
+@Settings.Config
 public class DLGroupServiceSettings {
 
 	public static DLGroupServiceSettings getInstance(long groupId)
 		throws PortalException {
 
-		Settings settings = SettingsFactoryUtil.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(groupId, DLConstants.SERVICE_NAME));
 
 		return new DLGroupServiceSettings(settings);
@@ -47,18 +36,13 @@ public class DLGroupServiceSettings {
 			long groupId, Map<String, String[]> parameterMap)
 		throws PortalException {
 
-		Settings settings = SettingsFactoryUtil.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(groupId, DLConstants.SERVICE_NAME));
 
 		Settings parameterMapSettings = new ParameterMapSettings(
 			parameterMap, settings);
 
 		return new DLGroupServiceSettings(parameterMapSettings);
-	}
-
-	public static void registerSettingsMetadata() {
-		SettingsFactoryUtil.registerSettingsMetadata(
-			DLGroupServiceSettings.class, null, _getFallbackKeys());
 	}
 
 	public DLGroupServiceSettings(Settings settings) {
@@ -175,80 +159,6 @@ public class DLGroupServiceSettings {
 
 	public boolean isShowHiddenMountFolders() {
 		return _typedSettings.getBooleanValue("showHiddenMountFolders");
-	}
-
-	private static FallbackKeys _getFallbackKeys() {
-		FallbackKeys fallbackKeys = new FallbackKeys();
-
-		fallbackKeys.add(
-			"emailFileEntryAddedBody",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_ADDED_BODY);
-		fallbackKeys.add(
-			"emailFileEntryAddedEnabled",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_ADDED_ENABLED);
-		fallbackKeys.add(
-			"emailFileEntryAddedSubject",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_ADDED_SUBJECT);
-		fallbackKeys.add(
-			"emailFileEntryExpiredBody",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_EXPIRED_BODY);
-		fallbackKeys.add(
-			"emailFileEntryExpiredEnabled",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_EXPIRED_ENABLED);
-		fallbackKeys.add(
-			"emailFileEntryExpiredSubject",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_EXPIRED_SUBJECT);
-		fallbackKeys.add(
-			"emailFileEntryReviewBody",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_REVIEW_BODY);
-		fallbackKeys.add(
-			"emailFileEntryReviewEnabled",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_REVIEW_ENABLED);
-		fallbackKeys.add(
-			"emailFileEntryReviewSubject",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_REVIEW_SUBJECT);
-		fallbackKeys.add(
-			"emailFileEntryUpdatedBody",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_UPDATED_BODY);
-		fallbackKeys.add(
-			"emailFileEntryUpdatedEnabled",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_UPDATED_ENABLED);
-		fallbackKeys.add(
-			"emailFileEntryUpdatedSubject",
-			PropsKeys.DL_EMAIL_FILE_ENTRY_UPDATED_SUBJECT);
-		fallbackKeys.add(
-			"emailFromAddress", PropsKeys.DL_EMAIL_FROM_ADDRESS,
-			PropsKeys.ADMIN_EMAIL_FROM_ADDRESS);
-		fallbackKeys.add(
-			"emailFromName", PropsKeys.DL_EMAIL_FROM_NAME,
-			PropsKeys.ADMIN_EMAIL_FROM_NAME);
-		fallbackKeys.add(
-			"enableCommentRatings", PropsKeys.DL_COMMENT_RATINGS_ENABLED);
-		fallbackKeys.add("enableRatings", PropsKeys.DL_RATINGS_ENABLED);
-		fallbackKeys.add(
-			"enableRelatedAssets", PropsKeys.DL_RELATED_ASSETS_ENABLED);
-		fallbackKeys.add(
-			"entriesPerPage", PropsKeys.SEARCH_CONTAINER_PAGE_DEFAULT_DELTA);
-		fallbackKeys.add("entryColumns", PropsKeys.DL_ENTRY_COLUMNS);
-		fallbackKeys.add("fileEntryColumns", PropsKeys.DL_FILE_ENTRY_COLUMNS);
-		fallbackKeys.add("folderColumns", PropsKeys.DL_FOLDER_COLUMNS);
-		fallbackKeys.add(
-			"foldersPerPage", PropsKeys.SEARCH_CONTAINER_PAGE_DEFAULT_DELTA);
-		fallbackKeys.add(
-			"fileEntriesPerPage",
-			PropsKeys.SEARCH_CONTAINER_PAGE_DEFAULT_DELTA);
-		fallbackKeys.add(
-			"showFoldersSearch", PropsKeys.DL_FOLDERS_SEARCH_VISIBLE);
-		fallbackKeys.add(
-			"showHiddenMountFolders", PropsKeys.DL_SHOW_HIDDEN_MOUNT_FOLDERS);
-		fallbackKeys.add("showSubfolders", PropsKeys.DL_SUBFOLDERS_VISIBLE);
-
-		return fallbackKeys;
-	}
-
-	static {
-		SettingsFactoryUtil.registerSettingsMetadata(
-			DLGroupServiceSettings.class, null, _getFallbackKeys());
 	}
 
 	private final TypedSettings _typedSettings;

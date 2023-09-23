@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.suggestions.portlet.action;
@@ -21,14 +12,13 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.display.context.PortletRequestThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferences;
 import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferencesImpl;
 import com.liferay.portal.search.web.internal.suggestions.constants.SuggestionsPortletKeys;
-import com.liferay.portal.search.web.internal.util.SearchStringUtil;
-
-import java.util.Optional;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -57,8 +47,7 @@ public class RedirectSuggestionsMVCActionCommand extends BaseMVCActionCommand {
 		hideDefaultSuccessMessage(actionRequest);
 
 		SearchBarPortletPreferences searchBarPortletPreferences =
-			new SearchBarPortletPreferencesImpl(
-				Optional.ofNullable(actionRequest.getPreferences()));
+			new SearchBarPortletPreferencesImpl(actionRequest.getPreferences());
 
 		String redirectURL = _getRedirectURL(
 			actionRequest, searchBarPortletPreferences);
@@ -77,14 +66,15 @@ public class RedirectSuggestionsMVCActionCommand extends BaseMVCActionCommand {
 	private String _addParameter(
 		String url, PortletRequest portletRequest, String parameterName) {
 
-		Optional<String> parameterValueOptional = SearchStringUtil.maybe(
+		String parameterValue = StringUtil.trim(
 			portletRequest.getParameter(parameterName));
 
-		Optional<String> urlOptional = parameterValueOptional.map(
-			parameterValue -> HttpComponentsUtil.addParameter(
-				url, parameterName, parameterValue));
+		if (Validator.isBlank(parameterValue)) {
+			return url;
+		}
 
-		return urlOptional.orElse(url);
+		return HttpComponentsUtil.addParameter(
+			url, parameterName, parameterValue);
 	}
 
 	private String _addParameters(
@@ -123,10 +113,11 @@ public class RedirectSuggestionsMVCActionCommand extends BaseMVCActionCommand {
 
 		String path = url.substring(0, url.indexOf(friendlyURL));
 
-		Optional<String> destinationOptional =
-			searchBarPortletPreferences.getDestinationOptional();
+		String destination = searchBarPortletPreferences.getDestination();
 
-		String destination = destinationOptional.orElse(friendlyURL);
+		if (Validator.isNull(destination)) {
+			destination = friendlyURL;
+		}
 
 		return _getPath(path, destination);
 	}

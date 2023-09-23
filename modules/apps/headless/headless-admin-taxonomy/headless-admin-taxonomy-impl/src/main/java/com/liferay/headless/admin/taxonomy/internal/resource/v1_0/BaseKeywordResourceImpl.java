@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.resource.v1_0;
@@ -19,6 +10,7 @@ import com.liferay.headless.admin.taxonomy.resource.v1_0.KeywordResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -59,7 +51,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -1131,18 +1122,19 @@ public abstract class BaseKeywordResourceImpl
 			Collection<Keyword> keywords, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Keyword, Exception> keywordUnsafeConsumer = null;
+		UnsafeFunction<Keyword, Keyword, Exception> keywordUnsafeFunction =
+			null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("assetLibraryId")) {
-				keywordUnsafeConsumer = keyword -> postAssetLibraryKeyword(
+				keywordUnsafeFunction = keyword -> postAssetLibraryKeyword(
 					(Long)parameters.get("assetLibraryId"), keyword);
 			}
 			else if (parameters.containsKey("siteId")) {
-				keywordUnsafeConsumer = keyword -> postSiteKeyword(
+				keywordUnsafeFunction = keyword -> postSiteKeyword(
 					(Long)parameters.get("siteId"), keyword);
 			}
 			else {
@@ -1151,18 +1143,23 @@ public abstract class BaseKeywordResourceImpl
 			}
 		}
 
-		if (keywordUnsafeConsumer == null) {
+		if (keywordUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Keyword");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(keywords, keywordUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				keywords, keywordUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				keywords, keywordUnsafeFunction::apply);
 		}
 		else {
 			for (Keyword keyword : keywords) {
-				keywordUnsafeConsumer.accept(keyword);
+				keywordUnsafeFunction.apply(keyword);
 			}
 		}
 	}
@@ -1253,32 +1250,46 @@ public abstract class BaseKeywordResourceImpl
 			Collection<Keyword> keywords, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Keyword, Exception> keywordUnsafeConsumer = null;
+		UnsafeFunction<Keyword, Keyword, Exception> keywordUnsafeFunction =
+			null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			keywordUnsafeConsumer = keyword -> putKeyword(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			keywordUnsafeFunction = keyword -> putKeyword(
 				keyword.getId() != null ? keyword.getId() :
-					Long.parseLong((String)parameters.get("keywordId")),
+					_parseLong((String)parameters.get("keywordId")),
 				keyword);
 		}
 
-		if (keywordUnsafeConsumer == null) {
+		if (keywordUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Keyword");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(keywords, keywordUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				keywords, keywordUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				keywords, keywordUnsafeFunction::apply);
 		}
 		else {
 			for (Keyword keyword : keywords) {
-				keywordUnsafeConsumer.accept(keyword);
+				keywordUnsafeFunction.apply(keyword);
 			}
 		}
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1446,6 +1457,14 @@ public abstract class BaseKeywordResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Keyword>, UnsafeFunction<Keyword, Keyword, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1661,6 +1680,12 @@ public abstract class BaseKeywordResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1691,7 +1716,18 @@ public abstract class BaseKeywordResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Keyword>, UnsafeFunction<Keyword, Keyword, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Keyword>, UnsafeConsumer<Keyword, Exception>, Exception>
 			contextBatchUnsafeConsumer;

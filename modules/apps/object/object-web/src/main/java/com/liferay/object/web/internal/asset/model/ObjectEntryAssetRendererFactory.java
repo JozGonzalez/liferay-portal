@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.asset.model;
@@ -19,6 +10,7 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.web.internal.object.entries.display.context.ObjectEntryDisplayContextFactory;
 import com.liferay.object.web.internal.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
@@ -39,6 +31,7 @@ public class ObjectEntryAssetRendererFactory
 		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
 		ObjectDefinition objectDefinition,
 		ObjectEntryDisplayContextFactory objectEntryDisplayContextFactory,
+		ObjectEntryLocalService objectEntryLocalService,
 		ObjectEntryService objectEntryService, ServletContext servletContext) {
 
 		setClassName(objectDefinition.getClassName());
@@ -49,6 +42,7 @@ public class ObjectEntryAssetRendererFactory
 			assetDisplayPageFriendlyURLProvider;
 		_objectDefinition = objectDefinition;
 		_objectEntryDisplayContextFactory = objectEntryDisplayContextFactory;
+		_objectEntryLocalService = objectEntryLocalService;
 		_objectEntryService = objectEntryService;
 		_servletContext = servletContext;
 	}
@@ -57,10 +51,14 @@ public class ObjectEntryAssetRendererFactory
 	public AssetRenderer<ObjectEntry> getAssetRenderer(long classPK, int type)
 		throws PortalException {
 
+		if (!_objectDefinition.isDefaultStorageType()) {
+			return null;
+		}
+
 		ObjectEntryAssetRenderer objectEntryAssetRenderer =
 			new ObjectEntryAssetRenderer(
 				_assetDisplayPageFriendlyURLProvider, _objectDefinition,
-				_objectEntryService.getObjectEntry(classPK),
+				_objectEntryLocalService.getObjectEntry(classPK),
 				_objectEntryDisplayContextFactory, _objectEntryService);
 
 		objectEntryAssetRenderer.setServletContext(_servletContext);
@@ -109,6 +107,7 @@ public class ObjectEntryAssetRendererFactory
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryDisplayContextFactory
 		_objectEntryDisplayContextFactory;
+	private final ObjectEntryLocalService _objectEntryLocalService;
 	private final ObjectEntryService _objectEntryService;
 	private final ServletContext _servletContext;
 

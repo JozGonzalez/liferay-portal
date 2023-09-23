@@ -1,32 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.security.permission.resource;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Rafael Praxedes
  */
-@Component(service = {})
 public class DDMStructurePermission {
 
 	public static boolean contains(
@@ -34,7 +22,10 @@ public class DDMStructurePermission {
 			String actionId)
 		throws PortalException {
 
-		return _ddmStructureModelResourcePermission.contains(
+		ModelResourcePermission<DDMStructure> modelResourcePermission =
+			_ddmStructureModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, ddmStructure, actionId);
 	}
 
@@ -43,7 +34,10 @@ public class DDMStructurePermission {
 			String actionId)
 		throws PortalException {
 
-		return _ddmStructureModelResourcePermission.contains(
+		ModelResourcePermission<DDMStructure> modelResourcePermission =
+			_ddmStructureModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, ddmStructureId, actionId);
 	}
 
@@ -51,35 +45,30 @@ public class DDMStructurePermission {
 			PermissionChecker permissionChecker, long groupId, long classNameId)
 		throws PortalException {
 
-		return _ddmPermissionSupport.containsAddStructurePermission(
+		DDMPermissionSupport ddmPermissionSupport =
+			_ddmPermissionSupportSnapshot.get();
+
+		return ddmPermissionSupport.containsAddStructurePermission(
 			permissionChecker, groupId, classNameId);
 	}
 
 	public static String getStructureModelResourceName(long classNameId)
 		throws PortalException {
 
-		return _ddmPermissionSupport.getStructureModelResourceName(classNameId);
+		DDMPermissionSupport ddmPermissionSupport =
+			_ddmPermissionSupportSnapshot.get();
+
+		return ddmPermissionSupport.getStructureModelResourceName(classNameId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMPermissionSupport(
-		DDMPermissionSupport ddmPermissionSupport) {
-
-		_ddmPermissionSupport = ddmPermissionSupport;
-	}
-
-	@Reference(
-		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
-		ModelResourcePermission<DDMStructure> modelResourcePermission) {
-
-		_ddmStructureModelResourcePermission = modelResourcePermission;
-	}
-
-	private static DDMPermissionSupport _ddmPermissionSupport;
-	private static ModelResourcePermission<DDMStructure>
-		_ddmStructureModelResourcePermission;
+	private static final Snapshot<DDMPermissionSupport>
+		_ddmPermissionSupportSnapshot = new Snapshot<>(
+			DDMStructurePermission.class, DDMPermissionSupport.class);
+	private static final Snapshot<ModelResourcePermission<DDMStructure>>
+		_ddmStructureModelResourcePermissionSnapshot = new Snapshot<>(
+			DDMStructurePermission.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.dynamic.data.mapping.model." +
+				"DDMStructure)");
 
 }

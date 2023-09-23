@@ -46,10 +46,9 @@
 				<arg value="${orderIDs}"/>
 			</execute>
 
+			<var name="pages" method="selenium#getElementValue('//tr[td[contains(@class,\'line-content\')][contains(.,\'textAlign = &quot;right&quot;\')]]/td[contains(@class,\'line-number\')]')"/>
 			<var name="camelCase" method="StringUtil#replace('${camelCase}', ' ', '')"/>
 			<var name="payload" method="StringUtil#replace('${payload}', '${payload}', '${payload}}')"/>
-
-			<var name="parameters" method="JSONUtil2#_addJSONObject('JSON = ${parameters}', 'key = &quot;virtualHost&quot;', 'value = &quot;\&quot;${virtualHost}\&quot;&quot;')"/>
 
 			<execute macro="ProductMenu#gotoPortlet">
 				<var name="category" value="Content" />
@@ -79,6 +78,11 @@
 		</task>
 
 		<var name="portalInstanceIds" method="StringUtil#regexReplaceAll('${portalInstanceIds}', '[\[\]&quot;]', '')"/>
+
+		<execute class="StringUtil" method="assertEquals">
+			<arg value="&quot;Row 1&quot;: &quot;Column 1&quot;"/>
+			<arg value="${data}"/>
+		</execute>
 	</command>
 
 	<command priority="5" name="AddUser">

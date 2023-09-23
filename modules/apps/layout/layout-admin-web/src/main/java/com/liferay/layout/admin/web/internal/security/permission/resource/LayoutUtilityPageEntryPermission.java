@@ -1,31 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.security.permission.resource;
 
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Eudaldo Alonso
  */
-@Component(service = {})
 public class LayoutUtilityPageEntryPermission {
 
 	public static void check(
@@ -33,7 +21,11 @@ public class LayoutUtilityPageEntryPermission {
 			String actionId)
 		throws PortalException {
 
-		_layoutUtilityPageEntryModelResourcePermission.check(
+		ModelResourcePermission<LayoutUtilityPageEntry>
+			modelResourcePermission =
+				_layoutUtilityPageEntryModelResourcePermissionSnapshot.get();
+
+		modelResourcePermission.check(
 			permissionChecker, layoutUtilityPageEntryId, actionId);
 	}
 
@@ -42,7 +34,11 @@ public class LayoutUtilityPageEntryPermission {
 			LayoutUtilityPageEntry layoutUtilityPageEntry, String actionId)
 		throws PortalException {
 
-		return _layoutUtilityPageEntryModelResourcePermission.contains(
+		ModelResourcePermission<LayoutUtilityPageEntry>
+			modelResourcePermission =
+				_layoutUtilityPageEntryModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, layoutUtilityPageEntry, actionId);
 	}
 
@@ -51,23 +47,21 @@ public class LayoutUtilityPageEntryPermission {
 			String actionId)
 		throws PortalException {
 
-		return _layoutUtilityPageEntryModelResourcePermission.contains(
+		ModelResourcePermission<LayoutUtilityPageEntry>
+			modelResourcePermission =
+				_layoutUtilityPageEntryModelResourcePermissionSnapshot.get();
+
+		return modelResourcePermission.contains(
 			permissionChecker, layoutUtilityPageEntryId, actionId);
 	}
 
-	@Reference(
-		target = "(model.class.name=com.liferay.layout.utility.page.model.LayoutUtilityPageEntry)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
-		ModelResourcePermission<LayoutUtilityPageEntry>
-			modelResourcePermission) {
-
-		_layoutUtilityPageEntryModelResourcePermission =
-			modelResourcePermission;
-	}
-
-	private static ModelResourcePermission<LayoutUtilityPageEntry>
-		_layoutUtilityPageEntryModelResourcePermission;
+	private static final Snapshot
+		<ModelResourcePermission<LayoutUtilityPageEntry>>
+			_layoutUtilityPageEntryModelResourcePermissionSnapshot =
+				new Snapshot<>(
+					LayoutUtilityPageEntryPermission.class,
+					Snapshot.cast(ModelResourcePermission.class),
+					"(model.class.name=com.liferay.layout.utility.page.model." +
+						"LayoutUtilityPageEntry)");
 
 }

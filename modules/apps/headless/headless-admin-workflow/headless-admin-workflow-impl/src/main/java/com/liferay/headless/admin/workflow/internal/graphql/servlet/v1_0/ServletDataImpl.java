@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.workflow.internal.graphql.servlet.v1_0;
@@ -377,6 +368,66 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowTaskHasAssignableUsers"));
+
+					put(
+						"query#WorkflowInstance.workflowTasks",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksPage"));
+					put(
+						"query#WorkflowInstance.workflowLogs",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"getWorkflowInstanceWorkflowLogsPage"));
+					put(
+						"query#WorkflowTask.hasAssignableUsers",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowTaskHasAssignableUsers"));
+					put(
+						"query#WorkflowInstance.workflowTasksAssignedToMe",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksAssignedToMePage"));
+					put(
+						"query#WorkflowTask.workflowInstance",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"getWorkflowInstance"));
+					put(
+						"query#WorkflowTasksBulkSelection.workflowDefinition",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"getWorkflowDefinition"));
+					put(
+						"query#WorkflowTaskAssignToUser.workflowTask",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class, "getWorkflowTask"));
+					put(
+						"query#WorkflowTask.assignableUsers",
+						new ObjectValuePair<>(
+							AssigneeResourceImpl.class,
+							"getWorkflowTaskAssignableUsersPage"));
+					put(
+						"query#WorkflowTask.nextTransitions",
+						new ObjectValuePair<>(
+							TransitionResourceImpl.class,
+							"getWorkflowTaskNextTransitionsPage"));
+					put(
+						"query#WorkflowInstance.workflowTasksAssignedToUser",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksAssignedToUserPage"));
+					put(
+						"query#WorkflowInstance.nextTransitions",
+						new ObjectValuePair<>(
+							TransitionResourceImpl.class,
+							"getWorkflowInstanceNextTransitionsPage"));
+					put(
+						"query#WorkflowTask.workflowLogs",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"getWorkflowTaskWorkflowLogsPage"));
 				}
 			};
 

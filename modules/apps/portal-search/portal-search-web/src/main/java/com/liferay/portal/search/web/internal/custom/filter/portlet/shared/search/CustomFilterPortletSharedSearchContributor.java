@@ -1,32 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.custom.filter.portlet.shared.search;
 
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.internal.custom.filter.constants.CustomFilterPortletKeys;
 import com.liferay.portal.search.web.internal.custom.filter.portlet.CustomFilterPortletPreferences;
 import com.liferay.portal.search.web.internal.custom.filter.portlet.CustomFilterPortletPreferencesImpl;
 import com.liferay.portal.search.web.internal.custom.filter.portlet.CustomFilterPortletUtil;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
-
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,7 +35,7 @@ public class CustomFilterPortletSharedSearchContributor
 
 		CustomFilterPortletPreferences customFilterPortletPreferences =
 			new CustomFilterPortletPreferencesImpl(
-				portletSharedSearchSettings.getPortletPreferencesOptional());
+				portletSharedSearchSettings.getPortletPreferences());
 
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getFederatedSearchRequestBuilder(
@@ -60,13 +48,13 @@ public class CustomFilterPortletSharedSearchContributor
 			).disabled(
 				customFilterPortletPreferences.isDisabled()
 			).field(
-				customFilterPortletPreferences.getFilterFieldString()
+				customFilterPortletPreferences.getFilterField()
 			).name(
-				customFilterPortletPreferences.getQueryNameString()
+				customFilterPortletPreferences.getQueryName()
 			).occur(
 				customFilterPortletPreferences.getOccur()
 			).parent(
-				customFilterPortletPreferences.getParentQueryNameString()
+				customFilterPortletPreferences.getParentQueryName()
 			).type(
 				customFilterPortletPreferences.getFilterQueryType()
 			).value(
@@ -78,45 +66,42 @@ public class CustomFilterPortletSharedSearchContributor
 	private Float _getBoost(
 		CustomFilterPortletPreferences customFilterPortletPreferences) {
 
-		Optional<String> optional =
-			customFilterPortletPreferences.getBoostOptional();
+		String boost = customFilterPortletPreferences.getBoost();
 
-		return optional.map(
-			GetterUtil::getFloat
-		).orElse(
-			null
-		);
+		if (Validator.isNull(boost)) {
+			return null;
+		}
+
+		return GetterUtil.getFloat(boost);
 	}
 
 	private String _getFilterValue(
 		PortletSharedSearchSettings portletSharedSearchSettings,
 		CustomFilterPortletPreferences customFilterPortletPreferences) {
 
-		Optional<String> optional = _getFilterValueOptional(
-			customFilterPortletPreferences, portletSharedSearchSettings);
-
-		return optional.orElse(null);
-	}
-
-	private Optional<String> _getFilterValueOptional(
-		CustomFilterPortletPreferences customFilterPortletPreferences,
-		PortletSharedSearchSettings portletSharedSearchSettings) {
-
-		Optional<String> filterValueOptional =
-			customFilterPortletPreferences.getFilterValueOptional();
+		String filterValue = customFilterPortletPreferences.getFilterValue();
 
 		if (customFilterPortletPreferences.isImmutable()) {
-			return filterValueOptional;
+			if (Validator.isNotNull(filterValue)) {
+				return filterValue;
+			}
+
+			return null;
 		}
 
-		Optional<String> parameterValueOptional =
-			portletSharedSearchSettings.getParameterOptional(
-				CustomFilterPortletUtil.getParameterName(
-					customFilterPortletPreferences));
+		String parameterValue = portletSharedSearchSettings.getParameter(
+			CustomFilterPortletUtil.getParameterName(
+				customFilterPortletPreferences));
 
-		return Optional.ofNullable(
-			SearchOptionalUtil.findFirstPresent(
-				Stream.of(parameterValueOptional, filterValueOptional), null));
+		if (parameterValue != null) {
+			return parameterValue;
+		}
+
+		if (Validator.isNotNull(filterValue)) {
+			return filterValue;
+		}
+
+		return null;
 	}
 
 	@Reference

@@ -1,39 +1,32 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	static var randomSiteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			HeadlessSite.addSite(siteName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
-		}
-	}
+			Staging.openStagingAdmin(siteURLKey = ${randomSiteURLKey});
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+			Staging.activateStagingCP(siteName = ${randomSiteName});
 		}
 	}
 
@@ -43,28 +36,35 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		task ("Add a new user") {
+			var userEmailAddress = StringUtil.randomString(8);
+			var userFirstName = StringUtil.randomString(8);
+			var userLastName = StringUtil.randomString(8);
+			var userScreenName = StringUtil.randomString(8);
+
 			JSONUser.addUser(
-				userEmailAddress = "userea@liferay.com",
-				userFirstName = "Userfn",
-				userLastName = "Userln",
-				userScreenName = "usersn");
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"),
+				userFirstName = ${userFirstName},
+				userLastName = ${userLastName},
+				userScreenName = StringUtil.toLowerCase(${userScreenName}));
 
 			JSONUser.setFirstPassword(
 				agreeToTermsAndAnswerReminderQuery = "true",
 				requireReset = "false",
-				userEmailAddress = "userea@liferay.com");
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"));
 		}
 
 		task ("Assign the user to site") {
 			JSONUser.addUserToSite(
-				groupName = "Test Site Name",
-				userEmailAddress = "userea@liferay.com");
+				groupName = ${randomSiteName},
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"));
 		}
 
 		task ("Add a new site role") {
+			var roleKey = StringUtil.randomString(8);
+
 			JSONRole.addSiteRole(
-				roleKey = "Roles Siterole Name",
-				roleTitle = "Roles Siterole Name");
+				roleKey = ${roleKey},
+				roleTitle = ${roleKey});
 		}
 
 		task ("Define the permissions of new role") {
@@ -72,47 +72,47 @@ definition {
 				Permissions.definePermissionViaJSONAPI(
 					resourceAction = ${resourceActionIndex},
 					resourceName = "com_liferay_layout_admin_web_portlet_GroupPagesPortlet",
-					roleTitle = "Roles Siterole Name",
+					roleTitle = ${roleKey},
 					roleType = "site");
 			}
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_SITE_ADMINISTRATION",
 				resourceName = "com.liferay.depot.model.DepotEntry",
-				roleTitle = "Roles Siterole Name",
+				roleTitle = ${roleKey},
 				roleType = "site");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW",
 				resourceName = "com.liferay.layout.seo",
-				roleTitle = "Roles Siterole Name",
+				roleTitle = ${roleKey},
 				roleType = "site");
 
 			for (var resourceActionIndex : list "ADD_LAYOUT,VIEW_SITE_ADMINISTRATION,VIEW_STAGING") {
 				Permissions.definePermissionViaJSONAPI(
 					resourceAction = ${resourceActionIndex},
 					resourceName = "com.liferay.portal.kernel.model.Group",
-					roleTitle = "Roles Siterole Name",
+					roleTitle = ${roleKey},
 					roleType = "site");
 			}
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW",
 				resourceName = "com.liferay.portal.kernel.model.Layout",
-				roleTitle = "Roles Siterole Name",
+				roleTitle = ${roleKey},
 				roleType = "site");
 		}
 
 		task ("Assign the site role to new user") {
 			JSONRole.assignSiteRoleToUser(
-				groupName = "Test Site Name",
-				roleTitle = "Roles Siterole Name",
-				userEmailAddress = "userea@liferay.com");
+				groupName = ${randomSiteName},
+				roleTitle = ${roleKey},
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"));
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -121,7 +121,7 @@ definition {
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -133,7 +133,7 @@ definition {
 		task ("Add a Heading fragment below the Button") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -142,19 +142,17 @@ definition {
 		}
 
 		task ("Publish to Live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("Sign in as new user") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "userea@liferay.com",
-				userLoginFullName = "userfn userln");
+			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"));
 		}
 
 		task ("Navigate to the Pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -189,7 +187,7 @@ definition {
 		}
 
 		task ("Navigate to the Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -227,31 +225,27 @@ definition {
 				locator1 = "PagesFinder#PAGE_ELLIPSIS_ICON");
 
 			MenuItem.viewNotPresent(menuItem = "Preview Draft");
-
-			JSONRole.deleteRole(roleTitle = "Roles Siterole Name");
 		}
 	}
 
 	@description = "This is a test for LPS-109854. Cannot view the sitemap of staging site as Guest."
 	@priority = 4
 	test CannotViewSiteMapOfStagingSiteAsGuest {
-		property test.name.skip.portal.instance = "ContentPagesWithStaging#CannotViewSiteMapOfStagingSiteAsGuest";
-
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
 
 			JSONLayout.publishLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false");
 		}
 
 		task ("Configure the Staging Public Pages in site configuration") {
-			Site.openSiteSettingsAdmin(siteURLKey = "test-site-name-staging");
+			Site.openSiteSettingsAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Site.addVirtualHostsURLCP(stagingPages = "www.able.com");
 		}
@@ -272,21 +266,21 @@ definition {
 	test CreatePageTemplateFromContentPageInStagingSite {
 		task ("Add a page template collection") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name-staging",
+				groupName = "${randomSiteName}-staging",
 				layoutPageTemplateCollectionName = "Page Template Collection",
 				site = "false");
 		}
 
 		task ("Add a Heading fragment and an Asset Publisher widget to content page then publish") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -302,13 +296,13 @@ definition {
 		task ("Create a content page template from the content page under page template collection") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.createPageTemplate(collectionName = "Page Template Collection");
 		}
 
 		task ("View the content page template shown in Page Templates admin") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name-staging");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -333,14 +327,14 @@ definition {
 	test DeactivateStagingAfterPublish {
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Add a Heading fragment to the content page") {
@@ -361,19 +355,19 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("Deactivate staging") {
-			Staging.deactivateStagingCP(siteName = "Test Site Name");
+			Staging.deactivateStagingCP(siteName = ${randomSiteName});
 		}
 
 		task ("Navigate to the content page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Assert the Heading fragment still present after deactivating staging") {
@@ -397,14 +391,14 @@ definition {
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				site = "false",
 				title = "Web Content Title");
 		}
 
 		task ("Add a content page based on Blank") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -413,7 +407,7 @@ definition {
 		task ("Add a Web Content Display to content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addWidget(portletName = "Web Content Display");
 		}
@@ -451,14 +445,14 @@ definition {
 	test MapPageToTextFragment {
 		task ("Add a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Widget Page Name",
 				site = "false");
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -467,7 +461,7 @@ definition {
 		task ("Add a Heading fragment to content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -491,7 +485,7 @@ definition {
 		task ("View selected page is linked to Heading fragment") {
 			AssertVisible(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/test-site-name-staging/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}-staging/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
@@ -502,7 +496,7 @@ definition {
 		task ("Publish to Live") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			Staging.gotoPublishToLive();
 
@@ -512,43 +506,45 @@ definition {
 		task ("Navigate to content page in staging site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			Click(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/test-site-name-staging/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}-staging/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
 		task ("Assert redirect to widget page in staging site") {
 			ControlMenu.viewHeaderTitle(headerTitle = "Test Widget Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "web/test-site-name-staging/test-widget-page-name");
+			AssertLocation.assertPartialLocation(value1 = "web/${randomSiteURLKey}-staging/test-widget-page-name");
 		}
 
 		task ("Navigate to content page in live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Click(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/test-site-name/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
 		task ("Assert redirect to widget page in live site") {
 			ControlMenu.viewHeaderTitle(headerTitle = "Test Widget Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "web/test-site-name/test-widget-page-name");
+			AssertLocation.assertPartialLocation(value1 = "web/${randomSiteURLKey}/test-widget-page-name");
 		}
 	}
 
 	@description = "This is a test for LPS-98030. A mapped editable background image of a fragment survives local staging."
 	@priority = 2
 	test MapWebContentImageToBackgroundImageOfBannerCenter {
+		property timeout.explicit.wait = "20";
+
 		task ("Add a web content structure with an Image field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-staging");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			NavItem.gotoStructures();
 
@@ -579,7 +575,7 @@ definition {
 
 		task ("Add a content page based on Blank") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -588,7 +584,7 @@ definition {
 		task ("Add a Banner Center to content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -614,7 +610,7 @@ definition {
 		task ("Assert the mapped image is shown in view mode in staging site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			ContentPages.viewFragmentBackgroundImage(image = "Document_2.jpeg");
 		}
@@ -628,7 +624,7 @@ definition {
 		task ("Assert the mapped image is shown in view mode in live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentBackgroundImage(image = "Document_2.jpeg");
 		}
@@ -639,7 +635,7 @@ definition {
 	test NavigateToSpecificInteractionStateViaUndoHistoryInStagingSite {
 		task ("Add a content page in staging site") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
@@ -648,7 +644,7 @@ definition {
 		task ("Add a Container to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -727,9 +723,11 @@ definition {
 	@description = "This is a test for LPS-140136. As a page creator with page update permissions, the draft actions are only visible in staging site."
 	@priority = 4
 	test PreviewAndDiscardDraftInStagingSite {
+		property portal.acceptance = "true";
+
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -738,7 +736,7 @@ definition {
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -750,7 +748,7 @@ definition {
 		task ("Add a Heading fragment below the Button") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -759,13 +757,13 @@ definition {
 		}
 
 		task ("Publish to Live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("Navigate to the Pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -800,7 +798,7 @@ definition {
 		}
 
 		task ("Preview the draft content page via Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Preview Draft",
@@ -848,7 +846,7 @@ definition {
 		}
 
 		task ("Discard the draft content page via Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Page Name");
 
@@ -881,14 +879,14 @@ definition {
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Add a Heading fragment to the content page") {
@@ -911,7 +909,7 @@ definition {
 		task ("Navigate to the content page in the staging site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("View the Heading fragment in view mode") {
@@ -931,13 +929,13 @@ definition {
 		task ("View the no resource shown in the live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertTextPresent(value1 = "The requested resource could not be found.");
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -945,7 +943,7 @@ definition {
 		task ("Navigate to the content page in the live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("View the Heading fragment") {
@@ -968,20 +966,20 @@ definition {
 	test PublishDraftContentPageToLive {
 		task ("Add a draft content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
 		}
 
 		task ("Publish to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("View draft page is shown in pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 
 			PagesAdmin.viewPageStatus(
 				pageName = "Test Content Page Name",
@@ -995,13 +993,13 @@ definition {
 		}
 
 		task ("Navigate to staging site via Product Menu") {
-			ProductMenu.gotoStagingSite();
+			ProductMenu.gotoStagingSite(site = ${randomSiteName});
 		}
 
 		task ("Add a Heading fragment to page in the staging site") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1009,13 +1007,13 @@ definition {
 		}
 
 		task ("Publish to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("View draft page is shown in pages admin in live site after republish with an edition") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 
 			PagesAdmin.viewPageStatus(
 				pageName = "Test Content Page Name",
@@ -1040,14 +1038,14 @@ definition {
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Add a Heading fragment to the content page") {
@@ -1068,7 +1066,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -1076,7 +1074,7 @@ definition {
 		task ("Navigate to the content page at edit mode in the staging site") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Add a Button fragment below the Paragraph") {
@@ -1121,7 +1119,7 @@ definition {
 		task ("Navigate to the content page in the live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("View the Heading fragment") {
@@ -1147,7 +1145,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -1155,7 +1153,7 @@ definition {
 		task ("Navigate to the content page in the live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("View the Heading fragment") {
@@ -1185,7 +1183,7 @@ definition {
 	test ResizeDisplayedImageViaImageEditorOnPageContentPanelInStagingSite {
 		task ("Add a content page based on Blank") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -1194,7 +1192,7 @@ definition {
 		task ("Add an Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1244,9 +1242,7 @@ definition {
 		}
 
 		task ("View the naturalWidth doesn't change") {
-			TestUtils.assertEquals(
-				actual = ${editedNaturalWidth},
-				expected = ${naturalWidth});
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
 		task ("View the naturalHeight becomes smaller") {
@@ -1260,7 +1256,7 @@ definition {
 		task ("Take down the new naturalWidth and naturalHeight of image at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.viewFragmentEditableImage(
 				id = "image-square",
@@ -1272,9 +1268,7 @@ definition {
 		}
 
 		task ("View the naturalWidth doesn't change") {
-			TestUtils.assertEquals(
-				actual = ${editedNaturalWidth},
-				expected = ${naturalWidth});
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
 		task ("View the naturalHeight becomes smaller") {
@@ -1292,7 +1286,7 @@ definition {
 		task ("Take down the new naturalWidth and naturalHeight of image at view mode in live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.viewFragmentEditableImage(
 				id = "image-square",
@@ -1304,9 +1298,7 @@ definition {
 		}
 
 		task ("View the naturalWidth doesn't change") {
-			TestUtils.assertEquals(
-				actual = ${editedNaturalWidth},
-				expected = ${naturalWidth});
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
 		task ("View the naturalHeight becomes smaller") {
@@ -1321,7 +1313,7 @@ definition {
 	test RotateDisplayedImageViaImageEditorOnPageContentPanelInStagingSite {
 		task ("Add a content page based on Blank") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -1330,7 +1322,7 @@ definition {
 		task ("Add a Banner Center fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -1389,7 +1381,7 @@ definition {
 		task ("View the version of mapped image at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			ContentPages.viewFragmentText(
 				fragmentName = "heading",
@@ -1411,7 +1403,7 @@ definition {
 		task ("View the version of mapped image at view mode in live site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentText(
 				fragmentName = "heading",
@@ -1430,14 +1422,14 @@ definition {
 	test UndoDeletedFragmentInStagingSite {
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Add a Heading fragment to the content page") {
@@ -1460,7 +1452,7 @@ definition {
 		task ("Navigate to the content page at edit mode in the staging site") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Remove Heading frgament in staging site") {
@@ -1497,7 +1489,7 @@ definition {
 	test ViewCustomCSSOfContentPageInStagingSite {
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Content Page Name",
 				site = "false",
 				type = "content");
@@ -1506,7 +1498,7 @@ definition {
 		task ("Navigate to the content page at edit mode in staging site") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Navigate to the Look and Feel settings") {
@@ -1536,7 +1528,7 @@ definition {
 		task ("Navigate to the content page at view mode in staging site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("View the Text Color of Paragraph") {
@@ -1562,7 +1554,7 @@ definition {
 		task ("Navigate to the content page at edit mode in staging site") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("Navigate to the Look and Feel settings") {
@@ -1586,7 +1578,7 @@ definition {
 		task ("Navigate to the content page at view mode in staging site") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 		}
 
 		task ("View the Text Color of Paragraph") {
@@ -1615,7 +1607,7 @@ definition {
 	test ViewExperienceInViewMode {
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
@@ -1624,7 +1616,7 @@ definition {
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1649,7 +1641,7 @@ definition {
 		task ("Change to new experience at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
+				siteName = "${randomSiteName} Staging");
 
 			ContentPages.changeExperience(experienceName = "New Experience");
 		}
@@ -1691,7 +1683,7 @@ definition {
 		task ("Given a page creator has a draft content page with new experience on staging site") {
 			task ("Add a content page") {
 				JSONLayout.addPublicLayout(
-					groupName = "Test Site Name (Staging)",
+					groupName = "${randomSiteName} (Staging)",
 					layoutName = "Test Page Name",
 					site = "false",
 					type = "content");
@@ -1700,7 +1692,7 @@ definition {
 			task ("Add a Button fragment to page") {
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Test Page Name",
-					siteName = "Test Site Name Staging");
+					siteName = "${randomSiteName} Staging");
 
 				PageEditor.addFragment(
 					collectionName = "Basic Components",
@@ -1725,7 +1717,7 @@ definition {
 			task ("Edit the inline text of Button in Default experience") {
 				ContentPagesNavigator.openViewContentPage(
 					pageName = "Test Page Name",
-					siteName = "Test Site Name Staging");
+					siteName = "${randomSiteName} Staging");
 
 				ContentPages.gotoPageEditor();
 
@@ -1798,34 +1790,30 @@ definition {
 	@description = "This is a test for LPS-146373. New prefixes for email,phone and none options can be used in Content Pages published from staging."
 	@priority = 4
 	test ViewPrefixesForEmailAndPhoneAndNoneOptionsInLiveSite {
-		task ("Given a site created from Welcome site template") {
-			Site.openSitesAdmin();
+		var siteName = StringUtil.randomString(8);
 
-			Site.addSiteTemplateCP(
-				siteName = "Site Name",
-				siteTemplateName = "Welcome");
+		var siteURLKey = StringUtil.toLowerCase(${siteName});
+
+		task ("Given a site created from Welcome site template") {
+			HeadlessSite.addSite(
+				siteName = ${siteName},
+				templateName = "Welcome",
+				templateType = "Site Initializer");
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Site Name");
+			Staging.openStagingAdmin(siteURLKey = ${siteURLKey});
+
+			Staging.activateStagingCP(siteName = ${siteName});
 		}
 
 		task ("When adding a web content with email and telephone") {
 			task ("Create a web content structure") {
-				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "site-name-staging");
+				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "${siteURLKey}-staging");
 
-				WebContentStructures.addCP(structureName = "Contact Information");
-
-				for (var fieldFieldLabel : list "Name,Email,Phone,Personal Web") {
-					DataEngine.addField(
-						fieldFieldLabel = ${fieldFieldLabel},
-						fieldName = "Text");
-				}
-
-				WebContentStructures.saveCP();
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
 			}
 
 			task ("Create a Web Content from Contact Information") {
@@ -1859,7 +1847,7 @@ definition {
 
 			task ("Create a content page") {
 				JSONLayout.addPublicLayout(
-					groupName = "Site Name (Staging)",
+					groupName = "${siteName} (Staging)",
 					layoutName = "Contact",
 					site = "false",
 					type = "content");
@@ -1868,7 +1856,7 @@ definition {
 			task ("Add a Container to page") {
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Contact",
-					siteName = "Site Name Staging");
+					siteName = "${siteName} Staging");
 
 				PageEditor.addFragment(
 					collectionName = "Layout Elements",
@@ -2009,11 +1997,11 @@ definition {
 		task ("Then user is able to view email and telephone on content page") {
 			task ("Publish the page and publish to Live") {
 				JSONLayout.publishLayout(
-					groupName = "Site Name (Staging)",
+					groupName = "${siteName} (Staging)",
 					layoutName = "Contact",
 					site = "false");
 
-				Staging.openStagingAdmin(siteURLKey = "site-name-staging");
+				Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
 
 				Staging.publishCustomPublication();
 			}
@@ -2021,7 +2009,7 @@ definition {
 			task ("View page in live") {
 				ContentPagesNavigator.openViewContentPage(
 					pageName = "Contact",
-					siteName = "Site Name");
+					siteName = ${siteName});
 			}
 
 			task ("View editable fields' link") {

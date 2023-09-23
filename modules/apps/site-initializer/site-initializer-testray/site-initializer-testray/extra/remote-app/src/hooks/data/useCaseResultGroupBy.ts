@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useCallback, useMemo} from 'react';
@@ -38,6 +29,62 @@ function getStatusesMap(
 	return facetValueMap;
 }
 
+const getAggregationValue = (value: number | string) =>
+	value ? Number(value) : 0;
+
+const useTotalTestCases = (testrayBuild: TestrayBuild) => {
+	const donutColumns = useMemo(
+		() => [
+			[
+				CaseResultStatuses.PASSED,
+				getAggregationValue(testrayBuild.caseResultPassed),
+			],
+			[
+				CaseResultStatuses.FAILED,
+				getAggregationValue(testrayBuild.caseResultFailed),
+			],
+			[
+				CaseResultStatuses.BLOCKED,
+				getAggregationValue(testrayBuild.caseResultBlocked),
+			],
+			[
+				CaseResultStatuses.TEST_FIX,
+				getAggregationValue(testrayBuild.caseResultTestFix),
+			],
+			[
+				CaseResultStatuses.INCOMPLETE,
+				getAggregationValue(testrayBuild.caseResultUntested) +
+					getAggregationValue(testrayBuild.caseResultInProgress),
+			],
+		],
+		[
+			testrayBuild.caseResultBlocked,
+			testrayBuild.caseResultFailed,
+			testrayBuild.caseResultInProgress,
+			testrayBuild.caseResultPassed,
+			testrayBuild.caseResultTestFix,
+			testrayBuild.caseResultUntested,
+		]
+	);
+
+	return useMemo(
+		() => ({
+			colors: chartColors,
+			donut: {
+				columns: donutColumns,
+				total: donutColumns
+					.map(([, totalCase]) => Number(totalCase))
+					.reduce(
+						(prevValue, currentValue) => prevValue + currentValue
+					),
+			},
+			ready: !!testrayBuild,
+			statuses: Object.values(CaseResultStatuses),
+		}),
+		[donutColumns, testrayBuild]
+	);
+};
+
 const useCaseResultGroupBy = (buildId: number = 0) => {
 	const {data, loading} = useFetch<
 		APIResponse<TestrayBuild> & FacetAggregation
@@ -45,7 +92,7 @@ const useCaseResultGroupBy = (buildId: number = 0) => {
 		params: {
 			aggregationTerms: 'dueStatus',
 			fields: 'id',
-			filter: SearchBuilder.eq('buildId', buildId as number),
+			filter: SearchBuilder.eq('buildId', buildId),
 		},
 	});
 
@@ -89,5 +136,7 @@ const useCaseResultGroupBy = (buildId: number = 0) => {
 		statuses: Object.values(CaseResultStatuses),
 	};
 };
+
+export {useTotalTestCases};
 
 export default useCaseResultGroupBy;

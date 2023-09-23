@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.portlet.action;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CommerceAddress;
@@ -26,6 +17,7 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Group;
@@ -87,7 +79,7 @@ public class ExportCommerceOrderReportMVCResourceCommand
 		HashMapBuilder.HashMapWrapper<String, Object> hashMapWrapper =
 			new HashMapBuilder.HashMapWrapper<>();
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		if (billingAddress != null) {
 			hashMapWrapper.put(
@@ -133,7 +125,7 @@ public class ExportCommerceOrderReportMVCResourceCommand
 			commerceOrder.getCommerceOrderItems();
 
 		hashMapWrapper.put(
-			"commerceAccountName", commerceAccount.getName()
+			"commerceAccountName", accountEntry.getName()
 		).put(
 			"commerceOrderId", commerceOrder.getCommerceOrderId()
 		).put(
@@ -152,11 +144,13 @@ public class ExportCommerceOrderReportMVCResourceCommand
 				return commerceOrderType.getName(themeDisplay.getLanguageId());
 			}
 		).put(
-			"companyId", commerceAccount.getCompanyId()
+			"companyId", accountEntry.getCompanyId()
 		).put(
 			"externalReferenceCode",
 			(commerceOrder.getExternalReferenceCode() != null) ?
 				commerceOrder.getExternalReferenceCode() : StringPool.BLANK
+		).put(
+			"language", _language
 		).put(
 			"locale", themeDisplay.getLocale()
 		).put(
@@ -296,6 +290,8 @@ public class ExportCommerceOrderReportMVCResourceCommand
 				commerceOrder.getCommerceCurrency(),
 				commerceOrder.getShippingWithTaxAmount(),
 				themeDisplay.getLocale())
+		).put(
+			"siteDefaultLocale", themeDisplay.getSiteDefaultLocale()
 		).put(
 			"subtotalDiscountAmount",
 			_commercePriceFormatter.format(
@@ -458,6 +454,9 @@ public class ExportCommerceOrderReportMVCResourceCommand
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -20,8 +11,8 @@ import ClayModal, {useModal} from '@clayui/modal';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
 import {ReactDOMServer, useEventListener} from '@liferay/frontend-js-react-web';
-import {useId} from '@liferay/layout-content-page-editor-web';
 import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import {fetch, navigate, openSelectionModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
@@ -215,7 +206,7 @@ const AppsPanel = ({
 
 	return (
 		<div className="applications-menu-wrapper">
-			<div className="applications-menu-header flex-shrink-0">
+			<div className="applications-menu-header">
 				<ClayLayout.ContainerFluid>
 					<ClayLayout.Row>
 						<ClayLayout.Col>
@@ -264,7 +255,7 @@ const AppsPanel = ({
 
 			<div className="applications-menu-bg applications-menu-border-top applications-menu-content">
 				<ClayLayout.ContainerFluid>
-					<ClayLayout.Row className="flex-md-nowrap">
+					<ClayLayout.Row>
 						<ClayLayout.Col lg="9" md="8">
 							<ClayTabs.Content activeIndex={activeTab}>
 								{categories.map(({childCategories}, index) => (
@@ -307,7 +298,7 @@ const AppsPanel = ({
 				</ClayLayout.ContainerFluid>
 			</div>
 
-			<div className="applications-menu-bg applications-menu-footer flex-shrink-0">
+			<div className="applications-menu-bg applications-menu-footer">
 				<ClayLayout.ContainerFluid>
 					<ClayLayout.Row>
 						<ClayLayout.Col lg="9" md="8">
@@ -477,8 +468,10 @@ const ApplicationsMenu = ({
 					observer={observer}
 					status="info"
 				>
-					<ClayModal.Header className="sr-only">
-						{Liferay.Language.get('applications-menu')}
+					<ClayModal.Header className="sr-only" withTitle={false}>
+						<ClayModal.Title>
+							{Liferay.Language.get('applications-menu')}
+						</ClayModal.Title>
 					</ClayModal.Header>
 
 					<ClayModal.Body className="p-0">

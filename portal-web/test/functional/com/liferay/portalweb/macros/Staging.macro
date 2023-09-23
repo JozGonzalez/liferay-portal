@@ -363,9 +363,7 @@ definition {
 			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_REMOTE_LIVE_BUTTON");
 		}
 		else if (isSet(scheduleProcess)) {
-			AssertClick(
-				locator1 = "StagingPublishToLive#ADD_EVENT_BUTTON",
-				value1 = "Add Event");
+			ClickNoError(locator1 = "StagingPublishToLive#ADD_EVENT_BUTTON");
 		}
 		else {
 			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
@@ -408,6 +406,10 @@ definition {
 			ContentConfiguration.contentDeletion();
 		}
 
+		if (${deleteApplicationData} == "true") {
+			Click(locator1 = "StagingPublishToLive#DELETE_APPLICATION_DATA_BEFORE_IMPORTING_CHECKBOX");
+		}
+
 		if (${pageDeletion} == "true") {
 			ContentConfiguration.pageDeletion();
 		}
@@ -426,6 +428,53 @@ definition {
 
 		if (isSet(uncheckPages)) {
 			ContentConfiguration.uncheckPages();
+		}
+
+		if (${includeThumbnailsAndPreviewsDuringStaging} == "true") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "Staging#STAGING_CONTENT_INFO",
+				value1 = "Previews and Thumbnails");
+
+			WaitForElementPresent(
+				key_contentName = ${checkContentNameList},
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK");
+
+			AssertClick.assertTextClickNoMouseOver(
+				key_contentName = ${checkContentNameList},
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK",
+				value1 = "Change");
+
+			AssertChecked.assertCheckedNotVisible(
+				key_contentName = ${checkContentNameList},
+				key_subContent = "Previews and Thumbnails",
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_SUBCONTENT_CHECKBOX");
+
+			AssertClick.assertTextClickNoMouseOver(
+				locator1 = "Button#CANCEL",
+				value1 = "Cancel");
+		}
+		else if (${includeThumbnailsAndPreviewsDuringStaging} == "false") {
+			AssertTextNotEquals.assertNotPartialText(
+				locator1 = "Staging#STAGING_CONTENT_INFO",
+				value1 = "Previews and Thumbnails");
+
+			WaitForElementPresent(
+				key_contentName = ${checkContentNameList},
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK");
+
+			AssertClick.assertTextClickNoMouseOver(
+				key_contentName = ${checkContentNameList},
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK",
+				value1 = "Change");
+
+			AssertNotChecked.assertNotCheckedNotVisible(
+				key_contentName = ${checkContentNameList},
+				key_subContent = "Previews and Thumbnails",
+				locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_SUBCONTENT_CHECKBOX");
+
+			AssertClick.assertTextClickNoMouseOver(
+				locator1 = "Button#CANCEL",
+				value1 = "Cancel");
 		}
 
 		if (isSet(uncheckSubContent)) {
@@ -471,13 +520,6 @@ definition {
 		}
 
 		var displayDateHour = selenium.getAttribute("//input[contains(@id,'schedulerStartDateHour')]@value");
-
-		var displayDateHourLength = StringUtil.length(${displayDateHour});
-
-		if (${displayDateHourLength} == 1) {
-			var displayDateHour = "0${displayDateHour}";
-		}
-
 		var displayDateAmpm = selenium.getAttribute("//input[contains(@id,'schedulerStartDateAmPm')]@value");
 
 		var displayDateAmpm = StringUtil.replace(${displayDateAmpm}, 0, "AM");
@@ -487,6 +529,19 @@ definition {
 
 		var displayDateMinuteFuture = ${displayDateMinute} + 5;
 
+		var result = MathUtil.isGreaterThan(${displayDateMinuteFuture}, 60);
+
+		if (${result} == "true") {
+			var displayDateHour = ${displayDateHour} + 1;
+			var displayDateMinuteFuture = ${displayDateMinuteFuture} - 60;
+		}
+
+		var displayDateHourLength = StringUtil.length(${displayDateHour});
+
+		if (${displayDateHourLength} == 1) {
+			var displayDateHour = "0${displayDateHour}";
+		}
+
 		var displayDateMinuteFutureLength = StringUtil.length(${displayDateMinuteFuture});
 
 		if (${displayDateMinuteFutureLength} == 1) {
@@ -495,7 +550,7 @@ definition {
 
 		var displayDate = "${displayDateHour}:${displayDateMinuteFuture} ${displayDateAmpm}";
 
-		Type(
+		Type.sendKeys(
 			locator1 = "StagingPublishToLive#DATE_SCHEDULE_TIME_INPUT",
 			value1 = ${displayDate});
 
@@ -750,7 +805,7 @@ definition {
 
 		Click(locator1 = "Staging#HISTORY_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 	}
 
 	macro gotoNavTab {
@@ -912,6 +967,8 @@ definition {
 			scheduleProcess = ${scheduleProcess},
 			validateErrorMessage = ${validateErrorMessage});
 
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
 		SelectFrameTop();
 
 		if (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
@@ -926,7 +983,7 @@ definition {
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		if (${replicateIndividualDeletions} == "true") {
 			AssertVisible(locator1 = "Staging#STAGING_CONTENT_DELETIONS");
@@ -1084,9 +1141,9 @@ definition {
 			var remotePort = 8080;
 		}
 
-		JSONGroup.addGroup(
-			groupName = "Remote Site",
-			portalURL = "http://localhost:${remotePort}");
+		HeadlessSite.addSite(
+			portalURL = "http://localhost:${remotePort}",
+			siteName = "Remote Site");
 
 		var siteId = JSONGroupSetter.setGroupId(
 			groupName = "Remote Site",
@@ -1110,9 +1167,9 @@ definition {
 			var remotePort = 8080;
 		}
 
-		JSONGroup.addGroup(
-			groupName = "Remote Site",
-			portalURL = "http://localhost:${remotePort}");
+		HeadlessSite.addSite(
+			portalURL = "http://localhost:${remotePort}",
+			siteName = "Remote Site");
 
 		var remoteGroupId = JSONGroupSetter.setGroupId(
 			groupName = "Remote Site",
@@ -1217,6 +1274,8 @@ definition {
 
 		Click(locator1 = "StagingPublishToLive#SWITCH_TO_ADVANCED_PUBLICATION");
 
+		AssertElementPresent(locator1 = "//div[contains(@class,'layout-selector-options')]//*[contains(@class,'treeview')]");
+
 		if (IsElementPresent(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX")) {
 			Click.clickAtNotVisible(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX");
 		}
@@ -1236,7 +1295,7 @@ definition {
 			for (var contentName : list ${checkContentNameList}) {
 				var key_contentName = ${contentName};
 
-				Click(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
+				Click.clickAtNotVisible(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
 			}
 		}
 
@@ -1318,9 +1377,7 @@ definition {
 	macro validateFolderExist {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "check-folder-in-lar");
+		AntCommands.runCommand("build-test.xml", "check-folder-in-lar");
 
 		var result = FileUtil.read("${liferayHome}/result.txt");
 
@@ -1332,9 +1389,7 @@ definition {
 	macro validateFolderNotExist {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "check-folder-in-lar");
+		AntCommands.runCommand("build-test.xml", "check-folder-in-lar");
 
 		var result = FileUtil.read("${liferayHome}/result.txt");
 
@@ -1416,7 +1471,7 @@ definition {
 	macro viewNoPublishContentCountViaPortletStagingCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertElementNotPresent(locator1 = "Staging#STAGING_CONTENT_COUNT");
 
@@ -1426,9 +1481,13 @@ definition {
 	}
 
 	macro viewNotStagedAssetMessageOnStaging {
-		AssertTextEquals.assertPartialText(
-			locator1 = "Staging#NOT_STAGED_ASSET_MESSAGE",
-			value1 = "The data of this portlet is not staged.");
+		MouseOver.javaScriptFocus(
+			key_text = "warning-full",
+			locator1 = "Icon#ANY");
+
+		AssertVisible(
+			key_content = "The data of this portlet is not staged. Any data changes are immediately available to the Local Live site. The portlet's own workflow is still honored. Portlet setup is still managed from staging.",
+			locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 	}
 
 	macro viewPageVariationPG {
@@ -1570,7 +1629,7 @@ definition {
 	macro viewPublishContentCountViaPortletStagingCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertTextEquals(
 			locator1 = "Staging#STAGING_CONTENT_COUNT",

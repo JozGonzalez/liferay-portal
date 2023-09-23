@@ -1,34 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal;
 
 import com.liferay.change.tracking.closure.CTClosure;
+import com.liferay.change.tracking.internal.closure.CTClosureFactoryImpl;
 import com.liferay.change.tracking.internal.closure.CTClosureImpl;
 import com.liferay.change.tracking.internal.closure.Edge;
-import com.liferay.change.tracking.internal.closure.GraphUtil;
 import com.liferay.change.tracking.internal.closure.Node;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,13 +56,14 @@ public class CTEnclosureUtilTest {
 		Node node5 = new Node(3, 5);
 		Node node6 = new Node(4, 6);
 
-		Set<Node> nodes = new HashSet<>(
+		List<Node> nodes = new ArrayList<>(
 			Arrays.asList(node1, node2, node3, node4, node5));
 
 		CTClosure ctClosure = new CTClosureImpl(
 			1,
-			GraphUtil.getNodeMap(
-				nodes,
+			ReflectionTestUtil.invoke(
+				new CTClosureFactoryImpl(), "_getNodeMap",
+				new Class<?>[] {List.class, Map.class}, nodes,
 				HashMapBuilder.<Node, Collection<Edge>>put(
 					node1,
 					Arrays.asList(

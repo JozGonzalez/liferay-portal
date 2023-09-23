@@ -1,24 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.data.set.provider;
 
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.model.CommerceAccountGroupRel;
-import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.commerce.product.definitions.web.internal.constants.CommerceProductFDSNames;
-import com.liferay.commerce.product.definitions.web.internal.model.AccountGroup;
+import com.liferay.commerce.product.definitions.web.internal.model.CProductAccountGroup;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
@@ -43,38 +35,37 @@ import org.osgi.service.component.annotations.Reference;
 	service = FDSDataProvider.class
 )
 public class CommerceProductAccountGroupFDSDataProvider
-	implements FDSDataProvider<AccountGroup> {
+	implements FDSDataProvider<CProductAccountGroup> {
 
 	@Override
-	public List<AccountGroup> getItems(
+	public List<CProductAccountGroup> getItems(
 			FDSKeywords fdsKeywords, FDSPagination fdsPagination,
 			HttpServletRequest httpServletRequest, Sort sort)
 		throws PortalException {
 
-		List<AccountGroup> accountGroups = new ArrayList<>();
+		List<CProductAccountGroup> cProductAccountGroups = new ArrayList<>();
 
 		long cpDefinitionId = ParamUtil.getLong(
 			httpServletRequest, "cpDefinitionId");
 
-		List<CommerceAccountGroupRel> commerceAccountGroupRels =
-			_commerceAccountGroupRelService.getCommerceAccountGroupRels(
+		List<AccountGroupRel> accountGroupRels =
+			_accountGroupRelLocalService.getAccountGroupRels(
 				CPDefinition.class.getName(), cpDefinitionId,
-				fdsPagination.getStartPosition(),
-				fdsPagination.getEndPosition(), null);
+				fdsKeywords.getKeywords(), fdsPagination.getStartPosition(),
+				fdsPagination.getEndPosition());
 
-		for (CommerceAccountGroupRel commerceAccountGroupRel :
-				commerceAccountGroupRels) {
+		for (AccountGroupRel accountGroupRel : accountGroupRels) {
+			AccountGroup accountGroup =
+				_accountGroupLocalService.getAccountGroup(
+					accountGroupRel.getAccountGroupId());
 
-			CommerceAccountGroup commerceAccountGroup =
-				commerceAccountGroupRel.getCommerceAccountGroup();
-
-			accountGroups.add(
-				new AccountGroup(
-					commerceAccountGroupRel.getCommerceAccountGroupRelId(),
-					commerceAccountGroup.getName()));
+			cProductAccountGroups.add(
+				new CProductAccountGroup(
+					accountGroupRel.getAccountGroupRelId(),
+					accountGroup.getName()));
 		}
 
-		return accountGroups;
+		return cProductAccountGroups;
 	}
 
 	@Override
@@ -85,11 +76,14 @@ public class CommerceProductAccountGroupFDSDataProvider
 		long cpDefinitionId = ParamUtil.getLong(
 			httpServletRequest, "cpDefinitionId");
 
-		return _commerceAccountGroupRelService.getCommerceAccountGroupRelsCount(
+		return _accountGroupRelLocalService.getAccountGroupRelsCount(
 			CPDefinition.class.getName(), cpDefinitionId);
 	}
 
 	@Reference
-	private CommerceAccountGroupRelService _commerceAccountGroupRelService;
+	private AccountGroupLocalService _accountGroupLocalService;
+
+	@Reference
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 }

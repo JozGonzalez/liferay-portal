@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser;
@@ -28,6 +19,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodParameter;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodSignature;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Content;
@@ -119,7 +111,8 @@ public class ResourceOpenAPIParser {
 
 							if (configYAML.isGenerateBatch()) {
 								_addBatchJavaMethodSignature(
-									javaMethodSignature, javaMethodSignatures);
+									configYAML, javaMethodSignature,
+									javaMethodSignatures);
 							}
 						});
 				});
@@ -153,9 +146,43 @@ public class ResourceOpenAPIParser {
 				sb.append("description=\"");
 				sb.append(operation.getDescription());
 				sb.append("\"");
+
+				if (javaMethodSignature.getRequestBodyMediaTypes(
+					).contains(
+						"multipart/form-data"
+					)) {
+
+					sb.append(", requestBody = ");
+					sb.append("@io.swagger.v3.oas.annotations.parameters.");
+					sb.append("RequestBody(content = @io.swagger.v3.oas.");
+					sb.append("annotations.media.Content( mediaType = ");
+					sb.append("\"multipart/form-data\", schema = @io.swagger.");
+					sb.append("v3.oas.annotations.media.Schema( ");
+					sb.append("implementation = ");
+					sb.append(
+						StringUtil.upperCaseFirstLetter(
+							operation.getOperationId()));
+					sb.append("RequestBody.class)))");
+				}
 			}
 
 			sb.append(")");
+
+			methodAnnotations.add(sb.toString());
+		}
+		else if (getMultipartBodySchemas(javaMethodSignature) != null) {
+			StringBundler sb = new StringBundler(
+				"@io.swagger.v3.oas.annotations.Operation(");
+
+			sb.append("requestBody = ");
+			sb.append("@io.swagger.v3.oas.annotations.parameters.");
+			sb.append("RequestBody(content = @io.swagger.v3.oas.annotations.");
+			sb.append("media.Content( mediaType = \"multipart/form-data\", ");
+			sb.append("schema = @io.swagger.v3.oas.annotations.media.Schema( ");
+			sb.append("implementation = ");
+			sb.append(
+				StringUtil.upperCaseFirstLetter(operation.getOperationId()));
+			sb.append("RequestBody.class))))");
 
 			methodAnnotations.add(sb.toString());
 		}
@@ -230,6 +257,30 @@ public class ResourceOpenAPIParser {
 		return StringUtil.merge(methodAnnotations, "\n");
 	}
 
+	public static Map<String, Schema> getMultipartBodySchemas(
+		JavaMethodSignature javaMethodSignature) {
+
+		Operation operation = javaMethodSignature.getOperation();
+
+		RequestBody requestBody = operation.getRequestBody();
+
+		if (requestBody == null) {
+			return null;
+		}
+
+		Map<String, Content> contentMap = requestBody.getContent();
+
+		Content content = contentMap.get("multipart/form-data");
+
+		if (content == null) {
+			return null;
+		}
+
+		Schema schema = content.getSchema();
+
+		return schema.getPropertySchemas();
+	}
+
 	public static String getParameters(
 		List<JavaMethodParameter> javaMethodParameters, OpenAPIYAML openAPIYAML,
 		Operation operation, boolean annotation) {
@@ -255,6 +306,38 @@ public class ResourceOpenAPIParser {
 		}
 
 		return sb.toString();
+	}
+
+	public static String getResourceMethodName(
+		List<JavaMethodSignature> javaMethodSignatures, String propertyName) {
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+			String schemaName = javaMethodSignature.getSchemaName();
+
+			if (StringUtil.equals(propertyName, "delete")) {
+				if (StringUtil.equals(methodName, "delete" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "get")) {
+				if (StringUtil.equals(methodName, "get" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "update")) {
+				if (StringUtil.equals(methodName, "patch" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "replace")) {
+				if (StringUtil.equals(methodName, "put" + schemaName)) {
+					return methodName;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public static Set<String> getVulcanBatchImplementationCreateStrategies(
@@ -325,7 +408,8 @@ public class ResourceOpenAPIParser {
 
 			if (methodName.equals(
 					StringBundler.concat(
-						"get", parentSchemaName, schemaName, "sPage"))) {
+						"get", parentSchemaName,
+						TextFormatter.formatPlural(schemaName), "Page"))) {
 
 				return true;
 			}
@@ -366,7 +450,7 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static void _addBatchJavaMethodSignature(
-		JavaMethodSignature javaMethodSignature,
+		ConfigYAML configYAML, JavaMethodSignature javaMethodSignature,
 		List<JavaMethodSignature> javaMethodSignatures) {
 
 		BatchOperationType batchOperationType = null;
@@ -376,9 +460,11 @@ public class ResourceOpenAPIParser {
 			javaMethodSignature.getParentSchemaName());
 		String schemaName = javaMethodSignature.getSchemaName();
 
-		if (methodName.equals(
+		if (ConfigUtil.isVersionCompatible(configYAML, 2) &&
+			methodName.equals(
 				StringBundler.concat(
-					"get", parentSchemaName, schemaName, "sPage"))) {
+					"get", parentSchemaName,
+					TextFormatter.formatPlural(schemaName), "Page"))) {
 
 			batchOperationType = BatchOperationType.EXPORT;
 		}

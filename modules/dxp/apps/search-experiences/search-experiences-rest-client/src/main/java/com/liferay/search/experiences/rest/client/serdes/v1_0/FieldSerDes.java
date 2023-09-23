@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.client.serdes.v1_0;
@@ -23,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -106,6 +96,20 @@ public class FieldSerDes {
 			sb.append("\"");
 		}
 
+		if (field.getHelpTextLocalized() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"helpTextLocalized\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(field.getHelpTextLocalized()));
+
+			sb.append("\"");
+		}
+
 		if (field.getLabel() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -116,6 +120,20 @@ public class FieldSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(field.getLabel()));
+
+			sb.append("\"");
+		}
+
+		if (field.getLabelLocalized() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"labelLocalized\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(field.getLabelLocalized()));
 
 			sb.append("\"");
 		}
@@ -197,11 +215,28 @@ public class FieldSerDes {
 			map.put("helpText", String.valueOf(field.getHelpText()));
 		}
 
+		if (field.getHelpTextLocalized() == null) {
+			map.put("helpTextLocalized", null);
+		}
+		else {
+			map.put(
+				"helpTextLocalized",
+				String.valueOf(field.getHelpTextLocalized()));
+		}
+
 		if (field.getLabel() == null) {
 			map.put("label", null);
 		}
 		else {
 			map.put("label", String.valueOf(field.getLabel()));
+		}
+
+		if (field.getLabelLocalized() == null) {
+			map.put("labelLocalized", null);
+		}
+		else {
+			map.put(
+				"labelLocalized", String.valueOf(field.getLabelLocalized()));
 		}
 
 		if (field.getName() == null) {
@@ -252,14 +287,18 @@ public class FieldSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "fieldMappings")) {
 				if (jsonParserFieldValue != null) {
-					field.setFieldMappings(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> FieldMappingSerDes.toDTO((String)object)
-						).toArray(
-							size -> new FieldMapping[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					FieldMapping[] fieldMappingsArray =
+						new FieldMapping[jsonParserFieldValues.length];
+
+					for (int i = 0; i < fieldMappingsArray.length; i++) {
+						fieldMappingsArray[i] = FieldMappingSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					field.setFieldMappings(fieldMappingsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "helpText")) {
@@ -267,9 +306,19 @@ public class FieldSerDes {
 					field.setHelpText((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "helpTextLocalized")) {
+				if (jsonParserFieldValue != null) {
+					field.setHelpTextLocalized((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "label")) {
 				if (jsonParserFieldValue != null) {
 					field.setLabel((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "labelLocalized")) {
+				if (jsonParserFieldValue != null) {
+					field.setLabelLocalized((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {

@@ -37,7 +37,7 @@
 </tr>
 <tr>
 	<td>PAGE_TITLE</td>
-	<td>//h1[text()='${key_title}']</td>
+	<td>//*[text()='${key_title}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -112,7 +112,7 @@
 </tr>
 <tr>
 	<td>PROJECT_LOGO</td>
-	<td>//*[contains(@class, 'subscription-card')]//img[contains(@src, '${logo}')]</td>
+	<td>//div[contains(@class,'account-subscription-card')]//div[contains(@class,'mb-3')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -182,7 +182,12 @@
 </tr>
 <tr>
 	<td>MODAL_INFO</td>
-	<td>//*[contains(text(), '${key_text}')]</td>
+	<td>//div[contains(@class, 'modal-content')]/parent::div//*[contains(text(), '${key_text}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_INFO</td>
+	<td>//div[contains(@class, 'container')]/parent::div//*[contains(text(), '${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -342,7 +347,7 @@
 </tr>
 <tr>
 	<td>CARD_LOGO</td>
-	<td>//*[contains(@class, 'cp-img-activation-status') and contains(@src, '${product}')]</td>
+	<td>//*[contains(@class, 'cp-img-activation-status')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -423,6 +428,11 @@
 <tr>
 	<td>DEPLOY_ACTIVATION_PAGE</td>
 	<td>//*//h1[contains(text(), 'Deploying Activation Keys')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TABLE_ELEMENT_BY_TEXT</td>
+	<td>//*[contains(@class, 'table-style-fluid')]//*[contains(text(), '${key_text}')]</td>
 	<td></td>
 </tr>
 </tbody>

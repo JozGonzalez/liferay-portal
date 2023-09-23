@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.yaml;
@@ -72,7 +63,12 @@ public class YAMLUtil {
 	private static final Yaml _YAML_OPEN_API;
 
 	static {
-		Constructor configYAMLConstructor = new Constructor(ConfigYAML.class);
+		LoaderOptions loaderOptions = new LoaderOptions();
+
+		loaderOptions.setAllowDuplicateKeys(false);
+
+		Constructor configYAMLConstructor = new Constructor(
+			ConfigYAML.class, loaderOptions);
 
 		TypeDescription securityTypeDescription = new TypeDescription(
 			Security.class);
@@ -82,7 +78,7 @@ public class YAMLUtil {
 
 		configYAMLConstructor.addTypeDescription(securityTypeDescription);
 
-		Representer representer = new Representer() {
+		Representer representer = new Representer(new DumperOptions()) {
 			{
 				setPropertyUtils(
 					new PropertyUtils() {
@@ -108,15 +104,12 @@ public class YAMLUtil {
 			}
 		};
 
-		LoaderOptions loaderOptions = new LoaderOptions();
-
-		loaderOptions.setAllowDuplicateKeys(false);
-
 		_YAML_CONFIG = new Yaml(
 			configYAMLConstructor, representer, new DumperOptions(),
 			loaderOptions);
 
-		Constructor openAPIYAMLConstructor = new Constructor(OpenAPIYAML.class);
+		Constructor openAPIYAMLConstructor = new Constructor(
+			OpenAPIYAML.class, loaderOptions);
 
 		TypeDescription itemsTypeDescription = new TypeDescription(Items.class);
 

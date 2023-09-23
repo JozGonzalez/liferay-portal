@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -17,6 +8,7 @@ package com.liferay.document.library.kernel.service;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -64,34 +56,34 @@ public class DLFileEntryTypeLocalServiceWrapper
 	}
 
 	@Override
-	public void addDLFolderDLFileEntryType(
+	public boolean addDLFolderDLFileEntryType(
 		long folderId, DLFileEntryType dlFileEntryType) {
 
-		_dlFileEntryTypeLocalService.addDLFolderDLFileEntryType(
+		return _dlFileEntryTypeLocalService.addDLFolderDLFileEntryType(
 			folderId, dlFileEntryType);
 	}
 
 	@Override
-	public void addDLFolderDLFileEntryType(
+	public boolean addDLFolderDLFileEntryType(
 		long folderId, long fileEntryTypeId) {
 
-		_dlFileEntryTypeLocalService.addDLFolderDLFileEntryType(
+		return _dlFileEntryTypeLocalService.addDLFolderDLFileEntryType(
 			folderId, fileEntryTypeId);
 	}
 
 	@Override
-	public void addDLFolderDLFileEntryTypes(
+	public boolean addDLFolderDLFileEntryTypes(
 		long folderId, java.util.List<DLFileEntryType> dlFileEntryTypes) {
 
-		_dlFileEntryTypeLocalService.addDLFolderDLFileEntryTypes(
+		return _dlFileEntryTypeLocalService.addDLFolderDLFileEntryTypes(
 			folderId, dlFileEntryTypes);
 	}
 
 	@Override
-	public void addDLFolderDLFileEntryTypes(
+	public boolean addDLFolderDLFileEntryTypes(
 		long folderId, long[] fileEntryTypeIds) {
 
-		_dlFileEntryTypeLocalService.addDLFolderDLFileEntryTypes(
+		return _dlFileEntryTypeLocalService.addDLFolderDLFileEntryTypes(
 			folderId, fileEntryTypeIds);
 	}
 
@@ -127,44 +119,6 @@ public class DLFileEntryTypeLocalServiceWrapper
 		return _dlFileEntryTypeLocalService.addFileEntryType(
 			userId, groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
 			descriptionMap, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, String fileEntryTypeKey,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _dlFileEntryTypeLocalService.addFileEntryType(
-			userId, groupId, fileEntryTypeKey, nameMap, descriptionMap,
-			ddmStructureIds, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, String name, String description,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _dlFileEntryTypeLocalService.addFileEntryType(
-			userId, groupId, name, description, ddmStructureIds,
-			serviceContext);
 	}
 
 	@Override
@@ -775,42 +729,6 @@ public class DLFileEntryTypeLocalServiceWrapper
 			dlFileEntry, serviceContext);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	@Override
-	public void updateFileEntryType(
-			long userId, long fileEntryTypeId,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_dlFileEntryTypeLocalService.updateFileEntryType(
-			userId, fileEntryTypeId, nameMap, descriptionMap, ddmStructureIds,
-			serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	@Override
-	public void updateFileEntryType(
-			long userId, long fileEntryTypeId, String name, String description,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_dlFileEntryTypeLocalService.updateFileEntryType(
-			userId, fileEntryTypeId, name, description, ddmStructureIds,
-			serviceContext);
-	}
-
 	@Override
 	public DLFileEntryType updateFileEntryType(
 			long fileEntryTypeId,
@@ -830,6 +748,11 @@ public class DLFileEntryTypeLocalServiceWrapper
 
 		_dlFileEntryTypeLocalService.updateFolderFileEntryTypes(
 			dlFolder, fileEntryTypeIds, defaultFileEntryTypeId, serviceContext);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _dlFileEntryTypeLocalService.getBasePersistence();
 	}
 
 	@Override

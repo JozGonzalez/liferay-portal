@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fireEvent, render, screen} from '@testing-library/react';
@@ -51,6 +42,7 @@ const contents = [
 			permissionsURL: 'permissionsURL',
 			viewUsagesURL: 'viewUsagesURL',
 		},
+		classNameId: '00000',
 		classPK: '11111',
 		subtype: 'Web Content Article',
 		title: 'Test Web Content',
@@ -69,6 +61,7 @@ const contents = [
 			viewItemsURL: 'viewItemsURL',
 			viewUsagesURL: 'viewUsagesURL',
 		},
+		classNameId: '00001',
 		classPK: '11112',
 		subtype: 'Collection',
 		title: 'Test Collection',
@@ -81,6 +74,7 @@ const contents = [
 				previewURL: '/previewURL',
 			},
 		},
+		classNameId: '00002',
 		classPK: '40571',
 		subtype: 'Basic Document',
 		title: 'image.png',
@@ -167,11 +161,11 @@ describe('PageContent', () => {
 		expect(screen.getByLabelText('edit-inline-text-x')).toBeInTheDocument();
 	});
 
-	it('selects the corresponding element on the page when edit button is clicked', () => {
+	it('selects the corresponding element on the page when inline text item is clicked', () => {
 		const selectItem = useSelectItem();
 		renderPageContent(inlineText);
 
-		fireEvent.click(screen.getByLabelText('edit-inline-text-x'));
+		fireEvent.click(screen.getByLabelText(`select ${inlineText.title}`));
 
 		expect(selectItem).toHaveBeenCalledWith('11113-element-text', {
 			itemType: 'editable',

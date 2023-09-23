@@ -1,25 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.browser.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -45,10 +34,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portlet.usersadmin.search.GroupSearch;
-import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
 import com.liferay.site.browser.web.internal.constants.SiteBrowserPortletKeys;
-import com.liferay.sites.kernel.util.SitesUtil;
+import com.liferay.site.search.GroupSearch;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -115,9 +102,6 @@ public class SiteBrowserDisplayContext {
 		GroupSearch groupSearch = new GroupSearch(
 			_liferayPortletRequest, getPortletURL());
 
-		GroupSearchTerms groupSearchTerms =
-			(GroupSearchTerms)groupSearch.getSearchTerms();
-
 		List<Group> results = new ArrayList<>();
 
 		int additionalSites = 0;
@@ -159,6 +143,8 @@ public class SiteBrowserDisplayContext {
 			additionalSites++;
 		}
 
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
+
 		String type = getType();
 
 		if (Objects.equals(type, "layoutScopes")) {
@@ -168,8 +154,8 @@ public class SiteBrowserDisplayContext {
 		}
 		else if (!Objects.equals(type, "parent-sites")) {
 			total = GroupLocalServiceUtil.searchCount(
-				themeDisplay.getCompanyId(), classNameIds,
-				groupSearchTerms.getKeywords(), _getGroupParams());
+				themeDisplay.getCompanyId(), classNameIds, keywords,
+				_getGroupParams());
 		}
 
 		total += additionalSites;
@@ -219,9 +205,8 @@ public class SiteBrowserDisplayContext {
 		}
 		else {
 			List<Group> groups = GroupLocalServiceUtil.search(
-				company.getCompanyId(), classNameIds,
-				groupSearchTerms.getKeywords(), _getGroupParams(),
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				company.getCompanyId(), classNameIds, keywords,
+				_getGroupParams(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				groupSearch.getOrderByComparator());
 
 			total = groups.size();
@@ -256,19 +241,8 @@ public class SiteBrowserDisplayContext {
 	public List<NavigationItem> getNavigationItems() {
 		String[] types = _getTypes();
 
-		if (ArrayUtil.isEmpty(types)) {
+		if (ArrayUtil.isEmpty(types) || (types.length == 1)) {
 			return Collections.emptyList();
-		}
-
-		if (types.length == 1) {
-			return NavigationItemListBuilder.add(
-				navigationItem -> {
-					navigationItem.setActive(true);
-					navigationItem.setHref(getPortletURL());
-					navigationItem.setLabel(
-						LanguageUtil.get(_httpServletRequest, "sites"));
-				}
-			).build();
 		}
 
 		return new NavigationItemList() {
@@ -411,7 +385,7 @@ public class SiteBrowserDisplayContext {
 
 		for (Group group : groups) {
 			if (filter.equals("contentSharingWithChildrenEnabled") &&
-				SitesUtil.isContentSharingWithChildrenEnabled(group)) {
+				group.isContentSharingWithChildrenEnabled()) {
 
 				filteredGroups.add(group);
 			}

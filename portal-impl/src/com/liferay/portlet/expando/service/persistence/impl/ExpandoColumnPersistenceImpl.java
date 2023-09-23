@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.expando.service.persistence.impl;
@@ -52,7 +43,6 @@ import com.liferay.portlet.expando.model.impl.ExpandoColumnModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -1277,21 +1267,21 @@ public class ExpandoColumnPersistenceImpl
 
 		name = Objects.toString(name, "");
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			ExpandoColumn.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {tableId, name};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByT_N, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			ExpandoColumn.class);
 
 		if (result instanceof ExpandoColumn) {
 			ExpandoColumn expandoColumn = (ExpandoColumn)result;
@@ -1301,6 +1291,14 @@ public class ExpandoColumnPersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						ExpandoColumn.class, expandoColumn.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2568,29 +2566,13 @@ public class ExpandoColumnPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"tableId", "name"}, false);
 
-		_setExpandoColumnUtilPersistence(this);
+		ExpandoColumnUtil.setPersistence(this);
 	}
 
 	public void destroy() {
-		_setExpandoColumnUtilPersistence(null);
+		ExpandoColumnUtil.setPersistence(null);
 
 		EntityCacheUtil.removeCache(ExpandoColumnImpl.class.getName());
-	}
-
-	private void _setExpandoColumnUtilPersistence(
-		ExpandoColumnPersistence expandoColumnPersistence) {
-
-		try {
-			Field field = ExpandoColumnUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, expandoColumnPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	private static final String _SQL_SELECT_EXPANDOCOLUMN =

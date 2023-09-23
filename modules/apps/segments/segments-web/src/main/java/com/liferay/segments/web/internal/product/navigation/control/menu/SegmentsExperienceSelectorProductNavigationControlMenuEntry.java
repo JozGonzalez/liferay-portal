@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.product.navigation.control.menu;
 
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
@@ -25,6 +17,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
@@ -33,7 +26,9 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.product.navigation.control.menu.BaseJSPProductNavigationControlMenuEntry;
+import com.liferay.portal.template.react.renderer.ComponentDescriptor;
+import com.liferay.portal.template.react.renderer.ReactRenderer;
+import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 import com.liferay.segments.manager.SegmentsExperienceManager;
@@ -45,10 +40,11 @@ import com.liferay.segments.web.internal.display.context.SegmentsExperienceSelec
 import com.liferay.sites.kernel.util.Sites;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
+import java.util.Locale;
 import java.util.Objects;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -66,18 +62,63 @@ import org.osgi.service.component.annotations.Reference;
 	service = ProductNavigationControlMenuEntry.class
 )
 public class SegmentsExperienceSelectorProductNavigationControlMenuEntry
-	extends BaseJSPProductNavigationControlMenuEntry
-	implements ProductNavigationControlMenuEntry {
+	extends BaseProductNavigationControlMenuEntry {
 
 	@Override
-	public String getIconJspPath() {
-		return "/segments_experience_selector.jsp";
+	public String getLabel(Locale locale) {
+		return null;
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest httpServletRequest)
-		throws PortalException {
+	public String getURL(HttpServletRequest httpServletRequest) {
+		return null;
+	}
 
+	@Override
+	public boolean includeIcon(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws IOException {
+
+		try {
+			SegmentsExperienceSelectorDisplayContext
+				segmentsExperienceSelectorDisplayContext =
+					new SegmentsExperienceSelectorDisplayContext(
+						httpServletRequest, _jsonFactory, _language, _portal,
+						_segmentsEntryLocalService,
+						new SegmentsExperienceManager(
+							_segmentsExperienceLocalService),
+						_segmentsExperienceLocalService,
+						_segmentsExperimentLocalService,
+						_segmentsExperimentRelLocalService);
+
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			printWriter.write("<div class=\"border-left border-secondary ");
+			printWriter.write("control-menu-nav-item c-ml-3 c-pl-md-3\">");
+
+			_reactRenderer.renderReact(
+				new ComponentDescriptor(
+					_npmResolver.resolveModuleName("segments-web") +
+						"/js/components/ExperiencePicker"),
+				segmentsExperienceSelectorDisplayContext.getData(),
+				httpServletRequest, printWriter);
+
+			printWriter.write("</div>");
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean isShow(HttpServletRequest httpServletRequest) {
 		String mode = ParamUtil.getString(
 			httpServletRequest, "p_l_mode", Constants.VIEW);
 
@@ -101,15 +142,15 @@ public class SegmentsExperienceSelectorProductNavigationControlMenuEntry
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (!layout.isTypeContent() || !_sites.isLayoutUpdateable(layout)) {
+		if ((layout instanceof VirtualLayout) || !layout.isLayoutUpdateable() ||
+			!layout.isTypeContent()) {
+
 			return false;
 		}
 
 		long segmentsExperiencesCount =
 			_segmentsExperienceLocalService.getSegmentsExperiencesCount(
-				themeDisplay.getScopeGroupId(),
-				_portal.getClassNameId(Layout.class.getName()),
-				themeDisplay.getPlid(), true);
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(), true);
 
 		if (segmentsExperiencesCount <= 1) {
 			return false;
@@ -147,30 +188,6 @@ public class SegmentsExperienceSelectorProductNavigationControlMenuEntry
 		return false;
 	}
 
-	@Override
-	protected ServletContext getServletContext() {
-		return _servletContext;
-	}
-
-	@Override
-	protected boolean include(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, String jspPath)
-		throws IOException {
-
-		httpServletRequest.setAttribute(
-			SegmentsExperienceSelectorDisplayContext.class.getName(),
-			new SegmentsExperienceSelectorDisplayContext(
-				httpServletRequest, _jsonFactory, _language, _portal,
-				_segmentsEntryLocalService,
-				new SegmentsExperienceManager(_segmentsExperienceLocalService),
-				_segmentsExperienceLocalService,
-				_segmentsExperimentLocalService,
-				_segmentsExperimentRelLocalService));
-
-		return super.include(httpServletRequest, httpServletResponse, jspPath);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsExperienceSelectorProductNavigationControlMenuEntry.class);
 
@@ -190,7 +207,13 @@ public class SegmentsExperienceSelectorProductNavigationControlMenuEntry
 	private LayoutContentModelResourcePermission _modelResourcePermission;
 
 	@Reference
+	private NPMResolver _npmResolver;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference
+	private ReactRenderer _reactRenderer;
 
 	@Reference
 	private SegmentsEntryLocalService _segmentsEntryLocalService;
@@ -204,9 +227,6 @@ public class SegmentsExperienceSelectorProductNavigationControlMenuEntry
 	@Reference
 	private SegmentsExperimentRelLocalService
 		_segmentsExperimentRelLocalService;
-
-	@Reference(target = "(osgi.web.symbolicname=com.liferay.segments.web)")
-	private ServletContext _servletContext;
 
 	@Reference
 	private Sites _sites;

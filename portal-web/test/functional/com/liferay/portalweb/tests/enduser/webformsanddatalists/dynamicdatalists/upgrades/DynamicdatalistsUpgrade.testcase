@@ -3,6 +3,8 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Dynamic Data Lists";
 	property testray.main.component.name = "Upgrades Data Engine";
 
@@ -22,7 +24,7 @@ definition {
 		property portal.upstream = "quarantine";
 		property portal.version = "6.2.10.21";
 
-		Upgrade.addDataDefinitionWithDB2(site = "Guest");
+		ValidateDataEngineUpgrade.addDataDefinitionWithDB2(site = "Guest");
 	}
 
 }

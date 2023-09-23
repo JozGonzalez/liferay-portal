@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.openapi.contributor;
@@ -19,15 +10,19 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.internal.vulcan.openapi.contributor.util.OpenAPIContributorUtil;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResource;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResourceProvider;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.openapi.OpenAPIContext;
@@ -40,9 +35,11 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
@@ -70,8 +67,8 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		ObjectEntryOpenAPIResourceProvider objectEntryOpenAPIResourceProvider,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		OpenAPIResource openAPIResource,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		_addRelatedSchemas = addRelatedSchemas;
 		_bundleContext = bundleContext;
@@ -84,7 +81,7 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_openAPIResource = openAPIResource;
 
-		init(dtoConverterRegistry, systemObjectDefinitionMetadataRegistry);
+		init(dtoConverterRegistry, systemObjectDefinitionManagerRegistry);
 	}
 
 	@Override
@@ -98,9 +95,19 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		Map<ObjectRelationship, ObjectDefinition> relatedObjectDefinitionsMap =
 			_getRelatedObjectDefinitionsMap();
 
+		Components components = openAPI.getComponents();
+
+		Map<String, Schema> schemas = components.getSchemas();
+
+		Schema objectDefinitionSchema = schemas.get(
+			_objectDefinition.getShortName());
+
+		Map<String, Schema> objectDefinitionSchemaProperties =
+			objectDefinitionSchema.getProperties();
+
 		Paths paths = openAPI.getPaths();
 
-		for (String key : new ArrayList<>(paths.keySet())) {
+		for (String key : ListUtil.fromMapKeys(paths)) {
 			if (!key.contains("objectActionName") &&
 				!key.contains("objectRelationshipName")) {
 
@@ -117,9 +124,13 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 				for (Map.Entry<ObjectRelationship, ObjectDefinition> entry :
 						relatedObjectDefinitionsMap.entrySet()) {
 
-					ObjectRelationship objectRelationship = entry.getKey();
-
 					ObjectDefinition relatedObjectDefinition = entry.getValue();
+
+					if (!relatedObjectDefinition.isActive()) {
+						continue;
+					}
+
+					ObjectRelationship objectRelationship = entry.getKey();
 
 					String relatedSchemaName = getSchemaName(
 						relatedObjectDefinition);
@@ -147,31 +158,55 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 						_setSchemaDescription(
 							objectRelationship, openAPI, relatedSchemaName);
 
-						openAPI.getComponents(
-						).getSchemas(
-						).get(
-							_objectDefinition.getShortName()
-						).getProperties(
-						).put(
+						objectDefinitionSchemaProperties.put(
 							objectRelationship.getName(),
-							_getSchema(objectRelationship, relatedSchemaName)
-						);
+							_getSchema(objectRelationship, relatedSchemaName));
 					}
 					else {
-						openAPI.getComponents(
-						).getSchemas(
-						).get(
-							_objectDefinition.getShortName()
-						).getProperties(
-						).put(
+						objectDefinitionSchemaProperties.put(
 							objectRelationship.getName(),
-							_getSchema(objectRelationship, null)
-						);
+							_getSchema(objectRelationship, null));
 					}
 				}
 			}
 
 			paths.remove(key);
+		}
+
+		if (!_objectDefinition.isEnableCategorization()) {
+			objectDefinitionSchemaProperties.remove("keywords");
+			objectDefinitionSchemaProperties.remove("taxonomyCategoryBriefs");
+			objectDefinitionSchemaProperties.remove("taxonomyCategoryIds");
+
+			schemas.remove("TaxonomyCategoryBrief");
+		}
+
+		if ((openAPIContext != null) &&
+			FeatureFlagManagerUtil.isEnabled("LPS-180090")) {
+
+			MapSchema collectionActionsMapSchema = _getActionsMapSchema(
+				openAPI, "Page" + _objectDefinition.getShortName());
+
+			collectionActionsMapSchema.setAdditionalProperties(null);
+			collectionActionsMapSchema.setProperties(
+				_getCollectionActionSchemas(
+					openAPIContext, openAPI.getPaths()));
+
+			MapSchema individualActionsMapSchema = _getActionsMapSchema(
+				openAPI, _objectDefinition.getShortName());
+
+			individualActionsMapSchema.setAdditionalProperties(null);
+			individualActionsMapSchema.setProperties(
+				_getIndividualActionSchemas(
+					openAPIContext, openAPI.getPaths()));
+
+			MapSchema permissionActionsMapSchema = _getActionsMapSchema(
+				openAPI, "PagePermission");
+
+			permissionActionsMapSchema.setAdditionalProperties(null);
+			permissionActionsMapSchema.setProperties(
+				_getIndividualActionSchemas(
+					openAPIContext, openAPI.getPaths()));
 		}
 	}
 
@@ -225,7 +260,7 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 
 		Map<String, Schema> sourceSchemas = null;
 
-		if (objectDefinition.isSystem()) {
+		if (objectDefinition.isUnmodifiableSystemObject()) {
 			sourceSchemas = OpenAPIContributorUtil.getSystemObjectSchemas(
 				_bundleContext, getExternalDTOClassName(objectDefinition),
 				_openAPIResource);
@@ -235,11 +270,55 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 				_objectEntryOpenAPIResourceProvider.
 					getObjectEntryOpenAPIResource(objectDefinition);
 
-			sourceSchemas = objectEntryOpenAPIResource.getSchemas();
+			if (objectEntryOpenAPIResource != null) {
+				sourceSchemas = objectEntryOpenAPIResource.getSchemas();
+			}
+			else {
+				sourceSchemas = new HashMap<>();
+			}
 		}
 
 		OpenAPIContributorUtil.copySchemas(
-			schemaName, sourceSchemas, objectDefinition.isSystem(), openAPI);
+			schemaName, sourceSchemas,
+			objectDefinition.isUnmodifiableSystemObject(), openAPI);
+	}
+
+	private String _buildActionsURL(
+		OpenAPIContext openAPIContext, String pathName) {
+
+		return openAPIContext.getBaseURL() +
+			StringUtil.removeFirst(pathName, StringPool.SLASH);
+	}
+
+	private Schema _createActionSchema(
+		OpenAPIContext openAPIContext,
+		Map.Entry<PathItem.HttpMethod, Operation> operation, String pathName) {
+
+		Schema actionSchema = new Schema();
+
+		actionSchema.setProperties(
+			HashMapBuilder.put(
+				"href",
+				() -> {
+					StringSchema stringSchema = new StringSchema();
+
+					stringSchema.setDefault(
+						_buildActionsURL(openAPIContext, pathName));
+
+					return stringSchema;
+				}
+			).put(
+				"method",
+				() -> {
+					StringSchema stringSchema = new StringSchema();
+
+					stringSchema.setDefault(operation.getKey());
+
+					return stringSchema;
+				}
+			).build());
+
+		return actionSchema;
 	}
 
 	private PathItem _createObjectActionPathItem(
@@ -304,6 +383,55 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		return pathItem;
 	}
 
+	private MapSchema _getActionsMapSchema(OpenAPI openAPI, String schemaName) {
+		Components components = openAPI.getComponents();
+
+		Map<String, Schema> schemas1 = components.getSchemas();
+
+		Schema schema = schemas1.get(schemaName);
+
+		Map<String, Schema> schemas2 = schema.getProperties();
+
+		return (MapSchema)schemas2.get("actions");
+	}
+
+	private Map<String, Schema> _getCollectionActionSchemas(
+		OpenAPIContext openAPIContext, Paths paths) {
+
+		Map<String, Schema> collectionActionSchemas = new HashMap<>();
+
+		for (Map.Entry<String, PathItem> key : paths.entrySet()) {
+			String pathName = key.getKey();
+
+			PathItem pathItem = key.getValue();
+
+			Map<PathItem.HttpMethod, Operation> operations =
+				pathItem.readOperationsMap();
+
+			if (StringUtil.equals(_objectDefinition.getScope(), "site")) {
+				if (pathName.equals("/scopes/{scopeKey}")) {
+					_setCollectionActionSchemas(
+						collectionActionSchemas, openAPIContext, operations,
+						pathName);
+				}
+			}
+			else {
+				if (pathName.equals(StringPool.SLASH)) {
+					_setCollectionActionSchemas(
+						collectionActionSchemas, openAPIContext, operations,
+						pathName);
+				}
+				else if (pathName.equals("/batch")) {
+					_setCollectionActionSchemas(
+						collectionActionSchemas, openAPIContext, operations,
+						pathName);
+				}
+			}
+		}
+
+		return collectionActionSchemas;
+	}
+
 	private Content _getContent(Content originalContent, String schemaName) {
 		Content content = new Content();
 
@@ -334,6 +462,46 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		return StringBundler.concat(
 			"Information about the relationship ", objectRelationship.getName(),
 			" can be embedded with \"nestedFields\".");
+	}
+
+	private Map<String, Schema> _getIndividualActionSchemas(
+		OpenAPIContext openAPIContext, Paths paths) {
+
+		Map<String, Schema> individualActionSchemas = new HashMap<>();
+
+		String objectEntryIdPathName = StringBundler.concat(
+			StringPool.SLASH, StringPool.OPEN_CURLY_BRACE,
+			StringUtil.lowerCaseFirstLetter(_objectDefinition.getShortName()),
+			"Id}");
+
+		for (Map.Entry<String, PathItem> key : paths.entrySet()) {
+			String pathName = key.getKey();
+
+			PathItem pathItem = key.getValue();
+
+			Map<PathItem.HttpMethod, Operation> operations =
+				pathItem.readOperationsMap();
+
+			if (pathName.equals(objectEntryIdPathName)) {
+				_setIndividualActionSchemas(
+					individualActionSchemas, openAPIContext, operations,
+					pathName);
+			}
+			else if (pathName.equals(objectEntryIdPathName + "/permissions")) {
+				_setIndividualActionSchemas(
+					individualActionSchemas, openAPIContext, operations,
+					pathName);
+			}
+			else if (pathName.contains("by-external-reference-code") &&
+					 pathName.contains("object-actions")) {
+
+				_setIndividualActionSchemas(
+					individualActionSchemas, openAPIContext, operations,
+					pathName);
+			}
+		}
+
+		return individualActionSchemas;
 	}
 
 	private ApiResponses _getObjectRelationshipApiResponses(
@@ -465,20 +633,6 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		return parameters;
 	}
 
-	private ObjectDefinition _getRelatedObjectDefinition(
-		ObjectRelationship objectRelationship) {
-
-		if (_objectDefinition.getObjectDefinitionId() ==
-				objectRelationship.getObjectDefinitionId2()) {
-
-			return _objectDefinitionLocalService.fetchObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
-		}
-
-		return _objectDefinitionLocalService.fetchObjectDefinition(
-			objectRelationship.getObjectDefinitionId2());
-	}
-
 	private Map<ObjectRelationship, ObjectDefinition>
 			_getRelatedObjectDefinitionsMap()
 		throws Exception {
@@ -493,7 +647,8 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		for (ObjectRelationship objectRelationship : objectRelationships) {
 			relatedObjectDefinitionsMap.put(
 				objectRelationship,
-				_getRelatedObjectDefinition(objectRelationship));
+				ObjectRelationshipUtil.getRelatedObjectDefinition(
+					_objectDefinition, objectRelationship));
 		}
 
 		return relatedObjectDefinitionsMap;
@@ -526,6 +681,94 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		objectSchema.setDescription(_getDescription(objectRelationship));
 
 		return objectSchema;
+	}
+
+	private void _setCollectionActionSchemas(
+		Map<String, Schema> actionSchemas, OpenAPIContext openAPIContext,
+		Map<PathItem.HttpMethod, Operation> operations, String pathName) {
+
+		for (Map.Entry<PathItem.HttpMethod, Operation> operation :
+				operations.entrySet()) {
+
+			PathItem.HttpMethod pathItemHttpMethod = operation.getKey();
+
+			Schema actionSchema = _createActionSchema(
+				openAPIContext, operation, pathName);
+
+			if (Objects.equals(
+					pathItemHttpMethod, PathItem.HttpMethod.DELETE) &&
+				pathName.contains("/batch")) {
+
+				actionSchemas.put("deleteBatch", actionSchema);
+			}
+			else if (Objects.equals(
+						pathItemHttpMethod, PathItem.HttpMethod.POST)) {
+
+				if (pathName.contains("/batch")) {
+					actionSchemas.put("createBatch", actionSchema);
+				}
+				else if (pathName.contains("scopeKey")) {
+					actionSchemas.put("create", actionSchema);
+				}
+				else if (pathName.equals("/")) {
+					actionSchemas.put("create", actionSchema);
+				}
+			}
+			else if (Objects.equals(
+						pathItemHttpMethod, PathItem.HttpMethod.PUT) &&
+					 pathName.contains("/batch")) {
+
+				actionSchemas.put("updateBatch", actionSchema);
+			}
+		}
+	}
+
+	private void _setIndividualActionSchemas(
+		Map<String, Schema> actionSchemas, OpenAPIContext openAPIContext,
+		Map<PathItem.HttpMethod, Operation> operations, String pathName) {
+
+		for (Map.Entry<PathItem.HttpMethod, Operation> operation :
+				operations.entrySet()) {
+
+			PathItem.HttpMethod pathItemHttpMethod = operation.getKey();
+
+			Schema actionSchema = _createActionSchema(
+				openAPIContext, operation, pathName);
+
+			if (Objects.equals(pathItemHttpMethod, PathItem.HttpMethod.GET)) {
+				if (pathName.contains("/permissions")) {
+					actionSchemas.put("permissions", actionSchema);
+				}
+				else {
+					actionSchemas.put(
+						StringUtil.toLowerCase(pathItemHttpMethod.name()),
+						actionSchema);
+				}
+			}
+			else if (Objects.equals(
+						pathItemHttpMethod, PathItem.HttpMethod.PATCH)) {
+
+				actionSchemas.put("update", actionSchema);
+			}
+			else if (Objects.equals(
+						pathItemHttpMethod, PathItem.HttpMethod.PUT) &&
+					 !pathName.contains("/permissions")) {
+
+				if (pathName.contains("object-actions")) {
+					actionSchemas.put(
+						StringUtil.extractLast(pathName, StringPool.SLASH),
+						actionSchema);
+				}
+				else {
+					actionSchemas.put("replace", actionSchema);
+				}
+			}
+			else if (!pathName.contains("/permissions")) {
+				actionSchemas.put(
+					StringUtil.toLowerCase(pathItemHttpMethod.name()),
+					actionSchema);
+			}
+		}
 	}
 
 	private void _setSchemaDescription(

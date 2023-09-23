@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.instance.lifecycle;
@@ -45,13 +36,8 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Jürgen Kappler
  */
-@Component(
-	enabled = false,
-	service = {ModelListener.class, PortalInstanceLifecycleListener.class}
-)
-public class DDMStructureModelListener
-	extends BaseModelListener<DDMStructure>
-	implements PortalInstanceLifecycleListener {
+@Component(enabled = false, service = ModelListener.class)
+public class DDMStructureModelListener extends BaseModelListener<DDMStructure> {
 
 	@Override
 	public void onAfterCreate(DDMStructure ddmStructure)
@@ -99,46 +85,21 @@ public class DDMStructureModelListener
 		}
 	}
 
-	@Override
-	public void portalInstanceRegistered(Company company) {
-		Map<Long, ServiceRegistration<?>> serviceRegistrations =
-			new HashMap<>();
-
-		List<DDMStructure> ddmStructures =
-			_ddmStructureLocalService.getClassStructures(
-				company.getCompanyId(),
-				_portal.getClassNameId(JournalArticle.class.getName()));
-
-		for (DDMStructure ddmStructure : ddmStructures) {
-			serviceRegistrations.put(
-				ddmStructure.getStructureId(),
-				_bundleContext.registerService(
-					RelatedInfoItemCollectionProvider.class,
-					new DDMStructureRelatedInfoCollectionProvider(
-						ddmStructure, _journalArticleLocalService),
-					null));
-		}
-
-		if (MapUtil.isNotEmpty(serviceRegistrations)) {
-			_serviceRegistrations.put(
-				company.getCompanyId(), serviceRegistrations);
-		}
-	}
-
-	@Override
-	public void portalInstanceUnregistered(Company company) {
-		_unregisterCompanyDDMStructures(company.getCompanyId());
-	}
-
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
+
+		_serviceRegistration = bundleContext.registerService(
+			PortalInstanceLifecycleListener.class,
+			new DDMStructurePortalInstanceLifecycleListener(), null);
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		_companyLocalService.forEachCompanyId(
 			companyId -> _unregisterCompanyDDMStructures(companyId));
+
+		_serviceRegistration.unregister();
 	}
 
 	private void _unregisterCompanyDDMStructures(long companyId) {
@@ -174,8 +135,46 @@ public class DDMStructureModelListener
 	@Reference
 	private Portal _portal;
 
+	private ServiceRegistration<PortalInstanceLifecycleListener>
+		_serviceRegistration;
 	private final Map<Long, Map<Long, ServiceRegistration<?>>>
 		_serviceRegistrations = Collections.synchronizedMap(
 			new LinkedHashMap<>());
+
+	private class DDMStructurePortalInstanceLifecycleListener
+		implements PortalInstanceLifecycleListener {
+
+		@Override
+		public void portalInstanceRegistered(Company company) {
+			Map<Long, ServiceRegistration<?>> serviceRegistrations =
+				new HashMap<>();
+
+			List<DDMStructure> ddmStructures =
+				_ddmStructureLocalService.getClassStructures(
+					company.getCompanyId(),
+					_portal.getClassNameId(JournalArticle.class.getName()));
+
+			for (DDMStructure ddmStructure : ddmStructures) {
+				serviceRegistrations.put(
+					ddmStructure.getStructureId(),
+					_bundleContext.registerService(
+						RelatedInfoItemCollectionProvider.class,
+						new DDMStructureRelatedInfoCollectionProvider(
+							ddmStructure, _journalArticleLocalService),
+						null));
+			}
+
+			if (MapUtil.isNotEmpty(serviceRegistrations)) {
+				_serviceRegistrations.put(
+					company.getCompanyId(), serviceRegistrations);
+			}
+		}
+
+		@Override
+		public void portalInstanceUnregistered(Company company) {
+			_unregisterCompanyDDMStructures(company.getCompanyId());
+		}
+
+	}
 
 }

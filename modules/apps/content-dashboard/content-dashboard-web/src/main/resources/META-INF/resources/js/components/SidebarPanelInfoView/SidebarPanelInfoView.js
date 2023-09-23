@@ -1,57 +1,30 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
+import ClayDropdown, {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
-import classnames from 'classnames';
-import {getSessionValue} from 'frontend-js-web';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useCallback, useLayoutEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 
-import {
-	DEFAULT_ACTIVE_PANEL_TAB,
-	TABS_STATE_SESSION_KEY,
-} from '../../utils/constants';
 import Sidebar from '../Sidebar';
+import Categorization from './Categorization';
 import DetailsContent from './DetailsContent';
 import ManageCollaborators from './ManageCollaborators';
 import Subscribe from './Subscribe';
 import VersionsContent from './VersionsContent';
 
-const useInitialActiveTabState = (singlePageApplicationEnabled) => {
-	const [activeTab, setActiveTab] = useState(
-		singlePageApplicationEnabled ? null : DEFAULT_ACTIVE_PANEL_TAB
-	);
-
-	useLayoutEffect(() => {
-		if (singlePageApplicationEnabled) {
-			getSessionValue(TABS_STATE_SESSION_KEY).then((value) => {
-				const parsedValue = parseInt(value, 10);
-				const safeValue = isNaN(parsedValue)
-					? DEFAULT_ACTIVE_PANEL_TAB
-					: parsedValue;
-
-				setActiveTab(safeValue);
-			});
-		}
-	}, [singlePageApplicationEnabled]);
-
-	return [activeTab, setActiveTab];
+const TABS = {
+	categorization: 1,
+	details: 0,
+	version: 2,
 };
 
 const SidebarPanelInfoView = ({
@@ -72,16 +45,11 @@ const SidebarPanelInfoView = ({
 	preview,
 	fetchSharingButtonURL,
 	fetchSharingCollaboratorsURL,
-	singlePageApplicationEnabled,
 	user,
 	viewURLs = [],
 	vocabularies = {},
 }) => {
-	const [activeTabKeyValue, setActiveTabKeyValue] = useInitialActiveTabState(
-		singlePageApplicationEnabled
-	);
-
-	const showTabs = !!getItemVersionsURL;
+	const [activeTabKeyValue, setActiveTabKeyValue] = useState(TABS.details);
 
 	const [error, setError] = useState(false);
 
@@ -91,13 +59,20 @@ const SidebarPanelInfoView = ({
 		setError(true);
 	}, []);
 
-	const handleTabClick = (tab) => {
-		setActiveTabKeyValue(tab);
+	const hasCategorization =
+		!!tags.length || !!Object.keys(vocabularies).length;
 
-		if (singlePageApplicationEnabled) {
-			Liferay.Util.Session.set(TABS_STATE_SESSION_KEY, tab);
-		}
-	};
+	const showTabs = !!getItemVersionsURL || hasCategorization;
+
+	const allTabs = !!getItemVersionsURL && hasCategorization;
+
+	const [active, setActive] = useState(false);
+
+	function _handleItemClick() {
+		setActive(false);
+
+		setActiveTabKeyValue(TABS.version);
+	}
 
 	return (
 		<>
@@ -150,7 +125,7 @@ const SidebarPanelInfoView = ({
 							))}
 						</div>
 
-						<div className="sidebar-section">
+						<div className="mb-1 sidebar-section">
 							{fetchSharingCollaboratorsURL ? (
 								<ManageCollaborators
 									fetchSharingCollaboratorsURL={
@@ -161,7 +136,7 @@ const SidebarPanelInfoView = ({
 							) : (
 								<>
 									<ClaySticker
-										className={classnames(
+										className={classNames(
 											'sticker-user-icon',
 											{
 												[`user-icon-color-${stickerColor}`]: !user.url,
@@ -185,40 +160,95 @@ const SidebarPanelInfoView = ({
 								</>
 							)}
 						</div>
-
-						<div className="mb-0 sidebar-section">
-							{showTabs && activeTabKeyValue !== null && (
-								<ClayTabs modern>
-									<ClayTabs.Item
-										active={activeTabKeyValue === 0}
-										innerProps={{
-											'aria-controls': 'details',
-										}}
-										onClick={() => handleTabClick(0)}
-									>
-										{Liferay.Language.get('details')}
-									</ClayTabs.Item>
-
-									<ClayTabs.Item
-										active={activeTabKeyValue === 1}
-										innerProps={{
-											'aria-controls': 'versions',
-										}}
-										onClick={() => handleTabClick(1)}
-									>
-										{Liferay.Language.get('versions')}
-									</ClayTabs.Item>
-								</ClayTabs>
-							)}
-						</div>
 					</div>
 				</ClayLayout.ContentRow>
 			</Sidebar.Header>
 
+			<div className="c-mb-3 sidebar-section">
+				{showTabs && activeTabKeyValue !== null && (
+					<ClayTabs
+						className="c-px-3 d-flex flex-nowrap justify-content-start"
+						modern
+					>
+						<ClayTabs.Item
+							active={activeTabKeyValue === TABS.details}
+							className="flex-shrink-0"
+							innerProps={{
+								'aria-controls': 'details',
+							}}
+							onClick={() => setActiveTabKeyValue(TABS.details)}
+						>
+							{Liferay.Language.get('details')}
+						</ClayTabs.Item>
+
+						{hasCategorization && (
+							<ClayTabs.Item
+								active={
+									activeTabKeyValue === TABS.categorization
+								}
+								className="flex-shrink-0"
+								innerProps={{
+									'aria-controls': 'categorization',
+								}}
+								onClick={() =>
+									setActiveTabKeyValue(TABS.categorization)
+								}
+							>
+								{Liferay.Language.get('categorization')}
+							</ClayTabs.Item>
+						)}
+
+						{!!getItemVersionsURL && !hasCategorization && (
+							<ClayTabs.Item
+								active={activeTabKeyValue === TABS.version}
+								className="flex-shrink-0"
+								innerProps={{
+									'aria-controls': 'versions',
+								}}
+								onClick={() =>
+									setActiveTabKeyValue(TABS.version)
+								}
+							>
+								{Liferay.Language.get('versions')}
+							</ClayTabs.Item>
+						)}
+
+						{allTabs && (
+							<ClayDropdown
+								active={active}
+								alignmentPosition={Align.BottomLeft}
+								hasRightSymbols
+								onActiveChange={setActive}
+								trigger={
+									<ClayTabs.Item>
+										{Liferay.Language.get('more')}
+
+										<ClayIcon symbol="caret-bottom" />
+									</ClayTabs.Item>
+								}
+							>
+								<ClayDropdown.Item
+									active={activeTabKeyValue === TABS.version}
+									aria-selected={
+										activeTabKeyValue === TABS.version
+									}
+									onClick={() => _handleItemClick()}
+								>
+									{Liferay.Language.get('versions')}
+								</ClayDropdown.Item>
+							</ClayDropdown>
+						)}
+					</ClayTabs>
+				)}
+			</div>
+
 			<Sidebar.Body>
 				<div>
 					<ClayTabs.Content activeIndex={activeTabKeyValue} fade>
-						<ClayTabs.TabPane aria-labelledby="tab-1">
+						<ClayTabs.TabPane
+							aria-labelledby="tab-1"
+							className="flex-shrink-0"
+						>
 							<DetailsContent
 								classPK={classPK}
 								createDate={createDate}
@@ -229,17 +259,32 @@ const SidebarPanelInfoView = ({
 								modifiedDate={modifiedDate}
 								preview={preview}
 								specificFields={specificFields}
-								tags={tags}
 								title={title}
 								viewURLs={viewURLs}
-								vocabularies={vocabularies}
 							/>
 						</ClayTabs.TabPane>
 
-						{showTabs && (
-							<ClayTabs.TabPane aria-labelledby="tab-2">
+						{hasCategorization &&
+							showTabs &&
+							activeTabKeyValue === TABS.categorization && (
+								<ClayTabs.TabPane
+									aria-labelledby="tab-2"
+									className="flex-shrink-0"
+								>
+									<Categorization
+										tags={tags}
+										vocabularies={vocabularies}
+									/>
+								</ClayTabs.TabPane>
+							)}
+
+						{showTabs && activeTabKeyValue === TABS.version && (
+							<ClayTabs.TabPane
+								aria-labelledby="tab-2"
+								className="flex-shrink-0"
+							>
 								<VersionsContent
-									active={activeTabKeyValue === 1}
+									active={activeTabKeyValue === TABS.version}
 									getItemVersionsURL={getItemVersionsURL}
 									languageTag={languageTag}
 									onError={handleError}
@@ -270,7 +315,6 @@ SidebarPanelInfoView.propTypes = {
 	latestVersions: PropTypes.array.isRequired,
 	modifiedDate: PropTypes.string.isRequired,
 	preview: PropTypes.object,
-	singlePageApplicationEnabled: PropTypes.bool.isRequired,
 	specificFields: PropTypes.object.isRequired,
 	subType: PropTypes.string.isRequired,
 	tags: PropTypes.array,

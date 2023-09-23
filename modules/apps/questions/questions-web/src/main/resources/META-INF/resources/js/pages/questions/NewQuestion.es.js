@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -20,20 +11,21 @@ import React, {useContext, useEffect, useRef, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
+import Alert from '../../components/Alert.es';
 import DefaultQuestionsEditor from '../../components/DefaultQuestionsEditor.es';
 import Link from '../../components/Link.es';
 import TagSelector from '../../components/TagSelector.es';
 import {
 	createQuestionInASectionQuery,
 	createQuestionInRootQuery,
-	getSectionBySectionTitleQuery,
+	getMessageBoardSectionByFriendlyUrlPathQuery,
 } from '../../utils/client.es';
+import lang from '../../utils/lang.es';
 import {
 	deleteCache,
 	getContextLink,
 	historyPushWithSlug,
-	processGraphQLError,
-	slugToText,
+	useDebounceCallback,
 } from '../../utils/utils.es';
 
 const HEADLINE_MAX_LENGTH = 75;
@@ -48,6 +40,7 @@ export default withRouter(
 		const editorRef = useRef('');
 		const [hasEnoughContent, setHasEnoughContent] = useState(false);
 		const [headline, setHeadline] = useState('');
+		const [error, setError] = useState({});
 		const [isPostButtonDisable, setIsPostButtonDisable] = useState(true);
 		const [sectionId, setSectionId] = useState();
 		const [sections, setSections] = useState([]);
@@ -57,18 +50,21 @@ export default withRouter(
 		const context = useContext(AppContext);
 		const historyPushParser = historyPushWithSlug(history.push);
 
+		const [debounceCallback] = useDebounceCallback(
+			() => historyPushParser(`/questions/${sectionTitle}/`),
+			500
+		);
+
 		const [createQuestionInASection] = useMutation(
 			createQuestionInASectionQuery
 		);
 
 		const [createQuestionInRoot] = useMutation(createQuestionInRootQuery);
-		const [getSectionBySectionTitle] = useManualQuery(
-			getSectionBySectionTitleQuery,
+		const [getMessageBoardSectionByFriendlyUrlPath] = useManualQuery(
+			getMessageBoardSectionByFriendlyUrlPathQuery,
 			{
 				variables: {
-					filter: `title eq '${slugToText(
-						sectionTitle
-					)}' or id eq '${slugToText(sectionTitle)}'`,
+					friendlyUrlPath: sectionTitle,
 					siteKey: context.siteKey,
 				},
 			}
@@ -81,9 +77,11 @@ export default withRouter(
 		}, [hasEnoughContent, headline, tagsLoaded]);
 
 		useEffect(() => {
-			getSectionBySectionTitle().then(({data}) => {
-				const section = data.messageBoardSections.items[0];
+			getMessageBoardSectionByFriendlyUrlPath().then(({data}) => {
+				const section = data.messageBoardSectionByFriendlyUrlPath;
+
 				setSectionId((section && section.id) || +context.rootTopicId);
+
 				if (section.parentMessageBoardSection) {
 					setSections([
 						{
@@ -109,44 +107,60 @@ export default withRouter(
 			context.rootTopicId,
 			context.siteKey,
 			sectionTitle,
-			getSectionBySectionTitle,
+			getMessageBoardSectionByFriendlyUrlPath,
 		]);
+
+		const processError = (error) => {
+			if (error.message && error.message.includes('AssetTagException')) {
+				error.message = lang.sub(
+					Liferay.Language.get(
+						'the-x-cannot-contain-the-following-invalid-characters-x'
+					),
+					[
+						'Tag',
+						' & \' @ \\\\ ] } : , = > / < \\n [ {  | + # ` ? \\" \\r ; / * ~',
+					]
+				);
+			}
+
+			setError(error);
+		};
+
+		const processResponse = (error) =>
+			error ? processError(error.graphQLErrors[0]) : debounceCallback();
 
 		const createQuestion = async () => {
 			setIsPostButtonDisable(true);
 			deleteCache();
 
-			const shouldCreateQuestionInRoot =
-				sectionTitle === 'all' && Number(context.rootTopicId) === 0;
-
-			const payload = {
-				fetchOptionsOverrides: getContextLink(sectionTitle),
-				variables: {
-					articleBody: editorRef.current.getContent(),
-					headline,
-					keywords: tags.map((tag) => tag.label),
-					...(shouldCreateQuestionInRoot
-						? {siteKey: context.siteKey}
-						: {messageBoardSectionId: sectionId}),
-				},
-			};
-
-			const fn = shouldCreateQuestionInRoot
-				? createQuestionInRoot
-				: createQuestionInASection;
-
-			try {
-				const {error} = await fn(payload);
-
-				if (error) {
-					processGraphQLError(error);
-				}
-				else {
-					historyPushParser(`/questions/${sectionTitle}/`);
-				}
+			if (
+				sectionTitle === context.rootTopicId &&
+				+context.rootTopicId === 0
+			) {
+				createQuestionInRoot({
+					fetchOptionsOverrides: getContextLink(sectionTitle),
+					variables: {
+						articleBody: editorRef.current.getContent(),
+						headline,
+						keywords: tags.map((tag) => tag.label),
+						siteKey: context.siteKey,
+					},
+				})
+					.then(({error}) => processResponse(error))
+					.catch(processError);
 			}
-			catch (error) {
-				processGraphQLError(error);
+			else {
+				createQuestionInASection({
+					fetchOptionsOverrides: getContextLink(sectionTitle),
+					variables: {
+						articleBody: editorRef.current.getContent(),
+						headline,
+						keywords: tags.map((tag) => tag.label),
+						messageBoardSectionId: sectionId,
+					},
+				})
+					.then(({error}) => processResponse(error))
+					.catch(processError);
 			}
 
 			setIsPostButtonDisable(false);
@@ -238,6 +252,15 @@ export default withRouter(
 
 						<div className="c-mt-4 d-flex flex-column-reverse flex-sm-row">
 							<ClayButton
+								aria-label={
+									context.trustedUser
+										? Liferay.Language.get(
+												'post-your-question'
+										  )
+										: Liferay.Language.get(
+												'submit-for-publication'
+										  )
+								}
 								className="c-mt-4 c-mt-sm-0"
 								disabled={isPostButtonDisable}
 								displayType="primary"
@@ -261,6 +284,8 @@ export default withRouter(
 						</div>
 					</div>
 				</div>
+
+				<Alert info={error} />
 			</section>
 		);
 	}

@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -19,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,7 @@ definition {
 		}
 	}
 
-	@priority = 4
+	@priority = 3
 	test ActivateDeactivateRemoteStagingInOnePortal {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
@@ -37,6 +37,8 @@ definition {
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "quarantine";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(siteName = "Site Name");
 
@@ -94,7 +96,7 @@ definition {
 			dmDocumentTitle = "DM Document Title");
 	}
 
-	@priority = 4
+	@priority = 3
 	test ActivateDeactivateStagingLocalLiveDM {
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -146,14 +148,15 @@ definition {
 			pageStaging = "true");
 	}
 
-	@priority = 5
+	@priority = 4
 	test ActivateRemoteStaging {
 		property app.server.bundles.size = "1";
 		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PGStaging#ActivateRemoteStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(
 			remotePort = 9080,
@@ -173,7 +176,7 @@ definition {
 		Site.deleteAllCP();
 	}
 
-	@priority = 5
+	@priority = 3
 	test AddDMDocumentWCArticleStagingLocalLive {
 		property testray.component.names = "Training";
 
@@ -189,6 +192,10 @@ definition {
 			siteName = "Site Name");
 
 		DMDocument.enableActionsMenuOnPortlet();
+
+		WaitForElementPresent(
+			key_portletName = "Documents and Media",
+			locator1 = "Portlet#ICON_PLUS_SIGN");
 
 		DMDocument.addPG(
 			dmDocumentFile = "Document_1.docx",
@@ -301,7 +308,7 @@ definition {
 			webContentTitle = "Web Content Title");
 	}
 
-	@priority = 5
+	@priority = 3
 	test AssertNoEditLink {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
@@ -410,7 +417,7 @@ definition {
 		Staging.deactivateStagingCP(siteName = "Site Name");
 	}
 
-	@priority = 4
+	@priority = 3
 	test DeleteDMDocument {
 		Navigator.gotoSitePage(
 			pageName = "Staging Test Page",
@@ -465,9 +472,7 @@ definition {
 
 		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_ICON");
 
-		AssertTextEquals(
-			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
-			value1 = "DM Document Title");
+		DMDocument.viewDocumentTitleInListView(dmDocumentTitle = "DM Document Title");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -496,7 +501,7 @@ definition {
 		AssertElementNotPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_ICON");
 	}
 
-	@priority = 4
+	@priority = 3
 	test LayoutScope {
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -523,7 +528,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-72893."
-	@priority = 4
+	@priority = 3
 	test PublishLayoutIconDeletion {
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -562,7 +567,7 @@ definition {
 		Page.viewLayoutLogoPG();
 	}
 
-	@priority = 5
+	@priority = 3
 	test PublishPrivatePage {
 		property portal.acceptance = "true";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -605,7 +610,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-80367."
-	@priority = 5
+	@priority = 3
 	test PublishWCIncludingTextsAndImages {
 		Navigator.openURL();
 
@@ -692,7 +697,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-80295."
-	@priority = 4
+	@priority = 3
 	test PublishWCWithFriendlyURL {
 		var baseURL = PropsUtil.get("portal.url");
 		var friendlyURL = "link";
@@ -765,7 +770,8 @@ definition {
 		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
-		property test.name.skip.portal.instance = "PGStaging#PublishWCWithPagesVariationViaRemoteStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(
 			pageVersioningEnabled = "true",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0;
@@ -115,6 +106,109 @@ public class Settings implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String css;
 
+	@Schema(description = "The FavIcon of the page")
+	@Valid
+	public Object getFavIcon() {
+		return favIcon;
+	}
+
+	public void setFavIcon(Object favIcon) {
+		this.favIcon = favIcon;
+	}
+
+	@JsonIgnore
+	public void setFavIcon(
+		UnsafeSupplier<Object, Exception> favIconUnsafeSupplier) {
+
+		try {
+			favIcon = favIconUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The FavIcon of the page")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Object favIcon;
+
+	@Schema(
+		description = "The client extensions for global css associated to the page."
+	)
+	@Valid
+	public ClientExtension[] getGlobalCSSClientExtensions() {
+		return globalCSSClientExtensions;
+	}
+
+	public void setGlobalCSSClientExtensions(
+		ClientExtension[] globalCSSClientExtensions) {
+
+		this.globalCSSClientExtensions = globalCSSClientExtensions;
+	}
+
+	@JsonIgnore
+	public void setGlobalCSSClientExtensions(
+		UnsafeSupplier<ClientExtension[], Exception>
+			globalCSSClientExtensionsUnsafeSupplier) {
+
+		try {
+			globalCSSClientExtensions =
+				globalCSSClientExtensionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The client extensions for global css associated to the page."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ClientExtension[] globalCSSClientExtensions;
+
+	@Schema(
+		description = "The client extensions for global js associated to the page."
+	)
+	@Valid
+	public ClientExtension[] getGlobalJSClientExtensions() {
+		return globalJSClientExtensions;
+	}
+
+	public void setGlobalJSClientExtensions(
+		ClientExtension[] globalJSClientExtensions) {
+
+		this.globalJSClientExtensions = globalJSClientExtensions;
+	}
+
+	@JsonIgnore
+	public void setGlobalJSClientExtensions(
+		UnsafeSupplier<ClientExtension[], Exception>
+			globalJSClientExtensionsUnsafeSupplier) {
+
+		try {
+			globalJSClientExtensions =
+				globalJSClientExtensionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The client extensions for global js associated to the page."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ClientExtension[] globalJSClientExtensions;
+
 	@Schema(description = "The page's JavaScript.")
 	public String getJavascript() {
 		return javascript;
@@ -200,6 +294,41 @@ public class Settings implements Serializable {
 	@GraphQLField(description = "The StyleBook that is applied to the page.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected StyleBook styleBook;
+
+	@Schema(description = "The Client Extension for the theme css of a page")
+	@Valid
+	public ClientExtension getThemeCSSClientExtension() {
+		return themeCSSClientExtension;
+	}
+
+	public void setThemeCSSClientExtension(
+		ClientExtension themeCSSClientExtension) {
+
+		this.themeCSSClientExtension = themeCSSClientExtension;
+	}
+
+	@JsonIgnore
+	public void setThemeCSSClientExtension(
+		UnsafeSupplier<ClientExtension, Exception>
+			themeCSSClientExtensionUnsafeSupplier) {
+
+		try {
+			themeCSSClientExtension =
+				themeCSSClientExtensionUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The Client Extension for the theme css of a page"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ClientExtension themeCSSClientExtension;
 
 	@Schema(description = "The page's theme name.")
 	public String getThemeName() {
@@ -313,6 +442,66 @@ public class Settings implements Serializable {
 			sb.append("\"");
 		}
 
+		if (favIcon != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"favIcon\": ");
+
+			if (favIcon instanceof Map) {
+				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)favIcon));
+			}
+			else if (favIcon instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)favIcon));
+				sb.append("\"");
+			}
+			else {
+				sb.append(favIcon);
+			}
+		}
+
+		if (globalCSSClientExtensions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"globalCSSClientExtensions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < globalCSSClientExtensions.length; i++) {
+				sb.append(String.valueOf(globalCSSClientExtensions[i]));
+
+				if ((i + 1) < globalCSSClientExtensions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (globalJSClientExtensions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"globalJSClientExtensions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < globalJSClientExtensions.length; i++) {
+				sb.append(String.valueOf(globalJSClientExtensions[i]));
+
+				if ((i + 1) < globalJSClientExtensions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (javascript != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -345,6 +534,16 @@ public class Settings implements Serializable {
 			sb.append("\"styleBook\": ");
 
 			sb.append(String.valueOf(styleBook));
+		}
+
+		if (themeCSSClientExtension != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"themeCSSClientExtension\": ");
+
+			sb.append(String.valueOf(themeCSSClientExtension));
 		}
 
 		if (themeName != null) {
@@ -476,5 +675,7 @@ public class Settings implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

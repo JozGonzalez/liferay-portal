@@ -1,8 +1,11 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Fragments,Upgrades WEM";
 	property testray.main.component.name = "Upgrades WEM";
 
@@ -23,7 +26,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.1";
 
-		Upgrade.viewCardWithThreeColumnsInMobileBreakpoint();
+		ValidateFragmentsUpgrade.viewCardWithThreeColumnsInMobileBreakpoint();
 	}
 
 	@description = "This is a test for LPS-133390. View Card fragment width is same as column width at mobile mode after upgrade."
@@ -33,7 +36,7 @@ definition {
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.2.10.4";
 
-		Upgrade.viewCardWithThreeColumnsInMobileBreakpoint();
+		ValidateFragmentsUpgrade.viewCardWithThreeColumnsInMobileBreakpoint();
 	}
 
 	@description = "This is a test for LPS-146029. The old Grid should keep previous layout styles in non-desktop viewports and changes back to default after editing."
@@ -43,7 +46,7 @@ definition {
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.version = "7.4.13";
 
-		Upgrade.viewDefinedGridLayout();
+		ValidateFragmentsUpgrade.viewDefinedGridLayout();
 	}
 
 	@description = "This is a test for LPS-146029. The old Grid should keep previous layout styles in non-desktop viewports and changes back to default after editing."
@@ -53,7 +56,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.3.21";
 
-		Upgrade.viewDefinedGridLayout();
+		ValidateFragmentsUpgrade.viewDefinedGridLayout();
 	}
 
 }

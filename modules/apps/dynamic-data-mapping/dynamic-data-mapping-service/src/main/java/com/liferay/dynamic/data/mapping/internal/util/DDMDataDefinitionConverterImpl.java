@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.util;
@@ -239,31 +230,41 @@ public class DDMDataDefinitionConverterImpl
 			long fieldSetDDMStructureId = GetterUtil.getLong(
 				ddmFormField.getProperty("ddmStructureId"));
 
-			if (fieldSetDDMStructureId != 0) {
+			if (fieldSetDDMStructureId == 0) {
+				continue;
+			}
+
+			DEDataDefinitionFieldLink deDataDefinitionFieldLink =
+				_deDataDefinitionFieldLinkLocalService.
+					fetchDEDataDefinitionFieldLinks(
+						classNameId, dataDefinitionId, fieldSetDDMStructureId,
+						ddmFormField.getName());
+
+			if (deDataDefinitionFieldLink == null) {
 				_deDataDefinitionFieldLinkLocalService.
 					addDEDataDefinitionFieldLink(
 						groupId, classNameId, dataDefinitionId,
 						fieldSetDDMStructureId, ddmFormField.getName());
-
-				_addDataDefinitionFieldLinks(
-					classNameId, dataDefinitionId,
-					ddmFormField.getNestedDDMFormFields(), groupId);
 			}
+
+			_addDataDefinitionFieldLinks(
+				classNameId, dataDefinitionId,
+				ddmFormField.getNestedDDMFormFields(), groupId);
 		}
 	}
 
 	private DDMFormField _createFieldSetDDMFormField(
-		Locale defaultLocale, String name,
+		Set<Locale> availableLocales, String name,
 		List<DDMFormField> nestedDDMFormFields, boolean repeatable) {
 
 		return _createFieldSetDDMFormField(
-			StringPool.BLANK, StringPool.BLANK, defaultLocale, name,
+			availableLocales, StringPool.BLANK, StringPool.BLANK, name,
 			nestedDDMFormFields, repeatable, false);
 	}
 
 	private DDMFormField _createFieldSetDDMFormField(
-		String ddmStructureId, String ddmStructureLayoutId,
-		Locale defaultLocale, String name,
+		Set<Locale> availableLocales, String ddmStructureId,
+		String ddmStructureLayoutId, String name,
 		List<DDMFormField> nestedDDMFormFields, boolean repeatable,
 		boolean upgradedStructure) {
 
@@ -272,19 +273,24 @@ public class DDMDataDefinitionConverterImpl
 				setLabel(
 					new LocalizedValue() {
 						{
-							addString(defaultLocale, StringPool.BLANK);
+							for (Locale locale : availableLocales) {
+								addString(
+									locale,
+									_language.get(locale, "fields-group"));
+							}
 						}
 					});
-				setLocalizable(false);
+				setLocalizable(true);
 				setNestedDDMFormFields(nestedDDMFormFields);
 				setProperty("collapsible", false);
 				setProperty("ddmStructureId", ddmStructureId);
 				setProperty("ddmStructureLayoutId", ddmStructureLayoutId);
+				setProperty("labelAtStructureLevel", true);
 				setProperty("upgradedStructure", upgradedStructure);
 				setReadOnly(false);
 				setRepeatable(repeatable);
 				setRequired(false);
-				setShowLabel(false);
+				setShowLabel(true);
 			}
 		};
 	}
@@ -325,15 +331,16 @@ public class DDMDataDefinitionConverterImpl
 	}
 
 	private DDMFormField _getFieldSetDDMFormField(
-		DDMFormField ddmFormField, Locale defaultLocale) {
+		Set<Locale> availableLocales, DDMFormField ddmFormField,
+		Locale defaultLocale) {
 
 		DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
-			defaultLocale, ddmFormField.getName() + "FieldSet",
+			availableLocales, ddmFormField.getName() + "FieldSet",
 			ListUtil.fromArray(ddmFormField), ddmFormField.isRepeatable());
 
 		_upgradeNestedFields(
-			ddmFormField.getNestedDDMFormFields(), defaultLocale,
-			fieldSetDDMFormField);
+			availableLocales, ddmFormField.getNestedDDMFormFields(),
+			defaultLocale, fieldSetDDMFormField);
 
 		fieldSetDDMFormField.setProperty(
 			"rows", _getDDMFormFieldsRows(fieldSetDDMFormField));
@@ -588,15 +595,16 @@ public class DDMDataDefinitionConverterImpl
 
 			newDDMForm.addDDMFormField(
 				_getFieldSetDDMFormField(
-					ddmFormField, ddmForm.getDefaultLocale()));
+					ddmForm.getAvailableLocales(), ddmFormField,
+					ddmForm.getDefaultLocale()));
 		}
 
 		return newDDMForm;
 	}
 
 	private void _upgradeNestedFields(
-		List<DDMFormField> ddmFormFields, Locale defaultLocale,
-		DDMFormField parentFieldSetDDMFormField) {
+		Set<Locale> availableLocales, List<DDMFormField> ddmFormFields,
+		Locale defaultLocale, DDMFormField parentFieldSetDDMFormField) {
 
 		List<DDMFormField> nestedDDMFormFields = new ArrayList<>();
 
@@ -608,7 +616,8 @@ public class DDMDataDefinitionConverterImpl
 			}
 
 			nestedDDMFormFields.add(
-				_getFieldSetDDMFormField(ddmFormField, defaultLocale));
+				_getFieldSetDDMFormField(
+					availableLocales, ddmFormField, defaultLocale));
 		}
 
 		if (nestedDDMFormFields.size() == 1) {
@@ -626,7 +635,7 @@ public class DDMDataDefinitionConverterImpl
 		}
 
 		DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
-			defaultLocale, parentFieldSetDDMFormField.getName() + "FieldSet",
+			availableLocales, parentFieldSetDDMFormField.getName() + "FieldSet",
 			nestedDDMFormFields, false);
 
 		fieldSetDDMFormField.setProperty(
@@ -654,9 +663,9 @@ public class DDMDataDefinitionConverterImpl
 		ddmFormFields.add(
 			0,
 			_createFieldSetDDMFormField(
+				ddmForm.getAvailableLocales(),
 				String.valueOf(parentStructureId),
 				String.valueOf(parentStructureLayoutId),
-				ddmForm.getDefaultLocale(),
 				"parentStructureFieldSet" + parentStructureId,
 				Collections.emptyList(), false, true));
 

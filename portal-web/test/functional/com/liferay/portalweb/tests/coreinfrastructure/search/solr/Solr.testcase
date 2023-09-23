@@ -20,15 +20,17 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
+	@priority = 3
 	test AssertSearchAdmin {
-		property test.name.skip.portal.instance = "Solr#AssertSearchAdmin";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -50,9 +52,9 @@ definition {
 			groupName = "Guest",
 			title = "apple");
 
-		Search.openSearchPage();
-
 		SearchPortlets.addWidgets(searchPortletList = "Search Insights");
+
+		Search.openSearchPage();
 
 		Portlet.gotoPortletOptions(
 			portletName = "Search Insights",
@@ -104,31 +106,37 @@ definition {
 			locator1 = "ApplicationsMenu#PORTLET");
 	}
 
+	@description = "This is a use case for LPS-183360."
+	@priority = 3
+	test ReindexModeNotAvailableWithSolr {
+		property custom.properties = "feature.flag.LPS-183661=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Go to Search Admin and assert the Reindex mode selection is not available while using Solr") {
+			SearchAdministration.openIndexActions();
+
+			AssertElementNotPresent(locator1 = "SearchAdmin#REINDEX_MODE_DROPDOWN");
+		}
+	}
+
 	@description = "This smoke test is to ensure that Liferay is successfully running on a remote Solr by asserting the Solr administration dashboard and performing searches in portal. Note by default, an embedded Elasticsearch is deployed in portal."
 	@priority = 4
 	test SolrSmokeTest {
-		property test.name.skip.portal.instance = "Solr#SolrSmokeTest";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Message Boards");
-
-		MessageboardsThread.addCP(
+		JSONMBMessage.addMessage(
+			groupName = "Guest",
 			threadBody = "Orange",
 			threadSubject = "Apple");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "Orange",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "Apple");
+			dmDocumentTitle = "Apple",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -165,9 +173,9 @@ definition {
 	@description = "This smoke test is to ensure that Liferay is successfully running on a remote SolrCloud with 2 nodes by asserting console logging for ZooKeeper and performing searches in portal."
 	@priority = 4
 	test SolrWithSolrCloudSmokeTest {
-		property dummy.socket.proxy.disabled = "true";
 		property solr.solrcloud.enabled = "true";
-		property test.name.skip.portal.instance = "Solr#SolrWithSolrCloudSmokeTest";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "zkClient has connected");
 
@@ -185,24 +193,17 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Message Boards");
-
-		MessageboardsThread.addCP(
+		JSONMBMessage.addMessage(
+			groupName = "Guest",
 			threadBody = "Orange",
 			threadSubject = "Apple");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "Orange",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "Apple");
+			dmDocumentTitle = "Apple",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -239,29 +240,24 @@ definition {
 	@description = "This smoke test is to ensure that Liferay is successfully running on a remote Solr with SSL Authentication by asserting console logging for KeyStoreLoaderImpl and performing searches in portal. Note by default, an embedded Elasticsearch is deployed in portal."
 	@priority = 4
 	test SolrWithSSLAuthenticationSmokeTest {
+		property search.environment.suite.exclude = "true";
 		property solr.ssl.authentication.enabled = "true";
-		property test.name.skip.portal.instance = "Solr#SolrWithSSLAuthenticationSmokeTest";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Message Boards");
-
-		MessageboardsThread.addCP(
+		JSONMBMessage.addMessage(
+			groupName = "Guest",
 			threadBody = "Orange",
 			threadSubject = "Apple");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "Orange",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "Apple");
+			dmDocumentTitle = "Apple",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
+
+		Navigator.openURL();
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.attachments.test;
@@ -37,6 +28,8 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
@@ -356,17 +349,23 @@ public class MBAttachmentsTest {
 					_group.getGroupId(), user.getUserId()));
 		}
 		else {
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext(
-					_group.getGroupId(), TestPropsValues.getUserId());
+			try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+					"org.apache.xmlbeans.impl.common.SAXHelper",
+					LoggerTestUtil.WARN)) {
 
-			List<ObjectValuePair<String, InputStream>> objectValuePairs =
-				MBTestUtil.getInputStreamOVPs(
-					"OSX_Test.docx", getClass(), StringPool.BLANK);
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId(), TestPropsValues.getUserId());
 
-			_message = MBMessageLocalServiceUtil.updateMessage(
-				TestPropsValues.getUserId(), _message.getMessageId(), "Subject",
-				"Body", objectValuePairs, 0, false, serviceContext);
+				List<ObjectValuePair<String, InputStream>> objectValuePairs =
+					MBTestUtil.getInputStreamOVPs(
+						"OSX_Test.docx", getClass(), StringPool.BLANK);
+
+				_message = MBMessageLocalServiceUtil.updateMessage(
+					TestPropsValues.getUserId(), _message.getMessageId(),
+					"Subject", "Body", objectValuePairs, 0, false,
+					serviceContext);
+			}
 		}
 	}
 
@@ -410,30 +409,13 @@ public class MBAttachmentsTest {
 			MBTestUtil.getInputStreamOVPs(
 				fileName, getClass(), StringPool.BLANK);
 
-		_message = MBMessageLocalServiceUtil.updateMessage(
-			TestPropsValues.getUserId(), _message.getMessageId(), "Subject",
-			"Body", objectValuePairs, 0, false, serviceContext);
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"org.apache.xmlbeans.impl.common.SAXHelper",
+				LoggerTestUtil.WARN)) {
 
-		Assert.assertEquals(
-			initialNotInTrashCount + 1,
-			_message.getAttachmentsFileEntriesCount());
-		Assert.assertEquals(
-			initialTrashEntriesCount,
-			_message.getDeletedAttachmentsFileEntriesCount());
-
-		long fileEntryId =
-			MBMessageLocalServiceUtil.moveMessageAttachmentToTrash(
-				TestPropsValues.getUserId(), _message.getMessageId(), fileName);
-
-		Assert.assertEquals(
-			initialNotInTrashCount, _message.getAttachmentsFileEntriesCount());
-		Assert.assertEquals(
-			initialTrashEntriesCount + 1,
-			_message.getDeletedAttachmentsFileEntriesCount());
-
-		if (restore) {
-			MBMessageLocalServiceUtil.restoreMessageAttachmentFromTrash(
-				TestPropsValues.getUserId(), _message.getMessageId(), fileName);
+			_message = MBMessageLocalServiceUtil.updateMessage(
+				TestPropsValues.getUserId(), _message.getMessageId(), "Subject",
+				"Body", objectValuePairs, 0, false, serviceContext);
 
 			Assert.assertEquals(
 				initialNotInTrashCount + 1,
@@ -442,22 +424,47 @@ public class MBAttachmentsTest {
 				initialTrashEntriesCount,
 				_message.getDeletedAttachmentsFileEntriesCount());
 
-			MBMessageLocalServiceUtil.deleteMessageAttachment(
-				_message.getMessageId(), fileName);
-		}
-		else {
-			FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
-				fileEntryId);
-
-			MBMessageLocalServiceUtil.deleteMessageAttachment(
-				_message.getMessageId(), fileEntry.getTitle());
+			long fileEntryId =
+				MBMessageLocalServiceUtil.moveMessageAttachmentToTrash(
+					TestPropsValues.getUserId(), _message.getMessageId(),
+					fileName);
 
 			Assert.assertEquals(
 				initialNotInTrashCount,
 				_message.getAttachmentsFileEntriesCount());
 			Assert.assertEquals(
-				initialTrashEntriesCount,
+				initialTrashEntriesCount + 1,
 				_message.getDeletedAttachmentsFileEntriesCount());
+
+			if (restore) {
+				MBMessageLocalServiceUtil.restoreMessageAttachmentFromTrash(
+					TestPropsValues.getUserId(), _message.getMessageId(),
+					fileName);
+
+				Assert.assertEquals(
+					initialNotInTrashCount + 1,
+					_message.getAttachmentsFileEntriesCount());
+				Assert.assertEquals(
+					initialTrashEntriesCount,
+					_message.getDeletedAttachmentsFileEntriesCount());
+
+				MBMessageLocalServiceUtil.deleteMessageAttachment(
+					_message.getMessageId(), fileName);
+			}
+			else {
+				FileEntry fileEntry =
+					PortletFileRepositoryUtil.getPortletFileEntry(fileEntryId);
+
+				MBMessageLocalServiceUtil.deleteMessageAttachment(
+					_message.getMessageId(), fileEntry.getTitle());
+
+				Assert.assertEquals(
+					initialNotInTrashCount,
+					_message.getAttachmentsFileEntriesCount());
+				Assert.assertEquals(
+					initialTrashEntriesCount,
+					_message.getDeletedAttachmentsFileEntriesCount());
+			}
 		}
 	}
 

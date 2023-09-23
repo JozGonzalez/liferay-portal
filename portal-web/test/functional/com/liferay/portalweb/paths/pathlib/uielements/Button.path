@@ -102,7 +102,7 @@
 </tr>
 <tr>
 	<td>ANY_TITLE</td>
-	<td>//button[@title='${key_title}'] | //button//span[@*='${key_title}']</td>
+	<td>//button[@*='${key_title}'] | //button//span[@*='${key_title}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -113,6 +113,11 @@
 <tr>
 	<td>ANY_WITH_ARIA_LABEL</td>
 	<td>//button[@aria-label='${ariaLabel}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_WITH_CLASS_AND_INDEX</td>
+	<td>xpath=(//button[contains(@class,'${key_class}')])[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -127,7 +132,7 @@
 </tr>
 <tr>
 	<td>ANY_WITH_SPAN</td>
-	<td>//button/span[contains(.,'${key_text}')]</td>
+	<td>//button/span[contains(.,'${key_text}')] | //button[contains(@class, 'select-button')]/descendant::span[contains(text(), '${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -187,7 +192,7 @@
 </tr>
 <tr>
 	<td>BUTTON_LABEL</td>
-	<td>//div[./label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}']</td>
+	<td>//div[./label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}'] | //div[contains(@class,'form-group')][.//label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -477,12 +482,12 @@
 </tr>
 <tr>
 	<td>IMAGE_CLEAR</td>
-	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphClearImageButton')]</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphClearImageButton')] | //div[normalize-space(text())='${key_fieldLabel}']/../following-sibling::div//button[contains(@id,'openGraphClearImageButton')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>IMAGE_SELECTOR</td>
-	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphImageButton')]</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphImageButton')] | //div[normalize-space(text())='${key_fieldLabel}']/../following-sibling::div//button[contains(@id,'openGraphImageButton')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -632,7 +637,7 @@
 </tr>
 <tr>
 	<td>PLUS</td>
-	<td>//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][*[contains(@class,'icon-plus')]]</td>
+	<td>//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][not(contains(@class,'btn-unstyled'))][*[contains(@class,'icon-plus')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -723,11 +728,6 @@
 <tr>
 	<td>RESET_CHANGES</td>
 	<td>//a[contains(@class,'btn')][contains(.,'Reset Changes')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESET_VALUES</td>
-	<td>//button/span[contains(.,'Reset Values')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -857,7 +857,7 @@
 </tr>
 <tr>
 	<td>TRANSLATIONS_LOCALIZATION</td>
-	<td>//div[contains(@class,'dropdown')]//button[contains(@class,'dropdown-toggle')]//*[name()='svg'][contains(@class,'lexicon-icon-${key_currentLocale}')]</td>
+	<td>//div[contains(@class,'dropdown')]//button[contains(@class,'dropdown-toggle')]//*[name()='svg'][contains(@class,'lexicon-icon-${key_currentLocale}')] | //button[contains(@aria-haspopup,'listbox')]//*[name()='svg'][contains(@class,'lexicon-icon-${key_currentLocale}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -992,7 +992,7 @@
 </tr>
 <tr>
 	<td>UNSUBSCRIBE</td>
-	<td>//button[contains(.,'Unsubscribe')] | //li[contains(@class,'nav-item')]/*[contains(@class,'nav-link')]</td>
+	<td>//button[contains(.,'Unsubscribe')] | //a[contains(.,'Unsubscribe')]</td>
 	<td></td>
 </tr>
 <tr>

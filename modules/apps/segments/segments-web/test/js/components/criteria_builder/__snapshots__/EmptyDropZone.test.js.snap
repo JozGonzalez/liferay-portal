@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmptyDropZone renders 1`] = `
+<DocumentFragment>
+  <div
+    class="empty-drop-zone p-6 rounded border-secondary-light empty-drop-zone--dashed"
+  />
+</DocumentFragment>
+`;
+
+exports[`EmptyDropZone renders illustration when empty contributors 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      class="c-mb-0 c-p-4 empty-contributors rounded"
+    >
+      <div
+        class="c-empty-state c-empty-state-animation"
+      >
+        <div
+          class="c-empty-state-image"
+        >
+          <div
+            class="c-empty-state-aspect-ratio"
+          >
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
+              src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
+            />
+          </div>
+        </div>
+        <div
+          class="c-empty-state-title"
+        >
+          <span
+            class="text-truncate-inline"
+          >
+            <span
+              class="text-truncate"
+            >
+              no-x-yet
+            </span>
+          </span>
+        </div>
+        <div
+          class="c-empty-state-text"
+        >
+          empty-conditions-message
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.cleanup.internal.upgrade.executor;
@@ -20,6 +11,7 @@ import com.liferay.change.tracking.store.service.CTSContentLocalService;
 import com.liferay.data.cleanup.internal.configuration.DataRemovalConfiguration;
 import com.liferay.data.cleanup.internal.upgrade.DLPreviewCTSContentDataUpgradeProcess;
 import com.liferay.data.cleanup.internal.upgrade.ExpiredJournalArticleUpgradeProcess;
+import com.liferay.data.cleanup.internal.upgrade.OutdatedPublishedCTCollectionUpgradeProcess;
 import com.liferay.data.cleanup.internal.upgrade.PublishedCTSContentDataUpgradeProcess;
 import com.liferay.data.cleanup.internal.upgrade.util.ConfigurationUtil;
 import com.liferay.journal.service.JournalArticleLocalService;
@@ -65,6 +57,11 @@ public class DataRemovalExecutor {
 			"com.liferay.change.tracking.service",
 			() -> new DLPreviewCTSContentDataUpgradeProcess(
 				_ctCollectionLocalService, _ctEntryLocalService, _portal));
+		_removeModuleData(
+			dataRemovalConfiguration::removeOutdatedPublishedCTCollections,
+			"com.liferay.change.tracking.service",
+			() -> new OutdatedPublishedCTCollectionUpgradeProcess(
+				_ctCollectionLocalService));
 		_removeModuleData(
 			dataRemovalConfiguration::removePublishedCTSContentData,
 			"com.liferay.change.tracking.store.service",

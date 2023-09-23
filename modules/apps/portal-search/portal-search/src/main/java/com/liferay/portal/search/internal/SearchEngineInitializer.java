@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal;
@@ -19,8 +10,9 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFacto
 import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
@@ -28,10 +20,15 @@ import com.liferay.portal.kernel.search.IndexWriterHelperUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.search.index.ConcurrentReindexManager;
+import com.liferay.portal.search.index.SyncReindexManager;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
@@ -47,11 +44,16 @@ public class SearchEngineInitializer implements Runnable {
 
 	public SearchEngineInitializer(
 		BundleContext bundleContext, long companyId,
-		PortalExecutorManager portalExecutorManager) {
+		ConcurrentReindexManager concurrentReindexManager, String executionMode,
+		PortalExecutorManager portalExecutorManager,
+		SyncReindexManager syncReindexManager) {
 
 		_bundleContext = bundleContext;
 		_companyId = companyId;
+		_concurrentReindexManager = concurrentReindexManager;
+		_executionMode = executionMode;
 		_portalExecutorManager = portalExecutorManager;
+		_syncReindexManager = syncReindexManager;
 	}
 
 	public void halt() {
@@ -66,7 +68,7 @@ public class SearchEngineInitializer implements Runnable {
 	}
 
 	public void reindex(int delay) {
-		_reIndex(delay);
+		_reindex(delay);
 	}
 
 	@Override
@@ -96,7 +98,29 @@ public class SearchEngineInitializer implements Runnable {
 		}
 	}
 
-	private void _reIndex(int delay) {
+	private boolean _isExecuteConcurrentReindex() {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-183661") &&
+			(_concurrentReindexManager != null) && (_executionMode != null) &&
+			_executionMode.equals("concurrent") &&
+			(_companyId != CompanyConstants.SYSTEM)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isExecuteSyncReindex() {
+		if ((_syncReindexManager != null) && (_executionMode != null) &&
+			_executionMode.equals("sync")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private void _reindex(int delay) {
 		if (IndexWriterHelperUtil.isIndexReadOnly()) {
 			return;
 		}
@@ -129,9 +153,23 @@ public class SearchEngineInitializer implements Runnable {
 		stopWatch.start();
 
 		try {
-			SearchEngineHelperUtil.removeCompany(_companyId);
+			Date date = null;
 
-			SearchEngineHelperUtil.initialize(_companyId);
+			if (_isExecuteConcurrentReindex()) {
+				SearchEngineHelperUtil.initialize(_companyId);
+
+				_concurrentReindexManager.createNextIndex(_companyId);
+			}
+			else if (_isExecuteSyncReindex()) {
+				date = new Date();
+
+				Thread.sleep(1000);
+			}
+			else {
+				SearchEngineHelperUtil.removeCompany(_companyId);
+
+				SearchEngineHelperUtil.initialize(_companyId);
+			}
 
 			long backgroundTaskId =
 				BackgroundTaskThreadLocal.getBackgroundTaskId();
@@ -148,7 +186,11 @@ public class SearchEngineInitializer implements Runnable {
 					"(!(system.index=true))");
 			}
 
+			Set<String> indexerClassNames = new HashSet<>();
+
 			for (Indexer<?> indexer : _indexers) {
+				indexerClassNames.add(indexer.getClassName());
+
 				FutureTask<Void> futureTask = new FutureTask<>(
 					new Callable<Void>() {
 
@@ -189,6 +231,15 @@ public class SearchEngineInitializer implements Runnable {
 				futureTask.get();
 			}
 
+			if (_isExecuteConcurrentReindex()) {
+				_concurrentReindexManager.replaceCurrentIndexWithNextIndex(
+					_companyId);
+			}
+			else if (_isExecuteSyncReindex()) {
+				_syncReindexManager.deleteStaleDocuments(
+					_companyId, date, indexerClassNames);
+			}
+
 			if (_log.isInfoEnabled()) {
 				_log.info(
 					"Reindexing completed in " +
@@ -196,6 +247,10 @@ public class SearchEngineInitializer implements Runnable {
 			}
 		}
 		catch (Exception exception) {
+			if (_isExecuteConcurrentReindex()) {
+				_concurrentReindexManager.deleteNextIndex(_companyId);
+			}
+
 			_log.error("Error encountered while reindexing", exception);
 
 			if (_log.isInfoEnabled()) {
@@ -211,8 +266,11 @@ public class SearchEngineInitializer implements Runnable {
 
 	private final BundleContext _bundleContext;
 	private final long _companyId;
+	private final ConcurrentReindexManager _concurrentReindexManager;
+	private final String _executionMode;
 	private boolean _finished;
 	private ServiceTrackerList<Indexer<?>> _indexers;
 	private final PortalExecutorManager _portalExecutorManager;
+	private final SyncReindexManager _syncReindexManager;
 
 }

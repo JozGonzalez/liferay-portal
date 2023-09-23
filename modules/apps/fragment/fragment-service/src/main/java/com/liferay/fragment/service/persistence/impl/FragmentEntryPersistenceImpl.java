@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.service.persistence.impl;
@@ -52,7 +43,6 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -1913,21 +1903,21 @@ public class FragmentEntryPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId, head};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G_Head, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntry.class);
 
 		if (result instanceof FragmentEntry) {
 			FragmentEntry fragmentEntry = (FragmentEntry)result;
@@ -1938,6 +1928,14 @@ public class FragmentEntryPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntry.class, fragmentEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -8411,21 +8409,21 @@ public class FragmentEntryPersistenceImpl
 
 		fragmentEntryKey = Objects.toString(fragmentEntryKey, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, fragmentEntryKey, head};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByG_FEK_Head, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntry.class);
 
 		if (result instanceof FragmentEntry) {
 			FragmentEntry fragmentEntry = (FragmentEntry)result;
@@ -8437,6 +8435,14 @@ public class FragmentEntryPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntry.class, fragmentEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -15190,21 +15196,21 @@ public class FragmentEntryPersistenceImpl
 	 */
 	@Override
 	public FragmentEntry fetchByHeadId(long headId, boolean useFinderCache) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {headId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByHeadId, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntry.class);
 
 		if (result instanceof FragmentEntry) {
 			FragmentEntry fragmentEntry = (FragmentEntry)result;
@@ -15212,6 +15218,14 @@ public class FragmentEntryPersistenceImpl
 			if (headId != fragmentEntry.getHeadId()) {
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntry.class, fragmentEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -16790,30 +16804,14 @@ public class FragmentEntryPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"headId"},
 			false);
 
-		_setFragmentEntryUtilPersistence(this);
+		FragmentEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setFragmentEntryUtilPersistence(null);
+		FragmentEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(FragmentEntryImpl.class.getName());
-	}
-
-	private void _setFragmentEntryUtilPersistence(
-		FragmentEntryPersistence fragmentEntryPersistence) {
-
-		try {
-			Field field = FragmentEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, fragmentEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

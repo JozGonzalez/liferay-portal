@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -441,11 +441,15 @@ definition {
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
-		PopulateObjectFormsConfiguration.viewDisplaySelectOption(label = "Object");
+		AssertElementPresent(
+			key_label = "Object",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 
 		PopulateObjectFormsConfiguration.selectObject(label = "Object");
 
-		PopulateObjectFormsConfiguration.viewDisplaySelectOption(label = "Custom Object 311");
+		AssertElementPresent(
+			key_label = "Custom Object 311",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 	}
 
 	@description = "LPS-136456 - Verify that the Repeatable option is not available on a form when it is mapped to an object"

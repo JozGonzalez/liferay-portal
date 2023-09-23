@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.verify;
@@ -1651,8 +1642,7 @@ public class VerifyProperties {
 	private static final String[] _OBSOLETE_PORTAL_KEYS = {
 		"aim.login", "aim.login", "amazon.access.key.id",
 		"amazon.associate.tag", "amazon.secret.access.key",
-		"asset.categories.properties.default",
-		"asset.entry.increment.view.counter.enabled", "asset.entry.validator",
+		"asset.categories.properties.default", "asset.entry.validator",
 		"asset.publisher.asset.entry.query.processors",
 		"asset.publisher.filter.unlistable.entries",
 		"asset.publisher.query.form.configuration",
@@ -1697,6 +1687,7 @@ public class VerifyProperties {
 		"captcha.engine.simplecaptcha.noise.producers",
 		"captcha.engine.simplecaptcha.text.producers",
 		"captcha.engine.simplecaptcha.word.renderers", "cas.validate.url",
+		"change.tracking.sql.transformer.cache.size",
 		"cluster.executor.heartbeat.interval",
 		"cluster.link.node.bootup.response.timeout",
 		"com.liferay.filters.doubleclick.DoubleClickFilter",
@@ -1704,6 +1695,7 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.doubleclick.DoubleClickFilter",
 		"com.liferay.portal.servlet.filters.charbufferpool." +
 			"CharBufferPoolFilter",
+		"com.liferay.portal.servlet.filters.i18n.I18nFilter",
 		"com.liferay.portal.servlet.filters.jsoncontenttype." +
 			"JSONContentTypeFilter",
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
@@ -1719,7 +1711,7 @@ public class VerifyProperties {
 		"control.panel.home.portlet.id",
 		"control.panel.navigation.max.organizations",
 		"control.panel.navigation.max.sites", "convert.processes",
-		"data.limit.max.dl.storage.size",
+		"counter.jdbc.prefix", "data.limit.max.dl.storage.size",
 		"data.limit.max.journal.article.count",
 		"data.limit.max.journal.folder.count",
 		"data.limit.max.mail.message.count",
@@ -1909,9 +1901,11 @@ public class VerifyProperties {
 		"layout.url.friendliable[panel]", "layout.url.friendliable[url]",
 		"layout.view.page[control_panel]", "layout.view.page[embedded]",
 		"layout.view.page[link_to_layout]", "layout.view.page[panel]",
-		"layout.view.page[url]", "library.download.url.resin.jar",
-		"library.download.url.script-10.jar", "liferay.lib.global.shared.dir",
-		"liferay.web.portal.dir", "look.and.feel.modifiable", "lucene.analyzer",
+		"layout.view.page[url]", "ldap.clock.skew",
+		"ldap.ignore.user.search.filter.for.auth=true",
+		"library.download.url.resin.jar", "library.download.url.script-10.jar",
+		"liferay.lib.global.shared.dir", "liferay.web.portal.dir",
+		"look.and.feel.modifiable", "lucene.analyzer",
 		"lucene.cluster.index.loading.sync.timeout", "lucene.file.extractor",
 		"lucene.file.extractor.regexp.strip", "lucene.replicate.write",
 		"lucene.store.jdbc.auto.clean.up",

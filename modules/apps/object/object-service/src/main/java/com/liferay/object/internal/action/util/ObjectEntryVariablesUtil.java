@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.action.util;
@@ -17,17 +8,20 @@ package com.liferay.object.internal.action.util;
 import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpression;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.internal.dynamic.data.mapping.expression.ObjectEntryDDMExpressionParameterAccessor;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
+import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -92,26 +86,28 @@ public class ObjectEntryVariablesUtil {
 	public static Map<String, Object> getVariables(
 		DTOConverterRegistry dtoConverterRegistry,
 		ObjectDefinition objectDefinition, JSONObject payloadJSONObject,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		Map<String, Object> currentVariables = _getVariables(
 			dtoConverterRegistry, objectDefinition, false, payloadJSONObject,
-			systemObjectDefinitionMetadataRegistry);
+			systemObjectDefinitionManagerRegistry);
 
 		return HashMapBuilder.<String, Object>put(
 			"baseModel", currentVariables
 		).put(
+			"entryDTO", currentVariables.get("entryDTO")
+		).put(
 			"originalBaseModel",
 			() -> {
 				String suffix = _getSuffix(
-					objectDefinition, systemObjectDefinitionMetadataRegistry);
+					objectDefinition, systemObjectDefinitionManagerRegistry);
 
 				if (payloadJSONObject.has("original" + suffix)) {
 					return _getVariables(
 						dtoConverterRegistry, objectDefinition, true,
 						payloadJSONObject,
-						systemObjectDefinitionMetadataRegistry);
+						systemObjectDefinitionManagerRegistry);
 				}
 
 				return _getDefaultVariables(
@@ -124,15 +120,15 @@ public class ObjectEntryVariablesUtil {
 	private static String _getContentType(
 		DTOConverterRegistry dtoConverterRegistry,
 		ObjectDefinition objectDefinition,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
 			jaxRsApplicationDescriptor.getApplicationName(),
@@ -140,8 +136,7 @@ public class ObjectEntryVariablesUtil {
 			jaxRsApplicationDescriptor.getVersion());
 
 		if (dtoConverter == null) {
-			Class<?> modelClass =
-				systemObjectDefinitionMetadata.getModelClass();
+			Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
 
 			return modelClass.getSimpleName();
 		}
@@ -158,7 +153,10 @@ public class ObjectEntryVariablesUtil {
 				ObjectFieldLocalServiceUtil.getObjectFields(
 					objectDefinition.getObjectDefinitionId())) {
 
-			String defaultValue = objectField.getDefaultValue();
+			String defaultValue =
+				ObjectFieldSettingUtil.getDefaultValueAsString(
+					null, objectField.getObjectFieldId(),
+					ObjectFieldSettingLocalServiceUtil.getService(), null);
 
 			if (Validator.isNotNull(defaultValue) &&
 				keys.contains(objectField.getName())) {
@@ -172,18 +170,18 @@ public class ObjectEntryVariablesUtil {
 
 	private static String _getSuffix(
 		ObjectDefinition objectDefinition,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
-		if (!objectDefinition.isSystem()) {
+		if (!objectDefinition.isUnmodifiableSystemObject()) {
 			return "ObjectEntry";
 		}
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
-		Class<?> modelClass = systemObjectDefinitionMetadata.getModelClass();
+		Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
 
 		return modelClass.getSimpleName();
 	}
@@ -192,28 +190,40 @@ public class ObjectEntryVariablesUtil {
 		DTOConverterRegistry dtoConverterRegistry,
 		ObjectDefinition objectDefinition, boolean oldValues,
 		JSONObject payloadJSONObject,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
+
+		String userId = payloadJSONObject.getString("userId");
 
 		Map<String, Object> allowedVariables =
 			HashMapBuilder.<String, Object>put(
-				"creator", payloadJSONObject.get("userId")
+				"creator",
+				() -> {
+					if (objectDefinition.isUnmodifiableSystemObject()) {
+						return userId;
+					}
+
+					return MapUtil.getString(
+						(Map<String, Object>)payloadJSONObject.get(
+							"objectEntry"),
+						"userId");
+				}
 			).put(
-				"currentUserId", payloadJSONObject.get("userId")
+				"currentUserId", userId
 			).build();
 
 		Map<String, Object> variables = new HashMap<>();
 
-		if (objectDefinition.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
-			variables = systemObjectDefinitionMetadata.getVariables(
+			variables = systemObjectDefinitionManager.getVariables(
 				_getContentType(
 					dtoConverterRegistry, objectDefinition,
-					systemObjectDefinitionMetadataRegistry),
+					systemObjectDefinitionManagerRegistry),
 				objectDefinition, oldValues, payloadJSONObject);
 
 			if (variables == null) {
@@ -234,6 +244,11 @@ public class ObjectEntryVariablesUtil {
 			variables.putAll((Map<String, Object>)variables.get("values"));
 
 			variables.remove("values");
+
+			allowedVariables.put(
+				"entryDTO",
+				payloadJSONObject.get(
+					"objectEntryDTO" + objectDefinition.getShortName()));
 
 			Object objectEntryId = variables.get("objectEntryId");
 

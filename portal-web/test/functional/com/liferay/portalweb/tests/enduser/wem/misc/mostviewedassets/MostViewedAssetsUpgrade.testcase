@@ -1,8 +1,11 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Most Viewed Assets,Upgrades WEM";
 	property testray.main.component.name = "Upgrades WEM";
 
@@ -23,7 +26,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.0.6";
 
-		Upgrade.viewOrderOfAssetsOnMostedViewedAssets();
+		ValidateMostViewedAssetsUpgrade.viewOrderOfAssetsOnMostedViewedAssets();
 	}
 
 	@description = "This is a test for LPS-125952. View displayed assets on Most Viewed Assets widget."
@@ -33,7 +36,7 @@ definition {
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.version = "7.0.10.16";
 
-		Upgrade.viewOrderOfAssetsOnMostedViewedAssets();
+		ValidateMostViewedAssetsUpgrade.viewOrderOfAssetsOnMostedViewedAssets();
 	}
 
 }

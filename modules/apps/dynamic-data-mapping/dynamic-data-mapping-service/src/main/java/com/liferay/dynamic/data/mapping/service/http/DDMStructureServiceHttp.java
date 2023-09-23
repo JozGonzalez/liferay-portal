@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.http;
@@ -207,7 +198,7 @@ public class DDMStructureServiceHttp {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMStructure
 			copyStructure(
-				HttpPrincipal httpPrincipal, long structureId,
+				HttpPrincipal httpPrincipal, long sourceStructureId,
 				java.util.Map<java.util.Locale, String> nameMap,
 				java.util.Map<java.util.Locale, String> descriptionMap,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -219,7 +210,7 @@ public class DDMStructureServiceHttp {
 				_copyStructureParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, structureId, nameMap, descriptionMap,
+				methodKey, sourceStructureId, nameMap, descriptionMap,
 				serviceContext);
 
 			Object returnObj = null;
@@ -253,7 +244,7 @@ public class DDMStructureServiceHttp {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMStructure
 			copyStructure(
-				HttpPrincipal httpPrincipal, long structureId,
+				HttpPrincipal httpPrincipal, long sourceStructureId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -263,7 +254,7 @@ public class DDMStructureServiceHttp {
 				_copyStructureParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, structureId, serviceContext);
+				methodKey, sourceStructureId, serviceContext);
 
 			Object returnObj = null;
 
@@ -802,6 +793,54 @@ public class DDMStructureServiceHttp {
 
 	public static java.util.List
 		<com.liferay.dynamic.data.mapping.model.DDMStructure> search(
+				HttpPrincipal httpPrincipal, long companyId, long[] groupIds,
+				long classNameId, long classPK, String keywords, int status,
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.dynamic.data.mapping.model.DDMStructure>
+						orderByComparator)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				DDMStructureServiceUtil.class, "search",
+				_searchParameterTypes18);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, groupIds, classNameId, classPK, keywords,
+				status, start, end, orderByComparator);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List
+				<com.liferay.dynamic.data.mapping.model.DDMStructure>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.dynamic.data.mapping.model.DDMStructure> search(
 			HttpPrincipal httpPrincipal, long companyId, long[] groupIds,
 			long classNameId, String keywords, int type, int status, int start,
 			int end,
@@ -812,7 +851,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "search",
-				_searchParameterTypes18);
+				_searchParameterTypes19);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, keywords, type,
@@ -851,7 +890,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "search",
-				_searchParameterTypes19);
+				_searchParameterTypes20);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, keywords, status,
@@ -892,7 +931,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "search",
-				_searchParameterTypes20);
+				_searchParameterTypes21);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, name, description,
@@ -922,13 +961,55 @@ public class DDMStructureServiceHttp {
 	}
 
 	public static int searchCount(
+			HttpPrincipal httpPrincipal, long companyId, long[] groupIds,
+			long classNameId, long classPK, String keywords, int status)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				DDMStructureServiceUtil.class, "searchCount",
+				_searchCountParameterTypes22);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, groupIds, classNameId, classPK, keywords,
+				status);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static int searchCount(
 		HttpPrincipal httpPrincipal, long companyId, long[] groupIds,
 		long classNameId, String keywords, int status) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "searchCount",
-				_searchCountParameterTypes21);
+				_searchCountParameterTypes23);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, keywords, status);
@@ -961,7 +1042,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "searchCount",
-				_searchCountParameterTypes22);
+				_searchCountParameterTypes24);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, keywords, type,
@@ -996,7 +1077,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "searchCount",
-				_searchCountParameterTypes23);
+				_searchCountParameterTypes25);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, classNameId, name, description,
@@ -1038,7 +1119,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "updateStructure",
-				_updateStructureParameterTypes24);
+				_updateStructureParameterTypes26);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, parentStructureId, classNameId,
@@ -1089,7 +1170,7 @@ public class DDMStructureServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DDMStructureServiceUtil.class, "updateStructure",
-				_updateStructureParameterTypes25);
+				_updateStructureParameterTypes27);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, structureId, parentStructureId, nameMap,
@@ -1202,31 +1283,40 @@ public class DDMStructureServiceHttp {
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _searchParameterTypes18 = new Class[] {
-		long.class, long[].class, long.class, String.class, int.class,
+		long.class, long[].class, long.class, long.class, String.class,
 		int.class, int.class, int.class,
 		com.liferay.portal.kernel.util.OrderByComparator.class
 	};
 	private static final Class<?>[] _searchParameterTypes19 = new Class[] {
 		long.class, long[].class, long.class, String.class, int.class,
-		int.class, int.class,
+		int.class, int.class, int.class,
 		com.liferay.portal.kernel.util.OrderByComparator.class
 	};
 	private static final Class<?>[] _searchParameterTypes20 = new Class[] {
+		long.class, long[].class, long.class, String.class, int.class,
+		int.class, int.class,
+		com.liferay.portal.kernel.util.OrderByComparator.class
+	};
+	private static final Class<?>[] _searchParameterTypes21 = new Class[] {
 		long.class, long[].class, long.class, String.class, String.class,
 		String.class, int.class, int.class, boolean.class, int.class, int.class,
 		com.liferay.portal.kernel.util.OrderByComparator.class
 	};
-	private static final Class<?>[] _searchCountParameterTypes21 = new Class[] {
-		long.class, long[].class, long.class, String.class, int.class
-	};
 	private static final Class<?>[] _searchCountParameterTypes22 = new Class[] {
-		long.class, long[].class, long.class, String.class, int.class, int.class
+		long.class, long[].class, long.class, long.class, String.class,
+		int.class
 	};
 	private static final Class<?>[] _searchCountParameterTypes23 = new Class[] {
+		long.class, long[].class, long.class, String.class, int.class
+	};
+	private static final Class<?>[] _searchCountParameterTypes24 = new Class[] {
+		long.class, long[].class, long.class, String.class, int.class, int.class
+	};
+	private static final Class<?>[] _searchCountParameterTypes25 = new Class[] {
 		long.class, long[].class, long.class, String.class, String.class,
 		String.class, int.class, int.class, boolean.class
 	};
-	private static final Class<?>[] _updateStructureParameterTypes24 =
+	private static final Class<?>[] _updateStructureParameterTypes26 =
 		new Class[] {
 			long.class, long.class, long.class, String.class,
 			java.util.Map.class, java.util.Map.class,
@@ -1234,7 +1324,7 @@ public class DDMStructureServiceHttp {
 			com.liferay.dynamic.data.mapping.model.DDMFormLayout.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateStructureParameterTypes25 =
+	private static final Class<?>[] _updateStructureParameterTypes27 =
 		new Class[] {
 			long.class, long.class, java.util.Map.class, java.util.Map.class,
 			com.liferay.dynamic.data.mapping.model.DDMForm.class,

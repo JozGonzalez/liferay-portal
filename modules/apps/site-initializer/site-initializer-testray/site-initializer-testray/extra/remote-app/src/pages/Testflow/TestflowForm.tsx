@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -19,6 +10,7 @@ import {useEffect, useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {useNavigate, useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../components/Form';
 import Container from '../../components/Layout/Container';
@@ -79,6 +71,8 @@ const TestflowForm = () => {
 
 	const {setHeading} = useHeader({timeout: 210});
 
+	const [isCheckedAll, setCheckedAll] = useState<boolean>(false);
+
 	const {
 		data: {
 			testrayTaskCaseTypes = [],
@@ -97,7 +91,6 @@ const TestflowForm = () => {
 			pageSize: 100,
 		},
 	});
-
 	const caseTypes = useMemo(() => data?.items || [], [
 		data?.items,
 	]) as TestrayCaseType[];
@@ -107,7 +100,7 @@ const TestflowForm = () => {
 	);
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -221,6 +214,23 @@ const TestflowForm = () => {
 		setValue('userIds', userIds);
 	}, [setValue, userIds]);
 
+	useEffect(() => {
+		if (caseTypesWatch.length && caseTypesWatch.length < caseTypes.length) {
+			setCheckedAll(false);
+		}
+	}, [caseTypes.length, caseTypesWatch.length]);
+
+	const onSelectAll = () => {
+		if (isCheckedAll) {
+			setValue('caseTypes', []);
+		}
+		else {
+			caseTypes.forEach((caseType, index) => {
+				setValue(`caseTypes.${index}`, caseType.id);
+			});
+		}
+	};
+
 	return (
 		<Container>
 			<ClayInput.GroupItem shrink>
@@ -237,6 +247,19 @@ const TestflowForm = () => {
 				<label className="mb-2 required">
 					{i18n.translate('case-type')}
 				</label>
+
+				<div className="col-4 my-3">
+					{!taskId && (
+						<Form.Checkbox
+							checked={isCheckedAll}
+							label={i18n.translate('select-all')}
+							onChange={() => {
+								setCheckedAll((isCheckedAll) => !isCheckedAll);
+								onSelectAll();
+							}}
+						/>
+					)}
+				</div>
 
 				<div className="d-flex flex-wrap">
 					{caseTypes.map((caseType, index: number) => (
@@ -300,6 +323,7 @@ const TestflowForm = () => {
 			<Form.Footer
 				onClose={() => onClose()}
 				onSubmit={handleSubmit(_onSubmit)}
+				primaryButtonProps={{loading: isSubmitting}}
 			/>
 
 			<TestflowAssignUserModal modal={modal} type={modalType} />
@@ -307,4 +331,8 @@ const TestflowForm = () => {
 	);
 };
 
-export default TestflowForm;
+export default withPagePermission(TestflowForm, {
+	createPath:
+		'/project/:projectId/routines/:routinesId/build/:buildId/testflow/create',
+	restImpl: testrayTaskImpl,
+});

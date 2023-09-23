@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.checkstyle.util;
@@ -74,11 +65,11 @@ public class CheckstyleUtil {
 			new PropertiesExpander(System.getProperties()),
 			ConfigurationLoader.IgnoredModulesOptions.EXECUTE);
 
-		DefaultConfiguration treeWalkerConfiguration = _getChildConfiguration(
-			configuration, "TreeWalker");
+		DefaultConfiguration treeWalkerDefaultConfiguration =
+			_getChildDefaultConfiguration(configuration, "TreeWalker");
 
 		Configuration[] checkConfigurations =
-			treeWalkerConfiguration.getChildren();
+			treeWalkerDefaultConfiguration.getChildren();
 
 		if (checkConfigurations == null) {
 			return configuration;
@@ -112,7 +103,7 @@ public class CheckstyleUtil {
 				 !filterCheckCategoryNames.contains(checkCategory) &&
 				 !filterCheckNames.contains(checkSimpleName))) {
 
-				treeWalkerConfiguration.removeChild(checkConfiguration);
+				treeWalkerDefaultConfiguration.removeChild(checkConfiguration);
 
 				continue;
 			}
@@ -157,9 +148,9 @@ public class CheckstyleUtil {
 				}
 			}
 
-			treeWalkerConfiguration.removeChild(checkConfiguration);
+			treeWalkerDefaultConfiguration.removeChild(checkConfiguration);
 
-			treeWalkerConfiguration.addChild(defaultConfiguration);
+			treeWalkerDefaultConfiguration.addChild(defaultConfiguration);
 		}
 
 		if (sourceFormatterArgs.isShowDebugInformation()) {
@@ -249,7 +240,7 @@ public class CheckstyleUtil {
 		return attributesJSONObject;
 	}
 
-	private static DefaultConfiguration _getChildConfiguration(
+	private static DefaultConfiguration _getChildDefaultConfiguration(
 		Configuration configuration, String name) {
 
 		if (!(configuration instanceof DefaultConfiguration)) {

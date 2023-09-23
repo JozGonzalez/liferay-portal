@@ -50,6 +50,10 @@ definition {
 		MenuItem.click(menuItem = ${filterValues});
 	}
 
+	macro goToNotificationQueueAdmin {
+		Navigator.openSpecificURL(url = "/group/guest/~/control_panel/manage?p_p_id=com_liferay_notification_web_internal_portlet_NotificationQueueEntriesPortlet");
+	}
+
 	macro gotoNotifications {
 		if (IsElementPresent(locator1 = "Notifications#USER_BAR_BADGE_COUNT")) {
 			Click(locator1 = "Notifications#USER_BAR_BADGE_COUNT");
@@ -70,6 +74,10 @@ definition {
 		if (IsElementPresent(locator1 = "Notifications#USER_NAVIGATION_BAR_BADGE_COUNT")) {
 			Click(locator1 = "Notifications#USER_NAVIGATION_BAR_BADGE_COUNT");
 		}
+	}
+
+	macro goToNotificationTemplateAdmin {
+		Navigator.openSpecificURL(url = "/group/guest/~/control_panel/manage?p_p_id=com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet");
 	}
 
 	macro markAsReadViaManagementBar {
@@ -137,31 +145,33 @@ definition {
 				locator1 = "Notifications#USER_BAR_BADGE_COUNT",
 				value1 = ${notificationCount});
 		}
-
-		if (IsElementPresent(locator1 = "Notifications#PROFILE_BADGE_COUNT")) {
+		else if (IsElementPresent(locator1 = "Notifications#PROFILE_BADGE_COUNT")) {
 			AssertTextEquals(
 				locator1 = "Notifications#PROFILE_BADGE_COUNT",
 				value1 = ${notificationCount});
 		}
-
-		if (IsElementPresent(locator1 = "Notifications#MY_ACCOUNT_BADGE_COUNT")) {
+		else if (IsElementPresent(locator1 = "Notifications#MY_ACCOUNT_BADGE_COUNT")) {
 			AssertTextEquals(
 				locator1 = "Notifications#MY_ACCOUNT_BADGE_COUNT",
 				value1 = ${notificationCount});
 		}
-
-		if (IsElementPresent(locator1 = "Notifications#NOTIFICATIONS_BADGE_COUNT")) {
+		else if (IsElementPresent(locator1 = "Notifications#NOTIFICATIONS_BADGE_COUNT")) {
 			if (IsElementPresent.isVisible(locator1 = "Notifications#NOTIFICATIONS_BADGE_COUNT")) {
 				AssertTextEquals(
 					locator1 = "Notifications#NOTIFICATIONS_BADGE_COUNT",
 					value1 = ${notificationCount});
 			}
 		}
-
-		if (IsElementPresent(locator1 = "Notifications#USER_NAVIGATION_BAR_BADGE_COUNT")) {
+		else if (IsElementPresent(locator1 = "Notifications#USER_NAVIGATION_BAR_BADGE_COUNT")) {
 			AssertTextEquals(
 				locator1 = "Notifications#USER_NAVIGATION_BAR_BADGE_COUNT",
 				value1 = ${notificationCount});
+		}
+		else if (${notificationCount} == 0) {
+			AssertElementNotPresent(locator1 = "Notifications#PROFILE_BADGE_COUNT");
+		}
+		else {
+			fail("FAIL. No notification was found.");
 		}
 	}
 
@@ -297,9 +307,7 @@ definition {
 
 		Notifications.navigateToContent(contentBody = ${contentBody});
 
-		AssertTextEquals(
-			locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-			value1 = "Forbidden");
+		AssertTextPresent(value1 = "You do not have permission to access the requested resource.");
 	}
 
 	macro viewNoRequest {

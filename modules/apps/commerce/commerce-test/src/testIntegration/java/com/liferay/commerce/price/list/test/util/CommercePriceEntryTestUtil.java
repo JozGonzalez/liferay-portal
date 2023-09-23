@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.test.util;
@@ -48,7 +39,7 @@ public class CommercePriceEntryTestUtil {
 
 		return CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
 			externalReferenceCode, cpProductId, cpInstanceUuid,
-			commercePriceListId, price, BigDecimal.ZERO,
+			commercePriceListId, price, false, BigDecimal.ZERO, null,
 			ServiceContextTestUtil.getServiceContext(
 				commercePriceList.getGroupId()));
 	}
@@ -69,7 +60,7 @@ public class CommercePriceEntryTestUtil {
 			ServiceContextTestUtil.getServiceContext(
 				commercePriceList.getGroupId());
 
-		User user = UserLocalServiceUtil.getDefaultUser(
+		User user = UserLocalServiceUtil.getGuestUser(
 			serviceContext.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());
@@ -80,18 +71,18 @@ public class CommercePriceEntryTestUtil {
 
 		return CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
 			externalReferenceCode, cpProductId, cpInstanceUuid,
-			commercePriceListId, price, discountDiscovery, discountLevel1,
+			commercePriceListId, discountDiscovery, discountLevel1,
 			discountLevel2, discountLevel3, discountLevel4,
 			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
 			calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR_OF_DAY),
 			calendar.get(Calendar.MINUTE), calendar.get(Calendar.MONTH),
 			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
 			calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE),
-			neverExpire, serviceContext);
+			neverExpire, price, false, null, null, serviceContext);
 	}
 
 	public static CommerceTierPriceEntry addCommerceTierPriceEntry(
-			long commercePriceEntryId, BigDecimal price, int minQuantity,
+			long commercePriceEntryId, BigDecimal price, BigDecimal minQuantity,
 			boolean bulkPricing)
 		throws PortalException {
 
@@ -110,7 +101,7 @@ public class CommercePriceEntryTestUtil {
 
 	public static CommerceTierPriceEntry addCommerceTierPriceEntry(
 			long commercePriceEntryId, String externalReferenceCode,
-			BigDecimal price, int minQuantity, boolean bulkPricing,
+			BigDecimal price, BigDecimal minQuantity, boolean bulkPricing,
 			boolean discountDiscovery, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4, boolean publish, boolean neverExpire)
@@ -127,7 +118,7 @@ public class CommercePriceEntryTestUtil {
 			ServiceContextTestUtil.getServiceContext(
 				commercePriceList.getGroupId());
 
-		User user = UserLocalServiceUtil.getDefaultUser(
+		User user = UserLocalServiceUtil.getGuestUser(
 			serviceContext.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());

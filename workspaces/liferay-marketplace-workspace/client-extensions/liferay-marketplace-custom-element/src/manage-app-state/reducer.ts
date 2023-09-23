@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {InitialStateProps} from './AppManageState';
 import {TYPES} from './actionTypes';
 
@@ -12,8 +17,12 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			return state;
 		}
 		case TYPES.SUBMIT_APP_PROFILE: {
-			const {appERC, appId, appProductId, appWorkflowStatusInfo} =
-				action.payload.value;
+			const {
+				appERC,
+				appId,
+				appProductId,
+				appWorkflowStatusInfo,
+			} = action.payload.value;
 
 			return {
 				...state,
@@ -55,9 +64,15 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			return {...state, appInstallationGuideURL: {id, value}};
 		}
 		case TYPES.UPDATE_APP_LICENSE: {
-			const appLicense = action.payload.value;
+			const {id, value} = action.payload;
 
-			return {...state, appLicense};
+			return {
+				...state,
+				appLicense: {
+					id,
+					value,
+				},
+			};
 		}
 		case TYPES.UPDATE_APP_LICENSE_PRICE: {
 			const appLicensePrice = action.payload.value;
@@ -96,20 +111,23 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			return {...state, appName};
 		}
 		case TYPES.UPDATE_APP_NOTES: {
+			const {value} = action.payload;
+
+			return {
+				...state,
+				appNotes: value,
+			};
+		}
+		case TYPES.UPDATE_APP_PRICE_MODEL: {
 			const {id, value} = action.payload;
 
 			return {
 				...state,
-				appNotes: {
+				priceModel: {
 					id,
 					value,
 				},
 			};
-		}
-		case TYPES.UPDATE_APP_PRICE_MODEL: {
-			const priceModel = action.payload.value;
-
-			return {...state, priceModel};
 		}
 		case TYPES.UPDATE_APP_PUBLISHER_WEBSITE_URL: {
 			const {id, value} = action.payload;
@@ -160,16 +178,47 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 		case TYPES.UPDATE_APP_VERSION: {
-			const {id, value} = action.payload;
+			const {value} = action.payload;
 
 			return {
 				...state,
-				appVersion: {
-					id,
-					value,
-				},
+				appVersion: value,
 			};
 		}
+
+		case TYPES.UPDATE_OPTION_ID: {
+			const optionId = action.payload.value;
+
+			return {...state, optionId};
+		}
+
+		case TYPES.UPDATE_PRODUCT_OPTION_ID: {
+			const productOptionId = action.payload.value;
+
+			return {...state, productOptionId};
+		}
+
+		case TYPES.UPDATE_PRODUCT_OPTION_VALUES_ID: {
+			const noOptionId = action.payload.noOptionId;
+			const yesOptionId = action.payload.yesOptionId;
+
+			const optionValuesId = {noOptionId, yesOptionId};
+
+			return {...state, optionValuesId};
+		}
+
+		case TYPES.UPDATE_SKU_TRIAL_ID: {
+			const skuTrialId = action.payload.value;
+
+			return {...state, skuTrialId};
+		}
+
+		case TYPES.UPDATE_SKU_VERSION_ID: {
+			const skuVersionId = action.payload.value;
+
+			return {...state, skuVersionId};
+		}
+
 		default:
 			return state;
 	}

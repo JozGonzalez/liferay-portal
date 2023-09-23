@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -183,7 +174,9 @@ name = HtmlUtil.escapeJS(name);
 		var validDropTarget =
 			element.isContentEditable || !!element.getAttribute('droppable');
 
-		if (!validDropTarget) {
+		var droppedFiles = event._event.dataTransfer.files || [];
+
+		if (!validDropTarget && droppedFiles.length > 0) {
 			event.preventDefault();
 			event.stopImmediatePropagation();
 		}
@@ -282,6 +275,21 @@ name = HtmlUtil.escapeJS(name);
 			},
 		</c:if>
 
+		<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
+			onChangeCallback: function () {
+				var ckEditor = CKEDITOR.instances['<%= name %>'];
+				var dirty = ckEditor.checkDirty();
+
+				if (dirty) {
+					window['<%= HtmlUtil.escapeJS(onChangeMethod) %>'](
+						window['<%= name %>'].getHTML()
+					);
+
+					ckEditor.resetDirty();
+				}
+			},
+		</c:if>
+
 		<c:if test="<%= Validator.isNotNull(onFocusMethod) %>">
 			onFocusCallback: function () {
 				window['<%= HtmlUtil.escapeJS(onFocusMethod) %>'](
@@ -332,6 +340,14 @@ name = HtmlUtil.escapeJS(name);
 
 		if (ckEditor) {
 			var iframe = ckEditor.one('iframe');
+
+			if (iframe) {
+				iframe.attr(
+					'aria-labelledby',
+					'<%= namespace %>Aria ' +
+						iframe._node.attributes['aria-describedby'].value
+				);
+			}
 
 			addAUIClass(iframe);
 
@@ -549,6 +565,25 @@ name = HtmlUtil.escapeJS(name);
 				);
 			</c:if>
 
+			<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
+				var contentChangeHandle = setInterval(() => {
+					try {
+						window['<%= name %>'].onChangeCallback();
+					}
+					catch (e) {}
+				}, 300);
+
+				var clearContentChangeHandle = function (event) {
+					if (event.portletId === '<%= portletId %>') {
+						clearInterval(contentChangeHandle);
+
+						Liferay.detach('destroyPortlet', clearContentChangeHandle);
+					}
+				};
+
+				Liferay.on('destroyPortlet', clearContentChangeHandle);
+			</c:if>
+
 			<c:if test="<%= Validator.isNotNull(onFocusMethod) %>">
 				CKEDITOR.instances['<%= name %>'].on(
 					'focus',
@@ -597,14 +632,6 @@ name = HtmlUtil.escapeJS(name);
 				);
 			</c:if>
 		});
-
-		<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
-			ckEditor.on('change', (event) => {
-				window['<%= HtmlUtil.escapeJS(onChangeMethod) %>'](
-					window['<%= name %>'].getHTML()
-				);
-			});
-		</c:if>
 
 		ckEditor.on('dataReady', (event) => {
 			if (instancePendingData !== null) {

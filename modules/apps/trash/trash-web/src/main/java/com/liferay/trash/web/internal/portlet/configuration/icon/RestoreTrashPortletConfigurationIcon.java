@@ -1,27 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.trash.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.TrashedModel;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BaseJSPPortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.constants.TrashPortletKeys;
@@ -31,6 +26,7 @@ import com.liferay.trash.web.internal.display.context.TrashDisplayContext;
 import java.util.Map;
 
 import javax.portlet.PortletRequest;
+import javax.portlet.PortletResponse;
 
 import javax.servlet.ServletContext;
 
@@ -55,6 +51,8 @@ public class RestoreTrashPortletConfigurationIcon
 			"action", getNamespace(portletRequest) + "restoreTrash"
 		).put(
 			"globalAction", true
+		).put(
+			"restoreTrashURL", _getRestoreTrashURL(portletRequest)
 		).build();
 	}
 
@@ -118,6 +116,49 @@ public class RestoreTrashPortletConfigurationIcon
 	@Override
 	protected ServletContext getServletContext() {
 		return _servletContext;
+	}
+
+	private String _getRestoreTrashURL(PortletRequest portletRequest) {
+		try {
+			PortletResponse portletResponse =
+				(PortletResponse)portletRequest.getAttribute(
+					JavaConstants.JAVAX_PORTLET_RESPONSE);
+
+			TrashDisplayContext trashDisplayContext = new TrashDisplayContext(
+				_portal.getHttpServletRequest(portletRequest),
+				_portal.getLiferayPortletRequest(portletRequest),
+				_portal.getLiferayPortletResponse(portletResponse));
+
+			TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
+
+			return PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, TrashPortletKeys.TRASH,
+					PortletRequest.RENDER_PHASE)
+			).setMVCPath(
+				"/view_container_model.jsp"
+			).setRedirect(
+				trashDisplayContext.getViewContentRedirectURL()
+			).setParameter(
+				"classNameId", trashDisplayContext.getClassNameId()
+			).setParameter(
+				"classPK", trashDisplayContext.getClassPK()
+			).setParameter(
+				"containerModelClassNameId",
+				_portal.getClassNameId(
+					trashHandler.getContainerModelClassName(
+						trashDisplayContext.getClassPK()))
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return StringPool.BLANK;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

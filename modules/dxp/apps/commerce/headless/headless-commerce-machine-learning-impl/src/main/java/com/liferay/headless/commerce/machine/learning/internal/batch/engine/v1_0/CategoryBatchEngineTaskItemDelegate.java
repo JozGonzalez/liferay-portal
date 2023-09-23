@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.machine.learning.internal.batch.engine.v1_0;
@@ -19,9 +10,9 @@ import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.Category;
-import com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.CategoryDTOConverter;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 
 import java.io.Serializable;
 
@@ -58,7 +49,9 @@ public class CategoryBatchEngineTaskItemDelegate
 			pagination, sorts, search);
 	}
 
-	@Reference
-	private CategoryDTOConverter _categoryDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.CategoryDTOConverter)"
+	)
+	private DTOConverter<AssetCategory, Category> _categoryDTOConverter;
 
 }

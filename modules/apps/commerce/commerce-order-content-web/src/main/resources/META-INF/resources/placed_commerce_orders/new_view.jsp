@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -77,7 +68,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 				<div class="col-xl-4">
 
 					<%
-					CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+					AccountEntry accountEntry = commerceOrder.getAccountEntry();
 					%>
 
 					<commerce-ui:info-box
@@ -85,14 +76,14 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 						title='<%= LanguageUtil.get(request, "account-info") %>'
 					>
 						<c:choose>
-							<c:when test="<%= Validator.isNull(commerceAccount) %>">
+							<c:when test="<%= Validator.isNull(accountEntry) %>">
 								<span class="text-muted">
 									<%= StringPool.BLANK %>
 								</span>
 							</c:when>
 							<c:otherwise>
-								<p class="mb-0"><%= commerceAccount.getName() %></p>
-								<p class="mb-0">#<%= commerceAccount.getCommerceAccountId() %></p>
+								<p class="mb-0"><%= accountEntry.getName() %></p>
+								<p class="mb-0">#<%= accountEntry.getAccountEntryId() %></p>
 							</c:otherwise>
 						</c:choose>
 					</commerce-ui:info-box>
@@ -122,7 +113,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 					CommerceAddress billingCommerceAddress = commerceOrder.getBillingAddress();
 					%>
 
-					<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) %>">
+					<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) && (billingCommerceAddress != null) %>">
 						<commerce-ui:info-box
 							elementClasses="py-3"
 							title='<%= LanguageUtil.get(request, "billing-address") %>'
@@ -153,30 +144,32 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 					CommerceAddress shippingCommerceAddress = commerceOrder.getShippingAddress();
 					%>
 
-					<commerce-ui:info-box
-						elementClasses="py-3"
-						title='<%= LanguageUtil.get(request, "shipping-address") %>'
-					>
-						<p class="mb-0">
-							<%= shippingCommerceAddress.getStreet1() %>
-						</p>
-
-						<c:if test="<%= !Validator.isBlank(shippingCommerceAddress.getStreet2()) %>">
+					<c:if test="<%= shippingCommerceAddress != null %>">
+						<commerce-ui:info-box
+							elementClasses="py-3"
+							title='<%= LanguageUtil.get(request, "shipping-address") %>'
+						>
 							<p class="mb-0">
-								<%= shippingCommerceAddress.getStreet2() %>
+								<%= shippingCommerceAddress.getStreet1() %>
 							</p>
-						</c:if>
 
-						<c:if test="<%= !Validator.isBlank(shippingCommerceAddress.getStreet3()) %>">
+							<c:if test="<%= !Validator.isBlank(shippingCommerceAddress.getStreet2()) %>">
+								<p class="mb-0">
+									<%= shippingCommerceAddress.getStreet2() %>
+								</p>
+							</c:if>
+
+							<c:if test="<%= !Validator.isBlank(shippingCommerceAddress.getStreet3()) %>">
+								<p class="mb-0">
+									<%= shippingCommerceAddress.getStreet3() %>
+								</p>
+							</c:if>
+
 							<p class="mb-0">
-								<%= shippingCommerceAddress.getStreet3() %>
+								<%= commerceOrderContentDisplayContext.getDescriptiveAddress(shippingCommerceAddress) %>
 							</p>
-						</c:if>
-
-						<p class="mb-0">
-							<%= commerceOrderContentDisplayContext.getDescriptiveAddress(shippingCommerceAddress) %>
-						</p>
-					</commerce-ui:info-box>
+						</commerce-ui:info-box>
+					</c:if>
 
 					<commerce-ui:info-box
 						actionLabel='<%= (commerceOrderContentDisplayContext.hasManageCommerceOrderPaymentTermsPermission() && (commerceOrder.getPaymentCommerceTermEntryId() > 0)) ? LanguageUtil.get(request, "view") : null %>'
@@ -286,7 +279,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 				summary.default('summary', 'summary-root', {
 					apiUrl:
 						'/o/headless-commerce-admin-order/v1.0/orders/<%= commerceOrderContentDisplayContext.getCommerceOrderId() %>',
-					datasetDisplayId: '<%= CommerceOrderFDSNames.PLACED_ORDER_ITEMS %>',
+					dataSetDisplayId: '<%= CommerceOrderFDSNames.PLACED_ORDER_ITEMS %>',
 					portletId: '<%= portletDisplay.getRootPortletId() %>',
 				});
 			</aui:script>

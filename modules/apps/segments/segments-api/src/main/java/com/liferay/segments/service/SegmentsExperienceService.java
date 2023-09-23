@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service;
@@ -59,20 +50,20 @@ public interface SegmentsExperienceService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the segments experience remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SegmentsExperienceServiceUtil} if injection and service tracking are not available.
 	 */
 	public SegmentsExperience addSegmentsExperience(
-			long groupId, long segmentsEntryId, long classNameId, long classPK,
+			long groupId, long segmentsEntryId, long plid,
 			Map<Locale, String> nameMap, boolean active,
 			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public SegmentsExperience appendSegmentsExperience(
-			long groupId, long segmentsEntryId, long classNameId, long classPK,
+			long groupId, long segmentsEntryId, long plid,
 			Map<Locale, String> nameMap, boolean active,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public SegmentsExperience appendSegmentsExperience(
-			long groupId, long segmentsEntryId, long classNameId, long classPK,
+			long groupId, long segmentsEntryId, long plid,
 			Map<Locale, String> nameMap, boolean active,
 			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
@@ -84,8 +75,7 @@ public interface SegmentsExperienceService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience fetchSegmentsExperience(
-			long groupId, String segmentsExperienceKey, long classNameId,
-			long classPK)
+			long groupId, String segmentsExperienceKey, long plid)
 		throws PortalException;
 
 	/**
@@ -100,20 +90,24 @@ public interface SegmentsExperienceService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<SegmentsExperience> getSegmentsExperiences(
-			long groupId, long classNameId, long classPK, boolean active)
+	public SegmentsExperience getSegmentsExperience(
+			long groupId, String segmentsExperienceKey, long plid)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsExperience> getSegmentsExperiences(
-			long groupId, long classNameId, long classPK, boolean active,
-			int start, int end,
+			long groupId, long plid, boolean active)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SegmentsExperience> getSegmentsExperiences(
+			long groupId, long plid, boolean active, int start, int end,
 			OrderByComparator<SegmentsExperience> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getSegmentsExperiencesCount(
-			long groupId, long classNameId, long classPK, boolean active)
+			long groupId, long plid, boolean active)
 		throws PortalException;
 
 	public SegmentsExperience updateSegmentsExperience(

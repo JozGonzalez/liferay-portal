@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service;
@@ -96,24 +87,19 @@ public interface CommerceTierPriceEntryLocalService
 
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			boolean bulkPricing, int minQuantity, ServiceContext serviceContext)
+			BigDecimal minQuantity, ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			int minQuantity, ServiceContext serviceContext)
-		throws PortalException;
-
-	public CommerceTierPriceEntry addCommerceTierPriceEntry(
-			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, BigDecimal promoPrice, boolean bulkPricing,
-			int minQuantity, ServiceContext serviceContext)
+			boolean bulkPricing, BigDecimal minQuantity,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, BigDecimal promoPrice, int minQuantity,
+			BigDecimal price, BigDecimal promoPrice, BigDecimal minQuantity,
 			boolean bulkPricing, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -126,13 +112,19 @@ public interface CommerceTierPriceEntryLocalService
 
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, BigDecimal promoPrice, int minQuantity,
+			BigDecimal price, BigDecimal promoPrice, BigDecimal minQuantity,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceTierPriceEntry addCommerceTierPriceEntry(
 			String externalReferenceCode, long commercePriceEntryId,
-			BigDecimal price, int minQuantity, boolean bulkPricing,
+			BigDecimal price, BigDecimal promoPrice, boolean bulkPricing,
+			BigDecimal minQuantity, ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommerceTierPriceEntry addCommerceTierPriceEntry(
+			String externalReferenceCode, long commercePriceEntryId,
+			BigDecimal price, BigDecimal minQuantity, boolean bulkPricing,
 			boolean discountDiscovery, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
@@ -146,14 +138,15 @@ public interface CommerceTierPriceEntryLocalService
 	public CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			String externalReferenceCode, long commerceTierPriceEntryId,
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			int minQuantity, boolean bulkPricing, boolean discountDiscovery,
-			BigDecimal discountLevel1, BigDecimal discountLevel2,
-			BigDecimal discountLevel3, BigDecimal discountLevel4,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, String priceEntryExternalReferenceCode,
+			BigDecimal minQuantity, boolean bulkPricing,
+			boolean discountDiscovery, BigDecimal discountLevel1,
+			BigDecimal discountLevel2, BigDecimal discountLevel3,
+			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			String priceEntryExternalReferenceCode,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -184,13 +177,13 @@ public interface CommerceTierPriceEntryLocalService
 	public CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			String externalReferenceCode, long commerceTierPriceEntryId,
 			long commercePriceEntryId, BigDecimal price, BigDecimal promoPrice,
-			int minQuantity, String priceEntryExternalReferenceCode,
+			BigDecimal minQuantity, String priceEntryExternalReferenceCode,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			String externalReferenceCode, long commerceTierPriceEntryId,
-			long commercePriceEntryId, BigDecimal price, int minQuantity,
+			long commercePriceEntryId, BigDecimal price, BigDecimal minQuantity,
 			boolean bulkPricing, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -364,10 +357,10 @@ public interface CommerceTierPriceEntryLocalService
 		String uuid, long companyId);
 
 	public CommerceTierPriceEntry findClosestCommerceTierPriceEntry(
-		long commercePriceEntryId, int quantity);
+		long commercePriceEntryId, BigDecimal minQuantity);
 
 	public List<CommerceTierPriceEntry> findCommerceTierPriceEntries(
-		long commercePriceEntryId, int quantity);
+		long commercePriceEntryId, BigDecimal minQuantity);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -495,7 +488,7 @@ public interface CommerceTierPriceEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CommerceTierPriceEntry updateCommerceTierPriceEntry(
 			long commerceTierPriceEntryId, BigDecimal price,
-			BigDecimal promoPrice, int minQuantity, boolean bulkPricing,
+			BigDecimal promoPrice, BigDecimal minQuantity, boolean bulkPricing,
 			boolean discountDiscovery, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
@@ -508,20 +501,21 @@ public interface CommerceTierPriceEntryLocalService
 
 	public CommerceTierPriceEntry updateCommerceTierPriceEntry(
 			long commerceTierPriceEntryId, BigDecimal price,
-			BigDecimal promoPrice, int minQuantity,
+			BigDecimal promoPrice, BigDecimal minQuantity, boolean bulkPricing,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceTierPriceEntry updateCommerceTierPriceEntry(
-			long commerceTierPriceEntryId, BigDecimal price, int minQuantity,
-			boolean bulkPricing, boolean discountDiscovery,
-			BigDecimal discountLevel1, BigDecimal discountLevel2,
-			BigDecimal discountLevel3, BigDecimal discountLevel4,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
+			long commerceTierPriceEntryId, BigDecimal price,
+			BigDecimal minQuantity, boolean bulkPricing,
+			boolean discountDiscovery, BigDecimal discountLevel1,
+			BigDecimal discountLevel2, BigDecimal discountLevel3,
+			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)

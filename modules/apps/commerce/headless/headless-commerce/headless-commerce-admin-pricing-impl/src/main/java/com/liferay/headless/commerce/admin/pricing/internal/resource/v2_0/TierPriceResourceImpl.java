@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
@@ -21,15 +12,16 @@ import com.liferay.commerce.price.list.model.CommerceTierPriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommerceTierPriceEntryService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.TierPrice;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.TierPriceDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.TierPriceUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.TierPriceResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -304,7 +296,7 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		return _commerceTierPriceEntryService.updateCommerceTierPriceEntry(
 			commerceTierPriceEntry.getCommerceTierPriceEntryId(),
 			BigDecimal.valueOf(tierPrice.getPrice()),
-			GetterUtil.get(
+			BigDecimalUtil.get(
 				tierPrice.getMinimumQuantity(),
 				commerceTierPriceEntry.getMinQuantity()),
 			commercePriceEntry.isBulkPricing(),
@@ -338,7 +330,10 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;
 
-	@Reference
-	private TierPriceDTOConverter _tierPriceDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.TierPriceDTOConverter)"
+	)
+	private DTOConverter<CommerceTierPriceEntry, TierPrice>
+		_tierPriceDTOConverter;
 
 }

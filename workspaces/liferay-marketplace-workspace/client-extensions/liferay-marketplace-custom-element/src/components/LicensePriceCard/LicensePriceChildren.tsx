@@ -1,10 +1,10 @@
-import './LicensePriceChildren.scss';
-import unitedStatesIcon from '../../assets/icons/united-states.svg';
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
 
-type Currency = {
-	icon: string;
-	name: string;
-};
+import './LicensePriceChildren.scss';
+import unitedStatesIcon from '../../assets/icons/united_states_icon.svg';
 
 type Quantity = {
 	from: string;
@@ -12,7 +12,7 @@ type Quantity = {
 };
 
 interface LicensePriceChildren {
-	currency: Currency;
+	currency: string;
 	quantity: Quantity;
 	value: string;
 }
@@ -48,7 +48,7 @@ export function LicensePriceChildren({
 				</div>
 
 				<span className="license-currency-country-abbreviation">
-					{currency.name}
+					{currency}
 				</span>
 
 				<span className="license-currency-value">{value}</span>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.rest.resource.v1_0.test;
@@ -27,6 +18,7 @@ import com.liferay.batch.planner.rest.client.http.HttpInvoker;
 import com.liferay.batch.planner.rest.client.pagination.Page;
 import com.liferay.batch.planner.rest.client.resource.v1_0.FieldResource;
 import com.liferay.batch.planner.rest.client.serdes.v1_0.FieldSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -62,8 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -195,24 +185,24 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetPlanInternalClassNameFieldsPage() throws Exception {
-		String internalClassName =
-			testGetPlanInternalClassNameFieldsPage_getInternalClassName();
-		String irrelevantInternalClassName =
-			testGetPlanInternalClassNameFieldsPage_getIrrelevantInternalClassName();
+	public void testGetPlanInternalClassNameKeyFieldsPage() throws Exception {
+		String internalClassNameKey =
+			testGetPlanInternalClassNameKeyFieldsPage_getInternalClassNameKey();
+		String irrelevantInternalClassNameKey =
+			testGetPlanInternalClassNameKeyFieldsPage_getIrrelevantInternalClassNameKey();
 
-		Page<Field> page = fieldResource.getPlanInternalClassNameFieldsPage(
-			internalClassName, null);
+		Page<Field> page = fieldResource.getPlanInternalClassNameKeyFieldsPage(
+			internalClassNameKey, null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
-		if (irrelevantInternalClassName != null) {
+		if (irrelevantInternalClassNameKey != null) {
 			Field irrelevantField =
-				testGetPlanInternalClassNameFieldsPage_addField(
-					irrelevantInternalClassName, randomIrrelevantField());
+				testGetPlanInternalClassNameKeyFieldsPage_addField(
+					irrelevantInternalClassNameKey, randomIrrelevantField());
 
-			page = fieldResource.getPlanInternalClassNameFieldsPage(
-				irrelevantInternalClassName, null);
+			page = fieldResource.getPlanInternalClassNameKeyFieldsPage(
+				irrelevantInternalClassNameKey, null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -220,18 +210,18 @@ public abstract class BaseFieldResourceTestCase {
 				Arrays.asList(irrelevantField), (List<Field>)page.getItems());
 			assertValid(
 				page,
-				testGetPlanInternalClassNameFieldsPage_getExpectedActions(
-					irrelevantInternalClassName));
+				testGetPlanInternalClassNameKeyFieldsPage_getExpectedActions(
+					irrelevantInternalClassNameKey));
 		}
 
-		Field field1 = testGetPlanInternalClassNameFieldsPage_addField(
-			internalClassName, randomField());
+		Field field1 = testGetPlanInternalClassNameKeyFieldsPage_addField(
+			internalClassNameKey, randomField());
 
-		Field field2 = testGetPlanInternalClassNameFieldsPage_addField(
-			internalClassName, randomField());
+		Field field2 = testGetPlanInternalClassNameKeyFieldsPage_addField(
+			internalClassNameKey, randomField());
 
-		page = fieldResource.getPlanInternalClassNameFieldsPage(
-			internalClassName, null);
+		page = fieldResource.getPlanInternalClassNameKeyFieldsPage(
+			internalClassNameKey, null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -239,13 +229,13 @@ public abstract class BaseFieldResourceTestCase {
 			Arrays.asList(field1, field2), (List<Field>)page.getItems());
 		assertValid(
 			page,
-			testGetPlanInternalClassNameFieldsPage_getExpectedActions(
-				internalClassName));
+			testGetPlanInternalClassNameKeyFieldsPage_getExpectedActions(
+				internalClassNameKey));
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetPlanInternalClassNameFieldsPage_getExpectedActions(
-				String internalClassName)
+			testGetPlanInternalClassNameKeyFieldsPage_getExpectedActions(
+				String internalClassNameKey)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
@@ -253,8 +243,8 @@ public abstract class BaseFieldResourceTestCase {
 		return expectedActions;
 	}
 
-	protected Field testGetPlanInternalClassNameFieldsPage_addField(
-			String internalClassName, Field field)
+	protected Field testGetPlanInternalClassNameKeyFieldsPage_addField(
+			String internalClassNameKey, Field field)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -262,7 +252,7 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	protected String
-			testGetPlanInternalClassNameFieldsPage_getInternalClassName()
+			testGetPlanInternalClassNameKeyFieldsPage_getInternalClassNameKey()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -270,7 +260,7 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	protected String
-			testGetPlanInternalClassNameFieldsPage_getIrrelevantInternalClassName()
+			testGetPlanInternalClassNameKeyFieldsPage_getIrrelevantInternalClassNameKey()
 		throws Exception {
 
 		return null;
@@ -403,14 +393,19 @@ public abstract class BaseFieldResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -556,14 +551,16 @@ public abstract class BaseFieldResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -593,18 +590,18 @@ public abstract class BaseFieldResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -621,17 +618,93 @@ public abstract class BaseFieldResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(field.getDescription()));
-			sb.append("'");
+			Object object = field.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(field.getName()));
-			sb.append("'");
+			Object object = field.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -642,9 +715,47 @@ public abstract class BaseFieldResourceTestCase {
 		}
 
 		if (entityFieldName.equals("type")) {
-			sb.append("'");
-			sb.append(String.valueOf(field.getType()));
-			sb.append("'");
+			Object object = field.getType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

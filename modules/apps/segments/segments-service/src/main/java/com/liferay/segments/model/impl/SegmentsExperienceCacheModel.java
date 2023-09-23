@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.model.impl;
@@ -78,7 +69,7 @@ public class SegmentsExperienceCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(39);
+		StringBundler sb = new StringBundler(37);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -104,10 +95,8 @@ public class SegmentsExperienceCacheModel
 		sb.append(segmentsEntryId);
 		sb.append(", segmentsExperienceKey=");
 		sb.append(segmentsExperienceKey);
-		sb.append(", classNameId=");
-		sb.append(classNameId);
-		sb.append(", classPK=");
-		sb.append(classPK);
+		sb.append(", plid=");
+		sb.append(plid);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", priority=");
@@ -174,8 +163,7 @@ public class SegmentsExperienceCacheModel
 				segmentsExperienceKey);
 		}
 
-		segmentsExperienceImpl.setClassNameId(classNameId);
-		segmentsExperienceImpl.setClassPK(classPK);
+		segmentsExperienceImpl.setPlid(plid);
 
 		if (name == null) {
 			segmentsExperienceImpl.setName("");
@@ -228,9 +216,7 @@ public class SegmentsExperienceCacheModel
 		segmentsEntryId = objectInput.readLong();
 		segmentsExperienceKey = objectInput.readUTF();
 
-		classNameId = objectInput.readLong();
-
-		classPK = objectInput.readLong();
+		plid = objectInput.readLong();
 		name = objectInput.readUTF();
 
 		priority = objectInput.readInt();
@@ -280,9 +266,7 @@ public class SegmentsExperienceCacheModel
 			objectOutput.writeUTF(segmentsExperienceKey);
 		}
 
-		objectOutput.writeLong(classNameId);
-
-		objectOutput.writeLong(classPK);
+		objectOutput.writeLong(plid);
 
 		if (name == null) {
 			objectOutput.writeUTF("");
@@ -317,8 +301,7 @@ public class SegmentsExperienceCacheModel
 	public long modifiedDate;
 	public long segmentsEntryId;
 	public String segmentsExperienceKey;
-	public long classNameId;
-	public long classPK;
+	public long plid;
 	public String name;
 	public int priority;
 	public boolean active;

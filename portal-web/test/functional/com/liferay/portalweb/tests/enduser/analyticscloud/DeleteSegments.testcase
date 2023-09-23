@@ -27,13 +27,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -46,8 +48,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8595 | Test Summary: Delete a criteria"
 	@priority = 3
 	test CanDeleteCriteria {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "DeleteSegments#CanDeleteCriteria";
+		property test.run.type = "single";
 
 		task ("Get site assigned property name") {
 			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -67,10 +68,10 @@ definition {
 			ACUtils.setItemName(itemName = "New Segment Test");
 		}
 
-		task ("Add a birthDate and createDate field") {
+		task ("Add a birthDate and modifiedDate field") {
 			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
 
-			for (var criteriaName : list "birthDate,createDate") {
+			for (var criteriaName : list "birthDate,modifiedDate") {
 				ACSegments.addSegmentField(segmentField = ${criteriaName});
 			}
 
@@ -81,7 +82,7 @@ definition {
 			ACSegments.viewSegmentCriteriaIndividualAttributes(attributeName = "birthDate");
 
 			ACSegments.viewSegmentCriteriaIndividualAttributes(
-				attributeName = "createDate",
+				attributeName = "modifiedDate",
 				index = 2);
 		}
 
@@ -98,7 +99,7 @@ definition {
 		}
 
 		task ("View the segment criteria") {
-			ACSegments.viewSegmentCriteriaIndividualAttributes(attributeName = "createDate");
+			ACSegments.viewSegmentCriteriaIndividualAttributes(attributeName = "modifiedDate");
 
 			AssertElementNotPresent(
 				key_criteriaName = "birthDate",
@@ -109,7 +110,7 @@ definition {
 	@description = "Delete a dynamic segment"
 	@priority = 5
 	test CanDeleteDynamicSegment {
-		property test.name.skip.portal.instance = "DeleteSegments#CanDeleteDynamicSegment";
+		property test.run.type = "single";
 
 		ACUtils.createBlogsAndAddToPage();
 
@@ -165,8 +166,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8597 | Test Summary: Delete a Segment via the Segment List"
 	@priority = 4
 	test CanDeleteSegmentViaSegmentList {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "DeleteSegments#CanDeleteSegmentViaSegmentList";
+		property test.run.type = "single";
 
 		task ("Get site assigned property name") {
 			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -228,8 +228,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8138 | Test Summary: Delete a static segment"
 	@priority = 5
 	test CanDeleteStaticSegment {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "DeleteSegments#CanDeleteStaticSegment";
+		property test.run.type = "single";
 
 		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
@@ -281,8 +280,7 @@ definition {
 	@description = "Bug: LRAC-10247 | Automation ID: LRAC-10247 | Test Summary: Deleting a static segment does not remove user in known individuals"
 	@priority = 5
 	test CheckIfKnownIndividualsDontDisappearAfterDeleteStaticSegment {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "DeleteSegments#CheckIfKnownIndividualsDontDisappearAfterDeleteStaticSegment";
+		property test.run.type = "single";
 
 		task ("Connect the DXP to AC") {
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -370,10 +368,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8592 | Test Summary: Deleting a custom field that is used by a segment should reset the data"
+	@ignore = "true"
 	@priority = 4
 	test DeleteCustomFieldUsedSegmentResetData {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "DeleteSegments#DeleteCustomFieldUsedSegmentResetData";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Connect DXP to AC") {
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -521,11 +523,13 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8594 | Test Summary: Deleting a data source causes individuals to be removed from segment"
+	@ignore = "true"
 	@priority = 4
 	test DeleteDataSourceIndividualsRemovedSegment {
 		property portal.upstream = "quarantine";
 
 		// AC Quarantine Reason: Segment membership takes long time to load LRAC-10769
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
 		task ("Get site assigned property name") {
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
@@ -595,9 +599,9 @@ definition {
 			ACIndividualsDashboard.assertIndividualAttribute(individualAttribute = "New Segment Test");
 		}
 
-		task ("Delete the Data Source") {
-			ACSettings.deleteDataSource(dataSourceName = ${assignedPropertyName});
-		}
+		//task ("Delete the Data Source") {
+		//	ACSettings.deleteDataSource(dataSourceName = ${assignedPropertyName});
+		//}
 
 		task ("Exit Settings") {
 			ACNavigation.exitSettings();
@@ -615,8 +619,6 @@ definition {
 	@description = "Bug: LRAC-8239 | Automation ID: LRAC-11536 | Test Summary: Delete a segment in edit mode"
 	@priority = 2
 	test DeleteSegmentInEditMode {
-		property analytics.cloud.upstream = "false";
-
 		var staticSegmentName = "New Static Segment";
 		var dynamicSegmentName = "New Dynamic Segment";
 

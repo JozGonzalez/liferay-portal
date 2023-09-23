@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {ReactNode, createContext, useEffect, useReducer} from 'react';
@@ -137,6 +128,7 @@ const VehicleInfoForm: VehicleInfoFormTypes[] = [
 export type InitialStateTypes = {
 	applicationId: string;
 	currentStep: number;
+	externalReferenceCode: string;
 	hasFormChanges: boolean;
 	isAbleToBeSave: boolean;
 	isAbleToNextStep: boolean;
@@ -171,6 +163,7 @@ export type InitialStateTypes = {
 const initialState: InitialStateTypes = {
 	applicationId: '',
 	currentStep: 0,
+	externalReferenceCode: '',
 	hasFormChanges: false,
 	isAbleToBeSave: false,
 	isAbleToNextStep: false,
@@ -203,7 +196,7 @@ const initialState: InitialStateTypes = {
 };
 
 export enum ACTIONS {
-	SET_APPLICATION_ID = 'SET_APPLICATION_ID',
+	SET_APPLICATION = 'SET_APPLICATION',
 	SET_CURRENT_STEP = 'SET_CURRENT_STEP',
 	SET_CONTACT_INFO_FORM = 'SET_CONTACT_INFO_FORM',
 	SET_VEHICLE_INFO_FORM = 'SET_VEHICLE_INFO_FORM',
@@ -223,7 +216,7 @@ export enum ACTIONS {
 }
 
 type ActionsPayload = {
-	[ACTIONS.SET_APPLICATION_ID]: {id: number};
+	[ACTIONS.SET_APPLICATION]: {externalReferenceCode: string; id: number};
 	[ACTIONS.SET_CONTACT_INFO_FORM]: ContactInfoFormTypes;
 	[ACTIONS.SET_COVERAGE_FORM]: CoverageFormTypes;
 	[ACTIONS.SET_CURRENT_STEP]: number;
@@ -268,10 +261,11 @@ export const NewApplicationAutoContext = createContext<
 
 const reducer = (state: InitialStateTypes, action: ApplicationActions) => {
 	switch (action.type) {
-		case ACTIONS.SET_APPLICATION_ID: {
+		case ACTIONS.SET_APPLICATION: {
 			return {
 				...state,
 				applicationId: action.payload.id.toString(),
+				externalReferenceCode: action.payload.externalReferenceCode,
 			};
 		}
 
@@ -592,6 +586,7 @@ const NewApplicationAutoContextProvider: React.FC<
 		const payload = {
 			applicationId: data.id,
 			currentStep: 0,
+			externalReferenceCode: data.externalReferenceCode,
 			hasFormChanges: false,
 			isAbleToBeSave: false,
 			isAbleToNextStep: true,

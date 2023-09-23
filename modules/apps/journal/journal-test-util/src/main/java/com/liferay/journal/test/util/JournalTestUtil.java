@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.test.util;
@@ -50,6 +41,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -76,7 +68,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -457,7 +448,7 @@ public class JournalTestUtil {
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire, 0, 0, 0, 0,
-			0, true, true, false, null, null, null, null, serviceContext);
+			0, true, true, false, 0, 0, null, null, null, null, serviceContext);
 	}
 
 	public static JournalArticle addArticle(
@@ -636,7 +627,7 @@ public class JournalTestUtil {
 			).build(),
 			xml, ddmStructure.getStructureId(), ddmTemplateKey, null, 1, 1,
 			1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false,
-			null, null, images, null, serviceContext);
+			0, 0, null, null, images, null, serviceContext);
 	}
 
 	public static JournalArticle addArticleWithXMLContent(
@@ -729,7 +720,7 @@ public class JournalTestUtil {
 	}
 
 	public static JournalFeed addFeed(
-			long groupId, long plid, String name, String ddmStructureKey,
+			long groupId, long plid, String name, long ddmStructureId,
 			String ddmTemplateKey, String rendererTemplateKey)
 		throws Exception {
 
@@ -753,7 +744,7 @@ public class JournalTestUtil {
 
 		return JournalFeedLocalServiceUtil.addFeed(
 			userId, groupId, feedId, autoFeedId, name, description,
-			ddmStructureKey, ddmTemplateKey, rendererTemplateKey, delta,
+			ddmStructureId, ddmTemplateKey, rendererTemplateKey, delta,
 			orderByCol, orderByType, friendlyURL, targetPortletId, contentField,
 			feedFormat, feedVersion, serviceContext);
 	}
@@ -1039,12 +1030,13 @@ public class JournalTestUtil {
 		return JournalArticleLocalServiceUtil.updateArticle(
 			userId, article.getGroupId(), article.getFolderId(),
 			article.getArticleId(), article.getVersion(), titleMap,
-			article.getDescriptionMap(), content, article.getDDMTemplateKey(),
-			article.getLayoutUuid(), displayDateMonth, displayDateDay,
-			displayDateYear, displayDateHour, displayDateMinute, 0, 0, 0, 0, 0,
-			true, 0, 0, 0, 0, 0, true, article.isIndexable(),
-			article.isSmallImage(), article.getSmallImageURL(), null, null,
-			null, serviceContext);
+			article.getDescriptionMap(), null, content,
+			article.getDDMTemplateKey(), article.getLayoutUuid(),
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
+			displayDateMinute, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true,
+			article.isIndexable(), article.isSmallImage(), 0,
+			article.getSmallImageSource(), article.getSmallImageURL(), null,
+			null, null, serviceContext);
 	}
 
 	public static JournalArticle updateArticleWithWorkflow(
@@ -1225,19 +1217,8 @@ public class JournalTestUtil {
 	static {
 		Bundle testBundle = FrameworkUtil.getBundle(JournalTestUtil.class);
 
-		BundleContext bundleContext = testBundle.getBundleContext();
-
-		Bundle journalServiceBundle = null;
-
-		for (Bundle bundle : bundleContext.getBundles()) {
-			String symbolicName = bundle.getSymbolicName();
-
-			if (symbolicName.equals("com.liferay.journal.service")) {
-				journalServiceBundle = bundle;
-
-				break;
-			}
-		}
+		Bundle journalServiceBundle = BundleUtil.getBundle(
+			testBundle.getBundleContext(), "com.liferay.journal.service");
 
 		if (journalServiceBundle == null) {
 			throw new ExceptionInInitializerError(

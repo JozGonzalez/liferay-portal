@@ -1,0 +1,168 @@
+@component-name = "portal-lima"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.component.names = "Document Management";
+	property testray.main.component.name = "Lima Headless";
+
+	setUp {
+		TestCase.setUpPortalInstanceNoSelenium();
+
+		task ("Given an asset library is created") {
+			JSONDepot.addDepot(depotName = "Test Depot Name");
+		}
+	}
+
+	tearDown {
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCPNoSelenium();
+		}
+	}
+
+	@priority = 5
+	test CanAddDownloadAndViewPermissions {
+		task ("Given a document in a depot") {
+			var filePath = TestCase.getDependenciesDirPath(fileName = "Document_1.jpg");
+
+			var documentId = DocumentAPI.getIdOfCreatedDocument(
+				depotName = "Test Depot Name",
+				dmDocumentTitle = "DM Document Title",
+				fileName = "FileName.jpg",
+				filePath = ${filePath});
+
+			var response = DocumentAPI.getDMPermissionsWithDocumentID(documentId = ${documentId});
+
+			echo("####Before updating permissions to Guest role: '${response}'");
+		}
+
+		task ("When a put request is made to add view and download permissions to Guest role") {
+			var response = DocumentAPI.putDMPermissionsWithDocumentID(
+				actionIds = '''DOWNLOAD","VIEW''',
+				documentId = ${documentId},
+				roleName = "Guest");
+
+			echo("####After updating permissions for Guest role: '${response}'");
+		}
+
+		task ("Then view and download permissions are returned to Guest role") {
+			DocumentAPI.assertDMPermissions(
+				actual = ${actualDMPermissions},
+				documentId = ${documentId},
+				expectedDMPermissions = '''["DOWNLOAD","VIEW"]''',
+				roleName = "Guest");
+
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			JSONDepot.connectSite(
+				depotName = "Test Depot Name",
+				groupName = "Site Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Documents and Media Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				column = 1,
+				groupName = "Site Name",
+				layoutName = "Documents and Media Page",
+				widgetName = "Documents and Media");
+
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			Navigator.openSitePage(
+				pageName = "Documents and Media Page",
+				siteName = "Site Name");
+
+			DMDocument.enableActionsMenuOnPortlet();
+
+			DMDocument.setRootFolder(
+				depotName = "Test Depot Name",
+				selectRootFolder = "Home");
+
+			User.logoutPG();
+
+			Navigator.openSitePage(
+				pageName = "Documents and Media Page",
+				siteName = "Site Name");
+
+			DMDocument.viewPG(dmDocumentTitle = "DM Document Title");
+
+			var depotId = JSONGroupAPI._getDepotIdByName(depotName = "Test Depot Name");
+
+			DMDocument.downloadViaURL(
+				dmDocumentTitle = "dm-document-title",
+				siteURLKey = "asset-library-${depotId}");
+
+			DMDocument.assertFileNameFromTempFolder(fileName = "FileName.jpg");
+		}
+	}
+
+	@priority = 3
+	test CannotGetRatedEntryByOtherUsers {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		task ("Given two rated documents by different users in a depot") {
+			JSONUser.addUser(
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+
+			JSONUser.setFirstPassword(
+				requireReset = "false",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONRole.assignRoleToUser(
+				roleTitle = "Administrator",
+				userEmailAddress = "userea@liferay.com");
+
+			var filePath = TestCase.getDependenciesDirPath(fileName = "Document_1.jpg");
+
+			var documentId = DocumentAPI.getIdOfCreatedDocument(
+				depotName = "Test Depot Name",
+				filePath = ${filePath});
+
+			DocumentAPI.postRatingWithDocumentID(
+				documentId = ${documentId},
+				ratingValue = 1);
+
+			var filePath = TestCase.getDependenciesDirPath(fileName = "Document_2.jpg");
+
+			var documentId = DocumentAPI.getIdOfCreatedDocument(
+				depotName = "Test Depot Name",
+				filePath = ${filePath});
+
+			var response = DocumentAPI.postRatingWithDocumentID(
+				documentId = ${documentId},
+				ratingValue = 1,
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+		}
+
+		echo(${response});
+
+		task ("When get the rated document by current user") {
+			var depotId = JSONGroupAPI._getDepotIdByName(depotName = "Test Depot Name");
+
+			var response = DocumentAPI.getRatedDocumentsWithDepotID(depotId = ${depotId});
+		}
+
+		echo(${response});
+
+		task ("Then only the rated document by current user is returned") {
+			TestUtils.assertPartialEquals(
+				actual = ${response},
+				expected = "Document_1.jpg");
+
+			TestUtils.assertNotEquals(
+				actual = ${response},
+				expected = "Document_2.jpg");
+		}
+	}
+
+}

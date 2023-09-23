@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -19,7 +10,7 @@
 <%
 FragmentManagementToolbarDisplayContextFactory fragmentManagementToolbarDisplayContextFactory = FragmentManagementToolbarDisplayContextFactory.getInstance();
 
-FragmentManagementToolbarDisplayContext fragmentManagementToolbarDisplayContext = fragmentManagementToolbarDisplayContextFactory.getFragmentManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, fragmentDisplayContext);
+FragmentManagementToolbarDisplayContext fragmentManagementToolbarDisplayContext = fragmentManagementToolbarDisplayContextFactory.getFragmentManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, fragmentEntriesDisplayContext);
 %>
 
 <liferay-ui:error exception="<%= RequiredFragmentEntryException.class %>" message="the-fragment-entry-cannot-be-deleted-because-it-is-required-by-one-or-more-page-templates" />
@@ -32,7 +23,7 @@ FragmentManagementToolbarDisplayContext fragmentManagementToolbarDisplayContext 
 
 <aui:form name="fm">
 	<liferay-ui:search-container
-		searchContainer="<%= fragmentDisplayContext.getFragmentEntriesSearchContainer() %>"
+		searchContainer="<%= fragmentEntriesDisplayContext.getFragmentEntriesSearchContainer() %>"
 	>
 		<liferay-ui:search-container-row
 			className="Object"
@@ -42,7 +33,7 @@ FragmentManagementToolbarDisplayContext fragmentManagementToolbarDisplayContext 
 			<%
 			row.setData(
 				HashMapBuilder.<String, Object>put(
-					"actions", fragmentDisplayContext.getAvailableActions(object)
+					"actions", fragmentEntriesDisplayContext.getAvailableActions(object)
 				).build());
 
 			FragmentEntryVerticalCardFactory fragmentEntryVerticalCardFactory = FragmentEntryVerticalCardFactory.getInstance();
@@ -53,14 +44,14 @@ FragmentManagementToolbarDisplayContext fragmentManagementToolbarDisplayContext 
 					<c:when test="<%= object instanceof FragmentComposition %>">
 						<clay:vertical-card
 							propsTransformer="js/FragmentCompositionDropdownPropsTransformer"
-							verticalCard="<%= fragmentEntryVerticalCardFactory.getVerticalCard((FragmentComposition)object, renderRequest, renderResponse, searchContainer.getRowChecker(), fragmentDisplayContext.getFragmentType()) %>"
+							verticalCard="<%= fragmentEntryVerticalCardFactory.getVerticalCard((FragmentComposition)object, renderRequest, renderResponse, searchContainer.getRowChecker(), fragmentEntriesDisplayContext.getFragmentType()) %>"
 						/>
 					</c:when>
 					<c:otherwise>
 						<clay:vertical-card
-							additionalProps="<%= fragmentDisplayContext.getAdditionalProps() %>"
+							additionalProps="<%= fragmentEntriesDisplayContext.getAdditionalProps() %>"
 							propsTransformer="js/FragmentEntryDropdownPropsTransformer"
-							verticalCard="<%= fragmentEntryVerticalCardFactory.getVerticalCard((FragmentEntry)object, renderRequest, renderResponse, searchContainer.getRowChecker(), fragmentDisplayContext.getFragmentType()) %>"
+							verticalCard="<%= fragmentEntryVerticalCardFactory.getVerticalCard((FragmentEntry)object, renderRequest, renderResponse, searchContainer.getRowChecker(), fragmentEntriesDisplayContext.getFragmentType()) %>"
 						/>
 					</c:otherwise>
 				</c:choose>

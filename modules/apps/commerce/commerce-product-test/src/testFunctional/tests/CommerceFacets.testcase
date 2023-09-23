@@ -14,6 +14,102 @@ definition {
 		CommerceConfiguration.commerceTearDown();
 	}
 
+	@description = "This is a test case for COMMERCE-10907. User can set custom Price Range Facet configurations and use Price Range Facet widget to filter the products, the results should be visible in the Search Result widget"
+	@priority = 3
+	test AssertProductsAreFilteredAfterUpdatingRangesByPriceRangeFacet {
+		property portal.acceptance = "false";
+
+		task ("Given the first two ranges are changed on Price Range Facet widget on a Minium site") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			var rangesArray = '''[{'range': '[0 TO 59.99]'}\, {'range': '[60 TO 99.99]'}\, {'range': '[100 TO 199.99]'}\, {'range': '[200 TO 499.99]'}\, {'range': '[500 TO 999.99]'}\, {'range': '[1000 TO *]'}]''';
+
+			CommerceWidget.updateFacetConfiguration(
+				portletName = "Price Range Facet",
+				rangesArray = ${rangesArray});
+		}
+
+		task ("When refresh the page") {
+			Refresh();
+		}
+
+		task ("Then assert the new ranges with the correct counts are shown") {
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 0.00 - $ 59.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 23);
+
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 60.00 - $ 99.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 10);
+
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 100.00 - $ 199.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 10);
+
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 200.00 - $ 499.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 4);
+
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 500.00 - $ 999.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 2);
+
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 1,000.00+",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = 0);
+		}
+
+		task ("And then the user is able to filter products using the first two ranges on the newly set Price Range Facet widget") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 0.00 - $ 59.99",
+				locator1 = "FormFields#CHECKBOX");
+
+			var productNames = "U-Joint,Transmission Cooler Line Assembly,Torque Converters,Wheel Seal - Front,Mount,Transmission Fluid,Wheel Bearing Grease,Tie Rod End Tool,Bushings,Lift Support,Muffler/Resonators,Exhaust Clamps,Valve Cover Grommets,Timing Chain,Timing Chain Tensioner,Seal,Piston,Master Cylinder,Brake Rotors";
+
+			for (var productName : list ${productNames}) {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+
+			Click(
+				key_pageNumber = 2,
+				locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
+
+			for (var productName : list "Premium Brake Pads,Brake Pads,ABS Sensor") {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+
+			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
+
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 60.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+
+			var productNames = "CV Axles,Shock Absorber,Oil Pump,Bearings,Master Cylinder,Calipers,Wear Sensors,Premium Brake Fluid,Brake Fluid";
+
+			for (var productName : list ${productNames}) {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+		}
+	}
+
 	@description = "COMMERCE-6169. As a buyer, I want to filter products using Category Facet widget and the results should be visible on the Search Results widget"
 	@priority = 5
 	test AssertProductsAreFilteredByCategoryFacet {
@@ -150,8 +246,115 @@ definition {
 			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
 	}
 
+	@description = "COMMERCE-9253. As a Buyer user, I want to be able to Clear selections in Commerce Search Facets."
+	@priority = 3
+	test CanClearSelectionsInCommerceSearchFacets {
+		property portal.acceptance = "false";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the buyer navigates to the Minium Catalog") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("When the user selects some search fields in Option Facet") {
+			for (var searchFieldValue : list "48,112") {
+				Check.checkToggleSwitch(
+					key_fieldName = ${searchFieldValue},
+					locator1 = "FormFields#CHECKBOX");
+			}
+
+			AssertElementPresent(
+				key_productCount = 2,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+
+		task ("Then the user is able to uncheck selections using Clear button") {
+			SearchFacetPortlet.clearFacet();
+
+			for (var searchFieldValue : list "48,112") {
+				FormViewBuilder.viewCheckboxNotChecked(
+					fieldName = "Option Facet",
+					fieldValue = ${searchFieldValue});
+			}
+
+			AssertElementPresent(
+				key_productCount = 49,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+
+		task ("When the user selects some search fields in Specification Facet") {
+			for (var searchFieldValue : list "Steel,Rubber") {
+				Check.checkToggleSwitch(
+					key_fieldName = ${searchFieldValue},
+					locator1 = "FormFields#CHECKBOX");
+			}
+
+			AssertElementPresent(
+				key_productCount = 24,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+
+		task ("Then the user is able to uncheck selections using Clear button") {
+			SearchFacetPortlet.clearFacet();
+
+			for (var searchFieldValue : list "Steel,Rubber") {
+				FormViewBuilder.viewCheckboxNotChecked(
+					fieldName = "Specification Facet",
+					fieldValue = ${searchFieldValue});
+			}
+
+			AssertElementPresent(
+				key_productCount = 49,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+
+		task ("When the user selects some search fields in Price Range Facet") {
+			for (var searchFieldValue : list "$ 0.00 - $ 49.99,$ 50.00 - $ 99.99") {
+				Check.checkToggleSwitch(
+					key_fieldName = ${searchFieldValue},
+					locator1 = "FormFields#CHECKBOX");
+			}
+
+			AssertElementPresent(
+				key_productCount = 33,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+
+		task ("Then the user is able to uncheck selections using Clear button") {
+			SearchFacetPortlet.clearFacet();
+
+			for (var searchFieldValue : list "$ 0.00 - $ 49.99,$ 50.00 - $ 99.99") {
+				FormViewBuilder.viewCheckboxNotChecked(
+					fieldName = "Price Range Facet",
+					fieldValue = ${searchFieldValue});
+			}
+
+			AssertElementPresent(
+				key_productCount = 49,
+				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
+		}
+	}
+
 	@description = "COMMERCE-10881 | As a Buyer user, Commerce Facet Widgets work without the Category Facet widget deployed on the page"
-	@ignore = "true"
 	@priority = 3
 	test CanFacetWidgetsWorkWithoutCategoryFacet {
 		property portal.acceptance = "false";
@@ -248,6 +451,328 @@ definition {
 					key_productName = ${productName},
 					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
 			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11957. Admin cannot view the specification entry's key is set with dots"
+	@priority = 5
+	test CannotAddSpecificationKeyWithDots {
+		property portal.acceptance = "true";
+
+		task ("When a specification entry is created using a dot for the key via JSON") {
+			CommerceJSONSpecificationsAPI._addCommerceSpecification(
+				specificationLabelFacetable = "true",
+				specificationLabelKey = "test.specification",
+				specificationLabelTitle = "Test Specification");
+		}
+
+		task ("Then the admin can view the key of the specification entry is applied to the horizontal line, not a dot") {
+			CommerceNavigator.goToSpecificationsAdmin();
+
+			Click(
+				key_entry = "Test Specification",
+				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+			AssertTextEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test-specification");
+
+			AssertTextNotEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+
+		task ("When the specification entry is updated using a dot for the key on UI") {
+			Type(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+
+		task ("Then the admin can view the new key of the specification entry is applied without a dot on UI") {
+			AssertTextEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "testspecification");
+
+			AssertTextNotEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11472. User can not view a product with an expired SKU using the price range facet"
+	@priority = 5
+	test CannotViewExpiredProductSKUByPriceRangeFacet {
+		property portal.acceptance = "true";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the SKU of 'ABS Sensor' is updated to be expired") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Never Expire",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Click(
+				key_text = "Save as Draft",
+				locator1 = "Button#ANY");
+
+			Alert.viewSuccessMessage();
+
+			Click(locator1 = "Icon#CLOSE");
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
+				tagName = "Expired");
+		}
+
+		task ("When the buyer navigates to the Minium Catalog") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And selects the price range of the expired SKU") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 50.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the product with an expired SKU is not shown") {
+			var productNames = "CV Axles,Wheel Bearing Grease,Shock Absorber,Oil Pump,Bearings,Master Cylinder,Calipers,Wear Sensors,Premium Brake Fluid,Brake Fluid";
+
+			for (var productName : list ${productNames}) {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+
+			AssertElementNotPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+		}
+	}
+
+	@description = "Test for COMMERCE-11353. The price range facet should filter the products as per the approved SKU of the product and should display the corresponding price"
+	@priority = 5
+	test CanPriceRangeFacetFilterActiveSkuPrice {
+		property portal.acceptance = "true";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a new Sku is created for the product ABS Sensor with a higher base price") {
+			CommerceJSONProductsAPI.addCommerceProductSku(
+				price = 750,
+				productName = "ABS Sensor",
+				skuName = "ABS-SKU");
+		}
+
+		task ("And assert the new sku is the only sku active for the product") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			AssertElementPresent(
+				key_entryTitle = "ABS-SKU",
+				key_index = 5,
+				key_label = "Approved",
+				locator1 = "CommerceEntry#TABLE_ENTRY_LABEL_FIELD");
+
+			AssertElementPresent(
+				key_entryTitle = "MIN93015",
+				key_index = 5,
+				key_label = "Expired",
+				locator1 = "CommerceEntry#TABLE_ENTRY_LABEL_FIELD");
+		}
+
+		task ("And the buyer navigates to the Minium Catalog") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("When the buyer selects the price range for the old sku's price") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 50.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the product will not be shown in the Catalog page") {
+			AssertElementNotPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+		}
+
+		task ("When the buyer selects the price range for the new sku's price") {
+			SearchFacetPortlet.clearFacet();
+
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 500.00 - $ 999.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the product will be shown in the Catalog page") {
+			AssertElementPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+
+			AssertElementPresent(
+				key_productName = "ABS Sensor",
+				key_productSku = "ABS-SKU",
+				locator1 = "CommerceEntry#PRODUCT_CARD_SKU");
+
+			AssertElementNotPresent(
+				key_productName = "ABS Sensor",
+				key_productSku = "MIN93015",
+				locator1 = "CommerceEntry#PRODUCT_CARD_SKU");
+		}
+	}
+
+	@description = "COMMERCE-12191 | Specification Facet works when searching products with specifications."
+	@priority = 5
+	test CanSpecificationFacetWorkWhenSearchingProducts {
+		property portal.acceptance = "true";
+
+		task ("Given the admin sets as 'facetable' all the specifications created with minium") {
+			CommerceNavigator.gotoPortlet(
+				category = "Product Management",
+				portlet = "Specifications");
+
+			for (var specificationTitle : list "Quantity,Dimensions,Weight,Height,Length,Width") {
+				Click(
+					key_entry = ${specificationTitle},
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+				Check.checkNotVisible(
+					key_toggleSwitchLabel = "Use in Faceted Navigation",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+				Button.clickSave();
+
+				CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+			}
+		}
+
+		task ("And the admin adds 11 more facetable specifications") {
+			for (var index : list "10,11,12,13,14,15,16,17,18,19,20") {
+				CommerceJSONSpecificationsAPI._addCommerceSpecification(
+					specificationLabelFacetable = "true",
+					specificationLabelKey = "spec${index}",
+					specificationLabelTitle = "Spec${index}");
+			}
+		}
+
+		task ("And adds all specifications to ABS Sensor with respective priorities and values") {
+			for (var specificationKeyAndPriority : list "width:5,fit:6,height:7,length:8,spec10:9,spec11:10,spec12:11,spec13:12,spec14:13,spec15:14,spec16:15,spec17:16,spec18:17,spec19:18,spec20:19") {
+				var specificationKey = StringUtil.extractFirst(${specificationKeyAndPriority}, ":");
+				var priority = StringUtil.extractLast(${specificationKeyAndPriority}, ":");
+
+				CommerceJSONProductsAPI._addCommerceProductSpecifications(
+					priority = ${priority},
+					productName = "ABS Sensor",
+					specificationKey = ${specificationKey},
+					value = 0);
+			}
+		}
+
+		task ("And a new specification is created and added to Shock Absorber with respective priority and value") {
+			CommerceJSONSpecificationsAPI._addCommerceSpecification(
+				specificationLabelFacetable = "true",
+				specificationLabelKey = "spec21",
+				specificationLabelTitle = "Spec21");
+
+			CommerceJSONProductsAPI._addCommerceProductSpecifications(
+				priority = 4,
+				productName = "Shock Absorber",
+				specificationKey = "spec21",
+				value = 0);
+		}
+
+		task ("When the admin configures minium site's specification facet widget with 20 as max terms") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			CommerceWidget.updateFacetConfiguration(
+				maxTerms = 20,
+				portletName = "Specification Facet");
+
+			Refresh();
+		}
+
+		task ("And searches for 'abs' in the minium search bar") {
+			CommerceNavigator.searchEntry(entryName = "abs");
+		}
+
+		task ("Then the specification facet widget can be used and no errors are shown") {
+			AssertElementPresent(
+				locator1 = "FormViewBuilder#RULE_LABEL",
+				ruleLabel = "Dimensions");
+
+			AssertElementNotPresent(
+				key_alertMessage = "Specification Facet is temporarily unavailable.",
+				locator1 = "Message#ERROR_ENTER_ANY");
+		}
+
+		task ("When the admin searches for 'shock' in the minium search bar") {
+			CommerceNavigator.searchEntry(entryName = "shock");
+		}
+
+		task ("Then the specification facet widget can be used and no errors are shown") {
+			AssertElementPresent(
+				locator1 = "FormViewBuilder#RULE_LABEL",
+				ruleLabel = "Dimensions");
+
+			AssertElementNotPresent(
+				key_alertMessage = "Specification Facet is temporarily unavailable.",
+				locator1 = "Message#ERROR_ENTER_ANY");
 		}
 	}
 
@@ -462,6 +987,62 @@ definition {
 			AssertElementNotPresent(
 				key_value = "U-Joint",
 				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+		}
+	}
+
+	@description = "This is a test case for COMMERCE-11970. As an admin, I want that the term count of price range facet fields doesn't change to 0 when I check a price range facet field"
+	@priority = 4
+	test CanViewTermCountOfPriceRangeFacetPersists {
+		property portal.acceptance = "false";
+
+		task ("Given the admin navigates to Minium site") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			ApplicationsMenu.gotoSite(site = "Minium");
+		}
+
+		task ("When the admin checks a price range facet value") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 50.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the term count of that value doesn't change") {
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 50.00 - $ 99.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = "(12)");
+		}
+
+		task ("And the term count of the other values doesn't change either") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
+				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
+
+				AssertTextEquals.assertPartialText(
+					key_facetType = "Price Range Facet",
+					key_termValue = ${priceRangeValue},
+					locator1 = "Search#FACET_TERM_FREQUENCIES",
+					value1 = ${priceRangeCount});
+			}
+		}
+
+		task ("When the admin checks all the price range facet values") {
+			Navigator.openSpecificURL(url = "${portalURL}/web/minium/catalog?basePrice=%5B0%20TO%2049.99%5D&basePrice=%5B50%20TO%2099.99%5D&basePrice=%5B100%20TO%20199.99%5D&basePrice=%5B200%20TO%20499.99%5D&basePrice=%5B500%20TO%20999.99%5D&basePrice=%5B1000%20TO%201.7976931348623157E308%5D");
+		}
+
+		task ("Then the term count of all values doesn't change") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 50.00 - $ 99.99:(12),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
+				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
+
+				AssertTextEquals.assertPartialText(
+					key_facetType = "Price Range Facet",
+					key_termValue = ${priceRangeValue},
+					locator1 = "Search#FACET_TERM_FREQUENCIES",
+					value1 = ${priceRangeCount});
+			}
 		}
 	}
 

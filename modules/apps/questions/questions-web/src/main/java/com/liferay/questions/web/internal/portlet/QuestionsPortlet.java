@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.questions.web.internal.portlet;
 
-import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
+import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.flags.taglib.servlet.taglib.util.FlagsTagUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
@@ -26,16 +18,12 @@ import com.liferay.message.boards.service.MBStatsUserLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
-import com.liferay.portal.kernel.portlet.PortletURLWrapper;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -208,33 +196,25 @@ public class QuestionsPortlet extends MVCPortlet {
 	private String _getTagSelectorURL(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
-		try {
-			PortletURL portletURL = PortletProviderUtil.getPortletURL(
-				renderRequest, AssetTag.class.getName(),
-				PortletProvider.Action.BROWSE);
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
-			PortletURLWrapper portletURLWrapper = new PortletURLWrapper(
-				portletURL);
+		AssetTagsItemSelectorCriterion assetTagsItemSelectorCriterion =
+			new AssetTagsItemSelectorCriterion();
 
-			if (portletURL == null) {
-				return null;
-			}
+		assetTagsItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new AssetTagsItemSelectorReturnType());
+		assetTagsItemSelectorCriterion.setGroupIds(
+			new long[] {
+				_portal.getSiteGroupId(themeDisplay.getScopeGroupId())
+			});
+		assetTagsItemSelectorCriterion.setMultiSelection(true);
 
-			portletURLWrapper.setParameter(
-				"eventName", renderResponse.getNamespace() + "selectTag");
-			portletURLWrapper.setParameter(
-				"selectedTagNames", "{selectedTagNames}");
-			portletURLWrapper.setWindowState(LiferayWindowState.POP_UP);
-
-			return portletURLWrapper.toString();
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return null;
-		}
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(renderRequest),
+				renderResponse.getNamespace() + "selectTag",
+				assetTagsItemSelectorCriterion));
 	}
 
 	private boolean _isTrustedUser(RenderRequest renderRequest) {

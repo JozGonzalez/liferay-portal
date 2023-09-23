@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.headless.delivery.resource.v1_0.MessageBoardSectionResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -60,7 +52,6 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -229,7 +220,7 @@ public abstract class BaseMessageBoardSectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{messageBoardSectionId}' -d $'{"customFields": ___, "description": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{messageBoardSectionId}' -d $'{"customFields": ___, "description": ___, "friendlyUrlPath": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates only the fields received in the request body, leaving any other fields untouched."
@@ -265,49 +256,22 @@ public abstract class BaseMessageBoardSectionResourceImpl
 		MessageBoardSection existingMessageBoardSection =
 			getMessageBoardSection(messageBoardSectionId);
 
-		if (messageBoardSection.getActions() != null) {
-			existingMessageBoardSection.setActions(
-				messageBoardSection.getActions());
-		}
-
-		if (messageBoardSection.getDateCreated() != null) {
-			existingMessageBoardSection.setDateCreated(
-				messageBoardSection.getDateCreated());
-		}
-
-		if (messageBoardSection.getDateModified() != null) {
-			existingMessageBoardSection.setDateModified(
-				messageBoardSection.getDateModified());
-		}
+		existingMessageBoardSection.setCustomFields(
+			messageBoardSection.getCustomFields());
 
 		if (messageBoardSection.getDescription() != null) {
 			existingMessageBoardSection.setDescription(
 				messageBoardSection.getDescription());
 		}
 
-		if (messageBoardSection.getNumberOfMessageBoardSections() != null) {
-			existingMessageBoardSection.setNumberOfMessageBoardSections(
-				messageBoardSection.getNumberOfMessageBoardSections());
-		}
-
-		if (messageBoardSection.getNumberOfMessageBoardThreads() != null) {
-			existingMessageBoardSection.setNumberOfMessageBoardThreads(
-				messageBoardSection.getNumberOfMessageBoardThreads());
+		if (messageBoardSection.getFriendlyUrlPath() != null) {
+			existingMessageBoardSection.setFriendlyUrlPath(
+				messageBoardSection.getFriendlyUrlPath());
 		}
 
 		if (messageBoardSection.getParentMessageBoardSectionId() != null) {
 			existingMessageBoardSection.setParentMessageBoardSectionId(
 				messageBoardSection.getParentMessageBoardSectionId());
-		}
-
-		if (messageBoardSection.getSiteId() != null) {
-			existingMessageBoardSection.setSiteId(
-				messageBoardSection.getSiteId());
-		}
-
-		if (messageBoardSection.getSubscribed() != null) {
-			existingMessageBoardSection.setSubscribed(
-				messageBoardSection.getSubscribed());
 		}
 
 		if (messageBoardSection.getTitle() != null) {
@@ -329,7 +293,7 @@ public abstract class BaseMessageBoardSectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{messageBoardSectionId}' -d $'{"customFields": ___, "description": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{messageBoardSectionId}' -d $'{"customFields": ___, "description": ___, "friendlyUrlPath": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the message board section with the information sent in the request body. Any missing fields are deleted, unless they are required."
@@ -714,7 +678,7 @@ public abstract class BaseMessageBoardSectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{parentMessageBoardSectionId}/message-board-sections' -d $'{"customFields": ___, "description": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{parentMessageBoardSectionId}/message-board-sections' -d $'{"customFields": ___, "description": ___, "friendlyUrlPath": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new message board section in the parent section."
@@ -747,6 +711,50 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			@javax.ws.rs.PathParam("parentMessageBoardSectionId")
 			Long parentMessageBoardSectionId,
 			MessageBoardSection messageBoardSection)
+		throws Exception {
+
+		return new MessageBoardSection();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/message-board-section/by-friendly-url-path/{friendlyUrlPath}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "friendlyUrlPath"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "MessageBoardSection"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/sites/{siteId}/message-board-section/by-friendly-url-path/{friendlyUrlPath: .+}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public MessageBoardSection getSiteMessageBoardSectionByFriendlyUrlPath(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("friendlyUrlPath")
+			String friendlyUrlPath)
 		throws Exception {
 
 		return new MessageBoardSection();
@@ -933,7 +941,7 @@ public abstract class BaseMessageBoardSectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/message-board-sections' -d $'{"customFields": ___, "description": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/message-board-sections' -d $'{"customFields": ___, "description": ___, "friendlyUrlPath": ___, "parentMessageBoardSectionId": ___, "title": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new message board section."
@@ -1168,15 +1176,15 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardSection, Exception>
-			messageBoardSectionUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>
+			messageBoardSectionUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("siteId")) {
-				messageBoardSectionUnsafeConsumer =
+				messageBoardSectionUnsafeFunction =
 					messageBoardSection -> postSiteMessageBoardSection(
 						(Long)parameters.get("siteId"), messageBoardSection);
 			}
@@ -1186,21 +1194,25 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			}
 		}
 
-		if (messageBoardSectionUnsafeConsumer == null) {
+		if (messageBoardSectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardSection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardSections, messageBoardSectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardSections, messageBoardSectionUnsafeConsumer);
+				messageBoardSections, messageBoardSectionUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardSection messageBoardSection :
 					messageBoardSections) {
 
-				messageBoardSectionUnsafeConsumer.accept(messageBoardSection);
+				messageBoardSectionUnsafeFunction.apply(messageBoardSection);
 			}
 		}
 	}
@@ -1252,8 +1264,8 @@ public abstract class BaseMessageBoardSectionResourceImpl
 		if (parameters.containsKey("siteId")) {
 			return getSiteMessageBoardSectionsPage(
 				(Long)parameters.get("siteId"),
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
-				null, filter, pagination, sorts);
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
 		}
 		else {
 			throw new NotSupportedException(
@@ -1289,51 +1301,71 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardSection, Exception>
-			messageBoardSectionUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>
+			messageBoardSectionUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardSectionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			messageBoardSectionUnsafeFunction =
 				messageBoardSection -> patchMessageBoardSection(
 					messageBoardSection.getId() != null ?
 						messageBoardSection.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"messageBoardSectionId")),
 					messageBoardSection);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardSectionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			messageBoardSectionUnsafeFunction =
 				messageBoardSection -> putMessageBoardSection(
 					messageBoardSection.getId() != null ?
 						messageBoardSection.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"messageBoardSectionId")),
 					messageBoardSection);
 		}
 
-		if (messageBoardSectionUnsafeConsumer == null) {
+		if (messageBoardSectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for MessageBoardSection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardSections, messageBoardSectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardSections, messageBoardSectionUnsafeConsumer);
+				messageBoardSections, messageBoardSectionUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardSection messageBoardSection :
 					messageBoardSections) {
 
-				messageBoardSectionUnsafeConsumer.accept(messageBoardSection);
+				messageBoardSectionUnsafeFunction.apply(messageBoardSection);
 			}
 		}
+	}
+
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1501,6 +1533,16 @@ public abstract class BaseMessageBoardSectionResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardSection>,
+			 UnsafeFunction
+				 <MessageBoardSection, MessageBoardSection, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1722,6 +1764,12 @@ public abstract class BaseMessageBoardSectionResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1752,7 +1800,19 @@ public abstract class BaseMessageBoardSectionResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardSection>,
+		 UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardSection>,
 		 UnsafeConsumer<MessageBoardSection, Exception>, Exception>

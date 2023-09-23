@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.portlet.shared.search;
@@ -20,14 +11,13 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.internal.display.context.PortletRequestThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.portlet.shared.task.helper.PortletSharedRequestHelper;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 import com.liferay.portal.search.web.search.request.SearchSettings;
-
-import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -40,13 +30,13 @@ public class PortletSharedSearchSettingsImpl
 
 	public PortletSharedSearchSettingsImpl(
 		SearchSettings searchSettings, String portletId,
-		Optional<PortletPreferences> portletPreferencesOptional,
+		PortletPreferences portletPreferences,
 		PortletSharedRequestHelper portletSharedRequestHelper,
 		RenderRequest renderRequest) {
 
 		_searchSettings = searchSettings;
 		_portletId = portletId;
-		_portletPreferencesOptional = portletPreferencesOptional;
+		_portletPreferences = portletPreferences;
 		_portletSharedRequestHelper = portletSharedRequestHelper;
 		_renderRequest = renderRequest;
 
@@ -97,28 +87,16 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	@Override
-	public Optional<String> getParameter71(String name) {
-		return _portletSharedRequestHelper.getParameter(name, _renderRequest);
-	}
-
-	@Override
-	public Optional<String> getParameterOptional(String name) {
+	public String getParameter(String name) {
 		return _portletSharedRequestHelper.getParameter(name, _renderRequest);
 	}
 
 	@Override
 	public String[] getParameterValues(String name) {
-		Optional<String[]> optional =
+		return (String[])GetterUtil.getObject(
 			_portletSharedRequestHelper.getParameterValues(
-				name, _renderRequest);
-
-		return optional.orElse(new String[0]);
-	}
-
-	@Override
-	public Optional<String[]> getParameterValues71(String name) {
-		return _portletSharedRequestHelper.getParameterValues(
-			name, _renderRequest);
+				name, _renderRequest),
+			new String[0]);
 	}
 
 	@Override
@@ -127,13 +105,8 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	@Override
-	public Optional<PortletPreferences> getPortletPreferences71() {
-		return _portletPreferencesOptional;
-	}
-
-	@Override
-	public Optional<PortletPreferences> getPortletPreferencesOptional() {
-		return _portletPreferencesOptional;
+	public PortletPreferences getPortletPreferences() {
+		return _portletPreferences;
 	}
 
 	@Override
@@ -218,7 +191,7 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	private final String _portletId;
-	private final Optional<PortletPreferences> _portletPreferencesOptional;
+	private final PortletPreferences _portletPreferences;
 	private final PortletSharedRequestHelper _portletSharedRequestHelper;
 	private final RenderRequest _renderRequest;
 	private final SearchRequestBuilder _searchRequestBuilder;

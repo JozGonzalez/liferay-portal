@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service;
 
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.List;
 
 /**
  * Provides the remote service utility for AccountEntryUserRel. This utility wraps
@@ -97,6 +90,62 @@ public class AccountEntryUserRelServiceUtil {
 		getService().deleteAccountEntryUserRels(accountEntryId, accountUserIds);
 	}
 
+	public static AccountEntryUserRel fetchAccountEntryUserRel(
+			long accountEntryUserRelId)
+		throws PortalException {
+
+		return getService().fetchAccountEntryUserRel(accountEntryUserRelId);
+	}
+
+	public static AccountEntryUserRel fetchAccountEntryUserRel(
+			long accountEntryId, long accountUserId)
+		throws PortalException {
+
+		return getService().fetchAccountEntryUserRel(
+			accountEntryId, accountUserId);
+	}
+
+	public static AccountEntryUserRel getAccountEntryUserRel(
+			long accountEntryId, long accountUserId)
+		throws PortalException {
+
+		return getService().getAccountEntryUserRel(
+			accountEntryId, accountUserId);
+	}
+
+	public static List<AccountEntryUserRel>
+			getAccountEntryUserRelsByAccountEntryId(long accountEntryId)
+		throws PortalException {
+
+		return getService().getAccountEntryUserRelsByAccountEntryId(
+			accountEntryId);
+	}
+
+	public static List<AccountEntryUserRel>
+			getAccountEntryUserRelsByAccountEntryId(
+				long accountEntryId, int start, int end)
+		throws PortalException {
+
+		return getService().getAccountEntryUserRelsByAccountEntryId(
+			accountEntryId, start, end);
+	}
+
+	public static List<AccountEntryUserRel>
+			getAccountEntryUserRelsByAccountUserId(long accountUserId)
+		throws PortalException {
+
+		return getService().getAccountEntryUserRelsByAccountUserId(
+			accountUserId);
+	}
+
+	public static long getAccountEntryUserRelsCountByAccountEntryId(
+			long accountEntryId)
+		throws PortalException {
+
+		return getService().getAccountEntryUserRelsCountByAccountEntryId(
+			accountEntryId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -126,6 +175,10 @@ public class AccountEntryUserRelServiceUtil {
 
 	public static AccountEntryUserRelService getService() {
 		return _service;
+	}
+
+	public static void setService(AccountEntryUserRelService service) {
+		_service = service;
 	}
 
 	private static volatile AccountEntryUserRelService _service;

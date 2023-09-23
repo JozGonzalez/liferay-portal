@@ -15,7 +15,7 @@ create table ObjectAction (
 	errorMessage STRING null,
 	label STRING null,
 	name VARCHAR(75) null,
-	objectActionExecutorKey VARCHAR(75) null,
+	objectActionExecutorKey VARCHAR(255) null,
 	objectActionTriggerKey VARCHAR(75) null,
 	parameters TEXT null,
 	status INTEGER
@@ -33,6 +33,8 @@ create table ObjectDefinition (
 	modifiedDate DATE null,
 	accountERObjectFieldId LONG,
 	descriptionObjectFieldId LONG,
+	objectFolderId LONG,
+	rootObjectDefinitionId LONG,
 	titleObjectFieldId LONG,
 	accountEntryRestricted BOOLEAN,
 	active_ BOOLEAN,
@@ -41,6 +43,8 @@ create table ObjectDefinition (
 	className VARCHAR(255) null,
 	enableCategorization BOOLEAN,
 	enableComments BOOLEAN,
+	enableLocalization BOOLEAN,
+	enableObjectEntryDraft BOOLEAN,
 	enableObjectEntryHistory BOOLEAN,
 	modifiable BOOLEAN,
 	name VARCHAR(75) null,
@@ -51,7 +55,7 @@ create table ObjectDefinition (
 	pluralLabel STRING null,
 	portlet BOOLEAN,
 	scope VARCHAR(75) null,
-	storageType VARCHAR(75) null,
+	storageType VARCHAR(255) null,
 	system_ BOOLEAN,
 	version INTEGER,
 	status INTEGER
@@ -92,12 +96,14 @@ create table ObjectField (
 	dbColumnName VARCHAR(75) null,
 	dbTableName VARCHAR(75) null,
 	dbType VARCHAR(75) null,
-	defaultValue VARCHAR(75) null,
 	indexed BOOLEAN,
 	indexedAsKeyword BOOLEAN,
 	indexedLanguageId VARCHAR(75) null,
 	label STRING null,
+	localized BOOLEAN,
 	name VARCHAR(75) null,
+	readOnly VARCHAR(75) null,
+	readOnlyConditionExpression TEXT null,
 	relationshipType VARCHAR(75) null,
 	required BOOLEAN,
 	state_ BOOLEAN,
@@ -131,6 +137,35 @@ create table ObjectFilter (
 	filterBy VARCHAR(75) null,
 	filterType VARCHAR(75) null,
 	json VARCHAR(75) null
+);
+
+create table ObjectFolder (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
+	objectFolderId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	label STRING null,
+	name VARCHAR(75) null
+);
+
+create table ObjectFolderItem (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	objectFolderItemId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	objectDefinitionId LONG,
+	objectFolderId LONG,
+	positionX INTEGER,
+	positionY INTEGER
 );
 
 create table ObjectLayout (
@@ -221,6 +256,7 @@ create table ObjectRelationship (
 	parameterObjectFieldId LONG,
 	deletionType VARCHAR(75) null,
 	dbTableName VARCHAR(75) null,
+	edge BOOLEAN,
 	label STRING null,
 	name VARCHAR(75) null,
 	reverse BOOLEAN,
@@ -277,10 +313,26 @@ create table ObjectValidationRule (
 	modifiedDate DATE null,
 	objectDefinitionId LONG,
 	active_ BOOLEAN,
-	engine VARCHAR(75) null,
+	engine VARCHAR(255) null,
 	errorLabel STRING null,
 	name STRING null,
-	script TEXT null
+	outputType VARCHAR(75) null,
+	script TEXT null,
+	system_ BOOLEAN
+);
+
+create table ObjectValidationRuleSetting (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	objectValidationRuleSettingId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	objectValidationRuleId LONG,
+	name VARCHAR(75) null,
+	value VARCHAR(75) null
 );
 
 create table ObjectView (

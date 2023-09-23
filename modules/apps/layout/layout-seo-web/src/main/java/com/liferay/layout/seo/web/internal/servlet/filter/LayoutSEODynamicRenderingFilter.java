@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.web.internal.servlet.filter;
@@ -27,6 +18,7 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.redirect.matcher.UserAgentMatcher;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -66,11 +58,8 @@ public class LayoutSEODynamicRenderingFilter extends BaseFilter {
 
 		try {
 			if (!_layoutSEODynamicRenderingConfiguration.enabled() ||
-				!_isCrawlerUserAgent(
-					_layoutSEODynamicRenderingConfiguration.crawlerUserAgents(),
-					StringUtil.toLowerCase(
-						httpServletRequest.getHeader(
-							HttpHeaders.USER_AGENT)))) {
+				!_userAgentMatcher.isCrawlerUserAgent(
+					httpServletRequest.getHeader(HttpHeaders.USER_AGENT))) {
 
 				return false;
 			}
@@ -171,18 +160,6 @@ public class LayoutSEODynamicRenderingFilter extends BaseFilter {
 		return headers;
 	}
 
-	private boolean _isCrawlerUserAgent(
-		String[] crawlerUserAgents, String userAgent) {
-
-		for (String crawlerUserAgent : crawlerUserAgents) {
-			if (userAgent.contains(StringUtil.toLowerCase(crawlerUserAgent))) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	private boolean _isIncludedPath(String requestURI, String[] includedPaths) {
 		for (String includedPath : includedPaths) {
 			if (requestURI.contains(StringUtil.toLowerCase(includedPath))) {
@@ -217,5 +194,8 @@ public class LayoutSEODynamicRenderingFilter extends BaseFilter {
 
 	private LayoutSEODynamicRenderingConfiguration
 		_layoutSEODynamicRenderingConfiguration;
+
+	@Reference
+	private UserAgentMatcher _userAgentMatcher;
 
 }

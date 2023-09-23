@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -53,7 +53,8 @@ definition {
 	@priority = 5
 	test AccountUserCanApproveTask {
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#AccountUserCanApproveTask";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -165,6 +166,9 @@ definition {
 	@description = "LPS-135888 - Verify that the user with Account role can view the order details through the My Workflow Tasks page"
 	@priority = 3
 	test AccountUserCanViewOrderDetails {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given a Minium site with a Account Administrator user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -294,12 +298,7 @@ definition {
 
 	@priority = 3
 	test AddCommentToTaskCompleted {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		Blogs.addWithWorkflow(
 			entryContent = "Blogs Entry Content",
@@ -339,6 +338,9 @@ definition {
 
 	@priority = 4
 	test ApproveResubmitTaskByActions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -421,6 +423,11 @@ definition {
 	@description = "Verify that when there are no pending tasks Assigned to My Roles, the page is displaying -There are no pending tasks assigned to your roles.-"
 	@priority = 2
 	test AssignedToMyRolesShowsMessageWhenNoPendingTasks {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SearchAdministration.executeReindex();
+
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
@@ -435,6 +442,9 @@ definition {
 	@description = "Verify that the user can assign a task to current user in the Assigned to My Roles tab"
 	@priority = 5
 	test CanAssignTaskToCurrentUser {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
@@ -499,7 +509,8 @@ definition {
 	@description = "LPS-135888 - Verify that the task is assigned to the user with Account role type"
 	@priority = 4
 	test CanAssignTaskToUserWithAccountRole {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanAssignTaskToUserWithAccountRole";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -654,15 +665,6 @@ definition {
 			key_workflowAssetTitle = "Blogs Entry Title",
 			key_workflowTask = "Blogs Entry",
 			locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TITLE");
-	}
-
-	@description = "Verify that in Update Due Date modal, the user can expand the comment box"
-	@ignore = "Test Stub"
-	@priority = 2
-	test CanExpandCommentBox {
-
-		// TODO LRQA-68860 CanExpandCommentBox pending implementation
-
 	}
 
 	@description = "Verify that the user can filter the results inside Assigned to Me by status"
@@ -904,7 +906,8 @@ definition {
 	@description = "Verify that the user can search for results inside Assigned to My Roles by Asset Title"
 	@priority = 5
 	test CanSearchForAssetTitleOnAssignedToMyRolesTab {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanSearchForAssetTitleOnAssignedToMyRolesTab";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1015,6 +1018,32 @@ definition {
 		AssertElementPresent(
 			key_resultBarMessage = "1 Result for \"Blogs Entry\"",
 			locator1 = "MyWorkflowTasks#MY_WORKFLOW_TASKS_SEARCH_RESULT_BAR");
+	}
+
+	@description = "LPS-172352 - Verify if it is possible to specify the recipient type in a workflow task"
+	@priority = 4
+	test CanSpecifyTheRecipientTypeInWorkflowTask {
+		task ("Given that a user accesses the workflow") {
+			Workflow.openWorkflowListView();
+
+			Workflow.gotoEditWorkflowDefinition(workflowDefinitionTitle = "Single Approver");
+		}
+
+		task ("When changing the recipient to Task Assignees") {
+			KaleoDesigner.selectNode(nodeNodeLabel = "review");
+
+			KaleoDesigner.editNodeNotifications(nodeNotificationsRecipientType = "Task Assignees");
+		}
+
+		task ("and When exits editing and returns again") {
+			Navigator.gotoBack();
+
+			KaleoDesigner.selectNode(nodeNodeLabel = "review");
+		}
+
+		task ("Then the notification remains the one chosen by the user") {
+			KaleoDesigner.viewNodeNotifications(nodeNotificationsRecipientType = "Task Assignees");
+		}
 	}
 
 	@description = "Verify that, in the Assigned to Me table, users can hover over the Last Activity Date and the Due Date row to see the exact time of the action"
@@ -1394,7 +1423,8 @@ definition {
 	@priority = 5
 	test ResubmitTaskByDetails {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#ResubmitTaskByDetails";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1416,6 +1446,10 @@ definition {
 			workflowTask = "Review");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Refresh();
+
+		WaitForSPARefresh();
 
 		Workflow.rejectTaskByActions(
 			workflowAssetContent = "Blogs Entry Content",
@@ -1445,37 +1479,22 @@ definition {
 
 	@priority = 3
 	test ReviewerApproveResubmitTaskByActionsUser {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
-
-		Workflow.addAssigneeToRegularRole(
-			assigneeName = "usersn",
-			assigneeType = "Users",
-			roleTitle = "Portal Content Reviewer");
-
-		Navigator.openURL();
+		JSONRole.assignRoleToUser(
+			roleTitle = "Portal Content Reviewer",
+			userEmailAddress = "userea@liferay.com");
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry",
@@ -1510,12 +1529,7 @@ definition {
 			workflowAssetType = "Blogs Entry",
 			workflowTask = "Update");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
@@ -1547,10 +1561,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "test test");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 

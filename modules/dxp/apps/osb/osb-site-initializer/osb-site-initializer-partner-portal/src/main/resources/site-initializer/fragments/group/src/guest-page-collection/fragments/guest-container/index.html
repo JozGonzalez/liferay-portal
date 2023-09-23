@@ -1,0 +1,10 @@
+[#if themeDisplay.isSignedIn() && !themeDisplay.getLayout().isTypeControlPanel() && !themeDisplay.getLayout().isSystem() && layoutMode != "edit"]
+	[#assign currentURL = (themeDisplay.getURLCurrent()?keep_before("/guest"))! /]
+	[#assign layoutPath = currentURL?ends_with("/")?then("home", "/home") /]
+
+	<script>
+		window.location.assign("${currentURL + layoutPath}");
+	</script>
+[/#if]
+
+<lfr-drop-zone></lfr-drop-zone>

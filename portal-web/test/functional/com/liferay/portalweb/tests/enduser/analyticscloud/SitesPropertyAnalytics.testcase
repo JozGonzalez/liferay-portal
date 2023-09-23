@@ -31,13 +31,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -116,8 +118,13 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8329 | Test Summary: Assert Chart ticks for Site Metrics standardized"
+	@ignore = "true"
 	@priority = 3
 	test AssertChartTicksSiteMetricsStandardized {
+
+		// AC Refactor: x-axis chart ticks does not appear with no data. Requires past data
+		// AC Refactor ticket: LRAC-13982
+
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 

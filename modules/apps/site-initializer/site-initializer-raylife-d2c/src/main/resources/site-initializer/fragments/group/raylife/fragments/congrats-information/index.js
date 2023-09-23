@@ -1,37 +1,43 @@
 /* eslint-disable no-undef */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const applicationId = localStorage.getItem('raylife-application-id');
-const quoteId = localStorage.getItem('raylife-quote-id');
-const userId = Liferay.ThemeDisplay.getUserId();
+const consentType = Liferay.Util.LocalStorage.TYPES.NECESSARY;
+
+const applicationId = Liferay.Util.LocalStorage.getItem(
+	'raylife-application-id',
+	consentType
+);
+
+const quoteId = Liferay.Util.LocalStorage.getItem(
+	'raylife-quote-id',
+	consentType
+);
 
 const raylifeApplicationForm = JSON.parse(
-	localStorage.getItem('raylife-application-form')
+	Liferay.Util.LocalStorage.getItem('raylife-application-form', consentType)
 );
-const orderId = localStorage.getItem('orderId');
+
+const orderId = Liferay.Util.LocalStorage.getItem('orderId', consentType);
+
 const nowDate = new Date().toISOString().split('T')[0];
 
 const fetchHeadless = async (url, options) => {
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	const response = await fetch(`${window.location.origin}/${url}`, {
-		...options,
-		headers: {
-			'Content-Type': 'application/json',
-			'x-csrf-token': Liferay.authToken,
-		},
-	});
+	const response = await fetch(
+		`${
+			window.location.origin
+		}${Liferay.ThemeDisplay.getPathContext()}/${url}`,
+		{
+			...options,
+			headers: {
+				'Content-Type': 'application/json',
+				'x-csrf-token': Liferay.authToken,
+			},
+		}
+	);
 
 	const data = await response.json();
 
@@ -45,7 +51,7 @@ const addPolicyEntryData = async ({
 	price,
 	productName,
 }) => {
-	await fetchHeadless(`/o/c/raylifepolicies/`, {
+	await fetchHeadless(`o/c/raylifepolicies/`, {
 		body: JSON.stringify({
 			commission: (price * 0.2).toString(),
 			currencyType: 'USD',
@@ -59,7 +65,7 @@ const addPolicyEntryData = async ({
 			},
 			productName,
 			r_quoteToPolicies_c_raylifeQuoteId: quoteId,
-			r_userToPolicies_userId: userId,
+			r_userToPolicies_userId: Liferay.ThemeDisplay.getUserId(),
 			startDate: nowDate,
 			termPremium: price,
 		}),

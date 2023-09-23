@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -50,6 +41,7 @@ public class UserLocalServiceUtil {
 	 * Adds a default admin user for the company.
 	 *
 	 * @param companyId the primary key of the user's company
+	 * @param password the password of the user
 	 * @param screenName the user's screen name
 	 * @param emailAddress the user's email address
 	 * @param locale the user's locale
@@ -59,14 +51,14 @@ public class UserLocalServiceUtil {
 	 * @return the new default admin user
 	 */
 	public static User addDefaultAdminUser(
-			long companyId, String screenName, String emailAddress,
-			java.util.Locale locale, String firstName, String middleName,
-			String lastName)
+			long companyId, String password, String screenName,
+			String emailAddress, java.util.Locale locale, String firstName,
+			String middleName, String lastName)
 		throws PortalException {
 
 		return getService().addDefaultAdminUser(
-			companyId, screenName, emailAddress, locale, firstName, middleName,
-			lastName);
+			companyId, password, screenName, emailAddress, locale, firstName,
+			middleName, lastName);
 	}
 
 	/**
@@ -97,6 +89,12 @@ public class UserLocalServiceUtil {
 		return getService().addDefaultRoles(userId);
 	}
 
+	public static User addDefaultServiceAccountUser(long companyId)
+		throws PortalException {
+
+		return getService().addDefaultServiceAccountUser(companyId);
+	}
+
 	/**
 	 * Adds the user to the default user groups, unless the user is already in
 	 * these user groups. The default user groups can be specified in
@@ -113,57 +111,60 @@ public class UserLocalServiceUtil {
 		return getService().addDefaultUserGroups(userId);
 	}
 
-	public static void addGroupUser(long groupId, long userId) {
-		getService().addGroupUser(groupId, userId);
+	public static boolean addGroupUser(long groupId, long userId) {
+		return getService().addGroupUser(groupId, userId);
 	}
 
-	public static void addGroupUser(long groupId, User user) {
-		getService().addGroupUser(groupId, user);
+	public static boolean addGroupUser(long groupId, User user) {
+		return getService().addGroupUser(groupId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addGroupUsers(long groupId, List<User> users)
+	public static boolean addGroupUsers(long groupId, List<User> users)
 		throws PortalException {
 
-		getService().addGroupUsers(groupId, users);
+		return getService().addGroupUsers(groupId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addGroupUsers(long groupId, long[] userIds)
+	public static boolean addGroupUsers(long groupId, long[] userIds)
 		throws PortalException {
 
-		getService().addGroupUsers(groupId, userIds);
+		return getService().addGroupUsers(groupId, userIds);
 	}
 
-	public static void addOrganizationUser(long organizationId, long userId) {
-		getService().addOrganizationUser(organizationId, userId);
+	public static boolean addOrganizationUser(
+		long organizationId, long userId) {
+
+		return getService().addOrganizationUser(organizationId, userId);
 	}
 
-	public static void addOrganizationUser(long organizationId, User user) {
-		getService().addOrganizationUser(organizationId, user);
+	public static boolean addOrganizationUser(long organizationId, User user) {
+		return getService().addOrganizationUser(organizationId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addOrganizationUsers(
+	public static boolean addOrganizationUsers(
 			long organizationId, List<User> users)
 		throws PortalException {
 
-		getService().addOrganizationUsers(organizationId, users);
+		return getService().addOrganizationUsers(organizationId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addOrganizationUsers(long organizationId, long[] userIds)
+	public static boolean addOrganizationUsers(
+			long organizationId, long[] userIds)
 		throws PortalException {
 
-		getService().addOrganizationUsers(organizationId, userIds);
+		return getService().addOrganizationUsers(organizationId, userIds);
 	}
 
 	public static User addOrUpdateUser(
@@ -197,56 +198,56 @@ public class UserLocalServiceUtil {
 		getService().addPasswordPolicyUsers(passwordPolicyId, userIds);
 	}
 
-	public static void addRoleUser(long roleId, long userId) {
-		getService().addRoleUser(roleId, userId);
+	public static boolean addRoleUser(long roleId, long userId) {
+		return getService().addRoleUser(roleId, userId);
 	}
 
-	public static void addRoleUser(long roleId, User user) {
-		getService().addRoleUser(roleId, user);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	public static void addRoleUsers(long roleId, List<User> users)
-		throws PortalException {
-
-		getService().addRoleUsers(roleId, users);
+	public static boolean addRoleUser(long roleId, User user) {
+		return getService().addRoleUser(roleId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addRoleUsers(long roleId, long[] userIds)
+	public static boolean addRoleUsers(long roleId, List<User> users)
 		throws PortalException {
 
-		getService().addRoleUsers(roleId, userIds);
-	}
-
-	public static void addTeamUser(long teamId, long userId) {
-		getService().addTeamUser(teamId, userId);
-	}
-
-	public static void addTeamUser(long teamId, User user) {
-		getService().addTeamUser(teamId, user);
+		return getService().addRoleUsers(roleId, users);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addTeamUsers(long teamId, List<User> users)
+	public static boolean addRoleUsers(long roleId, long[] userIds)
 		throws PortalException {
 
-		getService().addTeamUsers(teamId, users);
+		return getService().addRoleUsers(roleId, userIds);
+	}
+
+	public static boolean addTeamUser(long teamId, long userId) {
+		return getService().addTeamUser(teamId, userId);
+	}
+
+	public static boolean addTeamUser(long teamId, User user) {
+		return getService().addTeamUser(teamId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addTeamUsers(long teamId, long[] userIds)
+	public static boolean addTeamUsers(long teamId, List<User> users)
 		throws PortalException {
 
-		getService().addTeamUsers(teamId, userIds);
+		return getService().addTeamUsers(teamId, users);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static boolean addTeamUsers(long teamId, long[] userIds)
+		throws PortalException {
+
+		return getService().addTeamUsers(teamId, userIds);
 	}
 
 	/**
@@ -281,6 +282,7 @@ public class UserLocalServiceUtil {
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -300,7 +302,7 @@ public class UserLocalServiceUtil {
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -309,7 +311,7 @@ public class UserLocalServiceUtil {
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, type, groupIds,
 			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
 	}
 
@@ -327,30 +329,30 @@ public class UserLocalServiceUtil {
 		return getService().addUser(user);
 	}
 
-	public static void addUserGroupUser(long userGroupId, long userId) {
-		getService().addUserGroupUser(userGroupId, userId);
+	public static boolean addUserGroupUser(long userGroupId, long userId) {
+		return getService().addUserGroupUser(userGroupId, userId);
 	}
 
-	public static void addUserGroupUser(long userGroupId, User user) {
-		getService().addUserGroupUser(userGroupId, user);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	public static void addUserGroupUsers(long userGroupId, List<User> users)
-		throws PortalException {
-
-		getService().addUserGroupUsers(userGroupId, users);
+	public static boolean addUserGroupUser(long userGroupId, User user) {
+		return getService().addUserGroupUser(userGroupId, user);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static void addUserGroupUsers(long userGroupId, long[] userIds)
+	public static boolean addUserGroupUsers(long userGroupId, List<User> users)
 		throws PortalException {
 
-		getService().addUserGroupUsers(userGroupId, userIds);
+		return getService().addUserGroupUsers(userGroupId, users);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static boolean addUserGroupUsers(long userGroupId, long[] userIds)
+		throws PortalException {
+
+		return getService().addUserGroupUsers(userGroupId, userIds);
 	}
 
 	/**
@@ -385,6 +387,7 @@ public class UserLocalServiceUtil {
 	 * @param birthdayDay the user's birthday day
 	 * @param birthdayYear the user's birthday year
 	 * @param jobTitle the user's job title
+	 * @param type the user's type
 	 * @param groupIds the primary keys of the user's groups
 	 * @param organizationIds the primary keys of the user's organizations
 	 * @param roleIds the primary keys of the roles this user possesses
@@ -404,7 +407,7 @@ public class UserLocalServiceUtil {
 			String firstName, String middleName, String lastName,
 			long prefixListTypeId, long suffixListTypeId, boolean male,
 			int birthdayMonth, int birthdayDay, int birthdayYear,
-			String jobTitle, long[] groupIds, long[] organizationIds,
+			String jobTitle, int type, long[] groupIds, long[] organizationIds,
 			long[] roleIds, long[] userGroupIds, boolean sendEmail,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -413,7 +416,7 @@ public class UserLocalServiceUtil {
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, type, groupIds,
 			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
 	}
 
@@ -552,7 +555,6 @@ public class UserLocalServiceUtil {
 	 * authentication, without using the AuthPipeline. Primarily used for
 	 * authenticating users of <code>tunnel-web</code>.
 	 *
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 * @param companyId the primary key of the user's company
 	 * @param realm unused
 	 * @param nonce the number used once
@@ -561,6 +563,7 @@ public class UserLocalServiceUtil {
 	 * @param response the authentication response hash
 	 * @return the user's primary key if authentication is successful;
 	 <code>0</code> otherwise
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static long authenticateForDigest(
@@ -974,14 +977,14 @@ public class UserLocalServiceUtil {
 	}
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company, or <code>null</code> if a user
+	 * @return the guest user for the company, or <code>null</code> if a user
 	 with the company key could not be found
 	 */
-	public static User fetchDefaultUser(long companyId) {
-		return getService().fetchDefaultUser(companyId);
+	public static User fetchGuestUser(long companyId) {
+		return getService().fetchGuestUser(companyId);
 	}
 
 	public static User fetchUser(long userId) {
@@ -1151,21 +1154,19 @@ public class UserLocalServiceUtil {
 	}
 
 	/**
-	 * Returns the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUser(long)}
 	 */
+	@Deprecated
 	public static User getDefaultUser(long companyId) throws PortalException {
 		return getService().getDefaultUser(companyId);
 	}
 
 	/**
-	 * Returns the primary key of the default user for the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @return the primary key of the default user for the company
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getGuestUserId(long)}
 	 */
+	@Deprecated
 	public static long getDefaultUserId(long companyId) throws PortalException {
 		return getService().getDefaultUserId(companyId);
 	}
@@ -1270,6 +1271,26 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getGroupUsersCount(groupId, status);
+	}
+
+	/**
+	 * Returns the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the guest user for the company
+	 */
+	public static User getGuestUser(long companyId) throws PortalException {
+		return getService().getGuestUser(companyId);
+	}
+
+	/**
+	 * Returns the primary key of the guest user for the company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @return the primary key of the guest user for the company
+	 */
+	public static long getGuestUserId(long companyId) throws PortalException {
+		return getService().getGuestUserId(companyId);
 	}
 
 	public static
@@ -1450,6 +1471,10 @@ public class UserLocalServiceUtil {
 	 */
 	public static long[] getRoleUserIds(long roleId) {
 		return getService().getRoleUserIds(roleId);
+	}
+
+	public static long[] getRoleUserIds(long roleId, long type) {
+		return getService().getRoleUserIds(roleId, type);
 	}
 
 	public static List<User> getRoleUsers(long roleId) {
@@ -1878,11 +1903,11 @@ public class UserLocalServiceUtil {
 	}
 
 	public static List<User> getUsers(
-		long companyId, boolean defaultUser, int status, int start, int end,
+		long companyId, int status, int start, int end,
 		OrderByComparator<User> orderByComparator) {
 
 		return getService().getUsers(
-			companyId, defaultUser, status, start, end, orderByComparator);
+			companyId, status, start, end, orderByComparator);
 	}
 
 	/**
@@ -1894,10 +1919,8 @@ public class UserLocalServiceUtil {
 		return getService().getUsersCount();
 	}
 
-	public static int getUsersCount(
-		long companyId, boolean defaultUser, int status) {
-
-		return getService().getUsersCount(companyId, defaultUser, status);
+	public static int getUsersCount(long companyId, int status) {
+		return getService().getUsersCount(companyId, status);
 	}
 
 	public static boolean hasGroupUser(long groupId, long userId) {
@@ -1989,15 +2012,13 @@ public class UserLocalServiceUtil {
 	}
 
 	/**
-	 * Returns the default user for the company.
+	 * Returns the guest user for the company.
 	 *
 	 * @param companyId the primary key of the company
-	 * @return the default user for the company
+	 * @return the guest user for the company
 	 */
-	public static User loadGetDefaultUser(long companyId)
-		throws PortalException {
-
-		return getService().loadGetDefaultUser(companyId);
+	public static User loadGetGuestUser(long companyId) throws PortalException {
+		return getService().loadGetGuestUser(companyId);
 	}
 
 	/**
@@ -3135,6 +3156,10 @@ public class UserLocalServiceUtil {
 		return getService().updateUser(user);
 	}
 
+	public static void validateMaxUsers(long companyId) throws PortalException {
+		getService().validateMaxUsers(companyId);
+	}
+
 	/**
 	 * Verifies the email address of the ticket.
 	 *
@@ -3148,6 +3173,10 @@ public class UserLocalServiceUtil {
 
 	public static UserLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(UserLocalService service) {
+		_service = service;
 	}
 
 	private static volatile UserLocalService _service;

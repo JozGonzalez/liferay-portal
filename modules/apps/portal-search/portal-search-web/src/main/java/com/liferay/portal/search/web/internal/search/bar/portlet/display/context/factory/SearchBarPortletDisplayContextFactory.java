@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.bar.portlet.display.context.factory;
@@ -18,6 +9,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -25,10 +17,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -52,8 +42,6 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
-import java.util.Optional;
-
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 
@@ -73,14 +61,11 @@ public class SearchBarPortletDisplayContextFactory {
 		_portal = portal;
 		_renderRequest = renderRequest;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
 		_searchBarPortletInstanceConfiguration =
-			portletDisplay.getPortletInstanceConfiguration(
-				SearchBarPortletInstanceConfiguration.class);
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				SearchBarPortletInstanceConfiguration.class,
+				(ThemeDisplay)renderRequest.getAttribute(
+					WebKeys.THEME_DISPLAY));
 	}
 
 	public SearchBarPortletDisplayContext create(
@@ -91,6 +76,14 @@ public class SearchBarPortletDisplayContextFactory {
 
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			new SearchBarPortletDisplayContext();
+
+		SearchBarPortletPreferences searchBarPortletPreferences =
+			new SearchBarPortletPreferencesImpl(
+				_renderRequest.getPreferences());
+
+		if (searchBarPortletPreferences.isInvisible()) {
+			searchBarPortletDisplayContext.setRenderNothing(true);
+		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -108,7 +101,6 @@ public class SearchBarPortletDisplayContextFactory {
 
 			if (destinationURL == null) {
 				searchBarPortletDisplayContext.setDestinationUnreachable(true);
-				searchBarPortletDisplayContext.setRenderNothing(true);
 
 				return searchBarPortletDisplayContext;
 			}
@@ -121,8 +113,7 @@ public class SearchBarPortletDisplayContextFactory {
 
 		SearchBarPortletInstanceConfiguration
 			searchBarPortletInstanceConfiguration =
-				getSearchBarPortletInstanceConfiguration(
-					themeDisplay.getPortletDisplay());
+				getSearchBarPortletInstanceConfiguration(themeDisplay);
 
 		searchBarPortletDisplayContext.setAvailableEverythingSearchScope(
 			isAvailableEverythingSearchScope());
@@ -137,10 +128,6 @@ public class SearchBarPortletDisplayContextFactory {
 		searchBarPortletDisplayContext.setEverythingSearchScopeParameterString(
 			SearchScope.EVERYTHING.getParameterString());
 
-		SearchBarPortletPreferences searchBarPortletPreferences =
-			new SearchBarPortletPreferencesImpl(
-				Optional.ofNullable(_renderRequest.getPreferences()));
-
 		SearchResponse searchResponse = _getSearchResponse(
 			portletSharedSearchResponse, searchBarPortletPreferences);
 
@@ -150,51 +137,38 @@ public class SearchBarPortletDisplayContextFactory {
 			LanguageUtil.get(
 				getHttpServletRequest(_renderRequest), "search-..."));
 		searchBarPortletDisplayContext.setKeywords(
-			Optional.ofNullable(
-				searchRequest.getQueryString()
-			).orElse(
-				StringPool.BLANK
-			));
+			GetterUtil.getString(searchRequest.getQueryString()));
 		searchBarPortletDisplayContext.setKeywordsParameterName(
 			_getKeywordsParameterName(
 				portletPreferencesLookup,
 				portletSharedSearchResponse.getSearchSettings(),
 				searchBarPrecedenceHelper, searchBarPortletPreferences,
 				themeDisplay));
-
 		searchBarPortletDisplayContext.setPaginationStartParameterName(
-			Optional.ofNullable(
-				searchRequest.getPaginationStartParameterName()
-			).orElse(
-				StringPool.BLANK
-			));
+			GetterUtil.getString(
+				searchRequest.getPaginationStartParameterName()));
 
 		String scopeParameterName = _getScopeParameterName(
 			portletPreferencesLookup, searchBarPrecedenceHelper,
 			portletSharedSearchResponse.getSearchSettings(),
 			searchBarPortletPreferences, themeDisplay);
 
-		Optional<String> scopeParameterValueOptional =
-			portletSharedSearchResponse.getParameter(
-				scopeParameterName, _renderRequest);
+		String scopeParameterValue = portletSharedSearchResponse.getParameter(
+			scopeParameterName, _renderRequest);
 
 		searchBarPortletDisplayContext.setScopeParameterName(
 			scopeParameterName);
 
 		searchBarPortletDisplayContext.setScopeParameterValue(
-			scopeParameterValueOptional.orElse(StringPool.BLANK));
+			GetterUtil.getString(scopeParameterValue));
 		searchBarPortletDisplayContext.setSearchBarPortletInstanceConfiguration(
 			searchBarPortletInstanceConfiguration);
 
 		_setSelectedSearchScopePreference(
-			portletPreferencesLookup, scopeParameterValueOptional.orElse(null),
+			portletPreferencesLookup, scopeParameterValue,
 			searchBarPortletDisplayContext, searchBarPrecedenceHelper,
 			searchBarPortletPreferences,
 			portletSharedSearchResponse.getSearchSettings(), themeDisplay);
-
-		if (searchBarPortletPreferences.isInvisible()) {
-			searchBarPortletDisplayContext.setRenderNothing(true);
-		}
 
 		searchBarPortletDisplayContext.setSearchExperiencesSupported(
 			searchCapabilities.isSearchExperiencesSupported());
@@ -291,12 +265,11 @@ public class SearchBarPortletDisplayContextFactory {
 	}
 
 	protected SearchBarPortletInstanceConfiguration
-		getSearchBarPortletInstanceConfiguration(
-			PortletDisplay portletDisplay) {
+		getSearchBarPortletInstanceConfiguration(ThemeDisplay themeDisplay) {
 
 		try {
-			return portletDisplay.getPortletInstanceConfiguration(
-				SearchBarPortletInstanceConfiguration.class);
+			return ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				SearchBarPortletInstanceConfiguration.class, themeDisplay);
 		}
 		catch (ConfigurationException configurationException) {
 			throw new RuntimeException(configurationException);
@@ -316,13 +289,13 @@ public class SearchBarPortletDisplayContextFactory {
 			return searchBarPortletPreferences.getSearchScopePreference();
 		}
 
-		Optional<PortletPreferences> headerPortletPreferencesOptional =
+		PortletPreferences portletPreferences =
 			portletPreferencesLookup.fetchPreferences(
 				headerSearchBarPortlet, themeDisplay);
 
-		if (!headerPortletPreferencesOptional.isPresent() ||
+		if ((portletPreferences == null) ||
 			!SearchBarPortletDestinationUtil.isSameDestination(
-				headerPortletPreferencesOptional.get(), themeDisplay)) {
+				portletPreferences, themeDisplay)) {
 
 			return searchBarPortletPreferences.getSearchScopePreference();
 		}
@@ -379,13 +352,13 @@ public class SearchBarPortletDisplayContextFactory {
 			return searchBarPortletPreferences.getKeywordsParameterName();
 		}
 
-		Optional<PortletPreferences> headerPortletPreferencesOptional =
+		PortletPreferences portletPreferences =
 			portletPreferencesLookup.fetchPreferences(
 				headerSearchBarPortlet, themeDisplay);
 
-		if (!headerPortletPreferencesOptional.isPresent() ||
+		if ((portletPreferences == null) ||
 			!SearchBarPortletDestinationUtil.isSameDestination(
-				headerPortletPreferencesOptional.get(), themeDisplay)) {
+				portletPreferences, themeDisplay)) {
 
 			return searchBarPortletPreferences.getKeywordsParameterName();
 		}
@@ -409,13 +382,13 @@ public class SearchBarPortletDisplayContextFactory {
 			return searchBarPortletPreferences.getScopeParameterName();
 		}
 
-		Optional<PortletPreferences> headerPortletPreferencesOptional =
+		PortletPreferences portletPreferences =
 			portletPreferencesLookup.fetchPreferences(
 				headerSearchBarPortlet, themeDisplay);
 
-		if (!headerPortletPreferencesOptional.isPresent() ||
+		if ((portletPreferences == null) ||
 			!SearchBarPortletDestinationUtil.isSameDestination(
-				headerPortletPreferencesOptional.get(), themeDisplay)) {
+				portletPreferences, themeDisplay)) {
 
 			return searchBarPortletPreferences.getScopeParameterName();
 		}

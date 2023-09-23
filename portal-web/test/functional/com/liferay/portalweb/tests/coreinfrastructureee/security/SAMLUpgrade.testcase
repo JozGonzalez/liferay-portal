@@ -1,0 +1,444 @@
+@component-name = "portal-upgrades"
+definition {
+
+	property ci.retries.disabled = "true";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property dummy.socket.proxy.disabled = "true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.environment = "EE";
+	property test.run.type = "single";
+	property testray.component.names = "SAML";
+	property testray.main.component.name = "Upgrades Security";
+
+	setUp {
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
+	}
+
+	@description = "LPS-152122 TC8. Can import JSON file to configure the SAML IdP provider via Import/Export Center after upgrading from 7.1.10.3."
+	@priority = 4
+	test CanImportJSONFileToConfigureSAMLIDPAfterUpgrade71103 {
+		property custom.properties = "feature.flag.COMMERCE-8087=true";
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.release = "false";
+		property portal.version = "7.1.10.3";
+
+		task ("Given: Add SAP") {
+			var baseURL = PropsUtil.get("portal.url");
+
+			ServiceAccessPolicy.openServiceAccessPolicyAdmin();
+
+			ServiceAccessPolicy.addServiceAccessPolicy(
+				enabled = "true",
+				methodName = "*",
+				policyName = "SAML_Provider",
+				serviceClass = "com.liferay.saml.admin.rest.internal.resource.v1_0.SamlProviderResourceImpl",
+				title = "Configure SAML provider");
+		}
+
+		task ("When: Import the JSON file via Import/Export Center") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoImport();
+
+			ImportExport.configureImport(
+				entityType = "SamlProvider (v1_0 - Liferay SAML Admin REST)",
+				fileName = "identity-provider-configuration.json",
+				importStrategy = "Only Add New Records");
+
+			Button.click(button = "Next");
+
+			Button.click(button = "Start Import");
+
+			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
+		}
+
+		task ("Then: SAML is enabled with IDP role") {
+			SAML.goToSAMLAdmin();
+
+			SAMLRole.viewGeneralConfigurations(
+				samlEntityId = "samlidp",
+				samlRoleType = "Identity Provider");
+		}
+
+		task ("And: All the configurations which defines in identity-provider-configuration.json are configured") {
+			SAMLNavigation.gotoIdentityProvider();
+
+			SAMLPortlet.viewIdentityProviderConfigurations(sessionMaximum = 10000);
+		}
+	}
+
+	@description = "LPS-152122 TC8. Can import JSON file to configure the SAML IdP provider via Import/Export Center after upgrading from 7.2.10.1."
+	@priority = 4
+	test CanImportJSONFileToConfigureSAMLIDPAfterUpgrade72101 {
+		property custom.properties = "feature.flag.COMMERCE-8087=true";
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.release = "false";
+		property portal.version = "7.2.10.1";
+
+		task ("Given: Add SAP") {
+			var baseURL = PropsUtil.get("portal.url");
+
+			ServiceAccessPolicy.openServiceAccessPolicyAdmin();
+
+			ServiceAccessPolicy.addServiceAccessPolicy(
+				enabled = "true",
+				methodName = "*",
+				policyName = "SAML_Provider",
+				serviceClass = "com.liferay.saml.admin.rest.internal.resource.v1_0.SamlProviderResourceImpl",
+				title = "Configure SAML provider");
+		}
+
+		task ("When: Import the JSON file via Import/Export Center") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoImport();
+
+			ImportExport.configureImport(
+				entityType = "SamlProvider (v1_0 - Liferay SAML Admin REST)",
+				fileName = "identity-provider-configuration.json",
+				importStrategy = "Only Add New Records");
+
+			Button.click(button = "Next");
+
+			Button.click(button = "Start Import");
+
+			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
+		}
+
+		task ("Then: SAML is enabled with IDP role") {
+			SAML.goToSAMLAdmin();
+
+			SAMLRole.viewGeneralConfigurations(
+				samlEntityId = "samlidp",
+				samlRoleType = "Identity Provider");
+		}
+
+		task ("And: All the configurations which defines in identity-provider-configuration.json are configured") {
+			SAMLNavigation.gotoIdentityProvider();
+
+			SAMLPortlet.viewIdentityProviderConfigurations(sessionMaximum = 10000);
+		}
+	}
+
+	@description = "LPS-152122 TC8. Can import JSON file to configure the SAML IdP provider via Import/Export Center after upgrading from 7.3.10.1."
+	@priority = 4
+	test CanImportJSONFileToConfigureSAMLIDPAfterUpgrade73101 {
+		property custom.properties = "feature.flag.COMMERCE-8087=true";
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.release = "false";
+		property portal.version = "7.3.10.1";
+
+		task ("Given: Add SAP") {
+			var baseURL = PropsUtil.get("portal.url");
+
+			ServiceAccessPolicy.openServiceAccessPolicyAdmin();
+
+			ServiceAccessPolicy.addServiceAccessPolicy(
+				enabled = "true",
+				methodName = "*",
+				policyName = "SAML_Provider",
+				serviceClass = "com.liferay.saml.admin.rest.internal.resource.v1_0.SamlProviderResourceImpl",
+				title = "Configure SAML provider");
+		}
+
+		task ("When: Import the JSON file via Import/Export Center") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoImport();
+
+			ImportExport.configureImport(
+				entityType = "SamlProvider (v1_0 - Liferay SAML Admin REST)",
+				fileName = "identity-provider-configuration.json",
+				importStrategy = "Only Add New Records");
+
+			Button.click(button = "Next");
+
+			Button.click(button = "Start Import");
+
+			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
+		}
+
+		task ("Then: SAML is enabled with IDP role") {
+			SAML.goToSAMLAdmin();
+
+			SAMLRole.viewGeneralConfigurations(
+				samlEntityId = "samlidp",
+				samlRoleType = "Identity Provider");
+		}
+
+		task ("And: All the configurations which defines in identity-provider-configuration.json are configured") {
+			SAMLNavigation.gotoIdentityProvider();
+
+			SAMLPortlet.viewIdentityProviderConfigurations(sessionMaximum = 10000);
+		}
+	}
+
+	@description = "LPS-152122 TC8. Can import JSON file to configure the SAML IdP provider via Import/Export Center after upgrading from 7.0.10.16."
+	@priority = 4
+	test CanImportJSONFileToConfigureSAMLIDPAfterUpgrade701016 {
+		property custom.properties = "feature.flag.COMMERCE-8087=true";
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.release = "false";
+		property portal.version = "7.0.10.16";
+
+		task ("Given: Add SAP") {
+			var baseURL = PropsUtil.get("portal.url");
+
+			ServiceAccessPolicy.openServiceAccessPolicyAdmin();
+
+			ServiceAccessPolicy.addServiceAccessPolicy(
+				enabled = "true",
+				methodName = "*",
+				policyName = "SAML_Provider",
+				serviceClass = "com.liferay.saml.admin.rest.internal.resource.v1_0.SamlProviderResourceImpl",
+				title = "Configure SAML provider");
+		}
+
+		task ("When: Import the JSON file via Import/Export Center") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoImport();
+
+			ImportExport.configureImport(
+				entityType = "SamlProvider (v1_0 - Liferay SAML Admin REST)",
+				fileName = "identity-provider-configuration.json",
+				importStrategy = "Only Add New Records");
+
+			Button.click(button = "Next");
+
+			Button.click(button = "Start Import");
+
+			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
+		}
+
+		task ("Then: SAML is enabled with IDP role") {
+			SAML.goToSAMLAdmin();
+
+			SAMLRole.viewGeneralConfigurations(
+				samlEntityId = "samlidp",
+				samlRoleType = "Identity Provider");
+		}
+
+		task ("And: All the configurations which defines in identity-provider-configuration.json are configured") {
+			SAMLNavigation.gotoIdentityProvider();
+
+			SAMLPortlet.viewIdentityProviderConfigurations(sessionMaximum = 10000);
+		}
+	}
+
+	@description = "This is a use case for LPS-145635. Can provision new SP user after upgrading from 7.1.10.3."
+	@priority = 4
+	test CanProvisionNewSPUserAfterUpgrade71103 {
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.version = "7.1.10.3";
+
+		task ("Assert portal can provision a new SP user after successfully authenticating on the IDP") {
+			User.logoutPG();
+
+			SAML.executeSPInitiatedSSO(
+				password = "test",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "userea2@liferay.com");
+
+			User.viewLoggedInPG();
+
+			Navigator.openURL();
+
+			User.viewLoggedInPG();
+		}
+	}
+
+	@description = "This is a use case for LPS-145635. Can provision new SP user after upgrading from 7.2.10.1."
+	@priority = 4
+	test CanProvisionNewSPUserAfterUpgrade72101 {
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.version = "7.2.10.1";
+
+		task ("Assert portal can provision a new SP user after successfully authenticating on the IDP") {
+			User.logoutPG();
+
+			SAML.executeSPInitiatedSSO(
+				password = "test",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "userea2@liferay.com");
+
+			User.viewLoggedInPG();
+
+			Navigator.openURL();
+
+			User.viewLoggedInPG();
+		}
+	}
+
+	@description = "This is a use case for LPS-145635. Can provision new SP user after upgrading from 7.3.10.1."
+	@priority = 4
+	test CanProvisionNewSPUserAfterUpgrade73101 {
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.version = "7.3.10.1";
+
+		task ("Assert portal can provision a new SP user after successfully authenticating on the IDP") {
+			User.logoutPG();
+
+			SAML.executeSPInitiatedSSO(
+				password = "test",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "userea2@liferay.com");
+
+			User.viewLoggedInPG();
+
+			Navigator.openURL();
+
+			User.viewLoggedInPG();
+		}
+	}
+
+	@description = "This is a use case for LPS-145635. Can provision new SP user after upgrading from 7.0.10.16."
+	@priority = 4
+	test CanProvisionNewSPUserAfterUpgrade701016 {
+		property data.archive.type = "data-archive-saml-broken-mapping";
+		property portal.version = "7.0.10.16";
+
+		task ("Assert portal can provision a new SP user after successfully authenticating on the IDP") {
+			User.logoutPG();
+
+			SAML.executeSPInitiatedSSO(
+				password = "test",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "userea2@liferay.com");
+
+			User.viewLoggedInPG();
+
+			Navigator.openURL();
+
+			User.viewLoggedInPG();
+		}
+	}
+
+	@description = "This is a use case for LRQA-64613. View SAML configuration after upgrade 7.3.10."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade7310 {
+		property data.archive.type = "data-archive-saml";
+		property portal.version = "7.3.10";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "This is a use case for LRQA-61620. View SAML configuration after upgrade 7.4.12."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade7412 {
+		property data.archive.type = "data-archive-saml";
+		property portal.release = "quarantine";
+		property portal.upstream = "quarantine";
+		property portal.version = "7.4.12";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "View SAML configuration after upgrade 7.1.10.3."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade71103 {
+		property data.archive.type = "data-archive-saml";
+		property portal.version = "7.1.10.3";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "This is a use case for LRQA-61620. View SAML configuration after upgrade 7.2.10.1."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade72101 {
+		property data.archive.type = "data-archive-saml";
+		property portal.version = "7.2.10.1";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "This is a use case for LPS-136367. View SAML configuration after upgrade 7.3.10.1."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade73101 {
+		property data.archive.type = "data-archive-saml";
+		property database.types = "db2,mariadb,mysql,postgresql,sqlserver,sybase";
+		property portal.version = "7.3.10.1";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "This is a use case for LPS-132679. View SAML configuration after upgrade 7.0.10.10."
+	@priority = 4
+	test ViewSAMLConfigurationAfterUpgrade701016 {
+		property data.archive.type = "data-archive-saml";
+		property portal.version = "7.0.10.16";
+
+		task ("View SAML general IdP and connection configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration();
+		}
+	}
+
+	@description = "This is a use case for LRQA-64613. View SAML with encryption configuration after upgrade 7.3.10."
+	@priority = 4
+	test ViewSAMLWithEncryptionConfigurationAfterUpgrade7310 {
+		property data.archive.type = "data-archive-saml-encryption";
+		property database.types = "db2,mariadb,mysql,postgresql,sqlserver,sybase";
+		property portal.version = "7.3.10";
+
+		task ("View SAML general IdP and connection with encryption configuration ") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration(forceEncryption = "true");
+		}
+	}
+
+	@description = "This is a use case for LRQA-61620. View SAML configuration after upgrade 7.4.12."
+	@priority = 4
+	test ViewSAMLWithEncryptionConfigurationAfterUpgrade7412 {
+		property data.archive.type = "data-archive-saml-encryption";
+		property portal.release = "quarantine";
+		property portal.upstream = "quarantine";
+		property portal.version = "7.4.12";
+
+		task ("View SAML general IdP and connection with encryption configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration(forceEncryption = "true");
+		}
+	}
+
+	@description = "View SAML configuration after upgrade 7.2.10.1."
+	@priority = 4
+	test ViewSAMLWithEncryptionConfigurationAfterUpgrade72101 {
+		property data.archive.type = "data-archive-saml-encryption";
+		property portal.version = "7.2.10.1";
+
+		task ("View SAML general IdP and connection with encryption configuration") {
+			ValidateSAMLUpgrade.viewSAMLGeneralConfiguration(samlRoleType = "Identity Provider");
+
+			ValidateSAMLUpgrade.viewSAMLSPConnectionConfiguration(forceEncryption = "true");
+		}
+	}
+
+}

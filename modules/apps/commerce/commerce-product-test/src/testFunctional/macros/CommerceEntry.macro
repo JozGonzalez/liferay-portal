@@ -21,7 +21,6 @@ definition {
 		AssertElementPresent(locator1 = "CommerceEntry#PAYMENT_SUBSCRIPTION_TOGGLE_ACTIVE");
 	}
 
-	@summary = "Add a new user that is part of an account(the creation of a new account, the membership and the user's role are optional)"
 	macro addAccountEntryUser {
 		Variables.assertDefined(parameterList = "${accountName},${userEmailAddress},${userFirstName},${userLastName},${userScreenName}");
 
@@ -63,21 +62,15 @@ definition {
 		}
 
 		if (isSet(userRole)) {
-			ApplicationsMenu.gotoPortlet(
-				category = "Accounts",
-				panel = "Control Panel",
-				portlet = "Accounts");
-
-			LexiconEntry.gotoEntry(rowEntry = ${accountName});
-
-			Account.addAssigneeToRoleViaUsersTab(
-				accountRoleTitle = ${userRole},
-				accountUserName = ${userEmailAddress});
+			JSONAccountRole.associateUser(
+				accountEntryName = ${accountName},
+				accountRole = ${userRole},
+				userEmailAddress = ${userEmailAddress});
 		}
 	}
 
 	macro addFullDescriptionViaCKEditor {
-		Type.typeCKEditor(
+		Type.typeEditor(
 			locator1 = "CKEditor#BODY_FIELD",
 			value1 = ${entryFullDescription});
 	}
@@ -134,6 +127,16 @@ definition {
 			key_title = "Currency",
 			locator1 = "CommerceEntry#CATALOGS_FORM",
 			value1 = ${catalogCurrency});
+
+		if (isSet(linkCatalogSupplier)) {
+			Click(
+				key_label = "Link Catalog to a Supplier",
+				locator1 = "CommerceEntry#ANY_AUTOCOMPLETE_CONTAINS_TEXT_FIELD");
+
+			Click(
+				key_categoryName = ${supplierAccountName},
+				locator1 = "CommerceEntry#COMMERCE_CATEGORY_AUTOCOMPLETE_SPECIFIC");
+		}
 	}
 
 	macro addNewChannelsEntry {
@@ -211,6 +214,8 @@ definition {
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#SUBJECT_TO_VAT_CHECKBOX");
 
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
+
+		Button.clickSave();
 	}
 
 	macro addNewCurrenciesEntry {
@@ -421,6 +426,8 @@ definition {
 			value1 = ${code});
 
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
+
+		Button.clickSave();
 	}
 
 	macro addNewWarehousesEntry {
@@ -489,6 +496,34 @@ definition {
 		Type(
 			locator1 = "CommerceEntry#PRIORITY_FIELD",
 			value1 = ${valuePosition});
+	}
+
+	macro addPriceListsFromProductSKU {
+		CommerceNavigator.gotoEntry(entryName = ${skuName});
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+		Click(locator1 = "Button#PLUS");
+
+		SelectFrameTop();
+
+		SelectFrame(
+			key_frameTitle = "Add ${skuName} to Price List",
+			locator1 = "CommerceEntry#ANY_IFRAME");
+
+		for (var priceListName : list ${priceListNames}) {
+			Click.javaScriptClick(
+				key_imageName = ${priceListName},
+				locator1 = "Checkbox#ADAPTIVE_MEDIA_IMAGE");
+		}
+
+		SelectFrameTop();
+
+		Click(
+			key_text = "Add",
+			locator1 = "Button#ANY");
 	}
 
 	macro addPricingEntry {
@@ -709,6 +744,112 @@ definition {
 		Button.clickSave();
 	}
 
+	macro addUOMEntry {
+		Click(locator1 = "Button#PLUS");
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Type(
+			key_fieldLabel = "Unit of Measure",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${unitOfMeasureName});
+
+		Type(
+			locator1 = "CommerceEntry#KEY_FIELD",
+			value1 = ${unitOfMeasureKey});
+
+		if (isSet(conversionRate)) {
+			Type(
+				key_fieldLabel = "Conversion Rate",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${conversionRate});
+		}
+
+		if (isSet(decimalAllowed)) {
+			ScrollWebElementIntoView(
+				key_fieldLabel = "Decimal Allowed",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT");
+
+			DoubleClick(
+				key_fieldLabel = "Decimal Allowed",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT");
+
+			KeyPress(
+				key_fieldLabel = "Decimal Allowed",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "\BACK_SPACE");
+
+			Type(
+				key_fieldLabel = "Decimal Allowed",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${decimalAllowed});
+		}
+
+		if (isSet(baseUnitQuantity)) {
+			DoubleClick(
+				key_fieldLabel = "Base Unit Quantity",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT");
+
+			KeyPress(
+				key_fieldLabel = "Base Unit Quantity",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "\BACK_SPACE");
+
+			Type(
+				key_fieldLabel = "Base Unit Quantity",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${baseUnitQuantity});
+		}
+
+		if (isSet(basePrice)) {
+			ScrollWebElementIntoView(
+				key_text = "Base Price",
+				locator1 = "TextInput#ANY");
+
+			Type(
+				key_text = "Base Price",
+				locator1 = "TextInput#ANY",
+				value1 = ${basePrice});
+		}
+
+		if (isSet(promoPrice)) {
+			Type(
+				key_text = "Promotion Price",
+				locator1 = "TextInput#ANY",
+				value1 = ${promoPrice});
+		}
+
+		if (isSet(priority)) {
+			ScrollWebElementIntoView(
+				key_fieldLabel = "Priority",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT");
+
+			Type(
+				key_fieldLabel = "Priority",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${priority});
+		}
+
+		if (isSet(purchasable) && (${purchasable} == "true")) {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Purchasable",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+		else if (isSet(purchasable) && (${purchasable} == "false")) {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Purchasable",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		Button.clickAdd();
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+	}
+
 	macro assertCheckedSpecificToggle {
 		task ("Check if the Toggle is checked") {
 			AssertElementPresent(
@@ -753,6 +894,15 @@ definition {
 			locator1 = "CommerceEntry#OVERRIDE_DEFAULT_DISPLAY_PAGE");
 	}
 
+	macro assertTableRowSpecificColumnValue {
+		AssertTextEquals(
+			key_column = ${column},
+			key_entryName = ${entryName},
+			key_row = ${row},
+			locator1 = "CommerceEntry#TABLE_ASSERT_SPECIFIC_ROW_ANY_COLUMN_VALUE",
+			value1 = ${value});
+	}
+
 	macro assertUniqueTaxCategoryErc {
 		Click(
 			key_entry = ${keyName},
@@ -776,6 +926,21 @@ definition {
 		}
 
 		Click(locator1 = "Icon#BACK");
+	}
+
+	macro changePagination {
+		Click(
+			key_id = ${key_id},
+			locator1 = "CommerceEntry#PAGINATION_ITEMS_PER_PAGE_SELECT");
+
+		Click(
+			key_menuItem = ${itemsPerPage},
+			locator1 = "CommerceEntry#ANY_MENU_ITEM");
+
+		AssertTextEquals(
+			key_id = ${key_id},
+			locator1 = "CommerceEntry#PAGINATION_ITEMS_PER_PAGE_SELECT",
+			value1 = ${itemsPerPage});
 	}
 
 	macro changePinColor {
@@ -856,6 +1021,58 @@ definition {
 				key_entryName = ${entryName},
 				key_table = ${table},
 				locator1 = "CommerceEntry#TABLE_ENTRY_EDIT_BUTTON");
+		}
+	}
+
+	macro createAccountFromGuest {
+		Type(
+			locator1 = "TextInput#SCREEN_NAME",
+			value1 = ${userScreenName});
+
+		if (isSet(newuserEmailAddress)) {
+			Type(
+				locator1 = "TextInput#EMAIL_ADDRESS",
+				value1 = ${newuserEmailAddress});
+		}
+		else {
+			var key_userEmailAddress = ${userEmailAddress};
+
+			AssertElementPresent(locator1 = "UsersAndOrganizationsEditUser#CREATE_ACCOUNT_EMAIL_ADDRESS");
+		}
+
+		Type(
+			locator1 = "TextInput#FIRST_NAME",
+			value1 = ${userFirstName});
+
+		Type(
+			locator1 = "TextInput#LAST_NAME",
+			value1 = ${userLastName});
+
+		if (${disablePassword} == "true") {
+			AssertElementNotPresent(locator1 = "TextInput#PASSWORD");
+
+			AssertElementNotPresent(locator1 = "TextInput#REENTER_PASSWORD");
+		}
+		else {
+			Type(
+				locator1 = "TextInput#PASSWORD",
+				value1 = ${newPassword});
+
+			Type(
+				locator1 = "TextInput#REENTER_PASSWORD",
+				value1 = ${newPassword});
+		}
+
+		Button.clickSave();
+
+		if (isSet(newuserEmailAddress)) {
+			Alert.viewSuccessMessageText(successMessage = "Thank you for creating an account. Use your password to log in.");
+		}
+		else if (isSet(userEmailAddressMessage)) {
+			Alert.viewSuccessMessageText(successMessage = "Thank you for creating an account. You can set your password by following the instructions sent to ${userEmailAddressMessage}.");
+		}
+		else {
+			Alert.viewSuccessMessageText(successMessage = "Thank you for creating an account. You can set your password by following the instructions sent to ${newuserEmailAddress}.");
 		}
 	}
 
@@ -948,7 +1165,9 @@ definition {
 
 		var paginationResults = selenium.getText("CommerceEntry#PAGINATION_RESULTS");
 
-		var numberOfEntries = StringUtil.extractLast(${paginationResults}, " ");
+		var listOfStrings = ListUtil.newListFromString(${paginationResults}, " ");
+
+		var numberOfEntries = ListUtil.get(${listOfStrings}, 5);
 
 		var numberOfEntriesAfterDeletion = ${numberOfEntries} - 1;
 
@@ -973,9 +1192,7 @@ definition {
 				value1 = ${paginationResults});
 		}
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
-
-		AssertElementNotPresent(locator1 = "Message#ERROR");
+		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 	}
 
 	macro deleteTaxCategory {
@@ -1008,12 +1225,33 @@ definition {
 			value1 = ${newEntryShortDescription});
 	}
 
+	macro editPriceListsFromProductSKU {
+		CommerceNavigator.gotoEntry(entryName = ${skuName});
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+		CommerceNavigator.gotoEntry(entryName = ${priceList});
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		Type(
+			locator1 = "CommerceEntry#PRICE_FIELD",
+			value1 = ${price});
+
+		Button.clickSave();
+
+		Click(locator1 = "Icon#CLOSE");
+	}
+
 	macro editSkuPricingAndInventory {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		CommerceSKUs.setSkuPricing(
 			basePrice = ${basePrice},
 			cost = ${cost},
+			priceOnApplication = ${priceOnApplication},
 			promoPrice = ${promoPrice});
 
 		if (isSet(publish)) {
@@ -1072,6 +1310,95 @@ definition {
 			keyDescription = ${keyDescription},
 			keyName = ${keyName},
 			keyReferenceCode = ${keyReferenceCode});
+	}
+
+	macro editUOMEntry {
+		Click(
+			key_value = ${entryName},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		ClickNoError(
+			key_selectAction = "Edit",
+			locator1 = "FormViewBuilder#FIELD_ELLIPSIS_ACTION");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(unitOfMeasureNewName)) {
+			Type(
+				key_fieldLabel = "Unit of Measure",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${unitOfMeasureNewName});
+		}
+
+		if (isSet(changeLocale)) {
+			PortletEntry.changeLocale(locale = ${locale});
+
+			PortletEntry.inputName(name = ${localizedName});
+		}
+
+		if (isSet(unitOfMeasureKey)) {
+			Type(
+				locator1 = "CommerceEntry#KEY_FIELD",
+				value1 = ${unitOfMeasureKey});
+		}
+
+		if (isSet(conversionRate)) {
+			Type(
+				key_fieldLabel = "Conversion Rate",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${conversionRate});
+		}
+
+		if (isSet(decimalAllowed)) {
+			Type(
+				key_fieldLabel = "Decimal Allowed",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${decimalAllowed});
+		}
+
+		if (isSet(baseUnitQuantity)) {
+			Type(
+				key_fieldLabel = "Base Unit Quantity",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${baseUnitQuantity});
+		}
+
+		if (isSet(priority)) {
+			Type(
+				key_fieldLabel = "Priority",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${priority});
+		}
+
+		if (isSet(purchasable) && (${purchasable} == "true")) {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Purchasable",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+		else if (isSet(purchasable) && (${purchasable} == "false")) {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Purchasable",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		if (isSet(setAsPrimaryUOM)) {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Set as Primary Unit of Measure",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickNoError(button = "Save");
+
+			AssertConfirm.waitForConfirmation(value1 = "If the actual unit of measure is changed, all conversion rates to primary units of measure already set may become incorrect. Are you sure you want to change the primary unit of measure?");
+		}
+		else {
+			Button.clickSave();
+		}
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 	}
 
 	macro editWarehousesQuantity {
@@ -1142,6 +1469,25 @@ definition {
 		WaitForElementNotPresent(locator1 = "Message#SUCCESS");
 	}
 
+	macro removeEntryEligibility {
+		CommerceNavigator.gotoEntry(entryName = ${entryName});
+
+		Navigator.gotoNavTab(navTab = "Eligibility");
+
+		Click(
+			key_value = ${channelEligibility},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Remove");
+
+		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+
+		AssertElementNotPresent(
+			key_entryName = ${channelEligibility},
+			key_table = "Channels",
+			locator1 = "CommerceEntry#TABLE_ELIGIBILITY_ENTRY");
+	}
+
 	macro saveEntry {
 		Button.clickSave();
 
@@ -1173,11 +1519,9 @@ definition {
 		}
 		else {
 			if (${noOption} != "true") {
-				Click(locator1 = "CommerceEntry#OPTION_SELECT");
-
-				Click(
-					key_selectValue = ${optionValue},
-					locator1 = "CommerceEntry#OPTIONS_SELECT_LIST");
+				Select(
+					locator1 = "Select#SELECT",
+					value1 = ${optionValue});
 			}
 		}
 	}
@@ -1305,6 +1649,7 @@ definition {
 				for (var paymentTerm : list ${paymentTermsEligibility}) {
 					CommerceRelations.assignSingleRelationToEligibility(
 						entryName = ${paymentTerm},
+						key_eligibilityCardTitle = ${title},
 						title = ${title});
 
 					Click(
@@ -1339,6 +1684,7 @@ definition {
 				for (var deliveryTerm : list ${deliveryTermsEligibility}) {
 					CommerceRelations.assignSingleRelationToEligibility(
 						entryName = ${deliveryTerm},
+						key_eligibilityCardTitle = ${title},
 						title = ${title});
 
 					Click(
@@ -1369,6 +1715,7 @@ definition {
 				for (var orderType : list ${orderTypesEligibility}) {
 					CommerceRelations.assignSingleRelationToEligibility(
 						entryName = ${orderType},
+						key_eligibilityCardTitle = ${title},
 						title = ${title});
 
 					Click(
@@ -1395,7 +1742,7 @@ definition {
 			}
 		}
 
-		if (isSet(shippingOption)) {
+		if (isSet(shippingOption) && !(isSet(unpublish))) {
 			Click(locator1 = "Icon#CLOSE");
 
 			SelectFrame.selectFrameTop();
@@ -1406,13 +1753,19 @@ definition {
 
 	macro setExpirationTime {
 		var timeString = selenium.getElementValue("TextInput#DISPLAY_DATE_TIME");
-
-		var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
-		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
-		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
+		var timeAMPM = selenium.getElementValue("TextInput#DISPLAY_DATE_MERIDIAN");
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 1);
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 2);
 		var minutesToExpire = ${minutesToExpire};
 
 		var minutes = ${minutes} + ${minutesToExpire};
+
+		if (${timeAMPM} == 0) {
+			var ampm = "AM";
+		}
+		else {
+			var ampm = "PM";
+		}
 
 		var changeHour = MathUtil.isGreaterThan(${minutes}, 59);
 
@@ -1440,21 +1793,27 @@ definition {
 			checkboxName = "Never Expire",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		Type(
+		Type.sendKeys(
 			inputFieldId = "expirationDateTime",
 			locator1 = "TextInput#INPUT_ID",
-			value1 = "${hours}:${minutes} ${ampm}");
+			value1 = "${hours}${minutes}${ampm}");
 	}
 
 	macro setPublishTime {
 		var timeString = selenium.getElementValue("TextInput#DISPLAY_DATE_TIME");
-
-		var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
-		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
-		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
+		var timeAMPM = selenium.getElementValue("TextInput#DISPLAY_DATE_MERIDIAN");
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 1);
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 2);
 		var minutesToPublish = ${minutesToPublish};
 
 		var minutes = ${minutes} + ${minutesToPublish};
+
+		if (${timeAMPM} == 0) {
+			var ampm = "AM";
+		}
+		else {
+			var ampm = "PM";
+		}
 
 		var changeHour = MathUtil.isGreaterThan(${minutes}, 59);
 
@@ -1478,10 +1837,10 @@ definition {
 			}
 		}
 
-		Type(
+		Type.sendKeys(
 			inputFieldId = "displayDateTime",
 			locator1 = "TextInput#INPUT_ID",
-			value1 = "${hours}:${minutes} ${ampm}");
+			value1 = "${hours}${minutes}${ampm}");
 	}
 
 	macro uploadCatalogEntrySingleImage {
@@ -1622,6 +1981,27 @@ definition {
 			key_title = "Currency",
 			locator1 = "CommerceEntry#CATALOGS_FORM",
 			value1 = ${catalogCurrency});
+
+		if (isSet(catalogBasePriceList)) {
+			AssertValue(
+				key_labelName = "Base Price List",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = ${catalogBasePriceList});
+		}
+
+		if (isSet(catalogBasePromotion)) {
+			AssertValue(
+				key_labelName = "Base Promotion",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = ${catalogBasePromotion});
+		}
+
+		if (isSet(linkCatalogSupplier)) {
+			AssertValue(
+				key_labelName = "Link Catalog to a Supplier",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = ${supplierAccountName});
+		}
 	}
 
 	macro viewChannelsEntry {
@@ -1785,22 +2165,6 @@ definition {
 			value1 = ${results});
 	}
 
-	macro viewPriceListEntry {
-		AssertTextEquals(
-			locator1 = "CommerceEntry#NAME_FIELD",
-			value1 = ${priceListName});
-
-		AssertSelectedLabel(
-			key_fieldLabel = "Catalog",
-			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = ${priceListCatalog});
-
-		AssertSelectedLabel(
-			key_fieldLabel = "Currency",
-			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = ${priceListCurrency});
-	}
-
 	macro viewProductOptions {
 		Click(locator1 = "CommerceEntry#PRODUCT_DETAIL_VIEW_OPTION");
 
@@ -1954,6 +2318,18 @@ definition {
 		}
 
 		Click(locator1 = "Icon#BACK");
+	}
+
+	macro viewUOMEntry {
+		for (var rowValues : list ${uomRowList}) {
+			var firstRowValue = StringUtil.extractFirst(${rowValues}, ":");
+			var secondRowValue = StringUtil.extractLast(${rowValues}, ":");
+
+			AssertElementPresent(
+				key_firstRowValue = ${firstRowValue},
+				key_secondRowValue = ${secondRowValue},
+				locator1 = "CommerceEntry#GENERIC_TABLE_ROW_VALUE");
+		}
 	}
 
 }

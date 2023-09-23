@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -16,8 +10,6 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {CSVLink} from 'react-csv';
 
-import Dropdown from '../../common/components/Dropdown';
-import StatusBadge from '../../common/components/StatusBadge';
 import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
 import CheckboxFilter from '../../common/components/TableHeader/Filter/components/CheckboxFilter';
@@ -26,16 +18,18 @@ import DateFilter from '../../common/components/TableHeader/Filter/components/fi
 import Search from '../../common/components/TableHeader/Search';
 import {LiferayPicklistName} from '../../common/enums/liferayPicklistName';
 import {MDFClaimColumnKey} from '../../common/enums/mdfClaimColumnKey';
+import {ObjectActionName} from '../../common/enums/objectActionName';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePagination from '../../common/hooks/usePagination';
+import usePermissionActions from '../../common/hooks/usePermissionActions';
 import {MDFClaimListItem} from '../../common/interfaces/mdfClaimListItem';
 import TableColumn from '../../common/interfaces/tableColumn';
-import {Liferay} from '../../common/services/liferay';
 import getDropDownFilterMenus from '../../common/utils/getDropDownFilterMenus';
 import useDynamicFieldEntries from './hooks/useDynamicFieldEntries';
 import useFilters from './hooks/useFilters';
 import useGetListItemsFromMDFClaims from './hooks/useGetListItemsFromMDFClaims';
 import {INITIAL_FILTER} from './utils/constants/initialFilter';
+import getMDFClaimListColumns from './utils/getMDFClaimListColumns';
 
 type MDFClaimItem = {
 	[key in MDFClaimColumnKey]?: any;
@@ -47,7 +41,7 @@ const MDFClaimList = () => {
 	const {filters, filtersTerm, onFilter, setFilters} = useFilters();
 
 	const pagination = usePagination();
-	const {data, isValidating} = useGetListItemsFromMDFClaims(
+	const {data, isValidating, mutate} = useGetListItemsFromMDFClaims(
 		pagination.activePage,
 		pagination.activeDelta,
 		filtersTerm
@@ -55,74 +49,9 @@ const MDFClaimList = () => {
 
 	const siteURL = useLiferayNavigate();
 
-	const columns = [
-		{
-			columnKey: MDFClaimColumnKey.REQUEST_ID,
-			label: 'Request ID',
-			render: (data: string | undefined, row: MDFClaimListItem) => (
-				<a
-					className="link"
-					onClick={() =>
-						Liferay.Util.navigate(
-							`${siteURL}/l/${row[MDFClaimColumnKey.REQUEST_ID]}`
-						)
-					}
-				>{`Request-${data}`}</a>
-			),
-		},
-		{
-			columnKey: MDFClaimColumnKey.PARTNER,
-			label: 'Partner',
-		},
-		{
-			columnKey: MDFClaimColumnKey.STATUS,
-			label: 'Status',
-			render: (data?: string) => <StatusBadge status={data as string} />,
-		},
-		{
-			columnKey: MDFClaimColumnKey.TYPE,
-			label: 'Type',
-		},
-		{
-			columnKey: MDFClaimColumnKey.AMOUNT_CLAIMED,
-			label: 'Amount Claimed',
-		},
-		{
-			columnKey: MDFClaimColumnKey.PAID,
-			label: 'Paid',
-		},
-		{
-			columnKey: MDFClaimColumnKey.DATE_SUBMITTED,
-			label: 'Date Submitted',
-		},
-		{
-			columnKey: MDFClaimColumnKey.ACTION,
-			label: '',
-			render: (_: string | undefined, row: MDFClaimListItem) => (
-				<Dropdown
-					closeOnClick={true}
-					onClick={() =>
-						Liferay.Util.navigate(
-							`${siteURL}/l/${row[MDFClaimColumnKey.REQUEST_ID]}`
-						)
-					}
-					options={[
-						{
-							icon: 'view',
-							key: 'approve',
-							label: ' View',
-							onClick: () =>
-								Liferay.Util.navigate(
-									`${siteURL}/l/${
-										row[MDFClaimColumnKey.REQUEST_ID]
-									}`
-								),
-						},
-					]}
-				></Dropdown>
-			),
-		},
-	];
+	const actions = usePermissionActions(ObjectActionName.MDF_CLAIM);
+
+	const columns = getMDFClaimListColumns(siteURL, actions, mutate);
 
 	const getTable = (
 		totalCount: number,

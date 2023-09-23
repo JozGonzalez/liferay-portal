@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.display.context.builder;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -22,11 +14,11 @@ import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.DateFormatFactory;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
@@ -41,14 +33,11 @@ import java.io.Serializable;
 import java.text.DateFormat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.TimeZone;
-import java.util.stream.Stream;
 
 import javax.portlet.RenderRequest;
 
@@ -69,11 +58,9 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
-
 		_modifiedFacetPortletInstanceConfiguration =
-			portletDisplay.getPortletInstanceConfiguration(
-				ModifiedFacetPortletInstanceConfiguration.class);
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				ModifiedFacetPortletInstanceConfiguration.class, _themeDisplay);
 	}
 
 	public ModifiedFacetDisplayContext build() {
@@ -145,8 +132,7 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 	}
 
 	public void setParameterValues(String... parameterValues) {
-		_selectedRanges = Arrays.asList(
-			Objects.requireNonNull(parameterValues));
+		_selectedRanges = ListUtil.fromArray(parameterValues);
 	}
 
 	public void setTimeZone(TimeZone timeZone) {
@@ -217,14 +203,12 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 			modifiedFacetCalendarDisplayContextBuilder =
 				new ModifiedFacetCalendarDisplayContextBuilder();
 
-		Stream<String> selectedRangesStream = _selectedRanges.stream();
-
-		selectedRangesStream.filter(
-			s -> s.startsWith(StringPool.OPEN_CURLY_BRACE)
-		).findAny(
-		).ifPresent(
-			modifiedFacetCalendarDisplayContextBuilder::setRangeString
-		);
+		for (String selectedRange : _selectedRanges) {
+			if (selectedRange.startsWith(StringPool.OPEN_CURLY_BRACE)) {
+				modifiedFacetCalendarDisplayContextBuilder.setRangeString(
+					selectedRange);
+			}
+		}
 
 		modifiedFacetCalendarDisplayContextBuilder.setFrom(_from);
 		modifiedFacetCalendarDisplayContextBuilder.setLocale(_locale);

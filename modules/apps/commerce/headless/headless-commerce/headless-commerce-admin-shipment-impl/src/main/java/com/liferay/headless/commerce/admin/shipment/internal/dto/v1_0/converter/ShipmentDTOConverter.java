@@ -1,23 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.converter;
 
+import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.service.CommerceShipmentService;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Shipment;
+import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Status;
 import com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -70,6 +65,19 @@ public class ShipmentDTOConverter
 				shippingMethodId =
 					commerceShipment.getCommerceShippingMethodId();
 				shippingOptionName = commerceShipment.getShippingOptionName();
+				status = new Status() {
+					{
+						code = commerceShipment.getStatus();
+						label =
+							CommerceShipmentConstants.getShipmentStatusLabel(
+								commerceShipment.getStatus());
+						label_i18n = _language.get(
+							LanguageResources.getResourceBundle(
+								dtoConverterContext.getLocale()),
+							CommerceShipmentConstants.getShipmentStatusLabel(
+								commerceShipment.getStatus()));
+					}
+				};
 				trackingNumber = commerceShipment.getTrackingNumber();
 				trackingURL = commerceShipment.getTrackingURL();
 				userName = commerceShipment.getUserName();
@@ -79,5 +87,8 @@ public class ShipmentDTOConverter
 
 	@Reference
 	private CommerceShipmentService _commerceShipmentService;
+
+	@Reference
+	private Language _language;
 
 }

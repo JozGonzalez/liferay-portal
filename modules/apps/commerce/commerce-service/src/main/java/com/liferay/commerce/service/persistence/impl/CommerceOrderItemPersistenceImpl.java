@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.persistence.impl;
@@ -51,7 +42,6 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
@@ -1467,30 +1457,32 @@ public class CommerceOrderItemPersistenceImpl
 	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
 		"commerceOrderItem.companyId = ?";
 
-	private FinderPath _finderPathFetchByBookedQuantityId;
-	private FinderPath _finderPathCountByBookedQuantityId;
+	private FinderPath _finderPathFetchByCommerceInventoryBookedQuantityId;
+	private FinderPath _finderPathCountByCommerceInventoryBookedQuantityId;
 
 	/**
-	 * Returns the commerce order item where bookedQuantityId = &#63; or throws a <code>NoSuchOrderItemException</code> if it could not be found.
+	 * Returns the commerce order item where commerceInventoryBookedQuantityId = &#63; or throws a <code>NoSuchOrderItemException</code> if it could not be found.
 	 *
-	 * @param bookedQuantityId the booked quantity ID
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID
 	 * @return the matching commerce order item
 	 * @throws NoSuchOrderItemException if a matching commerce order item could not be found
 	 */
 	@Override
-	public CommerceOrderItem findByBookedQuantityId(long bookedQuantityId)
+	public CommerceOrderItem findByCommerceInventoryBookedQuantityId(
+			long commerceInventoryBookedQuantityId)
 		throws NoSuchOrderItemException {
 
-		CommerceOrderItem commerceOrderItem = fetchByBookedQuantityId(
-			bookedQuantityId);
+		CommerceOrderItem commerceOrderItem =
+			fetchByCommerceInventoryBookedQuantityId(
+				commerceInventoryBookedQuantityId);
 
 		if (commerceOrderItem == null) {
 			StringBundler sb = new StringBundler(4);
 
 			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			sb.append("bookedQuantityId=");
-			sb.append(bookedQuantityId);
+			sb.append("commerceInventoryBookedQuantityId=");
+			sb.append(commerceInventoryBookedQuantityId);
 
 			sb.append("}");
 
@@ -1505,44 +1497,50 @@ public class CommerceOrderItemPersistenceImpl
 	}
 
 	/**
-	 * Returns the commerce order item where bookedQuantityId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the commerce order item where commerceInventoryBookedQuantityId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @param bookedQuantityId the booked quantity ID
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID
 	 * @return the matching commerce order item, or <code>null</code> if a matching commerce order item could not be found
 	 */
 	@Override
-	public CommerceOrderItem fetchByBookedQuantityId(long bookedQuantityId) {
-		return fetchByBookedQuantityId(bookedQuantityId, true);
+	public CommerceOrderItem fetchByCommerceInventoryBookedQuantityId(
+		long commerceInventoryBookedQuantityId) {
+
+		return fetchByCommerceInventoryBookedQuantityId(
+			commerceInventoryBookedQuantityId, true);
 	}
 
 	/**
-	 * Returns the commerce order item where bookedQuantityId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the commerce order item where commerceInventoryBookedQuantityId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
-	 * @param bookedQuantityId the booked quantity ID
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching commerce order item, or <code>null</code> if a matching commerce order item could not be found
 	 */
 	@Override
-	public CommerceOrderItem fetchByBookedQuantityId(
-		long bookedQuantityId, boolean useFinderCache) {
+	public CommerceOrderItem fetchByCommerceInventoryBookedQuantityId(
+		long commerceInventoryBookedQuantityId, boolean useFinderCache) {
 
 		Object[] finderArgs = null;
 
 		if (useFinderCache) {
-			finderArgs = new Object[] {bookedQuantityId};
+			finderArgs = new Object[] {commerceInventoryBookedQuantityId};
 		}
 
 		Object result = null;
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByBookedQuantityId, finderArgs, this);
+				_finderPathFetchByCommerceInventoryBookedQuantityId, finderArgs,
+				this);
 		}
 
 		if (result instanceof CommerceOrderItem) {
 			CommerceOrderItem commerceOrderItem = (CommerceOrderItem)result;
 
-			if (bookedQuantityId != commerceOrderItem.getBookedQuantityId()) {
+			if (commerceInventoryBookedQuantityId !=
+					commerceOrderItem.getCommerceInventoryBookedQuantityId()) {
+
 				result = null;
 			}
 		}
@@ -1552,7 +1550,8 @@ public class CommerceOrderItemPersistenceImpl
 
 			sb.append(_SQL_SELECT_COMMERCEORDERITEM_WHERE);
 
-			sb.append(_FINDER_COLUMN_BOOKEDQUANTITYID_BOOKEDQUANTITYID_2);
+			sb.append(
+				_FINDER_COLUMN_COMMERCEINVENTORYBOOKEDQUANTITYID_COMMERCEINVENTORYBOOKEDQUANTITYID_2);
 
 			String sql = sb.toString();
 
@@ -1565,15 +1564,15 @@ public class CommerceOrderItemPersistenceImpl
 
 				QueryPos queryPos = QueryPos.getInstance(query);
 
-				queryPos.add(bookedQuantityId);
+				queryPos.add(commerceInventoryBookedQuantityId);
 
 				List<CommerceOrderItem> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
 						finderCache.putResult(
-							_finderPathFetchByBookedQuantityId, finderArgs,
-							list);
+							_finderPathFetchByCommerceInventoryBookedQuantityId,
+							finderArgs, list);
 					}
 				}
 				else {
@@ -1582,11 +1581,13 @@ public class CommerceOrderItemPersistenceImpl
 
 						if (_log.isWarnEnabled()) {
 							if (!useFinderCache) {
-								finderArgs = new Object[] {bookedQuantityId};
+								finderArgs = new Object[] {
+									commerceInventoryBookedQuantityId
+								};
 							}
 
 							_log.warn(
-								"CommerceOrderItemPersistenceImpl.fetchByBookedQuantityId(long, boolean) with parameters (" +
+								"CommerceOrderItemPersistenceImpl.fetchByCommerceInventoryBookedQuantityId(long, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
 										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
 						}
@@ -1616,32 +1617,37 @@ public class CommerceOrderItemPersistenceImpl
 	}
 
 	/**
-	 * Removes the commerce order item where bookedQuantityId = &#63; from the database.
+	 * Removes the commerce order item where commerceInventoryBookedQuantityId = &#63; from the database.
 	 *
-	 * @param bookedQuantityId the booked quantity ID
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID
 	 * @return the commerce order item that was removed
 	 */
 	@Override
-	public CommerceOrderItem removeByBookedQuantityId(long bookedQuantityId)
+	public CommerceOrderItem removeByCommerceInventoryBookedQuantityId(
+			long commerceInventoryBookedQuantityId)
 		throws NoSuchOrderItemException {
 
-		CommerceOrderItem commerceOrderItem = findByBookedQuantityId(
-			bookedQuantityId);
+		CommerceOrderItem commerceOrderItem =
+			findByCommerceInventoryBookedQuantityId(
+				commerceInventoryBookedQuantityId);
 
 		return remove(commerceOrderItem);
 	}
 
 	/**
-	 * Returns the number of commerce order items where bookedQuantityId = &#63;.
+	 * Returns the number of commerce order items where commerceInventoryBookedQuantityId = &#63;.
 	 *
-	 * @param bookedQuantityId the booked quantity ID
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID
 	 * @return the number of matching commerce order items
 	 */
 	@Override
-	public int countByBookedQuantityId(long bookedQuantityId) {
-		FinderPath finderPath = _finderPathCountByBookedQuantityId;
+	public int countByCommerceInventoryBookedQuantityId(
+		long commerceInventoryBookedQuantityId) {
 
-		Object[] finderArgs = new Object[] {bookedQuantityId};
+		FinderPath finderPath =
+			_finderPathCountByCommerceInventoryBookedQuantityId;
+
+		Object[] finderArgs = new Object[] {commerceInventoryBookedQuantityId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1650,7 +1656,8 @@ public class CommerceOrderItemPersistenceImpl
 
 			sb.append(_SQL_COUNT_COMMERCEORDERITEM_WHERE);
 
-			sb.append(_FINDER_COLUMN_BOOKEDQUANTITYID_BOOKEDQUANTITYID_2);
+			sb.append(
+				_FINDER_COLUMN_COMMERCEINVENTORYBOOKEDQUANTITYID_COMMERCEINVENTORYBOOKEDQUANTITYID_2);
 
 			String sql = sb.toString();
 
@@ -1663,7 +1670,7 @@ public class CommerceOrderItemPersistenceImpl
 
 				QueryPos queryPos = QueryPos.getInstance(query);
 
-				queryPos.add(bookedQuantityId);
+				queryPos.add(commerceInventoryBookedQuantityId);
 
 				count = (Long)query.uniqueResult();
 
@@ -1681,8 +1688,8 @@ public class CommerceOrderItemPersistenceImpl
 	}
 
 	private static final String
-		_FINDER_COLUMN_BOOKEDQUANTITYID_BOOKEDQUANTITYID_2 =
-			"commerceOrderItem.bookedQuantityId = ?";
+		_FINDER_COLUMN_COMMERCEINVENTORYBOOKEDQUANTITYID_COMMERCEINVENTORYBOOKEDQUANTITYID_2 =
+			"commerceOrderItem.commerceInventoryBookedQuantityId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByCommerceOrderId;
 	private FinderPath _finderPathWithoutPaginationFindByCommerceOrderId;
@@ -3206,6 +3213,536 @@ public class CommerceOrderItemPersistenceImpl
 
 	private static final String _FINDER_COLUMN_CPRODUCTID_CPRODUCTID_2 =
 		"commerceOrderItem.CProductId = ?";
+
+	private FinderPath
+		_finderPathWithPaginationFindByCustomerCommerceOrderItemId;
+	private FinderPath
+		_finderPathWithoutPaginationFindByCustomerCommerceOrderItemId;
+	private FinderPath _finderPathCountByCustomerCommerceOrderItemId;
+
+	/**
+	 * Returns all the commerce order items where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @return the matching commerce order items
+	 */
+	@Override
+	public List<CommerceOrderItem> findByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId) {
+
+		return findByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
+	}
+
+	/**
+	 * Returns a range of all the commerce order items where customerCommerceOrderItemId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceOrderItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param start the lower bound of the range of commerce order items
+	 * @param end the upper bound of the range of commerce order items (not inclusive)
+	 * @return the range of matching commerce order items
+	 */
+	@Override
+	public List<CommerceOrderItem> findByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId, int start, int end) {
+
+		return findByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce order items where customerCommerceOrderItemId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceOrderItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param start the lower bound of the range of commerce order items
+	 * @param end the upper bound of the range of commerce order items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce order items
+	 */
+	@Override
+	public List<CommerceOrderItem> findByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId, int start, int end,
+		OrderByComparator<CommerceOrderItem> orderByComparator) {
+
+		return findByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce order items where customerCommerceOrderItemId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceOrderItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param start the lower bound of the range of commerce order items
+	 * @param end the upper bound of the range of commerce order items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching commerce order items
+	 */
+	@Override
+	public List<CommerceOrderItem> findByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId, int start, int end,
+		OrderByComparator<CommerceOrderItem> orderByComparator,
+		boolean useFinderCache) {
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath =
+					_finderPathWithoutPaginationFindByCustomerCommerceOrderItemId;
+				finderArgs = new Object[] {customerCommerceOrderItemId};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath =
+				_finderPathWithPaginationFindByCustomerCommerceOrderItemId;
+			finderArgs = new Object[] {
+				customerCommerceOrderItemId, start, end, orderByComparator
+			};
+		}
+
+		List<CommerceOrderItem> list = null;
+
+		if (useFinderCache) {
+			list = (List<CommerceOrderItem>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (CommerceOrderItem commerceOrderItem : list) {
+					if (customerCommerceOrderItemId !=
+							commerceOrderItem.
+								getCustomerCommerceOrderItemId()) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(3);
+			}
+
+			sb.append(_SQL_SELECT_COMMERCEORDERITEM_WHERE);
+
+			sb.append(
+				_FINDER_COLUMN_CUSTOMERCOMMERCEORDERITEMID_CUSTOMERCOMMERCEORDERITEMID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(CommerceOrderItemModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(customerCommerceOrderItemId);
+
+				list = (List<CommerceOrderItem>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first commerce order item in the ordered set where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce order item
+	 * @throws NoSuchOrderItemException if a matching commerce order item could not be found
+	 */
+	@Override
+	public CommerceOrderItem findByCustomerCommerceOrderItemId_First(
+			long customerCommerceOrderItemId,
+			OrderByComparator<CommerceOrderItem> orderByComparator)
+		throws NoSuchOrderItemException {
+
+		CommerceOrderItem commerceOrderItem =
+			fetchByCustomerCommerceOrderItemId_First(
+				customerCommerceOrderItemId, orderByComparator);
+
+		if (commerceOrderItem != null) {
+			return commerceOrderItem;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("customerCommerceOrderItemId=");
+		sb.append(customerCommerceOrderItemId);
+
+		sb.append("}");
+
+		throw new NoSuchOrderItemException(sb.toString());
+	}
+
+	/**
+	 * Returns the first commerce order item in the ordered set where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce order item, or <code>null</code> if a matching commerce order item could not be found
+	 */
+	@Override
+	public CommerceOrderItem fetchByCustomerCommerceOrderItemId_First(
+		long customerCommerceOrderItemId,
+		OrderByComparator<CommerceOrderItem> orderByComparator) {
+
+		List<CommerceOrderItem> list = findByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last commerce order item in the ordered set where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce order item
+	 * @throws NoSuchOrderItemException if a matching commerce order item could not be found
+	 */
+	@Override
+	public CommerceOrderItem findByCustomerCommerceOrderItemId_Last(
+			long customerCommerceOrderItemId,
+			OrderByComparator<CommerceOrderItem> orderByComparator)
+		throws NoSuchOrderItemException {
+
+		CommerceOrderItem commerceOrderItem =
+			fetchByCustomerCommerceOrderItemId_Last(
+				customerCommerceOrderItemId, orderByComparator);
+
+		if (commerceOrderItem != null) {
+			return commerceOrderItem;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("customerCommerceOrderItemId=");
+		sb.append(customerCommerceOrderItemId);
+
+		sb.append("}");
+
+		throw new NoSuchOrderItemException(sb.toString());
+	}
+
+	/**
+	 * Returns the last commerce order item in the ordered set where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce order item, or <code>null</code> if a matching commerce order item could not be found
+	 */
+	@Override
+	public CommerceOrderItem fetchByCustomerCommerceOrderItemId_Last(
+		long customerCommerceOrderItemId,
+		OrderByComparator<CommerceOrderItem> orderByComparator) {
+
+		int count = countByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<CommerceOrderItem> list = findByCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the commerce order items before and after the current commerce order item in the ordered set where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param commerceOrderItemId the primary key of the current commerce order item
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next commerce order item
+	 * @throws NoSuchOrderItemException if a commerce order item with the primary key could not be found
+	 */
+	@Override
+	public CommerceOrderItem[] findByCustomerCommerceOrderItemId_PrevAndNext(
+			long commerceOrderItemId, long customerCommerceOrderItemId,
+			OrderByComparator<CommerceOrderItem> orderByComparator)
+		throws NoSuchOrderItemException {
+
+		CommerceOrderItem commerceOrderItem = findByPrimaryKey(
+			commerceOrderItemId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			CommerceOrderItem[] array = new CommerceOrderItemImpl[3];
+
+			array[0] = getByCustomerCommerceOrderItemId_PrevAndNext(
+				session, commerceOrderItem, customerCommerceOrderItemId,
+				orderByComparator, true);
+
+			array[1] = commerceOrderItem;
+
+			array[2] = getByCustomerCommerceOrderItemId_PrevAndNext(
+				session, commerceOrderItem, customerCommerceOrderItemId,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected CommerceOrderItem getByCustomerCommerceOrderItemId_PrevAndNext(
+		Session session, CommerceOrderItem commerceOrderItem,
+		long customerCommerceOrderItemId,
+		OrderByComparator<CommerceOrderItem> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_COMMERCEORDERITEM_WHERE);
+
+		sb.append(
+			_FINDER_COLUMN_CUSTOMERCOMMERCEORDERITEMID_CUSTOMERCOMMERCEORDERITEMID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(CommerceOrderItemModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(customerCommerceOrderItemId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						commerceOrderItem)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<CommerceOrderItem> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the commerce order items where customerCommerceOrderItemId = &#63; from the database.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 */
+	@Override
+	public void removeByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId) {
+
+		for (CommerceOrderItem commerceOrderItem :
+				findByCustomerCommerceOrderItemId(
+					customerCommerceOrderItemId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(commerceOrderItem);
+		}
+	}
+
+	/**
+	 * Returns the number of commerce order items where customerCommerceOrderItemId = &#63;.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID
+	 * @return the number of matching commerce order items
+	 */
+	@Override
+	public int countByCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId) {
+
+		FinderPath finderPath = _finderPathCountByCustomerCommerceOrderItemId;
+
+		Object[] finderArgs = new Object[] {customerCommerceOrderItemId};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(2);
+
+			sb.append(_SQL_COUNT_COMMERCEORDERITEM_WHERE);
+
+			sb.append(
+				_FINDER_COLUMN_CUSTOMERCOMMERCEORDERITEMID_CUSTOMERCOMMERCEORDERITEMID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(customerCommerceOrderItemId);
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String
+		_FINDER_COLUMN_CUSTOMERCOMMERCEORDERITEMID_CUSTOMERCOMMERCEORDERITEMID_2 =
+			"commerceOrderItem.customerCommerceOrderItemId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByParentCommerceOrderItemId;
 	private FinderPath
@@ -5088,6 +5625,8 @@ public class CommerceOrderItemPersistenceImpl
 
 		dbColumnNames.put("uuid", "uuid_");
 		dbColumnNames.put(
+			"commerceInventoryBookedQuantityId", "CIBookedQuantityId");
+		dbColumnNames.put(
 			"deliverySubscriptionTypeSettings", "deliverySubTypeSettings");
 		dbColumnNames.put(
 			"discountPercentageLevel1WithTaxAmount",
@@ -5101,6 +5640,9 @@ public class CommerceOrderItemPersistenceImpl
 		dbColumnNames.put(
 			"discountPercentageLevel4WithTaxAmount",
 			"discountPctLevel4WithTaxAmount");
+		dbColumnNames.put(
+			"unitOfMeasureIncrementalOrderQuantity",
+			"UOMIncrementalOrderQuantity");
 
 		setDBColumnNames(dbColumnNames);
 
@@ -5131,8 +5673,10 @@ public class CommerceOrderItemPersistenceImpl
 			commerceOrderItem);
 
 		finderCache.putResult(
-			_finderPathFetchByBookedQuantityId,
-			new Object[] {commerceOrderItem.getBookedQuantityId()},
+			_finderPathFetchByCommerceInventoryBookedQuantityId,
+			new Object[] {
+				commerceOrderItem.getCommerceInventoryBookedQuantityId()
+			},
 			commerceOrderItem);
 
 		finderCache.putResult(
@@ -5227,12 +5771,15 @@ public class CommerceOrderItemPersistenceImpl
 		finderCache.putResult(
 			_finderPathFetchByUUID_G, args, commerceOrderItemModelImpl);
 
-		args = new Object[] {commerceOrderItemModelImpl.getBookedQuantityId()};
+		args = new Object[] {
+			commerceOrderItemModelImpl.getCommerceInventoryBookedQuantityId()
+		};
 
 		finderCache.putResult(
-			_finderPathCountByBookedQuantityId, args, Long.valueOf(1));
+			_finderPathCountByCommerceInventoryBookedQuantityId, args,
+			Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchByBookedQuantityId, args,
+			_finderPathFetchByCommerceInventoryBookedQuantityId, args,
 			commerceOrderItemModelImpl);
 
 		args = new Object[] {
@@ -5801,15 +6348,17 @@ public class CommerceOrderItemPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathFetchByBookedQuantityId = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByBookedQuantityId",
+		_finderPathFetchByCommerceInventoryBookedQuantityId = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY,
+			"fetchByCommerceInventoryBookedQuantityId",
 			new String[] {Long.class.getName()},
-			new String[] {"bookedQuantityId"}, true);
+			new String[] {"CIBookedQuantityId"}, true);
 
-		_finderPathCountByBookedQuantityId = new FinderPath(
+		_finderPathCountByCommerceInventoryBookedQuantityId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByBookedQuantityId", new String[] {Long.class.getName()},
-			new String[] {"bookedQuantityId"}, false);
+			"countByCommerceInventoryBookedQuantityId",
+			new String[] {Long.class.getName()},
+			new String[] {"CIBookedQuantityId"}, false);
 
 		_finderPathWithPaginationFindByCommerceOrderId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCommerceOrderId",
@@ -5864,6 +6413,29 @@ public class CommerceOrderItemPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCProductId",
 			new String[] {Long.class.getName()}, new String[] {"CProductId"},
 			false);
+
+		_finderPathWithPaginationFindByCustomerCommerceOrderItemId =
+			new FinderPath(
+				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+				"findByCustomerCommerceOrderItemId",
+				new String[] {
+					Long.class.getName(), Integer.class.getName(),
+					Integer.class.getName(), OrderByComparator.class.getName()
+				},
+				new String[] {"customerCommerceOrderItemId"}, true);
+
+		_finderPathWithoutPaginationFindByCustomerCommerceOrderItemId =
+			new FinderPath(
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+				"findByCustomerCommerceOrderItemId",
+				new String[] {Long.class.getName()},
+				new String[] {"customerCommerceOrderItemId"}, true);
+
+		_finderPathCountByCustomerCommerceOrderItemId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByCustomerCommerceOrderItemId",
+			new String[] {Long.class.getName()},
+			new String[] {"customerCommerceOrderItemId"}, false);
 
 		_finderPathWithPaginationFindByParentCommerceOrderItemId =
 			new FinderPath(
@@ -5936,30 +6508,14 @@ public class CommerceOrderItemPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setCommerceOrderItemUtilPersistence(this);
+		CommerceOrderItemUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCommerceOrderItemUtilPersistence(null);
+		CommerceOrderItemUtil.setPersistence(null);
 
 		entityCache.removeCache(CommerceOrderItemImpl.class.getName());
-	}
-
-	private void _setCommerceOrderItemUtilPersistence(
-		CommerceOrderItemPersistence commerceOrderItemPersistence) {
-
-		try {
-			Field field = CommerceOrderItemUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, commerceOrderItemPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -6019,11 +6575,13 @@ public class CommerceOrderItemPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {
-			"uuid", "deliverySubscriptionTypeSettings",
+			"uuid", "commerceInventoryBookedQuantityId",
+			"deliverySubscriptionTypeSettings",
 			"discountPercentageLevel1WithTaxAmount",
 			"discountPercentageLevel2WithTaxAmount",
 			"discountPercentageLevel3WithTaxAmount",
-			"discountPercentageLevel4WithTaxAmount"
+			"discountPercentageLevel4WithTaxAmount",
+			"unitOfMeasureIncrementalOrderQuantity"
 		});
 
 	@Override

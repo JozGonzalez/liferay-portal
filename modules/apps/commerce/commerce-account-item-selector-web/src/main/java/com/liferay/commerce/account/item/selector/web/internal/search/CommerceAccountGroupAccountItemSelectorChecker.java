@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.account.item.selector.web.internal.search;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.model.CommerceAccountGroupCommerceAccountRel;
-import com.liferay.commerce.account.service.CommerceAccountGroupCommerceAccountRelLocalService;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 
 import javax.portlet.RenderResponse;
@@ -29,34 +20,29 @@ public class CommerceAccountGroupAccountItemSelectorChecker
 	extends EmptyOnClickRowChecker {
 
 	public CommerceAccountGroupAccountItemSelectorChecker(
-		RenderResponse renderResponse,
-		CommerceAccountGroup commerceAccountGroup,
-		CommerceAccountGroupCommerceAccountRelLocalService
-			commerceAccountGroupCommerceAccountRelLocalService) {
+		RenderResponse renderResponse, AccountGroup accountGroup,
+		AccountGroupRelLocalService accountGroupRelLocalService) {
 
 		super(renderResponse);
 
-		_commerceAccountGroup = commerceAccountGroup;
-		_commerceAccountGroupCommerceAccountRelLocalService =
-			commerceAccountGroupCommerceAccountRelLocalService;
+		_accountGroup = accountGroup;
+		_accountGroupRelLocalService = accountGroupRelLocalService;
 	}
 
 	@Override
 	public boolean isChecked(Object object) {
-		if (_commerceAccountGroup == null) {
+		if (_accountGroup == null) {
 			return false;
 		}
 
-		CommerceAccount commerceAccount = (CommerceAccount)object;
+		AccountEntry accountEntry = (AccountEntry)object;
 
-		CommerceAccountGroupCommerceAccountRel
-			commerceAccountGroupCommerceAccountRel =
-				_commerceAccountGroupCommerceAccountRelLocalService.
-					fetchCommerceAccountGroupCommerceAccountRel(
-						_commerceAccountGroup.getCommerceAccountGroupId(),
-						commerceAccount.getCommerceAccountId());
+		AccountGroupRel accountGroupRel =
+			_accountGroupRelLocalService.fetchAccountGroupRel(
+				_accountGroup.getAccountGroupId(), AccountEntry.class.getName(),
+				accountEntry.getAccountEntryId());
 
-		if (commerceAccountGroupCommerceAccountRel == null) {
+		if (accountGroupRel == null) {
 			return false;
 		}
 
@@ -68,8 +54,7 @@ public class CommerceAccountGroupAccountItemSelectorChecker
 		return isChecked(object);
 	}
 
-	private final CommerceAccountGroup _commerceAccountGroup;
-	private final CommerceAccountGroupCommerceAccountRelLocalService
-		_commerceAccountGroupCommerceAccountRelLocalService;
+	private final AccountGroup _accountGroup;
+	private final AccountGroupRelLocalService _accountGroupRelLocalService;
 
 }

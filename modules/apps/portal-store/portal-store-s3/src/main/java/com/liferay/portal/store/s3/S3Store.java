@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.store.s3;
@@ -45,6 +36,7 @@ import com.liferay.document.library.kernel.exception.AccessDeniedException;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.petra.io.unsync.UnsyncFilterInputStream;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -154,17 +146,26 @@ public class S3Store implements Store {
 			String versionLabel)
 		throws PortalException {
 
-		_s3FileCache.cleanUpCacheFiles();
-
 		try {
 			S3Object s3Object = getS3Object(
 				companyId, repositoryId, fileName, versionLabel);
 
-			ObjectMetadata objectMetadata = s3Object.getObjectMetadata();
+			InputStream s3InputStream = s3Object.getObjectContent();
 
-			return _s3FileCache.getCacheFileInputStream(
-				s3Object, fileName, s3Object::getObjectContent,
-				objectMetadata.getLastModified());
+			if (s3InputStream == null) {
+				throw new IOException("S3 object input stream is null");
+			}
+
+			return new UnsyncFilterInputStream(s3InputStream) {
+
+				@Override
+				public void close() throws IOException {
+					super.close();
+
+					s3Object.close();
+				}
+
+			};
 		}
 		catch (IOException ioException) {
 			throw new SystemException(ioException);
@@ -486,11 +487,10 @@ public class S3Store implements Store {
 
 		clientConfiguration.setConnectionTimeout(
 			_s3StoreConfiguration.connectionTimeout());
-
-		clientConfiguration.setMaxErrorRetry(
-			_s3StoreConfiguration.httpClientMaxErrorRetry());
 		clientConfiguration.setMaxConnections(
 			_s3StoreConfiguration.httpClientMaxConnections());
+		clientConfiguration.setMaxErrorRetry(
+			_s3StoreConfiguration.httpClientMaxErrorRetry());
 
 		configureConnectionProtocol(clientConfiguration);
 		configureProxySettings(clientConfiguration);
@@ -720,9 +720,6 @@ public class S3Store implements Store {
 	private AmazonS3 _amazonS3;
 	private AWSCredentialsProvider _awsCredentialsProvider;
 	private String _bucketName;
-
-	@Reference
-	private S3FileCache _s3FileCache;
 
 	@Reference
 	private S3KeyTransformer _s3KeyTransformer;

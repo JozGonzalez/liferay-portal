@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -21,8 +15,8 @@ import getNewActivity from '../../utils/getNewActivity';
 
 interface IProps {
 	activities: MDFRequestActivity[];
+	claimPercent: number;
 	currency: LiferayPicklist;
-
 	hasActivityErrorsByIndex: (index: number) => boolean;
 	onAdd: () => void;
 	onEdit: (index: number) => void;
@@ -32,6 +26,7 @@ interface IProps {
 
 const Listing = ({
 	activities,
+	claimPercent,
 	currency,
 	hasActivityErrorsByIndex,
 	onAdd,
@@ -41,7 +36,7 @@ const Listing = ({
 	push,
 }: IProps & ArrayHelpers) => {
 	const handleOnAdd = () => {
-		push(getNewActivity(currency));
+		push(getNewActivity(claimPercent, currency));
 
 		onAdd();
 	};
@@ -51,14 +46,18 @@ const Listing = ({
 			<div>
 				{!!activities.length &&
 					activities.map((activity, index) => (
-						<ActivityPanel
-							activity={activity}
-							hasErrors={hasActivityErrorsByIndex(index)}
-							key={index}
-							onEdit={() => onEdit(index)}
-							onRemove={() => onRemove(index)}
-							overallCampaignName={overallCampaignName}
-						/>
+						<>
+							{!activity.removed && (
+								<ActivityPanel
+									activity={activity}
+									hasErrors={hasActivityErrorsByIndex(index)}
+									key={index}
+									onEdit={() => onEdit(index)}
+									onRemove={() => onRemove(index)}
+									overallCampaignName={overallCampaignName}
+								/>
+							)}
+						</>
 					))}
 
 				{!activities.length && (

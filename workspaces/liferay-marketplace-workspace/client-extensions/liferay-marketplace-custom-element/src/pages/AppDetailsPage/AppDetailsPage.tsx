@@ -1,29 +1,35 @@
-import {useEffect} from 'react';
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import classNames from 'classnames';
+import {useEffect, useState} from 'react';
 
-import arrowDown from '../../assets/icons/arrow-down.svg';
-import arrowLeft from '../../assets/icons/arrow-left.svg';
-import circleFullIcon from '../../assets/icons/circle_fill.svg';
-import circleInfoIcon from '../../assets/icons/info-circle-icon.svg';
-
-import './AppDetailsPage.scss';
-
-import {useState} from 'react';
-
+import arrowDown from '../../assets/icons/arrow_down_icon.svg';
+import arrowLeft from '../../assets/icons/arrow_left_icon.svg';
+import circleFullIcon from '../../assets/icons/circle_fill_icon.svg';
 import {DashboardListItems} from '../../components/DashboardNavigation/DashboardNavigation';
 import {AppProps} from '../../components/DashboardTable/DashboardTable';
-import {ReviewAndSubmitAppPage} from '../ReviewAndSubmitAppPage/ReviewAndSubmitAppPage';
-import {TYPES} from '../../manage-app-state/actionTypes';
 import {useAppContext} from '../../manage-app-state/AppManageState';
+import {TYPES} from '../../manage-app-state/actionTypes';
+import {ReviewAndSubmitAppPage} from '../ReviewAndSubmitAppPage/ReviewAndSubmitAppPage';
+
+import './AppDetailsPage.scss';
+import {getProductSpecifications} from '../../utils/api';
+import {
+	getProductVersionFromSpecifications,
+	getThumbnailByProductAttachment,
+	showAppImage,
+} from '../../utils/util';
 
 interface AppDetailsPageProps {
 	dashboardNavigationItems: DashboardListItems[];
 	selectedApp: AppProps;
-	setSelectedApp: (value: AppProps | undefined) => void;
+	setSelectedApp?: (value: AppProps | undefined) => void;
 }
 
 export function AppDetailsPage({
@@ -31,10 +37,13 @@ export function AppDetailsPage({
 	selectedApp,
 	setSelectedApp,
 }: AppDetailsPageProps) {
-	const [navigationBarActive, setNavigationBarActive] =
-		useState('App Details');
+	const [appVersion, setAppVersion] = useState('0');
+	const [navigationBarActive, setNavigationBarActive] = useState(
+		'App Details'
+	);
 
 	const [_, dispatch] = useAppContext();
+	const thumbnail = getThumbnailByProductAttachment(selectedApp.attachments);
 
 	useEffect(() => {
 		dispatch({
@@ -46,7 +55,21 @@ export function AppDetailsPage({
 			},
 			type: TYPES.SUBMIT_APP_PROFILE,
 		});
-	}, [selectedApp]);
+
+		const fetchProductSpecifications = async () => {
+			const productSpecifications = await getProductSpecifications({
+				appProductId: selectedApp.productId,
+			});
+
+			const appVersion = getProductVersionFromSpecifications(
+				productSpecifications
+			);
+
+			setAppVersion(appVersion);
+		};
+
+		fetchProductSpecifications();
+	}, [dispatch, selectedApp]);
 
 	return (
 		<div className="app-details-page-container">
@@ -63,7 +86,9 @@ export function AppDetailsPage({
 						}
 					});
 
-					setSelectedApp(undefined);
+					if (setSelectedApp) {
+						setSelectedApp(undefined);
+					}
 				}}
 			>
 				<div>
@@ -76,17 +101,11 @@ export function AppDetailsPage({
 				</div>
 			</button>
 
-			<ClayAlert
-				className="app-details-page-alert-container"
-				displayType="info"
-			>
-				<div className="app-details-page-alert-items-container">
-					<img
-						alt="Circle Info "
-						className="app-details-page-alert-icon"
-						src={circleInfoIcon}
-					/>
-
+			{selectedApp.status === 'Draft' && (
+				<ClayAlert
+					className="app-details-page-alert-container"
+					displayType="info"
+				>
 					<span className="app-details-page-alert-text">
 						This submission is currently under review by Liferay.
 						Once the process is complete, you will be able to
@@ -94,8 +113,8 @@ export function AppDetailsPage({
 						information or data from this app submission cannot be
 						updated.
 					</span>
-				</div>
-			</ClayAlert>
+				</ClayAlert>
+			)}
 
 			<div className="app-details-page-app-info-main-container">
 				<div className="app-details-page-app-info-left-container">
@@ -103,7 +122,7 @@ export function AppDetailsPage({
 						<img
 							alt="App Logo"
 							className="app-details-page-app-info-logo"
-							src={selectedApp.image}
+							src={showAppImage(thumbnail)}
 						/>
 					</div>
 
@@ -114,7 +133,7 @@ export function AppDetailsPage({
 
 						<div className="app-details-page-app-info-subtitle-container">
 							<span className="app-details-page-app-info-subtitle-text">
-								v{selectedApp.version}
+								{appVersion}
 							</span>
 
 							<img
@@ -123,11 +142,11 @@ export function AppDetailsPage({
 									'app-details-page-app-info-subtitle-icon',
 									{
 										'app-details-page-app-info-subtitle-icon-hidden':
-											selectedApp.status === 'Hidden',
+											selectedApp.status === 'Draft',
 										'app-details-page-app-info-subtitle-icon-pending':
 											selectedApp.status === 'Pending',
 										'app-details-page-app-info-subtitle-icon-published':
-											selectedApp.status === 'Published',
+											selectedApp.status === 'Approved',
 									}
 								)}
 								src={circleFullIcon}
@@ -177,6 +196,8 @@ export function AppDetailsPage({
 				<ReviewAndSubmitAppPage
 					onClickBack={() => {}}
 					onClickContinue={() => {}}
+					productERC={selectedApp.externalReferenceCode}
+					productId={selectedApp.productId}
 					readonly
 				/>
 			</div>

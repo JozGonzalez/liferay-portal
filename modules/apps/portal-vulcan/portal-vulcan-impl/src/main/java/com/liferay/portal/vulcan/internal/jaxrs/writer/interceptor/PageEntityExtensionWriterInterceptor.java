@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor;
@@ -18,8 +9,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.vulcan.internal.extension.EntityExtensionHandler;
-import com.liferay.portal.vulcan.internal.jaxrs.extension.ExtendedEntity;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
+import com.liferay.portal.vulcan.jaxrs.extension.ExtendedEntity;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -50,7 +41,10 @@ public class PageEntityExtensionWriterInterceptor implements WriterInterceptor {
 	public void aroundWriteTo(WriterInterceptorContext writerInterceptorContext)
 		throws IOException {
 
-		if (Page.class.isAssignableFrom(writerInterceptorContext.getType())) {
+		if (Page.class.isAssignableFrom(writerInterceptorContext.getType()) &&
+			(writerInterceptorContext.getGenericType() instanceof
+				ParameterizedType)) {
+
 			ParameterizedType parameterizedType =
 				(ParameterizedType)writerInterceptorContext.getGenericType();
 

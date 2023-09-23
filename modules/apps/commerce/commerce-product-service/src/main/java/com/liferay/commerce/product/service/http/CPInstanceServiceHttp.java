@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.http;
@@ -143,7 +134,16 @@ public class CPInstanceServiceHttp {
 				int displayDateHour, int displayDateMinute,
 				int expirationDateMonth, int expirationDateDay,
 				int expirationDateYear, int expirationDateHour,
-				int expirationDateMinute, boolean neverExpire, String unspsc,
+				int expirationDateMinute, boolean neverExpire,
+				boolean overrideSubscriptionInfo, boolean subscriptionEnabled,
+				int subscriptionLength, String subscriptionType,
+				com.liferay.portal.kernel.util.UnicodeProperties
+					subscriptionTypeSettingsUnicodeProperties,
+				long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+				int deliverySubscriptionLength, String deliverySubscriptionType,
+				com.liferay.portal.kernel.util.UnicodeProperties
+					deliverySubscriptionTypeSettingsUnicodeProperties,
+				long deliveryMaxSubscriptionCycles, String unspsc,
 				boolean discontinued, String replacementCPInstanceUuid,
 				long replacementCProductId, int discontinuedDateMonth,
 				int discontinuedDateDay, int discontinuedDateYear,
@@ -162,7 +162,13 @@ public class CPInstanceServiceHttp {
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, expirationDateMonth,
 				expirationDateDay, expirationDateYear, expirationDateHour,
-				expirationDateMinute, neverExpire, unspsc, discontinued,
+				expirationDateMinute, neverExpire, overrideSubscriptionInfo,
+				subscriptionEnabled, subscriptionLength, subscriptionType,
+				subscriptionTypeSettingsUnicodeProperties,
+				maxSubscriptionCycles, deliverySubscriptionEnabled,
+				deliverySubscriptionLength, deliverySubscriptionType,
+				deliverySubscriptionTypeSettingsUnicodeProperties,
+				deliveryMaxSubscriptionCycles, unspsc, discontinued,
 				replacementCPInstanceUuid, replacementCProductId,
 				discontinuedDateMonth, discontinuedDateDay,
 				discontinuedDateYear, serviceContext);
@@ -845,7 +851,16 @@ public class CPInstanceServiceHttp {
 				int displayDateHour, int displayDateMinute,
 				int expirationDateMonth, int expirationDateDay,
 				int expirationDateYear, int expirationDateHour,
-				int expirationDateMinute, boolean neverExpire, String unspsc,
+				int expirationDateMinute, boolean neverExpire,
+				boolean overrideSubscriptionInfo, boolean subscriptionEnabled,
+				int subscriptionLength, String subscriptionType,
+				com.liferay.portal.kernel.util.UnicodeProperties
+					subscriptionTypeSettingsUnicodeProperties,
+				long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+				int deliverySubscriptionLength, String deliverySubscriptionType,
+				com.liferay.portal.kernel.util.UnicodeProperties
+					deliverySubscriptionTypeSettingsUnicodeProperties,
+				long deliveryMaxSubscriptionCycles, String unspsc,
 				boolean discontinued, String replacementCPInstanceUuid,
 				long replacementCProductId, int discontinuedDateMonth,
 				int discontinuedDateDay, int discontinuedDateYear,
@@ -864,9 +879,58 @@ public class CPInstanceServiceHttp {
 				displayDateDay, displayDateYear, displayDateHour,
 				displayDateMinute, expirationDateMonth, expirationDateDay,
 				expirationDateYear, expirationDateHour, expirationDateMinute,
-				neverExpire, unspsc, discontinued, replacementCPInstanceUuid,
-				replacementCProductId, discontinuedDateMonth,
-				discontinuedDateDay, discontinuedDateYear, serviceContext);
+				neverExpire, overrideSubscriptionInfo, subscriptionEnabled,
+				subscriptionLength, subscriptionType,
+				subscriptionTypeSettingsUnicodeProperties,
+				maxSubscriptionCycles, deliverySubscriptionEnabled,
+				deliverySubscriptionLength, deliverySubscriptionType,
+				deliverySubscriptionTypeSettingsUnicodeProperties,
+				deliveryMaxSubscriptionCycles, unspsc, discontinued,
+				replacementCPInstanceUuid, replacementCProductId,
+				discontinuedDateMonth, discontinuedDateDay,
+				discontinuedDateYear, serviceContext);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.commerce.product.model.CPInstance)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.commerce.product.model.CPInstance
+			updateExternalReferenceCode(
+				HttpPrincipal httpPrincipal, long cpInstanceId,
+				String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CPInstanceServiceUtil.class, "updateExternalReferenceCode",
+				_updateExternalReferenceCodeParameterTypes18);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, cpInstanceId, externalReferenceCode);
 
 			Object returnObj = null;
 
@@ -907,7 +971,7 @@ public class CPInstanceServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CPInstanceServiceUtil.class, "updatePricingInfo",
-				_updatePricingInfoParameterTypes18);
+				_updatePricingInfoParameterTypes19);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, cpInstanceId, price, promoPrice, cost,
@@ -951,7 +1015,7 @@ public class CPInstanceServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CPInstanceServiceUtil.class, "updateShippingInfo",
-				_updateShippingInfoParameterTypes19);
+				_updateShippingInfoParameterTypes20);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, cpInstanceId, width, height, depth, weight,
@@ -1002,7 +1066,7 @@ public class CPInstanceServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CPInstanceServiceUtil.class, "updateSubscriptionInfo",
-				_updateSubscriptionInfoParameterTypes20);
+				_updateSubscriptionInfoParameterTypes21);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, cpInstanceId, overrideSubscriptionInfo,
@@ -1069,8 +1133,13 @@ public class CPInstanceServiceHttp {
 			java.math.BigDecimal.class, java.math.BigDecimal.class,
 			java.math.BigDecimal.class, boolean.class, int.class, int.class,
 			int.class, int.class, int.class, int.class, int.class, int.class,
-			int.class, int.class, boolean.class, String.class, boolean.class,
-			String.class, long.class, int.class, int.class, int.class,
+			int.class, int.class, boolean.class, boolean.class, boolean.class,
+			int.class, String.class,
+			com.liferay.portal.kernel.util.UnicodeProperties.class, long.class,
+			boolean.class, int.class, String.class,
+			com.liferay.portal.kernel.util.UnicodeProperties.class, long.class,
+			String.class, boolean.class, String.class, long.class, int.class,
+			int.class, int.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _buildCPInstancesParameterTypes2 =
@@ -1135,22 +1204,31 @@ public class CPInstanceServiceHttp {
 			java.math.BigDecimal.class, java.math.BigDecimal.class,
 			boolean.class, int.class, int.class, int.class, int.class,
 			int.class, int.class, int.class, int.class, int.class, int.class,
-			boolean.class, String.class, boolean.class, String.class,
-			long.class, int.class, int.class, int.class,
+			boolean.class, boolean.class, boolean.class, int.class,
+			String.class,
+			com.liferay.portal.kernel.util.UnicodeProperties.class, long.class,
+			boolean.class, int.class, String.class,
+			com.liferay.portal.kernel.util.UnicodeProperties.class, long.class,
+			String.class, boolean.class, String.class, long.class, int.class,
+			int.class, int.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updatePricingInfoParameterTypes18 =
+	private static final Class<?>[]
+		_updateExternalReferenceCodeParameterTypes18 = new Class[] {
+			long.class, String.class
+		};
+	private static final Class<?>[] _updatePricingInfoParameterTypes19 =
 		new Class[] {
 			long.class, java.math.BigDecimal.class, java.math.BigDecimal.class,
 			java.math.BigDecimal.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateShippingInfoParameterTypes19 =
+	private static final Class<?>[] _updateShippingInfoParameterTypes20 =
 		new Class[] {
 			long.class, double.class, double.class, double.class, double.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateSubscriptionInfoParameterTypes20 =
+	private static final Class<?>[] _updateSubscriptionInfoParameterTypes21 =
 		new Class[] {
 			long.class, boolean.class, boolean.class, int.class, String.class,
 			com.liferay.portal.kernel.util.UnicodeProperties.class, long.class,

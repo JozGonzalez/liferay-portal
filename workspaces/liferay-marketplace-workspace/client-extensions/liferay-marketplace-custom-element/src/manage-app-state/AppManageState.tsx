@@ -1,14 +1,12 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React, {ReactNode, createContext, useContext, useReducer} from 'react';
 
 import {UploadedFile} from '../components/FileList/FileList';
 import {TAction, appReducer} from './reducer';
-
-type Categories = {
-	externalReferenceCode: string;
-	id: number;
-	name: string;
-	vocabulary: string;
-};
 
 type Specification = {
 	id: number;
@@ -23,32 +21,38 @@ export interface InitialStateProps {
 	appERC: string;
 	appId: string;
 	appInstallationGuideURL: Specification;
-	appLicense: string;
+	appLicense: Specification;
 	appLicensePrice: string;
 	appLogo: UploadedFile;
 	appName: string;
-	appNotes: Specification;
+	appNotes: string;
 	appProductId: number;
 	appStorefrontImages: UploadedFile[];
 	appTags: Categories[];
 	appType: Specification;
 	appUsageTermsURL: Specification;
-	appVersion: Specification;
+	appVersion: string;
 	appWorkflowStatusInfo: string;
 	buildZIPFiles: UploadedFile[];
 	catalogId: number;
 	dayTrial: string;
-	priceModel: string;
+	gravatarAPI: string;
+	optionId: number;
+	optionValuesId: {noOptionId: number; yesOptionId: number};
+	priceModel: Specification;
+	productOptionId: number;
 	publisherWebsiteURL: Specification;
+	skuTrialId: number;
+	skuVersionId: number;
 	supportURL: Specification;
 }
 
 const initialState = {
 	appBuild: 'upload',
-	appLicense: 'perpetual',
-	appType: {value: 'saas'},
+	appLicense: {value: 'Perpetual'},
+	appType: {value: 'cloud'},
 	dayTrial: 'no',
-	priceModel: 'paid',
+	priceModel: {value: 'Paid'},
 } as InitialStateProps;
 
 interface AppContextProps extends Array<InitialStateProps | Function> {
@@ -62,12 +66,16 @@ const AppContext = createContext({} as AppContextProps);
 
 interface AppContextProviderProps {
 	children: ReactNode;
+	gravatarAPI: string;
 }
 
-export function AppContextProvider({children}: AppContextProviderProps) {
+export function AppContextProvider({
+	children,
+	gravatarAPI,
+}: AppContextProviderProps) {
 	const [state, dispatch] = useReducer<
 		React.Reducer<InitialStateProps, TAction>
-	>(appReducer, {...initialState});
+	>(appReducer, {...initialState, gravatarAPI});
 
 	return (
 		<AppContext.Provider value={[state, dispatch]}>

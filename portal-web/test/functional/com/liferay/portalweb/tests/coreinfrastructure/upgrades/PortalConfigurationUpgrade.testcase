@@ -1,11 +1,14 @@
 @component-name = "portal-upgrades"
 definition {
 
-	property custom.properties = "feature.flag.LPS-155692=true";
+	property custom.properties = "layout.user.access.via.plid.enabled=true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
+	property portal.smoke.upgrades = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Upgrades User and System Management";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
+	property testray.main.component.name = "Portal Configuration";
 
 	setUp {
 		var portalURL = PropsUtil.get("portal.url");
@@ -39,7 +42,7 @@ definition {
 		property database.types = "mysql";
 		property portal.version = "6.2.5";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 	}
 
 	@priority = 5
@@ -48,9 +51,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.0.4";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -59,9 +62,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.1.3";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -70,9 +73,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.0";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -81,9 +84,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.1";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -92,9 +95,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.0";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -103,9 +106,9 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -113,9 +116,9 @@ definition {
 		property data.archive.type = "data-archive-portal-settings";
 		property portal.version = "7.1.10";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -123,19 +126,20 @@ definition {
 		property data.archive.type = "data-archive-portal-settings";
 		property portal.version = "7.2.10";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
 	test ViewPortalConfigurationAfterUpgrade7413 {
 		property data.archive.type = "data-archive-portal-settings";
 		property portal.version = "7.4.13";
+		property test.run.environment = "EE";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -143,9 +147,9 @@ definition {
 		property data.archive.type = "data-archive-portal-settings";
 		property portal.version = "7.0.10.6";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -153,9 +157,9 @@ definition {
 		property data.archive.type = "data-archive-portal-settings";
 		property portal.version = "7.2.10.1";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 
-		Upgrade.viewSystemSettings();
+		ValidateInstanceSettingsUpgrade.viewSystemSettings();
 	}
 
 	@priority = 5
@@ -164,7 +168,7 @@ definition {
 		property database.types = "db2,mysql,oracle,sybase";
 		property portal.version = "6.2.10.15";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 	}
 
 	@priority = 5
@@ -173,7 +177,7 @@ definition {
 		property database.types = "db2,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.21";
 
-		Upgrade.viewInstanceSettings();
+		ValidateInstanceSettingsUpgrade.viewInstanceSettings();
 	}
 
 }

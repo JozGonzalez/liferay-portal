@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -22,7 +22,7 @@ definition {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 	}
 
-	@description = "This ensures that the document using custom document type can be deleted and republished."
+	@description = "This ensures that the document using custom document type can be deleted and republished. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanDeleteDocumentWithCustomType {
@@ -174,6 +174,54 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR",
 			value1 = "Error:At least one field must be added.");
+	}
+
+	@description = "This ensures that a document can not be copied to a staging site."
+	@priority = 4
+	test CannotCopyDocumentToStagedSite {
+		property custom.properties = "feature.flag.LPS-182512=true";
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.copy(
+			copyToStagingSite = "true",
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a folder can not be copied to a staging site."
+	@priority = 4
+	test CannotCopyFolderToStagedSite {
+		property custom.properties = "feature.flag.LPS-182512=true";
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.copy(
+			copyToStagingSite = "true",
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Folder Name");
 	}
 
 	@description = "This is a test for LPS-95290. It asserts that an unauthorized user can not download the file through the document URL of the staged site."
@@ -906,7 +954,7 @@ definition {
 	@description = "This is a test for LPS-136826. It checks that a shortcut can be published using the normal publication process."
 	@priority = 3
 	test CanPublishShortcut {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -941,7 +989,7 @@ definition {
 	test CanPublishShortcutViaSAP {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -972,7 +1020,8 @@ definition {
 	@refactordone
 	test CanPublishSubfolderWithDocumentsViaSAP {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "StagingDM#PublishSubfolderWithDocumentsViaSAP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -1093,7 +1142,7 @@ definition {
 	@description = "This is a test for LPS-136830. It checks that a shortcut can be updated and published."
 	@priority = 3
 	test CanPublishUpdatedShortcut {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		for (var entryCount : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1325,6 +1374,8 @@ definition {
 
 		Staging.publishToLive();
 
+		Refresh();
+
 		DepotNavigator.openToEditDMEntryInDepot(
 			depotName = "Test Depot Name",
 			dmDocumentTitle = "Test YouTube Video",
@@ -1476,6 +1527,9 @@ definition {
 	@description = "This test covers LPS-154413. It checks that an image with a custom friendlyURL added to a dynamic collection displayed in an Asset Publisher can be rendered properly on a site after its friendlyURL is edited and republished."
 	@priority = 4
 	test CanViewImageInDynamicCollectionViaAPAfterFriendlyURLIsUpdated {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
@@ -1833,8 +1887,8 @@ definition {
 		property custom.properties = "dl.actions.visible=true";
 
 		JSONAssettag.addTag(
-			groupKey = "Site Name-staging",
-			staging = "true",
+			groupName = "Site Name (Staging)",
+			site = "false",
 			tagName = "tag1");
 
 		JSONLayout.addWidgetToPublicLayout(

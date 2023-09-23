@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -19,11 +10,10 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.KnowledgeBaseArticleDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.KnowledgeBaseArticleEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
@@ -49,6 +39,7 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -62,6 +53,7 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -69,10 +61,8 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
-import java.io.Serializable;
-
+import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -511,23 +501,31 @@ public class KnowledgeBaseArticleResourceImpl
 				knowledgeBaseArticle.getTitle(),
 				knowledgeBaseArticle.getFriendlyUrlPath(),
 				knowledgeBaseArticle.getArticleBody(),
-				knowledgeBaseArticle.getDescription(), null, null, null, null,
-				null,
-				ServiceContextRequestUtil.createServiceContext(
+				knowledgeBaseArticle.getDescription(), null, null, new Date(),
+				null, null, null,
+				_createServiceContext(
 					knowledgeBaseArticle.getTaxonomyCategoryIds(),
-					knowledgeBaseArticle.getKeywords(),
-					_getExpandoBridgeAttributes(knowledgeBaseArticle), groupId,
-					contextHttpServletRequest,
-					knowledgeBaseArticle.getViewableByAsString())));
+					knowledgeBaseArticle.getKeywords(), groupId,
+					knowledgeBaseArticle)));
 	}
 
-	private Map<String, Serializable> _getExpandoBridgeAttributes(
+	private ServiceContext _createServiceContext(
+		Long[] assetCategoryIds, String[] assetTagNames, long groupId,
 		KnowledgeBaseArticle knowledgeBaseArticle) {
 
-		return CustomFieldsUtil.toMap(
-			KBArticle.class.getName(), contextCompany.getCompanyId(),
-			knowledgeBaseArticle.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
+		return ServiceContextBuilder.create(
+			groupId, contextHttpServletRequest,
+			knowledgeBaseArticle.getViewableByAsString()
+		).assetCategoryIds(
+			assetCategoryIds
+		).assetTagNames(
+			assetTagNames
+		).expandoBridgeAttributes(
+			CustomFieldsUtil.toMap(
+				KBArticle.class.getName(), contextCompany.getCompanyId(),
+				knowledgeBaseArticle.getCustomFields(),
+				contextAcceptLanguage.getPreferredLocale())
+		).build();
 	}
 
 	private Page<KnowledgeBaseArticle> _getKnowledgeBaseArticlesPage(
@@ -667,26 +665,24 @@ public class KnowledgeBaseArticleResourceImpl
 			KBArticle kbArticle, KnowledgeBaseArticle knowledgeBaseArticle)
 		throws Exception {
 
+		Long[] taxonomyCategoryIds =
+			knowledgeBaseArticle.getTaxonomyCategoryIds();
+
+		if (taxonomyCategoryIds == null) {
+			taxonomyCategoryIds = new Long[0];
+		}
+
 		return _toKnowledgeBaseArticle(
 			_kbArticleService.updateKBArticle(
 				kbArticle.getResourcePrimKey(), knowledgeBaseArticle.getTitle(),
 				knowledgeBaseArticle.getArticleBody(),
-				knowledgeBaseArticle.getDescription(), null, null, null, null,
-				null, null,
-				ServiceContextRequestUtil.createServiceContext(
-					Optional.ofNullable(
-						knowledgeBaseArticle.getTaxonomyCategoryIds()
-					).orElse(
-						new Long[0]
-					),
-					Optional.ofNullable(
-						knowledgeBaseArticle.getKeywords()
-					).orElse(
-						new String[0]
-					),
-					_getExpandoBridgeAttributes(knowledgeBaseArticle),
-					kbArticle.getGroupId(), contextHttpServletRequest,
-					knowledgeBaseArticle.getViewableByAsString())));
+				knowledgeBaseArticle.getDescription(), null, null,
+				kbArticle.getDisplayDate(), null, null, null, null,
+				_createServiceContext(
+					taxonomyCategoryIds,
+					GetterUtil.getStringValues(
+						knowledgeBaseArticle.getKeywords()),
+					kbArticle.getGroupId(), knowledgeBaseArticle)));
 	}
 
 	@Reference
@@ -716,8 +712,11 @@ public class KnowledgeBaseArticleResourceImpl
 	@Reference
 	private KBFolderService _kbFolderService;
 
-	@Reference
-	private KnowledgeBaseArticleDTOConverter _knowledgeBaseArticleDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.KnowledgeBaseArticleDTOConverter)"
+	)
+	private DTOConverter<KBArticle, KnowledgeBaseArticle>
+		_knowledgeBaseArticleDTOConverter;
 
 	@Reference
 	private Portal _portal;

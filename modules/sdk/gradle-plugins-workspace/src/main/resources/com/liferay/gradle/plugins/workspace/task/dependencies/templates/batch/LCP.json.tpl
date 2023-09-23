@@ -1,14 +1,16 @@
 {
 	"cpu": 0.2,
 	"env": {
-		"OAUTH2_JOB_PROFILE": "__batch.oAuth2ApplicationExternalReferenceCode__"
+		"LIFERAY_BATCH_OAUTH_APP_ERC": "__batch.oAuthApplicationHeadlessServer__",
+		"LIFERAY_ROUTES_CLIENT_EXTENSION": "/etc/liferay/lxc/ext-init-metadata",
+		"LIFERAY_ROUTES_DXP": "/etc/liferay/lxc/dxp-metadata"
 	},
 	"environments": {
 		"infra": {
 			"deploy": false
 		}
 	},
-	"id": "__CLIENT_EXTENSION_ID__",
+	"id": "__PROJECT_ID__",
 	"kind": "Job",
 	"memory": 300,
 	"scale": 1

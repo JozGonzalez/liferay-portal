@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.instances.service;
@@ -35,22 +26,8 @@ public class PortalInstancesLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static void addCompanyId(long companyId) {
-		getService().addCompanyId(companyId);
-	}
-
-	public static long getCompanyId(
-		javax.servlet.http.HttpServletRequest httpServletRequest) {
-
-		return getService().getCompanyId(httpServletRequest);
-	}
-
 	public static long[] getCompanyIds() {
 		return getService().getCompanyIds();
-	}
-
-	public static long[] getCompanyIdsBySQL() throws java.sql.SQLException {
-		return getService().getCompanyIdsBySQL();
 	}
 
 	public static long getDefaultCompanyId() {
@@ -66,43 +43,11 @@ public class PortalInstancesLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
-	public static String[] getWebIds() {
-		return getService().getWebIds();
-	}
-
 	public static void initializePortalInstance(
 			long companyId, String siteInitializerKey)
 		throws PortalException {
 
 		getService().initializePortalInstance(companyId, siteInitializerKey);
-	}
-
-	public static boolean isAutoLoginIgnoreHost(String host) {
-		return getService().isAutoLoginIgnoreHost(host);
-	}
-
-	public static boolean isAutoLoginIgnorePath(String path) {
-		return getService().isAutoLoginIgnorePath(path);
-	}
-
-	public static boolean isCompanyActive(long companyId) {
-		return getService().isCompanyActive(companyId);
-	}
-
-	public static boolean isVirtualHostsIgnoreHost(String host) {
-		return getService().isVirtualHostsIgnoreHost(host);
-	}
-
-	public static boolean isVirtualHostsIgnorePath(String path) {
-		return getService().isVirtualHostsIgnorePath(path);
-	}
-
-	public static void reload() {
-		getService().reload();
-	}
-
-	public static void removeCompany(long companyId) {
-		getService().removeCompany(companyId);
 	}
 
 	public static void synchronizePortalInstances() {
@@ -111,6 +56,10 @@ public class PortalInstancesLocalServiceUtil {
 
 	public static PortalInstancesLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(PortalInstancesLocalService service) {
+		_service = service;
 	}
 
 	private static volatile PortalInstancesLocalService _service;

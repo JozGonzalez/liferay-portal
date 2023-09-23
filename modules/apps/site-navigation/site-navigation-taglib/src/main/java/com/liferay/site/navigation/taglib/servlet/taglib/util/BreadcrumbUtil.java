@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.taglib.servlet.taglib.util;
@@ -24,6 +15,8 @@ import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -35,16 +28,18 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -273,7 +268,7 @@ public class BreadcrumbUtil {
 
 		Group group = layoutSet.getGroup();
 
-		if (group.isControlPanel()) {
+		if (group.isControlPanel() || group.isDepot()) {
 			return;
 		}
 
@@ -286,38 +281,48 @@ public class BreadcrumbUtil {
 			}
 		}
 
+		if (_isGuestGroup(group)) {
+			return;
+		}
+
+		BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
+
+		breadcrumbEntry.setTitle(
+			group.getDescriptiveName(themeDisplay.getLocale()));
+
 		int layoutsPageCount = 0;
 
 		if (layoutSet.isPrivateLayout()) {
-			layoutsPageCount = group.getPrivateLayoutsPageCount();
+			layoutsPageCount = LayoutServiceUtil.getLayoutsCount(
+				group.getGroupId(), true);
 		}
 		else {
-			layoutsPageCount = group.getPublicLayoutsPageCount();
+			layoutsPageCount = LayoutServiceUtil.getLayoutsCount(
+				group.getGroupId(), false);
 		}
 
-		if ((layoutsPageCount > 0) && !_isGuestGroup(group)) {
-			BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
-
-			breadcrumbEntry.setTitle(
-				group.getDescriptiveName(themeDisplay.getLocale()));
-
-			if (group.isActive()) {
-				String layoutSetFriendlyURL =
-					PortalUtil.getLayoutSetFriendlyURL(layoutSet, themeDisplay);
-
-				if (themeDisplay.isAddSessionIdToURL()) {
-					layoutSetFriendlyURL = PortalUtil.getURLWithSessionId(
-						layoutSetFriendlyURL, themeDisplay.getSessionId());
-				}
-
-				breadcrumbEntry.setURL(layoutSetFriendlyURL);
-			}
-			else {
-				breadcrumbEntry.setBrowsable(false);
-			}
-
+		if (layoutsPageCount <= 0) {
 			breadcrumbEntries.add(breadcrumbEntry);
+
+			return;
 		}
+
+		if (group.isActive() && _hasViewPermissions(group, themeDisplay)) {
+			String layoutSetFriendlyURL = PortalUtil.getLayoutSetFriendlyURL(
+				layoutSet, themeDisplay);
+
+			if (themeDisplay.isAddSessionIdToURL()) {
+				layoutSetFriendlyURL = PortalUtil.getURLWithSessionId(
+					layoutSetFriendlyURL, themeDisplay.getSessionId());
+			}
+
+			breadcrumbEntry.setURL(layoutSetFriendlyURL);
+		}
+		else {
+			breadcrumbEntry.setBrowsable(false);
+		}
+
+		breadcrumbEntries.add(breadcrumbEntry);
 	}
 
 	private static void _addLayoutBreadcrumbEntries(
@@ -358,7 +363,7 @@ public class BreadcrumbUtil {
 				httpServletRequest, themeDisplay.getLocale());
 
 			if (Validator.isNotNull(infoItemName)) {
-				layoutName = HtmlUtil.escape(infoItemName);
+				layoutName = infoItemName;
 			}
 		}
 
@@ -400,16 +405,14 @@ public class BreadcrumbUtil {
 				infoItemFieldValues.getInfoFieldValue("title");
 
 			if (titleInfoFieldValue != null) {
-				return HtmlUtil.escape(
-					String.valueOf(titleInfoFieldValue.getValue(locale)));
+				return String.valueOf(titleInfoFieldValue.getValue(locale));
 			}
 
 			InfoFieldValue<Object> nameInfoFieldValue =
 				infoItemFieldValues.getInfoFieldValue("name");
 
 			if (nameInfoFieldValue != null) {
-				return HtmlUtil.escape(
-					String.valueOf(nameInfoFieldValue.getValue(locale)));
+				return String.valueOf(nameInfoFieldValue.getValue(locale));
 			}
 		}
 
@@ -417,7 +420,7 @@ public class BreadcrumbUtil {
 			WebKeys.LAYOUT_ASSET_ENTRY);
 
 		if (assetEntry != null) {
-			return HtmlUtil.escape(assetEntry.getTitle(locale));
+			return assetEntry.getTitle(locale);
 		}
 
 		return StringPool.BLANK;
@@ -432,7 +435,7 @@ public class BreadcrumbUtil {
 			Group parentGroup = group.getParentGroup();
 
 			if (parentGroup != null) {
-				return LayoutSetLocalServiceUtil.getLayoutSet(
+				return LayoutSetLocalServiceUtil.fetchLayoutSet(
 					parentGroup.getGroupId(), layoutSet.isPrivateLayout());
 			}
 		}
@@ -448,12 +451,34 @@ public class BreadcrumbUtil {
 
 				Group parentGroup = organization.getGroup();
 
-				return LayoutSetLocalServiceUtil.getLayoutSet(
+				return LayoutSetLocalServiceUtil.fetchLayoutSet(
 					parentGroup.getGroupId(), layoutSet.isPrivateLayout());
 			}
 		}
 
 		return null;
+	}
+
+	private static boolean _hasViewPermissions(
+		Group group, ThemeDisplay themeDisplay) {
+
+		try {
+			if (GroupPermissionUtil.contains(
+					themeDisplay.getPermissionChecker(), group,
+					ActionKeys.VIEW)) {
+
+				return true;
+			}
+
+			return false;
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
 	}
 
 	private static boolean _isGuestGroup(Group group) {
@@ -475,5 +500,7 @@ public class BreadcrumbUtil {
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(BreadcrumbUtil.class);
 
 }

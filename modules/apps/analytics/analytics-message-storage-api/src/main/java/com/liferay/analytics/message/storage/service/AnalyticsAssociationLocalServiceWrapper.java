@@ -1,20 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.service;
 
+import com.liferay.analytics.message.storage.model.AnalyticsAssociation;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link AnalyticsAssociationLocalService}.
@@ -48,21 +43,18 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @return the analytics association that was added
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		addAnalyticsAssociation(
-			com.liferay.analytics.message.storage.model.AnalyticsAssociation
-				analyticsAssociation) {
+	public AnalyticsAssociation addAnalyticsAssociation(
+		AnalyticsAssociation analyticsAssociation) {
 
 		return _analyticsAssociationLocalService.addAnalyticsAssociation(
 			analyticsAssociation);
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		addAnalyticsAssociation(
-			long companyId, java.util.Date createDate, long userId,
-			String associationClassName, long associationClassPK,
-			String className, long classPK) {
+	public AnalyticsAssociation addAnalyticsAssociation(
+		long companyId, java.util.Date createDate, long userId,
+		String associationClassName, long associationClassPK, String className,
+		long classPK) {
 
 		return _analyticsAssociationLocalService.addAnalyticsAssociation(
 			companyId, createDate, userId, associationClassName,
@@ -76,8 +68,8 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @return the new analytics association
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		createAnalyticsAssociation(long analyticsAssociationId) {
+	public AnalyticsAssociation createAnalyticsAssociation(
+		long analyticsAssociationId) {
 
 		return _analyticsAssociationLocalService.createAnalyticsAssociation(
 			analyticsAssociationId);
@@ -106,10 +98,8 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @return the analytics association that was removed
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		deleteAnalyticsAssociation(
-			com.liferay.analytics.message.storage.model.AnalyticsAssociation
-				analyticsAssociation) {
+	public AnalyticsAssociation deleteAnalyticsAssociation(
+		AnalyticsAssociation analyticsAssociation) {
 
 		return _analyticsAssociationLocalService.deleteAnalyticsAssociation(
 			analyticsAssociation);
@@ -127,8 +117,8 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @throws PortalException if a analytics association with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-			deleteAnalyticsAssociation(long analyticsAssociationId)
+	public AnalyticsAssociation deleteAnalyticsAssociation(
+			long analyticsAssociationId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsAssociationLocalService.deleteAnalyticsAssociation(
@@ -260,8 +250,8 @@ public class AnalyticsAssociationLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		fetchAnalyticsAssociation(long analyticsAssociationId) {
+	public AnalyticsAssociation fetchAnalyticsAssociation(
+		long analyticsAssociationId) {
 
 		return _analyticsAssociationLocalService.fetchAnalyticsAssociation(
 			analyticsAssociationId);
@@ -282,8 +272,8 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @throws PortalException if a analytics association with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-			getAnalyticsAssociation(long analyticsAssociationId)
+	public AnalyticsAssociation getAnalyticsAssociation(
+			long analyticsAssociationId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _analyticsAssociationLocalService.getAnalyticsAssociation(
@@ -302,31 +292,25 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @return the range of analytics associations
 	 */
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsAssociation>
-			getAnalyticsAssociations(int start, int end) {
+	public java.util.List<AnalyticsAssociation> getAnalyticsAssociations(
+		int start, int end) {
 
 		return _analyticsAssociationLocalService.getAnalyticsAssociations(
 			start, end);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsAssociation>
-			getAnalyticsAssociations(
-				long companyId, java.util.Date modifiedDate,
-				String associationClassName, int start, int end) {
+	public java.util.List<AnalyticsAssociation> getAnalyticsAssociations(
+		long companyId, java.util.Date modifiedDate,
+		String associationClassName, int start, int end) {
 
 		return _analyticsAssociationLocalService.getAnalyticsAssociations(
 			companyId, modifiedDate, associationClassName, start, end);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.analytics.message.storage.model.AnalyticsAssociation>
-			getAnalyticsAssociations(
-				long companyId, String associationClassName, int start,
-				int end) {
+	public java.util.List<AnalyticsAssociation> getAnalyticsAssociations(
+		long companyId, String associationClassName, int start, int end) {
 
 		return _analyticsAssociationLocalService.getAnalyticsAssociations(
 			companyId, associationClassName, start, end);
@@ -401,13 +385,36 @@ public class AnalyticsAssociationLocalServiceWrapper
 	 * @return the analytics association that was updated
 	 */
 	@Override
-	public com.liferay.analytics.message.storage.model.AnalyticsAssociation
-		updateAnalyticsAssociation(
-			com.liferay.analytics.message.storage.model.AnalyticsAssociation
-				analyticsAssociation) {
+	public AnalyticsAssociation updateAnalyticsAssociation(
+		AnalyticsAssociation analyticsAssociation) {
 
 		return _analyticsAssociationLocalService.updateAnalyticsAssociation(
 			analyticsAssociation);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _analyticsAssociationLocalService.getBasePersistence();
+	}
+
+	@Override
+	public CTPersistence<AnalyticsAssociation> getCTPersistence() {
+		return _analyticsAssociationLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<AnalyticsAssociation> getModelClass() {
+		return _analyticsAssociationLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<AnalyticsAssociation>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return _analyticsAssociationLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

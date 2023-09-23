@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -67,7 +58,7 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()) %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled", "structure") %>' wrapperCssClass="article-content-title mb-0" />
+					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()) %>" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="name" placeholder='<%= LanguageUtil.format(request, "untitled", "structure") %>' wrapperCssClass="article-content-title mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="metadata-type-button-row tbar-section text-right">

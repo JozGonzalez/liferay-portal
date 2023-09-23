@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
@@ -21,13 +12,16 @@ import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
+import com.liferay.object.exception.ObjectFieldSettingValueException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.render.ObjectFieldRenderingContext;
+import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectState;
 import com.liferay.object.model.ObjectStateFlow;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectStateFlowLocalService;
 import com.liferay.object.service.ObjectStateLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -61,7 +55,10 @@ public class PicklistObjectFieldBusinessType
 
 	@Override
 	public Set<String> getAllowedObjectFieldSettingsNames() {
-		return SetUtil.fromArray(ObjectFieldSettingConstants.NAME_STATE_FLOW);
+		return SetUtil.fromArray(
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+			ObjectFieldSettingConstants.NAME_STATE_FLOW);
 	}
 
 	@Override
@@ -100,14 +97,37 @@ public class PicklistObjectFieldBusinessType
 			_getDDMFormFieldOptions(objectField, objectFieldRenderingContext)
 		).put(
 			"predefinedValue",
-			_getDDMFormFieldPredefinedValue(
-				objectField, objectFieldRenderingContext)
+			() -> {
+				LocalizedValue localizedValue = new LocalizedValue(
+					objectFieldRenderingContext.getLocale());
+
+				localizedValue.addString(
+					objectFieldRenderingContext.getLocale(),
+					ObjectFieldSettingUtil.getDefaultValueAsString(
+						null, objectField.getObjectFieldId(),
+						_objectFieldSettingLocalService, null));
+
+				return localizedValue;
+			}
 		).build();
 	}
 
 	@Override
 	public PropertyDefinition.PropertyType getPropertyType() {
 		return PropertyDefinition.PropertyType.TEXT;
+	}
+
+	@Override
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
+		if (!objectField.isState()) {
+			return Collections.emptySet();
+		}
+
+		return SetUtil.fromArray(
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
 	}
 
 	@Override
@@ -145,6 +165,54 @@ public class PicklistObjectFieldBusinessType
 		_objectStateFlowLocalService.addDefaultObjectStateFlow(newObjectField);
 	}
 
+	@Override
+	public void validateObjectFieldSettingsDefaultValue(
+			ObjectField objectField,
+			Map<String, String> objectFieldSettingsValuesMap)
+		throws PortalException {
+
+		if (objectFieldSettingsValuesMap.isEmpty()) {
+			return;
+		}
+
+		ObjectFieldBusinessType.super.validateObjectFieldSettingsDefaultValue(
+			objectField, objectFieldSettingsValuesMap);
+
+		String defaultValueType = objectFieldSettingsValuesMap.get(
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
+
+		if (StringUtil.equals(
+				defaultValueType,
+				ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER)) {
+
+			if (objectField.isState()) {
+				throw new ObjectFieldSettingValueException.InvalidValue(
+					objectField.getName(),
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+					defaultValueType);
+			}
+
+			return;
+		}
+
+		String defaultValue = objectFieldSettingsValuesMap.get(
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
+
+		if (defaultValue == null) {
+			return;
+		}
+
+		ListTypeEntry listTypeEntry =
+			_listTypeEntryLocalService.fetchListTypeEntry(
+				objectField.getListTypeDefinitionId(), defaultValue);
+
+		if (listTypeEntry == null) {
+			throw new ObjectFieldSettingValueException.InvalidValue(
+				objectField.getName(),
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE, defaultValue);
+		}
+	}
+
 	private DDMFormFieldOptions _getDDMFormFieldOptions(
 			ObjectField objectField,
 			ObjectFieldRenderingContext objectFieldRenderingContext)
@@ -167,22 +235,6 @@ public class PicklistObjectFieldBusinessType
 		return ddmFormFieldOptions;
 	}
 
-	private LocalizedValue _getDDMFormFieldPredefinedValue(
-		ObjectField objectField,
-		ObjectFieldRenderingContext objectFieldRenderingContext) {
-
-		LocalizedValue ddmFormFieldPredefinedValueLocalizedValue =
-			new LocalizedValue(objectFieldRenderingContext.getLocale());
-
-		if (objectField.isState()) {
-			ddmFormFieldPredefinedValueLocalizedValue.addString(
-				objectFieldRenderingContext.getLocale(),
-				objectField.getDefaultValue());
-		}
-
-		return ddmFormFieldPredefinedValueLocalizedValue;
-	}
-
 	private List<ListTypeEntry> _getListTypeEntries(
 			ObjectField objectField,
 			ObjectFieldRenderingContext objectFieldRenderingContext)
@@ -193,7 +245,9 @@ public class PicklistObjectFieldBusinessType
 				objectField.getListTypeDefinitionId());
 		}
 
-		String listEntryKey = objectField.getDefaultValue();
+		String listEntryKey = ObjectFieldSettingUtil.getDefaultValueAsString(
+			null, objectField.getObjectFieldId(),
+			_objectFieldSettingLocalService, null);
 
 		if (MapUtil.isNotEmpty(objectFieldRenderingContext.getProperties())) {
 			ListEntry listEntry =
@@ -243,6 +297,9 @@ public class PicklistObjectFieldBusinessType
 
 	@Reference
 	private ListTypeEntryLocalService _listTypeEntryLocalService;
+
+	@Reference
+	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
 	private ObjectStateFlowLocalService _objectStateFlowLocalService;

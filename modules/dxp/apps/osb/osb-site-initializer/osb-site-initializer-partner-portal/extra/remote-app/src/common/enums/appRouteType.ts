@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export enum AppRouteType {
@@ -18,4 +12,9 @@ export enum AppRouteType {
 	DEAL_REGISTRATION_LIST = 'deal-registration-list',
 	PARTNER_OPPORTUNITIES_LIST = 'partner-opportunities-list',
 	RENEWALS_OPPORTUNITIES_LIST = 'renewal-opportunities-list',
+	DASHBOARD_DEALS_CHART = 'deals-chart',
+	DASHBOARD_LEVEL_CHART = 'level-chart',
+	DASHBOARD_MDF_REQUEST_CHART = 'mdf-requests-chart',
+	DASHBOARD_RENEWALS_CHART = 'renewals-chart',
+	DASHBOARD_REVENUE_CHART = 'revenue-chart',
 }

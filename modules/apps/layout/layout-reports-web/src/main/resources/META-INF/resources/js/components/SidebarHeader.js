@@ -1,29 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import React, {useContext} from 'react';
 
-import {SET_SELECTED_ISSUE} from '../constants/actionTypes';
-import {ConstantsContext} from '../context/ConstantsContext';
+import {SET_SELECTED_ITEM} from '../constants/actionTypes';
 import {StoreDispatchContext, StoreStateContext} from '../context/StoreContext';
 import loadIssues from '../utils/loadIssues';
 
 export default function SidebarHeader() {
-	const {selectedIssue} = useContext(StoreStateContext);
+	const {selectedItem} = useContext(StoreStateContext);
 
-	return selectedIssue ? (
+	if (Liferay.FeatureFlags['LPS-187284']) {
+		return null;
+	}
+
+	return selectedItem ? (
 		<IssueDetailSidebarHeader />
 	) : (
 		<DefaultSidebarHeader />
@@ -32,13 +26,12 @@ export default function SidebarHeader() {
 
 const DefaultSidebarHeader = () => {
 	const {data, languageId, loading} = useContext(StoreStateContext);
-	const {portletNamespace} = useContext(ConstantsContext);
 	const dispatch = useContext(StoreDispatchContext);
 
 	const showRefreshButton = data?.validConnection && !data?.privateLayout;
 
 	return (
-		<div className="d-flex justify-content-between p-3 sidebar-header">
+		<div className="d-flex justify-content-between sidebar-header">
 			<span className="font-weight-bold">
 				{Liferay.Language.get('page-audit')}
 			</span>
@@ -59,7 +52,6 @@ const DefaultSidebarHeader = () => {
 							loadIssues({
 								dispatch,
 								languageId,
-								portletNamespace,
 								url,
 							});
 						}}
@@ -80,19 +72,19 @@ const DefaultSidebarHeader = () => {
 };
 
 const IssueDetailSidebarHeader = () => {
-	const {selectedIssue} = useContext(StoreStateContext);
+	const {selectedItem} = useContext(StoreStateContext);
 	const dispatch = useContext(StoreDispatchContext);
 
 	return (
 		<div className="d-flex justify-content-between p-3 sidebar-header">
 			<div className="d-flex">
 				<ClayButtonWithIcon
-					className="component-action flex-shrink-0 mr-2 sidenav-back text-secondary"
+					className="align-items-start component-action flex-shrink-0 mr-2 sidenav-back text-secondary"
 					displayType="unstyled"
 					onClick={() => {
 						dispatch({
-							issue: null,
-							type: SET_SELECTED_ISSUE,
+							item: null,
+							type: SET_SELECTED_ITEM,
 						});
 					}}
 					symbol="angle-left"
@@ -100,7 +92,7 @@ const IssueDetailSidebarHeader = () => {
 				/>
 
 				<span className="align-self-center font-weight-bold issue-detail-title">
-					{selectedIssue.title}
+					{selectedItem.title}
 				</span>
 			</div>
 

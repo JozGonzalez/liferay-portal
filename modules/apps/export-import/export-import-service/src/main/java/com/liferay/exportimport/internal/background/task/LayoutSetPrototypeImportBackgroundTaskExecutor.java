@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.background.task;
 
 import com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
@@ -22,6 +14,7 @@ import com.liferay.layout.set.prototype.configuration.LayoutSetPrototypeConfigur
 import com.liferay.layout.set.prototype.configuration.LayoutSetPrototypeSystemConfiguration;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
@@ -34,7 +27,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
@@ -77,110 +69,119 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 	public BackgroundTaskResult execute(BackgroundTask backgroundTask)
 		throws Exception {
 
-		if (isCancelPropagationImportTask()) {
-			List<BackgroundTask> newBackgroundTasks =
-				_backgroundTaskManager.getBackgroundTasks(
-					backgroundTask.getGroupId(),
-					LayoutSetPrototypeImportBackgroundTaskExecutor.class.
-						getName(),
-					BackgroundTaskConstants.STATUS_NEW);
+		ExportImportThreadLocal.setLayoutImportInProcess(true);
 
-			List<BackgroundTask> queuedBackgroundTasks =
-				_backgroundTaskManager.getBackgroundTasks(
-					backgroundTask.getGroupId(),
-					LayoutSetPrototypeImportBackgroundTaskExecutor.class.
-						getName(),
-					BackgroundTaskConstants.STATUS_QUEUED);
+		try {
+			if (isCancelPropagationImportTask()) {
+				List<BackgroundTask> newBackgroundTasks =
+					_backgroundTaskManager.getBackgroundTasks(
+						backgroundTask.getGroupId(),
+						LayoutSetPrototypeImportBackgroundTaskExecutor.class.
+							getName(),
+						BackgroundTaskConstants.STATUS_NEW);
 
-			if (!newBackgroundTasks.isEmpty() ||
-				!queuedBackgroundTasks.isEmpty()) {
+				List<BackgroundTask> queuedBackgroundTasks =
+					_backgroundTaskManager.getBackgroundTasks(
+						backgroundTask.getGroupId(),
+						LayoutSetPrototypeImportBackgroundTaskExecutor.class.
+							getName(),
+						BackgroundTaskConstants.STATUS_QUEUED);
 
-				if (_log.isDebugEnabled()) {
-					StringBundler sb = new StringBundler(7);
+				if (!newBackgroundTasks.isEmpty() ||
+					!queuedBackgroundTasks.isEmpty()) {
 
-					sb.append("Cancelling background task ");
-					sb.append(backgroundTask.getBackgroundTaskId());
-					sb.append(", found ");
-					sb.append(newBackgroundTasks.size());
-					sb.append(" new and ");
-					sb.append(queuedBackgroundTasks.size());
-					sb.append(" queued tasks");
+					if (_log.isDebugEnabled()) {
+						StringBundler sb = new StringBundler(7);
 
-					_log.debug(sb.toString());
+						sb.append("Cancelling background task ");
+						sb.append(backgroundTask.getBackgroundTaskId());
+						sb.append(", found ");
+						sb.append(newBackgroundTasks.size());
+						sb.append(" new and ");
+						sb.append(queuedBackgroundTasks.size());
+						sb.append(" queued tasks");
+
+						_log.debug(sb.toString());
+					}
+
+					return new BackgroundTaskResult(
+						BackgroundTaskConstants.STATUS_CANCELLED);
 				}
-
-				return new BackgroundTaskResult(
-					BackgroundTaskConstants.STATUS_CANCELLED);
 			}
+
+			ExportImportConfiguration exportImportConfiguration =
+				getExportImportConfiguration(backgroundTask);
+
+			List<FileEntry> attachmentsFileEntries =
+				backgroundTask.getAttachmentsFileEntries();
+
+			File file = null;
+
+			for (FileEntry attachmentsFileEntry : attachmentsFileEntries) {
+				try {
+					file = _file.createTempFile("lar");
+
+					_file.write(file, attachmentsFileEntry.getContentStream());
+
+					TransactionInvokerUtil.invoke(
+						transactionConfig,
+						new LayoutImportCallable(
+							exportImportConfiguration, file));
+				}
+				catch (Throwable throwable) {
+					Map<String, Serializable> settingsMap =
+						exportImportConfiguration.getSettingsMap();
+
+					Map<String, String[]> parameterMap =
+						(Map<String, String[]>)settingsMap.get("parameterMap");
+
+					long layoutSetPrototypeId = MapUtil.getLong(
+						parameterMap, "layoutSetPrototypeId");
+
+					LayoutSetPrototype layoutSetPrototype =
+						_layoutSetPrototypeLocalService.getLayoutSetPrototype(
+							layoutSetPrototypeId);
+
+					LayoutSet layoutSetPrototypeLayoutSet =
+						layoutSetPrototype.getLayoutSet();
+
+					UnicodeProperties
+						layoutSetPrototypeSettingsUnicodeProperties =
+							layoutSetPrototypeLayoutSet.getSettingsProperties();
+
+					int mergeFailCount = GetterUtil.getInteger(
+						layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+							Sites.MERGE_FAIL_COUNT));
+
+					mergeFailCount++;
+
+					layoutSetPrototypeSettingsUnicodeProperties.setProperty(
+						Sites.MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
+
+					_layoutSetLocalService.updateLayoutSet(
+						layoutSetPrototypeLayoutSet);
+
+					_log.error(
+						StringBundler.concat(
+							"Merge fail count increased to ", mergeFailCount,
+							" for layout set prototype ",
+							layoutSetPrototype.getLayoutSetPrototypeId()),
+						throwable);
+
+					throw new SystemException(throwable);
+				}
+				finally {
+					MergeLayoutPrototypesThreadLocal.setInProgress(false);
+
+					_file.delete(file);
+				}
+			}
+
+			return BackgroundTaskResult.SUCCESS;
 		}
-
-		ExportImportConfiguration exportImportConfiguration =
-			getExportImportConfiguration(backgroundTask);
-
-		List<FileEntry> attachmentsFileEntries =
-			backgroundTask.getAttachmentsFileEntries();
-
-		File file = null;
-
-		for (FileEntry attachmentsFileEntry : attachmentsFileEntries) {
-			try {
-				file = _file.createTempFile("lar");
-
-				_file.write(file, attachmentsFileEntry.getContentStream());
-
-				TransactionInvokerUtil.invoke(
-					transactionConfig,
-					new LayoutImportCallable(exportImportConfiguration, file));
-			}
-			catch (Throwable throwable) {
-				Map<String, Serializable> settingsMap =
-					exportImportConfiguration.getSettingsMap();
-
-				Map<String, String[]> parameterMap =
-					(Map<String, String[]>)settingsMap.get("parameterMap");
-
-				long layoutSetPrototypeId = MapUtil.getLong(
-					parameterMap, "layoutSetPrototypeId");
-
-				LayoutSetPrototype layoutSetPrototype =
-					_layoutSetPrototypeLocalService.getLayoutSetPrototype(
-						layoutSetPrototypeId);
-
-				LayoutSet layoutSetPrototypeLayoutSet =
-					layoutSetPrototype.getLayoutSet();
-
-				UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
-					layoutSetPrototypeLayoutSet.getSettingsProperties();
-
-				int mergeFailCount = GetterUtil.getInteger(
-					layoutSetPrototypeSettingsUnicodeProperties.getProperty(
-						Sites.MERGE_FAIL_COUNT));
-
-				mergeFailCount++;
-
-				layoutSetPrototypeSettingsUnicodeProperties.setProperty(
-					Sites.MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
-
-				_layoutSetLocalService.updateLayoutSet(
-					layoutSetPrototypeLayoutSet);
-
-				_log.error(
-					StringBundler.concat(
-						"Merge fail count increased to ", mergeFailCount,
-						" for layout set prototype ",
-						layoutSetPrototype.getLayoutSetPrototypeId()),
-					throwable);
-
-				throw new SystemException(throwable);
-			}
-			finally {
-				MergeLayoutPrototypesThreadLocal.setInProgress(false);
-
-				_file.delete(file);
-			}
+		finally {
+			ExportImportThreadLocal.setLayoutValidationInProcess(false);
 		}
-
-		return BackgroundTaskResult.SUCCESS;
 	}
 
 	@Activate

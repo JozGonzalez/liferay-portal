@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.workspace;
@@ -28,6 +19,7 @@ import com.liferay.gradle.plugins.workspace.configurator.ThemesProjectConfigurat
 import com.liferay.gradle.plugins.workspace.configurator.WarsProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.tools.bundle.support.commands.DownloadCommand;
 import com.liferay.portal.tools.bundle.support.constants.BundleSupportConstants;
 import com.liferay.workspace.bundle.url.codec.BundleURLCodec;
@@ -47,6 +39,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -110,6 +103,8 @@ public class WorkspaceExtension {
 		_configsDir = _getProperty(
 			settings, "configs.dir",
 			BundleSupportConstants.DEFAULT_CONFIGS_DIR_NAME);
+		_dirExcludesGlobs = StringUtil.split(
+			GradleUtil.toString(_getProperty(settings, "dir.excludes.globs")));
 		_dockerDir = _getProperty(settings, "docker.dir", _DOCKER_DIR);
 		_dockerImageLiferay = _getProperty(
 			settings, "docker.image.liferay", _getDefaultDockerImage());
@@ -216,6 +211,10 @@ public class WorkspaceExtension {
 	}
 
 	public String getAppServerTomcatVersion() {
+		if (Objects.isNull(_appServerTomcatVersion)) {
+			return _getDefaultAppServerVersion();
+		}
+
 		return GradleUtil.toString(_appServerTomcatVersion);
 	}
 
@@ -224,6 +223,10 @@ public class WorkspaceExtension {
 	}
 
 	public String getBundleChecksumMD5() {
+		if (Objects.isNull(_bundleChecksumMD5)) {
+			return getDefaultBundleChecksumMD5();
+		}
+
 		return GradleUtil.toString(_bundleChecksumMD5);
 	}
 
@@ -245,6 +248,10 @@ public class WorkspaceExtension {
 	}
 
 	public String getBundleUrl() {
+		if (Objects.isNull(_bundleUrl)) {
+			return getDefaultBundleUrl();
+		}
+
 		return GradleUtil.toString(_bundleUrl);
 	}
 
@@ -272,6 +279,10 @@ public class WorkspaceExtension {
 		);
 	}
 
+	public List<String> getDirExcludesGlobs() {
+		return GradleUtil.toStringList(_dirExcludesGlobs);
+	}
+
 	public String getDockerContainerId() {
 		return GradleUtil.toString(_dockerContainerId);
 	}
@@ -285,6 +296,10 @@ public class WorkspaceExtension {
 	}
 
 	public String getDockerImageLiferay() {
+		if (Objects.isNull(_dockerImageLiferay)) {
+			return _getDefaultDockerImage();
+		}
+
 		return GradleUtil.toString(_dockerImageLiferay);
 	}
 
@@ -333,6 +348,10 @@ public class WorkspaceExtension {
 	}
 
 	public String getTargetPlatformVersion() {
+		if (Objects.isNull(_targetPlatformVersion)) {
+			return _getDefaultTargetplatformVersion();
+		}
+
 		return GradleUtil.toString(_targetPlatformVersion);
 	}
 
@@ -400,6 +419,10 @@ public class WorkspaceExtension {
 
 	public void setConfigsDir(Object configsDir) {
 		_configsDir = configsDir;
+	}
+
+	public void setDirExcludesGlobs(Iterable<String> dirExcludesGlobs) {
+		_dirExcludesGlobs = dirExcludesGlobs;
 	}
 
 	public void setDockerContainerId(Object dockerContainerId) {
@@ -711,6 +734,7 @@ public class WorkspaceExtension {
 	private Object _bundleTokenPasswordFile;
 	private Object _bundleUrl;
 	private Object _configsDir;
+	private Iterable<String> _dirExcludesGlobs;
 	private Object _dockerContainerId;
 	private Object _dockerDir;
 	private Object _dockerImageId;

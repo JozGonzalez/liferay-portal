@@ -61,13 +61,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -78,7 +80,7 @@ definition {
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10200 | Test Summary: Change data type from description"
 	@priority = 5
 	test CanChangeDataTypeFromDescription {
-		property test.name.skip.portal.instance = "CustomEventsChangeDataType#CanChangeDataTypeFromDescription";
+		property test.run.type = "single";
 
 		var attributeName = "animal";
 		var attributeValue = "dog";
@@ -284,6 +286,11 @@ definition {
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10206 | Test Summary: Undefined for results cannot be interpreted"
 	@priority = 3
 	test ViewUndefinedResultsIsDisplayedWhenChangeDataTypeThatCannotBeInterpreted {
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix investigate issue
+		// AC Quarantine Ticket: LRAC-14034
+
 		var attributeName = "company";
 		var attributeValue = "liferay";
 

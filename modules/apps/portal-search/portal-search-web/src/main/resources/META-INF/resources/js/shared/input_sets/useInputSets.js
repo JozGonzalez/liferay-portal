@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMemo, useRef, useState} from 'react';
@@ -130,6 +121,19 @@ function useInputSets(initialValue) {
 	};
 
 	/**
+	 * Replaces the input sets with a new list and updates
+	 * idCounterRef for the new length.
+	 * @param {Array} newValue The new list for input sets.
+	 */
+	const _handleInputSetsChange = (newValue) => {
+		const preparedValue = prepareInitialValue(newValue);
+
+		setValue(preparedValue);
+
+		idCounterRef.current = preparedValue.length;
+	};
+
+	/**
 	 * Changes a single object property's value.
 	 * @param {number} index The position of the item in the list.
 	 * @param {string|object} newValue If this is a string, value will be used as
@@ -204,6 +208,7 @@ function useInputSets(initialValue) {
 		onInputSetItemMove: _handleInputSetItemMove,
 		onInputSetItemReplace: _handleInputSetItemReplace,
 		onInputSetsAdd: _handleItemSetsAdd,
+		onInputSetsChange: _handleInputSetsChange,
 		value,
 	};
 }

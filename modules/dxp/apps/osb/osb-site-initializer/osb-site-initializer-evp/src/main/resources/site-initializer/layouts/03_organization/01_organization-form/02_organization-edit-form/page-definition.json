@@ -42,6 +42,29 @@
 				"pageElements": [
 					{
 						"definition": {
+							"indexed": true,
+							"layout": {
+								"opacity": 100,
+								"widthType": "Fluid"
+							},
+							"name": "Breadcrumb container"
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"widgetInstance": {
+										"widgetConfig": {
+										},
+										"widgetName": "com_liferay_site_navigation_breadcrumb_web_portlet_SiteNavigationBreadcrumbPortlet"
+									}
+								},
+								"type": "Widget"
+							}
+						],
+						"type": "Section"
+					},
+					{
+						"definition": {
 							"fragment": {
 								"key": "DIALECT-dialect-text"
 							},
@@ -374,7 +397,7 @@
 										"key": "INPUTS-text-input"
 									},
 									"fragmentConfig": {
-										"inputFieldId": "ObjectField_taxIdentificationNumber",
+										"inputFieldId": "ObjectField_taxId",
 										"inputRequired": true,
 										"showCharactersCount": false
 									},
@@ -569,57 +592,8 @@
 							},
 							"fragmentConfig": {
 								"inputFieldId": "ObjectField_bankingInfo",
+								"inputRequired": true,
 								"showCharactersCount": false
-							},
-							"fragmentFields": [
-							],
-							"fragmentStyle": {
-								"marginBottom": "3"
-							},
-							"indexed": true
-						},
-						"type": "Fragment"
-					},
-					{
-						"definition": {
-							"fragment": {
-								"key": "DIALECT-dialect-text"
-							},
-							"fragmentConfig": {
-								"textType": "h5",
-								"truncateText": false
-							},
-							"fragmentFields": [
-								{
-									"id": "element-text",
-									"value": {
-										"fragmentLink": {
-										},
-										"text": {
-											"value_i18n": {
-												"en_US": "Tax Information"
-											}
-										}
-									}
-								}
-							],
-							"fragmentStyle": {
-								"fontWeight": "fontWeightBold",
-								"marginBottom": "3",
-								"textColor": "colorNeutral9"
-							},
-							"indexed": true
-						},
-						"type": "Fragment"
-					},
-					{
-						"definition": {
-							"fragment": {
-								"key": "INPUTS-text-input"
-							},
-							"fragmentConfig": {
-								"inputFieldId": "ObjectField_taxId",
-								"inputRequired": true
 							},
 							"fragmentFields": [
 							],
@@ -717,6 +691,29 @@
 											"id": "link",
 											"value": {
 												"fragmentLink": {
+													"value": {
+														"href": {
+															"mapping": {
+																"itemReference": {
+																	"className": "com.liferay.portal.kernel.model.Layout",
+																	"fields": [
+																		{
+																			"fieldName": "friendlyURL",
+																			"fieldValue": "/organization"
+																		},
+																		{
+																			"fieldName": "privatePage",
+																			"fieldValue": "false"
+																		},
+																		{
+																			"fieldName": "siteKey",
+																			"fieldValue": "[$GROUP_KEY$]"
+																		}
+																	]
+																}
+															}
+														}
+													}
 												},
 												"text": {
 													"value_i18n": {

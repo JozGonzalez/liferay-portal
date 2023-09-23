@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.indexer.clauses.test;
@@ -25,6 +16,7 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
 import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
@@ -35,7 +27,6 @@ import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -57,7 +48,6 @@ import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +82,7 @@ public class IndexerClausesExpandoTest {
 	}
 
 	@Test
-	public void testBaseIndexer() throws Exception {
+	public void testDefaultIndexer1() throws Exception {
 		_setUp(
 			HashMapBuilder.<Class<?>, String[]>put(
 				JournalArticle.class,
@@ -102,8 +92,10 @@ public class IndexerClausesExpandoTest {
 		_test(
 			new Class<?>[] {JournalArticle.class}, "gamma",
 			() -> {
-				Assert.assertTrue(
-					_journalArticleIndexer instanceof BaseIndexer);
+				Assert.assertEquals(
+					"class com.liferay.portal.search.internal.indexer." +
+						"DefaultIndexer",
+					String.valueOf(_journalArticleIndexer.getClass()));
 
 				_assertSearch("[Gamma Article]", _consumer);
 				_assertSearch(
@@ -113,7 +105,7 @@ public class IndexerClausesExpandoTest {
 	}
 
 	@Test
-	public void testDefaultIndexer() throws Exception {
+	public void testDefaultIndexer2() throws Exception {
 		_setUp(
 			HashMapBuilder.<Class<?>, String[]>put(
 				BlogsEntry.class, new String[] {"Gamma Blog", "Omega Blog"}
@@ -308,7 +300,9 @@ public class IndexerClausesExpandoTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
-	@Inject(filter = "component.name=*.JournalArticleIndexer")
+	@Inject(
+		filter = "indexer.class.name=com.liferay.journal.model.JournalArticle"
+	)
 	private Indexer<JournalArticle> _journalArticleIndexer;
 
 	@Inject

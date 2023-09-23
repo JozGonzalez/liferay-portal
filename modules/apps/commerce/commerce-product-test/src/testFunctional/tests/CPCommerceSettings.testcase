@@ -18,7 +18,8 @@ definition {
 	@priority = 3
 	test BulkDeleteCountries {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CPCommerceSettings#BulkDeleteCountries";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a Admin goes to Countries") {
 			CommerceNavigator.gotoPortlet(
@@ -63,6 +64,416 @@ definition {
 		}
 	}
 
+	@description = "Test for COMMERCE-11974 | Verify that is not possible to perform XSS attack by injecting malicious script in Addressess"
+	@priority = 5
+	test CannotExecuteXSSInAddresses {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And Commerce Addresses widget is deployed on Minium's Catalog page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			CommerceAcceleratorsInitializer.addPortlet(portletName = "Commerce Addresses");
+		}
+
+		task ("And a business account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("When a billing and a shipping addresses with the XSS are created for the account") {
+			for (var address : list "billing,shipping") {
+				var city = "<script>alert('${address}-city')</script>";
+				var name = "<script>alert('${address}-name')</script>";
+				var street1 = "<script>alert('${address}-street-1')</script>";
+				var street2 = "<script>alert('${address}-street-2')</script>";
+				var street3 = "<script>alert('${address}-street-3')</script>";
+				var zip = "<script>alert('${address}-zip')</script>";
+
+				if (${address} == "billing") {
+					var type = 1;
+				}
+				else if (${address} == "shipping") {
+					var type = 3;
+				}
+
+				CommerceJSONAccountsAPI._addCommerceAccountAddress(
+					accountEntryName = "Commerce Account",
+					city = ${city},
+					countryISOCode = "US",
+					name = ${name},
+					street1 = ${street1},
+					street2 = ${street2},
+					street3 = ${street3},
+					type = ${type},
+					zip = ${zip});
+			}
+		}
+
+		task ("Then the injected script is not executed") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			AssertAlertNotPresent();
+		}
+
+		task ("When an order is created with the XSS addresses") {
+			var billingAddressName = "<script>alert(billing-name)</script>";
+			var shippingAddressName = "<script>alert(shipping-name)</script>";
+
+			CommerceJSONDeliveryCart._addCommerceCart(
+				accountEntryName = "Commerce Account",
+				billingAddressName = ${billingAddressName},
+				cartItems = "MIN55861:5",
+				shippingAddressName = ${shippingAddressName},
+				shippingOption = "Standard Delivery");
+		}
+
+		task ("Then in the Orders UI the injected script is not executed") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Open");
+
+			AssertAlertNotPresent();
+		}
+	}
+
+	@description = "Test for COMMERCE-11984 | Verify that is not possible to perform XSS attack by injecting malicious script in Countries and Regions"
+	@priority = 5
+	test CannotExecuteXSSInCommerceCountriesAndRegions {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
+
+		var countryName = '''<script>alert("country")</script>''';
+		var regionName = '''<script>alert("region")</script>''';
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And Commerce Addresses widget is deployed on Minium's Catalog page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			CommerceAcceleratorsInitializer.addPortlet(portletName = "Commerce Addresses");
+		}
+
+		task ("And a business account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And the admin navigates to Commerce's Countries page") {
+			CommerceNavigator.openCommerceCountriesAdmin();
+		}
+
+		task ("When the admin creates a country with XSS") {
+			Click(locator1 = "Button#PLUS");
+
+			CommerceEntry.addNewCountriesEntry(
+				entryIsoNumber = 020,
+				entryIsoThreeLetters = "TCO",
+				entryIsoTwoLetters = 54,
+				entryName = ${countryName});
+		}
+
+		task ("Then the injected script is not executed") {
+			CommerceNavigator.openCommerceCountriesAdmin();
+
+			AssertAlertNotPresent();
+		}
+
+		task ("When the admin creates a region with XSS") {
+			CommerceNavigator.searchEntry(entryName = ${countryName});
+
+			Click(
+				locator1 = "CommerceEntry#WISH_LIST_NAME",
+				wishListName = ${countryName});
+
+			CommerceEntry.gotoMenuTab(menuTab = "Regions");
+
+			Click(locator1 = "Button#PLUS");
+
+			CommerceEntry.addNewRegionsEntry(
+				code = "TRE",
+				entryName = ${regionName});
+		}
+
+		task ("Then the injected script is not executed, even if page is refreshed") {
+			AssertAlertNotPresent();
+
+			AssertElementPresent(
+				key_entry = ${regionName},
+				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+			Refresh();
+
+			AssertAlertNotPresent();
+		}
+
+		task ("When an address with the XSS country and region is created for the account") {
+			CommerceJSONAccountsAPI._addCommerceAccountAddress(
+				accountEntryName = "Commerce Account",
+				city = "Test City",
+				countryISOCode = 54,
+				name = "Test Address",
+				regionISOCode = "TRE",
+				street1 = "Test Street",
+				zip = "Test Zip Code");
+		}
+
+		task ("And the user navigates to Minium's Catalog page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+		}
+
+		task ("Then the injected script is not executed") {
+			AssertAlertNotPresent();
+		}
+
+		task ("When an order is created with the XSS address") {
+			CommerceJSONDeliveryCart._addCommerceCart(
+				accountEntryName = "Commerce Account",
+				billingAddressName = "Test Address",
+				cartItems = "MIN55861:5",
+				shippingAddressName = "Test Address",
+				shippingOption = "Standard Delivery");
+		}
+
+		task ("Then in the Orders UI the injected script is not executed") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Open");
+
+			AssertAlertNotPresent();
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11451. CanViewLanguageTagsForCategoryOnSitemapPage. Verify that the sitemap contain the URL for the translated category friendly URL"
+	@priority = 5
+	test CanViewLanguageTagsForCategoryOnSitemapPage {
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("Given an account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce",
+				accountEntryType = "Business");
+		}
+
+		task ("And a new widget page with the Category Content is created") {
+			JSONLayout.addPublicLayout(
+				groupName = "Minium",
+				layoutName = "Widget Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Minium",
+				layoutName = "Widget Page",
+				widgetName = "Category Content");
+		}
+
+		task ("And a category friendly URL is translated") {
+			Category.openCategoriesAdmin(siteURLKey = "global");
+
+			Navigator.gotoNavNested(navNested = "Minium");
+
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Edit",
+				rowEntry = "Brake System");
+
+			Navigator.gotoNavUnderline(navUnderline = "Friendly URL");
+
+			PortletEntry.changeLocale(
+				fieldName = "Friendly URL",
+				locale = "ca-ES");
+
+			Type(
+				key_fieldLabel = "Friendly URL",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "system-brake-es");
+
+			PortletEntry.save();
+		}
+
+		task ("And Uuid is acquired") {
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Minium",
+				site = "true");
+			var basePortalURL = PropsUtil.get("portal.url");
+
+			Open.openNoError(locator1 = "${basePortalURL}/sitemap.xml?groupId=${groupId}");
+
+			var responseToParse = CommerceJSONProductsAPI._getCommerceFieldValue(
+				field = "uuid",
+				groupName = "Minium",
+				title = "Widget Page");
+		}
+
+		task ("When the widget page sitemap link is opened") {
+			var uuid = JSONUtil.getWithJSONPath(${responseToParse}, "$..['items'][0].uuid");
+
+			var link = selenium.getHtmlNodeText("//*[contains(text(),'${uuid}')][1]");
+
+			Open.openNoErrorNoSPARefresh(locator1 = ${link});
+		}
+
+		task ("Then the default and translated category friendly URL are shown") {
+			for (var categoryNameList : list "brake-system:,system-brake-es:ca") {
+				var categoryName = StringUtil.extractFirst(${categoryNameList}, ":");
+				var categoryNameLanguage = StringUtil.extractLast(${categoryNameList}, ":");
+
+				if (${categoryNameLanguage} == "") {
+					AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+						key_basePortalURL = ${basePortalURL},
+						key_categoryName = ${categoryName},
+						locator1 = "CommerceEntry#CATEGORY_SITEMAP_URL");
+				}
+				else {
+					AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+						key_basePortalURL = ${basePortalURL},
+						key_categoryName = ${categoryName},
+						key_language = ${categoryNameLanguage},
+						locator1 = "CommerceEntry#CATEGORY_LANGUAGE_SITEMAP_URL");
+				}
+			}
+
+			for (var categoryURLName : list "brake-system,system-brake-es") {
+				for (var categoryNameList : list "brake-system:en-US,system-brake-es:ca-ES") {
+					var categoryName = StringUtil.extractFirst(${categoryNameList}, ":");
+					var categoryNameLang = StringUtil.extractLast(${categoryNameList}, ":");
+
+					if (${categoryURLName} == "brake-system") {
+						if (${categoryName} == "system-brake-es") {
+							var categoryLanguage = "/ca";
+
+							AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+								key_basePortalURL = ${basePortalURL},
+								key_categoryName = ${categoryName},
+								key_categoryNameLang = ${categoryNameLang},
+								key_categoryURLName = ${categoryURLName},
+								key_languageHref = ${categoryLanguage},
+								key_languageLoc = "",
+								locator1 = "CommerceEntry#CATEGORY_LANGUAGE_SITEMAP_URL_HREF_HREFLANG");
+						}
+						else {
+							AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+								key_basePortalURL = ${basePortalURL},
+								key_categoryName = ${categoryName},
+								key_categoryNameLang = ${categoryNameLang},
+								key_categoryURLName = ${categoryURLName},
+								locator1 = "CommerceEntry#CATEGORY_SITEMAP_URL_HREF_HREFLANG");
+						}
+					}
+					else {
+						if (${categoryName} == "system-brake-es") {
+							var categoryLanguage = "/ca";
+
+							AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+								key_basePortalURL = ${basePortalURL},
+								key_categoryName = ${categoryName},
+								key_categoryNameLang = ${categoryNameLang},
+								key_categoryURLName = ${categoryURLName},
+								key_languageHref = ${categoryLanguage},
+								key_languageLoc = ${categoryLanguage},
+								locator1 = "CommerceEntry#CATEGORY_LANGUAGE_SITEMAP_URL_HREF_HREFLANG");
+						}
+						else {
+							AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+								key_basePortalURL = ${basePortalURL},
+								key_categoryName = ${categoryName},
+								key_categoryNameLang = ${categoryNameLang},
+								key_categoryURLName = ${categoryURLName},
+								key_languageHref = "",
+								key_languageLoc = ${categoryLanguage},
+								locator1 = "CommerceEntry#CATEGORY_LANGUAGE_SITEMAP_URL_HREF_HREFLANG");
+						}
+					}
+				}
+			}
+
+			Open.openNoErrorNoSPARefresh(locator1 = ${basePortalURL});
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11452. CanViewSubcategoryForCategoryOnSitemapPage. Verify that the sitemap contain the URL for the subcategory"
+	@priority = 5
+	test CanViewSubcategoryForCategoryOnSitemapPage {
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("Given an account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce",
+				accountEntryType = "Business");
+		}
+
+		task ("And a new widget page with the Category Content is created") {
+			JSONLayout.addPublicLayout(
+				groupName = "Minium",
+				layoutName = "Widget Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Minium",
+				layoutName = "Widget Page",
+				widgetName = "Category Content");
+		}
+
+		task ("And a subcategory is created") {
+			Category.openCategoriesAdmin(siteURLKey = "global");
+
+			Subcategory.addCP(
+				categoryName = "Brake System",
+				subcategoryName = "System Brake Sub Category",
+				vocabularyName = "Minium");
+		}
+
+		task ("And Uuid is acquired") {
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Minium",
+				site = "true");
+			var basePortalURL = PropsUtil.get("portal.url");
+
+			Open.openNoError(locator1 = "${basePortalURL}/sitemap.xml?groupId=${groupId}");
+
+			var responseToParse = CommerceJSONProductsAPI._getCommerceFieldValue(
+				field = "uuid",
+				groupName = "Minium",
+				title = "Widget Page");
+		}
+
+		task ("When the widget page sitemap link is opened") {
+			var uuid = JSONUtil.getWithJSONPath(${responseToParse}, "$..['items'][0].uuid");
+
+			var link = selenium.getHtmlNodeText("//*[contains(text(),'${uuid}')][1]");
+
+			Open.openNoErrorNoSPARefresh(locator1 = ${link});
+		}
+
+		task ("Then both the category and subcategoty URL are shown") {
+			for (var subCategoryName : list "brake-system,system-brake-sub-category") {
+				AssertElementPresent.assertElementPresentNoWaitForSPAReFresh(
+					key_basePortalURL = ${basePortalURL},
+					key_categoryName = ${subCategoryName},
+					locator1 = "CommerceEntry#CATEGORY_SITEMAP_URL");
+			}
+
+			Open.openNoErrorNoSPARefresh(locator1 = ${basePortalURL});
+		}
+	}
+
 	@priority = 5
 	test CreateNewAvailabilityEstimate {
 		property portal.acceptance = "true";
@@ -96,8 +507,6 @@ definition {
 			entryIsoTwoLetters = 54,
 			entryName = "Test Country");
 
-		Button.clickSave();
-
 		AssertElementPresent(locator1 = "Message#SUCCESS");
 
 		CommerceEntry.gotoMenuTab(menuTab = "Regions");
@@ -107,8 +516,6 @@ definition {
 		CommerceEntry.addNewRegionsEntry(
 			code = "TRE",
 			entryName = "Test Region");
-
-		Button.clickSave();
 
 		AssertElementPresent(locator1 = "Message#SUCCESS");
 

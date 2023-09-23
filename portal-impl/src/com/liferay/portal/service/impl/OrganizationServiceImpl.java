@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -39,6 +30,7 @@ import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PasswordPolicyPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.OrganizationIdComparator;
 import com.liferay.portal.service.base.OrganizationServiceBaseImpl;
@@ -106,12 +98,12 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 	 */
 	@Override
 	public Organization addOrganization(
-			long parentOrganizationId, String name, String type, long regionId,
-			long countryId, long statusListTypeId, String comments,
-			boolean site, List<Address> addresses,
-			List<EmailAddress> emailAddresses, List<OrgLabor> orgLabors,
-			List<Phone> phones, List<Website> websites,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long parentOrganizationId,
+			String name, String type, long regionId, long countryId,
+			long statusListTypeId, String comments, boolean site,
+			List<Address> addresses, List<EmailAddress> emailAddresses,
+			List<OrgLabor> orgLabors, List<Phone> phones,
+			List<Website> websites, ServiceContext serviceContext)
 		throws PortalException {
 
 		boolean indexingEnabled = true;
@@ -124,8 +116,9 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 		try {
 			Organization organization = addOrganization(
-				parentOrganizationId, name, type, regionId, countryId,
-				statusListTypeId, comments, site, serviceContext);
+				externalReferenceCode, parentOrganizationId, name, type,
+				regionId, countryId, statusListTypeId, comments, site,
+				serviceContext);
 
 			UsersAdminUtil.updateAddresses(
 				Organization.class.getName(), organization.getOrganizationId(),
@@ -187,9 +180,10 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 	 */
 	@Override
 	public Organization addOrganization(
-			long parentOrganizationId, String name, String type, long regionId,
-			long countryId, long statusListTypeId, String comments,
-			boolean site, ServiceContext serviceContext)
+			String externalReferenceCode, long parentOrganizationId,
+			String name, String type, long regionId, long countryId,
+			long statusListTypeId, String comments, boolean site,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		if (parentOrganizationId ==
@@ -205,8 +199,9 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 		}
 
 		Organization organization = organizationLocalService.addOrganization(
-			getUserId(), parentOrganizationId, name, type, regionId, countryId,
-			statusListTypeId, comments, site, serviceContext);
+			externalReferenceCode, getUserId(), parentOrganizationId, name,
+			type, regionId, countryId, statusListTypeId, comments, site,
+			serviceContext);
 
 		OrganizationMembershipPolicyUtil.verifyPolicy(organization);
 
@@ -533,6 +528,22 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 	@Override
 	public List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		if (parentOrganizationId ==
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID) {
+
+			return organizationPersistence.filterFindByCompanyId(
+				companyId, start, end, orderByComparator);
+		}
+
+		return organizationPersistence.filterFindByC_P(
+			companyId, parentOrganizationId, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<Organization> getOrganizations(
 		long companyId, long parentOrganizationId, String name, int start,
 		int end) {
 
@@ -549,6 +560,28 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 		return organizationPersistence.filterFindByC_P_LikeN(
 			companyId, parentOrganizationId, name, start, end);
+	}
+
+	@Override
+	public List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator) {
+
+		if (Validator.isNull(name)) {
+			return getOrganizations(
+				companyId, parentOrganizationId, start, end, orderByComparator);
+		}
+
+		if (parentOrganizationId ==
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID) {
+
+			return organizationPersistence.filterFindByC_LikeN(
+				companyId, name, start, end, orderByComparator);
+		}
+
+		return organizationPersistence.filterFindByC_P_LikeN(
+			companyId, parentOrganizationId, name, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -708,9 +741,10 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 	 */
 	@Override
 	public Organization updateOrganization(
-			long organizationId, long parentOrganizationId, String name,
-			String type, long regionId, long countryId, long statusListTypeId,
-			String comments, boolean hasLogo, byte[] logoBytes, boolean site,
+			String externalReferenceCode, long organizationId,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusListTypeId, String comments,
+			boolean hasLogo, byte[] logoBytes, boolean site,
 			List<Address> addresses, List<EmailAddress> emailAddresses,
 			List<OrgLabor> orgLabors, List<Phone> phones,
 			List<Website> websites, ServiceContext serviceContext)
@@ -777,9 +811,10 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 			oldExpandoBridge.getAttributes();
 
 		organization = organizationLocalService.updateOrganization(
-			user.getCompanyId(), organizationId, parentOrganizationId, name,
-			type, regionId, countryId, statusListTypeId, comments, hasLogo,
-			logoBytes, site, serviceContext);
+			externalReferenceCode, user.getCompanyId(), organizationId,
+			parentOrganizationId, name, type, regionId, countryId,
+			statusListTypeId, comments, hasLogo, logoBytes, site,
+			serviceContext);
 
 		OrganizationMembershipPolicyUtil.verifyPolicy(
 			organization, oldOrganization, oldAssetCategories, oldAssetTags,
@@ -810,15 +845,16 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 	 */
 	@Override
 	public Organization updateOrganization(
-			long organizationId, long parentOrganizationId, String name,
-			String type, long regionId, long countryId, long statusListTypeId,
-			String comments, boolean site, ServiceContext serviceContext)
+			String externalReferenceCode, long organizationId,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusListTypeId, String comments,
+			boolean site, ServiceContext serviceContext)
 		throws PortalException {
 
 		return updateOrganization(
-			organizationId, parentOrganizationId, name, type, regionId,
-			countryId, statusListTypeId, comments, true, null, site, null, null,
-			null, null, null, serviceContext);
+			externalReferenceCode, organizationId, parentOrganizationId, name,
+			type, regionId, countryId, statusListTypeId, comments, true, null,
+			site, null, null, null, null, null, serviceContext);
 	}
 
 	@BeanReference(type = AssetCategoryLocalService.class)

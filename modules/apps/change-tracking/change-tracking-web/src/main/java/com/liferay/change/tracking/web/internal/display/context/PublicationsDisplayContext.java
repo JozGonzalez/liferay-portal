@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.display.context;
@@ -19,30 +10,39 @@ import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTPreferences;
+import com.liferay.change.tracking.model.CTRemote;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
+import com.liferay.change.tracking.service.CTRemoteLocalService;
+import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.constants.PublicationRoleConstants;
-import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
+import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
@@ -69,6 +69,7 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 		CTDisplayRendererRegistry ctDisplayRendererRegistry,
 		CTEntryLocalService ctEntryLocalService,
 		CTPreferencesLocalService ctPreferencesLocalService,
+		CTRemoteLocalService ctRemoteLocalService,
 		HttpServletRequest httpServletRequest, Language language,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
@@ -78,6 +79,7 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 		_ctCollectionService = ctCollectionService;
 		_ctDisplayRendererRegistry = ctDisplayRendererRegistry;
 		_ctEntryLocalService = ctEntryLocalService;
+		_ctRemoteLocalService = ctRemoteLocalService;
 		_httpServletRequest = httpServletRequest;
 		_language = language;
 		_renderRequest = renderRequest;
@@ -98,9 +100,15 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 		}
 	}
 
+	public String getAPIURL() {
+		return StringBundler.concat(
+			"/o/change-tracking-rest/v1.0/ct-collections?status=",
+			WorkflowConstants.STATUS_DRAFT, "&status=",
+			WorkflowConstants.STATUS_EXPIRED);
+	}
+
 	public Map<String, Object> getCollaboratorsReactData(
-			long ctCollectionId, boolean publicationTemplate)
-		throws PortalException {
+		long ctCollectionId, boolean publicationTemplate) {
 
 		return HashMapBuilder.<String, Object>put(
 			"autocompleteUserURL",
@@ -258,14 +266,14 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 					"longDescription",
 					_language.get(
 						_httpServletRequest,
-						"admins-can-view,-edit,-publish,-and-invite-other-" +
-							"users")
+						"administrators-can-view,-edit,-publish,-and-invite-" +
+							"other-users")
 				).put(
 					"shortDescription",
 					_language.get(
 						_httpServletRequest,
-						"admins-can-view,-edit,-publish,-and-invite-other-" +
-							"users")
+						"administrators-can-view,-edit,-publish,-and-invite-" +
+							"other-users")
 				).put(
 					"value", PublicationRoleConstants.ROLE_ADMIN
 				))
@@ -289,6 +297,54 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 				return sharingVerifyEmailAddressURL.toString();
 			}
 		).build();
+	}
+
+	public CreationMenu getCreationMenu() {
+		if (!CTPermission.contains(
+				_themeDisplay.getPermissionChecker(),
+				CTActionKeys.ADD_PUBLICATION)) {
+
+			return null;
+		}
+
+		CreationMenuBuilder.CreationMenuWrapper creationMenuWrapper =
+			CreationMenuBuilder.addDropdownItem(
+				dropdownItem -> {
+					dropdownItem.setHref(
+						_renderResponse.createRenderURL(),
+						"mvcRenderCommandName",
+						"/change_tracking/add_ct_collection", "redirect",
+						_themeDisplay.getURLCurrent());
+					dropdownItem.setLabel(
+						_language.get(
+							_httpServletRequest, "create-new-publication"));
+				});
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPS-186360")) {
+
+			List<CTRemote> ctRemotes = _ctRemoteLocalService.getCTRemotes(
+				_themeDisplay.getCompanyId());
+
+			for (CTRemote ctRemote : ctRemotes) {
+				creationMenuWrapper.addDropdownItem(
+					dropdownItem -> {
+						dropdownItem.setHref(
+							_renderResponse.createRenderURL(),
+							"mvcRenderCommandName",
+							"/change_tracking/add_ct_collection", "ctRemoteId",
+							ctRemote.getCtRemoteId(), "redirect",
+							_themeDisplay.getURLCurrent());
+						dropdownItem.setLabel(
+							_language.format(
+								_httpServletRequest,
+								"create-new-publication-on-x",
+								ctRemote.getName()));
+					});
+			}
+		}
+
+		return creationMenuWrapper.build();
 	}
 
 	public long getCtCollectionId() {
@@ -385,6 +441,128 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 		}
 
 		return data;
+	}
+
+	public List<FDSActionDropdownItem> getFDSActionDropdownItems() {
+		return ListUtil.fromArray(
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/checkout_ct_collection"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"radio-button", "checkout",
+				_language.get(_httpServletRequest, "work-on-publication"),
+				"post", "checkout", null),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/edit_ct_collection"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"pencil", "edit", _language.get(_httpServletRequest, "edit"),
+				"get", "update", null),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_changes"
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"list-ul", "review-changes",
+				_language.get(_httpServletRequest, "review-changes"), "get",
+				"get", null),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/manage_collaborators"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString(),
+				"users", "invite-users",
+				_language.get(_httpServletRequest, "invite-users"), "get",
+				"permissions", "modal"),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.create(
+					PortalUtil.getControlPanelPortletURL(
+						_httpServletRequest,
+						"com_liferay_portlet_configuration_web_portlet_" +
+							"PortletConfigurationPortlet",
+						ActionRequest.RENDER_PHASE)
+				).setMVCPath(
+					"/edit_permissions.jsp"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"modelResource", CTCollection.class.getName()
+				).setParameter(
+					"modelResourceDescription", "{name}"
+				).setParameter(
+					"resourcePrimKey", "{id}"
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString(),
+				"password-policies", "permissions",
+				_language.get(_httpServletRequest, "permissions"), "get",
+				"permissions", "modal-permissions"),
+			new FDSActionDropdownItem(
+				_language.get(
+					_httpServletRequest,
+					"are-you-sure-you-want-to-delete-this-publication"),
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/delete_ct_collection"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"times-circle", "delete",
+				_language.get(_httpServletRequest, "delete"), "get", "delete",
+				"async"),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_conflicts"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).setParameter(
+					"schedule", Boolean.TRUE
+				).buildString(),
+				"calendar", "schedule",
+				_language.get(_httpServletRequest, "schedule"), "get",
+				"schedule", null),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_conflicts"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"change", "publish",
+				_language.get(_httpServletRequest, "publish"), "get", "publish",
+				null));
 	}
 
 	public String getReviewChangesURL(long ctCollectionId) {
@@ -541,6 +719,7 @@ public class PublicationsDisplayContext extends BasePublicationsDisplayContext {
 	private final CTCollectionService _ctCollectionService;
 	private final CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 	private final CTEntryLocalService _ctEntryLocalService;
+	private final CTRemoteLocalService _ctRemoteLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final RenderRequest _renderRequest;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0;
@@ -23,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -165,14 +155,18 @@ public class HistogramMetricSerDes {
 
 			if (Objects.equals(jsonParserFieldName, "histograms")) {
 				if (jsonParserFieldValue != null) {
-					histogramMetric.setHistograms(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> HistogramSerDes.toDTO((String)object)
-						).toArray(
-							size -> new Histogram[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Histogram[] histogramsArray =
+						new Histogram[jsonParserFieldValues.length];
+
+					for (int i = 0; i < histogramsArray.length; i++) {
+						histogramsArray[i] = HistogramSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					histogramMetric.setHistograms(histogramsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "unit")) {

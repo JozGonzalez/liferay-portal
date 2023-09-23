@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v2_0_0;
@@ -40,13 +31,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Leonardo Barros
@@ -161,32 +151,31 @@ public class DDMFormInstanceUpgradeProcess extends UpgradeProcess {
 		String oldName, String newName, long currentActionIds,
 		long oldActionIds) {
 
-		Set<String> actionsIdsList = new HashSet<>();
+		Set<String> actionsIds = new HashSet<>();
 
 		_collectNewActionIds(
-			actionsIdsList,
-			_resourceActionLocalService.getResourceActions(oldName),
+			actionsIds, _resourceActionLocalService.getResourceActions(oldName),
 			oldActionIds);
 
 		List<ResourceAction> newResourceActions =
 			_resourceActionLocalService.getResourceActions(newName);
 
-		_collectNewActionIds(
-			actionsIdsList, newResourceActions, currentActionIds);
+		_collectNewActionIds(actionsIds, newResourceActions, currentActionIds);
 
-		Stream<ResourceAction> resourceActionStream =
-			newResourceActions.stream();
+		Map<String, Long> map = new HashMap<>();
 
-		Map<String, Long> map = resourceActionStream.collect(
-			Collectors.toMap(
-				resourceAction -> resourceAction.getActionId(),
-				resourceAction -> resourceAction.getBitwiseValue()));
+		for (ResourceAction resourceAction : newResourceActions) {
+			map.put(
+				resourceAction.getActionId(), resourceAction.getBitwiseValue());
+		}
 
-		Stream<String> actionsIdsStream = actionsIdsList.stream();
+		long sum = 0L;
 
-		return actionsIdsStream.mapToLong(
-			actionId -> MapUtil.getLong(map, actionId)
-		).sum();
+		for (String actionId : actionsIds) {
+			sum += MapUtil.getLong(map, actionId);
+		}
+
+		return sum;
 	}
 
 	private void _collectNewActionIds(

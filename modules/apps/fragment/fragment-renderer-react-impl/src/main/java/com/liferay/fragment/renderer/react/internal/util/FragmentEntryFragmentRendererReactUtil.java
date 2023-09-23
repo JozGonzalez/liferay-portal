@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.renderer.react.internal.util;
@@ -17,8 +8,8 @@ package com.liferay.fragment.renderer.react.internal.util;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackage;
 import com.liferay.frontend.js.loader.modules.extender.npm.ModuleNameUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Collections;
@@ -44,15 +35,15 @@ public class FragmentEntryFragmentRendererReactUtil {
 				"'frontend-js-react-web$react'"
 			},
 			new String[] {
-				com.liferay.petra.string.StringBundler.concat(
+				StringBundler.concat(
 					StringPool.APOSTROPHE,
 					ModuleNameUtil.getModuleResolvedId(
 						jsPackage, getModuleName(fragmentEntryLink)),
 					StringPool.APOSTROPHE),
-				com.liferay.petra.string.StringBundler.concat(
+				StringBundler.concat(
 					StringPool.APOSTROPHE, _DEPENDENCY_PORTAL_REACT,
 					StringPool.APOSTROPHE),
-				com.liferay.petra.string.StringBundler.concat(
+				StringBundler.concat(
 					StringPool.APOSTROPHE, _DEPENDENCY_PORTAL_REACT,
 					StringPool.APOSTROPHE)
 			});
@@ -62,9 +53,8 @@ public class FragmentEntryFragmentRendererReactUtil {
 		Date modifiedDate = fragmentEntryLink.getModifiedDate();
 
 		return StringBundler.concat(
-			"fragmentEntryLink/",
-			String.valueOf(fragmentEntryLink.getFragmentEntryLinkId()),
-			StringPool.DASH, String.valueOf(modifiedDate.getTime()));
+			"fragmentEntryLink/", fragmentEntryLink.getFragmentEntryLinkId(),
+			StringPool.DASH, modifiedDate.getTime());
 	}
 
 	private static final String _DEPENDENCY_PORTAL_REACT =

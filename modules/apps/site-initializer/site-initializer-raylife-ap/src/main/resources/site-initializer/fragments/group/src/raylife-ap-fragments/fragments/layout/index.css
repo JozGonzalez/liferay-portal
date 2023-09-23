@@ -12,6 +12,13 @@
 	padding-left: 12px;
 }
 
+.layout-container .ray-sticky-top,
+.ray-sidebar-container.ray-sticky-top {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+}
+
 .ray-sidebar-container .footer-bar .avatar-container,
 .ray-sidebar-container .footer-bar .notification-container,
 .ray-sidebar-container .top-bar {
@@ -36,6 +43,7 @@
 .ray-sidebar-container .footer-bar .avatar-container,
 .ray-sidebar-container .middle-bar .menu-item-name {
 	overflow: hidden;
+	padding-left: 5px;
 }
 
 .ray-sidebar-container .middle-bar div {
@@ -132,12 +140,29 @@
 	top: 0;
 }
 
+.layout-container .icon-tools {
+	margin-right: 20px;
+	margin-top: 3px !important;
+}
+
+.layout-container .notification-span {
+	margin-left: 20px;
+}
+
+.layout-container .notifications-sidebar-header {
+	box-shadow: 0 5px 15px rgb(77 133 255 / 12%);
+	padding-bottom: 18px;
+	padding-top: 18px;
+}
+
 .layout-container .mobile-header-container .search-icon,
 .layout-container .mobile-header-container .menu-icon,
 .page-header-container .header-content .search-icon {
 	cursor: pointer;
 }
 
+.layout-container #Account .header-content .search-icon,
+.layout-container #Notifications .header-content .search-icon,
 .layout-container #Details .header-content .search-icon {
 	display: none !important;
 }
@@ -228,4 +253,19 @@
 .badge {
 	display: inline-flex;
 	margin-left: 15px;
+}
+
+.layout-container .icon-tools {
+	margin-right: 20px;
+	margin-top: 3px !important;
+}
+
+.layout-container .notification-span {
+	margin-left: 20px;
+}
+
+.layout-container .notifications-sidebar-header {
+	box-shadow: 0 5px 15px rgb(77 133 255 / 12%);
+	padding-bottom: 18px;
+	padding-top: 18px;
 }

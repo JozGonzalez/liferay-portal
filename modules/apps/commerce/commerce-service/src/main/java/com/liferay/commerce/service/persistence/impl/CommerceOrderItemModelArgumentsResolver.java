@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.persistence.impl;
@@ -21,8 +12,9 @@ import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.model.BaseModel;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -32,7 +24,13 @@ import org.osgi.service.component.annotations.Component;
  * @author Alessio Antonio Rendina
  * @generated
  */
-@Component(service = ArgumentsResolver.class)
+@Component(
+	property = {
+		"class.name=com.liferay.commerce.model.impl.CommerceOrderItemImpl",
+		"table.name=CommerceOrderItem"
+	},
+	service = ArgumentsResolver.class
+)
 public class CommerceOrderItemModelArgumentsResolver
 	implements ArgumentsResolver {
 
@@ -54,36 +52,11 @@ public class CommerceOrderItemModelArgumentsResolver
 		CommerceOrderItemModelImpl commerceOrderItemModelImpl =
 			(CommerceOrderItemModelImpl)baseModel;
 
-		long columnBitmask = commerceOrderItemModelImpl.getColumnBitmask();
+		if (!checkColumn ||
+			_hasModifiedColumns(commerceOrderItemModelImpl, columnNames) ||
+			_hasModifiedColumns(
+				commerceOrderItemModelImpl, _ORDER_BY_COLUMNS)) {
 
-		if (!checkColumn || (columnBitmask == 0)) {
-			return _getValue(commerceOrderItemModelImpl, columnNames, original);
-		}
-
-		Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-			finderPath);
-
-		if (finderPathColumnBitmask == null) {
-			finderPathColumnBitmask = 0L;
-
-			for (String columnName : columnNames) {
-				finderPathColumnBitmask |=
-					commerceOrderItemModelImpl.getColumnBitmask(columnName);
-			}
-
-			if (finderPath.isBaseModelResult() &&
-				(CommerceOrderItemPersistenceImpl.
-					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION ==
-						finderPath.getCacheName())) {
-
-				finderPathColumnBitmask |= _ORDER_BY_COLUMNS_BITMASK;
-			}
-
-			_finderPathColumnBitmasksCache.put(
-				finderPath, finderPathColumnBitmask);
-		}
-
-		if ((columnBitmask & finderPathColumnBitmask) != 0) {
 			return _getValue(commerceOrderItemModelImpl, columnNames, original);
 		}
 
@@ -123,18 +96,35 @@ public class CommerceOrderItemModelArgumentsResolver
 		return arguments;
 	}
 
-	private static final Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-		new ConcurrentHashMap<>();
+	private static boolean _hasModifiedColumns(
+		CommerceOrderItemModelImpl commerceOrderItemModelImpl,
+		String[] columnNames) {
 
-	private static final long _ORDER_BY_COLUMNS_BITMASK;
+		if (columnNames.length == 0) {
+			return false;
+		}
+
+		for (String columnName : columnNames) {
+			if (!Objects.equals(
+					commerceOrderItemModelImpl.getColumnOriginalValue(
+						columnName),
+					commerceOrderItemModelImpl.getColumnValue(columnName))) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final String[] _ORDER_BY_COLUMNS;
 
 	static {
-		long orderByColumnsBitmask = 0;
+		List<String> orderByColumns = new ArrayList<String>();
 
-		orderByColumnsBitmask |= CommerceOrderItemModelImpl.getColumnBitmask(
-			"createDate");
+		orderByColumns.add("createDate");
 
-		_ORDER_BY_COLUMNS_BITMASK = orderByColumnsBitmask;
+		_ORDER_BY_COLUMNS = orderByColumns.toArray(new String[0]);
 	}
 
 }

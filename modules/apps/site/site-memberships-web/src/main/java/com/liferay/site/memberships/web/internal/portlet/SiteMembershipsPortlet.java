@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.memberships.web.internal.portlet;
 
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.MembershipRequestCommentsException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchRoleException;
@@ -75,6 +67,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-communities",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/site_memberships_admin.png",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -339,6 +332,16 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 			userIds, group.getGroupId(), roleId);
 	}
 
+	@Override
+	public void render(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		renderRequest.setAttribute(ItemSelector.class.getName(), _itemSelector);
+
+		super.render(renderRequest, renderResponse);
+	}
+
 	public void replyMembershipRequest(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
@@ -455,6 +458,9 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 
 		return siteMembershipsDisplayContext.getGroup();
 	}
+
+	@Reference
+	private ItemSelector _itemSelector;
 
 	@Reference
 	private MembershipRequestService _membershipRequestService;

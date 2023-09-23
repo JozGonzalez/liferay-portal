@@ -1,9 +1,8 @@
 @component-name = "portal-segmentation"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
-	property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.token.configuration.TokenConfiguration.config";
-	property osgi.module.configurations = "enabled=\"true\"${line.separator}tokenLocation=\"REQUEST\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Segmentation";
@@ -29,7 +28,7 @@ definition {
 				userEmailAddress = "userea1@liferay.com");
 		}
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -37,23 +36,6 @@ definition {
 			type = "content");
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-
-		JSONUser.tearDownNonAdminUsers();
-
-		JSONRole.deleteTestRoles();
-
-		JSONOrganization.tearDownOrganizations();
 	}
 
 	@description = "LPS-103102 Bug: Segmentation is not working after remove the user section"
@@ -82,7 +64,9 @@ definition {
 
 			Segmentation.gotoSidebar(fieldType = "Organization");
 
-			Segmentation.addSecondProperty(propertyOption = "Hierarchy Path");
+			Segmentation.addProperties(
+				indexNumber = 2,
+				propertyOption = "Hierarchy Path");
 
 			Segmentation.fillProperty(
 				criterionValue = "Organization Name",
@@ -352,6 +336,42 @@ definition {
 			AssertTextEquals(
 				locator1 = "PageEditor#EXPERIENCE_NAME",
 				value1 = "");
+		}
+	}
+
+	@description = "This is a test for LPS-127312. The page editor could add new experience after cancel edit experience."
+	@priority = 4
+	test AddNewExperienceAfterCancelEditExperience {
+		task ("Given a page editor has an experience") {
+			ContentPages.gotoPageEditor();
+
+			PageEditor.addExperience(
+				experienceName = "Test Exp",
+				segmentName = "Anyone");
+		}
+
+		task ("When the page editor cancels the experience editing") {
+			PageEditor.openExperienceMenu();
+
+			Click(locator1 = "PageEditor#EXPERIENCE_EDIT_BUTTON");
+
+			Type(
+				locator1 = "PageEditor#EXPERIENCE_NAME",
+				value1 = "Test Exp Edited");
+
+			Button.clickCancel();
+		}
+
+		task ("Then the page editor could add a new experience") {
+			Click(
+				key_text = "New Experience",
+				locator1 = "Button#ANY");
+
+			AssertElementPresent(locator1 = "PageEditor#EXPERIENCE_MODAL");
+
+			AssertTextNotEquals(
+				locator1 = "PageEditor#EXPERIENCE_NAME",
+				value1 = "Test Exp");
 		}
 	}
 
@@ -907,7 +927,8 @@ definition {
 	@priority = 5
 	test AddNewExperienceOrganizationRegionSegment {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceOrganizationRegionSegment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Organization via JSONWS") {
 			JSONOrganization.addOrganization(
@@ -1070,7 +1091,8 @@ definition {
 	@priority = 5
 	test AddNewExperienceOrganizationTypeSegment {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceOrganizationTypeSegment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Configure organization type") {
 			ApplicationsMenu.gotoPortlet(
@@ -1565,7 +1587,8 @@ definition {
 	@priority = 5
 	test AddNewExperienceSessionHostnameSegment {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceSessionHostnameSegment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a new Portal Instance") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -1682,7 +1705,8 @@ definition {
 	@priority = 4
 	test AddNewExperienceSessionIPGeocoderCountry {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceSessionIPGeocoderCountry";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a session IP Geocoder Country segment") {
 			JSONSegmentsentry.addSegment(
@@ -2749,7 +2773,8 @@ definition {
 	@priority = 5
 	test AddNewExperienceUserSiteOrganizationRoleSegment {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceUserSiteOrganizationRoleSegment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Assign userea1 to Test Site group") {
 			JSONGroup.assignUserToGroup(
@@ -3042,7 +3067,8 @@ definition {
 	@priority = 5
 	test AddNewExperienceUserUserGroupSegment {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#AddNewExperienceUserUserGroupSegment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create an user group via JSONWS") {
 			JSONUserGroup.addUserGroup(
@@ -3406,6 +3432,38 @@ definition {
 			AssertElementPresent(
 				key_experienceName = "Segment Name Experience",
 				locator1 = "PageEditor#EXPERIENCE_SELECT_ITEM");
+		}
+	}
+
+	@description = "This is a test for LPS-143405. Does return to Create Experience modal after cancel segment creation via experiences"
+	@priority = 3
+	test CancelSegmentCreationDuringNewExperienceCreation {
+		task ("Given a page designer has a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Experience Content Page",
+				siteName = "Test Site Name");
+		}
+
+		task ("When the page designer cancel the segment creation during experience creation") {
+			PageEditor.openExperienceMenu();
+
+			Click(
+				key_text = "New Experience",
+				locator1 = "Button#ANY");
+
+			Type(
+				locator1 = "PageEditor#EXPERIENCE_NAME",
+				value1 = "Experience Name");
+
+			Click(locator1 = "PageEditor#EXPERIENCE_CREATE_SEGMENT");
+
+			Button.clickCancel();
+		}
+
+		task ("Then the page designer should return to the experience creation modal") {
+			AssertTextEquals(
+				locator1 = "PageEditor#EXPERIENCE_NEW_EXPERIENCE_MODAL_TITLE",
+				value1 = "New Experience");
 		}
 	}
 
@@ -5149,7 +5207,8 @@ definition {
 	@priority = 4
 	test RemoveFragmentAndChangeBackToDefaultExperience {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ExperienceCreateExperience#RemoveFragmentAndChangeBackToDefaultExperience";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Web Content via JSONWS") {
 			JSONWebcontent.addWebContent(

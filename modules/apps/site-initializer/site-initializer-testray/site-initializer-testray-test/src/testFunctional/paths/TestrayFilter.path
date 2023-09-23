@@ -26,23 +26,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>VIEW_MULTI_SELECT</td>
-	<td>//div[contains(@class,'testray-multi-select')]//div[text()='${key_option}']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>COLUMNS_ICON</td>
+	<td>COLUMN_BUTTON</td>
 	<td>//button[contains(@class,'d-flex')]//span[contains(@class,'navbar-breakpoint-down-d-none')]//*[name()='svg']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>COLUMNS_OPTIONS</td>
 	<td>//div[@class='popover-body']//input[@type='checkbox']//following::span[contains(text(),'${key_column}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CLEAR_FILTER</td>
-	<td>//div[@class='popover-body']//button[contains(text(),'Clear')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,6 +43,11 @@
 <tr>
 	<td>MESSAGE_NO_RESULTS</td>
 	<td>//p[contains(.,'There are no matching results.')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STATUS_IN_FILTER</td>
+	<td>//label[normalize-space()='${key_label}']//following::span[contains(text(),'${key_status}')]</td>
 	<td></td>
 </tr>
 </tbody>

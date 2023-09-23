@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.events;
@@ -29,7 +20,6 @@ import com.liferay.portal.kernel.exception.LayoutPermissionException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -81,6 +71,8 @@ import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ColorSchemeFactoryUtil;
+import com.liferay.portal.kernel.util.Digester;
+import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -179,6 +171,8 @@ public class ServicePreAction extends Action {
 		if (themeDisplay == null) {
 			return;
 		}
+
+		_trackThemeDisplay(httpServletResponse, themeDisplay);
 
 		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
 
@@ -710,7 +704,7 @@ public class ServicePreAction extends Action {
 			if (!_isLoginRequest(httpServletRequest) &&
 				!hasViewLayoutPermission) {
 
-				if (user.isDefaultUser() &&
+				if (user.isGuestUser() &&
 					AuthLoginGroupSettingsUtil.isPromptEnabled(
 						layout.getGroupId())) {
 
@@ -901,19 +895,6 @@ public class ServicePreAction extends Action {
 			return null;
 		}
 
-		boolean signedIn = !user.isDefaultUser();
-
-		if (PropsValues.BROWSER_CACHE_DISABLED ||
-			(PropsValues.BROWSER_CACHE_SIGNED_IN_DISABLED && signedIn)) {
-
-			httpServletResponse.setDateHeader(HttpHeaders.EXPIRES, 0);
-			httpServletResponse.setHeader(
-				HttpHeaders.CACHE_CONTROL,
-				HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
-			httpServletResponse.setHeader(
-				HttpHeaders.PRAGMA, HttpHeaders.PRAGMA_NO_CACHE_VALUE);
-		}
-
 		HttpSession httpSession = httpServletRequest.getSession();
 
 		User realUser = user;
@@ -924,6 +905,27 @@ public class ServicePreAction extends Action {
 			(user.getUserId() != realUserId.longValue())) {
 
 			realUser = UserLocalServiceUtil.getUserById(realUserId.longValue());
+		}
+
+		if (!user.isActive()) {
+			user = company.getGuestUser();
+
+			if (realUser == null) {
+				httpSession.invalidate();
+			}
+		}
+
+		boolean signedIn = !user.isGuestUser();
+
+		if (PropsValues.BROWSER_CACHE_DISABLED ||
+			(PropsValues.BROWSER_CACHE_SIGNED_IN_DISABLED && signedIn)) {
+
+			httpServletResponse.setDateHeader(HttpHeaders.EXPIRES, 0);
+			httpServletResponse.setHeader(
+				HttpHeaders.CACHE_CONTROL,
+				HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
+			httpServletResponse.setHeader(
+				HttpHeaders.PRAGMA, HttpHeaders.PRAGMA_NO_CACHE_VALUE);
 		}
 
 		long refererPlid = ParamUtil.getLong(httpServletRequest, "refererPlid");
@@ -1001,8 +1003,13 @@ public class ServicePreAction extends Action {
 		if (layout != null) {
 			Group layoutGroup = layout.getGroup();
 
-			if (layoutGroup.isUser()) {
-				if (!FeatureFlagManagerUtil.isEnabled("LPS-155692")) {
+			if (layoutGroup.isUser() &&
+				(layoutGroup.getClassPK() != user.getUserId())) {
+
+				if (!GetterUtil.getBoolean(
+						PropsUtil.get(
+							PropsKeys.LAYOUT_USER_ACCESS_VIA_PLID_ENABLED))) {
+
 					long originalPlid = ParamUtil.getLong(
 						PortalUtil.getOriginalServletRequest(
 							httpServletRequest),
@@ -1010,10 +1017,10 @@ public class ServicePreAction extends Action {
 
 					String method = httpServletRequest.getMethod();
 
-					if ((Objects.equals(method, HttpMethods.GET) &&
-						 (originalPlid == plid)) ||
-						(!Objects.equals(method, HttpMethods.GET) &&
-						 !signedIn)) {
+					if ((originalPlid == plid) &&
+						(Objects.equals(method, HttpMethods.GET) ||
+						 (!Objects.equals(method, HttpMethods.GET) &&
+						  !signedIn))) {
 
 						String message =
 							"User layouts cannot be accessed via p_l_id";
@@ -1144,7 +1151,7 @@ public class ServicePreAction extends Action {
 					   !_hasAccessPermission(
 						   permissionChecker, layout, false)))) {
 
-				if (!group.isUser() && user.isDefaultUser() &&
+				if (!group.isUser() && user.isGuestUser() &&
 					AuthLoginGroupSettingsUtil.isPromptEnabled(
 						group.getGroupId())) {
 
@@ -1978,6 +1985,30 @@ public class ServicePreAction extends Action {
 		}
 	}
 
+	private void _trackThemeDisplay(
+		HttpServletResponse httpServletResponse, ThemeDisplay themeDisplay) {
+
+		if (!_TRACK_THEME_DISPLAY) {
+			return;
+		}
+
+		httpServletResponse.setHeader(
+			"X-Liferay-Request-Company",
+			String.valueOf(themeDisplay.getCompanyId()));
+		httpServletResponse.setHeader(
+			"X-Liferay-Request-Group",
+			String.valueOf(themeDisplay.getScopeGroupId()));
+
+		User user = themeDisplay.getUser();
+
+		httpServletResponse.setHeader(
+			"X-Liferay-Request-Guest-User", String.valueOf(user.isGuestUser()));
+		httpServletResponse.setHeader(
+			"X-Liferay-Request-User",
+			DigesterUtil.digestHex(
+				Digester.MD5, String.valueOf(user.getUserId())));
+	}
+
 	private void _updateUserLayouts(User user) throws Exception {
 		Boolean hasPowerUserRole = null;
 
@@ -2119,6 +2150,9 @@ public class ServicePreAction extends Action {
 	private static final String _PATH_PORTAL_LOGOUT = "/portal/logout";
 
 	private static final String _PATH_PROXY;
+
+	private static final boolean _TRACK_THEME_DISPLAY = GetterUtil.getBoolean(
+		PropsUtil.get("service.pre.action.track.theme.display"));
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ServicePreAction.class);

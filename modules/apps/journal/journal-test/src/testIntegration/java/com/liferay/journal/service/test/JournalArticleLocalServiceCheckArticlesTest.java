@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.test;
@@ -103,7 +94,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 
 	@Test
 	public void testExpireApprovedArticlePostponeExpiration() throws Exception {
-		testExpireArticle(true, _MODE_POSTPONE_EXPIRIRATION);
+		testExpireArticle(true, _MODE_POSTPONE_EXPIRATION);
 	}
 
 	@Test
@@ -113,7 +104,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 
 	@Test
 	public void testExpireDraftArticlePostponeExpiration() throws Exception {
-		testExpireArticle(false, _MODE_POSTPONE_EXPIRIRATION);
+		testExpireArticle(false, _MODE_POSTPONE_EXPIRATION);
 	}
 
 	@Test
@@ -148,7 +139,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 		Date modifiedDate = article.getModifiedDate();
 
 		JournalArticle updatedArticle = updateArticle(
-			article, _MODE_POSTPONE_EXPIRIRATION);
+			article, _MODE_POSTPONE_EXPIRATION);
 
 		article = _journalArticleLocalService.getArticle(article.getId());
 
@@ -159,7 +150,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 
 		_journalArticleLocalService.updateJournalArticle(updatedArticle);
 
-		_journalArticleLocalService.checkArticles();
+		_journalArticleLocalService.checkArticles(_group.getCompanyId());
 
 		article = _journalArticleLocalService.getArticle(article.getId());
 
@@ -228,7 +219,8 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 			expirationDateCalendar.get(Calendar.YEAR),
 			expirationDateCalendar.get(Calendar.HOUR_OF_DAY),
 			expirationDateCalendar.get(Calendar.MINUTE), neverExpires, 0, 0, 0,
-			0, 0, true, true, false, null, null, null, null, serviceContext);
+			0, 0, true, true, false, 0, 0, null, null, null, null,
+			serviceContext);
 	}
 
 	protected Calendar getExpirationCalendar(long timeUnit, int timeValue)
@@ -265,14 +257,14 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 		article.setExpirationDate(
 			new Date(expirationDate.getTime() - (Time.HOUR * 2)));
 
-		_journalArticleLocalService.updateJournalArticle(article);
+		article = _journalArticleLocalService.updateJournalArticle(article);
 
-		_journalArticleLocalService.checkArticles();
+		_journalArticleLocalService.checkArticles(_group.getCompanyId());
 
 		article = _journalArticleLocalService.getArticle(article.getId());
 
 		if (approved) {
-			if (mode == _MODE_POSTPONE_EXPIRIRATION) {
+			if (mode == _MODE_POSTPONE_EXPIRATION) {
 				Assert.assertFalse(article.isExpired());
 			}
 			else {
@@ -287,7 +279,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 	protected JournalArticle updateArticle(JournalArticle article, int mode)
 		throws Exception {
 
-		if (mode == _MODE_POSTPONE_EXPIRIRATION) {
+		if (mode == _MODE_POSTPONE_EXPIRATION) {
 			Calendar displayDateCalendar = new GregorianCalendar();
 
 			displayDateCalendar.setTime(article.getDisplayDate());
@@ -304,8 +296,9 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 				TestPropsValues.getUserId(), article.getGroupId(),
 				article.getFolderId(), article.getArticleId(),
 				article.getVersion(), article.getTitleMap(),
-				article.getDescriptionMap(), article.getContent(),
-				article.getDDMTemplateKey(), article.getLayoutUuid(),
+				article.getDescriptionMap(), article.getFriendlyURLMap(),
+				article.getContent(), article.getDDMTemplateKey(),
+				article.getLayoutUuid(),
 				displayDateCalendar.get(Calendar.MONTH),
 				displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 				displayDateCalendar.get(Calendar.YEAR),
@@ -316,8 +309,9 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 				expirationDateCalendar.get(Calendar.YEAR),
 				expirationDateCalendar.get(Calendar.HOUR_OF_DAY),
 				expirationDateCalendar.get(Calendar.MINUTE), false, 0, 0, 0, 0,
-				0, true, article.isIndexable(), article.isSmallImage(),
-				article.getSmallImageURL(), null, null, null, serviceContext);
+				0, true, article.isIndexable(), article.isSmallImage(), 0,
+				article.getSmallImageSource(), article.getSmallImageURL(), null,
+				null, null, serviceContext);
 		}
 
 		return article;
@@ -342,7 +336,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 		Assert.assertEquals(displayDate, journalArticle.getDisplayDate());
 		Assert.assertEquals(expirationDate, journalArticle.getExpirationDate());
 
-		_journalArticleLocalService.checkArticles();
+		_journalArticleLocalService.checkArticles(_group.getCompanyId());
 
 		journalArticle = _journalArticleLocalService.getArticle(
 			journalArticle.getId());
@@ -354,7 +348,7 @@ public class JournalArticleLocalServiceCheckArticlesTest {
 
 	private static final int _MODE_DEFAULT = 0;
 
-	private static final int _MODE_POSTPONE_EXPIRIRATION = 1;
+	private static final int _MODE_POSTPONE_EXPIRATION = 1;
 
 	@DeleteAfterTestRun
 	private Group _group;

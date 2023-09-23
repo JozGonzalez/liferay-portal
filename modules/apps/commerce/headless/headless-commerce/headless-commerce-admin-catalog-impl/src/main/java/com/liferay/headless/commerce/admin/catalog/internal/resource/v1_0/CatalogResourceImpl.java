@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.exception.NoSuchCatalogException;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -37,7 +29,6 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -57,12 +48,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/catalog.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {CatalogResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = CatalogResource.class
 )
 @CTAware
-public class CatalogResourceImpl
-	extends BaseCatalogResourceImpl implements NestedFieldSupport {
+public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 
 	@Override
 	public Response deleteCatalog(Long id) throws Exception {
@@ -88,6 +78,9 @@ public class CatalogResourceImpl
 					externalReferenceCode);
 		}
 
+		_commerceCatalogService.deleteCommerceCatalog(
+			commerceCatalog.getCommerceCatalogId());
+
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
 		return responseBuilder.build();
@@ -95,15 +88,7 @@ public class CatalogResourceImpl
 
 	@Override
 	public Catalog getCatalog(Long id) throws Exception {
-		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.fetchCommerceCatalog(id);
-
-		if (commerceCatalog == null) {
-			throw new NoSuchCatalogException(
-				"Unable to find Catalog with ID: " + id);
-		}
-
-		return _toCatalog(commerceCatalog);
+		return _toCatalog(_commerceCatalogService.getCommerceCatalog(id));
 	}
 
 	@Override
@@ -188,17 +173,8 @@ public class CatalogResourceImpl
 
 	@Override
 	public Response patchCatalog(Long id, Catalog catalog) throws Exception {
-		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.getCommerceCatalog(id);
-
-		_commerceCatalogService.updateCommerceCatalog(
-			commerceCatalog.getCommerceCatalogId(), catalog.getName(),
-			GetterUtil.get(
-				catalog.getCurrencyCode(),
-				commerceCatalog.getCommerceCurrencyCode()),
-			GetterUtil.get(
-				catalog.getDefaultLanguageId(),
-				commerceCatalog.getCatalogDefaultLanguageId()));
+		_updateCommerceCatalog(
+			catalog, _commerceCatalogService.getCommerceCatalog(id));
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -220,6 +196,8 @@ public class CatalogResourceImpl
 					externalReferenceCode);
 		}
 
+		_updateCommerceCatalog(catalog, commerceCatalog);
+
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
 		return responseBuilder.build();
@@ -234,13 +212,21 @@ public class CatalogResourceImpl
 
 		if (commerceCatalog == null) {
 			commerceCatalog = _commerceCatalogService.addCommerceCatalog(
-				catalog.getExternalReferenceCode(), catalog.getName(),
-				catalog.getCurrencyCode(), catalog.getDefaultLanguageId(),
+				catalog.getExternalReferenceCode(),
+				GetterUtil.get(
+					catalog.getAccountId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				catalog.getName(), catalog.getCurrencyCode(),
+				catalog.getDefaultLanguageId(),
 				_serviceContextHelper.getServiceContext());
 		}
 		else {
 			commerceCatalog = _commerceCatalogService.updateCommerceCatalog(
-				commerceCatalog.getCommerceCatalogId(), catalog.getName(),
+				commerceCatalog.getCommerceCatalogId(),
+				GetterUtil.get(
+					catalog.getAccountId(),
+					commerceCatalog.getAccountEntryId()),
+				GetterUtil.get(catalog.getName(), commerceCatalog.getName()),
 				GetterUtil.get(
 					catalog.getCurrencyCode(),
 					commerceCatalog.getCommerceCurrencyCode()),
@@ -289,6 +275,23 @@ public class CatalogResourceImpl
 				commerceCatalog.getCommerceCatalogId(),
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser));
+	}
+
+	private void _updateCommerceCatalog(
+			Catalog catalog, CommerceCatalog commerceCatalog)
+		throws Exception {
+
+		_commerceCatalogService.updateCommerceCatalog(
+			commerceCatalog.getCommerceCatalogId(),
+			GetterUtil.get(
+				catalog.getAccountId(), commerceCatalog.getAccountEntryId()),
+			GetterUtil.get(catalog.getName(), commerceCatalog.getName()),
+			GetterUtil.get(
+				catalog.getCurrencyCode(),
+				commerceCatalog.getCommerceCurrencyCode()),
+			GetterUtil.get(
+				catalog.getDefaultLanguageId(),
+				commerceCatalog.getCatalogDefaultLanguageId()));
 	}
 
 	private static final EntityModel _entityModel = new CatalogEntityModel();

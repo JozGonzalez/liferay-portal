@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.results.portlet;
@@ -17,7 +8,6 @@ package com.liferay.portal.search.web.internal.search.results.portlet;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.Language;
@@ -31,6 +21,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -55,7 +46,6 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -240,43 +230,31 @@ public class SearchResultsPortlet extends MVCPortlet {
 
 		SearchRequest searchRequest = searchResponse.getRequest();
 
-		Optional<String> keywordsOptional = Optional.ofNullable(
-			searchRequest.getQueryString());
-
 		searchResultsPortletDisplayContext.setKeywords(
-			keywordsOptional.orElse(StringPool.BLANK));
-
+			GetterUtil.getString(searchRequest.getQueryString()));
 		searchResultsPortletDisplayContext.setRenderNothing(
 			isRenderNothing(renderRequest, searchRequest));
 
-		int paginationDelta = Optional.ofNullable(
-			portletSharedSearchResponse.getPaginationDelta()
-		).orElse(
-			SearchContainer.DEFAULT_DELTA
-		);
-
-		int paginationStart = Optional.ofNullable(
-			portletSharedSearchResponse.getPaginationStart()
-		).orElse(
-			0
-		);
-
 		searchResultsPortletDisplayContext.setSearchContainer(
 			_buildSearchContainer(
-				documents, searchResponse.getTotalHits(), paginationStart,
+				documents, searchResponse.getTotalHits(),
+				portletSharedSearchResponse.getPaginationStart(),
 				searchResultsPortletPreferences.
 					getPaginationStartParameterName(),
-				paginationDelta,
+				portletSharedSearchResponse.getPaginationDelta(),
 				searchResultsPortletPreferences.
 					getPaginationDeltaParameterName(),
 				renderRequest));
-
 		searchResultsPortletDisplayContext.setSearchResultsSummariesHolder(
 			searchResultsSummariesHolder);
 		searchResultsPortletDisplayContext.
 			setSearchResultSummaryDisplayContexts(
 				searchResultsPortletDisplayContext.
 					translateSearchResultSummaryDisplayContexts(documents));
+		searchResultsPortletDisplayContext.setShowEmptyResultMessage(
+			searchResultsPortletPreferences.isShowEmptyResultMessage());
+		searchResultsPortletDisplayContext.setShowPagination(
+			searchResultsPortletPreferences.isShowPagination());
 		searchResultsPortletDisplayContext.setTotalHits(
 			searchResponse.getTotalHits());
 

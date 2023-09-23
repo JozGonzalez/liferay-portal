@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.portlet;
@@ -20,7 +11,6 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactoryRegistry;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
-import com.liferay.content.dashboard.web.internal.constants.ContentDashboardWebKeys;
 import com.liferay.content.dashboard.web.internal.dao.search.ContentDashboardItemSearchContainerFactory;
 import com.liferay.content.dashboard.web.internal.data.provider.ContentDashboardDataProvider;
 import com.liferay.content.dashboard.web.internal.display.context.ContentDashboardAdminDisplayContext;
@@ -161,7 +151,7 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 					resourceBundle, searchContainer);
 
 		renderRequest.setAttribute(
-			ContentDashboardWebKeys.CONTENT_DASHBOARD_ADMIN_DISPLAY_CONTEXT,
+			ContentDashboardAdminDisplayContext.class.getName(),
 			contentDashboardAdminDisplayContext);
 
 		ContentDashboardAdminManagementToolbarDisplayContext
@@ -171,18 +161,17 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 					contentDashboardAdminDisplayContext,
 					_contentDashboardItemFilterProviderRegistry,
 					_groupLocalService,
-					_portal.getHttpServletRequest(renderRequest), _language,
-					liferayPortletRequest, liferayPortletResponse,
+					_portal.getHttpServletRequest(renderRequest), _itemSelector,
+					_language, liferayPortletRequest, liferayPortletResponse,
 					_portal.getLocale(renderRequest), _userLocalService);
 
 		renderRequest.setAttribute(
-			ContentDashboardWebKeys.
-				CONTENT_DASHBOARD_ADMIN_MANAGEMENT_TOOLBAR_DISPLAY_CONTEXT,
+			ContentDashboardAdminManagementToolbarDisplayContext.class.
+				getName(),
 			contentDashboardAdminManagementToolbarDisplayContext);
 
 		renderRequest.setAttribute(
-			ContentDashboardWebKeys.
-				CONTENT_DASHBOARD_ADMIN_SHARING_DISPLAY_CONTEXT,
+			ContentDashboardAdminSharingDisplayContext.class.getName(),
 			new ContentDashboardAdminSharingDisplayContext(
 				_contentDashboardItemFactoryRegistry,
 				_portal.getHttpServletRequest(liferayPortletRequest),

@@ -36,13 +36,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NODE_COUNT</td>
-	<td>//div[contains(@class,'connection-info') and contains(.,'${key_connectionId}')]//a[contains(@aria-controls,'SearchAdminPortlet_Nodes')]</td>
+	<td>REINDEX_MODE_DROPDOWN</td>
+	<td>//button[@id='executionMode']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>NODE_NAME</td>
-	<td>//div[contains(@class,'connection-info') and contains(.,'${key_connectionId}')]//tr[contains(@data-qa-id, 'row') and contains(.,'${key_nodeName}')]</td>
+	<td>REINDEX_MODE_DROPDOWN_ITEM</td>
+	<td>//button[contains(@class,'dropdown-item')]//div[contains(@class,'list-group-title') and contains(.,'${key_reindexMode}')]</td>
 	<td></td>
 </tr>
 <tr>

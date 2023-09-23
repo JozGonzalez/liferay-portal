@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.v7_0_0;
@@ -17,6 +8,7 @@ package com.liferay.portal.upgrade.v7_0_0;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.BaseCompanyIdUpgradeProcess;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.util.PortalInstances;
 
 import java.io.IOException;
 
@@ -160,12 +152,10 @@ public class UpgradeCompanyId extends BaseCompanyIdUpgradeProcess {
 		public void update(Connection connection)
 			throws IOException, SQLException {
 
-			List<Long> companyIds = getCompanyIds(connection);
+			long[] companyIds = PortalInstances.getCompanyIdsBySQL();
 
-			if (companyIds.size() == 1) {
-				String selectSQL = String.valueOf(companyIds.get(0));
-
-				runSQL(connection, getUpdateSQL(selectSQL));
+			if (companyIds.length == 1) {
+				runSQL(connection, getUpdateSQL(String.valueOf(companyIds[0])));
 
 				return;
 			}

@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,8 @@ definition {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property test.name.skip.portal.instance = "Forms#AddFormInGlobal";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Training";
 
 		Navigator.openURL();
@@ -126,7 +127,8 @@ definition {
 	test AddFormToUserSiteAndViewNoDuplicates {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#AddFormToUserSiteAndViewNoDuplicates";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -156,6 +158,10 @@ definition {
 			portlet = "Sites");
 
 		Site.addBlankCP(siteName = "Form Site");
+
+		Navigator.gotoBack();
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Form Site",
@@ -243,7 +249,8 @@ definition {
 	test AutosaveDisplaysANotification {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#AutosaveDisplaysANotification";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -267,7 +274,8 @@ definition {
 	test AutosaveIntervalCanBeConfigured {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#AutosaveIntervalCanBeConfigured";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -335,7 +343,8 @@ definition {
 	test BelongsToRuleCanPairWithGuestUser {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#BelongsToRuleCanPairWithGuestUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -579,7 +588,8 @@ definition {
 	test CanBeCreatedWithoutTitle {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#CanBeCreatedWithoutTitle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -719,7 +729,8 @@ definition {
 	test CanBeEditedAfterChangingLanguage {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#CanBeEditedAfterChangingLanguage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -761,7 +772,8 @@ definition {
 	test CanBeEditedAfterChangingLocale {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#CanBeEditedAfterChangingLocale";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -897,7 +909,8 @@ definition {
 	test CanBeViewedAfterDeletingAField {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#CanBeViewedAfterDeletingAField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -925,17 +938,16 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -1142,17 +1154,16 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -1170,7 +1181,8 @@ definition {
 	test ConfirmationAppearsWhenLeavingFormWithoutSaving {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#ConfirmationAppearsWhenLeavingFormWithoutSaving";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -1200,7 +1212,8 @@ definition {
 	test DataProviderCanRetrieveDataForGuestUser {
 		property portal.acceptance = "false";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsDataProvider#DataProviderCanRetrieveDataForGuestUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1278,7 +1291,8 @@ definition {
 	@priority = 4
 	test EditAllFormFieldNames {
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#EditAllFormFieldNames";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -1389,7 +1403,8 @@ definition {
 	test EditAllFormFieldsTypesUsedBySystemSettings {
 		property portal.release = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#EditAllFormFieldsTypesUsedBySystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1581,7 +1596,8 @@ definition {
 	test EditFormsConfigurationViaSystemSettings {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#EditFormsConfigurationViaSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1733,7 +1749,8 @@ definition {
 	test PagesCanBeDeleted {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#PagesCanBeDeleted";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -1929,7 +1946,8 @@ definition {
 	test SearchFormRecordMultipleEntries {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#SearchFormRecordMultipleEntries";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var fieldValueList = "testEntry1,exampleText,sampleAnswer";
 
@@ -1949,17 +1967,16 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -2039,7 +2056,8 @@ definition {
 	@priority = 4
 	test SubmitFormWithMultipleFieldsAndViewEntriesViaDescriptiveDisplay {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Forms#SubmitFormWithMultipleFieldsAndViewEntriesViaDescriptiveDisplay";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -2110,17 +2128,16 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -2215,7 +2232,8 @@ definition {
 	test TitleAndDescriptionXSSUnescapedAfterUnpublish {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "Forms#TitleAndDescriptionXSSUnescapedAfterUnpublish";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -2264,7 +2282,8 @@ definition {
 		property portal.upstream = "true";
 		property test.assert.javascript.errors = "true";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "Forms#ViewDefaultFieldNamesWithPunctuationCharacters";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -2321,7 +2340,8 @@ definition {
 	@priority = 5
 	test ViewSelectFromListOptionValueWithCharacter {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Forms#ViewSelectFromListOptionValueWithCharacter";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 

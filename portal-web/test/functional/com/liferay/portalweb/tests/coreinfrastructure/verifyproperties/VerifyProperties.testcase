@@ -8,13 +8,10 @@ definition {
 	property portal.upstream = "true";
 	property testray.main.component.name = "Verify Properties";
 
-	setUp {
-		TestCase.setUpPortalInstance();
-	}
-
 	@description = "LRQA-78904: Upgrade will be stopped if Verify Properties fails when enable AutoUpgrade"
 	@priority = 3
 	test UpgradeStopsIfVerifyPropertiesFail {
+		property ci.retries.disabled = "false";
 		property custom.properties = "module.framework.runtime.start.level=20${line.separator}upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-portal";
 		property portal.version = "7.4.13";
@@ -22,13 +19,12 @@ definition {
 		property skip.start.app.server = "true";
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "false";
-		property test.name.skip.portal.instance = "VerifyProperties#UpgradeStopsIfVerifyPropertiesFail";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		Portlet.startServer(deleteLiferayHome = "false");
+		AntCommands.runCommand("build-test.xml", "start-app-server-tomcat-simple");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "wait-for-server-shutdown -Dapp.server.port.number=8080");
+		AntCommands.runCommand("build-test.xml", "wait-for-server-shutdown -Dapp.server.port.number=8080");
 
 		AssertConsoleTextPresent(value1 = "Completed com.liferay.portal.verify.VerifyProperties#verifySystemProperties");
 
@@ -39,15 +35,61 @@ definition {
 		AssertConsoleTextPresent(value1 = "Stopping the server due to incorrect use of migrated portal properties");
 	}
 
+	@description = "LPS-176626: Verify friendly URL error is not present when start portal without auto-upgrade"
+	@priority = 3
+	test VerifyLayoutFriendlyURLErrorOnlyInUpgradeProcess {
+		property ci.retries.disabled = "false";
+		property data.archive.type = "data-archive-reserved-friendly-url";
+		property database.types = "db2,mysql,oracle,postgresql,sqlserver";
+		property portal.version = "6.2.10.21";
+		property skip.start.app.server = "true";
+		property skip.upgrade-legacy-database = "true";
+		property test.assert.warning.exceptions = "false";
+
+		AntCommands.runCommand("modules/util/portal-tools-db-upgrade-client/src/testFunctional/ant/build-test-db-upgrade-client.xml", "bypass-expected-upgrade-error");
+
+		AssertConsoleTextPresent(value1 = "Detected reserved friendly URL \"/a\" Update the friendly URL for the layout with PLID");
+
+		Portlet.startServer(keepOsGiState = "true");
+
+		AssertConsoleTextNotPresent(value1 = "Detected reserved friendly URL \"/a\" Update the friendly URL for the layout with PLID");
+	}
+
+	@description = "LPS-176626: Verify friendly URL error is present during auto-upgrade"
+	@priority = 4
+	test VerifyLayoutFriendlyURLErrorUsingAutoUpgrade {
+		property data.archive.type = "data-archive-reserved-friendly-url";
+		property database.auto.upgrade.enabled = "true";
+		property database.types = "mysql";
+		property portal.version = "6.2.10.21";
+		property skip.upgrade-legacy-database = "true";
+		property test.assert.warning.exceptions = "false";
+
+		AssertConsoleTextPresent(value1 = "Detected reserved friendly URL \"/a\" Update the friendly URL for the layout with PLID");
+
+		Portlet.shutdownServer();
+
+		SQL.executeMySQLStatement(mysqlStatement = "UPDATE LayoutFriendlyURL SET friendlyURL = '/abc' WHERE friendlyURL = '/a';");
+
+		Portlet.startServer(deleteLiferayHome = "false");
+
+		Navigator.openSpecificURL(url = "http://localhost:8080/web/guest/abc");
+
+		AssertElementPresent(
+			key_pageName = "Test Page",
+			locator1 = "Home#PAGE");
+	}
+
 	@description = "LRQA-78467: Verify Properties is executed before the PortalUpgradeProcess starts to upgrade database when enable AutoUpgrade on startup"
 	@priority = 3
 	test VerifyPropertiesIsExecutedUsingAutoUpgrade {
-		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-portal";
+		property database.auto.upgrade.enabled = "true";
 		property portal.version = "7.4.13";
 		property skip.get.testcase.database.properties = "true";
 		property skip.upgrade-legacy-database = "true";
-		property test.name.skip.portal.instance = "VerifyProperties#VerifyPropertiesIsExecutedUsingAutoUpgrade";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "Completed com.liferay.portal.verify.VerifyProperties#verifySystemProperties");
 
@@ -61,7 +103,8 @@ definition {
 	test VerifyPropertiesIsOnlyExecutedInUpgradeProcess {
 		property data.archive.type = "data-archive-portal";
 		property portal.version = "7.4.13";
-		property test.name.skip.portal.instance = "VerifyProperties#VerifyPropertiesIsOnlyExecutedInUpgradeProcess";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
@@ -88,7 +131,8 @@ definition {
 	@description = "LRQA-78468: Verify Properties not run when start portal with empty database"
 	@priority = 3
 	test VerifyPropertiesNotRunWithEmptyDatabase {
-		property test.name.skip.portal.instance = "VerifyProperties#VerifyPropertiesNotRunWithEmptyDatabase";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextNotPresent(value1 = "Completed com.liferay.portal.verify.VerifyProperties#verifySystemProperties");
 

@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -18,9 +18,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -72,13 +72,11 @@ definition {
 			collectionName = "Content Display",
 			fragmentName = "Display Page Content");
 
-		Button.clickPublish();
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-		DisplayPageTemplatesAdmin.openToDisplayPageTemplateConfiguration(
-			displayPageTemplateEntryName = "Display Page Template Name",
-			groupName = "Test Site Name",
-			navItem = "Open Graph",
-			siteURLKey = "test-site-name");
+		SelectWindow.selectPopUp(locator1 = "null");
+
+		Navigator.gotoNavNested(navNested = "Open Graph");
 
 		OpenGraph.mapEditableTextToField(
 			field = "File Name",
@@ -123,6 +121,10 @@ definition {
 			mappedField = "ImageAlt",
 			mappedFieldValue = "Image Alt is Author Name: ${authorName:Author Name}",
 			textType = "TextArea");
+
+		Navigator.closeWindow();
+
+		PageEditor.publish();
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
 
@@ -186,11 +188,15 @@ definition {
 			groupName = "Test Site Name",
 			subType = "DM Document Type Name");
 
-		DisplayPageTemplatesAdmin.openToDisplayPageTemplateConfiguration(
-			displayPageTemplateEntryName = "Display Page Template Name",
-			groupName = "Test Site Name",
-			navItem = "SEO",
-			siteURLKey = "test-site-name");
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Template Name");
+
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
+
+		SelectWindow.selectPopUp(locator1 = "null");
+
+		Navigator.gotoNavNested(navNested = "SEO");
 
 		OpenGraph.mapEditableTextToField(
 			field = "File Name",
@@ -218,10 +224,13 @@ definition {
 			textType = "TextArea");
 	}
 
-	@description = "This test ensures that a user can map the display page with Open Graph when using the WC structure from AL on a connect site."
+	@description = "This test ensures that a user can map the display page with Open Graph when using the WC structure from AL on a connect site. Skip the instance for performance improvement."
 	@priority = 5
 	@refactordone
 	test CanMapWCWithOpenGraph {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		DepotNavigator.openDepotWebContentStructuresAdmin(depotName = "Test Depot Name");
@@ -272,13 +281,11 @@ definition {
 			collectionName = "Content Display",
 			fragmentName = "Display Page Content");
 
-		Button.clickPublish();
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-		DisplayPageTemplatesAdmin.openToDisplayPageTemplateConfiguration(
-			displayPageTemplateEntryName = "Display Page Template Name",
-			groupName = "Test Site Name",
-			navItem = "Open Graph",
-			siteURLKey = "test-site-name");
+		SelectWindow.selectPopUp(locator1 = "null");
+
+		Navigator.gotoNavNested(navNested = "Open Graph");
 
 		OpenGraph.mapEditableTextToField(
 			field = "Text",
@@ -335,6 +342,10 @@ definition {
 			mappedField = "ImageAlt",
 			mappedFieldValue = ${mappedFieldValue},
 			textType = "TextArea");
+
+		Navigator.closeWindow();
+
+		PageEditor.publish();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -412,11 +423,15 @@ definition {
 			groupName = "Test Site Name",
 			subType = "WC Structure Name");
 
-		DisplayPageTemplatesAdmin.openToDisplayPageTemplateConfiguration(
-			displayPageTemplateEntryName = "Display Page Template Name",
-			groupName = "Test Site Name",
-			navItem = "SEO",
-			siteURLKey = "test-site-name");
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Template Name");
+
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
+
+		SelectWindow.selectPopUp(locator1 = "null");
+
+		Navigator.gotoNavNested(navNested = "SEO");
 
 		OpenGraph.mapEditableTextToField(
 			field = "Text",

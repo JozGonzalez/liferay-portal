@@ -4,6 +4,85 @@
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.commerce.payment">
 	<author>Luca Pellizzon</author>
 	<namespace>Commerce</namespace>
+	<entity local-service="true" name="CommercePaymentEntry" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="commercePaymentEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="classNameId" type="long" />
+		<column name="classPK" type="long" />
+		<column name="commerceChannelId" type="long" />
+		<column name="amount" type="BigDecimal" />
+		<column name="callbackURL" type="String" />
+		<column name="currencyCode" type="String" />
+		<column name="paymentIntegrationKey" type="String" />
+		<column name="paymentIntegrationType" type="int" />
+		<column name="paymentStatus" type="int" />
+		<column name="redirectURL" type="String" />
+		<column name="transactionCode" type="String" />
+
+		<!-- Order -->
+
+		<order by="desc">
+			<order-column name="createDate" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
+		<finder name="C_C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="CommercePaymentEntryAudit" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="commercePaymentEntryAuditId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="commercePaymentEntryId" type="long" />
+		<column name="amount" type="BigDecimal" />
+		<column name="currencyCode" type="String" />
+		<column name="logType" type="String" />
+		<column name="logTypeSettings" type="String" />
+
+		<!-- Order -->
+
+		<order by="desc">
+			<order-column name="createDate" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="CommercePaymentEntryId" return-type="Collection">
+			<finder-column name="commercePaymentEntryId" />
+		</finder>
+	</entity>
 	<entity local-service="true" name="CommercePaymentMethodGroupRel" remote-service="true">
 
 		<!-- PK fields -->
@@ -26,10 +105,11 @@
 
 		<column localized="true" name="name" type="String" />
 		<column localized="true" name="description" type="String" />
-		<column name="imageId" type="long" />
-		<column name="engineKey" type="String" />
-		<column name="priority" type="double" />
 		<column name="active" type="boolean" />
+		<column name="imageId" type="long" />
+		<column name="paymentIntegrationKey" type="String" />
+		<column name="priority" type="double" />
+		<column name="typeSettings" type="String" />
 
 		<!-- Order -->
 
@@ -42,13 +122,13 @@
 		<finder name="GroupId" return-type="Collection">
 			<finder-column name="groupId" />
 		</finder>
-		<finder name="G_E" return-type="CommercePaymentMethodGroupRel" unique="true">
-			<finder-column name="groupId" />
-			<finder-column name="engineKey" />
-		</finder>
 		<finder name="G_A" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="active" />
+		</finder>
+		<finder name="G_P" return-type="CommercePaymentMethodGroupRel" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="paymentIntegrationKey" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="CommercePaymentMethodGroupRelQualifier" remote-service="true" table="CPMethodGroupRelQualifier">
@@ -69,7 +149,7 @@
 
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
-		<column db-name="CPaymentMethodGroupRelId" name="CommercePaymentMethodGroupRelId" type="long" />
+		<column db-name="CPaymentMethodGroupRelId" name="commercePaymentMethodGroupRelId" type="long" />
 
 		<!-- Order -->
 
@@ -80,16 +160,16 @@
 		<!-- Finder methods -->
 
 		<finder name="CommercePaymentMethodGroupRelId" return-type="Collection">
-			<finder-column name="CommercePaymentMethodGroupRelId" />
+			<finder-column name="commercePaymentMethodGroupRelId" />
 		</finder>
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="classNameId" />
-			<finder-column name="CommercePaymentMethodGroupRelId" />
+			<finder-column name="commercePaymentMethodGroupRelId" />
 		</finder>
 		<finder name="C_C_C" return-type="CommercePaymentMethodGroupRelQualifier" unique="true">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
-			<finder-column name="CommercePaymentMethodGroupRelId" />
+			<finder-column name="commercePaymentMethodGroupRelId" />
 		</finder>
 	</entity>
 	<exceptions>

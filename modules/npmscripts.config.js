@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 const CHECK_AND_FIX_GLOBS = [
@@ -24,6 +15,12 @@ module.exports = {
 		bundler: {
 			config: {
 				imports: {
+					'@liferay/accessibility-menu-web': {
+						'/': '*',
+					},
+					'@liferay/accessibility-settings-state-web': {
+						'/': '*',
+					},
 					'@liferay/address-web': {
 						'/': '*',
 					},
@@ -63,17 +60,40 @@ module.exports = {
 
 					'@liferay/frontend-js-dependencies-web': {
 						'/': '*',
-
+						'axe-core': '*',
 						'clipboard': '*',
-
+						'cropperjs': '*',
+						'cropperjs/dist/cropper.css': '*',
 						'dagre': '*',
 						'date-fns': '*',
 						'dom-align': '*',
 						'fuzzy': '*',
+						'graphiql': '*',
+						'graphiql/graphiql.css': '*',
+						'graphql': '*',
+						'graphql-hooks': '*',
+						'graphql-hooks-memcache': '*',
+						'highlight.js': '*',
+						'highlight.js/lib/core': '*',
+						'highlight.js/lib/languages/java': '*',
+						'highlight.js/lib/languages/javascript': '*',
+						'highlight.js/lib/languages/plaintext': '*',
+						'highlight.js/styles/monokai-sublime.css': '*',
 						'image-promise': '*',
 						'liferay-ckeditor': '*',
+						'lodash.groupby': '*',
+						'lodash.isequal': '*',
+						'moment': '*',
+						'moment/min/moment-with-locales': '*',
+						'numeral': '*',
+						'object-hash': '*',
+						'pkce-challenge': '*',
 						'qrcode': '*',
 						'qs': '*',
+						'react-dropzone': '*',
+						'react-flow-renderer': '*',
+						'react-helmet': '*',
+						'react-router-dom': '*',
 						'react-text-mask': '*',
 						'react-transition-group': '*',
 						'text-mask-addons': '*',
@@ -103,6 +123,9 @@ module.exports = {
 					'@liferay/layout-content-page-editor-web': {
 						'/': '*',
 					},
+					'@liferay/layout-js-components-web': {
+						'/': '*',
+					},
 					'@liferay/map-common': {
 						'/': '*',
 					},
@@ -119,6 +142,9 @@ module.exports = {
 					'@liferay/object-js-components-web': {
 						'/': '*',
 					},
+					'@liferay/portal-workflow-instance-tracker-web': {
+						'/': '*',
+					},
 					'@liferay/template-web': {
 						'/': '*',
 					},
@@ -126,6 +152,9 @@ module.exports = {
 						'/': '*',
 					},
 					'commerce-frontend-js': {
+						'/': '*',
+					},
+					'commerce-organization-web': {
 						'/': '*',
 					},
 					'data-engine-js-components-web': {
@@ -219,42 +248,6 @@ module.exports = {
 					'frontend-js-web': {
 						'/': '*',
 					},
-					'frontend-taglib-chart': {
-						'billboard.js': '*',
-						'clay-charts': '*',
-						'd3': '*',
-						'd3-array': '*',
-						'd3-axis': '*',
-						'd3-brush': '*',
-						'd3-chord': '*',
-						'd3-collection': '*',
-						'd3-color': '*',
-						'd3-contour': '*',
-						'd3-dispatch': '*',
-						'd3-drag': '*',
-						'd3-dsv': '*',
-						'd3-ease': '*',
-						'd3-fetch': '*',
-						'd3-force': '*',
-						'd3-format': '*',
-						'd3-geo': '*',
-						'd3-hierarchy': '*',
-						'd3-interpolate': '*',
-						'd3-path': '*',
-						'd3-polygon': '*',
-						'd3-quadtree': '*',
-						'd3-random': '*',
-						'd3-scale': '*',
-						'd3-scale-chromatic': '*',
-						'd3-selection': '*',
-						'd3-shape': '*',
-						'd3-time': '*',
-						'd3-time-format': '*',
-						'd3-timer': '*',
-						'd3-transition': '*',
-						'd3-voronoi': '*',
-						'd3-zoom': '*',
-					},
 					'frontend-taglib-clay': {
 						'/': '*',
 						'@clayui/alert': '*',
@@ -334,6 +327,9 @@ module.exports = {
 						'clay-tooltip': '*',
 					},
 					'item-selector-taglib': {
+						'/': '*',
+					},
+					'item-selector-web': {
 						'/': '*',
 					},
 					'social-bookmarks-taglib': {
@@ -436,23 +432,52 @@ module.exports = {
 			'dynamic-data-mapping-form-renderer',
 		],
 		imports: {
+			'@liferay/accessibility-menu-web': [],
+			'@liferay/accessibility-settings-state-web': [],
+			'@liferay/cookies-banner-web': [],
 			'@liferay/frontend-data-set-web': [],
 			'@liferay/frontend-js-dependencies-web': [
 				'@liferay/js-api',
+				'@liferay/js-api/data-set',
 				'clipboard',
+				'axe-core',
+				'cropperjs',
+				'cropperjs/dist/cropper.css',
 				'dagre',
 				'date-fns',
 				'dom-align',
 				'fuzzy',
+				'graphql-hooks-memcache',
+				'graphql-hooks',
+				'graphql',
+				'highlight.js',
+				'highlight.js/lib/core',
+				'highlight.js/lib/languages/java',
+				'highlight.js/lib/languages/javascript',
+				'highlight.js/lib/languages/plaintext',
+				'highlight.js/styles/monokai-sublime.css',
 				'image-promise',
 				'liferay-ckeditor',
+				'lodash.groupby',
+				'lodash.isequal',
+				'moment',
+				'moment/min/moment-with-locales',
+				'numeral',
+				'object-hash',
+				'pkce-challenge',
 				'qrcode',
 				'qs',
+				'react-dropzone',
+				'react-flow-renderer',
+				'react-helmet',
+				'react-router-dom',
 				'react-text-mask',
 				'react-transition-group',
 				'text-mask-addons',
 				'text-mask-core',
 				'uuid',
+				'graphiql',
+				'graphiql/graphiql.css',
 			],
 			'@liferay/frontend-js-react-web': [
 				'classnames',
@@ -604,7 +629,6 @@ module.exports = {
 			'app-builder-workflow-web',
 			'asset-categories-admin-web',
 			'asset-categories-item-selector-web',
-			'asset-categories-selector-web',
 			'asset-list-web',
 			'asset-publisher-web',
 			'asset-taglib',
@@ -628,7 +652,6 @@ module.exports = {
 			'commerce-organization-web',
 			'commerce-product-content-web',
 			'commerce-product-options-web',
-			'commerce-theme-minium-impl',
 			'contacts-web',
 			'content-dashboard-web',
 			'data-engine-js-components-web',
@@ -718,7 +741,6 @@ module.exports = {
 			'layout-seo-web',
 			'layout-set-prototype-web',
 			'layout-taglib',
-			'layout-template-admin-web',
 			'lfris-www-components',
 			'liferay-admin-theme',
 			'liferay-classic-theme',
@@ -847,99 +869,62 @@ module.exports = {
 			'youtube-web',
 		],
 		'allowed-non-global-dependencies': [
-			'@apollo/client',
-			'@googlemaps/js-api-loader',
-			'@hookform/resolvers',
-			'@liferay/amd-loader',
-			'@liferay/template-web',
-			'@types/ckeditor4',
-			'@types/codemirror',
-			'@types/google.maps',
-			'@types/react-router-dom',
-			'@types/warning',
+			'history',
+			'jest-fetch-mock',
+			'fetch-mock',
+			'gulp',
+			'liferay-theme-tasks',
+			'ckeditor4',
+			'alloy-ui',
+			'resize-observer-polyfill',
+			'webpack',
+			'react-dnd-test-utils',
+			'fs',
+
+			// Dependencies not expected to be shared
+
 			'@vscode/ripgrep',
-			'alloyeditor',
-			'apollo-link-rest',
-			'apollo3-cache-persist',
-			'axe-core',
-			'axios',
-			'base64-js',
-			'browser-tabs-lock',
-			'ckeditor4-react',
-			'clay-charts-react',
-			'clipboard',
-			'codemirror',
-			'core-js',
-			'cropperjs',
-			'custom-event-polyfill',
-			'dagre',
-			'date-fns',
-			'dayjs',
-			'dom-align',
-			'dom4',
-			'domain-browser',
-			'dompurify',
 			'es-module-shims',
-			'fuzzy',
-			'graphiql',
-			'graphql-anywhere',
-			'graphql-hooks-memcache',
-			'graphql-hooks',
-			'graphql',
-			'hash.js',
-			'highlight.js',
-			'html-webpack-plugin',
-			'image-promise',
-			'leaflet',
-			'liferay-ckeditor',
 			'liferay-font-awesome',
-			'lodash.escape',
-			'lodash.groupby',
-			'lodash.isequal',
-			'lodash.isfunction',
-			'lodash.omit',
-			'lodash.times',
-			'lodash.unescape',
-			'md5',
-			'mini-css-extract-plugin',
-			'moment',
-			'numeral',
-			'object-hash',
+			'swagger-ui-react',
+
+			// Needs to be removed
+
+			'axios',
+
+			// Causes bugs
+
+			'path-to-regexp',
+
+			// Doesn't support ESM
+
+			'codemirror',
+			'leaflet',
+
+			// Node Shims
+
 			'os-browserify',
 			'path-browserify',
-			'path-to-regexp',
-			'pkce-challenge',
-			'qrcode',
-			'qs',
-			'react-apollo-network-status',
-			'react-csv',
-			'react-dropzone',
-			'react-flow-renderer',
-			'react-helmet',
-			'react-hook-form',
-			'react-hotkeys-hook',
-			'react-imask',
-			'react-markdown',
-			'react-number-format',
-			'react-router-dom',
-			'react-scripts',
-			'react-select',
-			'react-text-mask',
-			'react-transition-group',
-			'remark-gfm',
-			'resize-observer-polyfill',
-			'sass',
-			'sassy-inputs',
-			'swagger-ui-react',
-			'swr',
-			'text-mask-addons',
-			'text-mask-core',
 			'timers-browserify',
-			'unfetch',
-			'uuid',
-			'yarn',
-			'yo',
-			'yup',
+
+			// Analytics Client Bundle
+
+			'browser-tabs-lock',
+			'hash.js',
+			'core-js',
+
+			'jest-fetch-mock',
+			'fetch-mock',
+			'gulp',
+			'liferay-theme-tasks',
+			'history',
+			'resize-observer-polyfill',
+			'ckeditor4',
+			'fetch-mock',
+			'@liferay/npm-scripts',
+			'webpack',
+			'alloy-ui',
+			'react-dnd-test-utils',
 		],
 	},
 };

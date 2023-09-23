@@ -308,7 +308,7 @@ definition {
 
 	macro duplicate {
 		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Duplicate",
+			menuItem = "Make a Copy",
 			rowEntry = ${formName});
 	}
 
@@ -517,7 +517,6 @@ definition {
 			value1 = ${elementSetTitle});
 	}
 
-	@summary = "Add the ${key_fieldType} field inside page ${formPageNumber} in position ${fieldPositionNumber}."
 	macro gotoAddField {
 		WaitForElementPresent(locator1 = "Form#SIDEBAR_CONTENT_OPEN");
 
@@ -1071,6 +1070,12 @@ definition {
 		AssertElementPresent(
 			key_fieldLabel = ${fieldLabel},
 			locator1 = "Form#FIELD_HIDDEN_LABEL");
+	}
+
+	macro viewNoEntryCP {
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "There are no forms.");
 	}
 
 	macro viewPageEmptyField {

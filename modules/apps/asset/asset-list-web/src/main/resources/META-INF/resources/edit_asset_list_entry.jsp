@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,15 +16,13 @@ if (Validator.isNull(redirect)) {
 	redirect = portletURL.toString();
 }
 
-Map data = editAssetListDisplayContext.getData();
-
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
 renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 %>
 
-<c:if test='<%= !(boolean)data.get("isSegmentationEnabled") %>'>
+<c:if test="<%= !editAssetListDisplayContext.isSegmentationEnabled(company.getCompanyId()) %>">
 	<clay:stripe
 		defaultTitleDisabled="<%= true %>"
 		dismissible="<%= true %>"
@@ -49,7 +38,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 			<c:when test="<%= segmentsConfigurationURL != null %>">
 				<clay:link
 					href="<%= segmentsConfigurationURL %>"
-					label='<%= LanguageUtil.get(request, "to-enable,-go-to-instance-settings") %>'
+					label="to-enable,-go-to-instance-settings"
 				/>
 			</c:when>
 			<c:otherwise>
@@ -76,7 +65,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 
 				<react:component
 					module="js/components/VariationsNav/index"
-					props="<%= data %>"
+					props="<%= editAssetListDisplayContext.getData() %>"
 				/>
 			</div>
 		</clay:col>
@@ -98,17 +87,19 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 
 <script>
 	<portlet:actionURL name="/asset_list/add_asset_list_entry_variation" var="addAssetListEntryVariationURL">
-	<portlet:param name="assetListEntryId" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryId()) %>" />
-	<portlet:param name="type" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryType()) %>" />
+		<portlet:param name="assetListEntryId" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryId()) %>" />
+		<portlet:param name="type" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryType()) %>" />
 	</portlet:actionURL>
 
 	function <portlet:namespace />openSelectSegmentsEntryDialog() {
 		Liferay.Util.openSelectionModal({
 			id: '<portlet:namespace />selectEntity',
-			onSelect: function (selectedItem) {
+			onSelect: function (event) {
+				const valueJSON = JSON.parse(event.value);
+
 				Liferay.Util.postForm(document.<portlet:namespace />fm, {
 					data: {
-						segmentsEntryId: selectedItem.entityid,
+						segmentsEntryId: valueJSON.segmentsEntryId,
 					},
 					url: '<%= addAssetListEntryVariationURL %>',
 				});

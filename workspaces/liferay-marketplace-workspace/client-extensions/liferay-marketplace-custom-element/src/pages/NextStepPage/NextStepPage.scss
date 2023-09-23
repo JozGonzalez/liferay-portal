@@ -5,12 +5,20 @@
 		justify-content: space-between;
 		margin-bottom: 2rem;
 		margin-top: 1.25rem;
+
+		.card-container {
+			justify-content: left;
+		}
 	}
 	&-container {
 		align-items: center;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+
+		&-larger {
+			width: 100%;
+		}
 	}
 	&-content {
 		margin-bottom: 12rem;
@@ -25,7 +33,6 @@
 			cursor: pointer;
 		}
 		display: flex;
-		font-family: 'Source Sans Pro', sans-serif;
 		font-size: 16px;
 		font-weight: 600;
 		justify-content: flex-end;
@@ -34,6 +41,11 @@
 		text-decoration: underline;
 	}
 	&-text {
+		color: #6c6c75;
 		margin-bottom: 2rem;
+
+		strong {
+			color: #282934;
+		}
 	}
 }

@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
+import {useResource} from '@clayui/data-provider';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import ClayMultiSelect, {itemLabelFilter} from '@clayui/multi-select';
+import ClayMultiSelect from '@clayui/multi-select';
 import {usePrevious} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import {
@@ -31,6 +23,7 @@ function AssetVocabulariesCategoriesSelector({
 	eventName,
 	id,
 	isValid = true,
+	formGroupClassName = '',
 	groupIds = [],
 	inputName,
 	label,
@@ -38,6 +31,7 @@ function AssetVocabulariesCategoriesSelector({
 	portletURL,
 	required,
 	selectedItems = [],
+	showVocabularyLabel = true,
 	singleSelect,
 	sourceItemsVocabularyIds = [],
 	useFallbackInput,
@@ -45,38 +39,49 @@ function AssetVocabulariesCategoriesSelector({
 	const [inputValue, setInputValue] = useState('');
 
 	const [invalidItems, setInvalidItems] = useState([]);
-	const [resource, setResource] = useState([]);
-	const selectButtonRef = useRef();
+
+	const [networkStatus, setNetworkStatus] = useState(4);
+	const {refetch, resource} = useResource({
+		fetch,
+		fetchOptions: {
+			body: new URLSearchParams({
+				cmd: JSON.stringify({
+					'/assetcategory/search': {
+						'-obc': null,
+						'end': 20,
+						groupIds,
+						'name': inputValue
+							? `%${inputValue.toLowerCase()}%`
+							: '',
+						'start': 0,
+						'vocabularyIds': sourceItemsVocabularyIds,
+					},
+				}),
+				p_auth: Liferay.authToken,
+			}),
+			method: 'POST',
+		},
+		fetchPolicy: 'cache-first',
+		link: `${
+			window.location.origin
+		}${themeDisplay.getPathContext()}/api/jsonws/invoke`,
+		onNetworkStatusChange: setNetworkStatus,
+	});
 
 	const previousInputValue = usePrevious(inputValue);
 
 	useEffect(() => {
-		if (inputValue && inputValue !== previousInputValue) {
-			fetch(
-				`${
-					window.location.origin
-				}${themeDisplay.getPathContext()}/api/jsonws/invoke`,
-				{
-					body: new URLSearchParams({
-						cmd: JSON.stringify({
-							'/assetcategory/search': {
-								'-obc': null,
-								'end': 20,
-								groupIds,
-								'name': `%${inputValue.toLowerCase()}%`,
-								'start': 0,
-								'vocabularyIds': sourceItemsVocabularyIds,
-							},
-						}),
-						p_auth: Liferay.authToken,
-					}),
-					method: 'POST',
-				}
-			)
-				.then((response) => response.json())
-				.then((response) => setResource(response));
+		if (inputValue !== previousInputValue) {
+			refetch();
 		}
+
+		// The intended `refetch` method has no reference stabilization, adding
+		// this to deps will cause a loop and we only want to invoke the
+		// `useEffect` when the value changes.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [groupIds, inputValue, previousInputValue, sourceItemsVocabularyIds]);
+
+	const selectButtonRef = useRef();
 
 	const getUnique = (array, property) => {
 		return array
@@ -136,7 +141,9 @@ function AssetVocabulariesCategoriesSelector({
 
 	const handleSelectButtonClick = () => {
 		const url = createPortletURL(portletURL, {
+			p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
 			selectedCategories: selectedItems.map((item) => item.value).join(),
+			selectedCategoryIds: selectedItems.map((item) => item.value).join(),
 			singleSelect,
 			vocabularyIds: sourceItemsVocabularyIds.concat(),
 		});
@@ -146,9 +153,6 @@ function AssetVocabulariesCategoriesSelector({
 			height: '70vh',
 			iframeBodyCssClass: '',
 			multiple: true,
-			onClose: () => {
-				selectButtonRef.current?.focus();
-			},
 			onSelect: (selectedItems) => {
 				if (selectedItems) {
 					const newValues = Object.keys(selectedItems).reduce(
@@ -181,7 +185,7 @@ function AssetVocabulariesCategoriesSelector({
 	return (
 		<div className="field-content">
 			<ClayForm.Group
-				className={classNames({
+				className={classNames(formGroupClassName, {
 					'has-error':
 						(invalidItems && !!invalidItems.length) || !isValid,
 				})}
@@ -196,7 +200,10 @@ function AssetVocabulariesCategoriesSelector({
 				)}
 
 				{label && (
-					<label htmlFor={inputName + '_MultiSelect'}>
+					<label
+						className={showVocabularyLabel ? '' : 'sr-only'}
+						htmlFor={inputName + '_MultiSelect'}
+					>
 						{label}
 
 						{required && (
@@ -214,24 +221,21 @@ function AssetVocabulariesCategoriesSelector({
 				<ClayInput.Group>
 					<ClayInput.GroupItem>
 						<ClayMultiSelect
-							alignmentByViewport
 							id={inputName + '_MultiSelect'}
 							inputName={inputName}
 							items={selectedItems}
+							loadingState={networkStatus}
 							onChange={setInputValue}
 							onItemsChange={handleItemsChange}
 							sourceItems={
 								resource
-									? itemLabelFilter(
-											resource.map((category) => {
-												return {
-													label:
-														category.titleCurrentValue,
-													value: category.categoryId,
-												};
-											}),
-											inputValue
-									  )
+									? resource.map((category) => {
+											return {
+												label:
+													category.titleCurrentValue,
+												value: category.categoryId,
+											};
+									  })
 									: []
 							}
 							value={inputValue}
@@ -246,7 +250,6 @@ function AssetVocabulariesCategoriesSelector({
 										Liferay.Language.get(
 											`category-x-does-not-exist`
 										),
-
 										invalidItems
 											.map((item) => item.label)
 											.join(',')

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
@@ -74,10 +65,13 @@ public interface PinResource {
 		throws Exception;
 
 	public Page<Pin> getProductIdPinsPage(
-			Long productId, String search, Pagination pagination, Sort[] sorts)
+			Long id, String search, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
-	public Pin postProductIdPin(Long productId, Pin pin) throws Exception;
+	public Pin postProductIdPin(Long id, Pin pin) throws Exception;
+
+	public Response postProductIdPinBatch(String callbackURL, Object object)
+		throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -155,6 +149,8 @@ public interface PinResource {
 			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder uriInfo(UriInfo uriInfo);
 
 		public Builder user(com.liferay.portal.kernel.model.User user);
 

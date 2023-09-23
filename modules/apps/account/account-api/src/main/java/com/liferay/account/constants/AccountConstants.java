@@ -1,23 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.constants;
+
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 
 /**
  * @author Pei-Jung Lan
  */
 public class AccountConstants {
+
+	public static final long ACCOUNT_ENTRY_ID_ADMIN = Long.MIN_VALUE;
 
 	public static final long ACCOUNT_ENTRY_ID_ANY = -1;
 
@@ -31,10 +26,9 @@ public class AccountConstants {
 
 	public static final String ACCOUNT_ENTRY_TYPE_PERSON = "person";
 
-	public static final String[] ACCOUNT_ENTRY_TYPES = {
-		ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_GUEST,
-		ACCOUNT_ENTRY_TYPE_PERSON
-	};
+	public static final String ACCOUNT_ENTRY_TYPE_SUPPLIER = "supplier";
+
+	public static final String[] ACCOUNT_ENTRY_TYPES = getAccountEntryTypes();
 
 	public static final String[] ACCOUNT_ENTRY_TYPES_DEFAULT_ALLOWED_TYPES = {
 		ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_PERSON
@@ -55,5 +49,19 @@ public class AccountConstants {
 	public static final long PARENT_ACCOUNT_ENTRY_ID_DEFAULT = 0;
 
 	public static final String RESOURCE_NAME = "com.liferay.account";
+
+	public static String[] getAccountEntryTypes() {
+		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-10890")) {
+			return new String[] {
+				ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_GUEST,
+				ACCOUNT_ENTRY_TYPE_PERSON, ACCOUNT_ENTRY_TYPE_SUPPLIER
+			};
+		}
+
+		return new String[] {
+			ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_GUEST,
+			ACCOUNT_ENTRY_TYPE_PERSON
+		};
+	}
 
 }

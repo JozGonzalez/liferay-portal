@@ -1,40 +1,36 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import DealRegistration from '../../../interfaces/dealRegistration';
 import DealRegistrationDTO from '../../../interfaces/dto/dealRegistrationDTO';
+import {ResourceName} from '../../../services/liferay/object/enum/resourceName';
 
 export function getDTOFromDealRegistration(
+	apiOption: ResourceName,
 	dealRegistration: DealRegistration,
-	leadExternalReferenceCode?: string,
-	leadQualificationExternalReferenceCode?: string
+	leadExternalReferenceCode?: string
 ): DealRegistrationDTO {
-	return {
-		accountExternalReferenceCodeSF:
-			dealRegistration.accountExternalReferenceCodeSF,
+	const dealObject: DealRegistrationDTO = {
+		accountExternalReferenceCode:
+			dealRegistration.partnerAccount.externalReferenceCode,
 		additionalContactEmailAddress:
 			dealRegistration.additionalContact?.emailAddress,
 		additionalContactFirstName:
 			dealRegistration.additionalContact?.firstName,
 		additionalContactLastName: dealRegistration.additionalContact?.lastName,
-		additionalContacts: `${dealRegistration.additionalContact?.firstName} ${dealRegistration.additionalContact?.lastName}, ${dealRegistration.additionalContact?.emailAddress}`,
+		additionalContacts: `${dealRegistration.additionalContact?.firstName} ${dealRegistration.additionalContact?.lastName} ${dealRegistration.additionalContact?.emailAddress}`,
 		additionalInformationAboutTheOpportunity:
 			dealRegistration.additionalInformationAboutTheOpportunity,
 		currency: dealRegistration.currency,
 		leadExternalReferenceCode,
-		leadQualificationExternalReferenceCode,
 		leadStatusDetail: dealRegistration.leadStatusDetails,
-		mdfActivityExternalReferenceCodeSF:
-			dealRegistration.mdfActivityAssociated.externalReferenceCodeSF,
-		partnerAccountName: dealRegistration.partnerAccount.name,
+		mdfActivityExternalReferenceCode:
+			dealRegistration.mdfActivityAssociated.externalReferenceCode,
+		mdfActivityName: dealRegistration.mdfActivityAssociated.name,
+		partnerFirstName: dealRegistration.partnerFirstName,
+		partnerLastName: dealRegistration.partnerLastName,
 		primaryProspectBusinessUnit:
 			dealRegistration.primaryProspect.businessUnit,
 		primaryProspectDepartment:
@@ -60,4 +56,10 @@ export function getDTOFromDealRegistration(
 		r_accToDealRegs_accountEntryId: dealRegistration.partnerAccount.id,
 		r_actToDealRegs_c_activityId: dealRegistration.mdfActivityAssociated.id,
 	};
+
+	if (apiOption === ResourceName.LEAD_NOTIFICATION) {
+		dealObject.partnerAccountName = dealRegistration.partnerAccount.name;
+	}
+
+	return dealObject;
 }

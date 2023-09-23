@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-WidgetTemplatesTemplateViewUsagesDisplayContext widgetTemplatesTemplateViewUsagesDisplayContext = new WidgetTemplatesTemplateViewUsagesDisplayContext(renderRequest, renderResponse);
+WidgetTemplatesTemplateViewUsagesDisplayContext widgetTemplatesTemplateViewUsagesDisplayContext = new WidgetTemplatesTemplateViewUsagesDisplayContext(request, renderRequest, renderResponse);
 
 DDMTemplate ddmTemplate = widgetTemplatesTemplateViewUsagesDisplayContext.getDDMTemplate();
 
@@ -34,23 +25,13 @@ renderResponse.setTitle(HtmlUtil.escape(ddmTemplate.getName(locale)));
 		<clay:col
 			lg="3"
 		>
-			<nav class="menubar menubar-transparent menubar-vertical-expand-lg">
-				<ul class="nav nav-nested">
-					<li class="nav-item">
-						<strong class="text-uppercase">
-							<liferay-ui:message key="usages" />
-						</strong>
+			<div class="c-mb-3 h5 text-uppercase">
+				<liferay-ui:message key="usages" />
+			</div>
 
-						<ul class="nav nav-stacked">
-							<li class="nav-item">
-								<a class="active nav-link">
-									<liferay-ui:message arguments="<%= widgetTemplatesTemplateViewUsagesDisplayContext.getUsagesCount() %>" key="all-x" />
-								</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
-			</nav>
+			<clay:vertical-nav
+				verticalNavItems="<%= widgetTemplatesTemplateViewUsagesDisplayContext.getVerticalItemList() %>"
+			/>
 		</clay:col>
 
 		<clay:col
@@ -83,7 +64,7 @@ renderResponse.setTitle(HtmlUtil.escape(ddmTemplate.getName(locale)));
 						%>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-expand table-title"
+							cssClass="table-title"
 							name="name"
 							value="<%= HtmlUtil.escape(widgetTemplatesTemplateViewUsagesDisplayContext.getDDMTemplateUsageName(curLayout)) %>"
 						/>
@@ -104,6 +85,11 @@ renderResponse.setTitle(HtmlUtil.escape(ddmTemplate.getName(locale)));
 								value="<%= PortletIdCodec.decodeInstanceId(curPortletPreferences.getPortletId()) %>"
 							/>
 						</c:if>
+
+						<liferay-ui:search-container-column-date
+							name="modified-date"
+							value="<%= curLayout.getModifiedDate() %>"
+						/>
 					</liferay-ui:search-container-row>
 
 					<liferay-ui:search-iterator

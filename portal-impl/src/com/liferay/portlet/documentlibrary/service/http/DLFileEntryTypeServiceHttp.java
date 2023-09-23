@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.http;
@@ -97,99 +88,6 @@ public class DLFileEntryTypeServiceHttp {
 		}
 	}
 
-	public static com.liferay.document.library.kernel.model.DLFileEntryType
-			addFileEntryType(
-				HttpPrincipal httpPrincipal, long groupId,
-				String fileEntryTypeKey,
-				java.util.Map<java.util.Locale, String> nameMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				long[] ddmStructureIds,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				DLFileEntryTypeServiceUtil.class, "addFileEntryType",
-				_addFileEntryTypeParameterTypes1);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, fileEntryTypeKey, nameMap, descriptionMap,
-				ddmStructureIds, serviceContext);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-
-			return (com.liferay.document.library.kernel.model.DLFileEntryType)
-				returnObj;
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
-	public static com.liferay.document.library.kernel.model.DLFileEntryType
-			addFileEntryType(
-				HttpPrincipal httpPrincipal, long groupId, String name,
-				String description, long[] ddmStructureIds,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				DLFileEntryTypeServiceUtil.class, "addFileEntryType",
-				_addFileEntryTypeParameterTypes2);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, name, description, ddmStructureIds,
-				serviceContext);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-
-			return (com.liferay.document.library.kernel.model.DLFileEntryType)
-				returnObj;
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
 	public static void deleteFileEntryType(
 			HttpPrincipal httpPrincipal, long fileEntryTypeId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -197,7 +95,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "deleteFileEntryType",
-				_deleteFileEntryTypeParameterTypes3);
+				_deleteFileEntryTypeParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryTypeId);
@@ -233,7 +131,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "getFileEntryType",
-				_getFileEntryTypeParameterTypes4);
+				_getFileEntryTypeParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryTypeId);
@@ -274,7 +172,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "getFileEntryTypes",
-				_getFileEntryTypesParameterTypes5);
+				_getFileEntryTypesParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds);
@@ -311,7 +209,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "getFileEntryTypes",
-				_getFileEntryTypesParameterTypes6);
+				_getFileEntryTypesParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, start, end);
@@ -345,7 +243,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "getFileEntryTypesCount",
-				_getFileEntryTypesCountParameterTypes7);
+				_getFileEntryTypesCountParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds);
@@ -381,7 +279,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "getFolderFileEntryTypes",
-				_getFolderFileEntryTypesParameterTypes8);
+				_getFolderFileEntryTypesParameterTypes6);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, folderId, inherited);
@@ -427,7 +325,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "search",
-				_searchParameterTypes9);
+				_searchParameterTypes7);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, folderId, groupIds, keywords,
@@ -475,7 +373,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "search",
-				_searchParameterTypes10);
+				_searchParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, keywords,
@@ -517,7 +415,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "search",
-				_searchParameterTypes11);
+				_searchParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, keywords,
@@ -554,7 +452,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "searchCount",
-				_searchCountParameterTypes12);
+				_searchCountParameterTypes10);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, folderId, groupIds, keywords,
@@ -588,7 +486,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "searchCount",
-				_searchCountParameterTypes13);
+				_searchCountParameterTypes11);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, keywords,
@@ -622,7 +520,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "searchCount",
-				_searchCountParameterTypes14);
+				_searchCountParameterTypes12);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, groupIds, keywords,
@@ -659,7 +557,7 @@ public class DLFileEntryTypeServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				DLFileEntryTypeServiceUtil.class, "updateFileEntryType",
-				_updateFileEntryTypeParameterTypes15);
+				_updateFileEntryTypeParameterTypes13);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryTypeId, nameMap, descriptionMap);
@@ -693,86 +591,6 @@ public class DLFileEntryTypeServiceHttp {
 		}
 	}
 
-	public static void updateFileEntryType(
-			HttpPrincipal httpPrincipal, long fileEntryTypeId,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				DLFileEntryTypeServiceUtil.class, "updateFileEntryType",
-				_updateFileEntryTypeParameterTypes16);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, fileEntryTypeId, nameMap, descriptionMap,
-				ddmStructureIds, serviceContext);
-
-			try {
-				TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
-	public static void updateFileEntryType(
-			HttpPrincipal httpPrincipal, long fileEntryTypeId, String name,
-			String description, long[] ddmStructureIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				DLFileEntryTypeServiceUtil.class, "updateFileEntryType",
-				_updateFileEntryTypeParameterTypes17);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, fileEntryTypeId, name, description, ddmStructureIds,
-				serviceContext);
-
-			try {
-				TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
 	private static Log _log = LogFactoryUtil.getLog(
 		DLFileEntryTypeServiceHttp.class);
 
@@ -782,62 +600,42 @@ public class DLFileEntryTypeServiceHttp {
 			java.util.Map.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _addFileEntryTypeParameterTypes1 =
-		new Class[] {
-			long.class, String.class, java.util.Map.class, java.util.Map.class,
-			long[].class, com.liferay.portal.kernel.service.ServiceContext.class
-		};
-	private static final Class<?>[] _addFileEntryTypeParameterTypes2 =
-		new Class[] {
-			long.class, String.class, String.class, long[].class,
-			com.liferay.portal.kernel.service.ServiceContext.class
-		};
-	private static final Class<?>[] _deleteFileEntryTypeParameterTypes3 =
+	private static final Class<?>[] _deleteFileEntryTypeParameterTypes1 =
 		new Class[] {long.class};
-	private static final Class<?>[] _getFileEntryTypeParameterTypes4 =
+	private static final Class<?>[] _getFileEntryTypeParameterTypes2 =
 		new Class[] {long.class};
-	private static final Class<?>[] _getFileEntryTypesParameterTypes5 =
+	private static final Class<?>[] _getFileEntryTypesParameterTypes3 =
 		new Class[] {long[].class};
-	private static final Class<?>[] _getFileEntryTypesParameterTypes6 =
+	private static final Class<?>[] _getFileEntryTypesParameterTypes4 =
 		new Class[] {long[].class, int.class, int.class};
-	private static final Class<?>[] _getFileEntryTypesCountParameterTypes7 =
+	private static final Class<?>[] _getFileEntryTypesCountParameterTypes5 =
 		new Class[] {long[].class};
-	private static final Class<?>[] _getFolderFileEntryTypesParameterTypes8 =
+	private static final Class<?>[] _getFolderFileEntryTypesParameterTypes6 =
 		new Class[] {long[].class, long.class, boolean.class};
-	private static final Class<?>[] _searchParameterTypes9 = new Class[] {
+	private static final Class<?>[] _searchParameterTypes7 = new Class[] {
 		long.class, long.class, long[].class, String.class, boolean.class,
 		boolean.class, int.class, int.class
 	};
-	private static final Class<?>[] _searchParameterTypes10 = new Class[] {
+	private static final Class<?>[] _searchParameterTypes8 = new Class[] {
 		long.class, long[].class, String.class, boolean.class, int.class,
 		int.class, int.class,
 		com.liferay.portal.kernel.util.OrderByComparator.class
 	};
-	private static final Class<?>[] _searchParameterTypes11 = new Class[] {
+	private static final Class<?>[] _searchParameterTypes9 = new Class[] {
 		long.class, long[].class, String.class, boolean.class, int.class,
 		int.class, com.liferay.portal.kernel.util.OrderByComparator.class
 	};
-	private static final Class<?>[] _searchCountParameterTypes12 = new Class[] {
+	private static final Class<?>[] _searchCountParameterTypes10 = new Class[] {
 		long.class, long.class, long[].class, String.class, boolean.class,
 		boolean.class
 	};
-	private static final Class<?>[] _searchCountParameterTypes13 = new Class[] {
+	private static final Class<?>[] _searchCountParameterTypes11 = new Class[] {
 		long.class, long[].class, String.class, boolean.class
 	};
-	private static final Class<?>[] _searchCountParameterTypes14 = new Class[] {
+	private static final Class<?>[] _searchCountParameterTypes12 = new Class[] {
 		long.class, long[].class, String.class, boolean.class, int.class
 	};
-	private static final Class<?>[] _updateFileEntryTypeParameterTypes15 =
+	private static final Class<?>[] _updateFileEntryTypeParameterTypes13 =
 		new Class[] {long.class, java.util.Map.class, java.util.Map.class};
-	private static final Class<?>[] _updateFileEntryTypeParameterTypes16 =
-		new Class[] {
-			long.class, java.util.Map.class, java.util.Map.class, long[].class,
-			com.liferay.portal.kernel.service.ServiceContext.class
-		};
-	private static final Class<?>[] _updateFileEntryTypeParameterTypes17 =
-		new Class[] {
-			long.class, String.class, String.class, long[].class,
-			com.liferay.portal.kernel.service.ServiceContext.class
-		};
 
 }

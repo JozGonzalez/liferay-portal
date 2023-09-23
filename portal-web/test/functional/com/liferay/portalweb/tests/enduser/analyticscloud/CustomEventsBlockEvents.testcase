@@ -61,13 +61,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -167,7 +169,7 @@ definition {
 	@ignore = "true"
 	@priority = 5
 	test CheckBlockedEventsNotShownOnSegments {
-		property test.name.skip.portal.instance = "CustomEventsBlockEvents#CheckBlockedEventsNotShownOnSegments";
+		property test.run.type = "single";
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
@@ -221,7 +223,7 @@ definition {
 	@description = "Feature ID: LRAC-7346 | Automation ID: LRAC-10150 | Test Summary: Block/Unblock custom events as non-admin"
 	@priority = 3
 	test CheckCannotBlockOrUnblockCustomEventsAsNonAdmin {
-		property test.name.skip.portal.instance = "CustomEventsBlockEvents#CheckCannotBlockOrUnblockCustomEventsAsNonAdmin";
+		property test.run.type = "single";
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
@@ -347,7 +349,7 @@ definition {
 	@description = "Feature ID: LRAC-7346 | Automation ID: LRAC-10151 | Test Summary: Blocked events are not processed"
 	@priority = 5
 	test CheckEventAnalysisNotUpdatedWhenEventIsBlocked {
-		property test.name.skip.portal.instance = "CustomEventsBlockEvents#CheckEventAnalysisNotUpdatedWhenEventIsBlocked";
+		property test.run.type = "single";
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();

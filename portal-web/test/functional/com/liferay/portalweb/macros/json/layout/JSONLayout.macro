@@ -1,15 +1,17 @@
 definition {
 
-	@summary = "Add a private site page or private child site page to an existing site or child site via groupName"
 	macro addPrivateLayout {
-		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
+		Variables.assertDefined(parameterList = ${layoutName});
 
 		var friendlyURL = JSONLayoutSetter.setFriendlyURL(friendlyURL = ${friendlyURL});
-		var groupId = JSONLayoutSetter.setGroupId(
-			grandParentGroupName = ${grandParentGroupName},
-			groupName = ${groupName},
-			parentGroupName = ${parentGroupName},
-			site = ${site});
+
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
 
 		var parentLayoutId = JSONLayoutSetter.setParentLayoutId(
 			groupId = ${groupId},
@@ -34,16 +36,18 @@ definition {
 		return ${plid};
 	}
 
-	@summary = "Add a public site page  or public child site page to an existing site or child site via groupName"
 	macro addPublicLayout {
-		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
+		Variables.assertDefined(parameterList = ${layoutName});
 
 		var friendlyURL = JSONLayoutSetter.setFriendlyURL(friendlyURL = ${friendlyURL});
-		var groupId = JSONLayoutSetter.setGroupId(
-			grandParentGroupName = ${grandParentGroupName},
-			groupName = ${groupName},
-			parentGroupName = ${parentGroupName},
-			site = ${site});
+
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
 
 		var parentLayoutId = JSONLayoutSetter.setParentLayoutId(
 			groupId = ${groupId},
@@ -68,15 +72,16 @@ definition {
 		return ${plid};
 	}
 
-	@summary = "Add a widget to a private layout via widgetName"
 	macro addWidgetToPrivateLayout {
-		Variables.assertDefined(parameterList = "${groupName},${layoutName},${widgetName}");
+		Variables.assertDefined(parameterList = "${layoutName},${widgetName}");
 
-		var groupId = JSONLayoutSetter.setGroupId(
-			grandParentGroupName = ${grandParentGroupName},
-			groupName = ${groupName},
-			parentGroupName = ${parentGroupName},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
 
 		var layoutId = JSONLayoutSetter.setLayoutId(
 			groupId = ${groupId},
@@ -95,19 +100,20 @@ definition {
 			typeSettings = ${typeSettings});
 	}
 
-	@summary = "Add a widget to a public layout via widgetName"
 	macro addWidgetToPublicLayout {
-		Variables.assertDefined(parameterList = "${groupName},${layoutName},${widgetName}");
+		Variables.assertDefined(parameterList = "${layoutName},${widgetName}");
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
-		var groupId = JSONLayoutSetter.setGroupId(
-			grandParentGroupName = ${grandParentGroupName},
-			groupName = ${groupName},
-			parentGroupName = ${parentGroupName},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
 
 		var layoutId = JSONLayoutSetter.setLayoutId(
 			groupId = ${groupId},
@@ -128,7 +134,6 @@ definition {
 			typeSettings = ${typeSettings});
 	}
 
-	@summary = "Delete a public site page under an existing site via groupName"
 	macro deletePublicLayout {
 		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
 
@@ -151,7 +156,6 @@ definition {
 			serviceContext = ${serviceContext});
 	}
 
-	@summary = "Get page scope id from an existing site via groupName"
 	macro getPageScopeIdByGroupName {
 		Variables.assertDefined(parameterList = ${groupName});
 
@@ -162,7 +166,6 @@ definition {
 			privateLayout = "false");
 	}
 
-	@summary = "Get the plid from a layout by groupName and layoutName"
 	macro getPlid {
 		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
 
@@ -186,7 +189,6 @@ definition {
 			privateLayout = ${privateLayout});
 	}
 
-	@summary = "Publish the draft layout"
 	macro publishLayout {
 		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
 
@@ -200,15 +202,17 @@ definition {
 	}
 
 	macro updateLayoutTemplateOfPublicLayout {
-		Variables.assertDefined(parameterList = "${groupName},${layoutName},${layoutTemplate}");
+		Variables.assertDefined(parameterList = "${layoutName},${layoutTemplate}");
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
-		var groupId = JSONLayoutSetter.setGroupId(
-			groupName = ${groupName},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONLayoutSetter.setGroupId(
+				groupName = ${groupName},
+				site = ${site});
+		}
 
 		var layoutId = JSONLayoutSetter.setLayoutId(
 			groupId = ${groupId},
@@ -225,6 +229,40 @@ definition {
 			groupId = ${groupId},
 			layoutId = ${layoutId},
 			privateLayout = "false",
+			typeSettings = ${typeSettings});
+	}
+
+	macro updateTypeSettings {
+		Variables.assertDefined(parameterList = "${groupName},${layoutName}");
+
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		if (!(isSet(privateLayout))) {
+			var privateLayout = "false";
+		}
+
+		var groupId = JSONLayoutSetter.setGroupId(
+			groupName = ${groupName},
+			site = ${site});
+
+		var layoutId = JSONLayoutSetter.setLayoutId(
+			groupId = ${groupId},
+			layoutName = ${layoutName},
+			privateLayout = ${privateLayout});
+		var typeSettings = JSONLayoutSetter.setTypeSettings(
+			column = ${column},
+			embeddedLayoutURL = ${embeddedLayoutURL},
+			groupId = ${groupId},
+			layoutName = ${layoutName},
+			layoutTemplate = ${layoutTemplate},
+			privateLayout = ${privateLayout});
+
+		JSONLayoutAPI._updateTypeSettings(
+			groupId = ${groupId},
+			layoutId = ${layoutId},
+			privateLayout = ${privateLayout},
 			typeSettings = ${typeSettings});
 	}
 

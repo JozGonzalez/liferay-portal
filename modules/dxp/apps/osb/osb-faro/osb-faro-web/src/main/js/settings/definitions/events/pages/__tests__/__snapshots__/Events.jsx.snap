@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Events should render 1`] = `
+<div>
+  <div
+    class="settings-base-page-root"
+  >
+    <div
+      class="maintenance-alert-root"
+    />
+    <ol
+      class="breadcrumb breadcrumbs-root"
+    >
+      <li
+        class="breadcrumb-item"
+      >
+        <a
+          class="breadcrumb-text-truncate breadcrumb-link"
+          href="/workspace/23/settings/definitions"
+        >
+          Definitions
+        </a>
+      </li>
+      <li
+        class="breadcrumb-item active"
+      >
+        <span
+          class="breadcrumb-text-truncate"
+        >
+          Events
+        </span>
+      </li>
+    </ol>
+    <div
+      class="content-header"
+    >
+      <div
+        class="header-text"
+      >
+        <div
+          class="d-flex"
+        >
+          <h3
+            class="title-text text-truncate"
+          >
+            <span
+              class="text-truncate"
+              data-tooltip="false"
+              title=""
+            >
+              Events
+            </span>
+          </h3>
+        </div>
+        <div
+          class="description"
+        >
+          This is the data model of events sent to Analytics Cloud.
+        </div>
+      </div>
+      <div
+        class="page-actions-container"
+      />
+    </div>
+    <div>
+      <div
+        class="card card-root page-display"
+      >
+        <nav
+          class="my-3 navbar navbar-collapse-relative navbar-expand-md navbar-underline navigation-bar navigation-bar-light"
+        >
+          <div
+            class="container-fluid container-fluid-max-xl"
+          >
+            <button
+              aria-expanded="false"
+              class="navbar-toggler navbar-toggler-link collapsed btn btn-unstyled"
+              type="button"
+            >
+              <span
+                class="navbar-text-truncate"
+              />
+              <svg
+                class="lexicon-icon lexicon-icon-caret-bottom"
+                role="presentation"
+              >
+                <use
+                  xlink:href="#caret-bottom"
+                />
+              </svg>
+            </button>
+            <div
+              class="navbar-collapse collapse"
+            >
+              <div
+                class="container-fluid container-fluid-max-xl"
+              >
+                <ul
+                  class="navbar-nav"
+                >
+                  <li
+                    class="nav-item"
+                  >
+                    <a
+                      class="nav-link"
+                      href="/workspace/23/settings/definitions/events/default"
+                    >
+                      <span
+                        class="navbar-text-truncate"
+                      >
+                        Default Events
+                      </span>
+                    </a>
+                  </li>
+                  <li
+                    class="nav-item"
+                  >
+                    <a
+                      class="nav-link"
+                      href="/workspace/23/settings/definitions/events/custom"
+                    >
+                      <span
+                        class="navbar-text-truncate"
+                      >
+                        Custom Events
+                      </span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+`;

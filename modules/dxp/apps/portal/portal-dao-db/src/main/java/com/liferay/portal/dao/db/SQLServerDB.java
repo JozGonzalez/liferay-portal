@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.dao.db;
@@ -23,6 +14,7 @@ import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -37,6 +29,9 @@ import java.sql.Types;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Alexander Chow
@@ -69,6 +64,8 @@ public class SQLServerDB extends BaseDB {
 		if (primaryKey) {
 			removePrimaryKey(connection, tableName);
 		}
+
+		_dropDefaultConstraint(connection, tableName, columnName);
 
 		super.alterColumnType(connection, tableName, columnName, newColumnType);
 
@@ -104,6 +101,21 @@ public class SQLServerDB extends BaseDB {
 			new String[] {"\\", "''", "\"", "\n", "\r"});
 
 		return template;
+	}
+
+	@Override
+	public String getDefaultValue(String columnDef) {
+		Matcher matcher = _defaultValuePattern.matcher(columnDef);
+
+		if (matcher.find()) {
+			if (matcher.group(1) == null) {
+				return matcher.group(2);
+			}
+
+			return matcher.group(1);
+		}
+
+		return columnDef;
 	}
 
 	@Override
@@ -213,13 +225,222 @@ public class SQLServerDB extends BaseDB {
 	}
 
 	@Override
+	protected void createSyncDeleteTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" on ");
+		sb.append(sourceTableName);
+		sb.append(" after delete as delete ");
+		sb.append(targetTableName);
+		sb.append(" from ");
+		sb.append(targetTableName);
+		sb.append(" inner join deleted on ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(targetTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(targetPrimaryKeyColumnNames[i]);
+			sb.append(" = deleted.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	@Override
+	protected void createSyncInsertTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" on ");
+		sb.append(sourceTableName);
+		sb.append(" after insert as insert into ");
+		sb.append(targetTableName);
+		sb.append(" (");
+		sb.append(StringUtil.merge(targetColumnNames, ", "));
+		sb.append(") select ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append(sourceTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" from ");
+		sb.append(sourceTableName);
+		sb.append(" inner join inserted on ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(sourceTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+			sb.append(" = inserted.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	@Override
+	protected void createSyncUpdateTrigger(
+			Connection connection, String sourceTableName,
+			String targetTableName, String triggerName,
+			String[] sourceColumnNames, String[] targetColumnNames,
+			String[] sourcePrimaryKeyColumnNames,
+			String[] targetPrimaryKeyColumnNames,
+			Map<String, String> defaultValuesMap)
+		throws Exception {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("create trigger ");
+		sb.append(triggerName);
+		sb.append(" on ");
+		sb.append(sourceTableName);
+		sb.append(" after update as update ");
+		sb.append(targetTableName);
+		sb.append(" set ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(targetTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(targetColumnNames[i]);
+			sb.append(" = ");
+
+			String defaultValue = defaultValuesMap.get(targetColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append("COALESCE(");
+			}
+
+			sb.append("res.");
+			sb.append(sourceColumnNames[i]);
+
+			if (defaultValue != null) {
+				sb.append(", ");
+				sb.append(defaultValue);
+				sb.append(")");
+			}
+		}
+
+		sb.append(" from (select ");
+
+		for (int i = 0; i < sourceColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(sourceTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(sourceColumnNames[i]);
+		}
+
+		sb.append(" from ");
+		sb.append(sourceTableName);
+		sb.append(" inner join inserted on ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append(sourceTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+			sb.append(" = inserted.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+		}
+
+		sb.append(") as res where ");
+
+		for (int i = 0; i < sourcePrimaryKeyColumnNames.length; i++) {
+			if (i > 0) {
+				sb.append(" and ");
+			}
+
+			sb.append("res.");
+			sb.append(sourcePrimaryKeyColumnNames[i]);
+			sb.append(" = ");
+			sb.append(targetTableName);
+			sb.append(StringPool.PERIOD);
+			sb.append(targetPrimaryKeyColumnNames[i]);
+		}
+
+		runSQL(connection, sb.toString());
+	}
+
+	protected String getCopyTableStructureSQL(
+		String tableName, String newTableName) {
+
+		return StringBundler.concat(
+			"select * into ", newTableName, " from ", tableName,
+			" where 1 = 0");
+	}
+
+	protected String getRenameTableSQL(
+		String oldTableName, String newTableName) {
+
+		return StringBundler.concat(
+			"exec sp_rename ", oldTableName, ", ", newTableName);
+	}
+
+	@Override
 	protected int[] getSQLTypes() {
 		return _SQL_TYPES;
 	}
 
 	@Override
-	protected int[] getSQLVarcharSizes() {
-		return _SQL_VARCHAR_SIZES;
+	protected Map<String, Integer> getSQLVarcharSizes() {
+		return HashMapBuilder.put(
+			"STRING", _SQL_STRING_SIZE
+		).put(
+			"TEXT", SQL_VARCHAR_MAX_SIZE
+		).build();
 	}
 
 	@Override
@@ -254,6 +475,17 @@ public class SQLServerDB extends BaseDB {
 						REWORD_TEMPLATE, template);
 
 					line = StringUtil.replace(line, " ;", ";");
+
+					String defaultValue = template[template.length - 2];
+
+					if (!Validator.isBlank(defaultValue)) {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ add constraint " +
+									"@old-column@_default default @default@ " +
+										"for @old-column@;",
+								REWORD_TEMPLATE, template));
+					}
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
 					String[] template = buildTableNameTokens(line);
@@ -316,15 +548,17 @@ public class SQLServerDB extends BaseDB {
 		}
 
 		runSQL(
+			connection,
 			StringBundler.concat(
 				"alter table ", tableName, " drop constraint ",
 				defaultConstraintName));
 	}
 
 	private static final String[] _SQL_SERVER = {
-		"--", "1", "0", "'19700101'", "GetDate()", " image", " image", " bit",
-		" datetime2(6)", " float", " int", " bigint", " nvarchar(4000)",
-		" nvarchar(max)", " nvarchar", "  identity(1,1)", "go"
+		"--", "1", "0", "'19700101'", "GetDate()", " image", " image",
+		" decimal(30, 16)", " bit", " datetime2(6)", " float", " int",
+		" bigint", " nvarchar(4000)", " nvarchar(max)", " nvarchar",
+		"  identity(1,1)", "go"
 	};
 
 	private static final int _SQL_SERVER_2000 = 8;
@@ -332,15 +566,14 @@ public class SQLServerDB extends BaseDB {
 	private static final int _SQL_STRING_SIZE = 4000;
 
 	private static final int[] _SQL_TYPES = {
-		Types.LONGVARBINARY, Types.LONGVARBINARY, Types.BIT, Types.TIMESTAMP,
-		Types.DOUBLE, Types.INTEGER, Types.BIGINT, Types.NVARCHAR,
-		Types.NVARCHAR, Types.NVARCHAR
-	};
-
-	private static final int[] _SQL_VARCHAR_SIZES = {
-		_SQL_STRING_SIZE, SQL_VARCHAR_MAX_SIZE
+		Types.LONGVARBINARY, Types.LONGVARBINARY, Types.DECIMAL, Types.BIT,
+		Types.TIMESTAMP, Types.DOUBLE, Types.INTEGER, Types.BIGINT,
+		Types.NVARCHAR, Types.NVARCHAR, Types.NVARCHAR
 	};
 
 	private static final boolean _SUPPORTS_NEW_UUID_FUNCTION = true;
+
+	private static final Pattern _defaultValuePattern = Pattern.compile(
+		"^\\('(.*)'\\)|\\(\\((\\d*)\\)\\)", Pattern.CASE_INSENSITIVE);
 
 }

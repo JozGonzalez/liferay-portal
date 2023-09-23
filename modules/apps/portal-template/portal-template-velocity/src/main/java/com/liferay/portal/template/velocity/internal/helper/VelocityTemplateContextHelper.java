@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.velocity.internal.helper;
@@ -30,8 +21,6 @@ import com.liferay.portal.template.TemplatePortletPreferences;
 import com.liferay.portal.template.engine.TemplateContextHelper;
 import com.liferay.portal.template.velocity.configuration.VelocityEngineConfiguration;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,13 +34,12 @@ import org.apache.velocity.tools.generic.MathTool;
 import org.apache.velocity.tools.generic.NumberTool;
 import org.apache.velocity.tools.generic.SortTool;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Brian Wing Shun Chan
@@ -60,7 +48,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.portal.template.velocity.configuration.VelocityEngineConfiguration",
-	service = {TemplateContextHelper.class, VelocityTemplateContextHelper.class}
+	service = TemplateContextHelper.class
 )
 public class VelocityTemplateContextHelper extends TemplateContextHelper {
 
@@ -141,7 +129,7 @@ public class VelocityTemplateContextHelper extends TemplateContextHelper {
 		// Custom template context contributors
 
 		for (TemplateContextContributor templateContextContributor :
-				_templateContextContributors) {
+				getTemplateContextContributors()) {
 
 			templateContextContributor.prepare(
 				contextObjects, httpServletRequest);
@@ -150,9 +138,18 @@ public class VelocityTemplateContextHelper extends TemplateContextHelper {
 
 	@Activate
 	@Modified
-	protected void activate(Map<String, Object> properties) {
+	protected void activate(
+		Map<String, Object> properties, BundleContext bundleContext) {
+
+		init(bundleContext);
+
 		_velocityEngineConfiguration = ConfigurableUtil.createConfigurable(
 			VelocityEngineConfiguration.class, properties);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		destory();
 	}
 
 	@Override
@@ -202,24 +199,6 @@ public class VelocityTemplateContextHelper extends TemplateContextHelper {
 		}
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(type=" + TemplateContextContributor.TYPE_GLOBAL + ")"
-	)
-	protected synchronized void registerTemplateContextContributor(
-		TemplateContextContributor templateContextContributor) {
-
-		_templateContextContributors.add(templateContextContributor);
-	}
-
-	protected synchronized void unregisterTemplateContextContributor(
-		TemplateContextContributor templateContextContributor) {
-
-		_templateContextContributors.remove(templateContextContributor);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		VelocityTemplateContextHelper.class);
 
@@ -228,8 +207,5 @@ public class VelocityTemplateContextHelper extends TemplateContextHelper {
 
 	@Reference
 	private RolePermission _rolePermission;
-
-	private final List<TemplateContextContributor>
-		_templateContextContributors = new ArrayList<>();
 
 }

@@ -13,13 +13,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,14 +44,14 @@ definition {
 			}
 		}
 
-		task ("Change the pagination to 5") {
+		task ("Change the pagination to 4") {
 			ACSettings.goToProperties();
 
-			ACUtils.changePagination(itemsPerPage = 5);
+			ACUtils.changePagination(itemsPerPage = 4);
 		}
 
-		task ("Check first 5 properties appear on first page") {
-			var propertyList1 = "Property Name 2,Property Name 3,Property Name 4,Property Name 5,Property Name 6";
+		task ("Check first 4 properties appear on first page") {
+			var propertyList1 = "Property Name 6,Property Name 5,Property Name 4,Property Name 3";
 
 			ACUtils.assertItemsName(itemList = ${propertyList1});
 		}
@@ -59,7 +61,9 @@ definition {
 		}
 
 		task ("Check last property appear on second page") {
-			ACUtils.assertItemsName(itemList = "Property Name 1");
+			var propertyList2 = "Property Name 2,Property Name 1";
+
+			ACUtils.assertItemsName(itemList = ${propertyList2});
 		}
 	}
 
@@ -143,8 +147,12 @@ definition {
 	}
 
 	@description = "Bug: LRAC-10602 | Automation ID: LRAC-11055 | Test Summary: Deleted properties don't appear as an option to sync sites"
+	@ignore = "true"
 	@priority = 2
 	test DeletedPropertiesNotAppearAsOptionInSyncSites {
+
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
 		task ("Go to properties page and add 2 new properties") {
 			var propertyList = "Property DeletedPropertiesNotAppearAsOptionInSyncSites 1,Property DeletedPropertiesNotAppearAsOptionInSyncSites 2";
 
@@ -160,7 +168,8 @@ definition {
 		task ("Delete a property") {
 			ACSettings.goToProperties();
 
-			ACSettings.deletePropertyByCheckbox(propertyName = "Property DeletedPropertiesNotAppearAsOptionInSyncSites 2");
+			//ACSettings.deletePropertyByCheckbox(propertyName = "Property DeletedPropertiesNotAppearAsOptionInSyncSites 2");
+
 		}
 
 		task ("Copy the token from AC") {
@@ -193,8 +202,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9120 | Test Summary: Property field is displayed in empty state when no property is available"
+	@ignore = "true"
 	@priority = 3
 	test ViewPropertyListDefault {
+
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
 		task ("Go to properties") {
 			ACNavigation.goToSettings();
 
@@ -202,9 +215,10 @@ definition {
 		}
 
 		task ("Assert empty state on properties page") {
-			if (IsElementNotPresent(key_textValue = "No Properties Found", locator1 = "ACUtils#GENERIC_TEXT")) {
-				ACSettings.deleteAllProperties();
-			}
+
+			//if (IsElementNotPresent(key_textValue = "No Properties Found", locator1 = "ACUtils#GENERIC_TEXT")) {
+			//	ACSettings.deleteAllProperties();
+			//}
 
 			ACProperties.assertNoProperties();
 		}

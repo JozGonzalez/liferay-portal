@@ -42,7 +42,7 @@
 </tr>
 <tr>
 	<td>MODAL_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]//h3[contains(@class,'modal-title')]</td>
+	<td>//div[contains(@class,'modal-header')]//div[contains(@class,'modal-title')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -172,6 +172,11 @@
 
 <!--DELETIONS-->
 
+<tr>
+	<td>DELETE_APPLICATION_DATA_BEFORE_IMPORTING_CHECKBOX</td>
+	<td>//input[contains(@name,'DELETE_PORTLET_DATA')]//following-sibling::span</td>
+	<td></td>
+</tr>
 <tr>
 	<td></td>
 	<td></td>

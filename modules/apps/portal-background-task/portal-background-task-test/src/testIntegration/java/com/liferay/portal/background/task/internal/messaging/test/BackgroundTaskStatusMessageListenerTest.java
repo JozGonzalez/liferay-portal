@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.background.task.internal.messaging.test;
@@ -17,7 +8,6 @@ package com.liferay.portal.background.task.internal.messaging.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.background.task.constants.BackgroundTaskPortletKeys;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutorRegistry;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
@@ -30,6 +20,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -43,6 +34,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Dante Wang
@@ -87,8 +83,18 @@ public class BackgroundTaskStatusMessageListenerTest {
 		Class<?> backgroundTaskExecutorClass =
 			backgroundTaskExecutor.getClass();
 
-		_backgroundTaskExecutorRegistry.registerBackgroundTaskExecutor(
-			backgroundTaskExecutorClass.getName(), backgroundTaskExecutor);
+		Bundle bundle = FrameworkUtil.getBundle(
+			BackgroundTaskStatusMessageListenerTest.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		ServiceRegistration<BackgroundTaskExecutor> serviceRegistration =
+			bundleContext.registerService(
+				BackgroundTaskExecutor.class, backgroundTaskExecutor,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"background.task.executor.class.name",
+					backgroundTaskExecutorClass.getName()
+				).build());
 
 		try {
 			_backgroundTaskManager.addBackgroundTask(
@@ -123,13 +129,9 @@ public class BackgroundTaskStatusMessageListenerTest {
 				jsonObject.getString("taskExecutorClassName"));
 		}
 		finally {
-			_backgroundTaskExecutorRegistry.unregisterBackgroundTaskExecutor(
-				backgroundTaskExecutorClass.getName());
+			serviceRegistration.unregister();
 		}
 	}
-
-	@Inject
-	private BackgroundTaskExecutorRegistry _backgroundTaskExecutorRegistry;
 
 	@Inject
 	private BackgroundTaskManager _backgroundTaskManager;

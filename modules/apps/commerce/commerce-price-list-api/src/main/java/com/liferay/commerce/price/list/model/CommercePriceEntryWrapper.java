@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.model;
@@ -60,17 +51,20 @@ public class CommercePriceEntryWrapper
 		attributes.put("commercePriceListId", getCommercePriceListId());
 		attributes.put("CPInstanceUuid", getCPInstanceUuid());
 		attributes.put("CProductId", getCProductId());
-		attributes.put("price", getPrice());
-		attributes.put("promoPrice", getPromoPrice());
+		attributes.put("bulkPricing", isBulkPricing());
 		attributes.put("discountDiscovery", isDiscountDiscovery());
 		attributes.put("discountLevel1", getDiscountLevel1());
 		attributes.put("discountLevel2", getDiscountLevel2());
 		attributes.put("discountLevel3", getDiscountLevel3());
 		attributes.put("discountLevel4", getDiscountLevel4());
-		attributes.put("hasTierPrice", isHasTierPrice());
-		attributes.put("bulkPricing", isBulkPricing());
 		attributes.put("displayDate", getDisplayDate());
 		attributes.put("expirationDate", getExpirationDate());
+		attributes.put("hasTierPrice", isHasTierPrice());
+		attributes.put("price", getPrice());
+		attributes.put("priceOnApplication", isPriceOnApplication());
+		attributes.put("promoPrice", getPromoPrice());
+		attributes.put("quantity", getQuantity());
+		attributes.put("unitOfMeasureKey", getUnitOfMeasureKey());
 		attributes.put("lastPublishDate", getLastPublishDate());
 		attributes.put("status", getStatus());
 		attributes.put("statusByUserId", getStatusByUserId());
@@ -162,16 +156,10 @@ public class CommercePriceEntryWrapper
 			setCProductId(CProductId);
 		}
 
-		BigDecimal price = (BigDecimal)attributes.get("price");
+		Boolean bulkPricing = (Boolean)attributes.get("bulkPricing");
 
-		if (price != null) {
-			setPrice(price);
-		}
-
-		BigDecimal promoPrice = (BigDecimal)attributes.get("promoPrice");
-
-		if (promoPrice != null) {
-			setPromoPrice(promoPrice);
+		if (bulkPricing != null) {
+			setBulkPricing(bulkPricing);
 		}
 
 		Boolean discountDiscovery = (Boolean)attributes.get(
@@ -209,18 +197,6 @@ public class CommercePriceEntryWrapper
 			setDiscountLevel4(discountLevel4);
 		}
 
-		Boolean hasTierPrice = (Boolean)attributes.get("hasTierPrice");
-
-		if (hasTierPrice != null) {
-			setHasTierPrice(hasTierPrice);
-		}
-
-		Boolean bulkPricing = (Boolean)attributes.get("bulkPricing");
-
-		if (bulkPricing != null) {
-			setBulkPricing(bulkPricing);
-		}
-
 		Date displayDate = (Date)attributes.get("displayDate");
 
 		if (displayDate != null) {
@@ -231,6 +207,43 @@ public class CommercePriceEntryWrapper
 
 		if (expirationDate != null) {
 			setExpirationDate(expirationDate);
+		}
+
+		Boolean hasTierPrice = (Boolean)attributes.get("hasTierPrice");
+
+		if (hasTierPrice != null) {
+			setHasTierPrice(hasTierPrice);
+		}
+
+		BigDecimal price = (BigDecimal)attributes.get("price");
+
+		if (price != null) {
+			setPrice(price);
+		}
+
+		Boolean priceOnApplication = (Boolean)attributes.get(
+			"priceOnApplication");
+
+		if (priceOnApplication != null) {
+			setPriceOnApplication(priceOnApplication);
+		}
+
+		BigDecimal promoPrice = (BigDecimal)attributes.get("promoPrice");
+
+		if (promoPrice != null) {
+			setPromoPrice(promoPrice);
+		}
+
+		BigDecimal quantity = (BigDecimal)attributes.get("quantity");
+
+		if (quantity != null) {
+			setQuantity(quantity);
+		}
+
+		String unitOfMeasureKey = (String)attributes.get("unitOfMeasureKey");
+
+		if (unitOfMeasureKey != null) {
+			setUnitOfMeasureKey(unitOfMeasureKey);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -502,6 +515,16 @@ public class CommercePriceEntryWrapper
 	}
 
 	/**
+	 * Returns the price on application of this commerce price entry.
+	 *
+	 * @return the price on application of this commerce price entry
+	 */
+	@Override
+	public boolean getPriceOnApplication() {
+		return model.getPriceOnApplication();
+	}
+
+	/**
 	 * Returns the primary key of this commerce price entry.
 	 *
 	 * @return the primary key of this commerce price entry
@@ -527,6 +550,16 @@ public class CommercePriceEntryWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getPromoPriceCommerceMoney(commerceCurrencyId);
+	}
+
+	/**
+	 * Returns the quantity of this commerce price entry.
+	 *
+	 * @return the quantity of this commerce price entry
+	 */
+	@Override
+	public BigDecimal getQuantity() {
+		return model.getQuantity();
 	}
 
 	/**
@@ -577,6 +610,16 @@ public class CommercePriceEntryWrapper
 	@Override
 	public Date getStatusDate() {
 		return model.getStatusDate();
+	}
+
+	/**
+	 * Returns the unit of measure key of this commerce price entry.
+	 *
+	 * @return the unit of measure key of this commerce price entry
+	 */
+	@Override
+	public String getUnitOfMeasureKey() {
+		return model.getUnitOfMeasureKey();
 	}
 
 	/**
@@ -717,6 +760,16 @@ public class CommercePriceEntryWrapper
 	@Override
 	public boolean isPending() {
 		return model.isPending();
+	}
+
+	/**
+	 * Returns <code>true</code> if this commerce price entry is price on application.
+	 *
+	 * @return <code>true</code> if this commerce price entry is price on application; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isPriceOnApplication() {
+		return model.isPriceOnApplication();
 	}
 
 	/**
@@ -945,6 +998,16 @@ public class CommercePriceEntryWrapper
 	}
 
 	/**
+	 * Sets whether this commerce price entry is price on application.
+	 *
+	 * @param priceOnApplication the price on application of this commerce price entry
+	 */
+	@Override
+	public void setPriceOnApplication(boolean priceOnApplication) {
+		model.setPriceOnApplication(priceOnApplication);
+	}
+
+	/**
 	 * Sets the primary key of this commerce price entry.
 	 *
 	 * @param primaryKey the primary key of this commerce price entry
@@ -962,6 +1025,16 @@ public class CommercePriceEntryWrapper
 	@Override
 	public void setPromoPrice(BigDecimal promoPrice) {
 		model.setPromoPrice(promoPrice);
+	}
+
+	/**
+	 * Sets the quantity of this commerce price entry.
+	 *
+	 * @param quantity the quantity of this commerce price entry
+	 */
+	@Override
+	public void setQuantity(BigDecimal quantity) {
+		model.setQuantity(quantity);
 	}
 
 	/**
@@ -1012,6 +1085,16 @@ public class CommercePriceEntryWrapper
 	@Override
 	public void setStatusDate(Date statusDate) {
 		model.setStatusDate(statusDate);
+	}
+
+	/**
+	 * Sets the unit of measure key of this commerce price entry.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce price entry
+	 */
+	@Override
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		model.setUnitOfMeasureKey(unitOfMeasureKey);
 	}
 
 	/**

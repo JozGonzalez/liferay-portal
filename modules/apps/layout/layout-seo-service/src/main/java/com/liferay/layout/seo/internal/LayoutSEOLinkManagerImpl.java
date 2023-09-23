@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.internal;
@@ -21,7 +12,6 @@ import com.liferay.layout.seo.kernel.LayoutSEOLink;
 import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -236,7 +226,7 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 		}
 
 		return _merge(
-			subtitleListMergeable.mergeToString(StringPool.SPACE),
+			subtitleListMergeable.mergeToString(_SEPARATOR),
 			_getTitle(layout, titleListMergeable, locale));
 	}
 
@@ -291,15 +281,17 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 		}
 
 		if (titleListMergeable != null) {
-			return titleListMergeable.mergeToString(StringPool.SPACE);
+			return titleListMergeable.mergeToString(_SEPARATOR);
 		}
 
 		return layout.getHTMLTitle(_language.getLanguageId(locale));
 	}
 
 	private String _merge(String... strings) {
-		return StringUtil.merge(strings, " - ");
+		return StringUtil.merge(strings, _SEPARATOR);
 	}
+
+	private static final String _SEPARATOR = " - ";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutSEOLinkManagerImpl.class);

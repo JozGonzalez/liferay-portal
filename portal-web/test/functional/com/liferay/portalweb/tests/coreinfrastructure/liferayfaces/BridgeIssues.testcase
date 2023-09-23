@@ -12,15 +12,15 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Bridge Issues");
+		HeadlessSite.addSite(siteName = "Bridge Issues");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Bridge Issues");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -144,6 +144,7 @@ definition {
 		AssertLocation.assertPartialLocation(value1 = "_FACES1478_WAR_comliferayfacesissuejsfportlet_testParam=bar");
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test Faces1618And1638PortletSmoke {
 

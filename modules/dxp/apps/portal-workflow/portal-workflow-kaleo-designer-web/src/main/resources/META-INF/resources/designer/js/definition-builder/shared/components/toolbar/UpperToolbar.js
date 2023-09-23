@@ -1,13 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -16,6 +9,7 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import ClayToolbar from '@clayui/toolbar';
 import {TranslationAdminSelector} from 'frontend-js-components-web';
+import {localStorage} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {isEdge, isNode} from 'react-flow-renderer';
@@ -46,7 +40,7 @@ export default function UpperToolbar({
 		blockingErrors,
 		currentEditor,
 		definitionDescription,
-		definitionId,
+		definitionName,
 		definitionTitle,
 		definitionTitleTranslations,
 		elements,
@@ -55,7 +49,6 @@ export default function UpperToolbar({
 		setAlertType,
 		setBlockingErrors,
 		setDefinitionDescription,
-		setDefinitionId,
 		setDefinitionName,
 		setDefinitionTitle,
 		setDefinitionTitleTranslations,
@@ -72,7 +65,9 @@ export default function UpperToolbar({
 		version,
 	} = useContext(DefinitionBuilderContext);
 
-	const [translations, setTranslations] = useState({});
+	const [translations, setTranslations] = useState(
+		definitionTitleTranslations
+	);
 
 	function findEmptyElements(element, language) {
 		if (element.data.label && !(language in element.data.label)) {
@@ -96,7 +91,7 @@ export default function UpperToolbar({
 	const errorTitle = () => {
 		if (blockingErrors.errorType === 'duplicated') {
 			return Liferay.Language.get(
-				'you-have-the-same-id-in-two-nodes'
+				'you-have-the-same-name-in-two-nodes'
 			).slice(0, -1);
 		}
 		else if (blockingErrors.errorType === 'emptyField') {
@@ -146,6 +141,7 @@ export default function UpperToolbar({
 				currentDescription = definitionDescription;
 				currentElements = elements;
 			}
+
 			xmlContent = serializeDefinition(
 				xmlNamespace,
 				{
@@ -210,17 +206,21 @@ export default function UpperToolbar({
 			publishDefinitionRequest({
 				active,
 				content: getXMLContent(true),
-				name: definitionId,
+				name: definitionName,
 				title: definitionTitle,
 				title_i18n: definitionTitleTranslations,
 				version,
 			}).then((response) => {
 				if (response.ok) {
 					response.json().then(({name, version}) => {
-						setDefinitionId(name);
+						setDefinitionName(name);
 						setVersion(parseInt(version, 10));
 						if (version === '1') {
-							localStorage.setItem('firstPublished', true);
+							localStorage.setItem(
+								'firstPublished',
+								true,
+								localStorage.TYPES.FUNCTIONAL
+							);
 							redirectToSavedDefinition(name, version);
 						}
 						else {
@@ -245,17 +245,21 @@ export default function UpperToolbar({
 			saveDefinitionRequest({
 				active,
 				content: getXMLContent(true),
-				name: definitionId,
+				name: definitionName,
 				title: definitionTitle,
 				title_i18n: definitionTitleTranslations,
 				version,
 			}).then((response) => {
 				if (response.ok) {
 					response.json().then(({name, version}) => {
-						setDefinitionId(name);
+						setDefinitionName(name);
 						setVersion(parseInt(version, 10));
 						if (version === '1') {
-							localStorage.setItem('firstSaved', true);
+							localStorage.setItem(
+								'firstSaved',
+								true,
+								localStorage.TYPES.FUNCTIONAL
+							);
 							redirectToSavedDefinition(name, version);
 						}
 						else {
@@ -321,11 +325,16 @@ export default function UpperToolbar({
 	}, [definitionTitle, elements]);
 
 	useEffect(() => {
-		if (localStorage.getItem('firstSaved')) {
+		if (localStorage.getItem('firstSaved', localStorage.TYPES.FUNCTIONAL)) {
 			setAlert(Liferay.Language.get('workflow-saved'), 'success', true);
 			localStorage.removeItem('firstSaved');
 		}
-		else if (localStorage.getItem('firstPublished')) {
+		else if (
+			localStorage.getItem(
+				'firstPublished',
+				localStorage.TYPES.FUNCTIONAL
+			)
+		) {
 			setAlert(
 				Liferay.Language.get('workflow-published-successfully'),
 				'success',

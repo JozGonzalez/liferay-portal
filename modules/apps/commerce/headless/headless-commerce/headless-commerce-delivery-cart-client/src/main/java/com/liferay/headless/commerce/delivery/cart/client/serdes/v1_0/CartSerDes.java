@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.client.serdes.v1_0;
@@ -27,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -871,14 +861,18 @@ public class CartSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "cartItems")) {
 				if (jsonParserFieldValue != null) {
-					cart.setCartItems(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> CartItemSerDes.toDTO((String)object)
-						).toArray(
-							size -> new CartItem[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CartItem[] cartItemsArray =
+						new CartItem[jsonParserFieldValues.length];
+
+					for (int i = 0; i < cartItemsArray.length; i++) {
+						cartItemsArray[i] = CartItemSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					cart.setCartItems(cartItemsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "channelId")) {
@@ -934,14 +928,18 @@ public class CartSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "notes")) {
 				if (jsonParserFieldValue != null) {
-					cart.setNotes(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> CartCommentSerDes.toDTO((String)object)
-						).toArray(
-							size -> new CartComment[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CartComment[] notesArray =
+						new CartComment[jsonParserFieldValues.length];
+
+					for (int i = 0; i < notesArray.length; i++) {
+						notesArray[i] = CartCommentSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					cart.setNotes(notesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {

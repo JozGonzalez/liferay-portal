@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.test;
@@ -112,7 +103,7 @@ public class InvokerFilterContainerImplTest {
 
 		Assert.assertTrue(
 			"Target not found in " + eventFilters,
-			eventFilters.removeIf(filter -> eventFilter == filter));
+			_hasFilter(eventFilters, eventFilter));
 	}
 
 	@Test
@@ -124,7 +115,7 @@ public class InvokerFilterContainerImplTest {
 
 		Assert.assertTrue(
 			"Target not found in " + renderFilters,
-			renderFilters.removeIf(filter -> renderFilter == filter));
+			_hasFilter(renderFilters, renderFilter));
 	}
 
 	@Test
@@ -137,7 +128,7 @@ public class InvokerFilterContainerImplTest {
 
 		Assert.assertTrue(
 			"Target not found in " + resourceFilters,
-			resourceFilters.removeIf(filter -> resourceFilter == filter));
+			_hasFilter(resourceFilters, resourceFilter));
 	}
 
 	@Test
@@ -172,7 +163,20 @@ public class InvokerFilterContainerImplTest {
 
 		Assert.assertTrue(
 			"Target not found in " + actionFilters,
-			actionFilters.removeIf(filter -> filter == actionFilter));
+			_hasFilter(actionFilters, actionFilter));
+	}
+
+	private boolean _hasFilter(
+		List<? extends PortletFilter> portletFilters,
+		PortletFilter portletFilter) {
+
+		for (PortletFilter currentPortletFilter : portletFilters) {
+			if (currentPortletFilter == portletFilter) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private <T> T _registerPortletFilter(Class<T> clazz) {

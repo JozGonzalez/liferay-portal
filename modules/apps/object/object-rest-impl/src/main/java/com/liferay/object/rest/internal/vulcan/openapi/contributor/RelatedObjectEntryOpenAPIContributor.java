@@ -1,31 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.openapi.contributor;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.internal.vulcan.openapi.contributor.util.OpenAPIContributorUtil;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResource;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResourceProvider;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.openapi.OpenAPIContext;
@@ -65,36 +57,36 @@ public class RelatedObjectEntryOpenAPIContributor
 			return;
 		}
 
-		Map<ObjectDefinition, SystemObjectDefinitionMetadata>
-			systemObjectDefinitionMetadataMap = new HashMap<>();
+		Map<ObjectDefinition, SystemObjectDefinitionManager>
+			systemObjectDefinitionManagerMap = new HashMap<>();
 
 		for (ObjectDefinition systemObjectDefinition :
 				_objectDefinitionLocalService.getSystemObjectDefinitions()) {
 
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						systemObjectDefinition.getName());
 
-			if (systemObjectDefinitionMetadata == null) {
+			if (systemObjectDefinitionManager == null) {
 				continue;
 			}
 
 			JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-				systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+				systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 			String path = openAPIContext.getPath();
 
 			if (path.contains(
 					jaxRsApplicationDescriptor.getApplicationPath())) {
 
-				systemObjectDefinitionMetadataMap.put(
-					systemObjectDefinition, systemObjectDefinitionMetadata);
+				systemObjectDefinitionManagerMap.put(
+					systemObjectDefinition, systemObjectDefinitionManager);
 			}
 		}
 
-		for (Map.Entry<ObjectDefinition, SystemObjectDefinitionMetadata> entry :
-				systemObjectDefinitionMetadataMap.entrySet()) {
+		for (Map.Entry<ObjectDefinition, SystemObjectDefinitionManager> entry :
+				systemObjectDefinitionManagerMap.entrySet()) {
 
 			ObjectDefinition systemObjectDefinition = entry.getKey();
 
@@ -111,17 +103,18 @@ public class RelatedObjectEntryOpenAPIContributor
 
 	@Activate
 	protected void activate() {
-		init(_dtoConverterRegistry, _systemObjectDefinitionMetadataRegistry);
+		init(_dtoConverterRegistry, _systemObjectDefinitionManagerRegistry);
 	}
 
 	private void _contribute(
 			OpenAPI openAPI, ObjectDefinition systemObjectDefinition,
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata,
+			SystemObjectDefinitionManager systemObjectDefinitionManager,
 			ObjectRelationship systemObjectRelationship, String version)
 		throws Exception {
 
-		ObjectDefinition relatedObjectDefinition = _getRelatedObjectDefinition(
-			systemObjectDefinition, systemObjectRelationship);
+		ObjectDefinition relatedObjectDefinition =
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				systemObjectDefinition, systemObjectRelationship);
 
 		if (!relatedObjectDefinition.isActive()) {
 			return;
@@ -140,10 +133,10 @@ public class RelatedObjectEntryOpenAPIContributor
 
 		OpenAPIContributorUtil.copySchemas(
 			relatedSchemaName, relatedSchemas,
-			relatedObjectDefinition.isSystem(), openAPI);
+			relatedObjectDefinition.isUnmodifiableSystemObject(), openAPI);
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 		String schemaName = getSchemaName(systemObjectDefinition);
 
 		String name = StringBundler.concat(
@@ -347,25 +340,6 @@ public class RelatedObjectEntryOpenAPIContributor
 		};
 	}
 
-	private ObjectDefinition _getRelatedObjectDefinition(
-			ObjectDefinition systemObjectDefinition,
-			ObjectRelationship systemObjectRelationship)
-		throws Exception {
-
-		long objectDefinitionId1 =
-			systemObjectRelationship.getObjectDefinitionId1();
-
-		if (objectDefinitionId1 !=
-				systemObjectDefinition.getObjectDefinitionId()) {
-
-			return _objectDefinitionLocalService.getObjectDefinition(
-				systemObjectRelationship.getObjectDefinitionId1());
-		}
-
-		return _objectDefinitionLocalService.getObjectDefinition(
-			systemObjectRelationship.getObjectDefinitionId2());
-	}
-
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
@@ -380,7 +354,7 @@ public class RelatedObjectEntryOpenAPIContributor
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

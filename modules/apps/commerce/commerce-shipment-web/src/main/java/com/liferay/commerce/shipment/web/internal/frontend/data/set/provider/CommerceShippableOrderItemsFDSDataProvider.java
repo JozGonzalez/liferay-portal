@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.frontend.data.set.provider;
@@ -30,8 +21,8 @@ import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
 import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceOrderItemService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
+import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.service.CommerceShipmentService;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
@@ -45,6 +36,8 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +72,7 @@ public class CommerceShippableOrderItemsFDSDataProvider
 			_commerceShipmentService.getCommerceShipment(commerceShipmentId);
 
 		List<CommerceOrderItem> commerceOrderItems =
-			_commerceOrderItemService.getCommerceOrderItems(
+			_commerceOrderItemLocalService.getCommerceOrderItems(
 				commerceShipment.getGroupId(),
 				commerceShipment.getCommerceAccountId(), orderStatuses,
 				fdsPagination.getStartPosition(),
@@ -115,20 +108,24 @@ public class CommerceShippableOrderItemsFDSDataProvider
 			}
 
 			if (commerceShipmentItem == null) {
+				BigDecimal quantity = commerceOrderItem.getQuantity();
+
 				orderItems.add(
 					new OrderItem(
 						_commerceInventoryEngine.getStockQuantity(
 							commerceOrderItem.getCompanyId(),
 							commerceCatalogGroupId,
 							commerceOrderItem.getGroupId(),
-							commerceOrderItem.getSku()),
+							commerceOrderItem.getSku(),
+							commerceOrderItem.getUnitOfMeasureKey()),
 						icon, commerceOrderItem.getCommerceOrderId(),
 						commerceOrderItem.getCommerceOrderItemId(),
-						commerceOrderItem.getQuantity() -
-							commerceOrderItem.getShippedQuantity(),
+						quantity.subtract(
+							commerceOrderItem.getShippedQuantity()),
 						_getShippingMethodAndOptionName(
 							commerceOrder, httpServletRequest),
-						commerceOrderItem.getSku()));
+						commerceOrderItem.getSku(),
+						commerceOrderItem.getUnitOfMeasureKey()));
 			}
 		}
 
@@ -146,7 +143,7 @@ public class CommerceShippableOrderItemsFDSDataProvider
 		CommerceShipment commerceShipment =
 			_commerceShipmentService.getCommerceShipment(commerceShipmentId);
 
-		return _commerceOrderItemService.getCommerceOrderItemsCount(
+		return _commerceOrderItemLocalService.getCommerceOrderItemsCount(
 			commerceShipment.getGroupId(),
 			commerceShipment.getCommerceAccountId(), orderStatuses);
 	}
@@ -161,10 +158,10 @@ public class CommerceShippableOrderItemsFDSDataProvider
 		throws PortalException {
 
 		CommerceAddress commerceOrderShippingCommerceAddress =
-			_commerceAddressService.fetchCommerceAddress(
+			_commerceAddressLocalService.fetchCommerceAddress(
 				commerceOrder.getShippingAddressId());
 		CommerceAddress commerceShipmentCommerceAddress =
-			_commerceAddressService.fetchCommerceAddress(
+			_commerceAddressLocalService.fetchCommerceAddress(
 				commerceShipment.getCommerceAddressId());
 
 		if ((commerceOrderShippingCommerceAddress != null) &&
@@ -227,13 +224,13 @@ public class CommerceShippableOrderItemsFDSDataProvider
 	}
 
 	@Reference
-	private CommerceAddressService _commerceAddressService;
+	private CommerceAddressLocalService _commerceAddressLocalService;
 
 	@Reference
 	private CommerceInventoryEngine _commerceInventoryEngine;
 
 	@Reference
-	private CommerceOrderItemService _commerceOrderItemService;
+	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
 
 	@Reference
 	private CommerceShipmentItemService _commerceShipmentItemService;

@@ -1,34 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.resource.v1_0.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
+import com.liferay.commerce.price.list.model.CommercePriceEntry;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.service.CPInstanceLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.CartItem;
+import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.Price;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -42,7 +37,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -62,14 +57,14 @@ public class CartItemResourceTest extends BaseCartItemResourceTestCase {
 
 		_user = UserTestUtil.addUser(testCompany);
 
-		_serviceContext = ServiceContextTestUtil.getServiceContext(
-			testCompany.getCompanyId(), testGroup.getGroupId(),
-			_user.getUserId());
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				testCompany.getCompanyId(), testGroup.getGroupId(),
+				_user.getUserId());
 
-		_commerceAccount =
-			_commerceAccountLocalService.addBusinessCommerceAccount(
-				"Test Business Account", 0, null, null, true, null, null, null,
-				_serviceContext);
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
+			_user.getUserId(), "Test Business Account", null, null, null, null,
+			serviceContext);
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			testGroup.getCompanyId());
@@ -79,34 +74,26 @@ public class CartItemResourceTest extends BaseCartItemResourceTestCase {
 
 		_commerceInventoryWarehouse =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
-				_serviceContext);
-	}
+				serviceContext);
 
-	@After
-	@Override
-	public void tearDown() throws Exception {
-		super.tearDown();
-
-		List<CommerceOrder> commerceOrders =
-			_commerceOrderLocalService.getCommerceOrders(
-				_commerceChannel.getGroupId(),
-				_commerceAccount.getCommerceAccountId(), -1, -1, null);
-
-		for (CommerceOrder commerceOrder : commerceOrders) {
-			_commerceOrderLocalService.deleteCommerceOrder(
-				commerceOrder.getCommerceOrderId());
-		}
-
-		if (_commerceAccount != null) {
-			_commerceAccountLocalService.deleteCommerceAccount(
-				_commerceAccount);
-		}
+		_commerceOrder = _commerceOrderLocalService.addCommerceOrder(
+			_user.getUserId(), _commerceChannel.getGroupId(),
+			_accountEntry.getAccountEntryId(),
+			_commerceCurrency.getCommerceCurrencyId(), 0);
 	}
 
 	@Ignore
 	@Override
 	@Test
 	public void testDeleteCartItem() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testGetCartItem() throws Exception {
+		super.testGetCartItem();
+
+		_testGetCartItemPriceOnApplication();
 	}
 
 	@Ignore
@@ -128,25 +115,19 @@ public class CartItemResourceTest extends BaseCartItemResourceTestCase {
 
 	@Override
 	protected CartItem randomCartItem() throws Exception {
-		CPInstance cpInstance = _addCPInstance();
-
-		return new CartItem() {
-			{
-				quantity = 1;
-				sku = cpInstance.getSku();
-				skuId = cpInstance.getCPInstanceId();
-			}
-		};
+		return _randomCartItem(RandomTestUtil.randomBoolean());
 	}
 
 	@Override
 	protected CartItem testDeleteCartItem_addCartItem() throws Exception {
-		return _addCartItem();
+		return cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(), randomCartItem());
 	}
 
 	@Override
 	protected CartItem testGetCartItem_addCartItem() throws Exception {
-		return _addCartItem();
+		return cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(), randomCartItem());
 	}
 
 	@Override
@@ -159,81 +140,113 @@ public class CartItemResourceTest extends BaseCartItemResourceTestCase {
 
 	@Override
 	protected Long testGetCartItemsPage_getCartId() throws Exception {
-		CommerceOrder commerceOrder = _addCommerceOrder();
-
-		return commerceOrder.getCommerceOrderId();
+		return _commerceOrder.getCommerceOrderId();
 	}
 
 	@Override
 	protected CartItem testGraphQLCartItem_addCartItem() throws Exception {
-		return _addCartItem();
+		return cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(), randomCartItem());
 	}
 
 	@Override
 	protected CartItem testPatchCartItem_addCartItem() throws Exception {
-		return _addCartItem();
+		return cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(), randomCartItem());
 	}
 
 	@Override
 	protected CartItem testPostCartItem_addCartItem(CartItem cartItem)
 		throws Exception {
 
-		return _addCartItem(cartItem);
+		return cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(), cartItem);
 	}
 
 	@Override
 	protected CartItem testPutCartItem_addCartItem() throws Exception {
-		return _addCartItem();
-	}
-
-	private CartItem _addCartItem() throws Exception {
-		CommerceOrder commerceOrder = _addCommerceOrder();
-
 		return cartItemResource.postCartItem(
-			commerceOrder.getCommerceOrderId(), randomCartItem());
+			_commerceOrder.getCommerceOrderId(), randomCartItem());
 	}
 
-	private CartItem _addCartItem(CartItem cartItem) throws Exception {
-		CommerceOrder commerceOrder = _addCommerceOrder();
+	private CPInstance _addCPInstance(boolean priceOnApplication)
+		throws Exception {
 
-		return cartItemResource.postCartItem(
-			commerceOrder.getCommerceOrderId(), cartItem);
-	}
-
-	private CommerceOrder _addCommerceOrder() throws Exception {
-		if (_commerceOrder != null) {
-			return _commerceOrder;
-		}
-
-		_commerceOrder = _commerceOrderLocalService.addCommerceOrder(
-			_user.getUserId(), _commerceChannel.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
-
-		return _commerceOrder;
-	}
-
-	private CPInstance _addCPInstance() throws Exception {
 		CPInstance cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
-			testGroup.getGroupId());
-
-		cpInstance.setPrice(BigDecimal.valueOf(RandomTestUtil.randomDouble()));
-
-		CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
-
-		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
-			_user.getUserId(), _commerceInventoryWarehouse, cpInstance.getSku(),
-			10);
+			testGroup.getGroupId(),
+			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		_cpInstances.add(cpInstance);
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), _commerceInventoryWarehouse, BigDecimal.TEN,
+			cpInstance.getSku(), StringPool.BLANK);
+
+		if (priceOnApplication) {
+			_updateCommercePriceEntry(
+				cpInstance, priceOnApplication,
+				CommercePriceListConstants.TYPE_PRICE_LIST);
+			_updateCommercePriceEntry(
+				cpInstance, priceOnApplication,
+				CommercePriceListConstants.TYPE_PROMOTION);
+		}
 
 		return cpInstance;
 	}
 
-	private CommerceAccount _commerceAccount;
+	private CartItem _randomCartItem(boolean priceOnApplication)
+		throws Exception {
 
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
+		CPInstance cpInstance = _addCPInstance(priceOnApplication);
+
+		return new CartItem() {
+			{
+				quantity = BigDecimal.valueOf(RandomTestUtil.randomInt(1, 10));
+				sku = cpInstance.getSku();
+				skuId = cpInstance.getCPInstanceId();
+			}
+		};
+	}
+
+	private void _testGetCartItemPriceOnApplication() throws Exception {
+		boolean priceOnApplication = RandomTestUtil.randomBoolean();
+
+		CartItem postCartItem = cartItemResource.postCartItem(
+			_commerceOrder.getCommerceOrderId(),
+			_randomCartItem(priceOnApplication));
+
+		CartItem getCartItem = cartItemResource.getCartItem(
+			postCartItem.getId());
+
+		assertEquals(postCartItem, getCartItem);
+		assertValid(getCartItem);
+
+		Price price = getCartItem.getPrice();
+
+		Assert.assertEquals(priceOnApplication, price.getPriceOnApplication());
+	}
+
+	private void _updateCommercePriceEntry(
+		CPInstance cpInstance, boolean priceOnApplication,
+		String typePriceList) {
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.getInstanceBaseCommercePriceEntry(
+				cpInstance.getCPInstanceUuid(), typePriceList,
+				StringPool.BLANK);
+
+		if (commercePriceEntry == null) {
+			return;
+		}
+
+		commercePriceEntry.setPriceOnApplication(priceOnApplication);
+
+		_commercePriceEntryLocalService.updateCommercePriceEntry(
+			commercePriceEntry);
+	}
+
+	@DeleteAfterTestRun
+	private AccountEntry _accountEntry;
 
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;
@@ -244,15 +257,17 @@ public class CartItemResourceTest extends BaseCartItemResourceTestCase {
 	@DeleteAfterTestRun
 	private CommerceInventoryWarehouse _commerceInventoryWarehouse;
 
+	@DeleteAfterTestRun
 	private CommerceOrder _commerceOrder;
 
 	@Inject
 	private CommerceOrderLocalService _commerceOrderLocalService;
 
-	@DeleteAfterTestRun
-	private List<CPInstance> _cpInstances = new ArrayList<>();
+	@Inject
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
 
-	private ServiceContext _serviceContext;
+	@DeleteAfterTestRun
+	private final List<CPInstance> _cpInstances = new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private User _user;

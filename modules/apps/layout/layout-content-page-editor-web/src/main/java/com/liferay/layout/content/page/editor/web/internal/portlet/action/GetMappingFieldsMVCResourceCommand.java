@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
@@ -17,6 +8,7 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -28,6 +20,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Locale;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -63,9 +57,8 @@ public class GetMappingFieldsMVCResourceCommand extends BaseMVCResourceCommand {
 		try {
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
-				MappingContentUtil.getMappingFieldsJSONArray(
-					classTypeId, themeDisplay.getScopeGroupId(),
-					_infoItemServiceRegistry, _portal.getClassName(classNameId),
+				_getMappingFieldsJSONArray(
+					classNameId, classTypeId, themeDisplay.getScopeGroupId(),
 					themeDisplay.getLocale()));
 		}
 		catch (Exception exception) {
@@ -79,6 +72,15 @@ public class GetMappingFieldsMVCResourceCommand extends BaseMVCResourceCommand {
 						themeDisplay.getRequest(),
 						"an-unexpected-error-occurred")));
 		}
+	}
+
+	private JSONArray _getMappingFieldsJSONArray(
+			long classNameId, String classTypeId, long groupId, Locale locale)
+		throws Exception {
+
+		return MappingContentUtil.getMappingFieldsJSONArray(
+			classTypeId, groupId, _infoItemServiceRegistry,
+			_portal.getClassName(classNameId), locale);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

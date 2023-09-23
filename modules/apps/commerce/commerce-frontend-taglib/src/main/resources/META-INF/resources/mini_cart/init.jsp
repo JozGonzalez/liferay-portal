@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -29,6 +20,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 <liferay-theme:defineObjects />
 
 <%
+long accountEntryId = (Long)request.getAttribute("liferay-commerce:cart:accountEntryId");
 Map<String, String> cartViews = (Map<String, String>)request.getAttribute("liferay-commerce:cart:cartViews");
 String checkoutURL = (String)request.getAttribute("liferay-commerce:cart:checkoutURL");
 long commerceChannelGroupId = (Long)request.getAttribute("liferay-commerce:cart:commerceChannelGroupId");
@@ -41,6 +33,7 @@ Map<String, String> labels = (Map<String, String>)request.getAttribute("liferay-
 String orderDetailURL = (String)request.getAttribute("liferay-commerce:cart:orderDetailURL");
 long orderId = (long)request.getAttribute("liferay-commerce:cart:orderId");
 String productURLSeparator = (String)request.getAttribute("liferay-commerce:cart:productURLSeparator");
+boolean requestCodeEnabled = (boolean)request.getAttribute("liferay-commerce:cart:requestQuoteEnabled");
 String siteDefaultURL = (String)request.getAttribute("liferay-commerce:cart:siteDefaultURL");
 boolean toggleable = (boolean)request.getAttribute("liferay-commerce:cart:toggleable");
 

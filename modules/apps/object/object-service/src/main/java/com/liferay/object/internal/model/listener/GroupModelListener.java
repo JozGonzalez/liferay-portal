@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.model.listener;
 
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -37,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
 public class GroupModelListener extends BaseModelListener<Group> {
 
 	@Override
-	public void onAfterRemove(Group group) throws ModelListenerException {
+	public void onBeforeRemove(Group group) throws ModelListenerException {
 		ActionableDynamicQuery actionableDynamicQuery =
 			_objectDefinitionLocalService.getActionableDynamicQuery();
 
@@ -80,7 +72,18 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			(ObjectEntry objectEntry) ->
 				_objectEntryLocalService.deleteObjectEntry(objectEntry));
 
-		actionableDynamicQuery.performActions();
+		boolean disassociateRelatedModels =
+			ObjectEntryThreadLocal.isDisassociateRelatedModels();
+
+		try {
+			ObjectEntryThreadLocal.setDisassociateRelatedModels(true);
+
+			actionableDynamicQuery.performActions();
+		}
+		finally {
+			ObjectEntryThreadLocal.setDisassociateRelatedModels(
+				disassociateRelatedModels);
+		}
 	}
 
 	@Reference

@@ -1,63 +1,65 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
-import {Treeview} from 'frontend-js-components-web';
-import React, {useCallback, useMemo, useState} from 'react';
+import {TreeView as ClayTreeView} from '@clayui/core';
+import ClayIcon from '@clayui/icon';
+import classNames from 'classnames';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import getAllEditables from '../../../../../app/components/fragment_content/getAllEditables';
+import {fromControlsId} from '../../../../../app/components/layout_data_items/Collection';
 import getAllPortals from '../../../../../app/components/layout_data_items/getAllPortals';
 import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/editableFragmentEntryProcessor';
+import {EDITABLE_TYPE_LABELS} from '../../../../../app/config/constants/editableTypeLabels';
 import {EDITABLE_TYPES} from '../../../../../app/config/constants/editableTypes';
 import {FRAGMENT_ENTRY_TYPES} from '../../../../../app/config/constants/fragmentEntryTypes';
 import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/freemarkerFragmentEntryProcessor';
 import {ITEM_TYPES} from '../../../../../app/config/constants/itemTypes';
+import {
+	ARROW_DOWN_KEY_CODE,
+	ARROW_LEFT_KEY_CODE,
+	ARROW_RIGHT_KEY_CODE,
+	ARROW_UP_KEY_CODE,
+} from '../../../../../app/config/constants/keyboardCodes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
 import {LAYOUT_TYPES} from '../../../../../app/config/constants/layoutTypes';
 import {config} from '../../../../../app/config/index';
 import {
 	useActiveItemId,
 	useHoverItem,
+	useHoveredItemId,
 } from '../../../../../app/contexts/ControlsContext';
 import {useMovementTarget} from '../../../../../app/contexts/KeyboardMovementContext';
-import {useSelector} from '../../../../../app/contexts/StoreContext';
+import {
+	useDispatch,
+	useSelector,
+	useSelectorRef,
+} from '../../../../../app/contexts/StoreContext';
 import selectCanUpdateEditables from '../../../../../app/selectors/selectCanUpdateEditables';
 import selectCanUpdateItemConfiguration from '../../../../../app/selectors/selectCanUpdateItemConfiguration';
+import selectCanUpdatePageStructure from '../../../../../app/selectors/selectCanUpdatePageStructure';
 import selectLayoutDataItemLabel from '../../../../../app/selectors/selectLayoutDataItemLabel';
 import {selectPageContents} from '../../../../../app/selectors/selectPageContents';
 import canActivateEditable from '../../../../../app/utils/canActivateEditable';
 import {DragAndDropContextProvider} from '../../../../../app/utils/drag_and_drop/useDragAndDrop';
 import isMapped from '../../../../../app/utils/editable_value/isMapped';
 import isMappedToCollection from '../../../../../app/utils/editable_value/isMappedToCollection';
+import findPageContent from '../../../../../app/utils/findPageContent';
 import {formIsMapped} from '../../../../../app/utils/formIsMapped';
 import {formIsRestricted} from '../../../../../app/utils/formIsRestricted';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import {getResponsiveConfig} from '../../../../../app/utils/getResponsiveConfig';
 import getSelectedField from '../../../../../app/utils/getSelectedField';
 import StructureTreeNode from './StructureTreeNode';
-
-const EDITABLE_LABEL = {
-	[EDITABLE_TYPES.backgroundImage]: Liferay.Language.get('background-image'),
-	[EDITABLE_TYPES.html]: Liferay.Language.get('html'),
-	[EDITABLE_TYPES.image]: Liferay.Language.get('image'),
-	[EDITABLE_TYPES.link]: Liferay.Language.get('link'),
-	[EDITABLE_TYPES['rich-text']]: Liferay.Language.get('rich-text'),
-	[EDITABLE_TYPES.text]: Liferay.Language.get('text'),
-};
+import StructureTreeNodeActions from './StructureTreeNodeActions';
+import VisibilityButton from './VisibilityButton';
 
 const EDITABLE_TYPE_ICONS = {
+	[EDITABLE_TYPES.action]: 'cursor',
 	[EDITABLE_TYPES.backgroundImage]: 'picture',
 	[EDITABLE_TYPES.html]: 'code',
 	[EDITABLE_TYPES.image]: 'picture',
@@ -88,19 +90,26 @@ export default function PageStructureSidebar() {
 	const layoutData = useSelector((state) => state.layoutData);
 	const pageContents = useSelector(selectPageContents);
 	const hoverItem = useHoverItem();
+	const hoveredItemId = useHoveredItemId();
 
 	const mappingFields = useSelector((state) => state.mappingFields);
 	const masterLayoutData = useSelector(
 		(state) => state.masterLayout?.masterLayoutData
 	);
 
+	const restrictedItemIds = useSelector((state) => state.restrictedItemIds);
+
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
 	);
+	const layoutDataRef = useSelectorRef((store) => store.layoutData);
 
 	const [dragAndDropHoveredItemId, setDragAndDropHoveredItemId] = useState(
 		null
 	);
+
+	const [editingNodeId, setEditingNodeId] = useState(null);
+	const [expandedKeys, setExpandedKeys] = useState([]);
 
 	const isMasterPage = config.layoutType === LAYOUT_TYPES.master;
 
@@ -118,35 +127,44 @@ export default function PageStructureSidebar() {
 				activeItemId,
 				canUpdateEditables,
 				canUpdateItemConfiguration,
-				dragAndDropHoveredItemId,
+				editingNodeId,
 				fragmentEntryLinks,
+				hoveredItemId,
 				isMasterPage,
-				keyboardMovementTargetId,
 				layoutData,
+				layoutDataRef,
 				mappingFields,
 				masterLayoutData,
 				onHoverNode,
 				pageContents,
+				restrictedItemIds,
 				selectedViewportSize,
 			}).children,
+
 		[
 			activeItemId,
 			canUpdateEditables,
 			canUpdateItemConfiguration,
 			data.items,
 			data.rootItems.main,
-			dragAndDropHoveredItemId,
+			editingNodeId,
 			fragmentEntryLinks,
+			hoveredItemId,
 			isMasterPage,
-			keyboardMovementTargetId,
 			layoutData,
+			layoutDataRef,
 			mappingFields,
 			masterLayoutData,
 			pageContents,
+			restrictedItemIds,
 			onHoverNode,
 			selectedViewportSize,
 		]
 	);
+
+	const setExpandedNodes = (expandedNodes) => {
+		setExpandedKeys(Array.from(expandedNodes));
+	};
 
 	const handleNodeFocus = () => {
 		const focusedItem = document.activeElement?.querySelector(
@@ -157,6 +175,155 @@ export default function PageStructureSidebar() {
 			hoverItem(focusedItem.dataset.itemId);
 		}
 	};
+
+	const handleButtonsKeyDown = (event) => {
+		if (
+			[
+				ARROW_DOWN_KEY_CODE,
+				ARROW_LEFT_KEY_CODE,
+				ARROW_RIGHT_KEY_CODE,
+				ARROW_UP_KEY_CODE,
+			].includes(event.nativeEvent.code)
+		) {
+			document.activeElement
+				.closest('.page-editor__page-structure__clay-tree-node')
+				?.focus();
+		}
+		else {
+			event.stopPropagation();
+		}
+	};
+
+	const ItemActions = ({item}) => {
+		const activeItemId = useActiveItemId();
+		const dispatch = useDispatch();
+		const hoveredItemId = useHoveredItemId();
+		const isSelected = item.id === fromControlsId(activeItemId);
+		const isHovered = item.id === fromControlsId(hoveredItemId);
+		const canUpdatePageStructure = useSelector(
+			selectCanUpdatePageStructure
+		);
+		const showOptions =
+			canUpdatePageStructure &&
+			item.itemType !== ITEM_TYPES.editable &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
+			item.activable &&
+			!item.isMasterItem;
+
+		if (item.editingName) {
+			return null;
+		}
+
+		return (
+			<div
+				className={classNames('autofit-row w-auto', {
+					'page-editor__page-structure__tree-node__buttons--hidden':
+						item.hidden || item.hiddenAncestor,
+				})}
+				onFocus={(event) => event.stopPropagation()}
+				onKeyDown={handleButtonsKeyDown}
+			>
+				{(item.hidable || item.hidden) && (
+					<VisibilityButton
+						className="ml-0"
+						dispatch={dispatch}
+						node={item}
+						selectedViewportSize={selectedViewportSize}
+						visible={item.hidden || isHovered || isSelected}
+					/>
+				)}
+
+				{showOptions && (
+					<StructureTreeNodeActions
+						item={item}
+						setEditingNodeId={setEditingNodeId}
+						visible={item.hidden || isHovered || isSelected}
+					/>
+				)}
+			</div>
+		);
+	};
+
+	const getAncestorsIds = useCallback(
+		(layoutDataItem, data) => {
+			if (!layoutDataItem.parentId) {
+				const itemInMasterLayout =
+					masterLayoutData?.items[layoutDataItem.itemId];
+				if (
+					!itemInMasterLayout &&
+					masterLayoutData?.rootItems?.dropZone
+				) {
+					const dropZoneItem =
+						masterLayoutData.items[
+							masterLayoutData.rootItems.dropZone
+						];
+
+					return [
+						...[layoutDataItem.itemId],
+						...getAncestorsIds(
+							masterLayoutData.items[dropZoneItem.parentId],
+							masterLayoutData
+						),
+					];
+				}
+				else {
+					return [layoutDataItem.itemId];
+				}
+			}
+
+			return [
+				...[layoutDataItem.itemId],
+				...getAncestorsIds(data.items[layoutDataItem.parentId], data),
+			];
+		},
+		[masterLayoutData]
+	);
+
+	useEffect(() => {
+		if (activeItemId) {
+			const layoutDataActiveItem = layoutData.items[activeItemId];
+
+			if (!layoutDataActiveItem) {
+				return;
+			}
+
+			setExpandedKeys((previousExpanedKeys) => [
+				...new Set([
+					...previousExpanedKeys,
+					...getAncestorsIds(layoutDataActiveItem, layoutData),
+				]),
+			]);
+		}
+	}, [activeItemId, getAncestorsIds, layoutData, masterLayoutData]);
+
+	useEffect(() => {
+		if (dragAndDropHoveredItemId) {
+			setExpandedKeys((previousExpanedKeys) => [
+				...new Set([
+					...previousExpanedKeys,
+					...[dragAndDropHoveredItemId],
+				]),
+			]);
+		}
+	}, [dragAndDropHoveredItemId]);
+
+	useEffect(() => {
+		if (keyboardMovementTargetId) {
+			const layoutDataTargetItem =
+				layoutData.items[keyboardMovementTargetId];
+
+			if (!layoutDataTargetItem) {
+				return;
+			}
+
+			setExpandedKeys((previousExpanedKeys) => [
+				...new Set([
+					...previousExpanedKeys,
+					...getAncestorsIds(layoutDataTargetItem, layoutData),
+				]),
+			]);
+		}
+	}, [getAncestorsIds, keyboardMovementTargetId, layoutData]);
 
 	return (
 		<div
@@ -174,11 +341,87 @@ export default function PageStructureSidebar() {
 			)}
 
 			<DragAndDropContextProvider>
-				<Treeview
-					NodeComponent={StructureTreeNode}
-					nodes={nodes}
-					selectedNodeIds={[activeItemId]}
-				/>
+				<ClayTreeView
+					displayType="light"
+					expandDoubleClick={false}
+					expandedKeys={new Set(expandedKeys)}
+					expanderIcons={{
+						close: <ClayIcon symbol="hr" />,
+						open: <ClayIcon symbol="plus" />,
+					}}
+					items={nodes}
+					onExpandedChange={setExpandedNodes}
+					onItemsChange={() => {}}
+					showExpanderOnHover={false}
+				>
+					{(item) => (
+						<ClayTreeView.Item
+							actions={<ItemActions item={item} />}
+							active={item.active && item.activable}
+						>
+							<ClayTreeView.ItemStack
+								className={classNames(
+									'page-editor__page-structure__clay-tree-node',
+									{
+										'page-editor__page-structure__clay-tree-node--active':
+											item.active && item.activable,
+										'page-editor__page-structure__clay-tree-node--hovered':
+											item.hovered,
+										'page-editor__page-structure__clay-tree-node--mapped':
+											item.mapped,
+										'page-editor__page-structure__clay-tree-node--master-item':
+											item.isMasterItem,
+									}
+								)}
+								data-qa-id={item.tooltipTitle}
+								data-title={
+									item.isMasterItem || !item.activable
+										? ''
+										: item.tooltipTitle
+								}
+								data-tooltip-align={
+									item.isMasterItem || !item.activable
+										? ''
+										: 'right'
+								}
+								onMouseLeave={(event) => {
+									if (item.hovered) {
+										event.stopPropagation();
+										hoverItem(null);
+									}
+								}}
+								onMouseOver={(event) => {
+									event.stopPropagation();
+									hoverItem(item.id);
+								}}
+							>
+								<span className="sr-only">{item.name}</span>
+
+								<StructureTreeNode
+									node={item}
+									setEditingNodeId={setEditingNodeId}
+								/>
+							</ClayTreeView.ItemStack>
+
+							<ClayTreeView.Group items={item.children}>
+								{(item) => (
+									<ClayTreeView.Item
+										actions={<ItemActions item={item} />}
+									>
+										<span className="sr-only">
+											{item.name}
+										</span>
+
+										<StructureTreeNode
+											node={item}
+											setEditingNodeId={setEditingNodeId}
+										/>
+									</ClayTreeView.Item>
+								)}
+							</ClayTreeView.Group>
+						</ClayTreeView.Item>
+					)}
+				</ClayTreeView>
 			</DragAndDropContextProvider>
 		</div>
 	);
@@ -210,26 +453,20 @@ function getDocumentFragment(content) {
 function getKey({collectionConfig, editable, infoItem, selectedMappingTypes}) {
 	if (collectionConfig) {
 		if (collectionConfig.classNameId) {
-			return getMappingFieldsKey(
-				collectionConfig.classNameId,
-				collectionConfig.classPK
-			);
+			return getMappingFieldsKey(collectionConfig);
 		}
 		else {
 			return collectionConfig.key;
 		}
 	}
 	else if (editable.mappedField) {
-		return getMappingFieldsKey(
-			selectedMappingTypes.type.id,
-			selectedMappingTypes.subtype.id || 0
-		);
+		return getMappingFieldsKey(selectedMappingTypes);
 	}
 	else if (!infoItem) {
 		return null;
 	}
 
-	return getMappingFieldsKey(infoItem.classNameId, infoItem.classTypeId);
+	return getMappingFieldsKey(infoItem);
 }
 
 function getMappedFieldLabel(
@@ -238,10 +475,7 @@ function getMappedFieldLabel(
 	pageContents,
 	mappingFields
 ) {
-	const infoItem = pageContents.find(
-		({classNameId, classPK}) =>
-			editable.classNameId === classNameId && editable.classPK === classPK
-	);
+	const infoItem = findPageContent(pageContents, editable);
 
 	const {selectedMappingTypes} = config;
 
@@ -364,21 +598,22 @@ function visit(
 		activeItemId,
 		canUpdateEditables,
 		canUpdateItemConfiguration,
-		dragAndDropHoveredItemId,
+		editingNodeId,
 		fragmentEntryLinks,
 		hasHiddenAncestor,
+		hoveredItemId,
 		isMasterPage,
-		keyboardMovementTargetId,
 		layoutData,
+		layoutDataRef,
 		mappingFields,
 		masterLayoutData,
 		onHoverNode,
 		pageContents,
+		restrictedItemIds,
 		selectedViewportSize,
 	}
 ) {
 	const children = [];
-	const restrictedItemIds = new Set(config.restrictedItemIds);
 
 	const itemInMasterLayout =
 		masterLayoutData &&
@@ -444,13 +679,13 @@ function visit(
 					activable:
 						canUpdateEditables &&
 						canActivateEditable(selectedViewportSize, type),
+					active: childId === activeItemId,
 					children: [],
-					dragAndDropHoveredItemId,
 					draggable: false,
-					expanded: childId === activeItemId,
 					hidable: false,
 					hidden: false,
 					hiddenAncestor: hasHiddenAncestor || hidden,
+					hovered: childId === hoveredItemId,
 					icon: EDITABLE_TYPE_ICONS[type],
 					id: childId,
 					isMasterItem: !isMasterPage && itemInMasterLayout,
@@ -460,7 +695,7 @@ function visit(
 					onHoverNode,
 					parentId: item.parentId,
 					removable: false,
-					tooltipTitle: EDITABLE_LABEL[type],
+					tooltipTitle: EDITABLE_TYPE_LABELS[type],
 				});
 			}
 			else {
@@ -471,15 +706,18 @@ function visit(
 						activeItemId,
 						canUpdateEditables,
 						canUpdateItemConfiguration,
-						dragAndDropHoveredItemId,
+						editingNodeId,
 						fragmentEntryLinks,
 						hasHiddenAncestor: hasHiddenAncestor || hidden,
+						hoveredItemId,
 						isMasterPage,
 						layoutData,
+						layoutDataRef,
 						mappingFields,
 						masterLayoutData,
 						onHoverNode,
 						pageContents,
+						restrictedItemIds,
 						selectedViewportSize,
 					}),
 
@@ -517,16 +755,18 @@ function visit(
 						activeItemId,
 						canUpdateEditables,
 						canUpdateItemConfiguration,
-						dragAndDropHoveredItemId,
+						editingNodeId,
 						fragmentEntryLinks,
 						hasHiddenAncestor: hasHiddenAncestor || hidden,
+						hoveredItemId,
 						isMasterPage,
-						keyboardMovementTargetId,
 						layoutData,
+						layoutDataRef,
 						mappingFields,
 						masterLayoutData,
 						onHoverNode,
 						pageContents,
+						restrictedItemIds,
 						selectedViewportSize,
 					}
 				).children;
@@ -538,16 +778,18 @@ function visit(
 					activeItemId,
 					canUpdateEditables,
 					canUpdateItemConfiguration,
-					dragAndDropHoveredItemId,
+					editingNodeId,
 					fragmentEntryLinks,
 					hasHiddenAncestor: hasHiddenAncestor || hidden,
+					hoveredItemId,
 					isMasterPage,
-					keyboardMovementTargetId,
 					layoutData,
+					layoutDataRef,
 					mappingFields,
 					masterLayoutData,
 					onHoverNode,
 					pageContents,
+					restrictedItemIds,
 					selectedViewportSize,
 				});
 
@@ -562,17 +804,17 @@ function visit(
 			item.type !== LAYOUT_DATA_ITEM_TYPES.collectionItem &&
 			item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone &&
 			canUpdateItemConfiguration,
+		active: item.itemId === activeItemId,
 		children,
+		config: layoutDataRef?.current?.items[item.itemId]?.config,
 		draggable: true,
-		expanded:
-			item.itemId === activeItemId ||
-			item.itemId === dragAndDropHoveredItemId ||
-			item.itemId === keyboardMovementTargetId,
+		editingName: editingNodeId === item.itemId,
 		hidable:
 			!itemInMasterLayout &&
 			isHidable(item, fragmentEntryLinks, layoutData),
 		hidden,
 		hiddenAncestor: hasHiddenAncestor,
+		hovered: item.itemId === hoveredItemId,
 		icon,
 		id: item.itemId,
 		isMasterItem: !isMasterPage && itemInMasterLayout,

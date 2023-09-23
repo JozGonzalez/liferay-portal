@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.http;
@@ -53,7 +44,7 @@ public class CommerceCatalogServiceHttp {
 	public static com.liferay.commerce.product.model.CommerceCatalog
 			addCommerceCatalog(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
-				String name, String commerceCurrencyCode,
+				long accountEntryId, String name, String commerceCurrencyCode,
 				String catalogDefaultLanguageId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -64,8 +55,8 @@ public class CommerceCatalogServiceHttp {
 				_addCommerceCatalogParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, externalReferenceCode, name, commerceCurrencyCode,
-				catalogDefaultLanguageId, serviceContext);
+				methodKey, externalReferenceCode, accountEntryId, name,
+				commerceCurrencyCode, catalogDefaultLanguageId, serviceContext);
 
 			Object returnObj = null;
 
@@ -430,7 +421,7 @@ public class CommerceCatalogServiceHttp {
 	public static com.liferay.commerce.product.model.CommerceCatalog
 			updateCommerceCatalog(
 				HttpPrincipal httpPrincipal, long commerceCatalogId,
-				String name, String commerceCurrencyCode,
+				long accountEntryId, String name, String commerceCurrencyCode,
 				String catalogDefaultLanguageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -440,8 +431,8 @@ public class CommerceCatalogServiceHttp {
 				_updateCommerceCatalogParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, commerceCatalogId, name, commerceCurrencyCode,
-				catalogDefaultLanguageId);
+				methodKey, commerceCatalogId, accountEntryId, name,
+				commerceCurrencyCode, catalogDefaultLanguageId);
 
 			Object returnObj = null;
 
@@ -521,7 +512,7 @@ public class CommerceCatalogServiceHttp {
 
 	private static final Class<?>[] _addCommerceCatalogParameterTypes0 =
 		new Class[] {
-			String.class, String.class, String.class, String.class,
+			String.class, long.class, String.class, String.class, String.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _deleteCommerceCatalogParameterTypes1 =
@@ -549,7 +540,9 @@ public class CommerceCatalogServiceHttp {
 			long.class, String.class
 		};
 	private static final Class<?>[] _updateCommerceCatalogParameterTypes9 =
-		new Class[] {long.class, String.class, String.class, String.class};
+		new Class[] {
+			long.class, long.class, String.class, String.class, String.class
+		};
 	private static final Class<?>[]
 		_updateCommerceCatalogExternalReferenceCodeParameterTypes10 =
 			new Class[] {String.class, long.class};

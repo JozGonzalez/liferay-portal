@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.repository.external;
@@ -1209,9 +1200,9 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 			extRepositoryFileEntryAdapter.getFileVersion());
 	}
 
-	private User _fetchDefaultUser() {
+	private User _fetchGuestUser() {
 		try {
-			return userLocalService.getDefaultUser(getCompanyId());
+			return userLocalService.getGuestUser(getCompanyId());
 		}
 		catch (PortalException portalException) {
 			_log.error(
@@ -1274,7 +1265,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	private String _getLogin() {
 		String login = PrincipalThreadLocal.getName();
 
-		if (Validator.isNull(login) || _isDefaultUser(login)) {
+		if (Validator.isNull(login) || _isGuestUser(login)) {
 			return PropsUtil.get(PropsKeys.DL_REPOSITORY_GUEST_USERNAME);
 		}
 
@@ -1309,7 +1300,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	private String _getPassword() {
 		String login = PrincipalThreadLocal.getName();
 
-		if (Validator.isNull(login) || _isDefaultUser(login)) {
+		if (Validator.isNull(login) || _isGuestUser(login)) {
 			return PropsUtil.get(PropsKeys.DL_REPOSITORY_GUEST_PASSWORD);
 		}
 
@@ -1324,12 +1315,10 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 			_extRepository.getRootFolderKey());
 	}
 
-	private boolean _isDefaultUser(String login) {
-		User defaultUser = _fetchDefaultUser();
+	private boolean _isGuestUser(String login) {
+		User guestUser = _fetchGuestUser();
 
-		if ((defaultUser != null) &&
-			login.equals(defaultUser.getScreenName())) {
-
+		if ((guestUser != null) && login.equals(guestUser.getScreenName())) {
 			return true;
 		}
 

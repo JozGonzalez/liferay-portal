@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.internal.upgrade.registry;
@@ -17,14 +8,21 @@ package com.liferay.commerce.inventory.internal.upgrade.registry;
 import com.liferay.commerce.inventory.internal.upgrade.v2_0_0.CommerceInventoryAuditUpgradeProcess;
 import com.liferay.commerce.inventory.internal.upgrade.v2_1_0.MVCCUpgradeProcess;
 import com.liferay.commerce.inventory.internal.upgrade.v2_6_0.util.CommerceInventoryWarehouseRelTable;
+import com.liferay.commerce.inventory.model.impl.CommerceInventoryAuditModelImpl;
+import com.liferay.commerce.inventory.model.impl.CommerceInventoryBookedQuantityModelImpl;
+import com.liferay.commerce.inventory.model.impl.CommerceInventoryReplenishmentItemModelImpl;
+import com.liferay.commerce.inventory.model.impl.CommerceInventoryWarehouseItemModelImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -130,8 +128,7 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			"2.4.1", "2.5.0",
 			new com.liferay.commerce.inventory.internal.upgrade.v2_5_0.
 				CommerceInventoryWarehouseUpgradeProcess(
-					_companyLocalService, _resourceActionLocalService,
-					_resourceLocalService));
+					_resourceActionLocalService));
 
 		registry.register(
 			"2.5.0", "2.5.1",
@@ -142,6 +139,53 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			"2.5.1", "2.6.0", CommerceInventoryWarehouseRelTable.create(),
 			new com.liferay.commerce.inventory.internal.upgrade.v2_6_0.
 				CommerceInventoryWarehouseUpgradeProcess());
+
+		registry.register(
+			"2.6.0", "2.6.1",
+			new com.liferay.commerce.inventory.internal.upgrade.v2_6_1.
+				CommercePermissionUpgradeProcess(
+					_resourcePermissionLocalService, _roleLocalService));
+
+		registry.register(
+			"2.6.1", "2.7.0",
+			UpgradeProcessFactory.addColumns(
+				CommerceInventoryAuditModelImpl.TABLE_NAME,
+				"unitOfMeasureKey VARCHAR(75) null"),
+			UpgradeProcessFactory.addColumns(
+				CommerceInventoryBookedQuantityModelImpl.TABLE_NAME,
+				"unitOfMeasureKey VARCHAR(75) null"),
+			UpgradeProcessFactory.addColumns(
+				CommerceInventoryReplenishmentItemModelImpl.TABLE_NAME,
+				"unitOfMeasureKey VARCHAR(75) null"),
+			UpgradeProcessFactory.addColumns(
+				CommerceInventoryWarehouseItemModelImpl.TABLE_NAME,
+				"unitOfMeasureKey VARCHAR(75) null"));
+
+		registry.register(
+			"2.7.0", "2.8.0",
+			UpgradeProcessFactory.alterColumnType(
+				"CIAudit", "quantity", "BIGDECIMAL null"));
+
+		registry.register(
+			"2.8.0", "2.9.0",
+			UpgradeProcessFactory.alterColumnType(
+				"CIWarehouseItem", "quantity", "BIGDECIMAL null"),
+			UpgradeProcessFactory.alterColumnType(
+				"CIWarehouseItem", "reservedQuantity", "BIGDECIMAL null"));
+
+		registry.register(
+			"2.9.0", "2.10.0",
+			UpgradeProcessFactory.alterColumnType(
+				CommerceInventoryReplenishmentItemModelImpl.TABLE_NAME,
+				"quantity", "BIGDECIMAL null"));
+
+		registry.register(
+			"2.10.0", "2.11.0",
+			UpgradeProcessFactory.alterColumnType(
+				CommerceInventoryBookedQuantityModelImpl.TABLE_NAME, "quantity",
+				"BIGDECIMAL null"));
+
+		registry.register("2.11.0", "2.11.1", new DummyUpgradeStep());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce inventory upgrade step registrator finished");
@@ -159,5 +203,11 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 }

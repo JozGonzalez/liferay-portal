@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -41,6 +32,7 @@ import PublishButton from './PublishButton';
 import Translation from './Translation';
 import UnsafeHTML from './UnsafeHTML';
 import ViewportSizeSelector from './ViewportSizeSelector';
+import ZoomAlert from './ZoomAlert';
 import Undo from './undo/Undo';
 
 const {Suspense, useCallback, useRef} = React;
@@ -71,10 +63,10 @@ function ToolbarBody({className}) {
 	useEffect(() => {
 		setEnableDiscard(
 			network.status === SERVICE_NETWORK_STATUS_TYPES.draftSaved ||
-				config.draft ||
+				store.draft ||
 				config.isConversionDraft
 		);
-	}, [network]);
+	}, [network, store.draft]);
 
 	const loadingRef = useRef(() => {
 		Promise.all(
@@ -217,7 +209,10 @@ function ToolbarBody({className}) {
 			)}
 			onClick={deselectItem}
 			ref={dropClearRef}
+			size={Liferay?.FeatureFlags?.['LPS-184404'] ? false : 'xl'}
 		>
+			<ZoomAlert />
+
 			<ul className="navbar-nav start" onClick={deselectItem}>
 				{config.toolbarPlugins.map(
 					({loadingPlaceholder, pluginEntryPoint}) => {
@@ -304,7 +299,6 @@ function ToolbarBody({className}) {
 				<li className="nav-item">
 					<form action={config.discardDraftURL} method="POST">
 						<ClayButton
-							className="btn btn-secondary"
 							disabled={!enableDiscard}
 							displayType="secondary"
 							onClick={handleDiscardDraft}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.service.impl;
@@ -58,6 +49,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.asset.service.base.AssetTagLocalServiceBaseImpl;
@@ -326,6 +318,25 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	@Override
 	public List<AssetTag> getGroupTags(long groupId, int start, int end) {
 		return assetTagPersistence.findByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns a range of all the asset tags in the group.
+	 *
+	 * @param  groupId the primary key of the group
+	 * @param  start the lower bound of the range of asset tags
+	 * @param  end the upper bound of the range of asset tags (not inclusive)
+	 * @param  orderByComparator the comparator to order the asset tags
+	 *         (optionally <code>null</code>)
+	 * @return the range of matching asset tags
+	 */
+	@Override
+	public List<AssetTag> getGroupTags(
+		long groupId, int start, int end,
+		OrderByComparator<AssetTag> orderByComparator) {
+
+		return assetTagPersistence.findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
@@ -759,7 +770,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 			HashMapBuilder.<String, Serializable>put(
 				Field.NAME, name
 			).build());
-
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 		searchContext.setGroupIds(groupIds);

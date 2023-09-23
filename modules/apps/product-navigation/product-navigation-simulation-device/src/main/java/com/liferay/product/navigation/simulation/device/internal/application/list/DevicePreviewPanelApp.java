@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.simulation.device.internal.application.list;
@@ -56,6 +47,11 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 	}
 
 	@Override
+	public Portlet getPortlet() {
+		return _portlet;
+	}
+
+	@Override
 	public String getPortletId() {
 		return ProductNavigationSimulationPortletKeys.
 			PRODUCT_NAVIGATION_SIMULATION;
@@ -75,21 +71,8 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 	}
 
 	@Override
-	@Reference(
-		target = "(javax.portlet.name=" + ProductNavigationSimulationPortletKeys.PRODUCT_NAVIGATION_SIMULATION + ")",
-		unbind = "-"
-	)
-	public void setPortlet(Portlet portlet) {
-		super.setPortlet(portlet);
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.product.navigation.simulation.device)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	private boolean _hasPreviewInDevicePermission(
@@ -105,5 +88,15 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 
 	@Reference
 	private Language _language;
+
+	@Reference(
+		target = "(javax.portlet.name=" + ProductNavigationSimulationPortletKeys.PRODUCT_NAVIGATION_SIMULATION + ")"
+	)
+	private Portlet _portlet;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.product.navigation.simulation.device)"
+	)
+	private ServletContext _servletContext;
 
 }

@@ -1,8 +1,14 @@
 definition {
 
 	macro _addCommerceOption {
+		Variables.assertDefined(parameterList = "${fieldType},${optionKey},${optionName}");
+
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(description))) {
+			var description = "";
 		}
 
 		if (!(isSet(facetable))) {
@@ -17,38 +23,58 @@ definition {
 			var skuContributor = "false";
 		}
 
-		var optionValues = '''
-		{
-			"key": "${key_value1}",
-			"name": {
-				"en_US": "value1"
-			}
-		},
-		{
-			"key": "${key_value2}",
-			"name": {
-				"en_US": "value2"
+		var optionValuesPayload = "";
+
+		if (isSet(optionValues)) {
+			for (var optionValue : list ${optionValues}) {
+				var optionValueKey = StringUtil.extractFirst(${optionValue}, ":");
+
+				var optionValue = StringUtil.replaceFirst(${optionValue}, "${optionValueKey}:", "");
+
+				var optionValueName = StringUtil.extractFirst(${optionValue}, ":");
+				var optionValuePriority = StringUtil.extractLast(${optionValue}, ":");
+
+				if (${optionValuesPayload} != "") {
+					var comma = ",";
+				}
+				else {
+					var comma = "";
+				}
+
+				var optionValuesPayload = '''
+					${optionValuesPayload}${comma}
+					{
+						"key": "${optionValueKey}",
+						"name": {
+							"en_US": "${optionValueName}"
+						},
+						"priority": ${optionValuePriority}
+					}
+				''';
 			}
 		}
-		''';
 
 		var payload = '''	
 		{
+			"description": {
+       	    "en_US": "${description}"
+            },
 			"facetable": "${facetable}",   
 			"fieldType": "${fieldType}", 
 			"key": "${optionKey}",                          
 			"name": {
 			"en_US": "${optionName}"
 			},
-			"optionValues": [${optionValues}],
+			"optionValues": [${optionValuesPayload}],
 			"required": "${required}",
     		"skuContributor": "${skuContributor}"
 		}
         ''';
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/options \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '${payload}'
@@ -126,10 +152,11 @@ definition {
 		}
 
 		var payload = StringUtil.replace(${payload}, ${payload}, "${payload}]");
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/batch \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '${payload}'
@@ -145,10 +172,11 @@ definition {
 
 		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
 		var optionId = CommerceJSONOptionsAPI._getCommerceOptionIdByKey(optionKey = ${optionKey});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/productOptions \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '[
@@ -181,9 +209,11 @@ definition {
 			for (var optionId : list ${optionIds}) {
 				echo("Deleting Commerce option with id: ${optionId}");
 
+				var userLoginInfo = JSONUtil2.formatJSONUser();
+
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-catalog/v1.0/options/${optionId} \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-H 'accept: application/json' \
 				''';
 
@@ -202,9 +232,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/options?search=${optionKey} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -231,9 +263,11 @@ definition {
 			var optionsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/options?pageSize=${optionsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -249,9 +283,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/options \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -260,6 +296,27 @@ definition {
 		echo("The Commerce option count is: ${optionsCount}");
 
 		return ${optionsCount};
+	}
+
+	macro _getCommerceOptionValues {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+		var optionId = CommerceJSONOptionsAPI._getCommerceOptionIdByKey(optionKey = ${optionKey});
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/options/${optionId}/optionValues \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
 	}
 
 }

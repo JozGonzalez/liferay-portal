@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Style Books";
@@ -18,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -413,7 +414,7 @@ definition {
 				locator1 = "StyleBookEditor#PREVIEW_SELECTOR");
 
 			AssertElementPresent(
-				key_caption = "Showing 4 of 8 Items",
+				key_caption = "Showing 4 of 10 Items",
 				locator1 = "Dropdown#CAPTION");
 		}
 
@@ -467,13 +468,13 @@ definition {
 			StyleBooks.viewCurrentPreviewType(previewType = "Fragments");
 		}
 
-		task ("View the Basic Components set is selected in the preview item selector") {
-			StyleBooks.viewCurrentPreviewItem(previewItem = "Basic Components");
+		task ("View the Account set is selected in the preview item selector") {
+			StyleBooks.viewCurrentPreviewItem(previewItem = "Account");
 		}
 
 		task ("Select the Navigation Bars from Default fragment set in the preview item selector") {
 			StyleBooks.selectPreviewItem(
-				caption = "Showing 4 of 7 Items",
+				caption = "Showing 4 of 9 Items",
 				previewItem = "Navigation Bars",
 				scope = "Default");
 
@@ -572,7 +573,7 @@ definition {
 				locator1 = "StyleBookEditor#PREVIEW_SELECTOR");
 
 			AssertElementPresent(
-				key_caption = "Showing 4 of 8 Items",
+				key_caption = "Showing 4 of 10 Items",
 				locator1 = "Dropdown#CAPTION");
 		}
 
@@ -1512,7 +1513,8 @@ definition {
 	@priority = 4
 	test ViewEmptyStateWhenSiteIsEmpty {
 		property portal.release = "false";
-		property test.name.skip.portal.instance = "StyleBooksWithPreview#ViewEmptyStateWhenSiteIsEmpty";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Deactivate the Default fragment sets") {
 			ApplicationsMenu.gotoPortlet(
@@ -1524,6 +1526,12 @@ definition {
 				Search.searchCP(searchTerm = "Fragment Collection Contributor");
 
 				AppManager.deactivateApp(appName = "Liferay Fragment Collection Contributor ${collectionName}");
+			}
+
+			for (var collectionName : list "Account,Cart") {
+				Search.searchCP(searchTerm = "Fragment Collection Contributor");
+
+				AppManager.deactivateApp(appName = "Liferay Commerce Fragment Collection Contributor ${collectionName}");
 			}
 		}
 

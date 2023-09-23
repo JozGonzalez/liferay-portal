@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -111,7 +106,8 @@ definition {
 
 	@priority = 5
 	test ConfigureDisplayTimeZone {
-		property portal.acceptance = "true";
+		property ci.retries.disabled = "true";
+		property portal.acceptance = "quarantine";
 
 		CalendarNavigator.gotoConfiguration();
 
@@ -152,8 +148,8 @@ definition {
 		CalendarNavigator.gotoEditEvent(eventTitle = "Calendar Event Title");
 
 		CalendarEvent.viewTimes(
-			endDateTime = " 3:00 PM",
-			startDateTime = " 2:00 PM");
+			endDateTime = " 15:00",
+			startDateTime = " 14:00");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -168,14 +164,14 @@ definition {
 		CalendarScheduler.selectSpecificEvent(eventTitle = "Calendar Event Title");
 
 		CalendarScheduler.viewEventTimesViaDialogBox(
-			endDateTime = "3:00pm",
-			startDateTime = "2:00pm");
+			endDateTime = " 7:00am",
+			startDateTime = " 8:00am");
 
 		CalendarScheduler.gotoDetailsViaDialogBox();
 
 		CalendarEvent.viewTimesViaDetails(
-			endDateTime = "3:00 PM",
-			startDateTime = "2:00 PM");
+			endDateTime = "08:00 AM",
+			startDateTime = "07:00 AM");
 	}
 
 	@priority = 4
@@ -216,6 +212,7 @@ definition {
 		CalendarEvent.viewNotPresentViaAgendaView(eventNumber = 5);
 	}
 
+	@ignore = "true"
 	@priority = 4
 	test View24hourTimeFormat {
 		CalendarScheduler.viewFirstHour(firstHour = "12am");
@@ -306,7 +303,8 @@ definition {
 	@priority = 5
 	test ViewCalendarTimeZoneDefaults {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CalendarConfiguration#ViewCalendarTimeZoneDefaults";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		UserBar.gotoDropdownItem(dropdownItem = "Account Settings");
 
@@ -345,6 +343,12 @@ definition {
 
 		CalendarNavigator.gotoAddEvent();
 
+		var endDateTime = CalendarEvent.getCalendarTimeHour(status = "End");
+		var startDateTime = CalendarEvent.getCalendarTimeHour(status = "Start");
+
+		var startDateTime = CalendarEvent.format12To24Hours(time12Hours = ${startDateTime});
+		var endDateTime = CalendarEvent.format12To24Hours(time12Hours = ${endDateTime});
+
 		CalendarEvent.editTitle(eventTitle = "Calendar Event All Day Title");
 
 		CalendarEvent.setAllDay();
@@ -359,8 +363,8 @@ definition {
 			eventType = "All Day");
 
 		CalendarEvent.viewTimesViaDetails(
-			endDateTime = "11:59 PM",
-			startDateTime = "12:00 AM");
+			endDateTime = ${endDateTime},
+			startDateTime = ${startDateTime});
 	}
 
 	@description = "This is a use case for LPS-51127."

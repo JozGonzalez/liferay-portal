@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.order.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.model.CommerceOrder;
@@ -137,20 +129,21 @@ public class CommerceVirtualOrderItemLocalServiceTest {
 
 		for (CPInstance cpInstance : cpDefinition.getCPInstances()) {
 			_commercePriceEntryLocalService.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+				null, cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
 				commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-				BigDecimal.ZERO,
+				false, BigDecimal.ZERO, null,
 				ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 			CommerceTestUtil.addCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), 1);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE);
 		}
 
 		commerceOrder = _setCommerceOrderStatuses(
 			_commerceOrderLocalService.getCommerceOrder(
 				commerceOrder.getCommerceOrderId()),
-			CommerceOrderConstants.PAYMENT_STATUS_PAID,
+			CommerceOrderPaymentConstants.STATUS_COMPLETED,
 			CommerceOrderConstants.ORDER_STATUS_PENDING);
 
 		_commerceVirtualOrderItemChecker.checkCommerceVirtualOrderItems(
@@ -230,20 +223,21 @@ public class CommerceVirtualOrderItemLocalServiceTest {
 				cpInstance, subscriptionLength, "daily");
 
 			_commercePriceEntryLocalService.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+				null, cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
 				commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-				BigDecimal.ZERO,
+				false, BigDecimal.ZERO, null,
 				ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 			CommerceTestUtil.addCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(),
-				cpInstance.getCPInstanceId(), 1);
+				cpInstance.getCPInstanceId(), BigDecimal.ONE);
 		}
 
 		commerceOrder = _setCommerceOrderStatuses(
 			_commerceOrderLocalService.getCommerceOrder(
 				commerceOrder.getCommerceOrderId()),
-			CommerceOrderConstants.PAYMENT_STATUS_PAID,
+			CommerceOrderPaymentConstants.STATUS_COMPLETED,
 			CommerceOrderConstants.ORDER_STATUS_PENDING);
 
 		_commerceSubscriptionEntryHelper.checkCommerceSubscriptions(

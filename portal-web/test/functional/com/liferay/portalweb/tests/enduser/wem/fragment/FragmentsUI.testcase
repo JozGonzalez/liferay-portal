@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -18,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -187,11 +188,11 @@ definition {
 		}
 
 		task ("Assert the actions order of collections menu") {
-			Click.waitForMenuToggleJSClick(locator1 = "MenuBar#ELLIPSIS");
+			Click.waitForMenuToggleJSClick(locator1 = "NavNested#NAV_NESTED_ELLIPSIS");
 
 			MenuItem.viewOrder(menuItemList = "Export,Import,Delete");
 
-			Click.waitForMenuToggleJSClick(locator1 = "MenuBar#ELLIPSIS");
+			Click.waitForMenuToggleJSClick(locator1 = "NavNested#NAV_NESTED_ELLIPSIS");
 		}
 
 		task ("Assert the actions order of a collection") {
@@ -205,7 +206,7 @@ definition {
 		task ("Assert the actions order of a draft fragment") {
 			LexiconEntry.openEntryMenu(rowEntry = "Draft Fragment Example");
 
-			MenuItem.viewOrder(menuItemList = "Edit,Change Thumbnail,Discard Draft,Rename,View Usages,Export,Make a Copy,Move,Delete");
+			MenuItem.viewOrder(menuItemList = "Edit,Change Thumbnail,Discard Draft,Rename,Mark as Cacheable,View Usages,Export,Make a Copy,Move,Delete");
 
 			LexiconEntry.openEntryMenu(rowEntry = "Draft Fragment Example");
 		}
@@ -213,7 +214,7 @@ definition {
 		task ("Assert the actions order of a published fragment") {
 			LexiconEntry.openEntryMenu(rowEntry = "Approved Fragment Example");
 
-			MenuItem.viewOrder(menuItemList = "Edit,Change Thumbnail,Rename,View Usages,Export,Make a Copy,Move,Delete");
+			MenuItem.viewOrder(menuItemList = "Edit,Change Thumbnail,Rename,Mark as Cacheable,View Usages,Export,Make a Copy,Move,Delete");
 
 			LexiconEntry.openEntryMenu(rowEntry = "Approved Fragment Example");
 		}

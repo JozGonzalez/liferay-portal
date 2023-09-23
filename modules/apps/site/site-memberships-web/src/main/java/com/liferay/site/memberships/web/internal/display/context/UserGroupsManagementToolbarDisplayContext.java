@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.memberships.web.internal.display.context;
@@ -22,6 +13,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -33,12 +26,14 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.memberships.web.internal.util.GroupUtil;
+import com.liferay.user.groups.admin.item.selector.UserGroupSiteMembershipItemSelectorCriterion;
 
 import java.util.List;
 import java.util.Objects;
@@ -210,14 +205,7 @@ public class UserGroupsManagementToolbarDisplayContext
 							themeDisplay.getLocale()));
 
 					dropdownItem.putData(
-						"selectUserGroupsURL",
-						PortletURLBuilder.createRenderURL(
-							liferayPortletResponse
-						).setMVCPath(
-							"/select_user_groups.jsp"
-						).setWindowState(
-							LiferayWindowState.POP_UP
-						).buildString());
+						"selectUserGroupsURL", _getSelectUserGroupURL());
 					dropdownItem.setLabel(
 						LanguageUtil.get(httpServletRequest, "add"));
 				}
@@ -253,7 +241,6 @@ public class UserGroupsManagementToolbarDisplayContext
 					).buildString());
 
 				labelItem.setCloseable(true);
-
 				labelItem.setLabel(role.getTitle(themeDisplay.getLocale()));
 			}
 		).build();
@@ -370,6 +357,25 @@ public class UserGroupsManagementToolbarDisplayContext
 		selectURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return selectURL.toString();
+	}
+
+	private String _getSelectUserGroupURL() {
+		ItemSelector itemSelector =
+			(ItemSelector)httpServletRequest.getAttribute(
+				ItemSelector.class.getName());
+
+		UserGroupSiteMembershipItemSelectorCriterion
+			userGroupSiteMembershipItemSelectorCriterion =
+				new UserGroupSiteMembershipItemSelectorCriterion();
+
+		userGroupSiteMembershipItemSelectorCriterion.
+			setDesiredItemSelectorReturnTypes(new UUIDItemSelectorReturnType());
+
+		return String.valueOf(
+			itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+				liferayPortletResponse.getNamespace() + "selectUserGroup",
+				userGroupSiteMembershipItemSelectorCriterion));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

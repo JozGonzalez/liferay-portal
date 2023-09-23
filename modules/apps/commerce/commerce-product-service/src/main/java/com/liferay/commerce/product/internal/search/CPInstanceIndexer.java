@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.internal.search;
@@ -71,6 +62,8 @@ public class CPInstanceIndexer extends BaseIndexer<CPInstance> {
 			Field.COMPANY_ID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK,
 			Field.GROUP_ID, Field.MODIFIED_DATE, Field.SCOPE_GROUP_ID,
 			CPField.SKU, Field.UID);
+		setFilterSearch(true);
+		setPermissionAware(true);
 	}
 
 	@Override
@@ -159,14 +152,14 @@ public class CPInstanceIndexer extends BaseIndexer<CPInstance> {
 			SearchContext searchContext)
 		throws Exception {
 
-		addSearchLocalizedTerm(
-			searchQuery, searchContext, Field.CONTENT, false);
-		addSearchLocalizedTerm(searchQuery, searchContext, Field.NAME, false);
-		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
-		addSearchTerm(searchQuery, searchContext, Field.NAME, false);
-		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
 		addSearchTerm(
 			searchQuery, searchContext, CPField.EXTERNAL_REFERENCE_CODE, false);
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, Field.CONTENT, false);
+		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
+		addSearchTerm(searchQuery, searchContext, Field.NAME, false);
+		addSearchLocalizedTerm(searchQuery, searchContext, Field.NAME, false);
+		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -221,12 +214,35 @@ public class CPInstanceIndexer extends BaseIndexer<CPInstance> {
 	@Override
 	protected Document doGetDocument(CPInstance cpInstance) throws Exception {
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing definition " + cpInstance);
+			_log.debug("Indexing commerce product instance " + cpInstance);
 		}
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		Document document = getBaseModelDocument(CLASS_NAME, cpInstance);
+
+		document.addKeyword(
+			CPField.CP_DEFINITION_ID, cpInstance.getCPDefinitionId());
+		document.addKeyword(
+			CPField.CP_DEFINITION_STATUS, cpDefinition.getStatus());
+		document.addDateSortable(
+			CPField.DISPLAY_DATE, cpInstance.getDisplayDate());
+		document.addKeyword(
+			CPField.EXTERNAL_REFERENCE_CODE,
+			cpInstance.getExternalReferenceCode());
+		document.addText(
+			CPField.EXTERNAL_REFERENCE_CODE,
+			cpInstance.getExternalReferenceCode());
+		document.addKeyword(
+			CPField.HAS_CHILD_CP_DEFINITIONS,
+			_cpDefinitionLocalService.hasChildCPDefinitions(
+				cpDefinition.getCPDefinitionId()));
+		document.addKeyword(CPField.PUBLISHED, cpInstance.isPublished());
+		document.addKeyword(CPField.PURCHASABLE, cpInstance.isPurchasable());
+		document.addTextSortable(CPField.SKU, cpInstance.getSku());
+		document.addKeyword(CPField.UNSPSC, cpInstance.getUnspsc());
+		document.addText(Field.CONTENT, cpInstance.getSku());
+		document.addText(Field.NAME, cpDefinition.getName());
 
 		List<String> languageIds =
 			_cpDefinitionLocalService.getCPDefinitionLocalizationLanguageIds(
@@ -247,38 +263,19 @@ public class CPInstanceIndexer extends BaseIndexer<CPInstance> {
 				_localization.getLocalizedName(Field.NAME, languageId), name);
 		}
 
-		document.addText(Field.NAME, cpDefinition.getName());
-
-		document.addText(
-			CPField.EXTERNAL_REFERENCE_CODE,
-			cpInstance.getExternalReferenceCode());
-
-		document.addText(Field.CONTENT, cpInstance.getSku());
-		document.addDateSortable(
-			CPField.DISPLAY_DATE, cpInstance.getDisplayDate());
-		document.addTextSortable(CPField.SKU, cpInstance.getSku());
-		document.addKeyword(
-			CPField.CP_DEFINITION_ID, cpInstance.getCPDefinitionId());
-		document.addKeyword(
-			CPField.CP_DEFINITION_STATUS, cpDefinition.getStatus());
-		document.addKeyword(CPField.PUBLISHED, cpInstance.isPublished());
-		document.addKeyword(CPField.PURCHASABLE, cpInstance.isPurchasable());
-		document.addKeyword(
-			CPField.EXTERNAL_REFERENCE_CODE,
-			cpInstance.getExternalReferenceCode());
-		document.addKeyword(
-			CPField.HAS_CHILD_CP_DEFINITIONS,
-			_cpDefinitionLocalService.hasChildCPDefinitions(
-				cpDefinition.getCPDefinitionId()));
-		document.addKeyword(CPField.UNSPSC, cpInstance.getUnspsc());
-
 		CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
 
-		document.addKeyword(
-			"commerceCatalogId", commerceCatalog.getCommerceCatalogId());
+		if (commerceCatalog != null) {
+			document.addKeyword(
+				"accountEntryId", commerceCatalog.getAccountEntryId());
+			document.addKeyword(
+				"commerceCatalogId", commerceCatalog.getCommerceCatalogId());
+		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Document " + cpInstance + " indexed successfully");
+			_log.debug(
+				"Commerce product instance " + cpInstance +
+					" indexed successfully");
 		}
 
 		return document;
@@ -328,8 +325,8 @@ public class CPInstanceIndexer extends BaseIndexer<CPInstance> {
 				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to index commerce product definition " +
-								cpInstance.getCPInstanceId(),
+							"Unable to index commerce product instance " +
+								cpInstance,
 							portalException);
 					}
 				}

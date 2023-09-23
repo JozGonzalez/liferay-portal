@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.graphql.servlet.v1_0;
@@ -93,6 +84,8 @@ public class ServletDataImpl implements ServletData {
 			_processMetricResourceComponentServiceObjects);
 		Mutation.setProcessVersionResourceComponentServiceObjects(
 			_processVersionResourceComponentServiceObjects);
+		Mutation.setReindexStatusResourceComponentServiceObjects(
+			_reindexStatusResourceComponentServiceObjects);
 		Mutation.setRoleResourceComponentServiceObjects(
 			_roleResourceComponentServiceObjects);
 		Mutation.setSLAResourceComponentServiceObjects(
@@ -184,6 +177,11 @@ public class ServletDataImpl implements ServletData {
 							CalendarResourceImpl.class,
 							"postCalendarsPageExportBatch"));
 					put(
+						"mutation#createIndexesPageExportBatch",
+						new ObjectValuePair<>(
+							IndexResourceImpl.class,
+							"postIndexesPageExportBatch"));
+					put(
 						"mutation#patchIndexRefresh",
 						new ObjectValuePair<>(
 							IndexResourceImpl.class, "patchIndexRefresh"));
@@ -271,6 +269,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ProcessVersionResourceImpl.class,
 							"postProcessProcessVersionsPageExportBatch"));
+					put(
+						"mutation#createReindexStatusesPageExportBatch",
+						new ObjectValuePair<>(
+							ReindexStatusResourceImpl.class,
+							"postReindexStatusesPageExportBatch"));
 					put(
 						"mutation#createProcessRolesPageExportBatch",
 						new ObjectValuePair<>(
@@ -427,6 +430,65 @@ public class ServletDataImpl implements ServletData {
 						"query#timeRanges",
 						new ObjectValuePair<>(
 							TimeRangeResourceImpl.class, "getTimeRangesPage"));
+
+					put(
+						"query#Process.instance",
+						new ObjectValuePair<>(
+							InstanceResourceImpl.class, "getProcessInstance"));
+					put(
+						"query#TaskBulkSelection.process",
+						new ObjectValuePair<>(
+							ProcessResourceImpl.class, "getProcess"));
+					put(
+						"query#Process.nodes",
+						new ObjectValuePair<>(
+							NodeResourceImpl.class, "getProcessNodesPage"));
+					put(
+						"query#Process.lastSLAResult",
+						new ObjectValuePair<>(
+							SLAResultResourceImpl.class,
+							"getProcessLastSLAResult"));
+					put(
+						"query#Process.histogramMetric",
+						new ObjectValuePair<>(
+							HistogramMetricResourceImpl.class,
+							"getProcessHistogramMetric"));
+					put(
+						"query#Process.tasks",
+						new ObjectValuePair<>(
+							TaskResourceImpl.class, "getProcessTasksPage"));
+					put(
+						"query#Process.sLAs",
+						new ObjectValuePair<>(
+							SLAResourceImpl.class, "getProcessSLAsPage"));
+					put(
+						"query#Process.roles",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "getProcessRolesPage"));
+					put(
+						"query#Process.metric",
+						new ObjectValuePair<>(
+							ProcessMetricResourceImpl.class,
+							"getProcessMetric"));
+					put(
+						"query#Process.task",
+						new ObjectValuePair<>(
+							TaskResourceImpl.class, "getProcessTask"));
+					put(
+						"query#Process.processVersions",
+						new ObjectValuePair<>(
+							ProcessVersionResourceImpl.class,
+							"getProcessProcessVersionsPage"));
+					put(
+						"query#Process.nodeMetrics",
+						new ObjectValuePair<>(
+							NodeMetricResourceImpl.class,
+							"getProcessNodeMetricsPage"));
+					put(
+						"query#Process.instances",
+						new ObjectValuePair<>(
+							InstanceResourceImpl.class,
+							"getProcessInstancesPage"));
 				}
 			};
 
@@ -467,6 +529,10 @@ public class ServletDataImpl implements ServletData {
 		_processVersionResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<ReindexStatusResource>
+		_reindexStatusResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<RoleResource>
 		_roleResourceComponentServiceObjects;
 
@@ -489,10 +555,6 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<NodeMetricResource>
 		_nodeMetricResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ReindexStatusResource>
-		_reindexStatusResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<SLAResultResource>

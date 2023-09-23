@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.servlet.taglib;
 
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorCategoryProvider;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntryProvider;
+import com.liferay.frontend.taglib.form.navigator.constants.FormNavigatorConstants;
 import com.liferay.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -62,6 +54,10 @@ public class FormNavigatorTag extends IncludeTag {
 		return _id;
 	}
 
+	public FormNavigatorConstants.FormNavigatorType getType() {
+		return _type;
+	}
+
 	public boolean isShowButtons() {
 		return _showButtons;
 	}
@@ -93,6 +89,10 @@ public class FormNavigatorTag extends IncludeTag {
 		_showButtons = showButtons;
 	}
 
+	public void setType(FormNavigatorConstants.FormNavigatorType type) {
+		_type = type;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -102,6 +102,7 @@ public class FormNavigatorTag extends IncludeTag {
 		_formModelBean = null;
 		_id = null;
 		_showButtons = true;
+		_type = FormNavigatorConstants.FormNavigatorType.DEFAULT;
 	}
 
 	@Override
@@ -125,6 +126,8 @@ public class FormNavigatorTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:showButtons",
 			String.valueOf(_showButtons));
+		httpServletRequest.setAttribute(
+			"liferay-frontend:form-navigator:type", _type);
 	}
 
 	private String _getBackURL() {
@@ -182,5 +185,7 @@ public class FormNavigatorTag extends IncludeTag {
 	private Object _formModelBean;
 	private String _id;
 	private boolean _showButtons = true;
+	private FormNavigatorConstants.FormNavigatorType _type =
+		FormNavigatorConstants.FormNavigatorType.DEFAULT;
 
 }

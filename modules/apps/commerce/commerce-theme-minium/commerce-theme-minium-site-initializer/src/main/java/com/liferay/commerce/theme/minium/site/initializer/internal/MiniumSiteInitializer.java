@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.theme.minium.site.initializer.internal;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.settings.AccountEntryGroupSettings;
-import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.util.CommerceAccountRoleHelper;
+import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.initializer.util.AssetCategoriesImporter;
@@ -58,8 +49,10 @@ import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedO
 import com.liferay.commerce.theme.minium.SiteInitializerDependencyResolver;
 import com.liferay.commerce.theme.minium.SiteInitializerDependencyResolverThreadLocal;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
+import com.liferay.commerce.util.CommerceAccountRoleHelper;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -75,7 +68,6 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.ThemeSetting;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -87,10 +79,10 @@ import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -315,23 +307,24 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		group.setMembershipRestriction(
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION);
 
-		_groupLocalService.updateGroup(group);
+		group = _groupLocalService.updateGroup(group);
 
-		_commerceCurrencyLocalService.importDefaultValues(serviceContext);
+		_commerceCurrencyLocalService.importDefaultValues(true, serviceContext);
 		_cpMeasurementUnitLocalService.importDefaultValues(serviceContext);
 
 		_commerceAccountRoleHelper.checkCommerceAccountRoles(serviceContext);
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
-				group.getGroupId(), CommerceAccountConstants.SERVICE_NAME));
+				group.getGroupId(),
+				CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
 
 		modifiableSettings.setValue(
 			"commerceSiteType",
-			String.valueOf(CommerceAccountConstants.SITE_TYPE_B2B));
+			String.valueOf(CommerceChannelConstants.SITE_TYPE_B2B));
 
 		modifiableSettings.store();
 
@@ -362,7 +355,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		Group group = serviceContext.getScopeGroup();
 
 		return _commerceChannelLocalService.addCommerceChannel(
-			StringPool.BLANK, group.getGroupId(),
+			StringPool.BLANK, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			group.getGroupId(),
 			group.getName(serviceContext.getLanguageId()) + " Portal",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			commerceCatalog.getCommerceCurrencyCode(), serviceContext);
@@ -388,7 +382,7 @@ public class MiniumSiteInitializer implements SiteInitializer {
 					CommerceAccountGroupServiceConfiguration.class,
 					new GroupServiceSettingsLocator(
 						commerceChannelGroupId,
-						CommerceAccountConstants.SERVICE_NAME));
+						CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		return AccountEntryAllowedTypesUtil.getAllowedTypes(
 			commerceAccountGroupServiceConfiguration.commerceSiteType());
@@ -1184,9 +1178,6 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		target = "(osgi.web.symbolicname=com.liferay.commerce.theme.minium.site.initializer)"
 	)
 	private ServletContext _servletContext;
-
-	@Reference
-	private SettingsFactory _settingsFactory;
 
 	private SiteInitializerDependencyResolver
 		_siteInitializerDependencyResolver;

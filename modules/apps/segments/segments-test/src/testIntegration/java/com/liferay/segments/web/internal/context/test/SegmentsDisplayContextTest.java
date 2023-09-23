@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.context.test;
 
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
@@ -25,8 +15,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.ResourceConstants;
-import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
@@ -34,11 +22,9 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstant
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
@@ -63,7 +49,6 @@ import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
 import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 import com.liferay.segments.configuration.SegmentsCompanyConfiguration;
 import com.liferay.segments.configuration.SegmentsConfiguration;
-import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.criteria.Criteria;
@@ -76,7 +61,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Dictionary;
-import java.util.List;
 import java.util.Map;
 
 import javax.portlet.Portlet;
@@ -134,13 +118,6 @@ public class SegmentsDisplayContextTest {
 	}
 
 	@Test
-	public void testGetActionDropdownItems() throws Exception {
-		List<DropdownItem> dropdownItems = _getActionDropdownItems();
-
-		Assert.assertEquals(dropdownItems.toString(), 1, dropdownItems.size());
-	}
-
-	@Test
 	public void testGetAssignUserRolesDataMap() throws Exception {
 		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 			ServiceContextTestUtil.getServiceContext(
@@ -183,16 +160,15 @@ public class SegmentsDisplayContextTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"roleSegmentationEnabled", false
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), _user.getUserId()));
 
-				Assert.assertEquals(
-					"assign-site-roles-link dropdown-item action disabled",
-					_getAssignUserRolesLinkCss(segmentsEntry));
+				Assert.assertFalse(
+					_isAssignUserRolesButtonEnabled(
+						segmentsEntry.getCompanyId()));
 			}
 		}
 	}
@@ -213,16 +189,15 @@ public class SegmentsDisplayContextTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"roleSegmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), _user.getUserId()));
 
-				Assert.assertEquals(
-					"assign-site-roles-link dropdown-item",
-					_getAssignUserRolesLinkCss(segmentsEntry));
+				Assert.assertTrue(
+					_isAssignUserRolesButtonEnabled(
+						segmentsEntry.getCompanyId()));
 			}
 		}
 	}
@@ -389,8 +364,7 @@ public class SegmentsDisplayContextTest {
 						AnalyticsConfiguration.class.getName(),
 						HashMapDictionaryBuilder.<String, Object>put(
 							"liferayAnalyticsURL", RandomTestUtil.randomString()
-						).build(),
-						SettingsFactoryUtil.getSettingsFactory())) {
+						).build())) {
 
 			SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
@@ -420,8 +394,7 @@ public class SegmentsDisplayContextTest {
 						AnalyticsConfiguration.class.getName(),
 						HashMapDictionaryBuilder.<String, Object>put(
 							"liferayAnalyticsURL", RandomTestUtil.randomString()
-						).build(),
-						SettingsFactoryUtil.getSettingsFactory())) {
+						).build())) {
 
 			SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
@@ -456,8 +429,7 @@ public class SegmentsDisplayContextTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"roleSegmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				Assert.assertTrue(
 					_isRoleSegmentationEnabled(TestPropsValues.getCompanyId()));
@@ -498,8 +470,7 @@ public class SegmentsDisplayContextTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", false
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				Assert.assertFalse(
 					_isSegmentationEnabled(TestPropsValues.getCompanyId()));
@@ -523,8 +494,7 @@ public class SegmentsDisplayContextTest {
 							SegmentsCompanyConfiguration.class.getName(),
 							HashMapDictionaryBuilder.<String, Object>put(
 								"segmentationEnabled", true
-							).build(),
-							SettingsFactoryUtil.getSettingsFactory())) {
+							).build())) {
 
 				Assert.assertTrue(
 					_isSegmentationEnabled(TestPropsValues.getCompanyId()));
@@ -554,30 +524,6 @@ public class SegmentsDisplayContextTest {
 				_group.getGroupId(), _user.getUserId()));
 
 		Assert.assertTrue(_isShowAssignUserRolesAction(segmentsEntry));
-	}
-
-	@Test
-	public void testIsShowCreationMenuWithoutPermissions() throws Exception {
-		Assert.assertFalse(_isShowCreationMenu());
-	}
-
-	@Test
-	public void testIsShowCreationMenuWithPermissions() throws Exception {
-		Role siteMemberRole = _roleLocalService.getRole(
-			_company.getCompanyId(), RoleConstants.SITE_MEMBER);
-
-		_resourcePermissionLocalService.addResourcePermission(
-			_company.getCompanyId(), "com.liferay.segments",
-			ResourceConstants.SCOPE_GROUP, String.valueOf(_group.getGroupId()),
-			siteMemberRole.getRoleId(),
-			SegmentsActionKeys.MANAGE_SEGMENTS_ENTRIES);
-
-		_groupLocalService.addUserGroup(_user.getUserId(), _group.getGroupId());
-
-		Assert.assertTrue(_isShowCreationMenu());
-
-		GroupLocalServiceUtil.deleteUserGroup(
-			_user.getUserId(), _group.getGroupId());
 	}
 
 	@Test
@@ -660,16 +606,6 @@ public class SegmentsDisplayContextTest {
 		Assert.assertTrue(_isShowViewAction(segmentsEntry));
 	}
 
-	private List<DropdownItem> _getActionDropdownItems() throws Exception {
-		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
-			_renderPortlet();
-
-		return ReflectionTestUtil.invoke(
-			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
-			"getActionDropdownItems", new Class<?>[0]);
-	}
-
 	private Map<String, Object> _getAssignUserRolesDataMap(
 			SegmentsEntry segmentsEntry)
 		throws Exception {
@@ -679,21 +615,8 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getAssignUserRolesDataMap", new Class<?>[] {SegmentsEntry.class},
-			segmentsEntry);
-	}
-
-	private String _getAssignUserRolesLinkCss(SegmentsEntry segmentsEntry)
-		throws Exception {
-
-		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
-			_renderPortlet();
-
-		return ReflectionTestUtil.invoke(
-			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
-			"getAssignUserRolesLinkCss", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
 
@@ -705,7 +628,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getAvailableActions", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -716,7 +639,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getDeleteURL", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -727,7 +650,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getEditURL", new Class<?>[] {SegmentsEntry.class}, segmentsEntry);
 	}
 
@@ -788,7 +711,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getPermissionURL", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -801,7 +724,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getPreviewMembersURL", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -812,7 +735,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getScopeName", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -825,7 +748,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getSegmentsEntryURL", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -838,7 +761,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"getSegmentsEntryURLTarget", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -857,6 +780,19 @@ public class SegmentsDisplayContextTest {
 		return themeDisplay;
 	}
 
+	private boolean _isAssignUserRolesButtonEnabled(long companyId)
+		throws Exception {
+
+		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
+			_renderPortlet();
+
+		return ReflectionTestUtil.invoke(
+			mockLiferayPortletRenderRequest.getAttribute(
+				_SEGMENTS_DISPLAY_CONTEXT),
+			"isRoleSegmentationEnabled", new Class<?>[] {long.class},
+			companyId);
+	}
+
 	private boolean _isRoleSegmentationEnabled(long companyId)
 		throws Exception {
 
@@ -865,7 +801,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isRoleSegmentationEnabled", new Class<?>[] {long.class},
 			companyId);
 	}
@@ -876,7 +812,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isSegmentationEnabled", new Class<?>[] {long.class}, companyId);
 	}
 
@@ -888,19 +824,9 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowAssignUserRolesAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
-	}
-
-	private boolean _isShowCreationMenu() throws Exception {
-		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
-			_renderPortlet();
-
-		return ReflectionTestUtil.invoke(
-			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
-			"isShowCreationMenu", new Class<?>[0]);
 	}
 
 	private boolean _isShowDeleteAction(SegmentsEntry segmentsEntry)
@@ -911,7 +837,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowDeleteAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -924,7 +850,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowPermissionAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -937,7 +863,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowUpdateAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -950,7 +876,7 @@ public class SegmentsDisplayContextTest {
 
 		return ReflectionTestUtil.invoke(
 			mockLiferayPortletRenderRequest.getAttribute(
-				"SEGMENTS_DISPLAY_CONTEXT"),
+				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowViewAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
 	}
@@ -967,6 +893,10 @@ public class SegmentsDisplayContextTest {
 
 		return mockLiferayPortletRenderRequest;
 	}
+
+	private static final String _SEGMENTS_DISPLAY_CONTEXT =
+		"com.liferay.segments.web.internal.display.context." +
+			"SegmentsDisplayContext";
 
 	private Company _company;
 

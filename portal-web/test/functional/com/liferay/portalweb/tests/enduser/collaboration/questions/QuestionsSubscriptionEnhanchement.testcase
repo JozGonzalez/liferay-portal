@@ -22,9 +22,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -192,6 +192,15 @@ definition {
 				categoryDescription = "Description",
 				categoryName = "Questions Test Topic",
 				userEmailAddress = "test@liferay.com");
+
+			Questions.openToQuestionsTopic(
+				layoutName = "questions-page",
+				siteURLKey = "guest",
+				topicName = "questions-test-topic");
+
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
 		}
 
 		task ("Subcribe on a Topic") {
@@ -326,6 +335,10 @@ definition {
 				siteURLKey = "guest",
 				topicName = "questions-test-topic");
 
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
+
 			Questions.subscribeTopic();
 		}
 
@@ -451,6 +464,10 @@ definition {
 				layoutName = "questions-page",
 				siteURLKey = "guest",
 				topicName = "questions-test-topic");
+
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
 		}
 
 		task ("Subcribe to the Topic") {
@@ -464,14 +481,10 @@ definition {
 		}
 
 		task ("Unsubcribe to the Topic") {
-			Questions.gotoTab(questionTabField = "Questions");
-
 			Questions.unsubscribeFromTopic(topicName = "Questions Test Topic");
 		}
 
 		task ("Validate if the unsubcribed topic") {
-			Questions.gotoTab(questionTabField = "Subscriptions");
-
 			Questions.viewSubscribedTopic(noSubscribedTopic = "true");
 		}
 	}

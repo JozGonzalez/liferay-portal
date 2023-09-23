@@ -34,14 +34,14 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -75,6 +75,10 @@ public interface ${schemaName}Resource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ${schemaName}Resource build() {
 			return new ${schemaName}ResourceImpl(this);
 		}
@@ -83,6 +87,27 @@ public interface ${schemaName}Resource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException("Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -160,7 +185,22 @@ public interface ${schemaName}Resource {
 					_logger.log(Level.WARNING, "HTTP response message: " + httpResponse.getMessage());
 					_logger.log(Level.WARNING, "HTTP response status code: " + httpResponse.getStatusCode());
 
-					throw new Problem.ProblemException(Problem.toDTO(content));
+					Problem.ProblemException problemException = null;
+
+					if (Objects.equals(httpResponse.getContentType(), "application/json")) {
+						problemException = new Problem.ProblemException(Problem.toDTO(content));
+					}
+					else {
+						_logger.log(Level.WARNING, "Unable to process content type: " + httpResponse.getContentType());
+
+						Problem problem = new Problem();
+
+						problem.setStatus(String.valueOf(httpResponse.getStatusCode()));
+
+						problemException = new Problem.ProblemException(problem);
+					}
+
+					throw problemException;
 				}
 				else {
 					_logger.fine("HTTP response content: " + content);
@@ -223,30 +263,29 @@ public interface ${schemaName}Resource {
 						/>
 
 						<#if bodyJavaMethodParameters?has_content>
-							httpInvoker.body(
 								<#list bodyJavaMethodParameters as javaMethodParameter>
 									<#if javaMethodParameter?is_last>
 										<#if javaMethodParameter.parameterType?starts_with("[L")>
-											Stream.of(
-												${javaMethodParameter.parameterName}
-											).map(
-												value ->
+											List<String> values = new ArrayList<>();
+
+											for (${javaMethodParameter.parameterType?keep_after_last(".")?keep_before(";")} ${javaMethodParameter.parameterName?remove_ending("s")}Value : ${javaMethodParameter.parameterName}) {
+												values.add(
 
 												<#if javaMethodParameter.parameterType?contains("String")>
-													"\"" + String.valueOf(value) + "\""
+													"\"" + String.valueOf(${javaMethodParameter.parameterName?remove_ending("s")}Value) + "\""
 												<#else>
-													String.valueOf(value)
+													String.valueOf(${javaMethodParameter.parameterName?remove_ending("s")}Value)
 												</#if>
-											).collect(
-												Collectors.toList()
-											).toString()
+
+												);
+											}
+
+											httpInvoker.body(values.toString(), "application/json");
 										<#else>
-											${javaMethodParameter.parameterName}.toString()
+											httpInvoker.body(${javaMethodParameter.parameterName}.toString(), "application/json");
 										</#if>
 									</#if>
 								</#list>
-
-								, "application/json");
 						</#if>
 					</#if>
 				</#if>

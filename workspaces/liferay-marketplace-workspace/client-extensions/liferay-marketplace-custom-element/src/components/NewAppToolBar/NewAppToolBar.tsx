@@ -1,12 +1,17 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayButton from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 
-import chevronRight from '../../assets/icons/chevron-right.svg';
-import circleFill from '../../assets/icons/circle_fill.svg';
-import dotsIcon from '../../assets/icons/dots-icon.svg';
-import emptyImage from '../../assets/icons/emptyImage.svg';
-import mainAccountLogo from '../../assets/icons/mainAppLogo.svg';
+import chevronRight from '../../assets/icons/chevron_right_icon.svg';
+import circleFill from '../../assets/icons/circle_fill_icon.svg';
+import dotsIcon from '../../assets/icons/dots_icon.svg';
+import emptyPicture from '../../assets/icons/empty_picture_icon.svg';
+import {showAccountImage} from '../../utils/util';
 
 import './NewAppToolBar.scss';
 
@@ -59,13 +64,13 @@ export function NewAppToolBar({
 	];
 
 	return (
-		<div className="new-app-tool-bar-container">
+		<div className="container new-app-tool-bar-container">
 			<ClayManagementToolbar.ItemList expand>
 				<div className="new-app-tool-bar-main-account-logo">
 					<img
 						alt="Main account logo"
 						className="new-app-tool-bar-main-account-logo-img"
-						src={accountImage ?? mainAccountLogo}
+						src={showAccountImage(accountImage)}
 					/>
 
 					<span className="new-app-tool-bar-main-account-logo-text">
@@ -83,7 +88,7 @@ export function NewAppToolBar({
 					<img
 						alt="New App logo"
 						className="new-app-tool-bar-new-app-logo-img"
-						src={appImage ?? emptyImage}
+						src={appImage ?? emptyPicture}
 					/>
 
 					<span className="new-app-tool-bar-new-app-logo-text">

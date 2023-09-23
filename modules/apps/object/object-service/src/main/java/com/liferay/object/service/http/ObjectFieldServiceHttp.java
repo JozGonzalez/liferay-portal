@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.http;
@@ -53,9 +44,10 @@ public class ObjectFieldServiceHttp {
 	public static com.liferay.object.model.ObjectField addCustomObjectField(
 			HttpPrincipal httpPrincipal, String externalReferenceCode,
 			long listTypeDefinitionId, long objectDefinitionId,
-			String businessType, String dbType, String defaultValue,
-			boolean indexed, boolean indexedAsKeyword, String indexedLanguageId,
-			java.util.Map<java.util.Locale, String> labelMap, String name,
+			String businessType, String dbType, boolean indexed,
+			boolean indexedAsKeyword, String indexedLanguageId,
+			java.util.Map<java.util.Locale, String> labelMap, boolean localized,
+			String name, String readOnly, String readOnlyConditionExpression,
 			boolean required, boolean state,
 			java.util.List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
@@ -68,9 +60,10 @@ public class ObjectFieldServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, listTypeDefinitionId,
-				objectDefinitionId, businessType, dbType, defaultValue, indexed,
-				indexedAsKeyword, indexedLanguageId, labelMap, name, required,
-				state, objectFieldSettings);
+				objectDefinitionId, businessType, dbType, indexed,
+				indexedAsKeyword, indexedLanguageId, labelMap, localized, name,
+				readOnly, readOnlyConditionExpression, required, state,
+				objectFieldSettings);
 
 			Object returnObj = null;
 
@@ -180,9 +173,10 @@ public class ObjectFieldServiceHttp {
 	public static com.liferay.object.model.ObjectField updateObjectField(
 			HttpPrincipal httpPrincipal, String externalReferenceCode,
 			long objectFieldId, long listTypeDefinitionId, String businessType,
-			String dbType, String defaultValue, boolean indexed,
-			boolean indexedAsKeyword, String indexedLanguageId,
-			java.util.Map<java.util.Locale, String> labelMap, String name,
+			String dbType, boolean indexed, boolean indexedAsKeyword,
+			String indexedLanguageId,
+			java.util.Map<java.util.Locale, String> labelMap, boolean localized,
+			String name, String readOnly, String readOnlyConditionExpression,
 			boolean required, boolean state,
 			java.util.List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
@@ -195,9 +189,10 @@ public class ObjectFieldServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, objectFieldId,
-				listTypeDefinitionId, businessType, dbType, defaultValue,
-				indexed, indexedAsKeyword, indexedLanguageId, labelMap, name,
-				required, state, objectFieldSettings);
+				listTypeDefinitionId, businessType, dbType, indexed,
+				indexedAsKeyword, indexedLanguageId, labelMap, localized, name,
+				readOnly, readOnlyConditionExpression, required, state,
+				objectFieldSettings);
 
 			Object returnObj = null;
 
@@ -233,9 +228,9 @@ public class ObjectFieldServiceHttp {
 	private static final Class<?>[] _addCustomObjectFieldParameterTypes0 =
 		new Class[] {
 			String.class, long.class, long.class, String.class, String.class,
-			String.class, boolean.class, boolean.class, String.class,
-			java.util.Map.class, String.class, boolean.class, boolean.class,
-			java.util.List.class
+			boolean.class, boolean.class, String.class, java.util.Map.class,
+			boolean.class, String.class, String.class, String.class,
+			boolean.class, boolean.class, java.util.List.class
 		};
 	private static final Class<?>[] _deleteObjectFieldParameterTypes1 =
 		new Class[] {long.class};
@@ -244,9 +239,9 @@ public class ObjectFieldServiceHttp {
 	private static final Class<?>[] _updateObjectFieldParameterTypes3 =
 		new Class[] {
 			String.class, long.class, long.class, String.class, String.class,
-			String.class, boolean.class, boolean.class, String.class,
-			java.util.Map.class, String.class, boolean.class, boolean.class,
-			java.util.List.class
+			boolean.class, boolean.class, String.class, java.util.Map.class,
+			boolean.class, String.class, String.class, String.class,
+			boolean.class, boolean.class, java.util.List.class
 		};
 
 }

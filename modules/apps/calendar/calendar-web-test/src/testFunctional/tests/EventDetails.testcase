@@ -10,46 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
-
-			Calendar.tearDownColor();
+			JSONCalendar.tearDown();
 
 			CalendarResource.tearDown();
 
@@ -207,7 +200,8 @@ definition {
 	@priority = 5
 	test DeleteRegular {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Calendar#DeleteEventRegular";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -255,7 +249,8 @@ definition {
 	@priority = 5
 	test DeleteRepeatingAllFollowing {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Calendar#DeleteEventRepeatingAllFollowing";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CalendarNavigator.gotoAddEvent();
 
@@ -289,8 +284,8 @@ definition {
 			startDate = "02/2/2016");
 
 		CalendarEvent.setTimes(
-			endDateTime = " 2:00 AM",
-			startDateTime = " 1:00 AM");
+			endDateTime = "02:00 AM",
+			startDateTime = "01:00 AM");
 
 		CalendarEvent.setRepeating(
 			frequency = "Daily",
@@ -907,36 +902,22 @@ definition {
 
 	@priority = 4
 	test ViewCalendarChange {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Memberships");
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
+		JSONUser.addUserToSite(
+			groupName = "Guest",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -1004,11 +985,11 @@ definition {
 	@description = "This is a use case for LPS-75292."
 	@priority = 5
 	test ViewCalendarEventDetailViaMailLink {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "EventDetails#ViewCalendarEventDetailViaMailLink";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property test.smtp.server.enabled = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 

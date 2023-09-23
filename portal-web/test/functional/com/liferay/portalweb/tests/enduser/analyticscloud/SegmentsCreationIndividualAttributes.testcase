@@ -47,13 +47,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -64,10 +66,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8565 | Test Summary: Add segment using an individual property 'role'"
+	@ignore = "true"
 	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyRole {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyRole";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Add a new regular role and assign to the user") {
 			JSONRole.addRegularRole(
@@ -279,10 +285,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8566 | Test Summary: Add segment using an individual property 'team'"
+	@ignore = "true"
 	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyTeam {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyTeam";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Assign the site to user") {
 			JSONGroup.assignUserToGroup(
@@ -419,8 +429,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8567 | Test Summary: Add segment using an individual property 'user group'"
 	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyUserGroup {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyUserGroup";
+		property test.run.type = "single";
 
 		task ("Add a new user group and assign to the user") {
 			JSONUserGroup.addUserGroup(
@@ -484,8 +493,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8569 | Test Summary: Add segment with custom field for individuals"
 	@priority = 4
 	test CanAddSegmentWithCustomFieldsForIndividuals {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentWithCustomFieldsForIndividuals";
+		property test.run.type = "single";
 
 		task ("Add a user custom field") {
 			CustomFields.openCustomFieldAdmin();
@@ -577,10 +585,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8570 | Test Summary: Add segment with custom fields for organizations"
+	@ignore = "true"
 	@priority = 4
 	test CanAddSegmentWithCustomFieldsForOrganizations {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentWithCustomFieldsForOrganizations";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Add a new organization and assign to the user") {
 			JSONOrganization.addOrganization(organizationName = "Organization Name");
@@ -837,8 +849,6 @@ definition {
 	@description = "Bug: LRAC-11460 | Automation ID: LRAC-11634 | Test Summary: Add a dynamic segment using an individual property "email" selecting one of the suggested autocomplete options and assert in the Known Individuals tab search this individual exists"
 	@priority = 3
 	test CheckIfAutocompleteSuggestionEmailPresentInKnownIndividualsList {
-		property analytics.cloud.upstream = "false";
-
 		var username = "ac ac";
 		var individualEmail = "ac@liferay.com";
 

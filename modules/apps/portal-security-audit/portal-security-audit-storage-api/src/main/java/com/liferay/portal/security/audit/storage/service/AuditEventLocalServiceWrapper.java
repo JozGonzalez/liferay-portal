@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.audit.storage.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link AuditEventLocalService}.
@@ -311,7 +303,7 @@ public class AuditEventLocalServiceWrapper
 	public java.util.List
 		<com.liferay.portal.security.audit.storage.model.AuditEvent>
 			getAuditEvents(
-				long companyId, long userId, String userName,
+				long companyId, long groupId, long userId, String userName,
 				java.util.Date createDateGT, java.util.Date createDateLT,
 				String eventType, String className, String classPK,
 				String clientHost, String clientIP, String serverName,
@@ -319,16 +311,16 @@ public class AuditEventLocalServiceWrapper
 				int end) {
 
 		return _auditEventLocalService.getAuditEvents(
-			companyId, userId, userName, createDateGT, createDateLT, eventType,
-			className, classPK, clientHost, clientIP, serverName, serverPort,
-			sessionID, andSearch, start, end);
+			companyId, groupId, userId, userName, createDateGT, createDateLT,
+			eventType, className, classPK, clientHost, clientIP, serverName,
+			serverPort, sessionID, andSearch, start, end);
 	}
 
 	@Override
 	public java.util.List
 		<com.liferay.portal.security.audit.storage.model.AuditEvent>
 			getAuditEvents(
-				long companyId, long userId, String userName,
+				long companyId, long groupId, long userId, String userName,
 				java.util.Date createDateGT, java.util.Date createDateLT,
 				String eventType, String className, String classPK,
 				String clientHost, String clientIP, String serverName,
@@ -339,9 +331,9 @@ public class AuditEventLocalServiceWrapper
 						orderByComparator) {
 
 		return _auditEventLocalService.getAuditEvents(
-			companyId, userId, userName, createDateGT, createDateLT, eventType,
-			className, classPK, clientHost, clientIP, serverName, serverPort,
-			sessionID, andSearch, start, end, orderByComparator);
+			companyId, groupId, userId, userName, createDateGT, createDateLT,
+			eventType, className, classPK, clientHost, clientIP, serverName,
+			serverPort, sessionID, andSearch, start, end, orderByComparator);
 	}
 
 	/**
@@ -361,16 +353,16 @@ public class AuditEventLocalServiceWrapper
 
 	@Override
 	public int getAuditEventsCount(
-		long companyId, long userId, String userName,
+		long companyId, long groupId, long userId, String userName,
 		java.util.Date createDateGT, java.util.Date createDateLT,
 		String eventType, String className, String classPK, String clientHost,
 		String clientIP, String serverName, int serverPort, String sessionID,
 		boolean andSearch) {
 
 		return _auditEventLocalService.getAuditEventsCount(
-			companyId, userId, userName, createDateGT, createDateLT, eventType,
-			className, classPK, clientHost, clientIP, serverName, serverPort,
-			sessionID, andSearch);
+			companyId, groupId, userId, userName, createDateGT, createDateLT,
+			eventType, className, classPK, clientHost, clientIP, serverName,
+			serverPort, sessionID, andSearch);
 	}
 
 	@Override
@@ -418,6 +410,11 @@ public class AuditEventLocalServiceWrapper
 				auditEvent) {
 
 		return _auditEventLocalService.updateAuditEvent(auditEvent);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _auditEventLocalService.getBasePersistence();
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
@@ -18,7 +9,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
+import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -72,10 +63,12 @@ public interface ObjectDefinitionLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition addCustomObjectDefinition(
-			long userId, boolean enableComments, Map<Locale, String> labelMap,
-			String name, String panelAppOrder, String panelCategoryKey,
-			Map<Locale, String> pluralLabelMap, String scope,
-			String storageType, List<ObjectField> objectFields)
+			long userId, long objectFolderId, boolean enableComments,
+			boolean enableLocalization, boolean enableObjectEntryDraft,
+			Map<Locale, String> labelMap, String name, String panelAppOrder,
+			String panelCategoryKey, Map<Locale, String> pluralLabelMap,
+			boolean portlet, String scope, String storageType,
+			List<ObjectField> objectFields)
 		throws PortalException;
 
 	/**
@@ -94,24 +87,29 @@ public interface ObjectDefinitionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition addObjectDefinition(
-			String externalReferenceCode, long userId)
+			String externalReferenceCode, long userId, long objectFolderId,
+			boolean modifiable, boolean system)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition addOrUpdateSystemObjectDefinition(
-			long companyId,
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata)
+			long companyId, long objectFolderId,
+			SystemObjectDefinitionManager systemObjectDefinitionManager)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition addSystemObjectDefinition(
-			long userId, String className, String dbTableName,
-			boolean enableComments, Map<Locale, String> labelMap,
-			boolean modifiable, String name, String panelAppOrder,
-			String panelCategoryKey, String pkObjectFieldDBColumnName,
-			String pkObjectFieldName, Map<Locale, String> pluralLabelMap,
-			String scope, String titleObjectFieldName, int version, int status,
+			String externalReferenceCode, long userId, long objectFolderId,
+			String className, String dbTableName, boolean enableComments,
+			Map<Locale, String> labelMap, boolean modifiable, String name,
+			String panelAppOrder, String panelCategoryKey,
+			String pkObjectFieldDBColumnName, String pkObjectFieldName,
+			Map<Locale, String> pluralLabelMap, String scope,
+			String titleObjectFieldName, int version, int status,
 			List<ObjectField> objectFields)
+		throws PortalException;
+
+	public void bindObjectDefinitions(long[] objectRelationshipIds)
 		throws PortalException;
 
 	/**
@@ -170,6 +168,9 @@ public interface ObjectDefinitionLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	public void deployInactiveObjectDefinition(
+		ObjectDefinition objectDefinition);
 
 	public void deployObjectDefinition(ObjectDefinition objectDefinition);
 
@@ -247,6 +248,11 @@ public interface ObjectDefinitionLocalService
 
 	public ObjectDefinition enableAccountEntryRestricted(
 			ObjectRelationship objectRelationship)
+		throws PortalException;
+
+	public ObjectDefinition
+			enableAccountEntryRestrictedForNondefaultStorageType(
+				ObjectField objectField)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -341,6 +347,10 @@ public interface ObjectDefinitionLocalService
 	public List<ObjectDefinition> getObjectDefinitions(
 		long companyId, boolean active, int status);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectDefinition> getObjectDefinitions(
+		long companyId, int status);
+
 	/**
 	 * Returns the number of object definitions.
 	 *
@@ -351,6 +361,10 @@ public interface ObjectDefinitionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectDefinitionsCount(long companyId) throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectDefinition> getObjectFolderObjectDefinitions(
+		long objectFolderId);
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -381,18 +395,23 @@ public interface ObjectDefinitionLocalService
 			long userId, long objectDefinitionId)
 		throws PortalException;
 
+	public void unbindObjectDefinition(long objectDefinitionId)
+		throws PortalException;
+
 	public void undeployObjectDefinition(ObjectDefinition objectDefinition);
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition updateCustomObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
 			long accountEntryRestrictedObjectFieldId,
-			long descriptionObjectFieldId, long titleObjectFieldId,
-			boolean accountEntryRestricted, boolean active,
-			boolean enableCategorization, boolean enableComments,
-			boolean enableObjectEntryHistory, Map<Locale, String> labelMap,
-			String name, String panelAppOrder, String panelCategoryKey,
-			boolean portlet, Map<Locale, String> pluralLabelMap, String scope)
+			long descriptionObjectFieldId, long objectFolderId,
+			long titleObjectFieldId, boolean accountEntryRestricted,
+			boolean active, boolean enableCategorization,
+			boolean enableComments, boolean enableLocalization,
+			boolean enableObjectEntryDraft, boolean enableObjectEntryHistory,
+			Map<Locale, String> labelMap, String name, String panelAppOrder,
+			String panelCategoryKey, boolean portlet,
+			Map<Locale, String> pluralLabelMap, String scope)
 		throws PortalException;
 
 	public ObjectDefinition updateExternalReferenceCode(
@@ -414,9 +433,18 @@ public interface ObjectDefinitionLocalService
 		ObjectDefinition objectDefinition);
 
 	@Indexable(type = IndexableType.REINDEX)
+	public ObjectDefinition updateObjectFolderId(
+			long objectDefinitionId, long objectFolderId)
+		throws PortalException;
+
+	public ObjectDefinition updateRootObjectDefinitionId(
+			long objectDefinitionId, long rootObjectDefinitionId)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition updateSystemObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
-			long titleObjectFieldId)
+			long objectFolderId, long titleObjectFieldId)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)

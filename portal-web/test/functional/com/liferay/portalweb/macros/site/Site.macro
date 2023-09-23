@@ -64,6 +64,12 @@ definition {
 
 			PortletEntry.inputName(name = ${siteName});
 
+			if (isSet(enablePrivatePage)) {
+				Check(
+					checkboxName = "Create default pages as private",
+					locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+
 			Button.click(button = "Add");
 
 			SelectFrameTop();
@@ -204,6 +210,7 @@ definition {
 	macro addSiteTemplateCP {
 		if (isSet(siteTemplateTab)) {
 			Site.addCP(
+				enablePrivatePage = ${enablePrivatePage},
 				membershipType = ${membershipType},
 				parentSiteName = ${parentSiteName},
 				siteName = ${siteName},
@@ -365,13 +372,11 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-		var key_rowEntry = ${teamName};
-
-		AssertClick(
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
-			value1 = ${teamName});
+		Click(
+			key_listEntry = ${teamName},
+			locator1 = "LexiconList#ANY_LIST");
 
 		SelectFrame(value1 = "relative=top");
 
@@ -497,7 +502,7 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconEntry.selectEntry(rowEntry = ${userGroupName});
+		LexiconCard.checkCardCheckbox(card = ${userGroupName});
 
 		SelectFrameTop();
 
@@ -525,8 +530,6 @@ definition {
 				key_pageName = ${pageName},
 				locator1 = "Icon#COG_PAGE");
 		}
-
-		Panel.expandPanel(panel = "Logo");
 
 		PagesAdmin.uploadLogo(logoFile = ${logoFile});
 	}
@@ -679,7 +682,7 @@ definition {
 	macro deleteCP {
 		var key_siteName = ${siteName};
 
-		Search.searchCP(searchTerm = "Name");
+		Search.searchCP(searchTerm = ${siteName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Sites#SITE_TABLE_NAME",
@@ -702,8 +705,6 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No sites were found.");
-
-		AssertTextNotPresent(value1 = ${siteName});
 	}
 
 	macro disableRecycleBinCP {
@@ -1032,11 +1033,15 @@ definition {
 	}
 
 	macro openSitesAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage/-/sites");
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/control_panel/manage/-/sites");
 	}
 
 	macro openSiteSettingsAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage/-/site/settings");
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/${siteURLKey}/~/control_panel/manage/-/site/settings");
 	}
 
 	macro openSiteTeamsAdmin {
@@ -1106,9 +1111,9 @@ definition {
 	}
 
 	macro searchCP {
-		Search.searchCP(searchTerm = "Site Name");
+		Search.searchCP(searchTerm = ${siteName});
 
-		Site.viewSearchResultsCP(siteName = "Site Name");
+		Site.viewSearchResultsCP(siteName = ${siteName});
 	}
 
 	macro searchMemberCP {
@@ -1199,6 +1204,22 @@ definition {
 		Close(locator1 = "null");
 
 		SelectFrame(value1 = "relative=top");
+	}
+
+	macro selectRoleToSeeControlMenu {
+		Button.click(button = "Select");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Check.checkToggleSwitch(
+			key_checkboxName = ${roleTitle},
+			locator1 = "Checkbox#ENABLE_CHECKBOX");
+
+		SelectFrame(value1 = "relative=top");
+
+		Button.clickAdd();
+
+		PortletEntry.save();
 	}
 
 	macro selectSiteTemplateTab {
@@ -1308,15 +1329,17 @@ definition {
 	}
 
 	macro viewCP {
-		var key_siteName = ${siteName};
-
-		AssertElementPresent(locator1 = "Sites#SITE_TABLE_CHECKBOX");
+		AssertElementPresent(
+			key_siteName = ${siteName},
+			locator1 = "Sites#SITE_TABLE_CHECKBOX");
 
 		AssertTextEquals.assertPartialText(
+			key_siteName = ${siteName},
 			locator1 = "Sites#SITE_TABLE_NAME",
 			value1 = ${siteName});
 
 		AssertTextEquals(
+			key_siteName = ${siteName},
 			locator1 = "Sites#SITE_TABLE_TYPE",
 			value1 = ${siteType});
 

@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.ip.address.internal.checker;
 
-import com.liferay.multi.factor.authentication.ip.address.internal.audit.MFAIPAddressAuditMessageBuilder;
 import com.liferay.multi.factor.authentication.ip.address.internal.configuration.MFAIPAddressConfiguration;
+import com.liferay.multi.factor.authentication.ip.address.internal.constants.MFAIPAddressEventTypes;
 import com.liferay.multi.factor.authentication.spi.checker.headless.HeadlessMFAChecker;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.audit.AuditException;
 import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.audit.AuditRouterUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -40,7 +34,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * @author Marta Medio
@@ -64,8 +57,8 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 						userId);
 			}
 
-			_routeAuditMessage(
-				_mfaIPAddressAuditMessageBuilder.
+			_mfaipAddressAuditMessageBuilder.routeAuditMessage(
+				_mfaipAddressAuditMessageBuilder.
 					buildNonexistentUserVerificationFailureAuditMessage(
 						CompanyThreadLocal.getCompanyId(), userId,
 						_getClassName()));
@@ -76,16 +69,16 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 		if (AccessControlUtil.isAccessAllowed(
 				httpServletRequest, _allowedIpAddressesAndNetmasks)) {
 
-			_routeAuditMessage(
-				_mfaIPAddressAuditMessageBuilder.
+			_mfaipAddressAuditMessageBuilder.routeAuditMessage(
+				_mfaipAddressAuditMessageBuilder.
 					buildVerificationSuccessAuditMessage(
 						user, _getClassName()));
 
 			return true;
 		}
 
-		_routeAuditMessage(
-			_mfaIPAddressAuditMessageBuilder.
+		_mfaipAddressAuditMessageBuilder.routeAuditMessage(
+			_mfaipAddressAuditMessageBuilder.
 				buildVerificationFailureAuditMessage(
 					user, _getClassName(), "IP is not allowed"));
 
@@ -128,23 +121,69 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 		return clazz.getName();
 	}
 
-	private void _routeAuditMessage(AuditMessage auditMessage) {
-		if (_mfaIPAddressAuditMessageBuilder != null) {
-			_mfaIPAddressAuditMessageBuilder.routeAuditMessage(auditMessage);
-		}
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		IPAddressHeadlessMFAChecker.class);
 
 	private Set<String> _allowedIpAddressesAndNetmasks;
-
-	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
-	private MFAIPAddressAuditMessageBuilder _mfaIPAddressAuditMessageBuilder;
-
+	private final MFAIPAddressAuditMessageBuilder
+		_mfaipAddressAuditMessageBuilder =
+			new MFAIPAddressAuditMessageBuilder();
 	private ServiceRegistration<HeadlessMFAChecker> _serviceRegistration;
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	private class MFAIPAddressAuditMessageBuilder {
+
+		public AuditMessage buildNonexistentUserVerificationFailureAuditMessage(
+			long companyId, long userId, String mfaCheckerClassName) {
+
+			return new AuditMessage(
+				MFAIPAddressEventTypes.MFA_IP_ADDRESS_VERIFICATION_FAILURE,
+				companyId, userId, "Nonexistent", mfaCheckerClassName,
+				String.valueOf(userId), null,
+				JSONUtil.put("reason", "Nonexistent User"));
+		}
+
+		public AuditMessage buildVerificationFailureAuditMessage(
+			User user, String mfaCheckerClassName, String reason) {
+
+			return new AuditMessage(
+				MFAIPAddressEventTypes.MFA_IP_ADDRESS_VERIFICATION_FAILURE,
+				user.getCompanyId(), user.getUserId(), user.getFullName(),
+				mfaCheckerClassName, String.valueOf(user.getPrimaryKey()), null,
+				JSONUtil.put("reason", reason));
+		}
+
+		public AuditMessage buildVerificationSuccessAuditMessage(
+			User user, String mfaCheckerClassName) {
+
+			return new AuditMessage(
+				MFAIPAddressEventTypes.MFA_IP_ADDRESS_VERIFICATION_SUCCESS,
+				user.getCompanyId(), user.getUserId(), user.getFullName(),
+				mfaCheckerClassName, String.valueOf(user.getPrimaryKey()), null,
+				null);
+		}
+
+		public void routeAuditMessage(AuditMessage auditMessage) {
+			try {
+				AuditRouterUtil.route(auditMessage);
+			}
+			catch (AuditException auditException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Unable to route audit message", auditException);
+				}
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+
+		private final Log _log = LogFactoryUtil.getLog(
+			MFAIPAddressAuditMessageBuilder.class);
+
+	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.audit.storage.service.http;
@@ -146,8 +137,8 @@ public class AuditEventServiceHttp {
 	public static java.util.List
 		<com.liferay.portal.security.audit.storage.model.AuditEvent>
 				getAuditEvents(
-					HttpPrincipal httpPrincipal, long companyId, long userId,
-					String userName, java.util.Date createDateGT,
+					HttpPrincipal httpPrincipal, long companyId, long groupId,
+					long userId, String userName, java.util.Date createDateGT,
 					java.util.Date createDateLT, String eventType,
 					String className, String classPK, String clientHost,
 					String clientIP, String serverName, int serverPort,
@@ -160,7 +151,7 @@ public class AuditEventServiceHttp {
 				_getAuditEventsParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, userId, userName, createDateGT,
+				methodKey, companyId, groupId, userId, userName, createDateGT,
 				createDateLT, eventType, className, classPK, clientHost,
 				clientIP, serverName, serverPort, sessionID, andSearch, start,
 				end);
@@ -198,8 +189,8 @@ public class AuditEventServiceHttp {
 	public static java.util.List
 		<com.liferay.portal.security.audit.storage.model.AuditEvent>
 				getAuditEvents(
-					HttpPrincipal httpPrincipal, long companyId, long userId,
-					String userName, java.util.Date createDateGT,
+					HttpPrincipal httpPrincipal, long companyId, long groupId,
+					long userId, String userName, java.util.Date createDateGT,
 					java.util.Date createDateLT, String eventType,
 					String className, String classPK, String clientHost,
 					String clientIP, String serverName, int serverPort,
@@ -215,7 +206,7 @@ public class AuditEventServiceHttp {
 				_getAuditEventsParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, userId, userName, createDateGT,
+				methodKey, companyId, groupId, userId, userName, createDateGT,
 				createDateLT, eventType, className, classPK, clientHost,
 				clientIP, serverName, serverPort, sessionID, andSearch, start,
 				end, orderByComparator);
@@ -291,8 +282,8 @@ public class AuditEventServiceHttp {
 	}
 
 	public static int getAuditEventsCount(
-			HttpPrincipal httpPrincipal, long companyId, long userId,
-			String userName, java.util.Date createDateGT,
+			HttpPrincipal httpPrincipal, long companyId, long groupId,
+			long userId, String userName, java.util.Date createDateGT,
 			java.util.Date createDateLT, String eventType, String className,
 			String classPK, String clientHost, String clientIP,
 			String serverName, int serverPort, String sessionID,
@@ -305,7 +296,7 @@ public class AuditEventServiceHttp {
 				_getAuditEventsCountParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, userId, userName, createDateGT,
+				methodKey, companyId, groupId, userId, userName, createDateGT,
 				createDateLT, eventType, className, classPK, clientHost,
 				clientIP, serverName, serverPort, sessionID, andSearch);
 
@@ -349,27 +340,28 @@ public class AuditEventServiceHttp {
 		};
 	private static final Class<?>[] _getAuditEventsParameterTypes2 =
 		new Class[] {
-			long.class, long.class, String.class, java.util.Date.class,
-			java.util.Date.class, String.class, String.class, String.class,
-			String.class, String.class, String.class, int.class, String.class,
-			boolean.class, int.class, int.class
+			long.class, long.class, long.class, String.class,
+			java.util.Date.class, java.util.Date.class, String.class,
+			String.class, String.class, String.class, String.class,
+			String.class, int.class, String.class, boolean.class, int.class,
+			int.class
 		};
 	private static final Class<?>[] _getAuditEventsParameterTypes3 =
 		new Class[] {
-			long.class, long.class, String.class, java.util.Date.class,
-			java.util.Date.class, String.class, String.class, String.class,
-			String.class, String.class, String.class, int.class, String.class,
-			boolean.class, int.class, int.class,
-			com.liferay.portal.kernel.util.OrderByComparator.class
+			long.class, long.class, long.class, String.class,
+			java.util.Date.class, java.util.Date.class, String.class,
+			String.class, String.class, String.class, String.class,
+			String.class, int.class, String.class, boolean.class, int.class,
+			int.class, com.liferay.portal.kernel.util.OrderByComparator.class
 		};
 	private static final Class<?>[] _getAuditEventsCountParameterTypes4 =
 		new Class[] {long.class};
 	private static final Class<?>[] _getAuditEventsCountParameterTypes5 =
 		new Class[] {
-			long.class, long.class, String.class, java.util.Date.class,
-			java.util.Date.class, String.class, String.class, String.class,
-			String.class, String.class, String.class, int.class, String.class,
-			boolean.class
+			long.class, long.class, long.class, String.class,
+			java.util.Date.class, java.util.Date.class, String.class,
+			String.class, String.class, String.class, String.class,
+			String.class, int.class, String.class, boolean.class
 		};
 
 }

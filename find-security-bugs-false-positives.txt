@@ -48,9 +48,6 @@ com/liferay/commerce/account/admin/web/internal/frontend/taglib/servlet/taglib/C
 com/liferay/commerce/account/admin/web/internal/frontend/taglib/servlet/taglib/CommerceAccountUserRelScreenNavigationEntry.getScreenNavigationKey()Ljava/lang/String;:SAFE
 com/liferay/commerce/account/admin/web/internal/portlet/CommerceAccountPortletProvider.getPortletName()Ljava/lang/String;:SAFE
 com/liferay/commerce/account/admin/web/internal/portlet/action/EditCommerceAccountMVCRenderCommand.render(Ljavax/portlet/RenderRequest;Ljavax/portlet/RenderResponse;)Ljava/lang/String;:SAFE
-com/liferay/commerce/account/constants/CommerceAccountConstants.getAccountGroupTypeLabel(I)Ljava/lang/String;:SAFE
-com/liferay/commerce/account/constants/CommerceAccountConstants.getAccountTypeLabel(I)Ljava/lang/String;:SAFE
-com/liferay/commerce/account/constants/CommerceAccountConstants.getSiteTypeLabel(I)Ljava/lang/String;:SAFE
 com/liferay/commerce/account/group/admin/web/internal/application/list/CommerceAccountGroupPanelApp.getPortletId()Ljava/lang/String;:SAFE
 com/liferay/commerce/account/group/admin/web/internal/display/context/CommerceAccountGroupAdminDisplayContext.getItemSelectorUrl()Ljava/lang/String;:SAFE
 com/liferay/commerce/account/group/admin/web/internal/display/context/CommerceAccountGroupAdminDisplayContext.getPortletURL()Ljavax/portlet/PortletURL;:SAFE
@@ -3528,6 +3525,7 @@ com/liferay/commerce/product/constants/CPConstants.SEPARATOR_PRODUCT_URL:SAFE
 com/liferay/commerce/product/constants/CPConstants.SERVICE_NAME:SAFE
 com/liferay/commerce/product/constants/CPConstants.WEEKLY_SUBSCRIPTION_TYPE:SAFE
 com/liferay/commerce/product/constants/CPConstants.YEARLY_SUBSCRIPTION_TYPE:SAFE
+com/liferay/commerce/product/constants/CommerceChannelConstants.getSiteTypeLabel(I)Ljava/lang/String;:SAFE
 com/liferay/commerce/product/content/category/web/internal/portlet/action/CPCategoryContentConfigurationAction.getJspPath(Ljavax/servlet/http/HttpServletRequest;)Ljava/lang/String;:SAFE
 com/liferay/commerce/product/content/category/web/internal/portlet/template/CPCategoryContentPortletDisplayTemplateHandler.getClassName()Ljava/lang/String;:SAFE
 com/liferay/commerce/product/content/category/web/internal/portlet/template/CPCategoryContentPortletDisplayTemplateHandler.getResourceName()Ljava/lang/String;:SAFE
@@ -3950,11 +3948,6 @@ com/liferay/commerce/product/internal/util/CPInstanceHelperImpl.getDefaultCPSku(
 com/liferay/commerce/product/internal/util/DDMFormValuesHelperImpl._toJSONObject(Lcom/liferay/dynamic/data/mapping/storage/DDMFormFieldValue;)Lcom/liferay/portal/kernel/json/JSONObject;:SAFE
 com/liferay/commerce/product/internal/util/DDMFormValuesHelperImpl.cleanDDMFormValuesJSON(Ljava/lang/String;)Ljava/lang/String;:0
 com/liferay/commerce/product/internal/util/DDMFormValuesHelperImpl.serialize(Lcom/liferay/dynamic/data/mapping/storage/DDMFormValues;)Ljava/lang/String;:SAFE
-com/liferay/commerce/product/internal/util/JsonHelperImpl._toJSONArray(Ljava/lang/String;)Lcom/liferay/portal/kernel/json/JSONArray;:SAFE
-com/liferay/commerce/product/internal/util/JsonHelperImpl.getFirstElementStringValue(Ljava/lang/String;)Ljava/lang/String;:0
-com/liferay/commerce/product/internal/util/JsonHelperImpl.getJSONArray(Ljava/lang/String;)Lcom/liferay/portal/kernel/json/JSONArray;:SAFE
-com/liferay/commerce/product/internal/util/JsonHelperImpl.getValueAsJSONArray(Ljava/lang/String;Lcom/liferay/portal/kernel/json/JSONObject;)Lcom/liferay/portal/kernel/json/JSONArray;:SAFE
-com/liferay/commerce/product/internal/util/JsonHelperImpl.toJSONArray(Ljava/util/Map;)Lcom/liferay/portal/kernel/json/JSONArray;:SAFE
 com/liferay/commerce/product/item/selector/web/internal/CPDefinitionItemSelectorView.getItemSelectorCriterionClass()Ljava/lang/Class;:SAFE
 com/liferay/commerce/product/item/selector/web/internal/CPDefinitionItemSelectorView.getTitle(Ljava/util/Locale;)Ljava/lang/String;:SAFE
 com/liferay/commerce/product/item/selector/web/internal/CPInstanceItemSelectorView.getItemSelectorCriterionClass()Ljava/lang/Class;:SAFE
@@ -5145,7 +5138,7 @@ com/liferay/commerce/shipment/web/internal/application/list/CommerceShipmentPane
 com/liferay/commerce/shipment/web/internal/display/context/BaseCommerceShipmentDisplayContext.getKeywords()Ljava/lang/String;:SAFE
 com/liferay/commerce/shipment/web/internal/display/context/BaseCommerceShipmentDisplayContext.getPortletURL()Ljavax/portlet/PortletURL;:SAFE
 com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getCommerceAccountThumbnailURL(Lcom/liferay/commerce/account/model/CommerceAccount;Ljava/lang/String;)Ljava/lang/String;:0
-com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getDatasetView()Ljava/lang/String;:SAFE
+com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getFDSName()Ljava/lang/String;:SAFE
 com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getNavigation()Ljava/lang/String;:SAFE
 com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getPortletURL()Ljavax/portlet/PortletURL;:SAFE
 com/liferay/commerce/shipment/web/internal/display/context/CommerceShipmentDisplayContext.getShipmentItemBulkActions()Ljava/util/List;:SAFE
@@ -5408,7 +5401,7 @@ com/liferay/commerce/tax/engine/fixed/web/internal/display/context/BaseCommerceT
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/BaseCommerceTaxFixedRateDisplayContext.getSelectedScreenNavigationCategoryKey()Ljava/lang/String;:SAFE
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRateAddressRelsDisplayContext.getAddTaxRateSettingURL()Ljava/lang/String;:SAFE
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRateAddressRelsDisplayContext.getCreationMenu()Lcom/liferay/frontend/taglib/clay/servlet/taglib/util/CreationMenu;:SAFE
-com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRateAddressRelsDisplayContext.getDatasetView()Ljava/lang/String;:SAFE
+com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRateAddressRelsDisplayContext.getFDSName()Ljava/lang/String;:SAFE
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRateAddressRelsDisplayContext.getScreenNavigationCategoryKey()Ljava/lang/String;:SAFE
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRatesDisplayContext.getAddTaxRateURL()Ljava/lang/String;:SAFE
 com/liferay/commerce/tax/engine/fixed/web/internal/display/context/CommerceTaxFixedRatesDisplayContext.getCreationMenu()Lcom/liferay/frontend/taglib/clay/servlet/taglib/util/CreationMenu;:SAFE
@@ -10689,7 +10682,6 @@ com/liferay/portal/kernel/json/JSONSerializer.serializeDeep(Ljava/lang/Object;)L
 com/liferay/portal/kernel/model/Group.getScopeDescriptiveName(Lcom/liferay/portal/kernel/theme/ThemeDisplay;)Ljava/lang/String;:SAFE
 com/liferay/portal/kernel/model/Group.getScopeLabel(Lcom/liferay/portal/kernel/theme/ThemeDisplay;)Ljava/lang/String;:SAFE
 com/liferay/portal/kernel/model/Portlet.getPortletName()Ljava/lang/String;:SAFE
-com/liferay/portal/kernel/patcher/PatcherUtil.getInstalledPatches()[Ljava/lang/String;:SAFE
 com/liferay/portal/kernel/scripting/ScriptingUtil.getSupportedLanguages()Ljava/util/Set;:SAFE
 com/liferay/portal/kernel/search/facet/Facet.getFieldId()Ljava/lang/String;:SAFE
 com/liferay/portal/kernel/security/permission/InlineSQLHelperUtil.replacePermissionCheck(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)Ljava/lang/String;:3

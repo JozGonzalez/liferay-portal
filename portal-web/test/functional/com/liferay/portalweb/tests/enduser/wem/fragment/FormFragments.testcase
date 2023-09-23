@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -14,21 +15,6 @@ definition {
 
 		task ("Add a new site") {
 			HeadlessSite.addSite(siteName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
-
-			JSONUser.tearDownNonAdminUsers();
 		}
 	}
 
@@ -425,7 +411,7 @@ definition {
 				id = "submit-button-text",
 				text = "Submit");
 
-			ScrollBy(value1 = "0, 500");
+			ScrollBy(value1 = "0, 1200");
 
 			AssertVisible(
 				index = 1,

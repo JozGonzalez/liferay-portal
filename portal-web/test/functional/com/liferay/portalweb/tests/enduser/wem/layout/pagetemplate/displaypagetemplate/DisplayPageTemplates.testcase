@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Display Page Templates";
@@ -27,9 +28,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -142,12 +143,14 @@ definition {
 
 			SelectWindow.selectPopUp(locator1 = "null");
 
+			Navigator.gotoNavTab(navTab = "SEO");
+
 			AssertElementPresent(
 				key_title = "SEO",
 				locator1 = "Header#H2_TITLE");
 
 			AssertElementPresent(
-				key_title = "General Settings",
+				key_title = "Settings",
 				locator1 = "Header#H3_TITLE");
 
 			AssertElementPresent(
@@ -212,7 +215,8 @@ definition {
 	@priority = 4
 	@uitest
 	test ConfigureTheme {
-		property test.name.skip.portal.instance = "DisplayPageTemplates#ConfigureTheme";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Publish the display page template") {
 			PageEditor.publish();

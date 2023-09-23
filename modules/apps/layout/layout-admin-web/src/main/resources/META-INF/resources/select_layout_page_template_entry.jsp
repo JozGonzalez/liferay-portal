@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -41,46 +32,13 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 		<clay:col
 			lg="3"
 		>
-			<nav class="menubar menubar-transparent menubar-vertical-expand-lg">
-				<ul class="nav nav-nested">
-					<li class="nav-item">
-						<p class="text-uppercase">
-							<strong><liferay-ui:message key="page-template-sets" /></strong>
-						</p>
+			<div class="c-mb-3 h5 text-uppercase">
+				<liferay-ui:message key="page-template-sets" />
+			</div>
 
-						<ul class="nav nav-stacked">
-							<li class="nav-item">
-								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
-									<liferay-ui:message key="basic-templates" />
-								</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "global-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
-									<liferay-ui:message key="global-templates" />
-								</a>
-							</li>
-
-							<%
-							for (LayoutPageTemplateCollection layoutPageTemplateCollection : LayoutPageTemplateCollectionServiceUtil.getLayoutPageTemplateCollections(scopeGroupId)) {
-								int layoutPageTemplateEntriesCount = LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntriesCount(themeDisplay.getScopeGroupId(), layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), WorkflowConstants.STATUS_APPROVED);
-							%>
-
-								<c:if test="<%= layoutPageTemplateEntriesCount > 0 %>">
-									<li class="nav-item">
-										<a class="nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.getSelPlid(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
-											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
-										</a>
-									</li>
-								</c:if>
-
-							<%
-							}
-							%>
-
-						</ul>
-					</li>
-				</ul>
-			</nav>
+			<clay:vertical-nav
+				verticalNavItems="<%= layoutsAdminDisplayContext.getVerticalNavItemList(selectLayoutPageTemplateEntryDisplayContext) %>"
+			/>
 		</clay:col>
 
 		<clay:col

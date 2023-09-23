@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.impl;
 
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileShortcut;
 import com.liferay.document.library.kernel.model.DLFileShortcutConstants;
 import com.liferay.document.library.kernel.model.DLFolder;
@@ -114,11 +107,15 @@ public class DLFileShortcutLocalServiceImpl
 
 		// Asset
 
-		copyAssetTags(
-			_dlAppLocalService.getFileEntry(toFileEntryId), serviceContext);
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(toFileEntryId);
+
+		copyAssetTags(fileEntry, serviceContext);
 
 		updateAsset(
-			userId, fileShortcut, serviceContext.getAssetCategoryIds(),
+			userId, fileShortcut,
+			_assetCategoryLocalService.getCategoryIds(
+				DLFileEntryConstants.getClassName(),
+				fileEntry.getFileEntryId()),
 			serviceContext.getAssetTagNames());
 
 		return fileShortcut;
@@ -341,7 +338,6 @@ public class DLFileShortcutLocalServiceImpl
 						treePathProperty.isNull(),
 						treePathProperty.ne(treePath)));
 			});
-
 		actionableDynamicQuery.setPerformActionMethod(
 			(DLFileShortcut dlFileShortcut) -> {
 				dlFileShortcut.setTreePath(treePath);
@@ -402,11 +398,15 @@ public class DLFileShortcutLocalServiceImpl
 
 		// Asset
 
-		copyAssetTags(
-			_dlAppLocalService.getFileEntry(toFileEntryId), serviceContext);
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(toFileEntryId);
+
+		copyAssetTags(fileEntry, serviceContext);
 
 		updateAsset(
-			userId, fileShortcut, serviceContext.getAssetCategoryIds(),
+			userId, fileShortcut,
+			_assetCategoryLocalService.getCategoryIds(
+				DLFileEntryConstants.getClassName(),
+				fileEntry.getFileEntryId()),
 			serviceContext.getAssetTagNames());
 
 		return fileShortcut;
@@ -462,7 +462,7 @@ public class DLFileShortcutLocalServiceImpl
 		throws PortalException {
 
 		String[] assetTagNames = _assetTagLocalService.getTagNames(
-			FileEntry.class.getName(), fileEntry.getFileEntryId());
+			DLFileEntryConstants.getClassName(), fileEntry.getFileEntryId());
 
 		_assetTagLocalService.checkTags(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
@@ -502,6 +502,9 @@ public class DLFileShortcutLocalServiceImpl
 		ServiceProxyFactory.newServiceTrackedInstance(
 			TrashHelper.class, DLFileShortcutLocalServiceImpl.class,
 			"_trashHelper", false);
+
+	@BeanReference(type = AssetCategoryLocalService.class)
+	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@BeanReference(type = AssetEntryLocalService.class)
 	private AssetEntryLocalService _assetEntryLocalService;

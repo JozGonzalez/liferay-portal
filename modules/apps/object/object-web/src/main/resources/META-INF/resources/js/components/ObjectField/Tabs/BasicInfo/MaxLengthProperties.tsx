@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -19,7 +10,11 @@ import React, {useEffect, useRef} from 'react';
 import {createTextMaskInputElement} from 'text-mask-core';
 
 import {createAutoCorrectedNumberPipe} from '../../../../utils/createAutoCorrectedNumberPipe';
-import {normalizeFieldSettings} from '../../../../utils/fieldSettings';
+import {
+	normalizeFieldSettings,
+	removeFieldSettings,
+	updateFieldSettings,
+} from '../../../../utils/fieldSettings';
 import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
 
 interface IMaxLengthPropertiesProps {
@@ -40,7 +35,10 @@ export function MaxLengthProperties({
 	setValues,
 }: IMaxLengthPropertiesProps) {
 	const [defaultMaxLength, defaultMaxLengthText] =
-		objectField.businessType === 'Text' ? [280, '280'] : [65000, '65,000'];
+		objectField.businessType === 'Encrypted' ||
+		objectField.businessType === 'Text'
+			? [280, '280']
+			: [65000, '65,000'];
 
 	const settings = normalizeFieldSettings(objectFieldSettings);
 
@@ -63,6 +61,27 @@ export function MaxLengthProperties({
 		}
 	}, [defaultMaxLength, objectField.businessType, settings.showCounter]);
 
+	const handleToggle = (toggled: boolean) => {
+		let updatedSettings;
+
+		if (!toggled) {
+			updatedSettings = removeFieldSettings(['maxLength'], objectField);
+		}
+		else {
+			updatedSettings = updateFieldSettings(objectFieldSettings, {
+				name: 'maxLength',
+				value: defaultMaxLength,
+			});
+		}
+
+		setValues({
+			objectFieldSettings: updateFieldSettings(updatedSettings, {
+				name: 'showCounter',
+				value: toggled,
+			}),
+		});
+	};
+
 	return (
 		<>
 			<ClayForm.Group>
@@ -70,29 +89,16 @@ export function MaxLengthProperties({
 					disabled={disabled}
 					label={Liferay.Language.get('limit-characters')}
 					name="showCounter"
-					onToggle={(value) => {
-						const updatedSettings: ObjectFieldSetting[] = [
-							{name: 'showCounter', value},
-						];
-
-						if (value) {
-							updatedSettings.push({
-								name: 'maxLength',
-								value: defaultMaxLength,
-							});
-						}
-
-						setValues({objectFieldSettings: updatedSettings});
-					}}
+					onToggle={handleToggle}
 					toggled={!!settings.showCounter}
 					tooltip={Liferay.Language.get(
 						'when-enabled-a-character-counter-will-be-shown-to-the-user'
 					)}
 				/>
-			</ClayForm.Group>
-			<ClayForm.Group>
+
 				{settings.showCounter && (
 					<Input
+						className="mt-3"
 						disabled={disabled}
 						error={errors.maxLength}
 						feedbackMessage={sub(

@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -34,7 +34,7 @@ definition {
 	@description = "This test checks that a user can subscribe and unsubscribe from an article."
 	@priority = 4
 	test CanSubscribeToArticleViaToolbar {
-		property custom.properties = "feature.flag.LPS-166643=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -93,8 +93,6 @@ definition {
 	@description = "This test ensures that users can subscribe to the KB home folder from the navigation pane."
 	@priority = 5
 	test CanSubscribeToHomeFolderViaNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONUser.addUser(

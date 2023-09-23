@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.helper.v1_0;
@@ -60,14 +51,12 @@ public class SkuHelper {
 
 		List<CPInstance> cpInstances =
 			_cpInstanceService.getCPDefinitionInstances(
-				cpDefinition.getCPDefinitionId(),
-				WorkflowConstants.STATUS_APPROVED,
+				cpDefinition.getCPDefinitionId(), WorkflowConstants.STATUS_ANY,
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
 		int totalItems = _cpInstanceService.getCPDefinitionInstancesCount(
-			cpDefinition.getCPDefinitionId(),
-			WorkflowConstants.STATUS_APPROVED);
+			cpDefinition.getCPDefinitionId(), WorkflowConstants.STATUS_ANY);
 
 		return Page.of(toSKUs(cpInstances, locale), pagination, totalItems);
 	}
@@ -88,6 +77,8 @@ public class SkuHelper {
 				public void accept(Object object) throws Exception {
 					SearchContext searchContext = (SearchContext)object;
 
+					searchContext.setAttribute(
+						Field.STATUS, WorkflowConstants.STATUS_ANY);
 					searchContext.setCompanyId(companyId);
 				}
 

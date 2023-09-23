@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.resource.v1_0;
@@ -72,6 +63,17 @@ public interface SXPElementResource {
 			SXPElement sxpElement, String callbackURL, Object object)
 		throws Exception;
 
+	public SXPElement getSXPElementByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public SXPElement putSXPElementByExternalReferenceCode(
+			String externalReferenceCode, SXPElement sxpElement)
+		throws Exception;
+
+	public SXPElement postSXPElementPreview(SXPElement sxpElement)
+		throws Exception;
+
 	public SXPElement postSXPElementValidate(String string) throws Exception;
 
 	public void deleteSXPElement(Long sxpElementId) throws Exception;
@@ -83,6 +85,14 @@ public interface SXPElementResource {
 	public SXPElement getSXPElement(Long sxpElementId) throws Exception;
 
 	public SXPElement patchSXPElement(Long sxpElementId, SXPElement sxpElement)
+		throws Exception;
+
+	public SXPElement putSXPElement(Long sxpElementId, SXPElement sxpElement)
+		throws Exception;
+
+	public Response putSXPElementBatch(
+			Long sxpElementId, SXPElement sxpElement, String callbackURL,
+			Object object)
 		throws Exception;
 
 	public SXPElement postSXPElementCopy(Long sxpElementId) throws Exception;
@@ -165,6 +175,8 @@ public interface SXPElementResource {
 			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder uriInfo(UriInfo uriInfo);
 
 		public Builder user(com.liferay.portal.kernel.model.User user);
 

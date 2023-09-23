@@ -1,35 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.export.background.task;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalServiceUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Pei-Jung Lan
@@ -46,30 +34,21 @@ public class UADExportBackgroundTaskManagerUtil {
 		dynamicQuery = dynamicQuery.addOrder(
 			OrderFactoryUtil.desc("createDate"));
 
-		List<com.liferay.portal.background.task.model.BackgroundTask>
-			backgroundTaskModels = BackgroundTaskLocalServiceUtil.dynamicQuery(
-				dynamicQuery);
+		for (com.liferay.portal.background.task.model.BackgroundTask
+				backgroundTaskModel :
+					BackgroundTaskLocalServiceUtil.
+						<com.liferay.portal.background.task.model.
+							BackgroundTask>dynamicQuery(dynamicQuery)) {
 
-		Stream<com.liferay.portal.background.task.model.BackgroundTask>
-			backgroundTaskModelsStream = backgroundTaskModels.stream();
+			Map<String, Serializable> taskContextMap =
+				backgroundTaskModel.getTaskContextMap();
 
-		backgroundTaskModels = backgroundTaskModelsStream.filter(
-			backgroundTaskModel -> {
-				Map<String, Serializable> taskContextMap =
-					backgroundTaskModel.getTaskContextMap();
-
-				return applicationKey.equals(
-					taskContextMap.get("applicationKey"));
+			if (applicationKey.equals(taskContextMap.get("applicationKey"))) {
+				return _getBackgroundTask(backgroundTaskModel);
 			}
-		).collect(
-			Collectors.toList()
-		);
-
-		if (ListUtil.isEmpty(backgroundTaskModels)) {
-			return null;
 		}
 
-		return _getBackgroundTask(backgroundTaskModels.get(0));
+		return null;
 	}
 
 	public static List<BackgroundTask> getBackgroundTasks(
@@ -145,16 +124,9 @@ public class UADExportBackgroundTaskManagerUtil {
 			return Collections.emptyList();
 		}
 
-		List<BackgroundTask> backgroundTasks = new ArrayList<>(
-			backgroundTaskModels.size());
-
-		for (com.liferay.portal.background.task.model.BackgroundTask
-				backgroundTaskModel : backgroundTaskModels) {
-
-			backgroundTasks.add(_getBackgroundTask(backgroundTaskModel));
-		}
-
-		return backgroundTasks;
+		return TransformUtil.transform(
+			backgroundTaskModels,
+			UADExportBackgroundTaskManagerUtil::_getBackgroundTask);
 	}
 
 	private static final String _BACKGROUND_TASK_EXECUTOR_CLASS_NAME =

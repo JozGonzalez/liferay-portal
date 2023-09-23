@@ -1,22 +1,17 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
+String redirect = ParamUtil.getString(request, "redirect");
+
+String backURL = ParamUtil.getString(request, "backURL", redirect);
+
 String navigation = ParamUtil.getString(request, "navigation", "all");
 
 boolean actionRequired = ParamUtil.getBoolean(request, "actionRequired");
@@ -38,7 +33,14 @@ notificationsSearchContainer.setId(searchContainerId);
 NotificationsManagementToolbarDisplayContext notificationsManagementToolbarDisplayContext = new NotificationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
 
 NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navigation, notificationsManagementToolbarDisplayContext.getOrderByType(), notificationsSearchContainer);
+
+if (Validator.isNotNull(backURL)) {
+	portletDisplay.setShowBackIcon(true);
+	portletDisplay.setURLBack(backURL);
+}
 %>
+
+<%@ include file="/notifications/view-ext-pre.jsp" %>
 
 <clay:navigation-bar
 	inverted="<%= layout.isTypeControlPanel() %>"
@@ -84,6 +86,8 @@ NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navi
 			"markNotificationsAsReadURL", markNotificationsAsReadURL.toString()
 		).put(
 			"markNotificationsAsUnreadURL", markNotificationsAsUnreadURL.toString()
+		).put(
+			"searchContainerId", searchContainerId
 		).build()
 	%>'
 	clearResultsURL="<%= notificationsManagementToolbarDisplayContext.getClearResultsURL() %>"
@@ -91,6 +95,7 @@ NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navi
 	filterDropdownItems="<%= notificationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	filterLabelItems="<%= notificationsManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= notificationsSearchContainer.getTotal() %>"
+	orderDropdownItems="<%= notificationsManagementToolbarDisplayContext.getOrderByDropdownItems() %>"
 	propsTransformer="notifications/js/NotificationsManagementToolbarPropsTransformer"
 	searchContainerId="<%= searchContainerId %>"
 	selectable="<%= actionRequired ? false : true %>"
@@ -103,6 +108,9 @@ NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navi
 
 <clay:container-fluid>
 	<aui:form action="<%= currentURL %>" method="get" name="fm">
+		<aui:input name="selectedEntryIds" type="hidden" />
+		<aui:input name="selectAll" type="hidden" value="<%= false %>" />
+
 		<div class="user-notifications">
 			<liferay-ui:search-container
 				rowChecker="<%= actionRequired ? null : new UserNotificationEventRowChecker(renderResponse) %>"
@@ -186,3 +194,5 @@ NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navi
 		'.user-notification-action'
 	);
 </aui:script>
+
+<%@ include file="/notifications/view-ext-post.jsp" %>

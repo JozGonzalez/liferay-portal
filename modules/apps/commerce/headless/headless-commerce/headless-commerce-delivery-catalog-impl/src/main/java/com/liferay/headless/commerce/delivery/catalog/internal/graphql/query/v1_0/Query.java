@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.graphql.query.v1_0;
@@ -22,6 +13,7 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Pin;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductSpecification;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
@@ -34,6 +26,7 @@ import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.LinkedProduc
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionValueResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductSpecificationResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.RelatedProductResource;
@@ -134,6 +127,14 @@ public class Query {
 
 		_productOptionResourceComponentServiceObjects =
 			productOptionResourceComponentServiceObjects;
+	}
+
+	public static void setProductOptionValueResourceComponentServiceObjects(
+		ComponentServiceObjects<ProductOptionValueResource>
+			productOptionValueResourceComponentServiceObjects) {
+
+		_productOptionValueResourceComponentServiceObjects =
+			productOptionValueResourceComponentServiceObjects;
 	}
 
 	public static void setProductSpecificationResourceComponentServiceObjects(
@@ -392,10 +393,10 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductOptions(channelId: ___, page: ___, pageSize: ___, productId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductProductOptions(channelId: ___, page: ___, pageSize: ___, productId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ProductOptionPage channelProductOptions(
+	public ProductOptionPage channelProductProductOptions(
 			@GraphQLName("channelId") Long channelId,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("pageSize") int pageSize,
@@ -406,8 +407,37 @@ public class Query {
 			_productOptionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			productOptionResource -> new ProductOptionPage(
-				productOptionResource.getChannelProductOptionsPage(
+				productOptionResource.getChannelProductProductOptionsPage(
 					channelId, productId, Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductProductOptionProductOptionValues(accountId: ___, channelId: ___, page: ___, pageSize: ___, productId: ___, productOptionId: ___, productOptionValueId: ___, skuId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ProductOptionValuePage
+			channelProductProductOptionProductOptionValues(
+				@GraphQLName("channelId") Long channelId,
+				@GraphQLName("productId") Long productId,
+				@GraphQLName("productOptionId") Long productOptionId,
+				@GraphQLName("accountId") Long accountId,
+				@GraphQLName("productOptionValueId") Long productOptionValueId,
+				@GraphQLName("skuId") Long skuId,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productOptionValueResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productOptionValueResource -> new ProductOptionValuePage(
+				productOptionValueResource.
+					getChannelProductProductOptionProductOptionValuesPage(
+						channelId, productId, productOptionId, accountId,
+						productOptionValueId, skuId,
+						Pagination.of(page, pageSize))));
 	}
 
 	/**
@@ -480,6 +510,25 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductSku(accountId: ___, channelId: ___, productId: ___, skuId: ___){DDMOptions, allowedOrderQuantities, availability, backOrderAllowed, depth, discontinued, discontinuedDate, displayDate, displayDiscountLevels, expirationDate, gtin, height, id, incomingQuantityLabel, manufacturerPartNumber, maxOrderQuantity, minOrderQuantity, neverExpire, price, productId, published, purchasable, replacementSku, replacementSkuExternalReferenceCode, replacementSkuId, sku, skuOptions, skuUnitOfMeasures, tierPrices, weight, width}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(description = "Retrieves a product from selected channel.")
+	public Sku channelProductSku(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("productId") Long productId,
+			@GraphQLName("skuId") Long skuId,
+			@GraphQLName("accountId") Long accountId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_skuResourceComponentServiceObjects, this::_populateResourceContext,
+			skuResource -> skuResource.getChannelProductSku(
+				channelId, productId, skuId, accountId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelWishLists(accountId: ___, channelId: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves wishlists for a given channel.")
@@ -536,12 +585,12 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wishListItems(accountId: ___, page: ___, pageSize: ___, wishListId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wishlistWishListWishListItems(accountId: ___, page: ___, pageSize: ___, wishListId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves wishlist items by wishListId for a specific channel and account"
 	)
-	public WishListItemPage wishListItems(
+	public WishListItemPage wishlistWishListWishListItems(
 			@GraphQLName("wishListId") Long wishListId,
 			@GraphQLName("accountId") Long accountId,
 			@GraphQLName("pageSize") int pageSize,
@@ -552,21 +601,23 @@ public class Query {
 			_wishListItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			wishListItemResource -> new WishListItemPage(
-				wishListItemResource.getWishListItemsPage(
+				wishListItemResource.getWishlistWishListWishListItemsPage(
 					wishListId, accountId, Pagination.of(page, pageSize))));
 	}
 
 	@GraphQLTypeExtension(WishList.class)
-	public class GetWishListItemsPageTypeExtension {
+	public class GetWishlistWishListWishListItemsPageTypeExtension {
 
-		public GetWishListItemsPageTypeExtension(WishList wishList) {
+		public GetWishlistWishListWishListItemsPageTypeExtension(
+			WishList wishList) {
+
 			_wishList = wishList;
 		}
 
 		@GraphQLField(
 			description = "Retrieves wishlist items by wishListId for a specific channel and account"
 		)
-		public WishListItemPage items(
+		public WishListItemPage wishlistWishListWishListItems(
 				@GraphQLName("accountId") Long accountId,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page)
@@ -576,7 +627,7 @@ public class Query {
 				_wishListItemResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
 				wishListItemResource -> new WishListItemPage(
-					wishListItemResource.getWishListItemsPage(
+					wishListItemResource.getWishlistWishListWishListItemsPage(
 						_wishList.getId(), accountId,
 						Pagination.of(page, pageSize))));
 		}
@@ -834,6 +885,39 @@ public class Query {
 
 		@GraphQLField
 		protected java.util.Collection<ProductOption> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("ProductOptionValuePage")
+	public class ProductOptionValuePage {
+
+		public ProductOptionValuePage(Page productOptionValuePage) {
+			actions = productOptionValuePage.getActions();
+
+			items = productOptionValuePage.getItems();
+			lastPage = productOptionValuePage.getLastPage();
+			page = productOptionValuePage.getPage();
+			pageSize = productOptionValuePage.getPageSize();
+			totalCount = productOptionValuePage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<ProductOptionValue> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -1144,6 +1228,22 @@ public class Query {
 	}
 
 	private void _populateResourceContext(
+			ProductOptionValueResource productOptionValueResource)
+		throws Exception {
+
+		productOptionValueResource.setContextAcceptLanguage(_acceptLanguage);
+		productOptionValueResource.setContextCompany(_company);
+		productOptionValueResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productOptionValueResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productOptionValueResource.setContextUriInfo(_uriInfo);
+		productOptionValueResource.setContextUser(_user);
+		productOptionValueResource.setGroupLocalService(_groupLocalService);
+		productOptionValueResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
 			ProductSpecificationResource productSpecificationResource)
 		throws Exception {
 
@@ -1232,6 +1332,8 @@ public class Query {
 		_productResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductOptionResource>
 		_productOptionResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ProductOptionValueResource>
+		_productOptionValueResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductSpecificationResource>
 		_productSpecificationResourceComponentServiceObjects;
 	private static ComponentServiceObjects<RelatedProductResource>

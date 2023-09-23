@@ -51,7 +51,6 @@
 								"key": "content-welcome-banner"
 							},
 							"fragmentConfig": {
-								"videoButtonLink": "https://www.youtube.com/embed/bZeAh7dpskw"
 							},
 							"fragmentFields": [
 								{
@@ -266,19 +265,19 @@
 														},
 														"text": {
 															"value_i18n": {
-																"ar_SA": "Get Your Partner Marketing Guide",
-																"ca_ES": "Get Your Partner Marketing Guide",
-																"de_DE": "Get Your Partner Marketing Guide",
-																"en_US": "Get Your Partner Marketing Guide",
-																"es_ES": "Get Your Partner Marketing Guide",
-																"fi_FI": "Get Your Partner Marketing Guide",
-																"fr_FR": "Get Your Partner Marketing Guide",
-																"hu_HU": "Get Your Partner Marketing Guide",
-																"ja_JP": "Get Your Partner Marketing Guide",
-																"nl_NL": "Get Your Partner Marketing Guide",
-																"pt_BR": "Get Your Partner Marketing Guide",
-																"sv_SE": "Get Your Partner Marketing Guide",
-																"zh_CN": "Get Your Partner Marketing Guide"
+																"ar_SA": "How to Submit an MDF Request",
+																"ca_ES": "How to Submit an MDF Request",
+																"de_DE": "How to Submit an MDF Request",
+																"en_US": "How to Submit an MDF Request",
+																"es_ES": "How to Submit an MDF Request",
+																"fi_FI": "How to Submit an MDF Request",
+																"fr_FR": "How to Submit an MDF Request",
+																"hu_HU": "How to Submit an MDF Request",
+																"ja_JP": "How to Submit an MDF Request",
+																"nl_NL": "How to Submit an MDF Request",
+																"pt_BR": "How to Submit an MDF Request",
+																"sv_SE": "How to Submit an MDF Request",
+																"zh_CN": "How to Submit an MDF Request"
 															}
 														}
 													}
@@ -345,11 +344,10 @@
 									{
 										"definition": {
 											"fragment": {
-												"key": "clay-icon-link"
+												"key": "button-welcome-banner"
 											},
 											"fragmentConfig": {
-												"iconLink": "",
-												"iconName": "video"
+												"videoButtonLink": "https://www.youtube.com/embed/bZeAh7dpskw"
 											},
 											"fragmentFields": [
 											],
@@ -537,51 +535,6 @@
 						"pageElements": [
 							{
 								"definition": {
-									"fragment": {
-										"key": "DIALECT-dialect-text"
-									},
-									"fragmentConfig": {
-										"textType": "h4",
-										"truncateText": false
-									},
-									"fragmentFields": [
-										{
-											"id": "element-text",
-											"value": {
-												"fragmentLink": {
-												},
-												"text": {
-													"value_i18n": {
-														"ar_SA": "Quick Links",
-														"ca_ES": "Quick Links",
-														"de_DE": "Quick Links",
-														"en_US": "Quick Links",
-														"es_ES": "Quick Links",
-														"fi_FI": "Quick Links",
-														"fr_FR": "Quick Links",
-														"hu_HU": "Quick Links",
-														"ja_JP": "Quick Links",
-														"nl_NL": "Quick Links",
-														"pt_BR": "Quick Links",
-														"sv_SE": "Quick Links",
-														"zh_CN": "Quick Links"
-													}
-												}
-											}
-										}
-									],
-									"fragmentStyle": {
-										"fontFamily": "fontFamilySansSerif",
-										"fontWeight": "fontWeightBold",
-										"textAlign": "",
-										"textColor": "colorNeutral10"
-									},
-									"indexed": true
-								},
-								"type": "Fragment"
-							},
-							{
-								"definition": {
 									"fragmentStyle": {
 										"marginTop": "4",
 										"textAlign": ""
@@ -598,7 +551,7 @@
 									"gutters": true,
 									"indexed": true,
 									"modulesPerRow": 2,
-									"numberOfColumns": 4,
+									"numberOfColumns": 6,
 									"reverseOrder": false,
 									"rowViewports": [
 										{
@@ -1551,19 +1504,19 @@
 																								},
 																								"text": {
 																									"value_i18n": {
-																										"ar_SA": "Marketing Resources",
-																										"ca_ES": "Marketing Resources",
-																										"de_DE": "Marketing Resources",
-																										"en_US": "Marketing Resources",
-																										"es_ES": "Marketing Resources",
-																										"fi_FI": "Marketing Resources",
-																										"fr_FR": "Marketing Resources",
-																										"hu_HU": "Marketing Resources",
-																										"ja_JP": "Marketing Resources",
-																										"nl_NL": "Marketing Resources",
-																										"pt_BR": "Marketing Resources",
-																										"sv_SE": "Marketing Resources",
-																										"zh_CN": "Marketing Resources"
+																										"ar_SA": "Campaigns",
+																										"ca_ES": "Campaigns",
+																										"de_DE": "Campaigns",
+																										"en_US": "Campaigns",
+																										"es_ES": "Campaigns",
+																										"fi_FI": "Campaigns",
+																										"fr_FR": "Campaigns",
+																										"hu_HU": "Campaigns",
+																										"ja_JP": "Campaigns",
+																										"nl_NL": "Campaigns",
+																										"pt_BR": "Campaigns",
+																										"sv_SE": "Campaigns",
+																										"zh_CN": "Campaigns"
 																									}
 																								}
 																							}
@@ -1619,19 +1572,19 @@
 																								},
 																								"text": {
 																									"value_i18n": {
-																										"ar_SA": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"ca_ES": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"de_DE": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"en_US": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"es_ES": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"fi_FI": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"fr_FR": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"hu_HU": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"ja_JP": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"nl_NL": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"pt_BR": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"sv_SE": "Explore all of the marketing tools and assets you need as available digital resources.",
-																										"zh_CN": "Explore all of the marketing tools and assets you need as available digital resources."
+																										"ar_SA": "",
+																										"ca_ES": "",
+																										"de_DE": "",
+																										"en_US": "",
+																										"es_ES": "",
+																										"fi_FI": "",
+																										"fr_FR": "",
+																										"hu_HU": "",
+																										"ja_JP": "",
+																										"nl_NL": "",
+																										"pt_BR": "",
+																										"sv_SE": "",
+																										"zh_CN": ""
 																									}
 																								}
 																							}
@@ -1704,39 +1657,43 @@
 																										"fragmentLink": {
 																											"value": {
 																												"href": {
-																													"value_i18n": {
-																														"ar_SA": "https://www.liferay.com/",
-																														"ca_ES": "https://www.liferay.com/",
-																														"de_DE": "https://www.liferay.com/",
-																														"en_US": "https://www.liferay.com/",
-																														"es_ES": "https://www.liferay.com/",
-																														"fi_FI": "https://www.liferay.com/",
-																														"fr_FR": "https://www.liferay.com/",
-																														"hu_HU": "https://www.liferay.com/",
-																														"ja_JP": "https://www.liferay.com/",
-																														"nl_NL": "https://www.liferay.com/",
-																														"pt_BR": "https://www.liferay.com/",
-																														"sv_SE": "https://www.liferay.com/",
-																														"zh_CN": "https://www.liferay.com/"
+																													"mapping": {
+																														"itemReference": {
+																															"className": "com.liferay.portal.kernel.model.Layout",
+																															"fields": [
+																																{
+																																	"fieldName": "friendlyURL",
+																																	"fieldValue": "/marketing/campaigns"
+																																},
+																																{
+																																	"fieldName": "privatePage",
+																																	"fieldValue": "false"
+																																},
+																																{
+																																	"fieldName": "siteKey",
+																																	"fieldValue": "[$GROUP_KEY$]"
+																																}
+																															]
+																														}
 																													}
 																												}
 																											}
 																										},
 																										"text": {
 																											"value_i18n": {
-																												"ar_SA": "View Marketing Resources",
-																												"ca_ES": "View Marketing Resources",
-																												"de_DE": "View Marketing Resources",
-																												"en_US": "View Marketing Resources",
-																												"es_ES": "View Marketing Resources",
-																												"fi_FI": "View Marketing Resources",
-																												"fr_FR": "View Marketing Resources",
-																												"hu_HU": "View Marketing Resources",
-																												"ja_JP": "View Marketing Resources",
-																												"nl_NL": "View Marketing Resources",
-																												"pt_BR": "View Marketing Resources",
-																												"sv_SE": "View Marketing Resources",
-																												"zh_CN": "View Marketing Resources"
+																												"ar_SA": "View Campaigns",
+																												"ca_ES": "View Campaigns",
+																												"de_DE": "View Campaigns",
+																												"en_US": "View Campaigns",
+																												"es_ES": "View Campaigns",
+																												"fi_FI": "View Campaigns",
+																												"fr_FR": "View Campaigns",
+																												"hu_HU": "View Campaigns",
+																												"ja_JP": "View Campaigns",
+																												"nl_NL": "View Campaigns",
+																												"pt_BR": "View Campaigns",
+																												"sv_SE": "View Campaigns",
+																												"zh_CN": "View Campaigns"
 																											}
 																										}
 																									}
@@ -1770,14 +1727,14 @@
 																								"key": "clay-icon-link"
 																							},
 																							"fragmentConfig": {
-																								"iconLink": "https://www.liferay.com/",
+																								"iconLink": "",
 																								"iconName": "order-arrow-right"
 																							},
 																							"fragmentFields": [
 																							],
 																							"fragmentStyle": {
 																								"textAlign": "",
-																								"textColor": "linkColor"
+																								"textColor": "colorBrandPrimary"
 																							},
 																							"indexed": true
 																						},
@@ -1831,6 +1788,7 @@
 														"borderColor": "colorNeutral3",
 														"borderRadius": "borderRadiusLg",
 														"borderWidth": "1",
+														"marginBottom": "4",
 														"paddingBottom": "4",
 														"paddingRight": "4",
 														"paddingTop": "4",
@@ -1874,7 +1832,7 @@
 													"layout": {
 														"borderColor": "colorNeutral3",
 														"borderWidth": 1,
-														"marginBottom": 0,
+														"marginBottom": 2,
 														"marginLeft": 0,
 														"marginRight": 0,
 														"marginTop": 0,
@@ -2134,19 +2092,19 @@
 																								},
 																								"text": {
 																									"value_i18n": {
-																										"ar_SA": "Partner Program Resources",
-																										"ca_ES": "Partner Program Resources",
-																										"de_DE": "Partner Program Resources",
-																										"en_US": "Partner Program Resources",
-																										"es_ES": "Partner Program Resources",
-																										"fi_FI": "Partner Program Resources",
-																										"fr_FR": "Partner Program Resources",
-																										"hu_HU": "Partner Program Resources",
-																										"ja_JP": "Partner Program Resources",
-																										"nl_NL": "Partner Program Resources",
-																										"pt_BR": "Partner Program Resources",
-																										"sv_SE": "Partner Program Resources",
-																										"zh_CN": "Partner Program Resources"
+																										"ar_SA": "Industries",
+																										"ca_ES": "Industries",
+																										"de_DE": "Industries",
+																										"en_US": "Industries",
+																										"es_ES": "Industries",
+																										"fi_FI": "Industries",
+																										"fr_FR": "Industries",
+																										"hu_HU": "Industries",
+																										"ja_JP": "Industries",
+																										"nl_NL": "Industries",
+																										"pt_BR": "Industries",
+																										"sv_SE": "Industries",
+																										"zh_CN": "Industries"
 																									}
 																								}
 																							}
@@ -2202,19 +2160,19 @@
 																								},
 																								"text": {
 																									"value_i18n": {
-																										"ar_SA": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"ca_ES": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"de_DE": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"en_US": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"es_ES": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"fi_FI": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"fr_FR": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"hu_HU": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"ja_JP": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"nl_NL": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"pt_BR": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"sv_SE": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications",
-																										"zh_CN": "Maximize your Liferay partnership with resources for co-branding, MDF activities, marketing training, and publications"
+																										"ar_SA": "",
+																										"ca_ES": "",
+																										"de_DE": "",
+																										"en_US": "",
+																										"es_ES": "",
+																										"fi_FI": "",
+																										"fr_FR": "",
+																										"hu_HU": "",
+																										"ja_JP": "",
+																										"nl_NL": "",
+																										"pt_BR": "",
+																										"sv_SE": "",
+																										"zh_CN": ""
 																									}
 																								}
 																							}
@@ -2287,39 +2245,43 @@
 																										"fragmentLink": {
 																											"value": {
 																												"href": {
-																													"value_i18n": {
-																														"ar_SA": "https://www.liferay.com/",
-																														"ca_ES": "https://www.liferay.com/",
-																														"de_DE": "https://www.liferay.com/",
-																														"en_US": "https://www.liferay.com/",
-																														"es_ES": "https://www.liferay.com/",
-																														"fi_FI": "https://www.liferay.com/",
-																														"fr_FR": "https://www.liferay.com/",
-																														"hu_HU": "https://www.liferay.com/",
-																														"ja_JP": "https://www.liferay.com/",
-																														"nl_NL": "https://www.liferay.com/",
-																														"pt_BR": "https://www.liferay.com/",
-																														"sv_SE": "https://www.liferay.com/",
-																														"zh_CN": "https://www.liferay.com/"
+																													"mapping": {
+																														"itemReference": {
+																															"className": "com.liferay.portal.kernel.model.Layout",
+																															"fields": [
+																																{
+																																	"fieldName": "friendlyURL",
+																																	"fieldValue": "/marketing/industries"
+																																},
+																																{
+																																	"fieldName": "privatePage",
+																																	"fieldValue": "false"
+																																},
+																																{
+																																	"fieldName": "siteKey",
+																																	"fieldValue": "[$GROUP_KEY$]"
+																																}
+																															]
+																														}
 																													}
 																												}
 																											}
 																										},
 																										"text": {
 																											"value_i18n": {
-																												"ar_SA": "View Partner Resources",
-																												"ca_ES": "View Partner Resources",
-																												"de_DE": "View Partner Resources",
-																												"en_US": "View Partner Resources",
-																												"es_ES": "View Partner Resources",
-																												"fi_FI": "View Partner Resources",
-																												"fr_FR": "View Partner Resources",
-																												"hu_HU": "View Partner Resources",
-																												"ja_JP": "View Partner Resources",
-																												"nl_NL": "View Partner Resources",
-																												"pt_BR": "View Partner Resources",
-																												"sv_SE": "View Partner Resources",
-																												"zh_CN": "View Partner Resources"
+																												"ar_SA": "View Industry Resources",
+																												"ca_ES": "View Industry Resources",
+																												"de_DE": "View Industry Resources",
+																												"en_US": "View Industry Resources",
+																												"es_ES": "View Industry Resources",
+																												"fi_FI": "View Industry Resources",
+																												"fr_FR": "View Industry Resources",
+																												"hu_HU": "View Industry Resources",
+																												"ja_JP": "View Industry Resources",
+																												"nl_NL": "View Industry Resources",
+																												"pt_BR": "View Industry Resources",
+																												"sv_SE": "View Industry Resources",
+																												"zh_CN": "View Industry Resources"
 																											}
 																										}
 																									}
@@ -2353,7 +2315,7 @@
 																								"key": "clay-icon-link"
 																							},
 																							"fragmentConfig": {
-																								"iconLink": "https://www.liferay.com/",
+																								"iconLink": "",
 																								"iconName": "order-arrow-right"
 																							},
 																							"fragmentFields": [
@@ -2400,7 +2362,569 @@
 												},
 												{
 													"columnViewportDefinition": {
+														"size": 2
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 6
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragmentStyle": {
+														"borderColor": "colorNeutral3",
+														"borderRadius": "borderRadiusLg",
+														"borderWidth": "1",
+														"marginBottom": "4",
+														"paddingBottom": "4",
+														"paddingRight": "4",
+														"paddingTop": "4",
+														"shadow": "",
+														"textAlign": ""
+													},
+													"fragmentViewports": [
+														{
+															"fragmentViewportStyle": {
+																"height": "",
+																"marginBottom": "0",
+																"maxHeight": ""
+															},
+															"id": "landscapeMobile"
+														},
+														{
+															"fragmentViewportStyle": {
+																"height": "",
+																"marginBottom": "0",
+																"marginLeft": "0",
+																"maxHeight": "",
+																"minHeight": "",
+																"paddingBottom": "3",
+																"paddingLeft": "3",
+																"paddingRight": "3",
+																"paddingTop": "3",
+																"textAlign": "left"
+															},
+															"id": "portraitMobile"
+														},
+														{
+															"fragmentViewportStyle": {
+																"marginBottom": "0",
+																"marginRight": "0",
+																"maxHeight": ""
+															},
+															"id": "tablet"
+														}
+													],
+													"indexed": true,
+													"layout": {
+														"borderColor": "colorNeutral3",
+														"borderWidth": 1,
+														"marginBottom": 2,
+														"marginLeft": 0,
+														"marginRight": 0,
+														"marginTop": 0,
+														"opacity": 100,
+														"paddingBottom": 2,
+														"paddingLeft": 0,
+														"paddingRight": 2,
+														"paddingTop": 2,
+														"widthType": "Fluid"
+													},
+													"name": "Quick Links Card"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"gutters": false,
+															"indexed": true,
+															"modulesPerRow": 2,
+															"name": "Card Grid",
+															"numberOfColumns": 2,
+															"reverseOrder": false,
+															"rowViewports": [
+																{
+																	"id": "landscapeMobile",
+																	"rowViewportDefinition": {
+																		"modulesPerRow": 2
+																	}
+																},
+																{
+																	"id": "portraitMobile",
+																	"rowViewportDefinition": {
+																		"modulesPerRow": 1
+																	}
+																},
+																{
+																	"id": "tablet",
+																	"rowViewportDefinition": {
+																	}
+																}
+															],
+															"verticalAlignment": "middle"
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"columnViewports": [
+																		{
+																			"columnViewportDefinition": {
+																				"size": 3
+																			},
+																			"id": "landscapeMobile"
+																		},
+																		{
+																			"columnViewportDefinition": {
+																				"size": 12
+																			},
+																			"id": "portraitMobile"
+																		},
+																		{
+																			"columnViewportDefinition": {
+																			},
+																			"id": "tablet"
+																		}
+																	],
+																	"size": 3
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"fragmentStyle": {
+																				"borderWidth": "0"
+																			},
+																			"fragmentViewports": [
+																				{
+																					"fragmentViewportStyle": {
+																						"marginBottom": "0"
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"fragmentViewportStyle": {
+																						"marginBottom": "2"
+																					},
+																					"id": "portraitMobile"
+																				}
+																			],
+																			"indexed": true,
+																			"layout": {
+																				"align": "Start",
+																				"borderWidth": 0,
+																				"contentDisplay": "FlexRow",
+																				"justify": "Center",
+																				"marginBottom": 0,
+																				"marginLeft": 0,
+																				"marginRight": 0,
+																				"marginTop": 0,
+																				"opacity": 100,
+																				"paddingBottom": 0,
+																				"paddingLeft": 0,
+																				"paddingRight": 0,
+																				"paddingTop": 0,
+																				"widthType": "Fluid"
+																			},
+																			"name": "Image Container"
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "BASIC_COMPONENT-image"
+																					},
+																					"fragmentConfig": {
+																						"imageSize": "w-0"
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "image-square",
+																							"value": {
+																								"fragmentImage": {
+																									"description": {
+																										"value_i18n": {
+																											"en_US": ""
+																										}
+																									},
+																									"url": {
+																										"value_i18n": {
+																											"en_US": "/documents/d/partner-porta/video-green-png?download=true"
+																										}
+																									}
+																								},
+																								"fragmentLink": {
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"borderRadius": "",
+																						"shadow": "",
+																						"textAlign": ""
+																					},
+																					"fragmentViewports": [
+																						{
+																							"fragmentViewportStyle": {
+																								"marginRight": "0"
+																							},
+																							"id": "landscapeMobile"
+																						},
+																						{
+																							"fragmentViewportStyle": {
+																								"hidden": false,
+																								"marginRight": "3",
+																								"paddingTop": "0",
+																								"textAlign": "left"
+																							},
+																							"id": "portraitMobile"
+																						},
+																						{
+																							"fragmentViewportStyle": {
+																								"marginRight": "0"
+																							},
+																							"id": "tablet"
+																						}
+																					],
+																					"indexed": true,
+																					"name": "Card Image"
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Section"
+																	}
+																],
+																"type": "Column"
+															},
+															{
+																"definition": {
+																	"columnViewports": [
+																		{
+																			"columnViewportDefinition": {
+																				"size": 9
+																			},
+																			"id": "landscapeMobile"
+																		},
+																		{
+																			"columnViewportDefinition": {
+																				"size": 12
+																			},
+																			"id": "portraitMobile"
+																		},
+																		{
+																			"columnViewportDefinition": {
+																			},
+																			"id": "tablet"
+																		}
+																	],
+																	"size": 9
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"fragmentStyle": {
+																				"borderRadius": "",
+																				"borderWidth": "",
+																				"shadow": "",
+																				"textAlign": ""
+																			},
+																			"fragmentViewports": [
+																				{
+																					"fragmentViewportStyle": {
+																						"paddingLeft": "0"
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"fragmentViewportStyle": {
+																						"marginLeft": "0"
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"indexed": true,
+																			"layout": {
+																				"align": "Start",
+																				"contentDisplay": "FlexColumn",
+																				"marginBottom": 0,
+																				"marginLeft": 0,
+																				"marginRight": 0,
+																				"marginTop": 0,
+																				"opacity": 100,
+																				"paddingBottom": 0,
+																				"paddingLeft": 0,
+																				"paddingRight": 0,
+																				"paddingTop": 0,
+																				"widthType": "Fluid"
+																			},
+																			"name": "Card Content Container"
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "DIALECT-dialect-text"
+																					},
+																					"fragmentConfig": {
+																						"textType": "h4",
+																						"truncateText": false
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "element-text",
+																							"value": {
+																								"fragmentLink": {
+																								},
+																								"text": {
+																									"value_i18n": {
+																										"ar_SA": "Use Cases",
+																										"ca_ES": "Use Cases",
+																										"de_DE": "Use Cases",
+																										"en_US": "Use Cases",
+																										"es_ES": "Use Cases",
+																										"fi_FI": "Use Cases",
+																										"fr_FR": "Use Cases",
+																										"hu_HU": "Use Cases",
+																										"ja_JP": "Use Cases",
+																										"nl_NL": "Use Cases",
+																										"pt_BR": "Use Cases",
+																										"sv_SE": "Use Cases",
+																										"zh_CN": "Use Cases"
+																									}
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"borderRadius": "",
+																						"fontWeight": "fontWeightBold",
+																						"maxHeight": "60px",
+																						"minHeight": "28px",
+																						"shadow": "",
+																						"textAlign": "",
+																						"textColor": "colorNeutral10"
+																					},
+																					"fragmentViewports": [
+																						{
+																							"fragmentViewportStyle": {
+																								"fontSize": "",
+																								"maxHeight": "60px",
+																								"overflow": ""
+																							},
+																							"id": "landscapeMobile"
+																						},
+																						{
+																							"fragmentViewportStyle": {
+																								"height": "",
+																								"maxHeight": "",
+																								"minHeight": "",
+																								"textAlign": "left"
+																							},
+																							"id": "portraitMobile"
+																						}
+																					],
+																					"indexed": true,
+																					"name": "Card Title"
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "DIALECT-dialect-text"
+																					},
+																					"fragmentConfig": {
+																						"textType": "h6",
+																						"truncateText": false
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "element-text",
+																							"value": {
+																								"fragmentLink": {
+																								},
+																								"text": {
+																									"value_i18n": {
+																										"en_US": ""
+																									}
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"borderRadius": "",
+																						"height": "60px",
+																						"overflow": "auto",
+																						"paddingBottom": "2",
+																						"paddingTop": "2",
+																						"shadow": "",
+																						"textAlign": "",
+																						"textColor": "colorNeutral8"
+																					},
+																					"fragmentViewports": [
+																						{
+																							"fragmentViewportStyle": {
+																								"fontSize": "19px",
+																								"hidden": false,
+																								"overflow": "visible"
+																							},
+																							"id": "portraitMobile"
+																						}
+																					],
+																					"indexed": true,
+																					"name": "Card Description"
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragmentStyle": {
+																						"borderRadius": "",
+																						"borderWidth": "0",
+																						"shadow": "",
+																						"textAlign": ""
+																					},
+																					"indexed": true,
+																					"layout": {
+																						"borderWidth": 0,
+																						"contentDisplay": "FlexRow",
+																						"marginBottom": 0,
+																						"marginLeft": 0,
+																						"marginRight": 0,
+																						"marginTop": 0,
+																						"opacity": 100,
+																						"paddingBottom": 0,
+																						"paddingLeft": 0,
+																						"paddingRight": 0,
+																						"paddingTop": 0,
+																						"widthType": "Fluid"
+																					},
+																					"name": "Link Container"
+																				},
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"fragment": {
+																								"key": "DIALECT-dialect-text"
+																							},
+																							"fragmentConfig": {
+																								"textType": "text-paragraph",
+																								"truncateText": false
+																							},
+																							"fragmentFields": [
+																								{
+																									"id": "element-text",
+																									"value": {
+																										"fragmentLink": {
+																											"value": {
+																												"href": {
+																													"mapping": {
+																														"itemReference": {
+																															"className": "com.liferay.portal.kernel.model.Layout",
+																															"fields": [
+																																{
+																																	"fieldName": "friendlyURL",
+																																	"fieldValue": "/marketing/use-cases"
+																																},
+																																{
+																																	"fieldName": "privatePage",
+																																	"fieldValue": "false"
+																																},
+																																{
+																																	"fieldName": "siteKey",
+																																	"fieldValue": "[$GROUP_KEY$]"
+																																}
+																															]
+																														}
+																													}
+																												}
+																											}
+																										},
+																										"text": {
+																											"value_i18n": {
+																												"en_US": "View Use Case Resources"
+																											}
+																										}
+																									}
+																								}
+																							],
+																							"fragmentStyle": {
+																								"borderRadius": "",
+																								"fontWeight": "fontWeightBold",
+																								"height": "24px",
+																								"paddingRight": "1",
+																								"shadow": "",
+																								"textAlign": "",
+																								"textColor": "colorBrandPrimary"
+																							},
+																							"fragmentViewports": [
+																								{
+																									"fragmentViewportStyle": {
+																										"marginRight": "0"
+																									},
+																									"id": "tablet"
+																								}
+																							],
+																							"indexed": true,
+																							"name": "Card Link"
+																						},
+																						"type": "Fragment"
+																					},
+																					{
+																						"definition": {
+																							"fragment": {
+																								"key": "clay-icon-link"
+																							},
+																							"fragmentConfig": {
+																								"iconLink": "",
+																								"iconName": "order-arrow-right"
+																							},
+																							"fragmentFields": [
+																							],
+																							"fragmentStyle": {
+																								"borderRadius": "",
+																								"shadow": "",
+																								"textAlign": "",
+																								"textColor": "colorBrandPrimary"
+																							},
+																							"indexed": true
+																						},
+																						"type": "Fragment"
+																					}
+																				],
+																				"type": "Section"
+																			}
+																		],
+																		"type": "Section"
+																	}
+																],
+																"type": "Column"
+															}
+														],
+														"type": "Row"
+													}
+												],
+												"type": "Section"
+											}
+										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
 														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+														"size": 2
 													},
 													"id": "tablet"
 												}
@@ -2860,7 +3384,8 @@
 																								"key": "DIALECT-dialect-text"
 																							},
 																							"fragmentConfig": {
-																								"textType": "text-paragraph"
+																								"textType": "text-paragraph",
+																								"truncateText": false
 																							},
 																							"fragmentFields": [
 																								{
@@ -2869,20 +3394,24 @@
 																										"fragmentLink": {
 																											"value": {
 																												"href": {
-																													"value_i18n": {
-																														"ar_SA": "https://www.liferay.com/",
-																														"ca_ES": "https://www.liferay.com/",
-																														"de_DE": "https://www.liferay.com/",
-																														"en_US": "https://www.liferay.com/",
-																														"es_ES": "https://www.liferay.com/",
-																														"fi_FI": "https://www.liferay.com/",
-																														"fr_FR": "https://www.liferay.com/",
-																														"hu_HU": "https://www.liferay.com/",
-																														"ja_JP": "https://www.liferay.com/",
-																														"nl_NL": "https://www.liferay.com/",
-																														"pt_BR": "https://www.liferay.com/",
-																														"sv_SE": "https://www.liferay.com/",
-																														"zh_CN": "https://www.liferay.com/"
+																													"mapping": {
+																														"itemReference": {
+																															"className": "com.liferay.portal.kernel.model.Layout",
+																															"fields": [
+																																{
+																																	"fieldName": "friendlyURL",
+																																	"fieldValue": "/events"
+																																},
+																																{
+																																	"fieldName": "privatePage",
+																																	"fieldValue": "false"
+																																},
+																																{
+																																	"fieldName": "siteKey",
+																																	"fieldValue": "[$GROUP_KEY$]"
+																																}
+																															]
+																														}
 																													}
 																												}
 																											}
@@ -2923,7 +3452,7 @@
 																								"key": "clay-icon-link"
 																							},
 																							"fragmentConfig": {
-																								"iconLink": "https://www.liferay.com/",
+																								"iconLink": "",
 																								"iconName": "order-arrow-right"
 																							},
 																							"fragmentFields": [
@@ -2952,6 +3481,31 @@
 												"type": "Section"
 											}
 										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+														"size": 2
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 6
+										},
 										"type": "Column"
 									}
 								],

@@ -1,0 +1,304 @@
+definition {
+
+	macro addEVPSite {
+		Site.openSitesAdmin();
+
+		TeamExtranet.addSiteTemplateCP(
+			siteName = "EVP Portal",
+			siteTemplateName = "EVP");
+	}
+
+	macro addLiferayManagerUserRole {
+		for (var userScreenName : list "manager,finance") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.assignRegularRoleCP(
+				roleTitle = "Liferay Manager",
+				userScreenName = ${userScreenName});
+		}
+	}
+
+	macro addUserPhoneNumber {
+		Type(
+			locator1 = "TextInput#NUMBER",
+			value1 = ${key_number});
+
+		AssertElementPresent(
+			key_message = ${assertNumber},
+			locator1 = "TextInput#NUMBER");
+	}
+
+	macro assertCardsTitle {
+		for (var cardTitle : list ${listcardTitle}) {
+			AssertElementPresent(
+				key_card = ${cardTitle},
+				locator1 = "Card#CARD_TITLE");
+		}
+	}
+
+	macro assertColumnsPage {
+		for (var columnsPage : list ${columnsList}) {
+			AssertElementPresent(
+				key_columns = ${columnsPage},
+				locator1 = "EVPUtils#REQUEST_COLUMNS");
+		}
+	}
+
+	macro assertContactInformation {
+		AssertElementPresent(
+			key_message = ${inforMessage},
+			locator1 = "EVPUtils#VALIDATE_SECONDARY_TEXT");
+	}
+
+	macro assertDataOnEVPValue {
+		AssertVisible(
+			key_text = "Years EVP has been active",
+			key_value = ${yearsEVP},
+			locator1 = "EVPUtils#DATA_ON_EVP_VALUE");
+
+		AssertVisible(
+			key_text = "Service Hours Completed",
+			key_value = ${serviceHoursCompleted},
+			locator1 = "EVPUtils#DATA_ON_EVP_VALUE");
+
+		AssertVisible(
+			key_text = "Grant Money Distributed",
+			key_value = ${grantMoneyDistributed},
+			locator1 = "EVPUtils#DATA_ON_EVP_VALUE");
+
+		AssertVisible(
+			key_text = "Number of nonprofits served",
+			key_value = ${numberOfNonprofitsServed},
+			locator1 = "EVPUtils#DATA_ON_EVP_VALUE");
+
+		AssertVisible(
+			key_text = "Employees that participated on EVP",
+			key_value = ${employeesParticipated},
+			locator1 = "EVPUtils#DATA_ON_EVP_VALUE");
+	}
+
+	macro assertHeadersTitle {
+		for (var headerTitle : list ${listHeaderTitle}) {
+			AssertElementPresent(
+				key_title = ${headerTitle},
+				locator1 = "Header#H4_TITLE");
+		}
+	}
+
+	macro assertNotAllowed {
+		AssertElementPresent(
+			field_disabled = ${notAllowed},
+			locator1 = "EVPUtils#NOT_ALLOWED");
+	}
+
+	macro assertTitlePage {
+		for (var titlePage : list ${listTitlePage}) {
+			AssertElementPresent(
+				key_title = ${titlePage},
+				locator1 = "Header#H3_TITLE");
+		}
+	}
+
+	macro changeStatus {
+		Type(
+			key_fieldId = "messageDescribed",
+			locator1 = "TextArea#ANY_ID",
+			value1 = ${typeMessage});
+
+		Button.click(button = ${button});
+
+		WaitForPageLoad();
+	}
+
+	macro downloadFileViaCurl {
+		var currentURL = selenium.getCurrentUrl();
+		var testDependenciesDir = PropsUtil.get("output.dir.name");
+
+		var curl = '''${currentURL} --create-dirs -o ${testDependenciesDir}/${fileName}''';
+
+		echo("curl = ${curl}");
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.get(${curl});
+	}
+
+	macro editObjectEVP {
+		Type(
+			key_fieldLabel = "Employees Participated EVP",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${employeesParticipated});
+
+		Type(
+			key_fieldLabel = "Grant Money Distributed",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${grantMoneyDistributed});
+
+		Type(
+			key_fieldLabel = "Number Of Nonprofits Served",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${numberOfNonprofitsServed});
+
+		Type(
+			key_fieldLabel = "Service Hours Completed",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${serviceHoursCompleted});
+
+		Type(
+			key_fieldLabel = "Years EVP",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${yearsEVP});
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro generateFinancialReport {
+		Click(
+			key_card = ${cardTitle},
+			locator1 = "Card#CARD_TITLE");
+
+		EVPUtils.insertDate(
+			dateRange = ${dateRange},
+			endDateLabel = ${endDateLabel},
+			initialDateLabel = ${initialDateLabel});
+
+		Button.click(button = "Generate");
+	}
+
+	macro generateRequestsListing {
+		Click(
+			key_card = ${cardTitle},
+			locator1 = "Card#CARD_TITLE");
+
+		EVPUtils.insertDate(
+			dateRange = ${dateRange},
+			endDateLabel = ${endDateLabel},
+			initialDateLabel = ${initialDateLabel});
+
+		if (isSet(fullName)) {
+			Type(
+				key_fieldLabel = "Full Name",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${fullName});
+		}
+
+		if (isSet(initialCompanyId)) {
+			Type(
+				inputFieldId = "initialCompanyId",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = ${initialCompanyId});
+		}
+
+		if (isSet(finalCompanyId)) {
+			Type(
+				inputFieldId = "finalCompanyId",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = ${finalCompanyId});
+		}
+
+		if (isSet(companyName)) {
+			Type(
+				key_fieldLabel = "Company Name",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${companyName});
+		}
+
+		for (var checkboxName : list ${listCheckbox}) {
+			Check.checkNotVisible(
+				checkboxName = ${checkboxName},
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+
+		Button.click(button = "Generate");
+	}
+
+	macro gotoContactInformation {
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test ");
+
+		ApplicationsMenu.gotoPortlet(
+			category = ${category},
+			panel = ${panel},
+			portlet = ${portlet});
+
+		Click(
+			key_roleTitle = ${enterUser},
+			locator1 = "UsersAndOrganizationsEditUser#ROLES_SELECT_ROLE_NAME");
+
+		Click(
+			key_navItem = ${contactUser},
+			locator1 = "PRMNavigation#NAV_LINK");
+
+		Click(
+			key_navItem = ${inforUser},
+			locator1 = "PRMNavigation#NAV_LINK");
+	}
+
+	macro gotoEVP {
+		Navigator.openSiteURL(siteName = "EVP Portal");
+
+		if (IsElementPresent(locator1 = "EVPUtils#SIGN_IN")) {
+			Click(locator1 = "EVPUtils#SIGN_IN");
+		}
+	}
+
+	macro insertDate {
+		var currentDate = DateUtil.getFormattedDate(${dateRange}, "yyyy-MM-dd");
+		var nextDayDate = DateUtil.getFormattedDate("+2", "yyyy-MM-dd");
+
+		Type.sendKeys(
+			key_fieldLabel = ${initialDateLabel},
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${currentDate});
+
+		Type.sendKeys(
+			key_fieldLabel = ${endDateLabel},
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${nextDayDate});
+	}
+
+	macro managerApproval {
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "manager@liferay.com",
+			userLoginFullName = "Manager User");
+
+		EVPUtils.gotoEVP();
+
+		EVPNavigator.goToNavItem(navItem = ${listingPage});
+
+		EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+
+		MenuItem.click(menuItem = "Review");
+
+		EVPUtils.changeStatus(
+			button = "Approve",
+			typeMessage = "Your organization has been approved!");
+	}
+
+	macro viewNotPresentStatus {
+		AssertElementNotPresent(
+			key_organizationName = ${organizationName},
+			key_status = ${status},
+			locator1 = "EVPUtils#STATUS_LISTING");
+	}
+
+	macro viewStatus {
+		AssertElementPresent(
+			key_organizationName = ${organizationName},
+			key_status = ${status},
+			locator1 = "EVPUtils#STATUS_LISTING");
+	}
+
+	macro viewSuccessMessage {
+		while (IsElementPresent(locator1 = "Message#EMPTY_INFO")) {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_INFO",
+				value1 = "Thank you. Your information was successfully received.");
+		}
+	}
+
+}

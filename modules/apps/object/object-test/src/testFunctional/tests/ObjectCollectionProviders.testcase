@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -83,9 +83,13 @@ definition {
 
 		Page.searchInCollectionFilter(searchTerm = "A");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesPresent(entries = "A");
+		AssertElementPresent(
+			key_entries = "A",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesNotPresent(entries = "B");
+		AssertElementNotPresent(
+			key_entries = "B",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 	}
 
 }

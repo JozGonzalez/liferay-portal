@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.http;
@@ -87,9 +78,10 @@ public class OrganizationServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.model.Organization addOrganization(
-			HttpPrincipal httpPrincipal, long parentOrganizationId, String name,
-			String type, long regionId, long countryId, long statusListTypeId,
-			String comments, boolean site,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusListTypeId, String comments,
+			boolean site,
 			java.util.List<com.liferay.portal.kernel.model.Address> addresses,
 			java.util.List<com.liferay.portal.kernel.model.EmailAddress>
 				emailAddresses,
@@ -105,9 +97,10 @@ public class OrganizationServiceHttp {
 				_addOrganizationParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, parentOrganizationId, name, type, regionId,
-				countryId, statusListTypeId, comments, site, addresses,
-				emailAddresses, orgLabors, phones, websites, serviceContext);
+				methodKey, externalReferenceCode, parentOrganizationId, name,
+				type, regionId, countryId, statusListTypeId, comments, site,
+				addresses, emailAddresses, orgLabors, phones, websites,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -138,9 +131,10 @@ public class OrganizationServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.model.Organization addOrganization(
-			HttpPrincipal httpPrincipal, long parentOrganizationId, String name,
-			String type, long regionId, long countryId, long statusListTypeId,
-			String comments, boolean site,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusListTypeId, String comments,
+			boolean site,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -150,8 +144,9 @@ public class OrganizationServiceHttp {
 				_addOrganizationParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, parentOrganizationId, name, type, regionId,
-				countryId, statusListTypeId, comments, site, serviceContext);
+				methodKey, externalReferenceCode, parentOrganizationId, name,
+				type, regionId, countryId, statusListTypeId, comments, site,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -740,7 +735,10 @@ public class OrganizationServiceHttp {
 	public static java.util.List<com.liferay.portal.kernel.model.Organization>
 		getOrganizations(
 			HttpPrincipal httpPrincipal, long companyId,
-			long parentOrganizationId, String name, int start, int end) {
+			long parentOrganizationId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.portal.kernel.model.Organization>
+					orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -748,7 +746,82 @@ public class OrganizationServiceHttp {
 				_getOrganizationsParameterTypes17);
 
 			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, parentOrganizationId, start, end,
+				orderByComparator);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List
+				<com.liferay.portal.kernel.model.Organization>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List<com.liferay.portal.kernel.model.Organization>
+		getOrganizations(
+			HttpPrincipal httpPrincipal, long companyId,
+			long parentOrganizationId, String name, int start, int end) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				OrganizationServiceUtil.class, "getOrganizations",
+				_getOrganizationsParameterTypes18);
+
+			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, parentOrganizationId, name, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List
+				<com.liferay.portal.kernel.model.Organization>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List<com.liferay.portal.kernel.model.Organization>
+		getOrganizations(
+			HttpPrincipal httpPrincipal, long companyId,
+			long parentOrganizationId, String name, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.portal.kernel.model.Organization>
+					orderByComparator) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				OrganizationServiceUtil.class, "getOrganizations",
+				_getOrganizationsParameterTypes19);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, parentOrganizationId, name, start, end,
+				orderByComparator);
 
 			Object returnObj = null;
 
@@ -779,7 +852,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "getOrganizationsCount",
-				_getOrganizationsCountParameterTypes18);
+				_getOrganizationsCountParameterTypes20);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, parentOrganizationId);
@@ -813,7 +886,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "getOrganizationsCount",
-				_getOrganizationsCountParameterTypes19);
+				_getOrganizationsCountParameterTypes21);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, parentOrganizationId, name);
@@ -853,7 +926,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "getUserOrganizations",
-				_getUserOrganizationsParameterTypes20);
+				_getUserOrganizationsParameterTypes22);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, userId);
 
@@ -893,7 +966,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "setGroupOrganizations",
-				_setGroupOrganizationsParameterTypes21);
+				_setGroupOrganizationsParameterTypes23);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, organizationIds);
@@ -929,7 +1002,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "unsetGroupOrganizations",
-				_unsetGroupOrganizationsParameterTypes22);
+				_unsetGroupOrganizationsParameterTypes24);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, organizationIds);
@@ -967,7 +1040,7 @@ public class OrganizationServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class,
 				"unsetPasswordPolicyOrganizations",
-				_unsetPasswordPolicyOrganizationsParameterTypes23);
+				_unsetPasswordPolicyOrganizationsParameterTypes25);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, passwordPolicyId, organizationIds);
@@ -1003,7 +1076,7 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "updateLogo",
-				_updateLogoParameterTypes24);
+				_updateLogoParameterTypes26);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, organizationId, logoBytes);
@@ -1038,11 +1111,11 @@ public class OrganizationServiceHttp {
 
 	public static com.liferay.portal.kernel.model.Organization
 			updateOrganization(
-				HttpPrincipal httpPrincipal, long organizationId,
-				long parentOrganizationId, String name, String type,
-				long regionId, long countryId, long statusListTypeId,
-				String comments, boolean hasLogo, byte[] logoBytes,
-				boolean site,
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long organizationId, long parentOrganizationId, String name,
+				String type, long regionId, long countryId,
+				long statusListTypeId, String comments, boolean hasLogo,
+				byte[] logoBytes, boolean site,
 				java.util.List<com.liferay.portal.kernel.model.Address>
 					addresses,
 				java.util.List<com.liferay.portal.kernel.model.EmailAddress>
@@ -1058,13 +1131,13 @@ public class OrganizationServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "updateOrganization",
-				_updateOrganizationParameterTypes25);
+				_updateOrganizationParameterTypes27);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, organizationId, parentOrganizationId, name, type,
-				regionId, countryId, statusListTypeId, comments, hasLogo,
-				logoBytes, site, addresses, emailAddresses, orgLabors, phones,
-				websites, serviceContext);
+				methodKey, externalReferenceCode, organizationId,
+				parentOrganizationId, name, type, regionId, countryId,
+				statusListTypeId, comments, hasLogo, logoBytes, site, addresses,
+				emailAddresses, orgLabors, phones, websites, serviceContext);
 
 			Object returnObj = null;
 
@@ -1096,22 +1169,22 @@ public class OrganizationServiceHttp {
 
 	public static com.liferay.portal.kernel.model.Organization
 			updateOrganization(
-				HttpPrincipal httpPrincipal, long organizationId,
-				long parentOrganizationId, String name, String type,
-				long regionId, long countryId, long statusListTypeId,
-				String comments, boolean site,
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long organizationId, long parentOrganizationId, String name,
+				String type, long regionId, long countryId,
+				long statusListTypeId, String comments, boolean site,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
 				OrganizationServiceUtil.class, "updateOrganization",
-				_updateOrganizationParameterTypes26);
+				_updateOrganizationParameterTypes28);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, organizationId, parentOrganizationId, name, type,
-				regionId, countryId, statusListTypeId, comments, site,
-				serviceContext);
+				methodKey, externalReferenceCode, organizationId,
+				parentOrganizationId, name, type, regionId, countryId,
+				statusListTypeId, comments, site, serviceContext);
 
 			Object returnObj = null;
 
@@ -1148,16 +1221,16 @@ public class OrganizationServiceHttp {
 		new Class[] {long.class, long[].class};
 	private static final Class<?>[] _addOrganizationParameterTypes1 =
 		new Class[] {
-			long.class, String.class, String.class, long.class, long.class,
-			long.class, String.class, boolean.class, java.util.List.class,
+			String.class, long.class, String.class, String.class, long.class,
+			long.class, long.class, String.class, boolean.class,
 			java.util.List.class, java.util.List.class, java.util.List.class,
-			java.util.List.class,
+			java.util.List.class, java.util.List.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _addOrganizationParameterTypes2 =
 		new Class[] {
-			long.class, String.class, String.class, long.class, long.class,
-			long.class, String.class, boolean.class,
+			String.class, long.class, String.class, String.class, long.class,
+			long.class, long.class, String.class, boolean.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
@@ -1208,37 +1281,48 @@ public class OrganizationServiceHttp {
 		new Class[] {long.class, long.class, int.class, int.class};
 	private static final Class<?>[] _getOrganizationsParameterTypes17 =
 		new Class[] {
+			long.class, long.class, int.class, int.class,
+			com.liferay.portal.kernel.util.OrderByComparator.class
+		};
+	private static final Class<?>[] _getOrganizationsParameterTypes18 =
+		new Class[] {
 			long.class, long.class, String.class, int.class, int.class
 		};
-	private static final Class<?>[] _getOrganizationsCountParameterTypes18 =
+	private static final Class<?>[] _getOrganizationsParameterTypes19 =
+		new Class[] {
+			long.class, long.class, String.class, int.class, int.class,
+			com.liferay.portal.kernel.util.OrderByComparator.class
+		};
+	private static final Class<?>[] _getOrganizationsCountParameterTypes20 =
 		new Class[] {long.class, long.class};
-	private static final Class<?>[] _getOrganizationsCountParameterTypes19 =
+	private static final Class<?>[] _getOrganizationsCountParameterTypes21 =
 		new Class[] {long.class, long.class, String.class};
-	private static final Class<?>[] _getUserOrganizationsParameterTypes20 =
+	private static final Class<?>[] _getUserOrganizationsParameterTypes22 =
 		new Class[] {long.class};
-	private static final Class<?>[] _setGroupOrganizationsParameterTypes21 =
+	private static final Class<?>[] _setGroupOrganizationsParameterTypes23 =
 		new Class[] {long.class, long[].class};
-	private static final Class<?>[] _unsetGroupOrganizationsParameterTypes22 =
+	private static final Class<?>[] _unsetGroupOrganizationsParameterTypes24 =
 		new Class[] {long.class, long[].class};
 	private static final Class<?>[]
-		_unsetPasswordPolicyOrganizationsParameterTypes23 = new Class[] {
+		_unsetPasswordPolicyOrganizationsParameterTypes25 = new Class[] {
 			long.class, long[].class
 		};
-	private static final Class<?>[] _updateLogoParameterTypes24 = new Class[] {
+	private static final Class<?>[] _updateLogoParameterTypes26 = new Class[] {
 		long.class, byte[].class
 	};
-	private static final Class<?>[] _updateOrganizationParameterTypes25 =
+	private static final Class<?>[] _updateOrganizationParameterTypes27 =
 		new Class[] {
-			long.class, long.class, String.class, String.class, long.class,
-			long.class, long.class, String.class, boolean.class, byte[].class,
-			boolean.class, java.util.List.class, java.util.List.class,
+			String.class, long.class, long.class, String.class, String.class,
+			long.class, long.class, long.class, String.class, boolean.class,
+			byte[].class, boolean.class, java.util.List.class,
 			java.util.List.class, java.util.List.class, java.util.List.class,
+			java.util.List.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateOrganizationParameterTypes26 =
+	private static final Class<?>[] _updateOrganizationParameterTypes28 =
 		new Class[] {
-			long.class, long.class, String.class, String.class, long.class,
-			long.class, long.class, String.class, boolean.class,
+			String.class, long.class, long.class, String.class, String.class,
+			long.class, long.class, long.class, String.class, boolean.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 

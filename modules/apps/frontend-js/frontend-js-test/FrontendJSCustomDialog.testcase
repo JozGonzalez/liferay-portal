@@ -27,9 +27,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -43,7 +43,7 @@ definition {
 	@priority = 3
 	test CanRenderOpenAlertModal {
 		task ("When: run JS code: Liferay.Util.openAlertModal({message: 'Test Alert Modal', onConfirm: ()=>{}})") {
-			RunScript(locator1 = "Liferay.Util.openAlertModal({message: 'Test Alert Modal', onConfirm: ()=>{}})");
+			ExecuteJavaScript(value1 = "Liferay.Util.openAlertModal({message: 'Test Alert Modal', onConfirm: ()=>{}})");
 		}
 
 		task ("Then: text 'Test Alert Modal' is present in the modal") {

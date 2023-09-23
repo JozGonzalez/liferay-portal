@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
@@ -60,7 +51,31 @@ public class SkuOptionSerDes {
 
 			sb.append("\"key\": ");
 
-			sb.append(skuOption.getKey());
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getKey()));
+
+			sb.append("\"");
+		}
+
+		if (skuOption.getOptionId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionId\": ");
+
+			sb.append(skuOption.getOptionId());
+		}
+
+		if (skuOption.getOptionValueId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionValueId\": ");
+
+			sb.append(skuOption.getOptionValueId());
 		}
 
 		if (skuOption.getValue() != null) {
@@ -70,7 +85,11 @@ public class SkuOptionSerDes {
 
 			sb.append("\"value\": ");
 
-			sb.append(skuOption.getValue());
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getValue()));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -96,6 +115,21 @@ public class SkuOptionSerDes {
 		}
 		else {
 			map.put("key", String.valueOf(skuOption.getKey()));
+		}
+
+		if (skuOption.getOptionId() == null) {
+			map.put("optionId", null);
+		}
+		else {
+			map.put("optionId", String.valueOf(skuOption.getOptionId()));
+		}
+
+		if (skuOption.getOptionValueId() == null) {
+			map.put("optionValueId", null);
+		}
+		else {
+			map.put(
+				"optionValueId", String.valueOf(skuOption.getOptionValueId()));
 		}
 
 		if (skuOption.getValue() == null) {
@@ -127,14 +161,24 @@ public class SkuOptionSerDes {
 
 			if (Objects.equals(jsonParserFieldName, "key")) {
 				if (jsonParserFieldValue != null) {
-					skuOption.setKey(
+					skuOption.setKey((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "optionId")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setOptionId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "optionValueId")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setOptionValueId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "value")) {
 				if (jsonParserFieldValue != null) {
-					skuOption.setValue(
-						Long.valueOf((String)jsonParserFieldValue));
+					skuOption.setValue((String)jsonParserFieldValue);
 				}
 			}
 		}

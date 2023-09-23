@@ -12,9 +12,9 @@ definition {
 	property testray.main.component.name = "Clustering";
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -23,39 +23,62 @@ definition {
 	test ClusterCanRecoverByShuttingDownAnyNodeWithManualRecovery {
 		property custom.properties = "license.cluster.overload.node.auto.shut.down=false";
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
-		property test.name.skip.portal.instance = "ClusteringLicense#ClusterCanRecoverByShuttingDownAnyNodeWithManualRecovery";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WaitForConsoleTextPresent(value1 = "Spring Extender Unavailable Component Checker check result");
 
 		for (var nodeNumber : list "8,9") {
-			User.firstLoginUI(
+			Clustering.viewTextPresentOnSpecificNode(
+				expectedText = "licensed for this cluster has been exceeded",
+				nodePort = "${nodeNumber}080");
+
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			Alert.viewErrorMessage(errorMessage = "The maximum number of 2 nodes licensed for this cluster has been exceeded. Please shut down excess nodes as soon as possible. An additional 2 nodes are temporarily permitted during the grace period");
 
 			Alert.viewErrorMessage(errorMessage = "This current node is within the licensed node count and will not be automatically deactivated nor shut down after the grace period expires.");
 		}
 
-		User.firstLoginUI(
+		Clustering.viewTextPresentOnSpecificNode(
+			expectedText = "licensed for this cluster has been exceeded",
+			nodePort = 10080);
+
+		User.loginPG(
+			nodePort = 10080,
 			password = "test",
-			specificURL = "http://localhost:10080",
 			userEmailAddress = "test@liferay.com");
+
+		WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+		Refresh();
+
+		Alert.viewErrorMessage(errorMessage = "The maximum number of 2 nodes licensed for this cluster has been exceeded. Please shut down excess nodes as soon as possible. An additional 2 nodes are temporarily permitted during the grace period");
 
 		Alert.viewErrorMessage(errorMessage = "This current node is within the temporarily permitted node count and will be automatically deactivated after the grace period expires");
 
-		Clustering.waitForNodeShutdown(nodePort = 10080);
+		Clustering.waitForNodeDeactivation(nodePort = 10080);
 
 		// Pausing 30 seconds due to LRQA-75909
 
 		Pause(locator1 = 30000);
 
 		for (var nodeNumber : list "8,9") {
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			Alert.viewErrorMessage(errorMessage = "Grace period which already ended");
 		}
@@ -73,10 +96,14 @@ definition {
 		WaitForConsoleTextPresent(value1 = "Finished shutting down overloaded nodes");
 
 		for (var nodeNumber : list "8,10") {
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 		}
@@ -87,7 +114,8 @@ definition {
 	test ExceedDoubleNodeLimit {
 		property app.server.bundles.size = "4";
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
-		property test.name.skip.portal.instance = "ClusteringLicense#ExceedDoubleNodeLimit";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var nodeNumber : list "8,9,10,11") {
 			User.firstLoginUI(
@@ -124,7 +152,8 @@ definition {
 	test LimitPreviouslyValidatedClusterNodes {
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
 		property skip.start.app.server.index = "2";
-		property test.name.skip.portal.instance = "ClusteringLicense#LimitPreviouslyValidatedClusterNodes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		User.firstLoginPG();
 
@@ -205,7 +234,8 @@ definition {
 		property custom.properties = "license.cluster.overload.node.auto.shut.down=false";
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
 		property skip.start.app.server.index = "2";
-		property test.name.skip.portal.instance = "ClusteringLicense#LimitPreviouslyValidatedClusterNodesWithManualRecovery";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Clustering.viewClusterStatusInConsole();
 
@@ -248,7 +278,7 @@ definition {
 
 		Alert.viewErrorMessage(errorMessage = "will be automatically deactivated");
 
-		Clustering.waitForNodeShutdown(nodePort = 9080);
+		Clustering.waitForNodeDeactivation(nodePort = 9080);
 
 		Navigator.openSpecificURL(url = "http://localhost:8080");
 
@@ -259,7 +289,8 @@ definition {
 	test ViewNodeLimit {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
-		property test.name.skip.portal.instance = "ClusteringLicense#ViewNodeLimit";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertElementNotPresent(locator1 = "Message#ERROR");
 
@@ -296,13 +327,21 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
+		WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+		Refresh();
+
 		AssertElementNotPresent(locator1 = "Message#ERROR");
 
 		for (var nodeNumber : list "9,10") {
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			Page.assertNodePortPG(nodePort = "${nodeNumber}080");
 
@@ -315,10 +354,14 @@ definition {
 
 		Navigator.openSpecificURL(url = "http://localhost:10080/c/portal/logout");
 
-		User.firstLoginUI(
+		User.loginPG(
+			nodePort = 10080,
 			password = "test",
-			specificURL = "http://localhost:10080",
 			userEmailAddress = "userea@liferay.com");
+
+		WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+		Refresh();
 
 		AssertElementNotPresent(locator1 = "Message#ERROR");
 
@@ -333,10 +376,14 @@ definition {
 				expectedText = "Finished shutting down overloaded nodes",
 				nodePort = "${nodeNumber}080");
 
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 		}
@@ -346,17 +393,22 @@ definition {
 	test ViewNodeLimitWithManualRecovery {
 		property custom.properties = "license.cluster.overload.node.auto.shut.down=false";
 		property dxp.license.file = "dxp-license-virtual-cluster.xml";
-		property test.name.skip.portal.instance = "ClusteringLicense#ViewNodeLimitWithManualRecovery";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var nodeNumber : list "8,9,10") {
 			Clustering.viewTextPresentOnSpecificNode(
 				expectedText = "licensed for this cluster has been exceeded",
 				nodePort = "${nodeNumber}080");
 
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			Page.assertNodePortPG(nodePort = "${nodeNumber}080");
 
@@ -367,17 +419,21 @@ definition {
 
 		Alert.viewErrorMessage(errorMessage = "will be automatically deactivated");
 
-		Clustering.waitForNodeShutdown(nodePort = 10080);
+		Clustering.waitForNodeDeactivation(nodePort = 10080);
 
 		// Pausing 30 seconds due to LRQA-75909
 
 		Pause(locator1 = 30000);
 
 		for (var nodeNumber : list "8,9") {
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			Alert.viewErrorMessage(errorMessage = "Grace period which already ended");
 		}
@@ -395,10 +451,14 @@ definition {
 		Clustering.waitForNodeShutdown(nodePort = 10080);
 
 		for (var nodeNumber : list "8,9") {
-			User.firstLoginUI(
+			User.loginPG(
+				nodePort = "${nodeNumber}080",
 				password = "test",
-				specificURL = "http://localhost:${nodeNumber}080",
 				userEmailAddress = "test@liferay.com");
+
+			WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+			Refresh();
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 		}

@@ -1,28 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.struts;
 
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.Constants;
@@ -32,8 +19,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.util.ConcurrentModificationException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,24 +58,23 @@ public class SessionTreeJSClickStrutsAction implements StrutsAction {
 			}
 			else if (cmd.equals("layoutCheck")) {
 				long plid = ParamUtil.getLong(httpServletRequest, "plid");
+				boolean privateLayout = ParamUtil.getBoolean(
+					httpServletRequest, "privateLayout");
 
 				if (plid == LayoutConstants.DEFAULT_PLID) {
-					boolean privateLayout = ParamUtil.getBoolean(
-						httpServletRequest, "privateLayout");
-
 					SessionTreeJSClicks.openLayoutNodes(
 						httpServletRequest, treeId, privateLayout,
 						LayoutConstants.DEFAULT_PLID, true);
 				}
 				else {
+					long layoutId = ParamUtil.getLong(
+						httpServletRequest, "layoutId");
 					boolean recursive = ParamUtil.getBoolean(
 						httpServletRequest, "recursive");
 
-					Layout layout = _layoutLocalService.getLayout(plid);
-
 					SessionTreeJSClicks.openLayoutNodes(
-						httpServletRequest, treeId, layout.isPrivateLayout(),
-						layout.getLayoutId(), recursive);
+						httpServletRequest, treeId, privateLayout, layoutId,
+						recursive);
 				}
 			}
 			else if (cmd.equals("layoutCollapse")) {
@@ -102,14 +86,16 @@ public class SessionTreeJSClickStrutsAction implements StrutsAction {
 					SessionTreeJSClicks.closeNodes(httpServletRequest, treeId);
 				}
 				else {
+					boolean privateLayout = ParamUtil.getBoolean(
+						httpServletRequest, "privateLayout");
+					long layoutId = ParamUtil.getLong(
+						httpServletRequest, "layoutId");
 					boolean recursive = ParamUtil.getBoolean(
 						httpServletRequest, "recursive");
 
-					Layout layout = _layoutLocalService.getLayout(plid);
-
 					SessionTreeJSClicks.closeLayoutNodes(
-						httpServletRequest, treeId, layout.isPrivateLayout(),
-						layout.getLayoutId(), recursive);
+						httpServletRequest, treeId, privateLayout, layoutId,
+						recursive);
 				}
 			}
 			else if (cmd.equals("layoutUncollapse")) {
@@ -130,18 +116,9 @@ public class SessionTreeJSClickStrutsAction implements StrutsAction {
 				}
 			}
 
-			if (!cmd.isEmpty()) {
-				updateCheckedLayoutPlids(httpServletRequest, treeId);
-			}
-
 			httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-			PortalPreferences portalPreferences =
-				PortletPreferencesFactoryUtil.getPortalPreferences(
-					httpServletRequest);
-
-			String json = portalPreferences.getValue(
-				SessionTreeJSClicks.class.getName(), treeId + "Plid");
+			String json = _getCheckedLayoutIds(httpServletRequest, treeId);
 
 			if (Validator.isNotNull(json)) {
 				ServletResponseUtil.write(httpServletResponse, json);
@@ -155,66 +132,33 @@ public class SessionTreeJSClickStrutsAction implements StrutsAction {
 		return null;
 	}
 
-	protected void updateCheckedLayoutPlids(
+	private String _getCheckedLayoutIds(
 		HttpServletRequest httpServletRequest, String treeId) {
-
-		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
-		boolean privateLayout = ParamUtil.getBoolean(
-			httpServletRequest, "privateLayout");
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		while (true) {
-			try {
-				PortalPreferences portalPreferences =
-					PortletPreferencesFactoryUtil.getPortalPreferences(
-						httpServletRequest);
+		PortalPreferences portalPreferences =
+			PortletPreferencesFactoryUtil.getPortalPreferences(
+				httpServletRequest);
 
-				long[] checkedLayoutIds = StringUtil.split(
-					portalPreferences.getValue(
-						SessionTreeJSClicks.class.getName(), treeId),
-					0L);
+		long[] checkedLayoutIds = StringUtil.split(
+			portalPreferences.getValue(
+				SessionTreeJSClicks.class.getName(), treeId),
+			0L);
 
-				for (long checkedLayoutId : checkedLayoutIds) {
-					if (checkedLayoutId == LayoutConstants.DEFAULT_PLID) {
-						jsonArray.put(
-							String.valueOf(LayoutConstants.DEFAULT_PLID));
-					}
-
-					Layout checkedLayout = _layoutLocalService.fetchLayout(
-						groupId, privateLayout, checkedLayoutId);
-
-					if (checkedLayout == null) {
-						continue;
-					}
-
-					jsonArray.put(String.valueOf(checkedLayout.getPlid()));
-				}
-
-				portalPreferences.setValue(
-					SessionTreeJSClicks.class.getName(), treeId + "Plid",
-					jsonArray.toString());
-
-				return;
+		for (long checkedLayoutId : checkedLayoutIds) {
+			if (checkedLayoutId == LayoutConstants.DEFAULT_PLID) {
+				jsonArray.put(String.valueOf(LayoutConstants.DEFAULT_PLID));
 			}
-			catch (ConcurrentModificationException
-						concurrentModificationException) {
 
-				if (_log.isDebugEnabled()) {
-					_log.debug(concurrentModificationException);
-				}
-			}
+			jsonArray.put(String.valueOf(checkedLayoutId));
 		}
-	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		SessionTreeJSClickStrutsAction.class);
+		return jsonArray.toString();
+	}
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;

@@ -1,78 +1,21 @@
 definition {
 
-	macro assertStatusBuildDisabled {
-		AssertElementPresent(
-			key_item = ${key_item},
-			locator1 = "TestrayRoutines#STATUS_BUILD_HISTORY_DISABLED");
-	}
-
-	macro clickStatusBuildHistory {
-		Click(
-			key_item = ${key_item},
-			locator1 = "TestrayRoutines#STATUS_BUILD_HISTORY");
-	}
-
 	macro createRoutine {
-		Click(locator1 = "Testray#ADD_PROJECT");
+		Click(locator1 = "Button#PLUS");
 
-		Type(
-			locator1 = "TestrayManage#NEW_OPTION_NAME",
-			value1 = ${key_name});
-
-		Click(locator1 = "TestrayManage#SAVE_BUTTON");
-	}
-
-	macro deleteRoutine {
-		Testray.deleteComponent(itemName = ${itemName});
-	}
-
-	macro deleteRoutineSetup {
-		TestrayLayout.clickResultsOnSidebar();
-
-		Refresh();
-
-		Testray.changePagination(
-			numberItems = 20,
-			valuePagination = 150);
-
-		if (IsElementPresent(key_projectName = "Projects_", locator1 = "Testray#ITEM_NAME")) {
-			Testray.goToProjectPage(projectName = "Projects_1 Project");
+		if (isSet(routineName)) {
+			PortletEntry.inputName(name = ${routineName});
 		}
 
-		if (IsElementPresent(key_projectName = "Routines_1 Routine", locator1 = "Testray#ITEM_NAME")) {
-			TestrayRoutines.deleteRoutine(itemName = "Routines_1 Routine");
-
-			Testray.checkSuccessAlertAppearsAndDisappears();
-		}
+		Button.clickSave();
 	}
 
 	macro editRoutine {
-		TestrayManage.editProductVersion(
-			caseName = ${newNameRoutine},
-			itemManage = "Edit",
-			valueName = ${routineName});
-	}
+		if (isSet(newName)) {
+			PortletEntry.inputName(name = ${newName});
+		}
 
-	macro goToRoutine {
-		Click(
-			key_projectName = ${routineName},
-			locator1 = "Testray#ITEM_NAME");
-	}
-
-	macro selectOptionDropdownRoutine {
-		Click(locator1 = "TestrayRoutines#DROPDOWN_ROUTINE");
-
-		MenuItem.clickNoError(menuItem = ${menuItem});
-
-		Alert.viewSuccessMessage();
-	}
-
-	macro typeRoutineField {
-		Type(
-			locator1 = "TestrayManage#NEW_OPTION_NAME",
-			value1 = ${key_name});
-
-		Click(locator1 = "TestrayManage#SAVE_BUTTON");
+		Button.clickSave();
 	}
 
 }

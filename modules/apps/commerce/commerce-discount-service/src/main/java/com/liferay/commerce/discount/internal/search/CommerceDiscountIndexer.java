@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.internal.search;
@@ -317,7 +308,7 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing discount " + commerceDiscount);
+			_log.debug("Indexing commerce discount " + commerceDiscount);
 		}
 
 		CommerceDiscountTarget commerceDiscountTarget =
@@ -330,13 +321,12 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 		Document document = getBaseModelDocument(CLASS_NAME, commerceDiscount);
 
 		document.addText(Field.TITLE, commerceDiscount.getTitle());
-
-		document.addText(
-			FIELD_TARGET_TYPE, commerceDiscountTargetType.toString());
 		document.addText(Field.USER_NAME, commerceDiscount.getUserName());
 		document.addKeyword(FIELD_ACTIVE, commerceDiscount.isActive());
 		document.addKeyword(
 			FIELD_COUPON_CODE, commerceDiscount.getCouponCode());
+		document.addText(
+			FIELD_TARGET_TYPE, commerceDiscountTargetType.toString());
 		document.addKeyword(
 			FIELD_USE_COUPON_CODE, commerceDiscount.isUseCouponCode());
 
@@ -396,7 +386,8 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Document " + commerceDiscount + " indexed successfully");
+				"Commerce discount " + commerceDiscount +
+					" indexed successfully");
 		}
 
 		if (commerceDiscountTarget instanceof CommerceDiscountProductTarget) {
@@ -466,7 +457,7 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index commerce discount " +
-								commerceDiscount.getCommerceDiscountId(),
+								commerceDiscount,
 							portalException);
 					}
 				}

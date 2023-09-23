@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.http;
@@ -51,6 +42,51 @@ import com.liferay.portal.kernel.util.MethodKey;
 public class NotificationQueueEntryServiceHttp {
 
 	public static com.liferay.notification.model.NotificationQueueEntry
+			addNotificationQueueEntry(
+				HttpPrincipal httpPrincipal,
+				com.liferay.notification.context.NotificationContext
+					notificationContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				NotificationQueueEntryServiceUtil.class,
+				"addNotificationQueueEntry",
+				_addNotificationQueueEntryParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, notificationContext);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.notification.model.NotificationQueueEntry)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.notification.model.NotificationQueueEntry
 			deleteNotificationQueueEntry(
 				HttpPrincipal httpPrincipal, long notificationQueueEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -59,7 +95,7 @@ public class NotificationQueueEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				NotificationQueueEntryServiceUtil.class,
 				"deleteNotificationQueueEntry",
-				_deleteNotificationQueueEntryParameterTypes0);
+				_deleteNotificationQueueEntryParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, notificationQueueEntryId);
@@ -102,7 +138,7 @@ public class NotificationQueueEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				NotificationQueueEntryServiceUtil.class,
 				"getNotificationQueueEntry",
-				_getNotificationQueueEntryParameterTypes1);
+				_getNotificationQueueEntryParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, notificationQueueEntryId);
@@ -145,7 +181,7 @@ public class NotificationQueueEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				NotificationQueueEntryServiceUtil.class,
 				"resendNotificationQueueEntry",
-				_resendNotificationQueueEntryParameterTypes2);
+				_resendNotificationQueueEntryParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, notificationQueueEntryId);
@@ -182,11 +218,15 @@ public class NotificationQueueEntryServiceHttp {
 	private static Log _log = LogFactoryUtil.getLog(
 		NotificationQueueEntryServiceHttp.class);
 
+	private static final Class<?>[] _addNotificationQueueEntryParameterTypes0 =
+		new Class[] {
+			com.liferay.notification.context.NotificationContext.class
+		};
 	private static final Class<?>[]
-		_deleteNotificationQueueEntryParameterTypes0 = new Class[] {long.class};
-	private static final Class<?>[] _getNotificationQueueEntryParameterTypes1 =
+		_deleteNotificationQueueEntryParameterTypes1 = new Class[] {long.class};
+	private static final Class<?>[] _getNotificationQueueEntryParameterTypes2 =
 		new Class[] {long.class};
 	private static final Class<?>[]
-		_resendNotificationQueueEntryParameterTypes2 = new Class[] {long.class};
+		_resendNotificationQueueEntryParameterTypes3 = new Class[] {long.class};
 
 }

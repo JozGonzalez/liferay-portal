@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import '@testing-library/jest-dom/extend-expect';
@@ -64,6 +55,7 @@ const renderComponent = ({
 	hasUpdatePermissions = true,
 	lockedExperience = false,
 	masterRootItemChildren = ['11-container'],
+	restrictedItemIds = new Set(),
 	rootItemChildren = ['01-container'],
 	viewportSize = VIEWPORT_SIZES.desktop,
 } = {}) => {
@@ -128,7 +120,7 @@ const renderComponent = ({
 									children: ['02-row'],
 									config: {},
 									itemId: '01-container',
-									parentId: 'main',
+									parentId: '00-main',
 									type: LAYOUT_DATA_ITEM_TYPES.container,
 								},
 								'02-row': {
@@ -173,7 +165,7 @@ const renderComponent = ({
 										...formConfig,
 									},
 									itemId: '06-form',
-									parentId: LAYOUT_DATA_ITEM_TYPES.root,
+									parentId: '00-main',
 									type: LAYOUT_DATA_ITEM_TYPES.form,
 								},
 								'07-row': {
@@ -231,7 +223,10 @@ const renderComponent = ({
 									},
 								},
 
-								rootItems: {main: '10-main'},
+								rootItems: {
+									dropZone: '12-dropzone',
+									main: '10-main',
+								},
 								version: 1,
 							},
 							masterLayoutPlid: '0',
@@ -249,6 +244,8 @@ const renderComponent = ({
 							LOCKED_SEGMENTS_EXPERIMENT: lockedExperience,
 							UPDATE: hasUpdatePermissions,
 						},
+
+						restrictedItemIds,
 
 						selectedViewportSize: viewportSize,
 					})}
@@ -282,16 +279,17 @@ describe('PageStructureSidebar', () => {
 
 	it('uses fragments names as labels', () => {
 		renderComponent({
-			activeItemId: '11-container',
-			rootItemChildren: ['04-fragment'],
+			activeItemId: '04-fragment',
 		});
 
-		expect(screen.getByText('Fragment 1')).toBeInTheDocument();
+		expect(
+			screen.getByText('Fragment 1', {selector: 'span'})
+		).toBeInTheDocument();
 	});
 
 	it('uses default labels for containers, columns, rows', () => {
 		renderComponent({
-			activeItemId: '11-container',
+			activeItemId: '03-column',
 			rootItemChildren: ['01-container', '02-row', '03-column'],
 		});
 
@@ -303,14 +301,13 @@ describe('PageStructureSidebar', () => {
 	});
 
 	it('sets activeItemId as selected item', () => {
-		renderComponent({
-			activeItemId: '11-container',
+		const {baseElement} = renderComponent({
+			activeItemId: '04-fragment',
 		});
 
-		expect(screen.getByLabelText('Collapse container')).toHaveAttribute(
-			'aria-expanded',
-			'true'
-		);
+		expect(
+			baseElement.querySelector('[aria-controls="04-fragment"]')
+		).toHaveAttribute('aria-expanded', 'true');
 	});
 
 	it('disables items that are in masterLayout', () => {
@@ -393,21 +390,25 @@ describe('PageStructureSidebar', () => {
 			rootItemChildren: ['04-fragment'],
 		});
 
-		expect(screen.getByText('Text Field 1')).toBeInTheDocument();
+		expect(
+			screen.getByText('Fragment 1', {selector: 'span'})
+		).toBeInTheDocument();
 	});
 
 	it('render custom fragment names as labels', () => {
 		renderComponent({
-			activeItemId: '11-container',
+			activeItemId: '04-fragment',
 			rootItemChildren: ['04-fragment'],
 		});
 
-		expect(screen.getByText('Fragment 1')).toBeInTheDocument();
+		expect(
+			screen.getByText('Fragment 1', {selector: 'span'})
+		).toBeInTheDocument();
 	});
 
 	it('allow changing fragment name', () => {
 		const {baseElement} = renderComponent({
-			activeItemId: '11-container',
+			activeItemId: '04-fragment',
 			rootItemChildren: ['04-fragment'],
 		});
 
@@ -435,11 +436,13 @@ describe('PageStructureSidebar', () => {
 	describe('Form container without permissions', () => {
 		it('shows the form normally when it is mapped to an element with permissions', () => {
 			renderComponent({
-				activeItemId: '11-container',
+				activeItemId: '04-fragment',
 				rootItemChildren: ['06-form'],
 			});
 
-			expect(screen.getByText('form-container')).toBeInTheDocument();
+			expect(
+				screen.getByText('form-container', {selector: 'span'})
+			).toBeInTheDocument();
 			expect(
 				screen.queryByText(
 					'this-content-cannot-be-displayed-due-to-permission-restrictions'
@@ -449,7 +452,7 @@ describe('PageStructureSidebar', () => {
 
 		it('shows a permission restriction message when the form is mapped to an element without permissions and their children are not listed', () => {
 			const {baseElement} = renderComponent({
-				activeItemId: '11-container',
+				activeItemId: '06-form',
 				formConfig: {
 					classNameId: '22222',
 					classTypeId: '0',
@@ -457,15 +460,37 @@ describe('PageStructureSidebar', () => {
 				rootItemChildren: ['06-form'],
 			});
 
-			expect(screen.getByText('form-container')).toBeInTheDocument();
+			expect(
+				screen.getByText('form-container', {selector: 'span'})
+			).toBeInTheDocument();
+
 			expect(
 				screen.getByText(
 					'this-content-cannot-be-displayed-due-to-permission-restrictions'
 				)
 			).toBeInTheDocument();
+
 			expect(
-				baseElement.querySelector('.lexicon-icon-plus')
+				baseElement.querySelector('[aria-controls="06-form"]')
 			).not.toBeInTheDocument();
+		});
+
+		it('shows a permission restriction message when the fragment is restricted', () => {
+			renderComponent({
+				activeItemId: '04-fragment',
+				restrictedItemIds: new Set(['04-fragment']),
+				rootItemChildren: ['04-fragment'],
+			});
+
+			expect(
+				screen.getByText('Fragment 1', {selector: 'span'})
+			).toBeInTheDocument();
+
+			expect(
+				screen.getByText(
+					'this-content-cannot-be-displayed-due-to-permission-restrictions'
+				)
+			).toBeInTheDocument();
 		});
 	});
 });

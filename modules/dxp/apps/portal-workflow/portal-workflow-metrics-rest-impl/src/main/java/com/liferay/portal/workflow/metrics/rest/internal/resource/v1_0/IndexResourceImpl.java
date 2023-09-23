@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -21,37 +12,30 @@ import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextM
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.index.RefreshIndexRequest;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Index;
 import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.IndexUtil;
 import com.liferay.portal.workflow.metrics.rest.internal.resource.exception.IndexKeyException;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.IndexResource;
 import com.liferay.portal.workflow.metrics.search.background.task.WorkflowMetricsBackgroundTaskExecutorNames;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
-import com.liferay.portal.workflow.metrics.search.index.reindexer.WorkflowMetricsReindexer;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
+import com.liferay.portal.workflow.metrics.search.index.reindexer.WorkflowMetricsReindexerRegistry;
 
 import java.io.Serializable;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.annotations.ServiceScope;
 
 /**
@@ -67,7 +51,7 @@ public class IndexResourceImpl extends BaseIndexResourceImpl {
 	public Page<Index> getIndexesPage() throws Exception {
 		return Page.of(
 			transform(
-				_indexEntityNameSet,
+				_workflowMetricsReindexerRegistry.getIndexEntityNames(),
 				indexEntityName -> IndexUtil.toIndex(
 					indexEntityName, _language,
 					ResourceBundleUtil.getModuleAndPortalResourceBundle(
@@ -93,17 +77,16 @@ public class IndexResourceImpl extends BaseIndexResourceImpl {
 
 		_searchEngineAdapter.execute(
 			new RefreshIndexRequest(
-				Stream.of(
-					indexEntityNames
-				).map(
-					_workflowMetricsIndexNameBuilderMap::get
-				).map(
-					workflowMetricsIndexNameBuilder ->
-						workflowMetricsIndexNameBuilder.getIndexName(
-							contextCompany.getCompanyId())
-				).toArray(
-					String[]::new
-				)));
+				transform(
+					indexEntityNames,
+					indexEntityName -> {
+						String indexName = _indexNameBuilder.getIndexName(
+							contextCompany.getCompanyId());
+
+						return indexName +
+							_indexNameSuffixMap.get(indexEntityName);
+					},
+					String.class)));
 	}
 
 	@Override
@@ -133,70 +116,6 @@ public class IndexResourceImpl extends BaseIndexResourceImpl {
 			new ServiceContext());
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addWorkflowMetricsIndexNameBuilder(
-		WorkflowMetricsIndexNameBuilder workflowMetricsIndexNameBuilder,
-		Map<String, Object> properties) {
-
-		String workflowMetricsIndexEntityName = GetterUtil.getString(
-			properties.get("workflow.metrics.index.entity.name"));
-
-		if (Validator.isNull(workflowMetricsIndexEntityName)) {
-			return;
-		}
-
-		_workflowMetricsIndexNameBuilderMap.put(
-			workflowMetricsIndexEntityName, workflowMetricsIndexNameBuilder);
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addWorkflowMetricsReindexer(
-		WorkflowMetricsReindexer workflowMetricsReindexer,
-		Map<String, Object> properties) {
-
-		String workflowMetricsIndexEntityName = GetterUtil.getString(
-			properties.get("workflow.metrics.index.entity.name"));
-
-		if (Validator.isNull(workflowMetricsIndexEntityName)) {
-			return;
-		}
-
-		_indexEntityNameSet.add(workflowMetricsIndexEntityName);
-	}
-
-	protected void removeWorkflowMetricsIndexNameBuilder(
-		WorkflowMetricsIndexNameBuilder workflowMetricsIndexNameBuilder,
-		Map<String, Object> properties) {
-
-		String workflowMetricsIndexEntityName = GetterUtil.getString(
-			properties.get("workflow.metrics.index.entity.name"));
-
-		_workflowMetricsIndexNameBuilderMap.remove(
-			workflowMetricsIndexEntityName);
-	}
-
-	protected void removeWorkflowMetricsReindexer(
-		WorkflowMetricsReindexer workflowMetricsReindexer,
-		Map<String, Object> properties) {
-
-		String workflowMetricsIndexEntityName = GetterUtil.getString(
-			properties.get("workflow.metrics.index.entity.name"));
-
-		if (Validator.isNull(workflowMetricsIndexEntityName)) {
-			return;
-		}
-
-		_indexEntityNameSet.remove(workflowMetricsIndexEntityName);
-	}
-
 	private String _getBackgroundTaskName(Index index) {
 		return StringBundler.concat(
 			IndexResourceImpl.class.getSimpleName(), StringPool.DASH,
@@ -204,46 +123,55 @@ public class IndexResourceImpl extends BaseIndexResourceImpl {
 	}
 
 	private String[] _getIndexEntityNames(Index index) {
+		Set<String> indexEntityNames =
+			_workflowMetricsReindexerRegistry.getIndexEntityNames();
+
 		if (Objects.equals(index.getKey(), Index.Group.ALL.getValue())) {
-			return _indexEntityNameSet.toArray(new String[0]);
+			return indexEntityNames.toArray(new String[0]);
 		}
 		else if (Objects.equals(
 					index.getKey(), Index.Group.METRIC.getValue())) {
 
-			return Stream.of(
-				_indexEntityNameSet
-			).flatMap(
-				Collection::stream
-			).filter(
-				value -> !value.startsWith("sla")
-			).toArray(
-				String[]::new
-			);
+			return ArrayUtil.filter(
+				indexEntityNames.toArray(new String[0]),
+				value -> !value.startsWith("sla"));
 		}
 		else if (Objects.equals(index.getKey(), Index.Group.SLA.getValue())) {
-			return Stream.of(
-				_indexEntityNameSet
-			).flatMap(
-				Collection::stream
-			).filter(
-				value -> value.startsWith("sla")
-			).toArray(
-				String[]::new
-			);
+			return ArrayUtil.filter(
+				indexEntityNames.toArray(new String[0]),
+				value -> value.startsWith("sla"));
 		}
-		else if (_indexEntityNameSet.contains(index.getKey())) {
+		else if (indexEntityNames.contains(index.getKey())) {
 			return new String[] {index.getKey()};
 		}
 
 		return new String[0];
 	}
 
-	private static final Set<String> _indexEntityNameSet = new HashSet<>();
-	private static final Map<String, WorkflowMetricsIndexNameBuilder>
-		_workflowMetricsIndexNameBuilderMap = new ConcurrentHashMap<>();
+	private static final Map<String, String> _indexNameSuffixMap =
+		HashMapBuilder.put(
+			"instance", WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE
+		).put(
+			"node", WorkflowMetricsIndexNameConstants.SUFFIX_NODE
+		).put(
+			"process", WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS
+		).put(
+			"sla-instance-result",
+			WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT
+		).put(
+			"sla-task-result",
+			WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT
+		).put(
+			"task", WorkflowMetricsIndexNameConstants.SUFFIX_TASK
+		).put(
+			"transition", WorkflowMetricsIndexNameConstants.SUFFIX_TRANSITION
+		).build();
 
 	@Reference
 	private BackgroundTaskLocalService _backgroundTaskLocalService;
+
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Language _language;
@@ -253,5 +181,8 @@ public class IndexResourceImpl extends BaseIndexResourceImpl {
 
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
+
+	@Reference
+	private WorkflowMetricsReindexerRegistry _workflowMetricsReindexerRegistry;
 
 }

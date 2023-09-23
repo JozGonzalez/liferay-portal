@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.order.term.contributor;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountUserRel;
-import com.liferay.commerce.account.service.CommerceAccountUserRelLocalService;
+import com.liferay.account.constants.AccountRoleConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.commerce.constants.CommerceDefinitionTermConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceSubscriptionNotificationConstants;
@@ -96,36 +87,30 @@ public class CommerceRecipientCommerceDefinitionTermContributor
 		}
 
 		if (term.equals(_ACCOUNT_ROLE_ADMINISTRATOR)) {
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 			Role accountAdminRole = _roleLocalService.getRole(
 				commerceOrder.getCompanyId(),
-				CommerceAccountConstants.ROLE_NAME_ACCOUNT_ADMINISTRATOR);
+				AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR);
 
-			return _getUserIds(commerceAccount, accountAdminRole);
+			return _getUserIds(accountEntry, accountAdminRole);
 		}
 
 		if (term.equals(_ACCOUNT_ROLE_ORDER_MANAGER)) {
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 			Role orderManagerRole = _roleLocalService.getRole(
 				commerceOrder.getCompanyId(),
-				CommerceAccountConstants.ROLE_NAME_ACCOUNT_ORDER_MANAGER);
+				AccountRoleConstants.ROLE_NAME_ACCOUNT_ORDER_MANAGER);
 
-			return _getUserIds(commerceAccount, orderManagerRole);
+			return _getUserIds(accountEntry, orderManagerRole);
 		}
 
 		if (term.equals(_ORDER_CREATOR)) {
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
-			if (commerceAccount.getType() ==
-					CommerceAccountConstants.ACCOUNT_TYPE_PERSONAL) {
-
-				User user = _userLocalService.getUser(
-					commerceAccount.getUserId());
+			if (accountEntry.isPersonalAccount()) {
+				User user = _userLocalService.getUser(accountEntry.getUserId());
 
 				return String.valueOf(user.getUserId());
 			}
@@ -156,25 +141,23 @@ public class CommerceRecipientCommerceDefinitionTermContributor
 		return new ArrayList<>(_languageKeys.keySet());
 	}
 
-	private String _getUserIds(CommerceAccount commerceAccount, Role role)
+	private String _getUserIds(AccountEntry accountEntry, Role role)
 		throws PortalException {
 
-		List<CommerceAccountUserRel> commerceAccountUserRels =
-			_commerceAccountUserRelLocalService.getCommerceAccountUserRels(
-				commerceAccount.getCommerceAccountId());
+		List<AccountEntryUserRel> accountEntryUserRels =
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountEntryId(
+					accountEntry.getAccountEntryId());
 
 		StringBundler resultsSB = new StringBundler();
 
-		for (CommerceAccountUserRel commerceAccountUserRel :
-				commerceAccountUserRels) {
-
+		for (AccountEntryUserRel accountEntryUserRel : accountEntryUserRels) {
 			List<Role> userRoles = _roleLocalService.getUserGroupRoles(
-				commerceAccountUserRel.getCommerceAccountUserId(),
-				commerceAccount.getCommerceAccountGroupId());
+				accountEntryUserRel.getAccountUserId(),
+				accountEntry.getAccountEntryGroupId());
 
 			if (userRoles.contains(role)) {
-				resultsSB.append(
-					commerceAccountUserRel.getCommerceAccountUserId());
+				resultsSB.append(accountEntryUserRel.getAccountUserId());
 				resultsSB.append(",");
 			}
 		}
@@ -183,13 +166,13 @@ public class CommerceRecipientCommerceDefinitionTermContributor
 	}
 
 	private String _getUserIds(UserGroup userGroup) throws PortalException {
-		List<User> groupUsers = _userLocalService.getUserGroupUsers(
+		long[] userIds = _userGroupLocalService.getUserPrimaryKeys(
 			userGroup.getUserGroupId());
 
 		StringBundler resultsSB = new StringBundler();
 
-		for (User user : groupUsers) {
-			resultsSB.append(user.getUserId());
+		for (long userId : userIds) {
+			resultsSB.append(userId);
 			resultsSB.append(",");
 		}
 
@@ -217,8 +200,7 @@ public class CommerceRecipientCommerceDefinitionTermContributor
 	).build();
 
 	@Reference
-	private CommerceAccountUserRelLocalService
-		_commerceAccountUserRelLocalService;
+	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Reference
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.http;
@@ -53,7 +44,7 @@ public class JournalFeedServiceHttp {
 	public static com.liferay.journal.model.JournalFeed addFeed(
 			HttpPrincipal httpPrincipal, long groupId, String feedId,
 			boolean autoFeedId, String name, String description,
-			String ddmStructureKey, String ddmTemplateKey,
+			long ddmStructureId, String ddmTemplateKey,
 			String ddmRendererTemplateKey, int delta, String orderByCol,
 			String orderByType, String targetLayoutFriendlyUrl,
 			String targetPortletId, String contentField, String feedType,
@@ -68,7 +59,7 @@ public class JournalFeedServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, feedId, autoFeedId, name, description,
-				ddmStructureKey, ddmTemplateKey, ddmRendererTemplateKey, delta,
+				ddmStructureId, ddmTemplateKey, ddmRendererTemplateKey, delta,
 				orderByCol, orderByType, targetLayoutFriendlyUrl,
 				targetPortletId, contentField, feedType, feedVersion,
 				serviceContext);
@@ -252,7 +243,7 @@ public class JournalFeedServiceHttp {
 
 	public static com.liferay.journal.model.JournalFeed updateFeed(
 			HttpPrincipal httpPrincipal, long groupId, String feedId,
-			String name, String description, String ddmStructureKey,
+			String name, String description, long ddmStructureId,
 			String ddmTemplateKey, String ddmRendererTemplateKey, int delta,
 			String orderByCol, String orderByType,
 			String targetLayoutFriendlyUrl, String targetPortletId,
@@ -266,7 +257,7 @@ public class JournalFeedServiceHttp {
 				_updateFeedParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, feedId, name, description, ddmStructureKey,
+				methodKey, groupId, feedId, name, description, ddmStructureId,
 				ddmTemplateKey, ddmRendererTemplateKey, delta, orderByCol,
 				orderByType, targetLayoutFriendlyUrl, targetPortletId,
 				contentField, feedType, feedVersion, serviceContext);
@@ -304,7 +295,7 @@ public class JournalFeedServiceHttp {
 
 	private static final Class<?>[] _addFeedParameterTypes0 = new Class[] {
 		long.class, String.class, boolean.class, String.class, String.class,
-		String.class, String.class, String.class, int.class, String.class,
+		long.class, String.class, String.class, int.class, String.class,
 		String.class, String.class, String.class, String.class, String.class,
 		double.class, com.liferay.portal.kernel.service.ServiceContext.class
 	};
@@ -321,7 +312,7 @@ public class JournalFeedServiceHttp {
 		long.class, String.class
 	};
 	private static final Class<?>[] _updateFeedParameterTypes5 = new Class[] {
-		long.class, String.class, String.class, String.class, String.class,
+		long.class, String.class, String.class, String.class, long.class,
 		String.class, String.class, int.class, String.class, String.class,
 		String.class, String.class, String.class, String.class, double.class,
 		com.liferay.portal.kernel.service.ServiceContext.class

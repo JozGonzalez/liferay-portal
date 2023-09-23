@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service.persistence;
@@ -1205,56 +1196,6 @@ public interface UserPersistence
 	public int countByC_MD(long companyId, Date modifiedDate);
 
 	/**
-	 * Returns the user where companyId = &#63; and defaultUser = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultUser the default user
-	 * @return the matching user
-	 * @throws NoSuchUserException if a matching user could not be found
-	 */
-	public User findByC_DU(long companyId, boolean defaultUser)
-		throws NoSuchUserException;
-
-	/**
-	 * Returns the user where companyId = &#63; and defaultUser = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultUser the default user
-	 * @return the matching user, or <code>null</code> if a matching user could not be found
-	 */
-	public User fetchByC_DU(long companyId, boolean defaultUser);
-
-	/**
-	 * Returns the user where companyId = &#63; and defaultUser = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultUser the default user
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching user, or <code>null</code> if a matching user could not be found
-	 */
-	public User fetchByC_DU(
-		long companyId, boolean defaultUser, boolean useFinderCache);
-
-	/**
-	 * Removes the user where companyId = &#63; and defaultUser = &#63; from the database.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultUser the default user
-	 * @return the user that was removed
-	 */
-	public User removeByC_DU(long companyId, boolean defaultUser)
-		throws NoSuchUserException;
-
-	/**
-	 * Returns the number of users where companyId = &#63; and defaultUser = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultUser the default user
-	 * @return the number of matching users
-	 */
-	public int countByC_DU(long companyId, boolean defaultUser);
-
-	/**
 	 * Returns the user where companyId = &#63; and screenName = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
 	 *
 	 * @param companyId the company ID
@@ -1503,6 +1444,160 @@ public interface UserPersistence
 	 * @return the number of matching users
 	 */
 	public int countByC_O(long companyId, String openId);
+
+	/**
+	 * Returns all the users where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @return the matching users
+	 */
+	public java.util.List<User> findByC_T(long companyId, int type);
+
+	/**
+	 * Returns a range of all the users where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of users
+	 * @param end the upper bound of the range of users (not inclusive)
+	 * @return the range of matching users
+	 */
+	public java.util.List<User> findByC_T(
+		long companyId, int type, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the users where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of users
+	 * @param end the upper bound of the range of users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching users
+	 */
+	public java.util.List<User> findByC_T(
+		long companyId, int type, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<User>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the users where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of users
+	 * @param end the upper bound of the range of users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching users
+	 */
+	public java.util.List<User> findByC_T(
+		long companyId, int type, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<User>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first user in the ordered set where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching user
+	 * @throws NoSuchUserException if a matching user could not be found
+	 */
+	public User findByC_T_First(
+			long companyId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<User>
+				orderByComparator)
+		throws NoSuchUserException;
+
+	/**
+	 * Returns the first user in the ordered set where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching user, or <code>null</code> if a matching user could not be found
+	 */
+	public User fetchByC_T_First(
+		long companyId, int type,
+		com.liferay.portal.kernel.util.OrderByComparator<User>
+			orderByComparator);
+
+	/**
+	 * Returns the last user in the ordered set where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching user
+	 * @throws NoSuchUserException if a matching user could not be found
+	 */
+	public User findByC_T_Last(
+			long companyId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<User>
+				orderByComparator)
+		throws NoSuchUserException;
+
+	/**
+	 * Returns the last user in the ordered set where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching user, or <code>null</code> if a matching user could not be found
+	 */
+	public User fetchByC_T_Last(
+		long companyId, int type,
+		com.liferay.portal.kernel.util.OrderByComparator<User>
+			orderByComparator);
+
+	/**
+	 * Returns the users before and after the current user in the ordered set where companyId = &#63; and type = &#63;.
+	 *
+	 * @param userId the primary key of the current user
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next user
+	 * @throws NoSuchUserException if a user with the primary key could not be found
+	 */
+	public User[] findByC_T_PrevAndNext(
+			long userId, long companyId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<User>
+				orderByComparator)
+		throws NoSuchUserException;
+
+	/**
+	 * Removes all the users where companyId = &#63; and type = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 */
+	public void removeByC_T(long companyId, int type);
+
+	/**
+	 * Returns the number of users where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @return the number of matching users
+	 */
+	public int countByC_T(long companyId, int type);
 
 	/**
 	 * Returns all the users where companyId = &#63; and status = &#63;.
@@ -1827,62 +1922,62 @@ public interface UserPersistence
 		long companyId, Date createDate, Date modifiedDate);
 
 	/**
-	 * Returns all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns all the users where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @return the matching users
 	 */
-	public java.util.List<User> findByC_DU_S(
-		long companyId, boolean defaultUser, int status);
+	public java.util.List<User> findByC_T_S(
+		long companyId, int type, int status);
 
 	/**
-	 * Returns a range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns a range of all the users where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @return the range of matching users
 	 */
-	public java.util.List<User> findByC_DU_S(
-		long companyId, boolean defaultUser, int status, int start, int end);
+	public java.util.List<User> findByC_T_S(
+		long companyId, int type, int status, int start, int end);
 
 	/**
-	 * Returns an ordered range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns an ordered range of all the users where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching users
 	 */
-	public java.util.List<User> findByC_DU_S(
-		long companyId, boolean defaultUser, int status, int start, int end,
+	public java.util.List<User> findByC_T_S(
+		long companyId, int type, int status, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator);
 
 	/**
-	 * Returns an ordered range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns an ordered range of all the users where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
@@ -1890,107 +1985,107 @@ public interface UserPersistence
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
-	public java.util.List<User> findByC_DU_S(
-		long companyId, boolean defaultUser, int status, int start, int end,
+	public java.util.List<User> findByC_T_S(
+		long companyId, int type, int status, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator,
 		boolean useFinderCache);
 
 	/**
-	 * Returns the first user in the ordered set where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the first user in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching user
 	 * @throws NoSuchUserException if a matching user could not be found
 	 */
-	public User findByC_DU_S_First(
-			long companyId, boolean defaultUser, int status,
+	public User findByC_T_S_First(
+			long companyId, int type, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<User>
 				orderByComparator)
 		throws NoSuchUserException;
 
 	/**
-	 * Returns the first user in the ordered set where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the first user in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching user, or <code>null</code> if a matching user could not be found
 	 */
-	public User fetchByC_DU_S_First(
-		long companyId, boolean defaultUser, int status,
+	public User fetchByC_T_S_First(
+		long companyId, int type, int status,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator);
 
 	/**
-	 * Returns the last user in the ordered set where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the last user in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching user
 	 * @throws NoSuchUserException if a matching user could not be found
 	 */
-	public User findByC_DU_S_Last(
-			long companyId, boolean defaultUser, int status,
+	public User findByC_T_S_Last(
+			long companyId, int type, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<User>
 				orderByComparator)
 		throws NoSuchUserException;
 
 	/**
-	 * Returns the last user in the ordered set where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the last user in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching user, or <code>null</code> if a matching user could not be found
 	 */
-	public User fetchByC_DU_S_Last(
-		long companyId, boolean defaultUser, int status,
+	public User fetchByC_T_S_Last(
+		long companyId, int type, int status,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator);
 
 	/**
-	 * Returns the users before and after the current user in the ordered set where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the users before and after the current user in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param userId the primary key of the current user
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the previous, current, and next user
 	 * @throws NoSuchUserException if a user with the primary key could not be found
 	 */
-	public User[] findByC_DU_S_PrevAndNext(
-			long userId, long companyId, boolean defaultUser, int status,
+	public User[] findByC_T_S_PrevAndNext(
+			long userId, long companyId, int type, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<User>
 				orderByComparator)
 		throws NoSuchUserException;
 
 	/**
-	 * Removes all the users where companyId = &#63; and defaultUser = &#63; and status = &#63; from the database.
+	 * Removes all the users where companyId = &#63; and type = &#63; and status = &#63; from the database.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 */
-	public void removeByC_DU_S(long companyId, boolean defaultUser, int status);
+	public void removeByC_T_S(long companyId, int type, int status);
 
 	/**
-	 * Returns the number of users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
+	 * Returns the number of users where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param companyId the company ID
-	 * @param defaultUser the default user
+	 * @param type the type
 	 * @param status the status
 	 * @return the number of matching users
 	 */
-	public int countByC_DU_S(long companyId, boolean defaultUser, int status);
+	public int countByC_T_S(long companyId, int type, int status);
 
 	/**
 	 * Returns the user where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -2240,32 +2335,37 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param groupPK the primary key of the group
+	 * @return <code>true</code> if an association between the user and the group was added; <code>false</code> if they were already associated
 	 */
-	public void addGroup(long pk, long groupPK);
+	public boolean addGroup(long pk, long groupPK);
 
 	/**
 	 * Adds an association between the user and the group. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param group the group
+	 * @return <code>true</code> if an association between the user and the group was added; <code>false</code> if they were already associated
 	 */
-	public void addGroup(long pk, com.liferay.portal.kernel.model.Group group);
+	public boolean addGroup(
+		long pk, com.liferay.portal.kernel.model.Group group);
 
 	/**
 	 * Adds an association between the user and the groups. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param groupPKs the primary keys of the groups
+	 * @return <code>true</code> if at least one association between the user and the groups was added; <code>false</code> if they were all already associated
 	 */
-	public void addGroups(long pk, long[] groupPKs);
+	public boolean addGroups(long pk, long[] groupPKs);
 
 	/**
 	 * Adds an association between the user and the groups. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param groups the groups
+	 * @return <code>true</code> if at least one association between the user and the groups was added; <code>false</code> if they were all already associated
 	 */
-	public void addGroups(
+	public boolean addGroups(
 		long pk, java.util.List<com.liferay.portal.kernel.model.Group> groups);
 
 	/**
@@ -2408,16 +2508,18 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param organizationPK the primary key of the organization
+	 * @return <code>true</code> if an association between the user and the organization was added; <code>false</code> if they were already associated
 	 */
-	public void addOrganization(long pk, long organizationPK);
+	public boolean addOrganization(long pk, long organizationPK);
 
 	/**
 	 * Adds an association between the user and the organization. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param organization the organization
+	 * @return <code>true</code> if an association between the user and the organization was added; <code>false</code> if they were already associated
 	 */
-	public void addOrganization(
+	public boolean addOrganization(
 		long pk, com.liferay.portal.kernel.model.Organization organization);
 
 	/**
@@ -2425,16 +2527,18 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param organizationPKs the primary keys of the organizations
+	 * @return <code>true</code> if at least one association between the user and the organizations was added; <code>false</code> if they were all already associated
 	 */
-	public void addOrganizations(long pk, long[] organizationPKs);
+	public boolean addOrganizations(long pk, long[] organizationPKs);
 
 	/**
 	 * Adds an association between the user and the organizations. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param organizations the organizations
+	 * @return <code>true</code> if at least one association between the user and the organizations was added; <code>false</code> if they were all already associated
 	 */
-	public void addOrganizations(
+	public boolean addOrganizations(
 		long pk,
 		java.util.List<com.liferay.portal.kernel.model.Organization>
 			organizations);
@@ -2581,32 +2685,36 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param rolePK the primary key of the role
+	 * @return <code>true</code> if an association between the user and the role was added; <code>false</code> if they were already associated
 	 */
-	public void addRole(long pk, long rolePK);
+	public boolean addRole(long pk, long rolePK);
 
 	/**
 	 * Adds an association between the user and the role. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param role the role
+	 * @return <code>true</code> if an association between the user and the role was added; <code>false</code> if they were already associated
 	 */
-	public void addRole(long pk, com.liferay.portal.kernel.model.Role role);
+	public boolean addRole(long pk, com.liferay.portal.kernel.model.Role role);
 
 	/**
 	 * Adds an association between the user and the roles. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param rolePKs the primary keys of the roles
+	 * @return <code>true</code> if at least one association between the user and the roles was added; <code>false</code> if they were all already associated
 	 */
-	public void addRoles(long pk, long[] rolePKs);
+	public boolean addRoles(long pk, long[] rolePKs);
 
 	/**
 	 * Adds an association between the user and the roles. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param roles the roles
+	 * @return <code>true</code> if at least one association between the user and the roles was added; <code>false</code> if they were all already associated
 	 */
-	public void addRoles(
+	public boolean addRoles(
 		long pk, java.util.List<com.liferay.portal.kernel.model.Role> roles);
 
 	/**
@@ -2746,32 +2854,36 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param teamPK the primary key of the team
+	 * @return <code>true</code> if an association between the user and the team was added; <code>false</code> if they were already associated
 	 */
-	public void addTeam(long pk, long teamPK);
+	public boolean addTeam(long pk, long teamPK);
 
 	/**
 	 * Adds an association between the user and the team. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param team the team
+	 * @return <code>true</code> if an association between the user and the team was added; <code>false</code> if they were already associated
 	 */
-	public void addTeam(long pk, com.liferay.portal.kernel.model.Team team);
+	public boolean addTeam(long pk, com.liferay.portal.kernel.model.Team team);
 
 	/**
 	 * Adds an association between the user and the teams. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param teamPKs the primary keys of the teams
+	 * @return <code>true</code> if at least one association between the user and the teams was added; <code>false</code> if they were all already associated
 	 */
-	public void addTeams(long pk, long[] teamPKs);
+	public boolean addTeams(long pk, long[] teamPKs);
 
 	/**
 	 * Adds an association between the user and the teams. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param teams the teams
+	 * @return <code>true</code> if at least one association between the user and the teams was added; <code>false</code> if they were all already associated
 	 */
-	public void addTeams(
+	public boolean addTeams(
 		long pk, java.util.List<com.liferay.portal.kernel.model.Team> teams);
 
 	/**
@@ -2912,16 +3024,18 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param userGroupPK the primary key of the user group
+	 * @return <code>true</code> if an association between the user and the user group was added; <code>false</code> if they were already associated
 	 */
-	public void addUserGroup(long pk, long userGroupPK);
+	public boolean addUserGroup(long pk, long userGroupPK);
 
 	/**
 	 * Adds an association between the user and the user group. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param userGroup the user group
+	 * @return <code>true</code> if an association between the user and the user group was added; <code>false</code> if they were already associated
 	 */
-	public void addUserGroup(
+	public boolean addUserGroup(
 		long pk, com.liferay.portal.kernel.model.UserGroup userGroup);
 
 	/**
@@ -2929,16 +3043,18 @@ public interface UserPersistence
 	 *
 	 * @param pk the primary key of the user
 	 * @param userGroupPKs the primary keys of the user groups
+	 * @return <code>true</code> if at least one association between the user and the user groups was added; <code>false</code> if they were all already associated
 	 */
-	public void addUserGroups(long pk, long[] userGroupPKs);
+	public boolean addUserGroups(long pk, long[] userGroupPKs);
 
 	/**
 	 * Adds an association between the user and the user groups. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the user
 	 * @param userGroups the user groups
+	 * @return <code>true</code> if at least one association between the user and the user groups was added; <code>false</code> if they were all already associated
 	 */
-	public void addUserGroups(
+	public boolean addUserGroups(
 		long pk,
 		java.util.List<com.liferay.portal.kernel.model.UserGroup> userGroups);
 

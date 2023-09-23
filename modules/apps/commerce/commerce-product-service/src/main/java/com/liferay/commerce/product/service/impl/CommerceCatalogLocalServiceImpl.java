@@ -1,19 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.impl;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.AccountEntryStatusException;
+import com.liferay.account.exception.AccountEntryTypeException;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.product.constants.CommerceCatalogConstants;
 import com.liferay.commerce.product.exception.CommerceCatalogProductsException;
 import com.liferay.commerce.product.exception.CommerceCatalogSystemException;
@@ -49,6 +45,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -73,10 +70,12 @@ public class CommerceCatalogLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCatalog addCommerceCatalog(
-			String externalReferenceCode, String name,
+			String externalReferenceCode, long accountEntryId, String name,
 			String commerceCurrencyCode, String catalogDefaultLanguageId,
 			boolean system, ServiceContext serviceContext)
 		throws PortalException {
+
+		_validateAccountEntry(accountEntryId);
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
@@ -93,6 +92,7 @@ public class CommerceCatalogLocalServiceImpl
 		commerceCatalog.setCompanyId(user.getCompanyId());
 		commerceCatalog.setUserId(user.getUserId());
 		commerceCatalog.setUserName(user.getFullName());
+		commerceCatalog.setAccountEntryId(accountEntryId);
 		commerceCatalog.setName(name);
 		commerceCatalog.setCommerceCurrencyCode(commerceCurrencyCode);
 		commerceCatalog.setCatalogDefaultLanguageId(catalogDefaultLanguageId);
@@ -126,8 +126,9 @@ public class CommerceCatalogLocalServiceImpl
 		throws PortalException {
 
 		return commerceCatalogLocalService.addCommerceCatalog(
-			externalReferenceCode, name, commerceCurrencyCode,
-			catalogDefaultLanguageId, false, serviceContext);
+			externalReferenceCode, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			name, commerceCurrencyCode, catalogDefaultLanguageId, false,
+			serviceContext);
 	}
 
 	@Override
@@ -136,18 +137,19 @@ public class CommerceCatalogLocalServiceImpl
 
 		Company company = _companyLocalService.getCompany(companyId);
 
-		User defaultUser = company.getDefaultUser();
+		User guestUser = company.getGuestUser();
 
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setCompanyId(company.getCompanyId());
-		serviceContext.setUserId(defaultUser.getUserId());
+		serviceContext.setUserId(guestUser.getUserId());
 		serviceContext.setUuid(_portalUUID.generate());
 
 		return commerceCatalogLocalService.addCommerceCatalog(
-			null, CommerceCatalogConstants.MASTER_COMMERCE_CATALOG,
+			null, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			CommerceCatalogConstants.MASTER_COMMERCE_CATALOG,
 			CommerceCatalogConstants.MASTER_COMMERCE_DEFAULT_CURRENCY,
-			defaultUser.getLanguageId(), true, serviceContext);
+			guestUser.getLanguageId(), true, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -284,6 +286,13 @@ public class CommerceCatalogLocalServiceImpl
 	}
 
 	@Override
+	public List<CommerceCatalog> getCommerceCatalogsByAccountEntryId(
+		long accountEntryId) {
+
+		return commerceCatalogPersistence.findByAccountEntryId(accountEntryId);
+	}
+
+	@Override
 	public List<CommerceCatalog> search(long companyId) throws PortalException {
 		return search(
 			companyId, StringPool.BLANK, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
@@ -318,13 +327,16 @@ public class CommerceCatalogLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCatalog updateCommerceCatalog(
-			long commerceCatalogId, String name, String commerceCurrencyCode,
-			String catalogDefaultLanguageId)
+			long commerceCatalogId, long accountEntryId, String name,
+			String commerceCurrencyCode, String catalogDefaultLanguageId)
 		throws PortalException {
+
+		_validateAccountEntry(accountEntryId);
 
 		CommerceCatalog commerceCatalog =
 			commerceCatalogPersistence.findByPrimaryKey(commerceCatalogId);
 
+		commerceCatalog.setAccountEntryId(accountEntryId);
 		commerceCatalog.setName(name);
 		commerceCatalog.setCommerceCurrencyCode(commerceCurrencyCode);
 		commerceCatalog.setCatalogDefaultLanguageId(catalogDefaultLanguageId);
@@ -447,9 +459,39 @@ public class CommerceCatalogLocalServiceImpl
 		}
 	}
 
+	private void _validateAccountEntry(long accountEntryId)
+		throws PortalException {
+
+		if (accountEntryId == 0) {
+			return;
+		}
+
+		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+			accountEntryId);
+
+		if (!StringUtil.equals(
+				accountEntry.getType(),
+				AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER)) {
+
+			throw new AccountEntryTypeException(
+				"Commerce catalogs can only be assigned with an account " +
+					"entry type:" +
+						AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER);
+		}
+
+		if (accountEntry.getStatus() != WorkflowConstants.STATUS_APPROVED) {
+			throw new AccountEntryStatusException(
+				"Commerce catalogs can only be assigned with an approved " +
+					"account entry");
+		}
+	}
+
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID
 	};
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;

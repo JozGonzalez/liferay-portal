@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.subscription.service.persistence.impl;
@@ -50,7 +41,6 @@ import com.liferay.subscription.service.persistence.impl.constants.SubscriptionP
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -3131,21 +3121,21 @@ public class SubscriptionPersistenceImpl
 		long companyId, long userId, long classNameId, long classPK,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			Subscription.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {companyId, userId, classNameId, classPK};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByC_U_C_C, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			Subscription.class);
 
 		if (result instanceof Subscription) {
 			Subscription subscription = (Subscription)result;
@@ -3157,6 +3147,14 @@ public class SubscriptionPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						Subscription.class, subscription.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -4369,30 +4367,14 @@ public class SubscriptionPersistenceImpl
 			new String[] {"companyId", "userId", "classNameId", "classPK"},
 			false);
 
-		_setSubscriptionUtilPersistence(this);
+		SubscriptionUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setSubscriptionUtilPersistence(null);
+		SubscriptionUtil.setPersistence(null);
 
 		entityCache.removeCache(SubscriptionImpl.class.getName());
-	}
-
-	private void _setSubscriptionUtilPersistence(
-		SubscriptionPersistence subscriptionPersistence) {
-
-		try {
-			Field field = SubscriptionUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, subscriptionPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

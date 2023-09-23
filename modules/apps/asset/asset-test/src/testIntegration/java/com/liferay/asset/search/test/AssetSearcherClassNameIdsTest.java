@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.search.AssetSearcherFactory;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
@@ -27,6 +19,7 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.BaseSearcher;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -40,7 +33,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.asset.util.AssetSearcher;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,12 +174,14 @@ public class AssetSearcherClassNameIdsTest {
 			AssetEntryQuery assetEntryQuery, SearchContext searchContext)
 		throws Exception {
 
-		AssetSearcher assetSearcher = new AssetSearcher();
+		BaseSearcher baseSearcher = _assetSearcherFactory.createBaseSearcher(
+			assetEntryQuery);
 
-		assetSearcher.setAssetEntryQuery(assetEntryQuery);
-
-		return assetSearcher.search(searchContext);
+		return baseSearcher.search(searchContext);
 	}
+
+	@Inject
+	private static AssetSearcherFactory _assetSearcherFactory;
 
 	@Inject
 	private static BlogsEntryLocalService _blogsEntryLocalService;

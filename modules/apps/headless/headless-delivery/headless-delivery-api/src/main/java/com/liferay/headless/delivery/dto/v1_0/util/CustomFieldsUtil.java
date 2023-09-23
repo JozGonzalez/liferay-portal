@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0.util;
@@ -38,12 +29,13 @@ import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.ParseException;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Function;
 
 /**
  * @author Javier Gamarra
@@ -104,10 +96,10 @@ public class CustomFieldsUtil {
 				map.put(fieldName, _parseDate(String.valueOf(data)));
 			}
 			else if (ExpandoColumnConstants.DOUBLE_ARRAY == attributeType) {
-				map.put(fieldName, ArrayUtil.toDoubleArray((List<Number>)data));
+				map.put(fieldName, _toArray(data, ArrayUtil::toDoubleArray));
 			}
 			else if (ExpandoColumnConstants.FLOAT_ARRAY == attributeType) {
-				map.put(fieldName, ArrayUtil.toFloatArray((List<Number>)data));
+				map.put(fieldName, _toArray(data, ArrayUtil::toFloatArray));
 			}
 			else if (ExpandoColumnConstants.GEOLOCATION == attributeType) {
 				Geo geo = customValue.getGeo();
@@ -121,15 +113,18 @@ public class CustomFieldsUtil {
 					).toString());
 			}
 			else if (ExpandoColumnConstants.INTEGER_ARRAY == attributeType) {
-				map.put(fieldName, ArrayUtil.toIntArray((List<Number>)data));
+				map.put(fieldName, _toArray(data, ArrayUtil::toIntArray));
 			}
 			else if (ExpandoColumnConstants.LONG_ARRAY == attributeType) {
-				map.put(fieldName, ArrayUtil.toLongArray((List<Number>)data));
+				map.put(
+					fieldName,
+					_toArray(
+						data,
+						(Function<Collection<Number>, Serializable>)
+							ArrayUtil::toLongArray));
 			}
 			else if (ExpandoColumnConstants.STRING_ARRAY == attributeType) {
-				List<?> list = (List<?>)data;
-
-				map.put(fieldName, list.toArray(new String[0]));
+				map.put(fieldName, _toArray(data, ArrayUtil::toStringArray));
 			}
 			else if (ExpandoColumnConstants.STRING_LOCALIZED == attributeType) {
 				map.put(
@@ -220,6 +215,16 @@ public class CustomFieldsUtil {
 			throw new IllegalArgumentException(
 				"Unable to parse date from " + data, parseException);
 		}
+	}
+
+	private static <T> Serializable _toArray(
+		Object data, Function<Collection<T>, Serializable> function) {
+
+		if (data instanceof Collection) {
+			return function.apply((Collection)data);
+		}
+
+		return (Serializable)data;
 	}
 
 	private static CustomField _toCustomField(

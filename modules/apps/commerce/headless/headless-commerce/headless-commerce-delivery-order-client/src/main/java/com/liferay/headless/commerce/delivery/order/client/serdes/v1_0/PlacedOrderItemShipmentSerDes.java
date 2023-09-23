@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.order.client.serdes.v1_0;
 
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderItemShipment;
 import com.liferay.headless.commerce.delivery.order.client.json.BaseJSONParser;
+
+import java.math.BigDecimal;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -239,6 +232,16 @@ public class PlacedOrderItemShipmentSerDes {
 			sb.append(String.valueOf(placedOrderItemShipment.getStatus()));
 		}
 
+		if (placedOrderItemShipment.getSupplierShipment() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"supplierShipment\": ");
+
+			sb.append(placedOrderItemShipment.getSupplierShipment());
+		}
+
 		if (placedOrderItemShipment.getTrackingNumber() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -249,6 +252,34 @@ public class PlacedOrderItemShipmentSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(placedOrderItemShipment.getTrackingNumber()));
+
+			sb.append("\"");
+		}
+
+		if (placedOrderItemShipment.getTrackingURL() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"trackingURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrderItemShipment.getTrackingURL()));
+
+			sb.append("\"");
+		}
+
+		if (placedOrderItemShipment.getUnitOfMeasureKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"unitOfMeasureKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrderItemShipment.getUnitOfMeasureKey()));
 
 			sb.append("\"");
 		}
@@ -404,6 +435,15 @@ public class PlacedOrderItemShipmentSerDes {
 				"status", String.valueOf(placedOrderItemShipment.getStatus()));
 		}
 
+		if (placedOrderItemShipment.getSupplierShipment() == null) {
+			map.put("supplierShipment", null);
+		}
+		else {
+			map.put(
+				"supplierShipment",
+				String.valueOf(placedOrderItemShipment.getSupplierShipment()));
+		}
+
 		if (placedOrderItemShipment.getTrackingNumber() == null) {
 			map.put("trackingNumber", null);
 		}
@@ -411,6 +451,24 @@ public class PlacedOrderItemShipmentSerDes {
 			map.put(
 				"trackingNumber",
 				String.valueOf(placedOrderItemShipment.getTrackingNumber()));
+		}
+
+		if (placedOrderItemShipment.getTrackingURL() == null) {
+			map.put("trackingURL", null);
+		}
+		else {
+			map.put(
+				"trackingURL",
+				String.valueOf(placedOrderItemShipment.getTrackingURL()));
+		}
+
+		if (placedOrderItemShipment.getUnitOfMeasureKey() == null) {
+			map.put("unitOfMeasureKey", null);
+		}
+		else {
+			map.put(
+				"unitOfMeasureKey",
+				String.valueOf(placedOrderItemShipment.getUnitOfMeasureKey()));
 		}
 
 		return map;
@@ -495,7 +553,7 @@ public class PlacedOrderItemShipmentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				if (jsonParserFieldValue != null) {
 					placedOrderItemShipment.setQuantity(
-						Integer.valueOf((String)jsonParserFieldValue));
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
@@ -524,9 +582,27 @@ public class PlacedOrderItemShipmentSerDes {
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "supplierShipment")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItemShipment.setSupplierShipment(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "trackingNumber")) {
 				if (jsonParserFieldValue != null) {
 					placedOrderItemShipment.setTrackingNumber(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "trackingURL")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItemShipment.setTrackingURL(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItemShipment.setUnitOfMeasureKey(
 						(String)jsonParserFieldValue);
 				}
 			}

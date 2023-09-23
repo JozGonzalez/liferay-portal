@@ -1,26 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.subscription.type.web.internal;
 
+import com.liferay.commerce.exception.CPSubscriptionTypeSettingsException;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.subscription.type.web.internal.constants.CPSubscriptionTypeConstants;
 import com.liferay.commerce.product.util.CPSubscriptionType;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -41,6 +37,17 @@ import org.osgi.service.component.annotations.Reference;
 	service = CPSubscriptionType.class
 )
 public class MonthlyCPSubscriptionTypeImpl implements CPSubscriptionType {
+
+	@Override
+	public UnicodeProperties
+			getDeliverySubscriptionTypeSettingsUnicodeProperties(
+				UnicodeProperties subscriptionTypeSettingsUnicodeProperties)
+		throws PortalException {
+
+		return _getSubscriptionTypeSettingsUnicodeProperties(
+			"deliveryMonthlyMode", "deliveryMonthDay",
+			subscriptionTypeSettingsUnicodeProperties);
+	}
 
 	@Override
 	public String getLabel(Locale locale) {
@@ -140,6 +147,83 @@ public class MonthlyCPSubscriptionTypeImpl implements CPSubscriptionType {
 		}
 
 		return calendar.getTime();
+	}
+
+	@Override
+	public UnicodeProperties getSubscriptionTypeSettingsUnicodeProperties(
+			UnicodeProperties subscriptionTypeSettingsUnicodeProperties)
+		throws PortalException {
+
+		return _getSubscriptionTypeSettingsUnicodeProperties(
+			"monthlyMode", "monthDay",
+			subscriptionTypeSettingsUnicodeProperties);
+	}
+
+	private UnicodeProperties _getSubscriptionTypeSettingsUnicodeProperties(
+			String monthlyModeKey, String monthDayKey,
+			UnicodeProperties subscriptionTypeSettingsUnicodeProperties)
+		throws CPSubscriptionTypeSettingsException {
+
+		if (subscriptionTypeSettingsUnicodeProperties == null) {
+			return null;
+		}
+
+		String monthlyModeValue = subscriptionTypeSettingsUnicodeProperties.get(
+			monthlyModeKey);
+
+		if (Validator.isBlank(monthlyModeValue)) {
+			throw new CPSubscriptionTypeSettingsException(
+				"The " + monthlyModeKey + " field is mandatory");
+		}
+
+		int monthlyMode = GetterUtil.getInteger(monthlyModeValue, -1);
+
+		return UnicodePropertiesBuilder.create(
+			true
+		).put(
+			monthDayKey,
+			() -> {
+				if (monthlyMode ==
+						CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH) {
+
+					String monthDayValue =
+						subscriptionTypeSettingsUnicodeProperties.get(
+							monthDayKey);
+
+					if (Validator.isBlank(monthDayValue)) {
+						throw new CPSubscriptionTypeSettingsException(
+							"The " + monthDayKey + " field is mandatory");
+					}
+
+					int monthDay = GetterUtil.getInteger(monthDayValue, -1);
+
+					if ((monthDay < 1) || (monthDay > 31)) {
+						throw new CPSubscriptionTypeSettingsException(
+							StringBundler.concat(
+								"Invalid ", monthDayKey, " ", monthDayValue));
+					}
+
+					return monthDayValue;
+				}
+
+				return null;
+			}
+		).put(
+			monthlyModeKey,
+			() -> {
+				if ((monthlyMode <
+						CPSubscriptionTypeConstants.MODE_ORDER_DATE) ||
+					(monthlyMode >
+						CPSubscriptionTypeConstants.MODE_LAST_DAY_OF_MONTH)) {
+
+					throw new CPSubscriptionTypeSettingsException(
+						StringBundler.concat(
+							"Invalid ", monthlyModeKey, " ", monthlyModeValue));
+				}
+
+				return monthlyModeValue;
+			}
+		).build();
 	}
 
 	@Reference

@@ -1,47 +1,44 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.util;
 
 import com.liferay.petra.lang.CentralizedThreadLocal;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * @author Matija Petanjek
  */
 public class ItemIndexThreadLocal {
 
-	public static int get(Object item) {
-		Map<Object, Integer> itemIndexMap = _itemIndexMap.get();
+	public static void add(int itemIndex) {
+		Queue<Integer> indexQueue = _indexQueue.get();
 
-		return itemIndexMap.get(item);
+		indexQueue.add(itemIndex);
 	}
 
-	public static void put(Object item, int itemIndex) {
-		Map<Object, Integer> itemIndexMap = _itemIndexMap.get();
-
-		itemIndexMap.put(item, itemIndex);
+	public static void clear() {
+		_indexQueue.remove();
 	}
 
-	public static void remove() {
-		_itemIndexMap.remove();
+	public static int get() {
+		Queue<Integer> indexQueue = _indexQueue.get();
+
+		return indexQueue.peek();
 	}
 
-	private static final ThreadLocal<Map<Object, Integer>> _itemIndexMap =
+	public static int remove() {
+		Queue<Integer> indexQueue = _indexQueue.get();
+
+		return indexQueue.remove();
+	}
+
+	private static final ThreadLocal<Queue<Integer>> _indexQueue =
 		new CentralizedThreadLocal<>(
-			ItemIndexThreadLocal.class + "._itemIndexMap", HashMap::new);
+			ItemIndexThreadLocal.class + "._indexQueue", LinkedList::new);
 
 }

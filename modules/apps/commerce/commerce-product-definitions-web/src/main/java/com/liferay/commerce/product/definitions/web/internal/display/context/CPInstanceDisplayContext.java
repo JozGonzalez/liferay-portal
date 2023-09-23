@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.display.context;
@@ -17,18 +8,23 @@ package com.liferay.commerce.product.definitions.web.internal.display.context;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
-import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
-import com.liferay.commerce.product.ddm.DDMHelper;
+import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
+import com.liferay.commerce.price.list.model.CommercePriceEntry;
+import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayContext;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.option.CommerceOptionType;
+import com.liferay.commerce.product.option.CommerceOptionTypeRegistry;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
 import com.liferay.commerce.product.util.CPInstanceHelper;
@@ -69,22 +65,24 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 	public CPInstanceDisplayContext(
 		ActionHelper actionHelper, HttpServletRequest httpServletRequest,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
-		CommercePriceFormatter commercePriceFormatter,
+		CommerceOptionTypeRegistry commerceOptionTypeRegistry,
+		CommercePriceEntryService commercePriceEntryService,
 		CommerceProductPriceCalculation commerceProductPriceCalculation,
 		CPDefinitionOptionRelService cpDefinitionOptionRelService,
 		CPInstanceHelper cpInstanceHelper,
-		CPMeasurementUnitLocalService cpMeasurementUnitLocalService,
-		DDMHelper ddmHelper) {
+		CPInstanceUnitOfMeasureService cpInstanceUnitOfMeasureService,
+		CPMeasurementUnitLocalService cpMeasurementUnitLocalService) {
 
 		super(actionHelper, httpServletRequest);
 
 		_commerceCurrencyLocalService = commerceCurrencyLocalService;
-		_commercePriceFormatter = commercePriceFormatter;
+		_commerceOptionTypeRegistry = commerceOptionTypeRegistry;
+		_commercePriceEntryService = commercePriceEntryService;
 		_commerceProductPriceCalculation = commerceProductPriceCalculation;
 		_cpDefinitionOptionRelService = cpDefinitionOptionRelService;
 		_cpInstanceHelper = cpInstanceHelper;
+		_cpInstanceUnitOfMeasureService = cpInstanceUnitOfMeasureService;
 		_cpMeasurementUnitLocalService = cpMeasurementUnitLocalService;
-		_ddmHelper = ddmHelper;
 	}
 
 	public Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
@@ -107,6 +105,16 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 		}
 
 		return StringPool.BLANK;
+	}
+
+	public CommercePriceEntry getCommercePriceEntry(CPInstance cpInstance) {
+		if (cpInstance == null) {
+			return null;
+		}
+
+		return _commercePriceEntryService.getInstanceBaseCommercePriceEntry(
+			cpInstance.getCPInstanceUuid(),
+			CommercePriceListConstants.TYPE_PRICE_LIST, StringPool.BLANK);
 	}
 
 	public List<CPDefinitionOptionRel> getCPDefinitionOptionRels()
@@ -255,7 +263,8 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 
 		CommerceMoney commerceMoney =
 			_commerceProductPriceCalculation.getBasePrice(
-				cpInstance.getCPInstanceId(), getCommerceCurrency());
+				cpInstance.getCPInstanceId(), getCommerceCurrency(),
+				_getPrimaryUnitOfMeasureKey(cpInstance.getCPInstanceId()));
 
 		return round(commerceMoney.getPrice());
 	}
@@ -269,7 +278,8 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 
 		CommerceMoney commerceMoney =
 			_commerceProductPriceCalculation.getBasePromoPrice(
-				cpInstance.getCPInstanceId(), getCommerceCurrency());
+				cpInstance.getCPInstanceId(), getCommerceCurrency(),
+				_getPrimaryUnitOfMeasureKey(cpInstance.getCPInstanceId()));
 
 		return round(commerceMoney.getPrice());
 	}
@@ -327,16 +337,24 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 			getCPInstanceId(), null);
 	}
 
-	public String renderOptions(HttpServletResponse httpServletResponse)
-		throws PortalException {
+	public void renderOptions(HttpServletResponse httpServletResponse)
+		throws Exception {
 
-		CPDefinition cpDefinition = getCPDefinition();
+		List<CPDefinitionOptionRel> cpDefinitionOptionRels =
+			_cpDefinitionOptionRelService.getCPDefinitionOptionRels(
+				getCPDefinitionId(), true);
 
-		return _ddmHelper.renderCPInstanceOptions(
-			getCPDefinitionId(), null, cpDefinition.isIgnoreSKUCombinations(),
-			httpServletRequest, httpServletResponse,
-			_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
-				getCPDefinitionId(), true, false));
+		for (CPDefinitionOptionRel cpDefinitionOptionRel :
+				cpDefinitionOptionRels) {
+
+			CommerceOptionType commerceOptionType =
+				_commerceOptionTypeRegistry.getCommerceOptionType(
+					cpDefinitionOptionRel.getCommerceOptionTypeKey());
+
+			commerceOptionType.render(
+				cpDefinitionOptionRel, 0, true, null, httpServletRequest,
+				httpServletResponse);
+		}
 	}
 
 	public BigDecimal round(BigDecimal value) throws PortalException {
@@ -387,14 +405,32 @@ public class CPInstanceDisplayContext extends BaseCPDefinitionsDisplayContext {
 		).buildString();
 	}
 
+	private String _getPrimaryUnitOfMeasureKey(long cpInstanceId)
+		throws PortalException {
+
+		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+			_cpInstanceUnitOfMeasureService.fetchPrimaryCPInstanceUnitOfMeasure(
+				cpInstanceId);
+
+		String unitOfMeasureKey = StringPool.BLANK;
+
+		if (cpInstanceUnitOfMeasure != null) {
+			unitOfMeasureKey = cpInstanceUnitOfMeasure.getKey();
+		}
+
+		return unitOfMeasureKey;
+	}
+
 	private final CommerceCurrencyLocalService _commerceCurrencyLocalService;
-	private final CommercePriceFormatter _commercePriceFormatter;
+	private final CommerceOptionTypeRegistry _commerceOptionTypeRegistry;
+	private final CommercePriceEntryService _commercePriceEntryService;
 	private final CommerceProductPriceCalculation
 		_commerceProductPriceCalculation;
 	private final CPDefinitionOptionRelService _cpDefinitionOptionRelService;
 	private CPInstance _cpInstance;
 	private final CPInstanceHelper _cpInstanceHelper;
+	private final CPInstanceUnitOfMeasureService
+		_cpInstanceUnitOfMeasureService;
 	private final CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
-	private final DDMHelper _ddmHelper;
 
 }

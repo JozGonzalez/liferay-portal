@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import '@testing-library/jest-dom/extend-expect';
@@ -127,31 +118,31 @@ describe('LayoutBreadcrumbs', () => {
 	it('renders item in breadcrumbs when selecting it', () => {
 		renderComponent({activeItemId: 'item-1'});
 
-		expect(screen.queryAllByTitle('Item 1')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
 	});
 
 	it('renders ancestors in breadcrumbs when selecting an item', () => {
 		renderComponent({activeItemId: 'item-3'});
 
-		expect(screen.queryAllByTitle('Item 3')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 3')[0]).toBeInTheDocument();
 
-		expect(screen.queryAllByTitle('Item 2')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 2')[0]).toBeInTheDocument();
 
-		expect(screen.queryAllByTitle('Item 1')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
 	});
 
 	it('does not render children in breadcrumbs when selecting an item', () => {
 		renderComponent({activeItemId: 'item-2'});
 
-		expect(screen.queryByTitle('Item 3')).not.toBeInTheDocument();
+		expect(screen.queryByText('Item 3')).not.toBeInTheDocument();
 	});
 
 	it('does not render columns in breadcrumbs even if they are in the path', () => {
 		renderComponent({activeItemId: 'item-4'});
 
-		expect(screen.queryAllByTitle('Item 4')[0]).toBeInTheDocument();
-		expect(screen.queryAllByTitle('grid')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 4')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('grid')[0]).toBeInTheDocument();
 
-		expect(screen.queryByTitle('column')).not.toBeInTheDocument();
+		expect(screen.queryByText('column')).not.toBeInTheDocument();
 	});
 });

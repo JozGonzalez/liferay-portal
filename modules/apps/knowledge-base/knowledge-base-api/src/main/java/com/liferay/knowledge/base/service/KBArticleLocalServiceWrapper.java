@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service;
@@ -17,6 +8,7 @@ package com.liferay.knowledge.base.service;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -69,16 +61,17 @@ public class KBArticleLocalServiceWrapper
 			String externalReferenceCode, long userId,
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			String title, String urlTitle, String content, String description,
-			String[] sections, String sourceURL, java.util.Date expirationDate,
-			java.util.Date reviewDate, String[] selectedFileNames,
+			String[] sections, String sourceURL, java.util.Date displayDate,
+			java.util.Date expirationDate, java.util.Date reviewDate,
+			String[] selectedFileNames,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbArticleLocalService.addKBArticle(
 			externalReferenceCode, userId, parentResourceClassNameId,
 			parentResourcePrimKey, title, urlTitle, content, description,
-			sections, sourceURL, expirationDate, reviewDate, selectedFileNames,
-			serviceContext);
+			sections, sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, serviceContext);
 	}
 
 	@Override
@@ -136,10 +129,10 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
-	public void checkKBArticles()
+	public void checkKBArticles(long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_kbArticleLocalService.checkKBArticles();
+		_kbArticleLocalService.checkKBArticles(companyId);
 	}
 
 	/**
@@ -867,15 +860,16 @@ public class KBArticleLocalServiceWrapper
 	public KBArticle updateKBArticle(
 			long userId, long resourcePrimKey, String title, String content,
 			String description, String[] sections, String sourceURL,
-			java.util.Date expirationDate, java.util.Date reviewDate,
-			String[] selectedFileNames, long[] removeFileEntryIds,
+			java.util.Date displayDate, java.util.Date expirationDate,
+			java.util.Date reviewDate, String[] selectedFileNames,
+			long[] removeFileEntryIds,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbArticleLocalService.updateKBArticle(
 			userId, resourcePrimKey, title, content, description, sections,
-			sourceURL, expirationDate, reviewDate, selectedFileNames,
-			removeFileEntryIds, serviceContext);
+			sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, removeFileEntryIds, serviceContext);
 	}
 
 	@Override
@@ -921,6 +915,11 @@ public class KBArticleLocalServiceWrapper
 
 		return _kbArticleLocalService.updateStatus(
 			userId, resourcePrimKey, status, serviceContext);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _kbArticleLocalService.getBasePersistence();
 	}
 
 	@Override

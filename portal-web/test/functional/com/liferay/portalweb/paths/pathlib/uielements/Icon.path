@@ -31,6 +31,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_N</td>
+	<td>xpath=(//*[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]])[${key_indexNumber}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_ENABLED</td>
 	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]][not(@disabled='')]</td>
 	<td></td>
@@ -87,7 +92,7 @@
 </tr>
 <tr>
 	<td>CLOSE_ALERT</td>
-	<td>//*[@role='alert'] //button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
+	<td>//div[contains(@class,'alert')]//button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -178,6 +183,11 @@
 <tr>
 	<td>EDIT_TAGS_DISABLED</td>
 	<td>//button[*[name()='svg'][contains(@class,'icon-tag')] and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EXCLAMATION_MARK</td>
+	<td>//*[contains(.,'${key_pageName}')]/*[name()='svg'][contains(@class,'icon-warning')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -409,6 +419,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>NAVBAR_ELLIPSIS</td>
+	<td>//ul[contains(@class,'navbar')]//*[*[name()='svg'][contains(@class,'icon-ellipsis-v')]]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>VERTICAL_ELLIPSIS_INDEXED</td>
 	<td>xpath=(//*[contains(.,'${key_text}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]])[${key_index}]</td>
 	<td></td>
@@ -470,7 +485,7 @@
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -480,7 +495,7 @@
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS_SAFARI</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[contains(@class, 'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>

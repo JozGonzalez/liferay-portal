@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -22,8 +13,6 @@ import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleService;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -57,6 +46,25 @@ public class KnowledgeBaseAttachmentResourceImpl
 
 		_portletFileRepository.deletePortletFileEntry(
 			knowledgeBaseAttachmentId);
+	}
+
+	@Override
+	public void
+			deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		KBArticle kbArticle =
+			_kbArticleService.getLatestKBArticleByExternalReferenceCode(
+				siteId, knowledgeBaseArticleExternalReferenceCode);
+
+		FileEntry fileEntry =
+			kbArticle.getAttachmentsFileEntryByExternalReferenceCode(
+				externalReferenceCode);
+
+		_portletFileRepository.deletePortletFileEntry(
+			fileEntry.getFileEntryId());
 	}
 
 	@Override
@@ -104,8 +112,8 @@ public class KnowledgeBaseAttachmentResourceImpl
 				siteId, knowledgeBaseArticleExternalReferenceCode);
 
 		return _toKnowledgeBaseAttachment(
-			_portletFileRepository.getPortletFileEntryByExternalReferenceCode(
-				externalReferenceCode, kbArticle.getGroupId()));
+			kbArticle.getAttachmentsFileEntryByExternalReferenceCode(
+				externalReferenceCode));
 	}
 
 	@Override
@@ -130,75 +138,7 @@ public class KnowledgeBaseAttachmentResourceImpl
 				KBArticle.class.getName(), kbArticle.getClassPK(),
 				KBConstants.SERVICE_NAME, kbArticle.getAttachmentsFolderId(),
 				binaryFile.getInputStream(), binaryFile.getFileName(),
-				binaryFile.getFileName(), false));
-	}
-
-	@Override
-	public KnowledgeBaseAttachment
-			postSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
-				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
-				String externalReferenceCode, MultipartBody multipartBody)
-		throws Exception {
-
-		BinaryFile binaryFile = multipartBody.getBinaryFile("file");
-
-		if (binaryFile == null) {
-			throw new BadRequestException("No file found in body");
-		}
-
-		KBArticle kbArticle =
-			_kbArticleService.getLatestKBArticleByExternalReferenceCode(
-				siteId, knowledgeBaseArticleExternalReferenceCode);
-
-		return _toKnowledgeBaseAttachment(
-			_portletFileRepository.addPortletFileEntry(
-				externalReferenceCode, kbArticle.getGroupId(),
-				contextUser.getUserId(), KBArticle.class.getName(),
-				kbArticle.getClassPK(), KBConstants.SERVICE_NAME,
-				kbArticle.getAttachmentsFolderId(), binaryFile.getInputStream(),
-				binaryFile.getFileName(), binaryFile.getFileName(), false));
-	}
-
-	@Override
-	public KnowledgeBaseAttachment
-			putSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
-				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
-				String externalReferenceCode, MultipartBody multipartBody)
-		throws Exception {
-
-		BinaryFile binaryFile = multipartBody.getBinaryFile("file");
-
-		if (binaryFile == null) {
-			throw new BadRequestException("No file found in body");
-		}
-
-		KBArticle kbArticle =
-			_kbArticleService.getLatestKBArticleByExternalReferenceCode(
-				siteId, knowledgeBaseArticleExternalReferenceCode);
-
-		try {
-			FileEntry portletFileEntry =
-				_portletFileRepository.
-					getPortletFileEntryByExternalReferenceCode(
-						externalReferenceCode, kbArticle.getGroupId());
-
-			_portletFileRepository.deletePortletFileEntry(
-				portletFileEntry.getFileEntryId());
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(exception);
-			}
-		}
-
-		return _toKnowledgeBaseAttachment(
-			_portletFileRepository.addPortletFileEntry(
-				_getKnowledgeBaseAttachmentExternalReferenceCode(multipartBody),
-				kbArticle.getGroupId(), contextUser.getUserId(),
-				KBArticle.class.getName(), kbArticle.getClassPK(),
-				KBConstants.SERVICE_NAME, kbArticle.getAttachmentsFolderId(),
-				binaryFile.getInputStream(), binaryFile.getFileName(),
-				binaryFile.getFileName(), false));
+				binaryFile.getContentType(), false));
 	}
 
 	private String _getKnowledgeBaseAttachmentExternalReferenceCode(
@@ -222,9 +162,8 @@ public class KnowledgeBaseAttachmentResourceImpl
 
 		return new KnowledgeBaseAttachment() {
 			{
-				contentUrl = _dlURLHelper.getPreviewURL(
-					fileEntry, fileEntry.getFileVersion(), null, "", false,
-					false);
+				contentUrl = _portletFileRepository.getPortletFileEntryURL(
+					null, fileEntry, null);
 				contentValue = ContentValueUtil.toContentValue(
 					"contentValue", fileEntry::getContentStream,
 					contextUriInfo);
@@ -237,9 +176,6 @@ public class KnowledgeBaseAttachmentResourceImpl
 			}
 		};
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		KnowledgeBaseAttachmentResourceImpl.class);
 
 	@Reference
 	private DLURLHelper _dlURLHelper;

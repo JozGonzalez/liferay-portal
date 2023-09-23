@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.suggest;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,11 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -115,6 +102,9 @@ public abstract class BaseGenericSpellCheckIndexWriter
 	}
 
 	protected NGramHolderBuilder getNGramHolderBuilder() {
+		NGramHolderBuilder nGramHolderBuilder =
+			_nGramHolderBuilderSnapshot.get();
+
 		if (nGramHolderBuilder != null) {
 			return nGramHolderBuilder;
 		}
@@ -194,13 +184,6 @@ public abstract class BaseGenericSpellCheckIndexWriter
 		}
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile NGramHolderBuilder nGramHolderBuilder;
-
 	private static final int _DEFAULT_BATCH_SIZE = 1000;
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -208,6 +191,10 @@ public abstract class BaseGenericSpellCheckIndexWriter
 
 	private static final NGramHolderBuilder _defaultNGramHolderBuilder =
 		new NullNGramHolderBuilder();
+	private static final Snapshot<NGramHolderBuilder>
+		_nGramHolderBuilderSnapshot = new Snapshot<>(
+			BaseGenericSpellCheckIndexWriter.class, NGramHolderBuilder.class,
+			null, true);
 
 	private int _batchSize = _DEFAULT_BATCH_SIZE;
 	private Document _documentPrototype = new DocumentImpl();

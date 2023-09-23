@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
-import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
@@ -26,6 +16,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AttachmentDTOConverterContext;
@@ -36,7 +27,6 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -49,12 +39,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/attachment.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {AttachmentResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = AttachmentResource.class
 )
 @CTAware
-public class AttachmentResourceImpl
-	extends BaseAttachmentResourceImpl implements NestedFieldSupport {
+public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@NestedField(parentClass = Product.class, value = "attachments")
 	@Override
@@ -105,31 +94,29 @@ public class AttachmentResourceImpl
 	private Long _getAccountId(Long accountId, CommerceChannel commerceChannel)
 		throws Exception {
 
-		int countUserCommerceAccounts =
+		int countUserAccounts =
 			_commerceAccountHelper.countUserCommerceAccounts(
 				contextUser.getUserId(), commerceChannel.getGroupId());
 
-		if (countUserCommerceAccounts > 1) {
+		if (countUserAccounts > 1) {
 			if (accountId == null) {
-				throw new NoSuchAccountException();
+				throw new NoSuchEntryException();
 			}
 		}
 		else {
-			long[] commerceAccountIds =
+			long[] accountIds =
 				_commerceAccountHelper.getUserCommerceAccountIds(
 					contextUser.getUserId(), commerceChannel.getGroupId());
 
-			if (commerceAccountIds.length == 0) {
-				CommerceAccount commerceAccount =
-					_commerceAccountLocalService.getGuestCommerceAccount(
+			if (accountIds.length == 0) {
+				AccountEntry accountEntry =
+					_accountEntryLocalService.getGuestAccountEntry(
 						contextCompany.getCompanyId());
 
-				commerceAccountIds = new long[] {
-					commerceAccount.getCommerceAccountId()
-				};
+				accountIds = new long[] {accountEntry.getAccountEntryId()};
 			}
 
-			return commerceAccountIds[0];
+			return accountIds[0];
 		}
 
 		return accountId;
@@ -168,6 +155,9 @@ public class AttachmentResourceImpl
 				contextAcceptLanguage.getPreferredLocale(), accountId));
 	}
 
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AttachmentDTOConverter)"
 	)
@@ -179,9 +169,6 @@ public class AttachmentResourceImpl
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
-
-	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

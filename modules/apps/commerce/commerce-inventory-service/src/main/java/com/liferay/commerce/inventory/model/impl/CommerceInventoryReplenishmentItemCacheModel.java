@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model.impl;
@@ -24,6 +15,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 
@@ -82,7 +75,7 @@ public class CommerceInventoryReplenishmentItemCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(29);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -104,12 +97,14 @@ public class CommerceInventoryReplenishmentItemCacheModel
 		sb.append(modifiedDate);
 		sb.append(", commerceInventoryWarehouseId=");
 		sb.append(commerceInventoryWarehouseId);
-		sb.append(", sku=");
-		sb.append(sku);
 		sb.append(", availabilityDate=");
 		sb.append(availabilityDate);
 		sb.append(", quantity=");
 		sb.append(quantity);
+		sb.append(", sku=");
+		sb.append(sku);
+		sb.append(", unitOfMeasureKey=");
+		sb.append(unitOfMeasureKey);
 		sb.append("}");
 
 		return sb.toString();
@@ -170,13 +165,6 @@ public class CommerceInventoryReplenishmentItemCacheModel
 		commerceInventoryReplenishmentItemImpl.setCommerceInventoryWarehouseId(
 			commerceInventoryWarehouseId);
 
-		if (sku == null) {
-			commerceInventoryReplenishmentItemImpl.setSku("");
-		}
-		else {
-			commerceInventoryReplenishmentItemImpl.setSku(sku);
-		}
-
 		if (availabilityDate == Long.MIN_VALUE) {
 			commerceInventoryReplenishmentItemImpl.setAvailabilityDate(null);
 		}
@@ -187,13 +175,30 @@ public class CommerceInventoryReplenishmentItemCacheModel
 
 		commerceInventoryReplenishmentItemImpl.setQuantity(quantity);
 
+		if (sku == null) {
+			commerceInventoryReplenishmentItemImpl.setSku("");
+		}
+		else {
+			commerceInventoryReplenishmentItemImpl.setSku(sku);
+		}
+
+		if (unitOfMeasureKey == null) {
+			commerceInventoryReplenishmentItemImpl.setUnitOfMeasureKey("");
+		}
+		else {
+			commerceInventoryReplenishmentItemImpl.setUnitOfMeasureKey(
+				unitOfMeasureKey);
+		}
+
 		commerceInventoryReplenishmentItemImpl.resetOriginalValues();
 
 		return commerceInventoryReplenishmentItemImpl;
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
@@ -208,10 +213,10 @@ public class CommerceInventoryReplenishmentItemCacheModel
 		modifiedDate = objectInput.readLong();
 
 		commerceInventoryWarehouseId = objectInput.readLong();
-		sku = objectInput.readUTF();
 		availabilityDate = objectInput.readLong();
-
-		quantity = objectInput.readInt();
+		quantity = (BigDecimal)objectInput.readObject();
+		sku = objectInput.readUTF();
+		unitOfMeasureKey = objectInput.readUTF();
 	}
 
 	@Override
@@ -249,6 +254,8 @@ public class CommerceInventoryReplenishmentItemCacheModel
 		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(commerceInventoryWarehouseId);
+		objectOutput.writeLong(availabilityDate);
+		objectOutput.writeObject(quantity);
 
 		if (sku == null) {
 			objectOutput.writeUTF("");
@@ -257,9 +264,12 @@ public class CommerceInventoryReplenishmentItemCacheModel
 			objectOutput.writeUTF(sku);
 		}
 
-		objectOutput.writeLong(availabilityDate);
-
-		objectOutput.writeInt(quantity);
+		if (unitOfMeasureKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(unitOfMeasureKey);
+		}
 	}
 
 	public long mvccVersion;
@@ -272,8 +282,9 @@ public class CommerceInventoryReplenishmentItemCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long commerceInventoryWarehouseId;
-	public String sku;
 	public long availabilityDate;
-	public int quantity;
+	public BigDecimal quantity;
+	public String sku;
+	public String unitOfMeasureKey;
 
 }

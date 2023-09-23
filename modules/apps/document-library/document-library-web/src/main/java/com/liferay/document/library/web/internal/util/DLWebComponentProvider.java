@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.util;
@@ -17,69 +8,35 @@ package com.liferay.document.library.web.internal.util;
 import com.liferay.document.library.display.context.DLDisplayContextProvider;
 import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContextProvider;
 import com.liferay.document.library.web.internal.display.context.IGDisplayContextProvider;
-
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import com.liferay.osgi.util.service.Snapshot;
 
 /**
  * @author Iván Zaera
  */
-@Component(service = {})
 public class DLWebComponentProvider {
 
-	public static DLWebComponentProvider getDLWebComponentProvider() {
-		return _dlWebComponentProvider;
+	public static DLAdminDisplayContextProvider
+		getDlAdminDisplayContextProvider() {
+
+		return _dlAdminDisplayContextProviderSnapshot.get();
 	}
 
-	public DLAdminDisplayContextProvider getDlAdminDisplayContextProvider() {
-		return _dlAdminDisplayContextProvider;
+	public static DLDisplayContextProvider getDLDisplayContextProvider() {
+		return _dlDisplayContextProviderSnapshot.get();
 	}
 
-	public DLDisplayContextProvider getDLDisplayContextProvider() {
-		return _dlDisplayContextProvider;
+	public static IGDisplayContextProvider getIGDisplayContextProvider() {
+		return _igDisplayContextProviderSnapshot.get();
 	}
 
-	public IGDisplayContextProvider getIGDisplayContextProvider() {
-		return _igDisplayContextProvider;
-	}
-
-	@Activate
-	protected void activate() {
-		_dlWebComponentProvider = this;
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_dlWebComponentProvider = null;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDlAdminDisplayContextProvider(
-		DLAdminDisplayContextProvider dlAdminDisplayContextProvider) {
-
-		_dlAdminDisplayContextProvider = dlAdminDisplayContextProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDLDisplayContextProvider(
-		DLDisplayContextProvider dlDisplayContextProvider) {
-
-		_dlDisplayContextProvider = dlDisplayContextProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setIGDisplayContextProvider(
-		IGDisplayContextProvider igDisplayContextProvider) {
-
-		_igDisplayContextProvider = igDisplayContextProvider;
-	}
-
-	private static DLWebComponentProvider _dlWebComponentProvider;
-
-	private DLAdminDisplayContextProvider _dlAdminDisplayContextProvider;
-	private DLDisplayContextProvider _dlDisplayContextProvider;
-	private IGDisplayContextProvider _igDisplayContextProvider;
+	private static final Snapshot<DLAdminDisplayContextProvider>
+		_dlAdminDisplayContextProviderSnapshot = new Snapshot<>(
+			DLWebComponentProvider.class, DLAdminDisplayContextProvider.class);
+	private static final Snapshot<DLDisplayContextProvider>
+		_dlDisplayContextProviderSnapshot = new Snapshot<>(
+			DLWebComponentProvider.class, DLDisplayContextProvider.class);
+	private static final Snapshot<IGDisplayContextProvider>
+		_igDisplayContextProviderSnapshot = new Snapshot<>(
+			DLWebComponentProvider.class, IGDisplayContextProvider.class);
 
 }

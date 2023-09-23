@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.processor;
@@ -31,26 +22,30 @@ public class BNDSourceProcessorTest extends BaseSourceProcessorTestCase {
 			"Deprecated apps that are not published on Marketplace should be " +
 				"moved to the archived folder");
 		test(
-			"FormatBndInstructions3/app.testbnd",
-			new String[] {
+			SourceProcessorTestParameters.create(
+				"FormatBndInstructions3/app.testbnd"
+			).addExpectedMessage(
 				"The 'Liferay-Releng-Restart-Required' can only be set to " +
-					"false if a POSHI tests exists",
+					"false if a POSHI tests exists"
+			).addExpectedMessage(
 				StringBundler.concat(
 					"The 'Liferay-Releng-Suite' can be blank or one of the ",
 					"following values 'collaboration, commerce, ",
 					"forms-and-workflow, foundation, static, web-experience'")
-			});
+			));
 	}
 
 	@Test
 	public void testFormatDefinitionKeys() throws Exception {
 		test("FormatDefinitionKeys1/common.testbnd");
 		test(
-			"FormatDefinitionKeys2/common.testbnd",
-			new String[] {
-				"Unknown key \"-fixupmessagess\"",
+			SourceProcessorTestParameters.create(
+				"FormatDefinitionKeys2/common.testbnd"
+			).addExpectedMessage(
+				"Unknown key \"-fixupmessagess\""
+			).addExpectedMessage(
 				"Unknown key \"Liferay-Portal-ServerInfo\""
-			});
+			));
 	}
 
 	@Test

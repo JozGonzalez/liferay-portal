@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.web.internal.asset.model;
@@ -18,6 +9,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
@@ -151,7 +143,8 @@ public class TranslationEntryAssetRenderer
 				InfoItemFormProvider.class, _translationEntry.getClassName());
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, _translationEntry.getClassName());
+				InfoItemObjectProvider.class, _translationEntry.getClassName(),
+				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 		String content = _translationEntry.getContent();
 
@@ -162,7 +155,8 @@ public class TranslationEntryAssetRenderer
 					_translationEntry.getClassName(),
 					_translationEntry.getClassPK()),
 				new ByteArrayInputStream(
-					content.getBytes(StandardCharsets.UTF_8)));
+					content.getBytes(StandardCharsets.UTF_8)),
+				true);
 
 		httpServletRequest.setAttribute(
 			ViewTranslationDisplayContext.class.getName(),
@@ -170,7 +164,8 @@ public class TranslationEntryAssetRenderer
 				httpServletRequest,
 				infoItemFormProvider.getInfoForm(
 					infoItemObjectProvider.getInfoItem(
-						_translationEntry.getClassPK())),
+						new ClassPKInfoItemIdentifier(
+							_translationEntry.getClassPK()))),
 				_translationInfoFieldChecker, translationSnapshot));
 
 		return super.include(httpServletRequest, httpServletResponse, template);

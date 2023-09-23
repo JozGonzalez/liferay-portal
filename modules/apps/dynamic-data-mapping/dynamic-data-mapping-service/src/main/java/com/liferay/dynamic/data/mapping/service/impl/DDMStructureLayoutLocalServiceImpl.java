@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
@@ -46,7 +37,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -101,11 +91,9 @@ public class DDMStructureLayoutLocalServiceImpl
 		structureLayout.setUserName(user.getFullName());
 		structureLayout.setClassNameId(classNameId);
 		structureLayout.setStructureLayoutKey(
-			Optional.ofNullable(
-				structureLayoutKey
-			).orElseGet(
-				() -> String.valueOf(counterLocalService.increment())
-			));
+			GetterUtil.getString(
+				structureLayoutKey,
+				String.valueOf(counterLocalService.increment())));
 		structureLayout.setStructureVersionId(structureVersionId);
 		structureLayout.setDefinition(_serialize(ddmFormLayout));
 
@@ -137,11 +125,9 @@ public class DDMStructureLayoutLocalServiceImpl
 		structureLayout.setModifiedDate(new Date());
 		structureLayout.setClassNameId(classNameId);
 		structureLayout.setStructureLayoutKey(
-			Optional.ofNullable(
-				structureLayoutKey
-			).orElseGet(
-				() -> String.valueOf(counterLocalService.increment())
-			));
+			GetterUtil.getString(
+				structureLayoutKey,
+				String.valueOf(counterLocalService.increment())));
 		structureLayout.setStructureVersionId(structureVersionId);
 		structureLayout.setNameMap(name);
 		structureLayout.setDescriptionMap(description);
@@ -155,12 +141,11 @@ public class DDMStructureLayoutLocalServiceImpl
 			long classNameId, DDMStructureVersion ddmStructureVersion)
 		throws PortalException {
 
-		List<DDMStructureLayout> ddmStructureLayouts =
-			ddmStructureLayoutPersistence.findByG_C_SV(
-				ddmStructureVersion.getGroupId(), classNameId,
-				ddmStructureVersion.getStructureVersionId());
+		for (DDMStructureLayout ddmStructureLayout :
+				ddmStructureLayoutPersistence.findByG_C_SV(
+					ddmStructureVersion.getGroupId(), classNameId,
+					ddmStructureVersion.getStructureVersionId())) {
 
-		for (DDMStructureLayout ddmStructureLayout : ddmStructureLayouts) {
 			deleteDDMStructureLayout(ddmStructureLayout);
 		}
 	}

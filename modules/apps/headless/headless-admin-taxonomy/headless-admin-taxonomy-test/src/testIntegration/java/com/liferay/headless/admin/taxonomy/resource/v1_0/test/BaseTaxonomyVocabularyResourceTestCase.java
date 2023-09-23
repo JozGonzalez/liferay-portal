@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.resource.v1_0.test;
@@ -32,6 +23,7 @@ import com.liferay.headless.admin.taxonomy.client.permission.Permission;
 import com.liferay.headless.admin.taxonomy.client.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.headless.admin.taxonomy.client.serdes.v1_0.TaxonomyVocabularySerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -74,8 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -347,45 +337,39 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	public void testGetAssetLibraryTaxonomyVocabulariesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAssetLibraryTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAssetLibraryTaxonomyVocabulariesPageWithFilterStringContains()
+		throws Exception {
 
-		Long assetLibraryId =
-			testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId();
-
-		TaxonomyVocabulary taxonomyVocabulary1 =
-			testGetAssetLibraryTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-				assetLibraryId, randomTaxonomyVocabulary());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary2 =
-			testGetAssetLibraryTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-				assetLibraryId, randomTaxonomyVocabulary());
-
-		for (EntityField entityField : entityFields) {
-			Page<TaxonomyVocabulary> page =
-				taxonomyVocabularyResource.
-					getAssetLibraryTaxonomyVocabulariesPage(
-						assetLibraryId, null, null,
-						getFilterString(entityField, "eq", taxonomyVocabulary1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(taxonomyVocabulary1),
-				(List<TaxonomyVocabulary>)page.getItems());
-		}
+		testGetAssetLibraryTaxonomyVocabulariesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAssetLibraryTaxonomyVocabulariesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAssetLibraryTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAssetLibraryTaxonomyVocabulariesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAssetLibraryTaxonomyVocabulariesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAssetLibraryTaxonomyVocabulariesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -408,7 +392,8 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				taxonomyVocabularyResource.
 					getAssetLibraryTaxonomyVocabulariesPage(
 						assetLibraryId, null, null,
-						getFilterString(entityField, "eq", taxonomyVocabulary1),
+						getFilterString(
+							entityField, operator, taxonomyVocabulary1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1083,43 +1068,39 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	public void testGetSiteTaxonomyVocabulariesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSiteTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSiteTaxonomyVocabulariesPageWithFilterStringContains()
+		throws Exception {
 
-		Long siteId = testGetSiteTaxonomyVocabulariesPage_getSiteId();
-
-		TaxonomyVocabulary taxonomyVocabulary1 =
-			testGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-				siteId, randomTaxonomyVocabulary());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary2 =
-			testGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-				siteId, randomTaxonomyVocabulary());
-
-		for (EntityField entityField : entityFields) {
-			Page<TaxonomyVocabulary> page =
-				taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
-					siteId, null, null,
-					getFilterString(entityField, "eq", taxonomyVocabulary1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(taxonomyVocabulary1),
-				(List<TaxonomyVocabulary>)page.getItems());
-		}
+		testGetSiteTaxonomyVocabulariesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSiteTaxonomyVocabulariesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSiteTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteTaxonomyVocabulariesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteTaxonomyVocabulariesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteTaxonomyVocabulariesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1140,7 +1121,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			Page<TaxonomyVocabulary> page =
 				taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
 					siteId, null, null,
-					getFilterString(entityField, "eq", taxonomyVocabulary1),
+					getFilterString(entityField, operator, taxonomyVocabulary1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -2399,14 +2380,19 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -2682,14 +2668,16 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -2719,18 +2707,18 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -2753,9 +2741,47 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		}
 
 		if (entityFieldName.equals("assetLibraryKey")) {
-			sb.append("'");
-			sb.append(String.valueOf(taxonomyVocabulary.getAssetLibraryKey()));
-			sb.append("'");
+			Object object = taxonomyVocabulary.getAssetLibraryKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2844,9 +2870,47 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(taxonomyVocabulary.getDescription()));
-			sb.append("'");
+			Object object = taxonomyVocabulary.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2857,10 +2921,47 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(taxonomyVocabulary.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = taxonomyVocabulary.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2871,9 +2972,47 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(taxonomyVocabulary.getName()));
-			sb.append("'");
+			Object object = taxonomyVocabulary.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

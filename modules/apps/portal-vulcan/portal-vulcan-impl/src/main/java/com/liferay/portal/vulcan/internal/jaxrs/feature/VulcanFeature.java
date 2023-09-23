@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.feature;
@@ -18,9 +9,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.jaxrs.xml.JacksonXMLProvider;
 
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -30,8 +19,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
-import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
-import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResourceFactory;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
 import com.liferay.portal.vulcan.extension.ExtensionProviderRegistry;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.CTContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.ContextContainerRequestFilter;
@@ -53,12 +42,14 @@ import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.ObjectMapperCon
 import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.XmlMapperContextResolver;
 import com.liferay.portal.vulcan.internal.jaxrs.dynamic.feature.StatusDynamicFeature;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.IllegalArgumentExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidFilterExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidFormatExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonMappingExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonParseExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NoSuchModelExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NotAcceptableExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NotFoundExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.PrincipalExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.UnrecognizedPropertyExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ValidationExceptionMapper;
@@ -116,6 +107,7 @@ public class VulcanFeature implements Feature {
 		featureContext.register(EntityExtensionWriterInterceptor.class);
 		featureContext.register(ExceptionMapper.class);
 		featureContext.register(FieldsQueryParamContextProvider.class);
+		featureContext.register(IllegalArgumentExceptionMapper.class);
 		featureContext.register(InvalidFilterExceptionMapper.class);
 		featureContext.register(InvalidFormatExceptionMapper.class);
 		featureContext.register(JSONMessageBodyReader.class);
@@ -128,6 +120,7 @@ public class VulcanFeature implements Feature {
 		featureContext.register(NestedFieldsContainerRequestFilter.class);
 		featureContext.register(NoSuchModelExceptionMapper.class);
 		featureContext.register(NotAcceptableExceptionMapper.class);
+		featureContext.register(NotFoundExceptionMapper.class);
 		featureContext.register(ObjectMapperContextResolver.class);
 		featureContext.register(PageEntityExtensionWriterInterceptor.class);
 		featureContext.register(PaginationContextProvider.class);
@@ -153,15 +146,12 @@ public class VulcanFeature implements Feature {
 				_groupLocalService, _language, _portal,
 				_resourceActionLocalService, _resourcePermissionLocalService,
 				_roleLocalService, _getScopeChecker(), _sortParserProvider,
-				_vulcanBatchEngineExportTaskResource,
-				_vulcanBatchEngineImportTaskResource));
+				_vulcanBatchEngineExportTaskResourceFactory,
+				_vulcanBatchEngineImportTaskResourceFactory));
 		featureContext.register(
 			new EntityExtensionHandlerContextResolver(
 				_extensionProviderRegistry));
-		featureContext.register(
-			new MultipartBodyMessageBodyReader(
-				_dlValidator.getMaxAllowableSize(
-					GroupConstants.DEFAULT_PARENT_GROUP_ID, null)));
+		featureContext.register(new MultipartBodyMessageBodyReader());
 
 		_nestedFieldsWriterInterceptor = new NestedFieldsWriterInterceptor(
 			_bundleContext);
@@ -211,9 +201,6 @@ public class VulcanFeature implements Feature {
 	@Reference
 	private DepotEntryLocalService _depotEntryLocalService;
 
-	@Reference
-	private DLValidator _dlValidator;
-
 	@Reference(
 		target = "(result.class.name=com.liferay.portal.kernel.search.filter.Filter)"
 	)
@@ -249,11 +236,11 @@ public class VulcanFeature implements Feature {
 	private SortParserProvider _sortParserProvider;
 
 	@Reference
-	private VulcanBatchEngineExportTaskResource
-		_vulcanBatchEngineExportTaskResource;
+	private VulcanBatchEngineExportTaskResourceFactory
+		_vulcanBatchEngineExportTaskResourceFactory;
 
 	@Reference
-	private VulcanBatchEngineImportTaskResource
-		_vulcanBatchEngineImportTaskResource;
+	private VulcanBatchEngineImportTaskResourceFactory
+		_vulcanBatchEngineImportTaskResourceFactory;
 
 }

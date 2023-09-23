@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -51,7 +42,7 @@ type ClaimTableType = {
 	claimStatus: {name: string};
 	externalReferenceCode: string;
 	id: string;
-	isClickable: string;
+	isClickable: boolean;
 	r_policyToClaims_c_raylifePolicy: {
 		externalReferenceCode: string;
 		policyOwnerName: string;
@@ -60,7 +51,7 @@ type ClaimTableType = {
 };
 
 type TableContentType = {
-	[key: string]: string;
+	[key: string]: string | any;
 };
 
 type ItemsProducts = TableContentType;
@@ -383,9 +374,10 @@ const ClaimsTable = () => {
 				claimName: r_policyToClaims_c_raylifePolicy?.policyOwnerName,
 				claimStatus: claimStatus?.name,
 				id,
-				isClickable: (
+				isClickable:
 					r_policyToClaims_c_raylifePolicy.productName === 'Auto'
-				).toString(),
+						? true
+						: false,
 				key: externalReferenceCode,
 				policyNumber:
 					r_policyToClaims_c_raylifePolicy?.externalReferenceCode,
@@ -691,7 +683,12 @@ const ClaimsTable = () => {
 		item: TableHeaders,
 		rowContent: TableRowContentType
 	) => {
-		if (item.clickable && item.key === 'id') {
+		const hasDetails =
+			item.clickable &&
+			item.key === 'id' &&
+			rowContent.productName === 'Auto';
+
+		if (hasDetails) {
 			handleRedirectToDetailsPages(
 				rowContent['id'] as number,
 				'claim-details'
@@ -786,6 +783,7 @@ const ClaimsTable = () => {
 								onKeyDown={handleKeyDown}
 								placeholder="Search for..."
 								type="text"
+								value={searchInput}
 							/>
 						</ClayInput.GroupItem>
 
@@ -840,7 +838,7 @@ const ClaimsTable = () => {
 											checked={
 												checkedStateProduct[
 													checkedIndex
-												]
+												] ?? false
 											}
 											key={checkedIndex}
 											label={
@@ -879,7 +877,9 @@ const ClaimsTable = () => {
 									) => (
 										<ClayCheckbox
 											checked={
-												checkedStateStatus[checkedIndex]
+												checkedStateStatus[
+													checkedIndex
+												] ?? false
 											}
 											key={checkedIndex}
 											label={

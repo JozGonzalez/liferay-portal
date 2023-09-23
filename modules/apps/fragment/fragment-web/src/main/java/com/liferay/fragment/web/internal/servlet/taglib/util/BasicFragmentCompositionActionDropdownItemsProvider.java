@@ -1,34 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.servlet.taglib.util;
 
+import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration;
-import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -62,7 +54,7 @@ public class BasicFragmentCompositionActionDropdownItemsProvider {
 			(FragmentPortletConfiguration)_httpServletRequest.getAttribute(
 				FragmentPortletConfiguration.class.getName());
 		_itemSelector = (ItemSelector)_httpServletRequest.getAttribute(
-			FragmentWebKeys.ITEM_SELECTOR);
+			ItemSelector.class.getName());
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -176,7 +168,7 @@ public class BasicFragmentCompositionActionDropdownItemsProvider {
 
 		return dropdownItem -> {
 			dropdownItem.setHref(exportFragmentEntryURL);
-			dropdownItem.setIcon("upload");
+			dropdownItem.setIcon("export");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "export"));
 		};
@@ -233,15 +225,27 @@ public class BasicFragmentCompositionActionDropdownItemsProvider {
 				).setRedirect(
 					_themeDisplay.getURLCurrent()
 				).buildString());
+
+			RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+				RequestBackedPortletURLFactoryUtil.create(_httpServletRequest);
+
+			FragmentCollectionItemSelectorCriterion
+				fragmentCollectionItemSelectorCriterion =
+					new FragmentCollectionItemSelectorCriterion();
+
+			fragmentCollectionItemSelectorCriterion.
+				setDesiredItemSelectorReturnTypes(
+					new UUIDItemSelectorReturnType());
+
 			dropdownItem.putData(
 				"selectFragmentCollectionURL",
-				PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/fragment/select_fragment_collection"
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString());
+				String.valueOf(
+					_itemSelector.getItemSelectorURL(
+						requestBackedPortletURLFactory,
+						_renderResponse.getNamespace() +
+							"selectFragmentCollection",
+						fragmentCollectionItemSelectorCriterion)));
+
 			dropdownItem.setIcon("move-folder");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "move"));

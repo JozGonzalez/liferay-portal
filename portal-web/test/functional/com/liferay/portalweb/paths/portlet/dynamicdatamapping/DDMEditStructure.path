@@ -206,6 +206,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FORM_FIELD_GROUP_TARGET_SPACE</td>
+	<td>//*[contains(@class,'form-view-ddm-target')][last()]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FORM_FIELD_CONTAINER_FIRST</td>
 	<td>xpath=(//div[contains(@class, 'ddm-field-container')])[1]</td>
 	<td></td>
@@ -272,7 +277,7 @@
 </tr>
 <tr>
 	<td>FORM_FIELD_DELETE_BUTTON</td>
-	<td>portal/screenshots/ddm/form_delete.png</td>
+	<td>//div[contains(label,'${key_fieldFieldLabel}')]/following-sibling::div//*[contains(@class, 'icon-trash')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal;
@@ -25,6 +16,7 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderFactoryImpl;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -78,12 +70,21 @@ public class ElasticsearchIndexSearcherTest {
 		searchContext.setAttribute(
 			SearchContextAttributes.ATTRIBUTE_KEY_LUCENE_SYNTAX, Boolean.TRUE);
 
+		SearchRequest searchRequest = _searchRequestBuilderFactory.builder(
+			searchContext
+		).build();
+
+		Query query = Mockito.mock(Query.class);
+
 		SearchSearchRequest searchSearchRequest =
 			_elasticsearchIndexSearcher.createSearchSearchRequest(
-				_searchRequestBuilderFactory.builder(
-					searchContext
-				).build(),
-				searchContext, Mockito.mock(Query.class), 0, 0);
+				searchRequest, searchContext, query);
+
+		searchSearchRequest.setSize(0);
+		searchSearchRequest.setSorts(searchContext.getSorts());
+		searchSearchRequest.setSorts(searchRequest.getSorts());
+		searchSearchRequest.setStart(0);
+		searchSearchRequest.setStats(searchContext.getStats());
 
 		Assert.assertTrue(searchSearchRequest.isBasicFacetSelection());
 		Assert.assertTrue(searchSearchRequest.isLuceneSyntax());

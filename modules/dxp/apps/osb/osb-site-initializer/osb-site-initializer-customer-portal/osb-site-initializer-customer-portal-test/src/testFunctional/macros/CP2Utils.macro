@@ -69,13 +69,50 @@ definition {
 	}
 
 	macro assigneToRoleViaUsersTab {
-		Account.openAccountsAdmin();
+		if (isSet(searchItem)) {
+			Account.openAccountsAdmin();
 
-		CustomerPortal.accountTableProject(title = ${testAccount});
+			CustomerPortal.accountTableProject(title = ${testAccount});
 
-		Account.addAssigneeToRoleViaUsersTab(
-			accountRoleTitle = ${accountRoleTitle},
-			accountUserName = ${accountUserName});
+			Navigator.gotoNavTab(navTab = "Users");
+
+			CustomerPortal.search(searchItem = ${searchItem});
+
+			KeyPress(
+				locator1 = "CustomerPortalSite#SEARCH",
+				value1 = "\ENTER");
+
+			Account.goToEntryMenuItem(
+				menuItem = "Assign Roles",
+				rowEntry = ${accountUserName});
+
+			SelectFrame(
+				key_title = "Assign Roles",
+				locator1 = "IFrame#MODAL_ANY");
+
+			Check(
+				key_tableEntry = ${accountRoleTitle},
+				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+
+			SelectFrameTop();
+
+			Button.click(button = "Done");
+
+			Alert.viewSuccessMessage();
+
+			Account.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = ${accountRoleTitle},
+				accountUserName = ${accountUserName});
+		}
+		else {
+			Account.openAccountsAdmin();
+
+			CustomerPortal.accountTableProject(title = ${testAccount});
+
+			Account.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = ${accountRoleTitle},
+				accountUserName = ${accountUserName});
+		}
 	}
 
 	macro changeCardStatus {
@@ -98,6 +135,12 @@ definition {
 		Select(
 			locator1 = "CP2Utils#SELECT_ROLE",
 			value1 = ${role});
+	}
+
+	macro clickAtButtonManagerUsers {
+		var key_product = ${product};
+
+		Click(locator1 = "CP2Utils#BUTTON_MANAGE_USERS");
 	}
 
 	macro clickAtFilterMenu {
@@ -123,8 +166,26 @@ definition {
 		Click(locator1 = "CP2Utils#SVG_DROPDOWN_LIST");
 	}
 
+	macro clickInTableKeyByName {
+		Click(
+			key_text = ${keyName},
+			locator1 = "CP2ActivationKeys#RESPONSIVE_TABLE");
+	}
+
 	macro closeModal {
 		Click(locator1 = "CP2Utils#CLOSE_BUTTON");
+	}
+
+	macro deactivateExistingKey {
+		CP2ActivationKeys.selectKeyCheckboxByEnvironmentName(key_environmentName = ${environmentName});
+
+		Button.click(button = "Deactivate");
+
+		Button.click(button = "Confirm Deactivate Keys");
+
+		Button.click(button = "Continue");
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro deleteActivationStatus {
@@ -173,6 +234,73 @@ definition {
 			value1 = ${value});
 	}
 
+	macro fulfillGuestForm {
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${email},
+			fieldName = "Contact Email Address",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${companyName},
+			fieldName = "Company Name",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${supportRegion},
+			fieldName = "Support Region");
+
+		KeyPress(
+			key_option = "Sup",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${explainField},
+			fieldName = "Please explain why you need a replacement activation key",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${typeOfServer},
+			fieldName = "Type of Server");
+
+		KeyPress(
+			key_option = "Server",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${clustered},
+			fieldName = "Clustered?");
+
+		KeyPress(
+			key_option = "Clustered",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		Click.clickNoWaitForVisible(
+			key_fieldName = "acknowledgement",
+			locator1 = "Checkbox#CHECKBOX_NAME");
+
+		if (isSet(submit)) {
+			Button.click(button = "Submit");
+		}
+	}
+
+	macro fulfillGuestFormFields {
+		if (isSet(typeField)) {
+			Type(
+				key_fieldsname = ${fieldName},
+				locator1 = "CP2Utils#GUEST_FORM_FIELDS",
+				value1 = ${fieldInput});
+		}
+		else {
+			Type(
+				key_option = ${fieldName},
+				locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+				value1 = ${fieldInput});
+		}
+	}
+
 	// Workaround for LPS-168369
 
 	macro goToCustomerPortalSiteWithRefresh {
@@ -190,11 +318,11 @@ definition {
 	}
 
 	macro onboardingFlow {
-		CustomerPortal.clickOnStartProjectSetup();
+		Button.click(button = "Start Project Setup");
 
-		CustomerPortal.clickOnSkipForNowButton();
+		Button.click(button = "Skip for now");
 
-		CustomerPortal.clickOnSkipForNowButton();
+		Button.click(button = "Skip for now");
 	}
 
 	macro onlySeeExportAllKeys {
@@ -234,6 +362,18 @@ definition {
 		}
 	}
 
+	macro searchForKeyInTable {
+		WaitForElementPresent(locator1 = "CustomerPortalSite#SEARCH");
+
+		Type(
+			locator1 = "CustomerPortalSite#SEARCH",
+			value1 = ${environmentName});
+
+		KeyPress(
+			locator1 = "CustomerPortalSite#SEARCH",
+			value1 = "\ENTER");
+	}
+
 	macro searchKeys {
 		Click(locator1 = "CP2NavigationMenu#SEARCH_FILTER");
 
@@ -260,6 +400,34 @@ definition {
 		}
 	}
 
+	macro tearDownForCloudEntries {
+		if (!(isSet(entry))) {
+			var entry = "ERC-001";
+		}
+
+		if (!(isSet(entry1))) {
+			var entry1 = "test@liferay.com";
+		}
+
+		if (!(isSet(portlet))) {
+			var portlet = "DXP Cloud Environments";
+		}
+
+		if (!(isSet(portlet1))) {
+			var portlet1 = "Admins DXP Cloud";
+		}
+
+		CustomerPortal.clearStatus(status = ${status});
+
+		CP2Utils.deleteSpecificObjectEntry(
+			entry = ${entry},
+			portlet = ${portlet});
+
+		CP2Utils.deleteSpecificObjectEntry(
+			entry = ${entry1},
+			portlet = ${portlet1});
+	}
+
 	macro typeSetupInfoFields {
 		if (!(isSet(position))) {
 			var position = 1;
@@ -280,6 +448,43 @@ definition {
 		Account.unassignUserRole(
 			accountRoleTitle = ${accountRoleTitle},
 			accountUserName = ${accountUserName});
+	}
+
+	// Workaround for LPS-149449
+
+	macro typeLinkForTheConsoleLiferayCloud {
+		ApplicationsMenu.gotoPortlet(
+			category = "Object",
+			panel = "Control Panel",
+			portlet = "Account Subscription Groups");
+
+		// Refresh added due to portal instability
+
+		Refresh();
+
+		var key_status = ${status};
+
+		Search.searchCP(searchTerm = ${key_status});
+
+		if (IsElementPresent(key_accountName = ${key_status}, locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON")) {
+			Click(
+				key_accountName = ${key_status},
+				locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON");
+
+			MenuItem.click(menuItem = "View");
+
+			// Refresh added due to portal instability
+
+			Refresh();
+
+			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
+				label = "manageContactsURL",
+				value = "https://console.liferay.cloud");
+
+			Click(locator1 = "Button#SAVE");
+
+			Alert.viewSuccessMessage();
+		}
 	}
 
 }

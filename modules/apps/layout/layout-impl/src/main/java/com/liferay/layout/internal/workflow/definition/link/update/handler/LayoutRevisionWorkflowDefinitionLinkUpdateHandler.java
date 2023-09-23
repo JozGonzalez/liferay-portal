@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.workflow.definition.link.update.handler;
@@ -23,9 +14,6 @@ import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.definition.link.update.handler.WorkflowDefinitionLinkUpdateHandler;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,37 +36,30 @@ public class LayoutRevisionWorkflowDefinitionLinkUpdateHandler
 
 		// Workflow definition link was deleted
 
-		List<LayoutRevision> pendingLayoutRevisions =
-			_layoutRevisionLocalService.getLayoutRevisionsByStatus(
-				WorkflowConstants.STATUS_PENDING);
+		for (LayoutRevision layoutRevision :
+				_layoutRevisionLocalService.getLayoutRevisionsByStatus(
+					WorkflowConstants.STATUS_PENDING)) {
 
-		Stream<LayoutRevision> stream = pendingLayoutRevisions.stream();
+			layoutRevision.setStatus(WorkflowConstants.STATUS_DRAFT);
 
-		stream.forEach(
-			layoutRevision -> {
-				layoutRevision.setStatus(WorkflowConstants.STATUS_DRAFT);
+			layoutRevision = _layoutRevisionLocalService.updateLayoutRevision(
+				layoutRevision);
 
-				_layoutRevisionLocalService.updateLayoutRevision(
-					layoutRevision);
-
-				try {
-					_workflowInstanceLinkLocalService.
-						deleteWorkflowInstanceLinks(
-							layoutRevision.getCompanyId(),
-							layoutRevision.getGroupId(),
-							layoutRevision.getModelClassName(),
-							layoutRevision.getLayoutRevisionId());
+			try {
+				_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
+					layoutRevision.getCompanyId(), layoutRevision.getGroupId(),
+					layoutRevision.getModelClassName(),
+					layoutRevision.getLayoutRevisionId());
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to delete workflow instance links for layout " +
+							"revision " + layoutRevision.getLayoutRevisionId(),
+						portalException);
 				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to delete workflow instance links for " +
-								"layout revision " +
-									layoutRevision.getLayoutRevisionId(),
-							portalException);
-					}
-				}
-			});
+			}
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

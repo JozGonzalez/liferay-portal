@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.json;
 
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -124,6 +116,36 @@ public class JSONUtilTest {
 			"gamma",
 			JSONUtil.getValue(
 				jsonObject, "JSONObject/alpha", "JSONArray/beta", "Object/0"));
+	}
+
+	@Test
+	public void testGetValueAsJSONArray() throws JSONException {
+		Assert.assertNull(
+			JSONUtil.getValueAsJSONArray(
+				_createJSONObject(), "JSONArray/able"));
+		Assert.assertNull(
+			JSONUtil.getValueAsJSONArray(
+				_createJSONObject("{\"able\": 1}"), "JSONArray/able"));
+
+		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
+			_createJSONObject("{\"able\": []}"), "JSONArray/able");
+
+		Assert.assertNotNull(jsonArray);
+		Assert.assertEquals(0, jsonArray.length());
+
+		jsonArray = JSONUtil.getValueAsJSONArray(
+			_createJSONObject("{\"able\": [\"0\"]}"), "JSONArray/able");
+
+		Assert.assertNotNull(jsonArray);
+		Assert.assertEquals(1, jsonArray.length());
+		Assert.assertEquals("0", jsonArray.getString(0));
+
+		jsonArray = JSONUtil.getValueAsJSONArray(
+			_createJSONObject("{\"able\": [0, 1, 2, 3]}"), "JSONArray/able");
+
+		Assert.assertNotNull(jsonArray);
+		Assert.assertEquals(4, jsonArray.length());
+		Assert.assertEquals("2", jsonArray.getString(2));
 	}
 
 	@Test
@@ -835,6 +857,10 @@ public class JSONUtilTest {
 
 	private JSONObject _createJSONObject() {
 		return JSONFactoryUtil.createJSONObject();
+	}
+
+	private JSONObject _createJSONObject(String json) throws JSONException {
+		return JSONFactoryUtil.createJSONObject(json);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(JSONUtilTest.class);

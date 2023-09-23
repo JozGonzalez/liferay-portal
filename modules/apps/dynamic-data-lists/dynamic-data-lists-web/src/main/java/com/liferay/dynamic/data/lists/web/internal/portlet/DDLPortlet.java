@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.lists.web.internal.portlet;
@@ -28,7 +19,7 @@ import com.liferay.dynamic.data.lists.web.internal.configuration.activator.DDLWe
 import com.liferay.dynamic.data.lists.web.internal.display.context.DDLDisplayContext;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
-import com.liferay.dynamic.data.mapping.storage.StorageEngine;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletPreferencesException;
@@ -54,9 +45,6 @@ import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Marcellus Tavares
@@ -116,7 +104,7 @@ public class DDLPortlet extends MVCPortlet {
 				renderRequest, renderResponse, _ddl, _ddlRecordSetLocalService,
 				_ddlWebConfigurationActivator.getDDLWebConfiguration(),
 				_ddmDisplayRegistry, _ddmPermissionSupport,
-				_ddmTemplateLocalService, _storageEngine);
+				_ddmStorageEngineManager, _ddmTemplateLocalService);
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, ddlDisplayContext);
@@ -196,12 +184,6 @@ public class DDLPortlet extends MVCPortlet {
 			DDLWebKeys.DYNAMIC_DATA_LISTS_RECORD_SET, recordSet);
 	}
 
-	protected void unsetDDLWebConfigurationActivator(
-		DDLWebConfigurationActivator ddlWebConfigurationActivator) {
-
-		_ddlWebConfigurationActivator = null;
-	}
-
 	private void _setCloseRedirect(ActionRequest actionRequest) {
 		String closeRedirect = ParamUtil.getString(
 			actionRequest, "closeRedirect");
@@ -231,13 +213,8 @@ public class DDLPortlet extends MVCPortlet {
 	@Reference
 	private DDLRecordSetService _ddlRecordSetService;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "unsetDDLWebConfigurationActivator"
-	)
-	private volatile DDLWebConfigurationActivator _ddlWebConfigurationActivator;
+	@Reference
+	private DDLWebConfigurationActivator _ddlWebConfigurationActivator;
 
 	@Reference
 	private DDMDisplayRegistry _ddmDisplayRegistry;
@@ -246,12 +223,12 @@ public class DDLPortlet extends MVCPortlet {
 	private DDMPermissionSupport _ddmPermissionSupport;
 
 	@Reference
+	private DDMStorageEngineManager _ddmStorageEngineManager;
+
+	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private StorageEngine _storageEngine;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.internal.batch.engine.broker;
@@ -46,6 +37,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -148,10 +140,13 @@ public class BatchEngineBrokerImpl implements BatchEngineBroker {
 			IMPORT_STRATEGY_STRING_ON_ERROR_CONTINUE;
 	}
 
-	private UriInfo _getImportTaskUriInfo(BatchPlannerPlan batchPlannerPlan) {
+	private UriInfo _getUriInfo(
+		BatchPlannerPlan batchPlannerPlan,
+		Map<String, String> planPolicyNameTypes) {
+
 		BatchEngineUriInfo.Builder builder = new BatchEngineUriInfo.Builder();
 
-		for (String name : BatchPlannerPolicyConstants.nameTypes.keySet()) {
+		for (String name : planPolicyNameTypes.keySet()) {
 			builder.queryParameter(
 				name,
 				_getValue(batchPlannerPlan.fetchBatchPlannerPolicy(name)));
@@ -176,7 +171,9 @@ public class BatchEngineBrokerImpl implements BatchEngineBroker {
 		_exportTaskResource.setContextCompany(
 			_companyLocalService.getCompany(batchPlannerPlan.getCompanyId()));
 		_exportTaskResource.setContextUriInfo(
-			_getImportTaskUriInfo(batchPlannerPlan));
+			_getUriInfo(
+				batchPlannerPlan,
+				BatchPlannerPolicyConstants.exportPlanPolicyNameTypes));
 		_exportTaskResource.setContextUser(
 			_userLocalService.getUser(batchPlannerPlan.getUserId()));
 
@@ -199,7 +196,9 @@ public class BatchEngineBrokerImpl implements BatchEngineBroker {
 		_importTaskResource.setContextCompany(
 			_companyLocalService.getCompany(batchPlannerPlan.getCompanyId()));
 		_importTaskResource.setContextUriInfo(
-			_getImportTaskUriInfo(batchPlannerPlan));
+			_getUriInfo(
+				batchPlannerPlan,
+				BatchPlannerPolicyConstants.importPlanPolicyNameTypes));
 		_importTaskResource.setContextUser(
 			_userLocalService.getUser(batchPlannerPlan.getUserId()));
 

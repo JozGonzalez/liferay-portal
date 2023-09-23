@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.password.policies.admin.web.internal.display.context;
@@ -96,7 +87,6 @@ public class PasswordPolicyDisplayContext {
 			() -> (_passwordPolicyId == 0) || _hasPermission(ActionKeys.UPDATE),
 			navigationItem -> {
 				navigationItem.setActive(tabs1.equals("details"));
-
 				navigationItem.setHref(
 					PortletURLBuilder.create(
 						PortletURLUtil.clone(portletURL, _renderResponse)
@@ -105,7 +95,6 @@ public class PasswordPolicyDisplayContext {
 					).setTabs1(
 						"details"
 					).buildString());
-
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "details"));
 			}
@@ -113,7 +102,6 @@ public class PasswordPolicyDisplayContext {
 			() -> _hasPermission(ActionKeys.ASSIGN_MEMBERS),
 			navigationItem -> {
 				navigationItem.setActive(tabs1.equals("assignees"));
-
 				navigationItem.setHref(
 					PortletURLBuilder.create(
 						PortletURLUtil.clone(portletURL, _renderResponse)
@@ -122,7 +110,6 @@ public class PasswordPolicyDisplayContext {
 					).setTabs1(
 						"assignees"
 					).buildString());
-
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "assignees"));
 			}

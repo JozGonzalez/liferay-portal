@@ -83,6 +83,14 @@ function create_angular_app {
 	rm -f README.md
 	rm -fr .vscode
 
+	cat <<EOF > build.gradle
+apply plugin: "com.liferay.node"
+
+node {
+	nodeVersion = "16.15.1"
+}
+EOF
+
 	#
 	# Add support for custom elements and disable tests.
 	#
@@ -98,13 +106,14 @@ function create_angular_app {
 
 	sed -i \
 		-e 's/{ Component }/{ Component, Input }/' \
+		-e "s/selector: 'app-root'/selector: '${CUSTOM_ELEMENT_NAME}'/" \
 		-e 's/title = /@Input("title") title = /' \
 		src/app/app.component.ts
 
 	sed -i \
 		-e 's/{ NgModule }/{ Injector, NgModule }/' \
 		-e '/@angular\/core/aimport { createCustomElement } from "@angular/elements";' \
-		-e '/@NgModule({/a\  entryComponents: [AppComponent],' \
+		-e '/@NgModule({/a\  bootstrap: [AppComponent],' \
 		-e '/bootstrap: /d' \
 		-e 's/class AppModule { }/class AppModule {/' \
 		-e '/class AppModule {/a\ ' \
@@ -141,7 +150,10 @@ function create_react_app {
 
 	mv README.md README.markdown
 
-	echo "SKIP_PREFLIGHT_CHECK=true" > ".env"
+	cat <<EOF > .env
+DISABLE_ESLINT_PLUGIN=true
+SKIP_PREFLIGHT_CHECK=true
+EOF
 
 	sed -i -e "s|<div id=\"root\"></div>|<${CUSTOM_ELEMENT_NAME} route=\"hello-world\"></${CUSTOM_ELEMENT_NAME}>|g" public/index.html
 
@@ -261,15 +273,20 @@ function write_react_app_files {
 	#
 
 	cat <<EOF > common/services/liferay/api.js
-import { Liferay } from "./liferay";
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
 
-const { REACT_APP_LIFERAY_HOST = window.location.origin } = process.env;
+import {Liferay} from './liferay.js';
+
+const {REACT_APP_LIFERAY_HOST = window.location.origin} = process.env;
 
 const baseFetch = async (url, options = {}) => {
-	return fetch(REACT_APP_LIFERAY_HOST + "/" + url, {
+	return fetch(REACT_APP_LIFERAY_HOST + '/' + url, {
 		headers: {
-			"Content-Type": "application/json",
-			"x-csrf-token": Liferay.authToken,
+			'Content-Type': 'application/json',
+			'x-csrf-token': Liferay.authToken,
 		},
 		...options,
 	});
@@ -283,22 +300,27 @@ EOF
 	#
 
 	cat <<EOF > common/services/liferay/liferay.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 export const Liferay = window.Liferay || {
 	OAuth2: {
 		getAuthorizeURL: () => '',
 		getBuiltInRedirectURL: () => '',
 		getIntrospectURL: () => '',
 		getTokenURL: () => '',
-		getUserAgentApplication: (serviceName) => {},
+		getUserAgentApplication: (_serviceName) => {},
 	},
 	OAuth2Client: {
-		FromParameters: (options) => {
+		FromParameters: (_options) => {
 			return {};
 		},
-		FromUserAgentApplication: (userAgentApplicationId) => {
+		FromUserAgentApplication: (_userAgentApplicationId) => {
 			return {};
 		},
-		fetch: (url, options = {}) => {},
+		fetch: (_url, _options = {}) => {},
 	},
 	ThemeDisplay: {
 		getCompanyGroupId: () => 0,
@@ -309,7 +331,7 @@ export const Liferay = window.Liferay || {
 		},
 	},
 	authToken: '',
-}
+};
 EOF
 
 	#
@@ -332,7 +354,8 @@ EOF
 	cat <<EOF > common/styles/index.scss
 ${CUSTOM_ELEMENT_NAME} {
 	@import 'variables';
-	@import 'hello-world.scss';
+
+	@import 'hello-world';
 }
 EOF
 
@@ -419,6 +442,11 @@ EOF
 	#
 
 	cat <<EOF > routes/hello-bar/pages/HelloBar.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 
 const HelloBar = () => (
@@ -435,6 +463,11 @@ EOF
 	#
 
 	cat <<EOF > routes/hello-foo/pages/HelloFoo.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 
 const HelloFoo = () => (
@@ -451,11 +484,18 @@ EOF
 	#
 
 	cat <<EOF > routes/hello-world/pages/HelloWorld.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 
 const HelloWorld = () => (
 	<div className="hello-world">
-		<h1>Hello <span className="hello-world-name">World</span></h1>
+		<h1>
+			Hello <span className="hello-world-name">World</span>
+		</h1>
 	</div>
 );
 

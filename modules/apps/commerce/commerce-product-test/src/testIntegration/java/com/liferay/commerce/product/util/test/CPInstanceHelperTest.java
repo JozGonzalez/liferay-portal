@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.util.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.product.exception.CPDefinitionIgnoreSKUCombinationsException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
@@ -121,13 +111,13 @@ public class CPInstanceHelperTest {
 			"There is only CP instance A that represents SKU value " +
 				"combination Option_1_Value_2, Option_2_Value_1"
 		).and(
-			"serialized DDM form values contains combination " +
+			"serialized form field values contains combination " +
 				"Option_1_Value_2, Option_2_Value_1"
 		).then(
 			"CP instance A must be fetched"
 		).but(
 			StringBundler.concat(
-				"If serialized DDM form values contains combination other ",
+				"If serialized form field values contains combination other ",
 				"than Option_1_Value_2, Option_2_Value_1 nothing should be ",
 				"fetched")
 		);
@@ -156,7 +146,7 @@ public class CPInstanceHelperTest {
 
 		CPInstance cpInstanceA = cpDefinitionInstances.get(2);
 
-		List<String> deletedCPInstanceDDMFormSerializedValues =
+		List<String> deletedCPInstanceFormFieldSerializedValues =
 			new ArrayList<>();
 
 		for (CPInstance cpDefinitionInstance : cpDefinitionInstances) {
@@ -166,8 +156,8 @@ public class CPInstanceHelperTest {
 				continue;
 			}
 
-			deletedCPInstanceDDMFormSerializedValues.add(
-				_getSerializedDDMFormValues(cpDefinitionInstance));
+			deletedCPInstanceFormFieldSerializedValues.add(
+				_getSerializedFormFieldValues(cpDefinitionInstance));
 
 			_cpInstanceLocalService.deleteCPInstance(cpDefinitionInstance);
 		}
@@ -183,7 +173,7 @@ public class CPInstanceHelperTest {
 
 		CPInstance fetchCPInstance = _cpInstanceHelper.fetchCPInstance(
 			cpDefinition.getCPDefinitionId(),
-			_getSerializedDDMFormValues(cpInstanceA));
+			_getSerializedFormFieldValues(cpInstanceA));
 
 		Assert.assertNotNull("Fetched CP instance exist", fetchCPInstance);
 
@@ -191,13 +181,13 @@ public class CPInstanceHelperTest {
 			"Fetched CP instance equals CP instance A",
 			cpInstanceA.getCPInstanceId(), fetchCPInstance.getCPInstanceId());
 
-		for (String deletedCPInstanceDDMFormSerializedValue :
-				deletedCPInstanceDDMFormSerializedValues) {
+		for (String deletedCPInstanceFormFieldSerializedValue :
+				deletedCPInstanceFormFieldSerializedValues) {
 
 			Assert.assertNull(
 				_cpInstanceHelper.fetchCPInstance(
 					cpDefinition.getCPDefinitionId(),
-					deletedCPInstanceDDMFormSerializedValue));
+					deletedCPInstanceFormFieldSerializedValue));
 		}
 	}
 
@@ -241,7 +231,7 @@ public class CPInstanceHelperTest {
 		CPInstance expectedCPInstance = cpDefinitionInstances.get(0);
 
 		CPInstance fetchCPInstance = _cpInstanceHelper.fetchCPInstance(
-			cpDefinition.getCPDefinitionId(), null);
+			cpDefinition.getCPDefinitionId(), StringPool.BLANK);
 
 		Assert.assertEquals(
 			"Default CP instance cpInstanceId",
@@ -260,7 +250,7 @@ public class CPInstanceHelperTest {
 			"Product instance count", 0, cpDefinitionInstances.size());
 
 		fetchCPInstance = _cpInstanceHelper.fetchCPInstance(
-			cpDefinition.getCPDefinitionId(), null);
+			cpDefinition.getCPDefinitionId(), StringPool.BLANK);
 
 		Assert.assertNull(
 			"Fetched CP instance does not exist", fetchCPInstance);
@@ -307,7 +297,7 @@ public class CPInstanceHelperTest {
 			defaultCPInstance.getCPInstanceId());
 	}
 
-	@Test(expected = CPDefinitionIgnoreSKUCombinationsException.class)
+	@Test
 	public void testGetDefaultCPInstanceIfSKUContributorOptionPresent()
 		throws Exception {
 
@@ -367,8 +357,10 @@ public class CPInstanceHelperTest {
 			"Product approved instances count", 1,
 			approvedCPDefinitionInstances.size());
 
-		_cpInstanceHelper.getDefaultCPInstance(
-			cpDefinition.getCPDefinitionId());
+		Assert.assertEquals(
+			_cpInstanceHelper.getDefaultCPInstance(
+				cpDefinition.getCPDefinitionId()),
+			approvedCPDefinitionInstances.get(0));
 	}
 
 	@Test
@@ -393,8 +385,9 @@ public class CPInstanceHelperTest {
 
 		cpDefinitionOptionRel1.setPriority(2);
 
-		_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
-			cpDefinitionOptionRel1);
+		cpDefinitionOptionRel1 =
+			_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
+				cpDefinitionOptionRel1);
 
 		CPDefinitionOptionRel cpDefinitionOptionRel2 =
 			CPTestUtil.addCPDefinitionOptionRel(
@@ -403,8 +396,9 @@ public class CPInstanceHelperTest {
 
 		cpDefinitionOptionRel2.setPriority(1);
 
-		_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
-			cpDefinitionOptionRel2);
+		cpDefinitionOptionRel2 =
+			_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
+				cpDefinitionOptionRel2);
 
 		Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
 			cpDefinitionOptionValueRelsMap =
@@ -450,8 +444,9 @@ public class CPInstanceHelperTest {
 
 		cpDefinitionOptionRel1.setName("Size");
 
-		_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
-			cpDefinitionOptionRel1);
+		cpDefinitionOptionRel1 =
+			_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
+				cpDefinitionOptionRel1);
 
 		CPDefinitionOptionRel cpDefinitionOptionRel2 =
 			CPTestUtil.addCPDefinitionOptionRel(
@@ -460,8 +455,9 @@ public class CPInstanceHelperTest {
 
 		cpDefinitionOptionRel2.setName("Color");
 
-		_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
-			cpDefinitionOptionRel2);
+		cpDefinitionOptionRel2 =
+			_cpDefinitionOptionRelLocalService.updateCPDefinitionOptionRel(
+				cpDefinitionOptionRel2);
 
 		Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
 			cpDefinitionOptionValueRelsMap =
@@ -488,7 +484,7 @@ public class CPInstanceHelperTest {
 	@Rule
 	public final FrutillaRule frutillaRule = new FrutillaRule();
 
-	private String _getSerializedDDMFormValues(CPInstance cpInstance)
+	private String _getSerializedFormFieldValues(CPInstance cpInstance)
 		throws Exception {
 
 		Map<String, List<String>>

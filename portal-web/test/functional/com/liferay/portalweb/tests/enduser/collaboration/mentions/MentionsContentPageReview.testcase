@@ -13,8 +13,8 @@ definition {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site via Headless API") {
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Import test fragments from dependencies folder") {
@@ -46,9 +46,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {

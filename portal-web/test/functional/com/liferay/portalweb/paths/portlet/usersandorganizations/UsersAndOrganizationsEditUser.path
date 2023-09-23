@@ -72,6 +72,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DETAILS_SCREEN_NAME_FIELD_DISABLED</td>
+	<td>//input[contains(@id,'screenName') and @disabled='disabled']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DETAILS_SUFFIX_SELECT</td>
 	<td>//div[contains(.,'Suffix')]/select</td>
 	<td></td>
@@ -108,7 +113,7 @@
 </tr>
 <tr>
 	<td>DETAILS_PROFILE_IMAGE</td>
-	<td>//img[contains(@id,'avatar') and contains(@src,'${key_imageName}')]</td>
+	<td>//img[contains(@class,'logo-selector') and contains(@src,'${key_imageName}')]</td>
 	<td></td>
 </tr>
 <tr>

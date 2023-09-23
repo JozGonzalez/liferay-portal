@@ -1,31 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.change.tracking.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.test.util.BaseTableReferenceDefinitionTestCase;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListAccountRelLocalService;
-import com.liferay.commerce.price.list.test.util.CommercePriceListTestUtil;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
+import com.liferay.commerce.test.util.price.list.CommercePriceListTestUtil;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -73,9 +64,8 @@ public class CommercePriceListAccountRelTableReferenceDefinitionTest
 			commerceCatalog.getGroupId(), false,
 			CommercePriceListConstants.TYPE_PRICE_LIST, 1.0);
 
-		_commerceAccount =
-			_commerceAccountLocalService.getPersonalCommerceAccount(
-				TestPropsValues.getUserId());
+		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
+			TestPropsValues.getUserId());
 	}
 
 	@Override
@@ -84,12 +74,9 @@ public class CommercePriceListAccountRelTableReferenceDefinitionTest
 			addCommercePriceListAccountRel(
 				TestPropsValues.getUserId(),
 				_commercePriceList.getCommercePriceListId(),
-				_commerceAccount.getCommerceAccountId(), 0,
+				_accountEntry.getAccountEntryId(), 0,
 				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
-
-	@Inject
-	private static CommerceAccountLocalService _commerceAccountLocalService;
 
 	@Inject
 	private static CommerceCatalogLocalService _commerceCatalogLocalService;
@@ -98,7 +85,7 @@ public class CommercePriceListAccountRelTableReferenceDefinitionTest
 	private static CommercePriceListAccountRelLocalService
 		_commercePriceListAccountRelLocalService;
 
-	private CommerceAccount _commerceAccount;
+	private AccountEntry _accountEntry;
 	private CommercePriceList _commercePriceList;
 
 }

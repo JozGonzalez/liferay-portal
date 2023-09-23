@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.impl;
@@ -106,7 +97,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.LongStream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -818,7 +808,8 @@ public class CommercePriceListLocalServiceImpl
 	public CommercePriceList getCommercePriceListByLowestPrice(
 			long groupId, long commerceAccountId,
 			long[] commerceAccountGroupIds, long commerceChannelId,
-			long commerceOrderTypeId, String cPInstanceUuid, String type)
+			long commerceOrderTypeId, String cPInstanceUuid, String type,
+			String unitOfMeasureKey)
 		throws PortalException {
 
 		List<CommercePriceEntry> commercePriceEntries =
@@ -827,8 +818,11 @@ public class CommercePriceListLocalServiceImpl
 					DSLQueryFactoryUtil.selectDistinct(
 						CommercePriceEntryTable.INSTANCE),
 					groupId, commerceAccountId, commerceAccountGroupIds,
-					commerceChannelId, commerceOrderTypeId, cPInstanceUuid, type
+					commerceChannelId, commerceOrderTypeId, cPInstanceUuid,
+					type, unitOfMeasureKey
 				).orderBy(
+					CommercePriceEntryTable.INSTANCE.priceOnApplication.
+						ascending(),
 					CommercePriceEntryTable.INSTANCE.price.ascending()
 				).limit(
 					0, 1
@@ -1592,15 +1586,10 @@ public class CommercePriceListLocalServiceImpl
 					commercePriceListId.eq(
 						CommercePriceListTable.INSTANCE.commercePriceListId));
 
-			LongStream longStream = Arrays.stream(commerceAccountGroupIds);
-
 			predicate = predicate.and(
 				CommercePriceListCommerceAccountGroupRelTable.INSTANCE.
 					commerceAccountGroupId.in(
-						longStream.boxed(
-						).toArray(
-							Long[]::new
-						)));
+						ArrayUtil.toLongArray(commerceAccountGroupIds)));
 		}
 		else {
 			joinStep = joinStep.leftJoinOn(
@@ -1657,7 +1646,8 @@ public class CommercePriceListLocalServiceImpl
 	private GroupByStep _getGroupByStep(
 		FromStep fromStep, Long groupId, Long commerceAccountId,
 		long[] commerceAccountGroupIds, Long commerceChannelId,
-		Long commerceOrderTypeId, String cPInstanceUuid, String type) {
+		Long commerceOrderTypeId, String cPInstanceUuid, String type,
+		String unitOfMeasureKey) {
 
 		JoinStep joinStep = fromStep.from(
 			CommercePriceEntryTable.INSTANCE
@@ -1689,12 +1679,8 @@ public class CommercePriceListLocalServiceImpl
 		if ((commerceAccountGroupIds != null) &&
 			(commerceAccountGroupIds.length > 0)) {
 
-			LongStream longStream = Arrays.stream(commerceAccountGroupIds);
-
-			commerceAccountGroupObjs = longStream.boxed(
-			).toArray(
-				Long[]::new
-			);
+			commerceAccountGroupObjs = ArrayUtil.toLongArray(
+				commerceAccountGroupIds);
 		}
 
 		Predicate predicate = CommercePriceListTable.INSTANCE.status.eq(
@@ -1738,6 +1724,16 @@ public class CommercePriceListLocalServiceImpl
 			predicate = predicate.and(
 				CommercePriceEntryTable.INSTANCE.CPInstanceUuid.eq(
 					cPInstanceUuid)
+			).and(
+				CommercePriceEntryTable.INSTANCE.status.eq(
+					WorkflowConstants.STATUS_APPROVED)
+			);
+		}
+
+		if (Validator.isNotNull(unitOfMeasureKey)) {
+			predicate = predicate.and(
+				CommercePriceEntryTable.INSTANCE.unitOfMeasureKey.eq(
+					unitOfMeasureKey)
 			).and(
 				CommercePriceEntryTable.INSTANCE.status.eq(
 					WorkflowConstants.STATUS_APPROVED)

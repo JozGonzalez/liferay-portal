@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.scheduler;
@@ -33,11 +24,12 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.workflow.metrics.internal.configuration.WorkflowMetricsConfiguration;
 import com.liferay.portal.workflow.metrics.internal.sla.transformer.WorkflowMetricsSLADefinitionTransformer;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 
 import java.util.Map;
 
@@ -97,8 +89,8 @@ public class WorkflowMetricsSLADefinitionTransformerSchedulerJobConfiguration
 
 		IndicesExistsIndexRequest indicesExistsIndexRequest =
 			new IndicesExistsIndexRequest(
-				_processWorkflowMetricsIndexNameBuilder.getIndexName(
-					companyId));
+				_indexNameBuilder.getIndexName(companyId) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 
 		IndicesExistsIndexResponse indicesExistsIndexResponse =
 			_searchEngineAdapter.execute(indicesExistsIndexRequest);
@@ -114,7 +106,8 @@ public class WorkflowMetricsSLADefinitionTransformerSchedulerJobConfiguration
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_processWorkflowMetricsIndexNameBuilder.getIndexName(companyId));
+			_indexNameBuilder.getIndexName(companyId) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
@@ -149,9 +142,8 @@ public class WorkflowMetricsSLADefinitionTransformerSchedulerJobConfiguration
 	@Reference
 	private CompanyLocalService _companyLocalService;
 
-	@Reference(target = "(workflow.metrics.index.entity.name=process)")
-	private WorkflowMetricsIndexNameBuilder
-		_processWorkflowMetricsIndexNameBuilder;
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Queries _queries;

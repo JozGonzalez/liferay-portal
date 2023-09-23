@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -18,17 +9,27 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentElement;
+import com.liferay.headless.delivery.client.pagination.Page;
+import com.liferay.headless.delivery.client.pagination.Pagination;
+import com.liferay.headless.delivery.client.resource.v1_0.ContentElementResource;
+import com.liferay.headless.delivery.client.serdes.v1_0.ContentElementSerDes;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.odata.entity.EntityField;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -38,6 +39,48 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ContentElementResourceTest
 	extends BaseContentElementResourceTestCase {
+
+	@Override
+	@Test
+	public void testGetAssetLibraryContentElementsPage() throws Exception {
+		super.testGetAssetLibraryContentElementsPage();
+
+		String name = RandomTestUtil.randomString();
+
+		DepotEntry depotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(LocaleUtil.getDefault(), name), null,
+			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId()));
+
+		testGetAssetLibraryContentElementsPage_addContentElement(
+			depotEntry.getDepotEntryId(), randomContentElement());
+
+		ContentElementResource.Builder builder =
+			ContentElementResource.builder();
+
+		contentElementResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
+			LocaleUtil.getDefault()
+		).parameters(
+			"fields", "content.assetLibraryKey"
+		).build();
+
+		Page<ContentElement> page =
+			contentElementResource.getAssetLibraryContentElementsPage(
+				depotEntry.getDepotEntryId(), null, null, null,
+				Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		JSONObject jsonObject = JSONUtil.put(
+			"content", JSONUtil.put("assetLibraryKey", name));
+
+		assertEquals(
+			ContentElementSerDes.toDTO(jsonObject.toString()),
+			page.fetchFirstItem());
+
+		assertValid(page);
+	}
 
 	@Override
 	@Test

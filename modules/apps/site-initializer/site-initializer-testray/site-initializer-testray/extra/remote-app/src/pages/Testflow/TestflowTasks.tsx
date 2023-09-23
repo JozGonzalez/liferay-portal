@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
@@ -54,7 +45,11 @@ import TaskHeaderActions from './TaskHeaderActions';
 
 type OutletContext = {
 	data: {
-		testrayTask: TestrayTask;
+		testrayTask: TestrayTask & {
+			actions: {
+				[key: string]: string;
+			};
+		};
 		testrayTaskUser: TestrayTaskUser[];
 	};
 	revalidate: {revalidateSubtask: () => void};
@@ -156,7 +151,7 @@ const TestFlowTasks = () => {
 
 	return (
 		<>
-			<TaskHeaderActions />
+			{testrayTask.actions?.update && <TaskHeaderActions />}
 
 			<Container collapsable title={i18n.sub('task-x', 'details')}>
 				<div className="d-flex flex-wrap">
@@ -342,7 +337,11 @@ const TestFlowTasks = () => {
 								key: 'user',
 								render: (
 									_: any,
-									subtask: TestraySubTask,
+									subtask: TestraySubTask & {
+										actions: {
+											[key: string]: string;
+										};
+									},
 									mutate
 								) => {
 									if (subtask.user) {
@@ -359,6 +358,7 @@ const TestFlowTasks = () => {
 
 									return (
 										<AssignToMe
+											hidden={!subtask.actions.update}
 											onClick={() =>
 												testraySubTaskImpl
 													.assignToMe(subtask)

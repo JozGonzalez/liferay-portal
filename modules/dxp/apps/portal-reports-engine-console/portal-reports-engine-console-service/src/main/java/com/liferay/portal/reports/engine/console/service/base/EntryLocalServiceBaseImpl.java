@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.reports.engine.console.service.base;
@@ -47,8 +38,6 @@ import com.liferay.portal.reports.engine.console.service.persistence.EntryFinder
 import com.liferay.portal.reports.engine.console.service.persistence.EntryPersistence;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -380,7 +369,7 @@ public abstract class EntryLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		EntryLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -395,7 +384,7 @@ public abstract class EntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		entryLocalService = (EntryLocalService)aopProxy;
 
-		_setLocalServiceUtilService(entryLocalService);
+		EntryLocalServiceUtil.setService(entryLocalService);
 	}
 
 	/**
@@ -437,22 +426,6 @@ public abstract class EntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		EntryLocalService entryLocalService) {
-
-		try {
-			Field field = EntryLocalServiceUtil.class.getDeclaredField(
-				"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, entryLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

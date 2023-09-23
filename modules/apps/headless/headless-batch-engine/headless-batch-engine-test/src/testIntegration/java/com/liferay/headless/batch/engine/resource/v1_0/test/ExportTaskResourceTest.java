@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.batch.engine.resource.v1_0.test;
@@ -165,6 +156,7 @@ public class ExportTaskResourceTest {
 				sb.append(className);
 				sb.append(": ");
 				sb.append(throwable.getMessage());
+				sb.append("\n");
 			}
 		}
 
@@ -288,6 +280,10 @@ public class ExportTaskResourceTest {
 	);
 
 	private static final List<String> _untestableDTOClassNames = Arrays.asList(
+		"com.liferay.change.tracking.rest.dto.v1_0.CTCollection",
+		"com.liferay.change.tracking.rest.dto.v1_0.CTEntry",
+		"com.liferay.change.tracking.rest.dto.v1_0.CTProcess",
+		"com.liferay.change.tracking.rest.dto.v1_0.CTRemote",
 		"com.liferay.data.engine.rest.dto.v2_0.DataDefinition",
 		"com.liferay.data.engine.rest.dto.v2_0.DataDefinitionFieldLink",
 		"com.liferay.data.engine.rest.dto.v2_0.DataLayout",
@@ -297,6 +293,7 @@ public class ExportTaskResourceTest {
 		"com.liferay.digital.signature.rest.dto.v1_0.DSEnvelope",
 		"com.liferay.dispatch.rest.dto.v1_0.DispatchTrigger",
 		"com.liferay.headless.admin.address.dto.v1_0.Country",
+		"com.liferay.headless.admin.address.dto.v1_0.Region",
 		"com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry",
 		"com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword",
 		"com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyCategory",
@@ -313,9 +310,11 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.admin.user.dto.v1_0.WebUrl",
 		"com.liferay.headless.admin.workflow.dto.v1_0.Assignee",
 		"com.liferay.headless.admin.workflow.dto.v1_0.Transition",
+		"com.liferay.headless.admin.workflow.dto.v1_0.WorkflowDefinition",
 		"com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstance",
 		"com.liferay.headless.admin.workflow.dto.v1_0.WorkflowLog",
 		"com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTask",
+		"com.liferay.headless.commerce.admin.account.dto.v1_0.Account",
 		"com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress",
 		"com.liferay.headless.commerce.admin.account.dto.v1_0." +
 			"AccountChannelEntry",
@@ -324,18 +323,25 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember",
 		"com.liferay.headless.commerce.admin.account.dto.v1_0." +
 			"AccountOrganization",
+		"com.liferay.headless.commerce.admin.account.dto.v1_0." +
+			"AdminAccountGroup",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Catalog",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Category",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Diagram",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.GroupedProduct",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.LinkedProduct",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.LowStockAction",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.MappedProduct",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionCategory",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Pin",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0." +
 			"ProductAccountGroup",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductChannel",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroup",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0." +
 			"ProductGroupProduct",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOption",
@@ -344,6 +350,9 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0." +
 			"ProductSpecification",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
 			"PaymentMethodGroupRelOrderType",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
@@ -355,18 +364,26 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0.ShippingMethod",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0.TaxCategory",
 		"com.liferay.headless.commerce.admin.inventory.dto.v1_0." +
+			"ReplenishmentItem",
+		"com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse",
+		"com.liferay.headless.commerce.admin.inventory.dto.v1_0." +
 			"WarehouseChannel",
 		"com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem",
 		"com.liferay.headless.commerce.admin.inventory.dto.v1_0." +
 			"WarehouseOrderType",
+		"com.liferay.headless.commerce.admin.order.dto.v1_0.Order",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderNote",
+		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRule",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleAccount",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0." +
 			"OrderRuleAccountGroup",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleChannel",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleOrderType",
+		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderType",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderTypeChannel",
+		"com.liferay.headless.commerce.admin.order.dto.v1_0.Term",
 		"com.liferay.headless.commerce.admin.order.dto.v1_0.TermOrderType",
+		"com.liferay.headless.commerce.admin.pricing.dto.v1_0.Discount",
 		"com.liferay.headless.commerce.admin.pricing.dto.v1_0." +
 			"DiscountAccountGroup",
 		"com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountCategory",
@@ -377,6 +394,7 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.pricing.dto.v1_0." +
 			"PriceListAccountGroup",
 		"com.liferay.headless.commerce.admin.pricing.dto.v1_0.TierPrice",
+		"com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount",
 		"com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountAccount",
 		"com.liferay.headless.commerce.admin.pricing.dto.v2_0." +
 			"DiscountAccountGroup",
@@ -421,11 +439,14 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.delivery.cart.dto.v1_0.ShippingMethod",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Attachment",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Category",
+		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Channel",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.LinkedProduct",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Pin",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption",
+		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0." +
+			"ProductOptionValue",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0." +
 			"ProductSpecification",
 		"com.liferay.headless.commerce.delivery.catalog.dto.v1_0." +
@@ -476,10 +497,12 @@ public class ExportTaskResourceTest {
 		"com.liferay.notification.rest.dto.v1_0.NotificationQueueEntry",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectAction",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectField",
+		"com.liferay.object.admin.rest.dto.v1_0.ObjectFolder",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectLayout",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectRelationship",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectView",
+		"com.liferay.portal.search.rest.dto.v1_0.SearchResult",
 		"com.liferay.portal.workflow.metrics.rest.dto.v1_0.Assignee",
 		"com.liferay.portal.workflow.metrics.rest.dto.v1_0.AssigneeMetric",
 		"com.liferay.portal.workflow.metrics.rest.dto.v1_0.Calendar",
@@ -507,7 +530,6 @@ public class ExportTaskResourceTest {
 		"com.liferay.search.experiences.rest.dto.v1_0." +
 			"SearchableAssetNameDisplay",
 		"com.liferay.search.experiences.rest.dto.v1_0.SearchIndex",
-		"com.liferay.search.experiences.rest.dto.v1_0.SXPElement",
 		"com.liferay.search.experiences.rest.dto.v1_0." +
 			"SXPParameterContributorDefinition",
 		"com.liferay.segments.asah.rest.dto.v1_0.Experiment",

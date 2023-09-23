@@ -66,6 +66,49 @@ definition {
 		}
 	}
 
+	@description = "This is a test case for COMMERCE-10820. User with Category Manager role can access Categories from the site admin menu"
+	@priority = 3
+	test CanCategoryManagerAccessCategoriesAdminMenu {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a user with Category Manager role is created") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Category Manager",
+				userEmailAddress = "category.manager@liferay.com",
+				userFirstName = "Category",
+				userLastName = "Manager",
+				userScreenName = "category.manager");
+
+			JSONUser.addUserToSite(
+				groupName = "Minium",
+				userEmailAddress = "category.manager@liferay.com");
+		}
+
+		task ("When Category Manager logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "category.manager@liferay.com");
+		}
+
+		task ("Then Categories admin menu is shown") {
+			ProductMenu.gotoPortlet(
+				category = "Categorization",
+				portlet = "Categories");
+
+			AssertTextEquals(
+				locator1 = "ControlMenu#HEADING",
+				value1 = "Categories");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10322. Create a new Content Page, deploy the widget Categories Navigation, configure it with Minium as Vocabulary, and then verify if when the page is reached by the guest no errors are present"
 	@priority = 5
 	test CanGuestUserViewTheCategoriesNavigationWidgetWithoutErrors {
@@ -112,6 +155,96 @@ definition {
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 
 			AssertConsoleTextNotPresent(value1 = "must have VIEW permission for com.liferay.asset.kernel.model.AssetVocabulary");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11649. Verify that 404 Utility Pages work on Minium site"
+	@priority = 3
+	test CanSee404UtilityPagesWorkOnMiniumSite {
+		property portal.acceptance = "false";
+
+		var portalURL = PropsUtil.get("portal.url");
+
+		task ("Given a Minium Site with an account is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
+
+			CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account");
+		}
+
+		task ("And the admin creates a master page template with a Commerce Categories Navigation widget inside of it") {
+			ProductMenu.gotoPortlet(
+				category = "Design",
+				portlet = "Page Templates");
+
+			MastersPageTemplatesAdmin.addMasters(masterLayoutName = "Master Page Template Test");
+
+			PageEditor.addWidget(
+				dropTarget = "Header",
+				portletName = "Commerce Categories Navigation",
+				scope = "Minium");
+		}
+
+		task ("And in the widget configuration the vocabulary is changed to 'Minium'") {
+			Portlet.gotoPortletOptions(
+				portletName = "Commerce Categories Navigation",
+				portletOption = "Configuration");
+
+			CommerceNavigator.changeVocabulary(newVocabularyName = "Minium");
+
+			MastersPageTemplates.publishMaster();
+		}
+
+		task ("And the admin creates a new utility page, selecting the created master for it") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "minium");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(
+				masterLayoutName = "Master Page Template Test",
+				pageName = "404 Error Utility Page");
+		}
+
+		task ("And a paragraph is added to the 404 page") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Paragraph text edited.");
+
+			PageEditor.publish();
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("And the newly created 404 is set as default") {
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Mark as Default",
+				rowEntry = "404 Error Utility Page");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("When the admin navigates to the non existent page") {
+			Navigator.openSpecificURL(url = "${portalURL}/web/minium/mynonexistentpage");
+		}
+
+		task ("Then the paragraph is visible inside the page") {
+			AssertElementPresent(
+				key_value = "Paragraph text edited.",
+				locator1 = "CommerceEntry#ASSERT_PARAGRAPH_TEXT");
+		}
+
+		task ("And the Minium Catalog page is not visible") {
+			AssertElementNotPresent(
+				key_title = "Catalog",
+				locator1 = "CommerceAccelerators#MINIUM_PAGE_TITLE");
 		}
 	}
 
@@ -296,6 +429,45 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11975. The admin is not redirected into another page after he publishes an image for a category"
+	@priority = 3
+	test CanViewSamePageAfterPublishingAnImageForACategory {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And also a new vocabulary for the site") {
+			JSONCategory.addVocabulary(
+				groupName = "Minium",
+				title = "Test Vocabulary");
+		}
+
+		task ("And also a category for the vocabulary") {
+			JSONCategory.addCategory(
+				groupName = "Minium",
+				title = "Test Category",
+				vocabularyName = "Test Vocabulary");
+		}
+
+		task ("When the admin navigates to the minium categories page") {
+			Category.openCategoriesAdmin(siteURLKey = "minium");
+		}
+
+		task ("And adds an image for the category using Select from File button") {
+			Category.addImageToCategory(
+				categoryName = "Test Category",
+				imageName = "Document_1.jpg");
+		}
+
+		task ("Then after publishing the admin is not redirected to the categories page, but remains in the same tab") {
+			AssertElementPresent(
+				key_tabName = "Images",
+				locator1 = "StagingPublishToLive#ACTIVE_TAB_NAME");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-7853. Verify user can override a default category display page for different categories"
 	@priority = 5
 	test OverrideDefaultCategoryDisplayPageForDifferentCategories {
@@ -393,7 +565,9 @@ definition {
 
 			Button.clickSave();
 
-			Alert.viewErrorMessage(errorMessage = "Please select a valid layout.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Close Error:Please select a valid layout.");
 		}
 
 		task ("And Given it is not possible to add an Override Default Category Display Page by selecting only a page") {
@@ -409,7 +583,11 @@ definition {
 
 			Button.clickSave();
 
-			Alert.viewErrorMessage(errorMessage = "Please select a valid category.");
+			WaitForElementPresent(locator1 = "Message#ERROR");
+
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Close Error:Please select a valid category.");
 		}
 
 		task ("And given the Test Public Widget Page is set as Override Default Category Display Page for Engine") {

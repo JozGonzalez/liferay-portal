@@ -62,19 +62,19 @@
 										},
 										"text": {
 											"value_i18n": {
-												"ar_SA": "Partner Deal Registration",
-												"ca_ES": "Partner Deal Registration",
-												"de_DE": "Partner Deal Registration",
-												"en_US": "Partner Deal Registration",
-												"es_ES": "Partner Deal Registration",
-												"fi_FI": "Partner Deal Registration",
-												"fr_FR": "Partner Deal Registration",
-												"hu_HU": "Partner Deal Registration",
-												"ja_JP": "Partner Deal Registration",
-												"nl_NL": "Partner Deal Registration",
-												"pt_BR": "Partner Deal Registration",
-												"sv_SE": "Partner Deal Registration",
-												"zh_CN": "Partner Deal Registration"
+												"ar_SA": "Deal Registrations",
+												"ca_ES": "Deal Registrations",
+												"de_DE": "Deal Registrations",
+												"en_US": "Deal Registrations",
+												"es_ES": "Deal Registrations",
+												"fi_FI": "Deal Registrations",
+												"fr_FR": "Deal Registrations",
+												"hu_HU": "Deal Registrations",
+												"ja_JP": "Deal Registrations",
+												"nl_NL": "Deal Registrations",
+												"pt_BR": "Deal Registrations",
+												"sv_SE": "Deal Registrations",
+												"zh_CN": "Deal Registrations"
 											}
 										}
 									}
@@ -91,7 +91,7 @@
 															"fields": [
 																{
 																	"fieldName": "friendlyURL",
-																	"fieldValue": "/sales/partner-opportunities"
+																	"fieldValue": "/sales/opportunities"
 																},
 																{
 																	"fieldName": "privatePage",
@@ -105,19 +105,19 @@
 										},
 										"text": {
 											"value_i18n": {
-												"ar_SA": "Partner Opportunities",
-												"ca_ES": "Partner Opportunities",
-												"de_DE": "Partner Opportunities",
-												"en_US": "Partner Opportunities",
-												"es_ES": "Partner Opportunities",
-												"fi_FI": "Partner Opportunities",
-												"fr_FR": "Partner Opportunities",
-												"hu_HU": "Partner Opportunities",
-												"ja_JP": "Partner Opportunities",
-												"nl_NL": "Partner Opportunities",
-												"pt_BR": "Partner Opportunities",
-												"sv_SE": "Partner Opportunities",
-												"zh_CN": "Partner Opportunities"
+												"ar_SA": "Opportunities",
+												"ca_ES": "Opportunities",
+												"de_DE": "Opportunities",
+												"en_US": "Opportunities",
+												"es_ES": "Opportunities",
+												"fi_FI": "Opportunities",
+												"fr_FR": "Opportunities",
+												"hu_HU": "Opportunities",
+												"ja_JP": "Opportunities",
+												"nl_NL": "Opportunities",
+												"pt_BR": "Opportunities",
+												"sv_SE": "Opportunities",
+												"zh_CN": "Opportunities"
 											}
 										}
 									}

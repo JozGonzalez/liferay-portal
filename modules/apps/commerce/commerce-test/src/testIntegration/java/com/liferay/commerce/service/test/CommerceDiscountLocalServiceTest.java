@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelLocalServiceUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
-import com.liferay.commerce.account.service.CommerceAccountGroupCommerceAccountRelLocalServiceUtil;
-import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
@@ -33,13 +24,12 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
@@ -92,21 +82,30 @@ public class CommerceDiscountLocalServiceTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
-		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
 			_serviceContext);
 
-		_commerceAccountGroup =
-			_commerceAccountGroupLocalService.addCommerceAccountGroup(
-				_group.getCompanyId(), RandomTestUtil.randomString(), 0, false,
-				null, _serviceContext);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
 
-		CommerceAccountGroupCommerceAccountRelLocalServiceUtil.
-			addCommerceAccountGroupCommerceAccountRel(
-				_commerceAccountGroup.getCommerceAccountGroupId(),
-				_commerceAccount.getCommerceAccountId(), _serviceContext);
+		_accountGroup = _accountGroupLocalService.addAccountGroup(
+			serviceContext.getUserId(), null, RandomTestUtil.randomString(),
+			serviceContext);
+
+		_accountGroup.setExternalReferenceCode(null);
+		_accountGroup.setDefaultAccountGroup(false);
+		_accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
+		_accountGroup.setExpandoBridgeAttributes(serviceContext);
+
+		_accountGroup = _accountGroupLocalService.updateAccountGroup(
+			_accountGroup);
+
+		AccountGroupRelLocalServiceUtil.addAccountGroupRel(
+			_accountGroup.getAccountGroupId(), AccountEntry.class.getName(),
+			_accountEntry.getAccountEntryId());
 
 		_commerceCatalog = CommerceTestUtil.addCommerceCatalog(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId(),
@@ -223,8 +222,8 @@ public class CommerceDiscountLocalServiceTest {
 		_commerceOrders.add(commerceOrder);
 
 		long[] commerceAccountGroups =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_commerceAccount.getCommerceAccountId());
+			_accountGroupLocalService.getAccountGroupIds(
+				_accountEntry.getAccountEntryId());
 
 		CommerceDiscount commerceDiscountTotal1 =
 			CommerceDiscountTestUtil.addChannelOrderDiscount(
@@ -253,7 +252,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountTotal4 =
 			CommerceDiscountTestUtil.addAccountOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				CommerceDiscountConstants.TARGET_TOTAL);
 
 		_orderAssertEquals(
@@ -261,7 +260,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountTotal5 =
 			CommerceDiscountTestUtil.addAccountAndChannelOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(),
 				CommerceDiscountConstants.TARGET_TOTAL);
 
@@ -298,7 +297,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountShipping4 =
 			CommerceDiscountTestUtil.addAccountOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				CommerceDiscountConstants.TARGET_SHIPPING);
 
 		_orderAssertEquals(
@@ -307,7 +306,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountShipping5 =
 			CommerceDiscountTestUtil.addAccountAndChannelOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(),
 				CommerceDiscountConstants.TARGET_SHIPPING);
 
@@ -345,7 +344,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountSubtotal4 =
 			CommerceDiscountTestUtil.addAccountOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				CommerceDiscountConstants.TARGET_SUBTOTAL);
 
 		_orderAssertEquals(
@@ -354,7 +353,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceDiscountSubtotal5 =
 			CommerceDiscountTestUtil.addAccountAndChannelOrderDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(),
 				CommerceDiscountConstants.TARGET_SUBTOTAL);
 
@@ -383,13 +382,13 @@ public class CommerceDiscountLocalServiceTest {
 		_commerceOrders.add(commerceOrder);
 
 		CommerceDiscountTestUtil.addAccountAndChannelOrderDiscount(
-			_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+			_user.getGroupId(), _accountEntry.getAccountEntryId(),
 			_commerceChannel.getCommerceChannelId(),
 			CommerceDiscountConstants.TARGET_TOTAL);
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getOrderCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				RandomTestUtil.nextLong(),
 				CommerceDiscountConstants.TARGET_TOTAL);
 
@@ -417,8 +416,8 @@ public class CommerceDiscountLocalServiceTest {
 		_commerceOrders.add(commerceOrder);
 
 		long[] commerceAccountGroups =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_commerceAccount.getCommerceAccountId());
+			_accountGroupLocalService.getAccountGroupIds(
+				_accountEntry.getAccountEntryId());
 
 		CommerceDiscountTestUtil.addAccountGroupAndChannelOrderDiscount(
 			_user.getGroupId(), commerceAccountGroups,
@@ -427,7 +426,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getOrderCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				RandomTestUtil.nextLong(),
 				CommerceDiscountConstants.TARGET_TOTAL);
 
@@ -476,8 +475,8 @@ public class CommerceDiscountLocalServiceTest {
 			cpInstance.getCPInstanceId());
 
 		long[] commerceAccountGroups =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_commerceAccount.getCommerceAccountId());
+			_accountGroupLocalService.getAccountGroupIds(
+				_accountEntry.getAccountEntryId());
 
 		CommerceDiscount commerceAccountGroupsDiscount =
 			CommerceDiscountTestUtil.addAccountGroupDiscount(
@@ -502,7 +501,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceAccountDiscount =
 			CommerceDiscountTestUtil.addAccountDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				CommerceDiscountConstants.LEVEL_L4,
 				cpDefinition.getCPDefinitionId());
 
@@ -512,7 +511,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		CommerceDiscount commerceAccountAndChannelDiscount =
 			CommerceDiscountTestUtil.addAccountAndChannelDiscount(
-				_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+				_user.getGroupId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(),
 				CommerceDiscountConstants.LEVEL_L4,
 				cpDefinition.getCPDefinitionId());
@@ -541,14 +540,14 @@ public class CommerceDiscountLocalServiceTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		CommerceDiscountTestUtil.addAccountAndChannelDiscount(
-			_user.getGroupId(), _commerceAccount.getCommerceAccountId(),
+			_user.getGroupId(), _accountEntry.getAccountEntryId(),
 			_commerceChannel.getCommerceChannelId(),
 			CommerceDiscountConstants.LEVEL_L4,
 			cpDefinition.getCPDefinitionId());
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getProductCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				RandomTestUtil.nextLong(), cpDefinition.getCPDefinitionId(),
 				cpInstance.getCPInstanceId());
 
@@ -575,8 +574,8 @@ public class CommerceDiscountLocalServiceTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		long[] commerceAccountGroups =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_commerceAccount.getCommerceAccountId());
+			_accountGroupLocalService.getAccountGroupIds(
+				_accountEntry.getAccountEntryId());
 
 		CommerceDiscountTestUtil.addAccountGroupAndChannelDiscount(
 			_user.getGroupId(), commerceAccountGroups,
@@ -586,7 +585,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getProductCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				RandomTestUtil.nextLong(), cpDefinition.getCPDefinitionId(),
 				cpInstance.getCPInstanceId());
 
@@ -639,8 +638,7 @@ public class CommerceDiscountLocalServiceTest {
 		}
 
 		long[] commerceAccountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceAccountId);
+			_accountGroupLocalService.getAccountGroupIds(commerceAccountId);
 
 		commerceDiscounts =
 			_commerceDiscountLocalService.
@@ -741,8 +739,7 @@ public class CommerceDiscountLocalServiceTest {
 		}
 
 		long[] commerceAccountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceAccountId);
+			_accountGroupLocalService.getAccountGroupIds(commerceAccountId);
 
 		commerceDiscounts =
 			_commerceDiscountLocalService.
@@ -807,7 +804,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getOrderCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), type);
 
 		CommerceDiscount commerceDiscount = commerceDiscounts.get(0);
@@ -824,7 +821,7 @@ public class CommerceDiscountLocalServiceTest {
 
 		List<CommerceDiscount> commerceDiscounts =
 			_getProductCommerceDiscountByHierarchy(
-				_group.getCompanyId(), _commerceAccount.getCommerceAccountId(),
+				_group.getCompanyId(), _accountEntry.getAccountEntryId(),
 				_commerceChannel.getCommerceChannelId(), cpDefinitionId,
 				cpInstanceId);
 
@@ -837,14 +834,11 @@ public class CommerceDiscountLocalServiceTest {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
-	private CommerceAccountGroup _commerceAccountGroup;
+	private AccountEntry _accountEntry;
+	private AccountGroup _accountGroup;
 
 	@Inject
-	private CommerceAccountGroupLocalService _commerceAccountGroupLocalService;
-
-	@Inject
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	private CommerceCatalog _commerceCatalog;
 	private CommerceChannel _commerceChannel;
@@ -861,9 +855,6 @@ public class CommerceDiscountLocalServiceTest {
 
 	@Inject
 	private ConfigurationProvider _configurationProvider;
-
-	@Inject
-	private CPDefinitionLocalService _cpDefinitionLocalService;
 
 	private Group _group;
 	private ServiceContext _serviceContext;

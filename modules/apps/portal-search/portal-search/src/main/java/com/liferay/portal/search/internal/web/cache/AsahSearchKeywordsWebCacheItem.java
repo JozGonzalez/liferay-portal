@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.web.cache;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -27,7 +18,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
 import com.liferay.portal.search.internal.configuration.AsahSearchKeywordsConfiguration;
-import com.liferay.portal.search.internal.util.AsahUtil;
 
 import java.net.HttpURLConnection;
 
@@ -37,26 +27,21 @@ import java.net.HttpURLConnection;
 public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 
 	public static JSONObject get(
+		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
-		long companyId, int count, String displayLanguageId, long groupId,
+		long companyId, String displayLanguageId, long groupId, int minCounts,
 		int size, String sort) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-159643") ||
-			!AsahUtil.isAnalyticsEnabled(companyId)) {
-
-			return JSONFactoryUtil.createJSONObject();
-		}
 
 		try {
 			return (JSONObject)WebCachePoolUtil.get(
 				StringBundler.concat(
 					AsahSearchKeywordsWebCacheItem.class.getName(),
-					StringPool.POUND, companyId, StringPool.POUND, count,
+					StringPool.POUND, companyId, StringPool.POUND, minCounts,
 					StringPool.POUND, displayLanguageId, StringPool.POUND,
 					groupId, StringPool.POUND, sort),
 				new AsahSearchKeywordsWebCacheItem(
-					asahSearchKeywordsConfiguration, companyId, count,
-					displayLanguageId, groupId, size, sort));
+					analyticsConfiguration, asahSearchKeywordsConfiguration,
+					displayLanguageId, groupId, minCounts, size, sort));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -68,15 +53,16 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 	}
 
 	public AsahSearchKeywordsWebCacheItem(
+		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
-		long companyId, int count, String displayLanguageId, long groupId,
-		int size, String sort) {
+		String displayLanguageId, long groupId, int minCounts, int size,
+		String sort) {
 
+		_analyticsConfiguration = analyticsConfiguration;
 		_asahSearchKeywordsConfiguration = asahSearchKeywordsConfiguration;
-		_companyId = companyId;
-		_count = count;
 		_displayLanguageId = displayLanguageId;
 		_groupId = groupId;
+		_minCounts = minCounts;
 		_size = size;
 		_sort = sort;
 	}
@@ -88,9 +74,11 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 
 			options.addHeader(
 				"OSB-Asah-Faro-Backend-Security-Signature",
-				AsahUtil.getAsahFaroBackendSecuritySignature(_companyId));
+				_analyticsConfiguration.
+					liferayAnalyticsFaroBackendSecuritySignature());
 			options.addHeader(
-				"OSB-Asah-Project-ID", AsahUtil.getAsahProjectId(_companyId));
+				"OSB-Asah-Project-ID",
+				_analyticsConfiguration.liferayAnalyticsProjectId());
 
 			String url = _getURL();
 
@@ -114,21 +102,17 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 
 	@Override
 	public long getRefreshTime() {
-		if (AsahUtil.isAnalyticsEnabled(_companyId)) {
-			return _asahSearchKeywordsConfiguration.cacheTimeout();
-		}
-
-		return 0;
+		return _asahSearchKeywordsConfiguration.cacheTimeout();
 	}
 
 	private String _getURL() {
 		StringBundler sb = new StringBundler(11);
 
-		sb.append(AsahUtil.getAsahFaroBackendURL(_companyId));
-		sb.append("/api/1.0/pages/search-keywords?counts=");
-		sb.append(_count);
+		sb.append(_analyticsConfiguration.liferayAnalyticsFaroBackendURL());
+		sb.append("/api/1.0/pages/search-keywords?minCounts=");
+		sb.append(_minCounts);
 
-		if (Validator.isBlank(_displayLanguageId)) {
+		if (!Validator.isBlank(_displayLanguageId)) {
 			sb.append("&displayLanguageId=");
 			sb.append(_displayLanguageId);
 		}
@@ -164,12 +148,12 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 	private static final Log _log = LogFactoryUtil.getLog(
 		AsahSearchKeywordsWebCacheItem.class);
 
+	private final AnalyticsConfiguration _analyticsConfiguration;
 	private final AsahSearchKeywordsConfiguration
 		_asahSearchKeywordsConfiguration;
-	private final long _companyId;
-	private final int _count;
 	private final String _displayLanguageId;
 	private final long _groupId;
+	private final int _minCounts;
 	private final int _size;
 	private final String _sort;
 

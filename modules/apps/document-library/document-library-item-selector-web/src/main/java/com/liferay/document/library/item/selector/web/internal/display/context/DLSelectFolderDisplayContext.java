@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.item.selector.web.internal.display.context;
@@ -26,12 +17,19 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
+import com.liferay.portal.kernel.service.GroupServiceUtil;
+import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -39,7 +37,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portlet.documentlibrary.service.permission.DLFolderPermission;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,12 +55,14 @@ public class DLSelectFolderDisplayContext {
 
 	public DLSelectFolderDisplayContext(
 		DLAppService dlAppService, Folder folder,
+		ModelResourcePermission<Folder> folderModelResourcePermission,
 		HttpServletRequest httpServletRequest, PortletURL portletURL,
 		long repositoryId, long selectedFolderId, long selectedRepositoryId,
 		boolean showGroupSelector) {
 
 		_dlAppService = dlAppService;
 		_folder = folder;
+		_folderModelResourcePermission = folderModelResourcePermission;
 		_httpServletRequest = httpServletRequest;
 		_portletURL = portletURL;
 		_repositoryId = repositoryId;
@@ -236,20 +235,30 @@ public class DLSelectFolderDisplayContext {
 				return getFolderName();
 			}
 		).put(
-			"repositoryid",
+			"repositoryid", getRepositoryId()
+		).put(
+			"repositoryname",
 			() -> {
-				if (folder != null) {
-					return folder.getRepositoryId();
+				if ((folder == null) ||
+					(getRepositoryId() == folder.getGroupId())) {
+
+					Group group = GroupServiceUtil.getGroup(getRepositoryId());
+
+					return group.getDescriptiveName(_themeDisplay.getLocale());
 				}
 
-				return getRepositoryId();
+				Repository repository =
+					RepositoryLocalServiceUtil.fetchRepository(
+						getRepositoryId());
+
+				return repository.getName();
 			}
 		).build();
 	}
 
 	public boolean hasAddFolderPermission() throws PortalException {
 		if (_isAddFolderButtonVisible() &&
-			DLFolderPermission.contains(
+			_contains(
 				_themeDisplay.getPermissionChecker(), getRepositoryId(),
 				getFolderId(), ActionKeys.ADD_FOLDER)) {
 
@@ -275,6 +284,16 @@ public class DLSelectFolderDisplayContext {
 
 	public boolean isShowGroupSelector() {
 		return _showGroupSelector;
+	}
+
+	private boolean _contains(
+			PermissionChecker permissionChecker, long groupId, long folderId,
+			String actionId)
+		throws PortalException {
+
+		return ModelResourcePermissionUtil.contains(
+			_folderModelResourcePermission, permissionChecker, groupId,
+			folderId, actionId);
 	}
 
 	private PortletURL _getFolderPortletURL(
@@ -320,6 +339,8 @@ public class DLSelectFolderDisplayContext {
 
 	private final DLAppService _dlAppService;
 	private final Folder _folder;
+	private final ModelResourcePermission<Folder>
+		_folderModelResourcePermission;
 	private final HttpServletRequest _httpServletRequest;
 	private final PortletURL _portletURL;
 	private final long _repositoryId;

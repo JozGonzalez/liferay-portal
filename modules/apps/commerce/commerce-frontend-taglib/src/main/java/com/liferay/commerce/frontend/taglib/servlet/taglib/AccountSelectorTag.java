@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
@@ -23,6 +14,7 @@ import com.liferay.commerce.frontend.taglib.internal.model.CurrentCommerceOrderM
 import com.liferay.commerce.frontend.taglib.internal.model.WorkflowStatusModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -46,12 +38,68 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 /**
  * @author Fabio Diego Mastrorilli
  */
 public class AccountSelectorTag extends IncludeTag {
+
+	@Override
+	public int doStartTag() throws JspException {
+		try {
+			HttpServletRequest httpServletRequest = getRequest();
+
+			CommerceContext commerceContext =
+				(CommerceContext)httpServletRequest.getAttribute(
+					CommerceWebKeys.COMMERCE_CONTEXT);
+
+			_commerceChannelId = commerceContext.getCommerceChannelId();
+
+			if (_commerceChannelId == 0) {
+				_accountEntryAllowedTypes = new String[0];
+				_addCommerceOrderURL = StringPool.BLANK;
+				_editOrderURL = StringPool.BLANK;
+				_setCurrentAccountURL = StringPool.BLANK;
+
+				return super.doStartTag();
+			}
+
+			_accountEntry = commerceContext.getAccountEntry();
+			_accountEntryAllowedTypes =
+				commerceContext.getAccountEntryAllowedTypes();
+			_addCommerceOrderURL = _getAddCommerceOrderURL(httpServletRequest);
+			_commerceOrder = commerceContext.getCommerceOrder();
+			_editOrderURL = _getEditOrderURL(httpServletRequest);
+			_setCurrentAccountURL =
+				PortalUtil.getPortalURL(httpServletRequest) +
+					PortalUtil.getPathContext() +
+						"/o/commerce-ui/set-current-account";
+
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+			if (Validator.isNull(_spritemap)) {
+				_spritemap = _themeDisplay.getPathThemeSpritemap();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+
+			_accountEntry = null;
+			_accountEntryAllowedTypes = null;
+			_addCommerceOrderURL = null;
+			_commerceChannelId = 0;
+			_commerceOrder = null;
+			_editOrderURL = null;
+			_setCurrentAccountURL = null;
+			_spritemap = null;
+			_themeDisplay = null;
+		}
+
+		return super.doStartTag();
+	}
 
 	public String getSpritemap() {
 		return _spritemap;
@@ -61,10 +109,23 @@ public class AccountSelectorTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		_commerceOrderTypeLocalService =
-			ServletContextUtil.getCommerceOrderTypeLocalService();
+		try {
+			HttpServletRequest httpServletRequest = getRequest();
 
-		setServletContext(ServletContextUtil.getServletContext());
+			CommerceContext commerceContext =
+				(CommerceContext)httpServletRequest.getAttribute(
+					CommerceWebKeys.COMMERCE_CONTEXT);
+
+			_commerceChannelId = commerceContext.getCommerceChannelId();
+
+			_commerceOrderTypeLocalService =
+				ServletContextUtil.getCommerceOrderTypeLocalService();
+
+			setServletContext(ServletContextUtil.getServletContext());
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 	}
 
 	public void setSpritemap(String spritemap) {
@@ -75,8 +136,16 @@ public class AccountSelectorTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_accountEntry = null;
+		_accountEntryAllowedTypes = null;
+		_addCommerceOrderURL = null;
+		_commerceChannelId = 0;
+		_commerceOrder = null;
 		_commerceOrderTypeLocalService = null;
+		_editOrderURL = null;
+		_setCurrentAccountURL = null;
 		_spritemap = null;
+		_themeDisplay = null;
 	}
 
 	@Override
@@ -86,111 +155,77 @@ public class AccountSelectorTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
-		try {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:accountEntryAllowedTypes",
+			_accountEntryAllowedTypes);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:commerceChannelId",
+			_commerceChannelId);
 
-			if (Validator.isNull(_spritemap)) {
-				_spritemap = themeDisplay.getPathThemeSpritemap();
+		if (_accountEntry != null) {
+			String thumbnailUrl = null;
+
+			if (_accountEntry.getLogoId() == 0) {
+				thumbnailUrl =
+					_themeDisplay.getPathImage() +
+						"/organization_logo?img_id=0";
+			}
+			else {
+				thumbnailUrl = StringBundler.concat(
+					_themeDisplay.getPathImage(), "/organization_logo?img_id=",
+					_accountEntry.getLogoId(), "&t=",
+					WebServerServletTokenUtil.getToken(
+						_accountEntry.getLogoId()));
 			}
 
-			HttpServletRequest parentHttpServletRequest = getRequest();
-
-			CommerceContext commerceContext =
-				(CommerceContext)parentHttpServletRequest.getAttribute(
-					CommerceWebKeys.COMMERCE_CONTEXT);
-
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:accountEntryAllowedTypes",
-				commerceContext.getAccountEntryAllowedTypes());
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:commerceChannelId",
-				commerceContext.getCommerceChannelId());
-
-			CommerceAccount commerceAccount =
-				commerceContext.getCommerceAccount();
-
-			if (commerceAccount != null) {
-				String thumbnailUrl = null;
-
-				if (commerceAccount.getLogoId() == 0) {
-					thumbnailUrl =
-						themeDisplay.getPathImage() +
-							"/organization_logo?img_id=0";
-				}
-				else {
-					thumbnailUrl = StringBundler.concat(
-						themeDisplay.getPathImage(),
-						"/organization_logo?img_id=",
-						commerceAccount.getLogoId(), "&t=",
-						WebServerServletTokenUtil.getToken(
-							commerceAccount.getLogoId()));
-				}
-
-				CurrentCommerceAccountModel currentCommerceAccountModel =
-					new CurrentCommerceAccountModel(
-						commerceAccount.getCommerceAccountId(), thumbnailUrl,
-						commerceAccount.getName());
-
-				httpServletRequest.setAttribute(
-					"liferay-commerce:account-selector:currentCommerceAccount",
-					currentCommerceAccountModel);
-			}
-
-			CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
-
-			if (commerceOrder != null) {
-				String workflowStatusInfoLabel =
-					WorkflowConstants.getStatusLabel(commerceOrder.getStatus());
-
-				WorkflowStatusModel workflowStatusModel =
-					new WorkflowStatusModel(
-						commerceOrder.getStatus(), workflowStatusInfoLabel,
-						LanguageUtil.get(
-							themeDisplay.getLocale(), workflowStatusInfoLabel));
-
-				CurrentCommerceOrderModel currentCommerceOrderModel =
-					new CurrentCommerceOrderModel(
-						commerceOrder.getCommerceOrderId(),
-						workflowStatusModel);
-
-				httpServletRequest.setAttribute(
-					"liferay-commerce:account-selector:currentCommerceOrder",
-					currentCommerceOrderModel);
-			}
+			CurrentCommerceAccountModel currentCommerceAccountModel =
+				new CurrentCommerceAccountModel(
+					_accountEntry.getAccountEntryId(), thumbnailUrl,
+					_accountEntry.getName());
 
 			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:createNewOrderURL",
-				_getAddCommerceOrderURL(themeDisplay, httpServletRequest));
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:selectOrderURL",
-				_getEditOrderURL(themeDisplay));
-
-			String setCurrentAccountURL =
-				PortalUtil.getPortalURL(parentHttpServletRequest) +
-					PortalUtil.getPathContext() +
-						"/o/commerce-ui/set-current-account";
-
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:setCurrentAccountURL",
-				setCurrentAccountURL);
-
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:spritemap", _spritemap);
+				"liferay-commerce:account-selector:currentCommerceAccount",
+				currentCommerceAccountModel);
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+
+		if (_commerceOrder != null) {
+			String workflowStatusInfoLabel = WorkflowConstants.getStatusLabel(
+				_commerceOrder.getStatus());
+
+			WorkflowStatusModel workflowStatusModel = new WorkflowStatusModel(
+				_commerceOrder.getStatus(), workflowStatusInfoLabel,
+				LanguageUtil.get(
+					_themeDisplay.getLocale(), workflowStatusInfoLabel));
+
+			CurrentCommerceOrderModel currentCommerceOrderModel =
+				new CurrentCommerceOrderModel(
+					_commerceOrder.getCommerceOrderId(), workflowStatusModel);
+
+			httpServletRequest.setAttribute(
+				"liferay-commerce:account-selector:currentCommerceOrder",
+				currentCommerceOrderModel);
 		}
+
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:createNewOrderURL",
+			_addCommerceOrderURL);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:selectOrderURL", _editOrderURL);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:setCurrentAccountURL",
+			_setCurrentAccountURL);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:spritemap", _spritemap);
 	}
 
 	private String _getAddCommerceOrderURL(
-			ThemeDisplay themeDisplay, HttpServletRequest httpServletRequest)
+			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		int commerceOrderTypesCount =
 			_commerceOrderTypeLocalService.getCommerceOrderTypesCount(
-				themeDisplay.getCompanyId(), true);
+				PortalUtil.getCompanyId(httpServletRequest),
+				CommerceChannel.class.getName(), _commerceChannelId, true);
 
 		if (commerceOrderTypesCount > 1) {
 			httpServletRequest.setAttribute(
@@ -199,7 +234,7 @@ public class AccountSelectorTag extends IncludeTag {
 
 			return PortletURLBuilder.create(
 				_getPortletURL(
-					themeDisplay.getRequest(),
+					httpServletRequest,
 					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
 			).setMVCRenderCommandName(
 				"/commerce_order_content/view_commerce_order_order_type_modal"
@@ -213,13 +248,13 @@ public class AccountSelectorTag extends IncludeTag {
 			Boolean.FALSE);
 
 		long plid = PortalUtil.getPlidFromPortletId(
-			themeDisplay.getScopeGroupId(),
+			PortalUtil.getScopeGroupId(httpServletRequest),
 			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
 
 		if (plid > 0) {
 			return PortletURLBuilder.create(
 				_getPortletURL(
-					themeDisplay.getRequest(),
+					httpServletRequest,
 					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
 			).setActionName(
 				"/commerce_open_order_content/edit_commerce_order"
@@ -231,17 +266,17 @@ public class AccountSelectorTag extends IncludeTag {
 		return StringPool.BLANK;
 	}
 
-	private String _getEditOrderURL(ThemeDisplay themeDisplay)
+	private String _getEditOrderURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		long plid = PortalUtil.getPlidFromPortletId(
-			themeDisplay.getScopeGroupId(),
+			PortalUtil.getScopeGroupId(httpServletRequest),
 			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
 
 		if (plid > 0) {
 			return PortletURLBuilder.create(
 				_getPortletURL(
-					themeDisplay.getRequest(),
+					httpServletRequest,
 					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
 			).setActionName(
 				"/commerce_open_order_content/edit_commerce_order"
@@ -278,7 +313,15 @@ public class AccountSelectorTag extends IncludeTag {
 	private static final Log _log = LogFactoryUtil.getLog(
 		AccountSelectorTag.class);
 
+	private AccountEntry _accountEntry;
+	private String[] _accountEntryAllowedTypes;
+	private String _addCommerceOrderURL;
+	private long _commerceChannelId;
+	private CommerceOrder _commerceOrder;
 	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
+	private String _editOrderURL;
+	private String _setCurrentAccountURL;
 	private String _spritemap;
+	private ThemeDisplay _themeDisplay;
 
 }

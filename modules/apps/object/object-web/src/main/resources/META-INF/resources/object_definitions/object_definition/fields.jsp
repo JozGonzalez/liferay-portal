@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -29,34 +20,32 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 %>
 
-<frontend-data-set:headless-display
-	apiURL="<%= objectDefinitionsFieldsDisplayContext.getAPIURL() %>"
-	creationMenu="<%= objectDefinitionsFieldsDisplayContext.getCreationMenu(objectDefinition) %>"
-	fdsActionDropdownItems="<%= objectDefinitionsFieldsDisplayContext.getFDSActionDropdownItems() %>"
-	formName="fm"
-	id="<%= ObjectDefinitionsFDSNames.OBJECT_FIELDS %>"
-	propsTransformer="js/components/FDSPropsTransformer/ObjectFieldsFDSPropsTransformer"
-	style="fluid"
-/>
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
 
-<div id="<portlet:namespace />AddObjectField">
+<div>
 	<react:component
-		module="js/components/ObjectField/AddObjectField"
+		module="js/components/ObjectField/Fields"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsFieldsDisplayContext.getAPIURL()
 			).put(
-				"forbiddenChars", PropsUtil.getArray(PropsKeys.DL_CHAR_BLACKLIST)
+				"baseResourceURL", String.valueOf(baseResourceURL)
 			).put(
-				"forbiddenLastChars", objectDefinitionsFieldsDisplayContext.getForbiddenLastCharacters()
+				"creationMenu", objectDefinitionsFieldsDisplayContext.getCreationMenu(objectDefinition)
 			).put(
-				"forbiddenNames", PropsUtil.getArray(PropsKeys.DL_NAME_BLACKLIST)
+				"formName", "fm"
+			).put(
+				"id", ObjectDefinitionsFDSNames.OBJECT_FIELDS
+			).put(
+				"items", objectDefinitionsFieldsDisplayContext.getFDSActionDropdownItems()
 			).put(
 				"objectDefinitionExternalReferenceCode", objectDefinition.getExternalReferenceCode()
 			).put(
 				"objectFieldTypes", objectDefinitionsFieldsDisplayContext.getObjectFieldBusinessTypeMaps(false, locale)
 			).put(
-				"objectName", objectDefinition.getShortName()
+				"style", "fluid"
+			).put(
+				"url", objectDefinitionsFieldsDisplayContext.getEditObjectFieldURL()
 			).build()
 		%>'
 	/>
@@ -67,7 +56,7 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 		module="js/components/ExpressionBuilderModal"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements()
+				"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements(ObjectFieldConstants.BUSINESS_TYPE_FORMULA)
 			).build()
 		%>'
 	/>

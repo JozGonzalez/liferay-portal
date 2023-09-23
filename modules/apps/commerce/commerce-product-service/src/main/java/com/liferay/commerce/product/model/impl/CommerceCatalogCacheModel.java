@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -78,7 +69,7 @@ public class CommerceCatalogCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -100,6 +91,8 @@ public class CommerceCatalogCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", accountEntryId=");
+		sb.append(accountEntryId);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", commerceCurrencyCode=");
@@ -159,6 +152,8 @@ public class CommerceCatalogCacheModel
 			commerceCatalogImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		commerceCatalogImpl.setAccountEntryId(accountEntryId);
+
 		if (name == null) {
 			commerceCatalogImpl.setName("");
 		}
@@ -204,6 +199,8 @@ public class CommerceCatalogCacheModel
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
+
+		accountEntryId = objectInput.readLong();
 		name = objectInput.readUTF();
 		commerceCurrencyCode = objectInput.readUTF();
 		catalogDefaultLanguageId = objectInput.readUTF();
@@ -247,6 +244,8 @@ public class CommerceCatalogCacheModel
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
+		objectOutput.writeLong(accountEntryId);
+
 		if (name == null) {
 			objectOutput.writeUTF("");
 		}
@@ -281,6 +280,7 @@ public class CommerceCatalogCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long accountEntryId;
 	public String name;
 	public String commerceCurrencyCode;
 	public String catalogDefaultLanguageId;

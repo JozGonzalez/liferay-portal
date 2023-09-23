@@ -1,58 +1,86 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMemo} from 'react';
 
 import {PartnerOpportunitiesColumnKey} from '../../../common/enums/partnerOpportunitiesColumnKey';
-import DealRegistrationDTO from '../../../common/interfaces/dto/dealRegistrationDTO';
 import useGetDealRegistration from '../../../common/services/liferay/object/deal-registration/useGetDealRegistration';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
-import getDealAmount from '../utils/getOpportunityAmount';
+import getOpportunityAmount from '../utils/getOpportunityAmount';
+import getOpportunityDates from '../utils/getOpportunityDates';
 
 export default function useGetListItemsFromPartnerOpportunities(
-	getDates: (
-		items: DealRegistrationDTO
-	) =>
-		| {
-				[key in PartnerOpportunitiesColumnKey]?: string;
-		  }
-		| undefined,
 	page: number,
 	pageSize: number,
 	filtersTerm: string,
-	sort: string
+	sort: string,
+	opportunityFilter?: string
 ) {
 	const swrResponse = useGetDealRegistration(
 		ResourceName.OPPORTUNITIES_SALESFORCE,
 		page,
 		pageSize,
 		filtersTerm,
+		opportunityFilter ? `&filter=${opportunityFilter}` : '',
 		sort
 	);
+
 	const listItems = useMemo(
 		() =>
 			swrResponse.data?.items.map((item) => ({
-				[PartnerOpportunitiesColumnKey.ACCOUNT_NAME]:
-					item.partnerAccountName,
-				...getDates(item),
-				...getDealAmount(item.amount),
-				[PartnerOpportunitiesColumnKey.STAGE]: item.stage,
-				[PartnerOpportunitiesColumnKey.PARTNER_REP_NAME]: `${
+				[PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME]: item.partnerAccountName
+					? item.partnerAccountName
+					: ' - ',
+				[PartnerOpportunitiesColumnKey.PARTNER_NAME]: `${
 					item.partnerFirstName ? item.partnerFirstName : ''
 				}${item.partnerLastName ? ' ' + item.partnerLastName : ''}`,
-				[PartnerOpportunitiesColumnKey.PARTNER_REP_EMAIL]:
-					item.partnerEmail,
-				[PartnerOpportunitiesColumnKey.LIFERAY_REP]: item.ownerName,
+				...(item.projectSubscriptionStartDate
+					? getOpportunityDates(
+							item.projectSubscriptionStartDate,
+							item.projectSubscriptionEndDate
+					  )
+					: {
+							[PartnerOpportunitiesColumnKey.START_DATE]: ' - ',
+							[PartnerOpportunitiesColumnKey.END_DATE]: ' - ',
+					  }),
+				[PartnerOpportunitiesColumnKey.ACCOUNT_NAME]: item.accountName
+					? item.accountName
+					: ' - ',
+				...(item.amount
+					? getOpportunityAmount(item.amount)
+					: {[PartnerOpportunitiesColumnKey.DEAL_AMOUNT]: ' - '}),
+
+				[PartnerOpportunitiesColumnKey.CLOSE_DATE]: item.closeDate
+					? item.closeDate
+					: '- ',
+				[PartnerOpportunitiesColumnKey.PARTNER_REP_NAME]: `${
+					item.primaryContactFirstName
+						? item.primaryContactFirstName
+						: ' - '
+				}${
+					item.primaryContactLastName
+						? ' ' + item.primaryContactLastName
+						: ' '
+				}`,
+				[PartnerOpportunitiesColumnKey.PARTNER_REP_EMAIL]: item.primaryContactEmail
+					? item.primaryContactEmail
+					: ' - ',
+				[PartnerOpportunitiesColumnKey.LIFERAY_REP]: item.ownerName
+					? item.ownerName
+					: ' - ',
+				[PartnerOpportunitiesColumnKey.STAGE]: item.stage
+					? item.stage
+					: '- ',
+				[PartnerOpportunitiesColumnKey.TYPE]: item.type
+					? item.type
+					: '- ',
+				[PartnerOpportunitiesColumnKey.CURRENCY]: item.currency.name
+					? item.currency.name
+					: '- ',
 			})),
-		[getDates, swrResponse.data?.items]
+		[swrResponse.data?.items]
 	);
 
 	return {

@@ -21,13 +21,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,7 +40,12 @@ definition {
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11120 | Test Summary: Empty state Assets page with assets with data source and property no data"
 	@priority = 2
 	test CheckAllAssetsMessagesWhenHasPropertyAndDataSource {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllAssetsMessagesWhenHasPropertyAndDataSource";
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix empty state change no tooltip pop up
+		// AC Quarantine Ticket: LRAC-14035
+
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -47,7 +54,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Create the pages and assets in DXP") {
@@ -69,7 +76,9 @@ definition {
 		}
 
 		task ("Connect DXP to AC") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(
+				acToken = ${token},
+				siteName = "Site Name");
 		}
 
 		task ("View the blog page") {
@@ -146,9 +155,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by location.");
 
-			SelectWindow(locator1 = "title=Blogs — Liferay Learn");
+			SelectWindow(locator1 = "title=Blogs - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Location");
+			ACUtils.viewGenericText(textValueList = "Views by Location");
 
 			Close.closeWindow();
 		}
@@ -164,9 +173,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by technology.");
 
-			SelectWindow(locator1 = "title=Blogs — Liferay Learn");
+			SelectWindow(locator1 = "title=Blogs - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Technology");
+			ACUtils.viewGenericText(textValueList = "Views by Technology");
 
 			Close.closeWindow();
 		}
@@ -178,9 +187,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about assets.");
 
-			SelectWindow(locator1 = "title=Assets — Liferay Learn");
+			SelectWindow(locator1 = "title=Assets - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Assets");
+			ACUtils.viewGenericText(textValueList = "Assets");
 
 			Close.closeWindow();
 		}
@@ -201,9 +210,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about individuals.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Individuals Dashboard");
+			ACUtils.viewGenericText(textValueList = "Individuals Dashboard");
 
 			Close.closeWindow();
 		}
@@ -244,9 +253,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about downloads by location.");
 
-			SelectWindow(locator1 = "title=Documents and Media — Liferay Learn");
+			SelectWindow(locator1 = "title=Documents and Media - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Downloads by Location");
+			ACUtils.viewGenericText(textValueList = "Downloads by Location");
 
 			Close.closeWindow();
 		}
@@ -262,9 +271,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about downloads by technology.");
 
-			SelectWindow(locator1 = "title=Documents and Media — Liferay Learn");
+			SelectWindow(locator1 = "title=Documents and Media - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Technology");
+			ACUtils.viewGenericText(textValueList = "Views by Technology");
 
 			Close.closeWindow();
 		}
@@ -305,9 +314,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about submissions by location.");
 
-			SelectWindow(locator1 = "title=Forms — Liferay Learn");
+			SelectWindow(locator1 = "title=Forms - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Submissions by Location");
+			ACUtils.viewGenericText(textValueList = "Submissions by Location");
 
 			Close.closeWindow();
 		}
@@ -323,9 +332,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about submissions by technology.");
 
-			SelectWindow(locator1 = "title=Forms — Liferay Learn");
+			SelectWindow(locator1 = "title=Forms - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Submissions by Technology");
+			ACUtils.viewGenericText(textValueList = "Submissions by Technology");
 
 			Close.closeWindow();
 		}
@@ -366,9 +375,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by location.");
 
-			SelectWindow(locator1 = "title=Web Content — Liferay Learn");
+			SelectWindow(locator1 = "title=Web Content - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Location");
+			ACUtils.viewGenericText(textValueList = "Views by Location");
 
 			Close.closeWindow();
 		}
@@ -384,18 +393,23 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by technology.");
 
-			SelectWindow(locator1 = "title=Web Content — Liferay Learn");
+			SelectWindow(locator1 = "title=Web Content - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Technology");
+			ACUtils.viewGenericText(textValueList = "Views by Technology");
 
 			Close.closeWindow();
 		}
 	}
 
 	@description = "Feature ID: LRAC-9248 | Automation ID: LRAC-10727 | Test Summary: Empty state of pages with no data source and no property"
+	@ignore = "true"
 	@priority = 2
 	test CheckAllMessagesRelatedToSettings {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllMessagesRelatedToSettings";
+
+		// AC Bug: Individuals Attribute empty state showing blank page
+		// AC Bug ticket: LRAC-13973
+
+		property test.run.type = "single";
 
 		task ("Close the onboarding modal") {
 			ACUtils.closeModal();
@@ -412,9 +426,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 
 			SelectWindow(locator1 = "title=Data Sources - Settings - Analytics Cloud");
 		}
@@ -426,9 +440,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(locator1 = "title=Scoping Sites and Individuals Using Properties — Liferay Learn");
+			SelectWindow(locator1 = "title=Scoping Sites and Individuals Using Properties - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Scoping Sites and Individuals Using Properties");
+			ACUtils.viewGenericText(textValueList = "Scoping Sites and Individuals Using Properties");
 
 			SelectWindow(locator1 = "title=Properties - Settings - Analytics Cloud");
 		}
@@ -456,9 +470,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about event tracking.");
 
-			SelectWindow(locator1 = "title=Definitions for Event Attributes — Liferay Learn");
+			SelectWindow(locator1 = "title=Definitions for Event Attributes - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Definitions for Event Attributes");
+			ACUtils.viewGenericText(textValueList = "Definitions for Event Attributes");
 
 			SelectWindow(locator1 = "title=canonicalUrl - Settings - Analytics Cloud");
 		}
@@ -474,9 +488,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn how to add custom events on your site.");
 
-			SelectWindow(locator1 = "title=Tracking Events — Liferay Learn");
+			SelectWindow(locator1 = "title=Tracking Events - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Tracking Events");
+			ACUtils.viewGenericText(textValueList = "Tracking Events");
 
 			SelectWindow(locator1 = "title=Events - Settings - Analytics Cloud");
 		}
@@ -490,28 +504,24 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn how to manage custom events.");
 
-			SelectWindow(locator1 = "title=Definitions for Events — Liferay Learn");
+			SelectWindow(locator1 = "title=Definitions for Events - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Definitions for Events");
+			ACUtils.viewGenericText(textValueList = "Definitions for Events");
 
 			SelectWindow(locator1 = "title=Block List - Settings - Analytics Cloud");
 		}
 
-		task ("Go to Definitions, then go to Interests and check the empty page status message then check if the hyperlink is taking the user to the documentation") {
-			ACSettings.goToDefinitions();
+		// The Keywords Blocklist Page was hidden after this ticket: LRAC-13648
 
-			ACDefinitions.goToDefinitionType(definitionType = "Interests");
-
-			ACUtils.viewGenericText(textValueList = "No Keywords Found,Add a keyword to be blocked.,Learn more about interest topics.");
-
-			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interest topics.");
-
-			SelectWindow(locator1 = "title=Managing Interest Topics — Liferay Learn");
-
-			ACUtils.viewGenericText(textValueList = "Documentation,Managing Interest Topics");
-
-			SelectWindow(locator1 = "title=Interest Topics - Settings - Analytics Cloud");
-		}
+		//task ("Go to Definitions, then go to Interests and check the empty page status message then check if the hyperlink is taking the user to the documentation") {
+		//	ACSettings.goToDefinitions();
+		//	ACDefinitions.goToDefinitionType(definitionType = "Interests");
+		//	ACUtils.viewGenericText(textValueList = "No Keywords Found,Add a keyword to be blocked.,Learn more about interest topics.");
+		//	ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interest topics.");
+		//	SelectWindow(locator1 = "title=Managing Interest Topics - Liferay Learn");
+		//	ACUtils.viewGenericText(textValueList = "Managing Interest Topics");
+		//	SelectWindow(locator1 = "title=Interest Topics - Settings - Analytics Cloud");
+		//}
 
 		task ("Go to Data Control and Privacy, then go to Request Log > Manage and check the empty page status message") {
 			ACSettings.goToDataControlAndPrivacy();
@@ -523,34 +533,30 @@ definition {
 			ACUtils.viewGenericText(textValueList = "No Requests Found,Create a request to get started.,Access our documentation to learn more.");
 		}
 
-		task ("Go back to Data Control and Privacy, then go to Suppressed Users > Manage, and check the empty page status message then check the if the hyperlink is taking the user to the documentation") {
-			ACSettings.goToDataControlAndPrivacy();
+		// The Suppressed User card was hidden after this ticket: LRAC-13620
 
-			ACSettings.navigateToRequestOrSuppressedOptions(
-				optionName = "Suppressed Users",
-				optionValue = "Manage");
+		//task ("Go back to Data Control and Privacy, then go to Suppressed Users > Manage, and check the empty page status message then check the if the hyperlink is taking the user to the documentation") {
+		//	ACSettings.goToDataControlAndPrivacy();
+		//	ACSettings.navigateToRequestOrSuppressedOptions(
+		//		optionName = "Suppressed Users",
+		//		optionValue = "Manage");
+		//	ACUtils.viewGenericText(textValueList = "No Suppressed Users Found,Access our documentation to learn more.");
+		//	var textValue = "To suppress a user, go to data control & privacy under settings and create a new request on the request log.";
+		//	AssertTextEquals.assertPartialText(
+		//		key_textValue = ${textValue},
+		//		locator1 = "ACUtils#GENERIC_TEXT",
+		//		value1 = ${textValue});
+		//	ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
+		//	SelectWindow(locator1 = "title=Data Control and Privacy - Liferay Learn");
+		//	ACUtils.viewGenericText(textValueList = "Data Control and Privacy");
+		//}
 
-			ACUtils.viewGenericText(textValueList = "No Suppressed Users Found,Access our documentation to learn more.");
-
-			var textValue = "To suppress a user, go to data control & privacy under settings and create a new request on the request log.";
-
-			AssertTextEquals.assertPartialText(
-				key_textValue = ${textValue},
-				locator1 = "ACUtils#GENERIC_TEXT",
-				value1 = ${textValue});
-
-			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
-
-			SelectWindow(locator1 = "title=Data Control and Privacy — Liferay Learn");
-
-			ACUtils.viewGenericText(textValueList = "Documentation,Data Control and Privacy");
-		}
 	}
 
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11119 | Test Summary: Empty state of no assets with data source and property"
 	@priority = 2
 	test CheckAllMessagesWhenHasPropertyAndDataSourceButNoData {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllMessagesWhenHasPropertyAndDataSourceButNoData";
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -559,7 +565,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC no data") {
@@ -567,7 +573,7 @@ definition {
 
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectDXPtoAnalyticsCloud(acToken = ${token});
 		}
 
 		task ("Go to AC workspace") {
@@ -588,9 +594,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about blogs.");
 
-			SelectWindow(locator1 = "title=Blogs — Liferay Learn");
+			SelectWindow(locator1 = "title=Blogs - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Blogs");
+			ACUtils.viewGenericText(textValueList = "Blogs");
 
 			Close.closeWindow();
 		}
@@ -607,9 +613,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about documents and media.");
 
-			SelectWindow(locator1 = "title=Documents and Media — Liferay Learn");
+			SelectWindow(locator1 = "title=Documents and Media - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Documents and Media");
+			ACUtils.viewGenericText(textValueList = "Documents and Media");
 
 			Close.closeWindow();
 		}
@@ -626,9 +632,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about forms.");
 
-			SelectWindow(locator1 = "title=Forms — Liferay Learn");
+			SelectWindow(locator1 = "title=Forms - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Forms");
+			ACUtils.viewGenericText(textValueList = "Forms");
 
 			Close.closeWindow();
 		}
@@ -645,9 +651,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about web content.");
 
-			SelectWindow(locator1 = "title=Web Content — Liferay Learn");
+			SelectWindow(locator1 = "title=Web Content - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Web Content");
+			ACUtils.viewGenericText(textValueList = "Web Content");
 
 			Close.closeWindow();
 		}
@@ -664,9 +670,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about custom assets.");
 
-			SelectWindow(locator1 = "title=Tracking Custom Assets — Liferay Learn");
+			SelectWindow(locator1 = "title=Tracking Custom Assets - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Tracking Custom Assets");
+			ACUtils.viewGenericText(textValueList = "Tracking Custom Assets");
 
 			Close.closeWindow();
 		}
@@ -678,9 +684,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(locator1 = "title=Events Analysis — Liferay Learn");
+			SelectWindow(locator1 = "title=Events Analysis - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Events Analysis");
+			ACUtils.viewGenericText(textValueList = "Events Analysis");
 
 			Close.closeWindow();
 		}
@@ -692,9 +698,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(locator1 = "title=Segments — Liferay Learn");
+			SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Segments");
+			ACUtils.viewGenericText(textValueList = "Segments");
 
 			Close.closeWindow();
 		}
@@ -706,9 +712,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about active individuals.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Active Individuals");
+			ACUtils.viewGenericText(textValueList = "Active Individuals");
 
 			Close.closeWindow();
 
@@ -716,9 +722,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Interests");
+			ACUtils.viewGenericText(textValueList = "Interests");
 
 			Close.closeWindow();
 		}
@@ -734,9 +740,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about distribution.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Breakdown");
+			ACUtils.viewGenericText(textValueList = "Breakdown");
 
 			Close.closeWindow();
 		}
@@ -748,9 +754,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Interests");
+			ACUtils.viewGenericText(textValueList = "Interests");
 
 			Close.closeWindow();
 		}
@@ -762,9 +768,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about distribution.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Breakdown");
+			ACUtils.viewGenericText(textValueList = "Breakdown");
 
 			Close.closeWindow();
 		}
@@ -778,9 +784,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about tests.");
 
-			SelectWindow(locator1 = "title=A/B Testing — Liferay Learn");
+			SelectWindow(locator1 = "title=A/B Testing - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,A/B Testing");
+			ACUtils.viewGenericText(textValueList = "A/B Testing");
 
 			Close.closeWindow();
 		}
@@ -789,7 +795,7 @@ definition {
 	@description = "Feature ID: LRAC-10403 | Automation ID: LRAC-10740 | Test Summary: Empty state of pages without data source and with property"
 	@priority = 2
 	test CheckAllMessageWhenHasPropertyNoDataSource {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllMessageWhenHasPropertyNoDataSource";
+		property test.run.type = "single";
 
 		// Accounts and Salesforce tests are no longer possible to run after this one from LRAC-11571
 
@@ -913,18 +919,17 @@ definition {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
 			task ("Switch to the documentation tab") {
-				SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+				SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 			}
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 		}
 	}
 
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11118 | Test Summary: Empty state Page cards with data source and property no data"
 	@priority = 2
 	test CheckAllPagesMessagesWhenHasPropertyAndDataSource {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "EmptyState#CheckAllPagesMessagesWhenHasPropertyAndDataSource";
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -933,7 +938,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC") {
@@ -943,7 +948,9 @@ definition {
 
 			ACUtils.createBlogsAndAddToPage();
 
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(
+				acToken = ${token},
+				siteName = "Site Name");
 		}
 
 		task ("View the blog") {
@@ -975,11 +982,7 @@ definition {
 		}
 
 		task ("Navigate to AC Page > Overview") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
-
-			ACNavigation.openItem(itemName = "Blogs AC Title - Site Name - ${dataSourceName}");
+			ACNavigation.openItem(itemName = "Blogs AC Title - Site Name - ${assignedPropertyName}");
 		}
 
 		task ("Change all cards to last 30 days time filter") {
@@ -1006,9 +1009,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by location.");
 
-			SelectWindow(locator1 = "title=Pages — Liferay Learn");
+			SelectWindow(locator1 = "title=Pages - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Location");
+			ACUtils.viewGenericText(textValueList = "Views by Location");
 
 			Close.closeWindow();
 		}
@@ -1024,9 +1027,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about views by technology.");
 
-			SelectWindow(locator1 = "title=Pages — Liferay Learn");
+			SelectWindow(locator1 = "title=Pages - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Views by Technology");
+			ACUtils.viewGenericText(textValueList = "Views by Technology");
 
 			Close.closeWindow();
 		}
@@ -1042,9 +1045,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about path.");
 
-			SelectWindow(locator1 = "title=Paths — Liferay Learn");
+			SelectWindow(locator1 = "title=Paths - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Paths");
+			ACUtils.viewGenericText(textValueList = "Paths");
 
 			Close.closeWindow();
 		}
@@ -1065,9 +1068,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about individuals.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Individuals Dashboard");
+			ACUtils.viewGenericText(textValueList = "Individuals Dashboard");
 
 			Close.closeWindow();
 		}
@@ -1098,9 +1101,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about individuals.");
 
-			SelectWindow(locator1 = "title=Individual Profiles — Liferay Learn");
+			SelectWindow(locator1 = "title=Individual Profiles - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Individual Profiles");
+			ACUtils.viewGenericText(textValueList = "Individual Profiles");
 
 			Close.closeWindow();
 		}
@@ -1115,9 +1118,9 @@ definition {
 
 				ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about segments.");
 
-				SelectWindow(locator1 = "title=Individual Profiles — Liferay Learn");
+				SelectWindow(locator1 = "title=Individual Profiles - Liferay Learn");
 
-				ACUtils.viewGenericText(textValueList = "Documentation,Segments");
+				ACUtils.viewGenericText(textValueList = "Segments");
 
 				Close.closeWindow();
 			}
@@ -1130,9 +1133,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Individual Profiles — Liferay Learn");
+			SelectWindow(locator1 = "title=Individual Profiles - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Interests");
+			ACUtils.viewGenericText(textValueList = "Interests");
 
 			Close.closeWindow();
 		}
@@ -1144,9 +1147,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Individuals Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Individuals Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Interests");
+			ACUtils.viewGenericText(textValueList = "Interests");
 
 			Close.closeWindow();
 		}
@@ -1162,9 +1165,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about individuals.");
 
-			SelectWindow(locator1 = "title=Individual Profiles — Liferay Learn");
+			SelectWindow(locator1 = "title=Individual Profiles - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Individual Profiles");
+			ACUtils.viewGenericText(textValueList = "Individual Profiles");
 
 			Close.closeWindow();
 		}
@@ -1173,7 +1176,12 @@ definition {
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11121 | Test Summary: Empty state Segments page no/with segment with data source and property no data"
 	@priority = 2
 	test CheckAllSegmentMessagesWhenHasPropertyAndDataSourceButNoData {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllSegmentMessagesWhenHasPropertyAndDataSourceButNoData";
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix investigate empty state message
+		// AC Quarantine Ticket: LRAC-14036
+
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -1182,7 +1190,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC") {
@@ -1190,7 +1198,7 @@ definition {
 
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectDXPtoAnalyticsCloud(acToken = ${token});
 		}
 
 		task ("Go to AC") {
@@ -1204,9 +1212,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(locator1 = "title=Segments — Liferay Learn");
+			SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Segments");
+			ACUtils.viewGenericText(textValueList = "Segments");
 
 			Close.closeWindow();
 		}
@@ -1241,9 +1249,9 @@ definition {
 
 				ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about segment membership.");
 
-				SelectWindow(locator1 = "title=Segments — Liferay Learn");
+				SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-				ACUtils.viewGenericText(textValueList = "Documentation,Segment Membership Panel");
+				ACUtils.viewGenericText(textValueList = "Segment Membership Panel");
 
 				Close.closeWindow();
 			}
@@ -1258,9 +1266,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Segments — Liferay Learn");
+			SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Top Interests Panel");
+			ACUtils.viewGenericText(textValueList = "Top Interests Panel");
 
 			Close.closeWindow();
 		}
@@ -1274,9 +1282,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Segments — Liferay Learn");
+			SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Interests Tab");
+			ACUtils.viewGenericText(textValueList = "Interests Tab");
 
 			Close.closeWindow();
 		}
@@ -1289,9 +1297,9 @@ definition {
 
 				ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about distribution.");
 
-				SelectWindow(locator1 = "title=Segments — Liferay Learn");
+				SelectWindow(locator1 = "title=Segments - Liferay Learn");
 
-				ACUtils.viewGenericText(textValueList = "Documentation,Distribution Tab");
+				ACUtils.viewGenericText(textValueList = "Distribution Tab");
 
 				Close.closeWindow();
 			}
@@ -1301,7 +1309,12 @@ definition {
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11117 | Test Summary: Empty state Sites page with data source and property no data"
 	@priority = 2
 	test CheckAllSitesMessagesWhenHasPropertyAndDataSourceButNoData {
-		property test.name.skip.portal.instance = "EmptyState#CheckAllSitesMessagesWhenHasPropertyAndDataSourceButNoData";
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix investigate empty state
+		// AC Quarantine Ticket: LRAC-13989
+
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -1310,7 +1323,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC") {
@@ -1318,7 +1331,7 @@ definition {
 
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectDXPtoAnalyticsCloud(acToken = ${token});
 		}
 
 		task ("Go to AC") {
@@ -1330,9 +1343,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about site activity.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Site Activities");
+			ACUtils.viewGenericText(textValueList = "Site Activities");
 
 			Close.closeWindow();
 		}
@@ -1352,9 +1365,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about pages.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Top Pages");
+			ACUtils.viewGenericText(textValueList = "Top Pages");
 
 			Close.closeWindow();
 		}
@@ -1374,9 +1387,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about acquisitions.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Acquisitions");
+			ACUtils.viewGenericText(textValueList = "Acquisitions");
 
 			Close.closeWindow();
 		}
@@ -1392,9 +1405,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about visitors by day and time.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Visitors by Day and Time");
+			ACUtils.viewGenericText(textValueList = "Visitors by Day and Time");
 
 			Close.closeWindow();
 		}
@@ -1406,9 +1419,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about search terms.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Search Terms and Interests");
+			ACUtils.viewGenericText(textValueList = "Search Terms and Interests");
 
 			Close.closeWindow();
 		}
@@ -1420,9 +1433,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Search Terms and Interests");
+			ACUtils.viewGenericText(textValueList = "Search Terms and Interests");
 
 			Close.closeWindow();
 		}
@@ -1438,9 +1451,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about sessions by location.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Sessions by Location");
+			ACUtils.viewGenericText(textValueList = "Sessions by Location");
 
 			Close.closeWindow();
 		}
@@ -1456,9 +1469,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about sessions by technology.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Session Technology");
+			ACUtils.viewGenericText(textValueList = "Session Technology");
 
 			Close.closeWindow();
 		}
@@ -1474,9 +1487,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about sessions by cohort analysis.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Cohort Analysis");
+			ACUtils.viewGenericText(textValueList = "Cohort Analysis");
 
 			Close.closeWindow();
 		}
@@ -1493,9 +1506,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about pages.");
 
-			SelectWindow(locator1 = "title=Pages — Liferay Learn");
+			SelectWindow(locator1 = "title=Pages - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Pages");
+			ACUtils.viewGenericText(textValueList = "Pages");
 
 			Close.closeWindow();
 		}
@@ -1512,16 +1525,16 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn more about interests.");
 
-			SelectWindow(locator1 = "title=Sites Dashboard — Liferay Learn");
+			SelectWindow(locator1 = "title=Sites Dashboard - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Search Terms and Interests");
+			ACUtils.viewGenericText(textValueList = "Search Terms and Interests");
 		}
 	}
 
 	@description = "Feature ID: LRAC-10698 | Automation ID: LRAC-10869 | Test Summary: Empty state for all workspace pages"
 	@priority = 2
 	test CheckMessageWhenNoPropertyNoDataSource {
-		property test.name.skip.portal.instance = "EmptyState#CheckMessageWhenNoPropertyNoDataSource";
+		property test.run.type = "single";
 
 		var textValue = "First, complete the onboarding to get your workspace set up.";
 
@@ -1566,7 +1579,7 @@ definition {
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11122 | Test Summary: Empty state page with search bar and date range options"
 	@priority = 2
 	test CheckSearchMessagesWithNoResults {
-		property test.name.skip.portal.instance = "EmptyState#CheckSearchMessagesWithNoResults";
+		property test.run.type = "single";
 
 		task ("Check the first screen of the onboarding modal") {
 			ACUtils.viewGenericText(textValueList = "Welcome to Analytics Cloud,Just a few more steps to set up your workspace.");
@@ -1575,7 +1588,7 @@ definition {
 		task ("Copy the AC token through the modal") {
 			Button.clickNext();
 
-			Copy(locator1 = "ACSettings#TOKEN_INPUT_FIELD");
+			var token = selenium.getElementValue("ACSettings#TOKEN_INPUT_FIELD");
 		}
 
 		task ("Connect DXP to AC") {
@@ -1583,7 +1596,7 @@ definition {
 
 			ACDXPSettings.goToInstanceSettingsAC();
 
-			ACDXPSettings.connectAnalyticsCloud();
+			ACDXPSettings.connectDXPtoAnalyticsCloud(acToken = ${token});
 		}
 
 		task ("Go to AC") {

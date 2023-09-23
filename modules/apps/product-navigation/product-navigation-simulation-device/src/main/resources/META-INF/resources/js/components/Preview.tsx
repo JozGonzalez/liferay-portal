@@ -1,58 +1,107 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
+import {useEventListener} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
+import {debounce} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
-import {SIZES, Size} from '../constants/sizes';
+import {SIZES, ScreenSize, Size} from '../constants/sizes';
+import {useCustomSize} from '../contexts/CustomSizeContext';
 
 interface IPreviewProps {
 	activeSize: Size;
+	open: boolean;
 	previewRef: React.RefObject<HTMLDivElement>;
 }
 
-export default function Preview({activeSize, previewRef}: IPreviewProps) {
-	const [visible, setVisible] = useState<boolean>(true);
+export default function Preview({activeSize, open, previewRef}: IPreviewProps) {
+	const [segmentMessage, setSegmentMessage] = useState<string | null>(null);
+	const [size, setSize] = useState<ScreenSize | undefined>(
+		activeSize.screenSize
+	);
+	const customSize = useCustomSize();
+
+	const previewWrapperRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const hideIframe = () => setVisible(false);
-		const showIframe = () => setVisible(true);
-
-		Liferay.on('SimulationMenu:closeSimulationPanel', hideIframe);
-		Liferay.on('SimulationMenu:openSimulationPanel', showIframe);
+		Liferay.component('SimulationPreview', {
+			setMessage: setSegmentMessage,
+		});
 
 		return () => {
-			Liferay.detach('SimulationMenu:closeSimulationPanel', hideIframe);
-			Liferay.detach('SimulationMenu:openSimulationPanel', showIframe);
+			Liferay.destroyComponent('SimulationPreview');
 		};
 	}, []);
 
-	if (!visible || activeSize.id === SIZES.autosize.id) {
+	const updateAutosizePreview = useCallback(() => {
+		if (!open || !previewWrapperRef.current) {
+			return;
+		}
+
+		setSize(
+			activeSize.id === SIZES.autosize.id
+				? {
+						height:
+							previewWrapperRef.current.getBoundingClientRect()
+								.height - 6,
+						width: previewWrapperRef.current.getBoundingClientRect()
+							.width,
+				  }
+				: activeSize.screenSize
+		);
+	}, [activeSize.id, activeSize.screenSize, open]);
+
+	useEffect(() => {
+		updateAutosizePreview();
+	}, [activeSize, updateAutosizePreview]);
+
+	const handleWindowResize = debounce(() => {
+		updateAutosizePreview();
+	}, 250);
+
+	// @ts-ignore
+
+	useEventListener('resize', handleWindowResize, false, window);
+
+	if (!open) {
 		return null;
 	}
 
 	return (
-		<div className="align-items-center d-flex justify-content-center simulation-preview">
+		<div
+			className={classNames('d-flex flex-column simulation-preview', {
+				'justify-content-center': !Liferay.FeatureFlags['LPS-186558'],
+			})}
+			ref={previewWrapperRef}
+		>
+			{Liferay.FeatureFlags['LPS-186558'] && segmentMessage && (
+				<ClayAlert
+					className="c-m-3"
+					displayType="info"
+					title={`${Liferay.Language.get('info')}:`}
+				>
+					{segmentMessage}
+				</ClayAlert>
+			)}
+
 			<div
 				className={classNames(
-					'device position-absolute',
+					'device position-absolute align-self-center',
 					activeSize.cssClass,
-					{resizable: activeSize.id === SIZES.custom.id}
+					{
+						'device--with-alert':
+							Liferay.FeatureFlags['LPS-186558'] &&
+							segmentMessage,
+						'resizable': activeSize.id === SIZES.custom.id,
+					}
 				)}
 				ref={previewRef}
-				style={activeSize.screenSize}
+				style={activeSize.id === SIZES.custom.id ? customSize : size}
 			>
 				<iframe
 					className="border-0 h-100 w-100"

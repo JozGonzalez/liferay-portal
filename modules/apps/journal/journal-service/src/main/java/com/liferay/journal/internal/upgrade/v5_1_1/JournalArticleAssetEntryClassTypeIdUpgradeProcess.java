@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.v5_1_1;
@@ -43,7 +34,7 @@ public class JournalArticleAssetEntryClassTypeIdUpgradeProcess
 	protected void doUpgrade() throws Exception {
 		long classNameId = _classNameLocalService.getClassNameId(
 			JournalArticle.class.getName());
-		Map<Long, Map<Long, List<Long>>> ddmStrutureIdsMaps =
+		Map<Long, Map<Long, List<Long>>> entryIdsMaps =
 			new ConcurrentHashMap<>();
 
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
@@ -53,9 +44,9 @@ public class JournalArticleAssetEntryClassTypeIdUpgradeProcess
 					"AssetEntry.classTypeId, JournalArticle.DDMStructureId ",
 					"from AssetEntry, JournalArticle where ",
 					"AssetEntry.classNameId = ", classNameId,
-					" and AssetEntry.classPK in ",
-					"(JournalArticle.resourcePrimKey, JournalArticle.id_) and ",
-					" AssetEntry.classTypeId != JournalArticle.DDMStructureId"),
+					" and (AssetEntry.classPK = JournalArticle.id_ or ",
+					"AssetEntry.classPK = JournalArticle.resourcePrimKey) and ",
+					"AssetEntry.classTypeId != JournalArticle.DDMStructureId"),
 				"update AssetEntry set classTypeId = ? where entryId = ?",
 				resultSet -> new Object[] {
 					resultSet.getLong(1), resultSet.getLong(2),
@@ -73,11 +64,11 @@ public class JournalArticleAssetEntryClassTypeIdUpgradeProcess
 
 					preparedStatement.addBatch();
 
-					Map<Long, List<Long>> ddmStructureIdsMap =
-						ddmStrutureIdsMaps.computeIfAbsent(
+					Map<Long, List<Long>> entryIdsMap =
+						entryIdsMaps.computeIfAbsent(
 							classTypeId, key -> new ConcurrentHashMap<>());
 
-					List<Long> entryIds = ddmStructureIdsMap.computeIfAbsent(
+					List<Long> entryIds = entryIdsMap.computeIfAbsent(
 						ddmStructureId, key -> new ArrayList<>());
 
 					entryIds.add(entryId);
@@ -85,17 +76,17 @@ public class JournalArticleAssetEntryClassTypeIdUpgradeProcess
 				"Unable to set asset entry class type ID");
 		}
 
-		if (_log.isDebugEnabled() && ddmStrutureIdsMaps.isEmpty()) {
+		if (_log.isDebugEnabled() && entryIdsMaps.isEmpty()) {
 			_log.debug(
 				"No asset entries with the wrong class type ID were found");
 		}
 
-		if (!_log.isWarnEnabled() || ddmStrutureIdsMaps.isEmpty()) {
+		if (!_log.isWarnEnabled() || entryIdsMaps.isEmpty()) {
 			return;
 		}
 
 		for (Map.Entry<Long, Map<Long, List<Long>>> entry1 :
-				ddmStrutureIdsMaps.entrySet()) {
+				entryIdsMaps.entrySet()) {
 
 			long classTypeId = entry1.getKey();
 
@@ -103,12 +94,9 @@ public class JournalArticleAssetEntryClassTypeIdUpgradeProcess
 				"Asset entries with the wrong class type ID " + classTypeId +
 					" were found");
 
-			Map<Long, List<Long>> ddmStructureIdAssetEntryIdsMap =
-				entry1.getValue();
+			Map<Long, List<Long>> entryIdsMap = entry1.getValue();
 
-			for (Map.Entry<Long, List<Long>> entry2 :
-					ddmStructureIdAssetEntryIdsMap.entrySet()) {
-
+			for (Map.Entry<Long, List<Long>> entry2 : entryIdsMap.entrySet()) {
 				long ddmStructureId = entry2.getKey();
 				List<Long> entryIds = entry2.getValue();
 

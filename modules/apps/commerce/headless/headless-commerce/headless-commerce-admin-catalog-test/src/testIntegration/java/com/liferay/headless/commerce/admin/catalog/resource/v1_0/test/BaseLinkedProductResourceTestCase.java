@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.LinkedProductResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.LinkedProductSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -63,8 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -196,23 +186,23 @@ public abstract class BaseLinkedProductResourceTestCase {
 
 	@Test
 	public void testGetProductIdLinkedProductsPage() throws Exception {
-		Long productId = testGetProductIdLinkedProductsPage_getProductId();
-		Long irrelevantProductId =
-			testGetProductIdLinkedProductsPage_getIrrelevantProductId();
+		Long id = testGetProductIdLinkedProductsPage_getId();
+		Long irrelevantId =
+			testGetProductIdLinkedProductsPage_getIrrelevantId();
 
 		Page<LinkedProduct> page =
 			linkedProductResource.getProductIdLinkedProductsPage(
-				productId, Pagination.of(1, 10));
+				id, Pagination.of(1, 10));
 
 		Assert.assertEquals(0, page.getTotalCount());
 
-		if (irrelevantProductId != null) {
+		if (irrelevantId != null) {
 			LinkedProduct irrelevantLinkedProduct =
 				testGetProductIdLinkedProductsPage_addLinkedProduct(
-					irrelevantProductId, randomIrrelevantLinkedProduct());
+					irrelevantId, randomIrrelevantLinkedProduct());
 
 			page = linkedProductResource.getProductIdLinkedProductsPage(
-				irrelevantProductId, Pagination.of(1, 2));
+				irrelevantId, Pagination.of(1, 2));
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -222,19 +212,19 @@ public abstract class BaseLinkedProductResourceTestCase {
 			assertValid(
 				page,
 				testGetProductIdLinkedProductsPage_getExpectedActions(
-					irrelevantProductId));
+					irrelevantId));
 		}
 
 		LinkedProduct linkedProduct1 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
-				productId, randomLinkedProduct());
+				id, randomLinkedProduct());
 
 		LinkedProduct linkedProduct2 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
-				productId, randomLinkedProduct());
+				id, randomLinkedProduct());
 
 		page = linkedProductResource.getProductIdLinkedProductsPage(
-			productId, Pagination.of(1, 10));
+			id, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -242,13 +232,11 @@ public abstract class BaseLinkedProductResourceTestCase {
 			Arrays.asList(linkedProduct1, linkedProduct2),
 			(List<LinkedProduct>)page.getItems());
 		assertValid(
-			page,
-			testGetProductIdLinkedProductsPage_getExpectedActions(productId));
+			page, testGetProductIdLinkedProductsPage_getExpectedActions(id));
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetProductIdLinkedProductsPage_getExpectedActions(
-				Long productId)
+			testGetProductIdLinkedProductsPage_getExpectedActions(Long id)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
@@ -260,23 +248,23 @@ public abstract class BaseLinkedProductResourceTestCase {
 	public void testGetProductIdLinkedProductsPageWithPagination()
 		throws Exception {
 
-		Long productId = testGetProductIdLinkedProductsPage_getProductId();
+		Long id = testGetProductIdLinkedProductsPage_getId();
 
 		LinkedProduct linkedProduct1 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
-				productId, randomLinkedProduct());
+				id, randomLinkedProduct());
 
 		LinkedProduct linkedProduct2 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
-				productId, randomLinkedProduct());
+				id, randomLinkedProduct());
 
 		LinkedProduct linkedProduct3 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
-				productId, randomLinkedProduct());
+				id, randomLinkedProduct());
 
 		Page<LinkedProduct> page1 =
 			linkedProductResource.getProductIdLinkedProductsPage(
-				productId, Pagination.of(1, 2));
+				id, Pagination.of(1, 2));
 
 		List<LinkedProduct> linkedProducts1 =
 			(List<LinkedProduct>)page1.getItems();
@@ -286,7 +274,7 @@ public abstract class BaseLinkedProductResourceTestCase {
 
 		Page<LinkedProduct> page2 =
 			linkedProductResource.getProductIdLinkedProductsPage(
-				productId, Pagination.of(2, 2));
+				id, Pagination.of(2, 2));
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -298,7 +286,7 @@ public abstract class BaseLinkedProductResourceTestCase {
 
 		Page<LinkedProduct> page3 =
 			linkedProductResource.getProductIdLinkedProductsPage(
-				productId, Pagination.of(1, 3));
+				id, Pagination.of(1, 3));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(linkedProduct1, linkedProduct2, linkedProduct3),
@@ -306,21 +294,19 @@ public abstract class BaseLinkedProductResourceTestCase {
 	}
 
 	protected LinkedProduct testGetProductIdLinkedProductsPage_addLinkedProduct(
-			Long productId, LinkedProduct linkedProduct)
+			Long id, LinkedProduct linkedProduct)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdLinkedProductsPage_getProductId()
-		throws Exception {
-
+	protected Long testGetProductIdLinkedProductsPage_getId() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdLinkedProductsPage_getIrrelevantProductId()
+	protected Long testGetProductIdLinkedProductsPage_getIrrelevantId()
 		throws Exception {
 
 		return null;
@@ -460,14 +446,19 @@ public abstract class BaseLinkedProductResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -615,14 +606,16 @@ public abstract class BaseLinkedProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -652,18 +645,18 @@ public abstract class BaseLinkedProductResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -680,11 +673,47 @@ public abstract class BaseLinkedProductResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("productExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					linkedProduct.getProductExternalReferenceCode()));
-			sb.append("'");
+			Object object = linkedProduct.getProductExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -695,9 +724,47 @@ public abstract class BaseLinkedProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("type")) {
-			sb.append("'");
-			sb.append(String.valueOf(linkedProduct.getType()));
-			sb.append("'");
+			Object object = linkedProduct.getType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

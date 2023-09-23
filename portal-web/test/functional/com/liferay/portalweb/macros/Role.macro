@@ -113,6 +113,33 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
+	macro addAssigneeInKaleoForms {
+		Role._goToRoleAssigneeType(
+			assigneeType = ${assigneeType},
+			roleTitle = ${roleTitle});
+
+		LexiconEntry.gotoAdd();
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
+
+		var key_userScreenName = ${assigneeName};
+		var key_assigneeName = ${assigneeName};
+
+		AssertTextEquals(
+			locator1 = "RolesAssignMembers#USER_TABLE_SCREEN_NAME",
+			value1 = ${assigneeName});
+
+		Check(locator1 = "RolesAssignMembers#ADD_ASSIGNEE_TABLE_CHECKBOX");
+
+		SelectFrameTop(value1 = "relative=top");
+
+		Button.clickAdd();
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro definePermissionPG {
 		var key_roleTitle = StringUtil.replace(${roleTitle}, " ", "-");
 
@@ -156,11 +183,21 @@ definition {
 				locator1 = "RolesPermissionsNavigation#SEARCH_FIELD",
 				value1 = ${permissionNavItem});
 
-			AssertClick(
-				key_permissionNavHeader = ${permissionNavHeader},
-				key_permissionNavItem = ${permissionNavItem},
-				locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVIGATION",
-				value1 = ${permissionNavItem});
+			if (isSet(accountsPermission)) {
+				AssertClick(
+					key_indexNumber = 2,
+					key_permissionNavHeader = ${permissionNavHeader},
+					key_permissionNavItem = ${permissionNavItem},
+					locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVIGATION_N",
+					value1 = ${permissionNavItem});
+			}
+			else {
+				AssertClick(
+					key_permissionNavHeader = ${permissionNavHeader},
+					key_permissionNavItem = ${permissionNavItem},
+					locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVIGATION",
+					value1 = ${permissionNavItem});
+			}
 
 			AssertTextEquals(
 				locator1 = "RolesPermissions#PERMISSION_ITEM_HEADER",
@@ -245,7 +282,17 @@ definition {
 
 		SelectFrameTop(value1 = "relative=top");
 
+		SetWindowSize.maximizeWindow();
+
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		if ((IsElementNotPresent(key_tableEntry = ${roleTitle}, locator1 = "LexiconTable#TABLE_ENTRY_EXACT_MATCH")) && (IsEditable(locator1 = "Pagination#NEXT_LINK"))) {
+			Type.typeKeys(
+				locator1 = "//body",
+				value1 = "keys=CONTROL,END");
+
+			Pagination.changePaginationViaKeyboard(itemsPerPage = 60);
+		}
 
 		ScrollWebElementIntoView(locator1 = "Permissions#${permissionDefinitionKey}");
 
@@ -344,6 +391,19 @@ definition {
 			value1 = "No roles were found.");
 	}
 
+	macro viewNoPermissionCP {
+		var key_permissionDefinitionValue = ${permissionDefinitionValue};
+		var key_permissionNavigationValue = ${permissionNavigationValue};
+
+		AssertElementNotPresent(locator1 = "RolesPermissionsSummary#PERMISSION_TABLE_PERMISSIONS");
+
+		if (isSet(siteNameScope)) {
+			AssertElementNotPresent(
+				key_siteNameScope = ${siteNameScope},
+				locator1 = "RolesPermissionsSummary#PERMISSION_TABLE_SCOPE");
+		}
+	}
+
 	macro viewPermissionCP {
 		var key_permissionDefinitionValue = ${permissionDefinitionValue};
 		var key_permissionNavigationValue = ${permissionNavigationValue};
@@ -393,8 +453,6 @@ definition {
 
 			if (IsElementPresent(locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVITEM_SUBITEM_COLLAPSED")) {
 				Click.clickAt(locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVITEM_SUBITEM_COLLAPSED");
-
-				AssertElementNotPresent(locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVITEM_SUBITEM_COLLAPSED");
 			}
 		}
 	}

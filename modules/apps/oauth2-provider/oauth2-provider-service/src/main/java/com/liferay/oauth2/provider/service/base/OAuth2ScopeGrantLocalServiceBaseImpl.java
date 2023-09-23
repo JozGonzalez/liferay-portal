@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.service.base;
@@ -48,8 +39,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -401,40 +390,40 @@ public abstract class OAuth2ScopeGrantLocalServiceBaseImpl
 	/**
 	 */
 	@Override
-	public void addOAuth2AuthorizationOAuth2ScopeGrant(
+	public boolean addOAuth2AuthorizationOAuth2ScopeGrant(
 		long oAuth2AuthorizationId, long oAuth2ScopeGrantId) {
 
-		oAuth2AuthorizationPersistence.addOAuth2ScopeGrant(
+		return oAuth2AuthorizationPersistence.addOAuth2ScopeGrant(
 			oAuth2AuthorizationId, oAuth2ScopeGrantId);
 	}
 
 	/**
 	 */
 	@Override
-	public void addOAuth2AuthorizationOAuth2ScopeGrant(
+	public boolean addOAuth2AuthorizationOAuth2ScopeGrant(
 		long oAuth2AuthorizationId, OAuth2ScopeGrant oAuth2ScopeGrant) {
 
-		oAuth2AuthorizationPersistence.addOAuth2ScopeGrant(
+		return oAuth2AuthorizationPersistence.addOAuth2ScopeGrant(
 			oAuth2AuthorizationId, oAuth2ScopeGrant);
 	}
 
 	/**
 	 */
 	@Override
-	public void addOAuth2AuthorizationOAuth2ScopeGrants(
+	public boolean addOAuth2AuthorizationOAuth2ScopeGrants(
 		long oAuth2AuthorizationId, long[] oAuth2ScopeGrantIds) {
 
-		oAuth2AuthorizationPersistence.addOAuth2ScopeGrants(
+		return oAuth2AuthorizationPersistence.addOAuth2ScopeGrants(
 			oAuth2AuthorizationId, oAuth2ScopeGrantIds);
 	}
 
 	/**
 	 */
 	@Override
-	public void addOAuth2AuthorizationOAuth2ScopeGrants(
+	public boolean addOAuth2AuthorizationOAuth2ScopeGrants(
 		long oAuth2AuthorizationId, List<OAuth2ScopeGrant> oAuth2ScopeGrants) {
 
-		oAuth2AuthorizationPersistence.addOAuth2ScopeGrants(
+		return oAuth2AuthorizationPersistence.addOAuth2ScopeGrants(
 			oAuth2AuthorizationId, oAuth2ScopeGrants);
 	}
 
@@ -575,7 +564,7 @@ public abstract class OAuth2ScopeGrantLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		OAuth2ScopeGrantLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -590,7 +579,8 @@ public abstract class OAuth2ScopeGrantLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		oAuth2ScopeGrantLocalService = (OAuth2ScopeGrantLocalService)aopProxy;
 
-		_setLocalServiceUtilService(oAuth2ScopeGrantLocalService);
+		OAuth2ScopeGrantLocalServiceUtil.setService(
+			oAuth2ScopeGrantLocalService);
 	}
 
 	/**
@@ -632,23 +622,6 @@ public abstract class OAuth2ScopeGrantLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		OAuth2ScopeGrantLocalService oAuth2ScopeGrantLocalService) {
-
-		try {
-			Field field =
-				OAuth2ScopeGrantLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, oAuth2ScopeGrantLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

@@ -79,18 +79,6 @@ components:
                     example: Account Name
                     type: string
             type: object
-        AccountGroup:
-            properties:
-                id:
-                    example: 30130
-                    format: int64
-                    minimum: 0
-                    readOnly: true
-                    type: integer
-                name:
-                    example: AccountGroup Name
-                    type: string
-            type: object
         Category:
             properties:
                 id:
@@ -218,6 +206,11 @@ components:
                     format: bigdecimal
                     minimum: 0
                     type: number
+                modifiedDate:
+                    example: 2017-07-21
+                    format: date
+                    readOnly: true
+                    type: string
                 neverExpire:
                     example: true
                     type: boolean
@@ -309,7 +302,7 @@ components:
         DiscountAccountGroup:
             properties:
                 accountGroup:
-                    $ref: "#/components/schemas/AccountGroup"
+                    $ref: "#/components/schemas/PricingAccountGroup"
                     readOnly: true
                 accountGroupExternalReferenceCode:
                     example: "PAB-34098-789-N"
@@ -619,6 +612,9 @@ components:
                     format: int64
                     minimum: 0
                     type: integer
+                unitOfMeasureKey:
+                    example: m
+                    type: string
             required:
                 - skuId
             type: object
@@ -748,9 +744,16 @@ components:
                     format: int64
                     minimum: 0
                     type: integer
+                priceOnApplication:
+                    example: true
+                    type: boolean
                 product:
                     $ref: "#/components/schemas/Product"
                     readOnly: true
+                quantity:
+                    example: 10.1
+                    format: bigdecimal
+                    type: number
                 sku:
                     $ref: "#/components/schemas/Sku"
                     readOnly: true
@@ -766,6 +769,9 @@ components:
                     items:
                         $ref: "#/components/schemas/TierPrice"
                     type: array
+                unitOfMeasureKey:
+                    example: m
+                    type: string
             required:
                 - price
                 - priceListId
@@ -932,7 +938,7 @@ components:
         PriceListAccountGroup:
             properties:
                 accountGroup:
-                    $ref: "#/components/schemas/AccountGroup"
+                    $ref: "#/components/schemas/PricingAccountGroup"
                     readOnly: true
                 accountGroupExternalReferenceCode:
                     example: DAB-34098-789-N
@@ -1282,6 +1288,18 @@ components:
                 - priceModifierId
                 - productGroupId
             type: object
+        PricingAccountGroup:
+            properties:
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                name:
+                    example: PricingAccountGroup Name
+                    type: string
+            type: object
         Product:
             properties:
                 id:
@@ -1419,10 +1437,10 @@ components:
                     minimum: 0
                     type: integer
                 minimumQuantity:
-                    example: 5
-                    format: int32
+                    example: 10.1
+                    format: bigdecimal
                     minimum: 0
-                    type: integer
+                    type: number
                 neverExpire:
                     example: true
                     type: boolean
@@ -1438,6 +1456,9 @@ components:
                     minimum: 0
                     type: integer
                 priceFormatted:
+                    type: string
+                unitOfMeasureKey:
+                    example: m
                     type: string
             required:
                 - minimumQuantity
@@ -1467,7 +1488,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Pricing API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.pricing.client', and version '4.0.21'."
+        artifact ID 'com.liferay.headless.commerce.admin.pricing.client', and version '4.0.29'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -1532,10 +1553,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/PricingAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/PricingAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -1577,7 +1598,7 @@ paths:
                 - OAuth2:
                       - HeadlessCommerceAdminPricing.read
             summary: Gets account group associated to the pricing object.
-            tags: ["AccountGroup"]
+            tags: ["PricingAccountGroup"]
     /discount-accounts/{discountAccountId}:
         delete:
             operationId: deleteDiscountAccount
@@ -6869,10 +6890,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/PricingAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/PricingAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -6914,7 +6935,7 @@ paths:
                 - OAuth2:
                       - HeadlessCommerceAdminPricing.read
             summary: Gets account group associated to the pricing object.
-            tags: ["AccountGroup"]
+            tags: ["PricingAccountGroup"]
     /price-list-accounts/{priceListAccountId}:
         delete:
             operationId: deletePriceListAccount

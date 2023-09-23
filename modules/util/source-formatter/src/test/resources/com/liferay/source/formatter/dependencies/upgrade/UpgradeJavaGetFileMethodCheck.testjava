@@ -1,0 +1,32 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies.upgrade;
+
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
+
+/**
+ * @author Tamyris Bernardo
+ */
+public class UpgradeJavaGetFileMethodCheck {
+
+	public void method() {
+
+		// Test local service class method
+
+		File file = _dlFileEntryLocalService.getFile(
+			fileEntryId, fileEntryVersion, true);
+
+		// Test utility class method
+
+		return DLFileEntryLocalServiceUtil.getFile(
+			fileEntryId, fileEntryVersion, true);
+	}
+
+	@Reference
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+}

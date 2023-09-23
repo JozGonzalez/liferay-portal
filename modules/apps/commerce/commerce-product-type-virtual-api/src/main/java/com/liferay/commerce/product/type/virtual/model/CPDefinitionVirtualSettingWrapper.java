@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.model;
@@ -65,7 +56,7 @@ public class CPDefinitionVirtualSettingWrapper
 		attributes.put("maxUsages", getMaxUsages());
 		attributes.put("useSample", isUseSample());
 		attributes.put("sampleFileEntryId", getSampleFileEntryId());
-		attributes.put("sampleUrl", getSampleUrl());
+		attributes.put("sampleURL", getSampleURL());
 		attributes.put("termsOfUseRequired", isTermsOfUseRequired());
 		attributes.put("termsOfUseContent", getTermsOfUseContent());
 		attributes.put(
@@ -188,10 +179,10 @@ public class CPDefinitionVirtualSettingWrapper
 			setSampleFileEntryId(sampleFileEntryId);
 		}
 
-		String sampleUrl = (String)attributes.get("sampleUrl");
+		String sampleURL = (String)attributes.get("sampleURL");
 
-		if (sampleUrl != null) {
-			setSampleUrl(sampleUrl);
+		if (sampleURL != null) {
+			setSampleURL(sampleURL);
 		}
 
 		Boolean termsOfUseRequired = (Boolean)attributes.get(
@@ -434,8 +425,8 @@ public class CPDefinitionVirtualSettingWrapper
 	 * @return the sample url of this cp definition virtual setting
 	 */
 	@Override
-	public String getSampleUrl() {
-		return model.getSampleUrl();
+	public String getSampleURL() {
+		return model.getSampleURL();
 	}
 
 	/**
@@ -635,8 +626,8 @@ public class CPDefinitionVirtualSettingWrapper
 	}
 
 	@Override
-	public boolean isUseSampleUrl() {
-		return model.isUseSampleUrl();
+	public boolean isUseSampleURL() {
+		return model.isUseSampleURL();
 	}
 
 	@Override
@@ -839,11 +830,11 @@ public class CPDefinitionVirtualSettingWrapper
 	/**
 	 * Sets the sample url of this cp definition virtual setting.
 	 *
-	 * @param sampleUrl the sample url of this cp definition virtual setting
+	 * @param sampleURL the sample url of this cp definition virtual setting
 	 */
 	@Override
-	public void setSampleUrl(String sampleUrl) {
-		model.setSampleUrl(sampleUrl);
+	public void setSampleURL(String sampleURL) {
+		model.setSampleURL(sampleURL);
 	}
 
 	/**

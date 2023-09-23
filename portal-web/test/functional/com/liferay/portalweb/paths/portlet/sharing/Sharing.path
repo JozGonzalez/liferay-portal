@@ -69,7 +69,7 @@
 
 <tr>
 	<td>MODAL_INVITE_TO_COLLABORATE_DROPDOWN</td>
-	<td>//div[contains(@class,'dropdown-menu')]//*[contains(@class,'dropdown-item')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//*[contains(@class,'dropdown-item')]//div[contains(@class,'autofit-row')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -97,12 +97,12 @@
 
 <tr>
 	<td>NOTIFICATIONS_TITLE</td>
-	<td>//h4/a[contains(.,'${key_ownerName} has shared ${key_contentTitle} with you for ${key_contentSharingPermission}')]</td>
+	<td>//div/a[contains(.,'${key_ownerName} has shared ${key_contentTitle} with you for ${key_contentSharingPermission}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NOTIFICATIONS_TITLE_SPECIAL</td>
-	<td>//h4/a[contains(.,"${key_ownerName} has shared ${key_contentTitle} with you for ${key_contentSharingPermission}")]</td>
+	<td>//div/a[contains(.,"${key_ownerName} has shared ${key_contentTitle} with you for ${key_contentSharingPermission}")]</td>
 	<td></td>
 </tr>
 <tr>

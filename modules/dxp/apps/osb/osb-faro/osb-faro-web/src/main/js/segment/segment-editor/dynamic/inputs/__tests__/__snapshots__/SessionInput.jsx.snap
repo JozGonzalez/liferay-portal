@@ -1,0 +1,264 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SessionInput should render 1`] = `
+<div>
+  <div
+    class="criteria-statement"
+  >
+    <div
+      aria-hidden="true"
+      class="form-group form-group-autofit"
+      data-aria-hidden="true"
+    >
+      <div
+        class="criteria-statement"
+      >
+        <div
+          class="form-group form-group-autofit"
+        >
+          <div
+            aria-hidden="true"
+            class="form-group-item entity-name form-group-item-label form-group-item-shrink"
+            data-aria-hidden="true"
+          />
+          <div
+            aria-hidden="true"
+            class="form-group-item display-value form-group-item-label form-group-item-shrink"
+            data-aria-hidden="true"
+          />
+          <div
+            class="form-group-item form-group-item-shrink"
+          >
+            <button
+              aria-activedescendant="eq"
+              aria-expanded="true"
+              aria-haspopup="listbox"
+              aria-owns="clay-id-2"
+              class="form-control form-control-select form-control-select-secondary show"
+              role="combobox"
+              style=""
+              tabindex="0"
+              type="button"
+            >
+              is
+            </button>
+          </div>
+          <div
+            aria-hidden="true"
+            class="form-group-item"
+            data-aria-hidden="true"
+          >
+            <div
+              aria-haspopup="true"
+              class="input-group base-select-input-root select-input-root"
+            >
+              <div
+                class="input-group-item"
+              >
+                <input
+                  autocomplete="off"
+                  class="input-root form-control input-group-inset input-group-inset-after"
+                  placeholder=""
+                  type="text"
+                  value=""
+                />
+                <div
+                  class="input-group-inset-item input-group-inset-item-after"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-caret-bottom icon-root"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#caret-bottom"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      aria-hidden="true"
+      class="form-group form-group-autofit"
+      data-aria-hidden="true"
+    >
+      <div
+        class="form-group-item form-group-item-shrink"
+      >
+        <button
+          aria-activedescendant="eq"
+          aria-expanded="true"
+          aria-haspopup="listbox"
+          aria-owns="clay-id-4"
+          class="form-control form-control-select form-control-select-secondary conjunction-input show"
+          data-testid="conjunction-input"
+          role="combobox"
+          style=""
+          tabindex="0"
+          type="button"
+        >
+          on
+        </button>
+      </div>
+      <div
+        aria-hidden="true"
+        class="form-group-item form-group-item-shrink"
+        data-aria-hidden="true"
+      >
+        <div
+          aria-haspopup="true"
+          class="input-group date-input-root"
+        >
+          <div
+            class="input-group-item"
+          >
+            <input
+              autocomplete="off"
+              class="input-root form-control input-group-inset input-group-inset-after"
+              data-testid="date-input"
+              placeholder="YYYY-MM-DD"
+              readonly=""
+              type="text"
+              value="2021-01-01"
+            />
+            <div
+              class="input-group-inset-item input-group-inset-item-after"
+            >
+              <button
+                aria-label="Choose a date"
+                class="button-root btn btn-unstyled"
+                type="button"
+              >
+                <svg
+                  class="lexicon-icon lexicon-icon-calendar icon-root"
+                  role="presentation"
+                >
+                  <use
+                    xlink:href="#calendar"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SessionInput should render with "ever" 1`] = `
+<div>
+  <div
+    class="criteria-statement"
+  >
+    <div
+      aria-hidden="true"
+      class="form-group form-group-autofit"
+      data-aria-hidden="true"
+    >
+      <div
+        class="criteria-statement"
+      >
+        <div
+          class="form-group form-group-autofit"
+        >
+          <div
+            aria-hidden="true"
+            class="form-group-item entity-name form-group-item-label form-group-item-shrink"
+            data-aria-hidden="true"
+          />
+          <div
+            aria-hidden="true"
+            class="form-group-item display-value form-group-item-label form-group-item-shrink"
+            data-aria-hidden="true"
+          />
+          <div
+            class="form-group-item form-group-item-shrink"
+          >
+            <button
+              aria-activedescendant="eq"
+              aria-expanded="true"
+              aria-haspopup="listbox"
+              aria-owns="clay-id-6"
+              class="form-control form-control-select form-control-select-secondary show"
+              role="combobox"
+              style=""
+              tabindex="0"
+              type="button"
+            >
+              is
+            </button>
+          </div>
+          <div
+            aria-hidden="true"
+            class="form-group-item"
+            data-aria-hidden="true"
+          >
+            <div
+              aria-haspopup="true"
+              class="input-group base-select-input-root select-input-root"
+            >
+              <div
+                class="input-group-item"
+              >
+                <input
+                  autocomplete="off"
+                  class="input-root form-control input-group-inset input-group-inset-after"
+                  placeholder=""
+                  type="text"
+                  value=""
+                />
+                <div
+                  class="input-group-inset-item input-group-inset-item-after"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-caret-bottom icon-root"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#caret-bottom"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      aria-hidden="true"
+      class="form-group form-group-autofit"
+      data-aria-hidden="true"
+    >
+      <div
+        class="form-group-item form-group-item-shrink"
+      >
+        <button
+          aria-activedescendant="ever"
+          aria-expanded="true"
+          aria-haspopup="listbox"
+          aria-owns="clay-id-8"
+          class="form-control form-control-select form-control-select-secondary conjunction-input show"
+          data-testid="conjunction-input"
+          role="combobox"
+          style=""
+          tabindex="0"
+          type="button"
+        >
+          ever
+        </button>
+      </div>
+      <div
+        aria-hidden="true"
+        class="form-group-item form-group-item-shrink"
+        data-aria-hidden="true"
+      />
+    </div>
+  </div>
+</div>
+`;

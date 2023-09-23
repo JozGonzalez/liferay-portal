@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.storage;
@@ -24,12 +15,12 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.storage.SynonymSetsDatabaseImporter;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.DocumentToSynonymSetTranslator;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReindexer;
 import com.liferay.portal.search.tuning.synonyms.web.internal.storage.helper.SynonymSetJSONStorageHelper;
 
 import java.util.List;
@@ -74,8 +65,10 @@ public class SynonymSetsDatabaseImporterImpl
 	@Reference
 	protected SynonymSetIndexNameBuilder synonymSetIndexNameBuilder;
 
-	@Reference
-	protected SynonymSetIndexReindexer synonymSetIndexReindexer;
+	@Reference(
+		target = "(component.name=com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReindexer)"
+	)
+	protected IndexReindexer synonymSetIndexReindexer;
 
 	@Reference
 	protected SynonymSetJSONStorageHelper synonymSetJSONStorageHelper;

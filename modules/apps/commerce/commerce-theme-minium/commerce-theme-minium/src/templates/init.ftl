@@ -63,24 +63,25 @@ group_id = theme_display.getScopeGroupId()
 
 <#if !user_initialized??>
 	<#assign
-	is_default_user = user.isDefaultUser()
-	is_female = user.isFemale()
-	is_male = user.isMale()
-	is_setup_complete = user.isSetupComplete()
-	language = locale.getLanguage()
-	language_id = user.getLanguageId()
-	user_birthday = user.getBirthday()
-	user_comments = user.getComments()
-	user_email_address = user.getEmailAddress()
-	user_first_name = user.getFirstName()
-	user_greeting = htmlUtil.escape(user.getGreeting())
-	user_id = user.getUserId()
-	user_last_login_ip = user.getLastLoginIP()
-	user_last_name = user.getLastName()
-	user_login_ip = user.getLoginIP()
-	user_middle_name = user.getMiddleName()
-	user_name = user.getFullName()
-	w3c_language_id = localeUtil.toW3cLanguageId(theme_display.getLanguageId())
+		is_default_user = user.isDefaultUser()
+		is_female = user.isFemale()
+		is_guest_user = user.isGuestUser()
+		is_male = user.isMale()
+		is_setup_complete = user.isSetupComplete()
+		language = locale.getLanguage()
+		language_id = user.getLanguageId()
+		user_birthday = user.getBirthday()
+		user_comments = user.getComments()
+		user_email_address = user.getEmailAddress()
+		user_first_name = user.getFirstName()
+		user_greeting = htmlUtil.escape(user.getGreeting())
+		user_id = user.getUserId()
+		user_last_login_ip = user.getLastLoginIP()
+		user_last_name = user.getLastName()
+		user_login_ip = user.getLoginIP()
+		user_middle_name = user.getMiddleName()
+		user_name = user.getFullName()
+		w3c_language_id = localeUtil.toW3cLanguageId(theme_display.getLanguageId())
 	/>
 </#if>
 
@@ -122,16 +123,12 @@ group_id = theme_display.getScopeGroupId()
 	</#if>
 </#if>
 
-<#assign show_sign_in = theme_display.isShowSignInIcon() />
-
-<#if show_sign_in>
-	<#assign
+<#assign
+	show_sign_in = theme_display.isShowSignInIcon()
+	show_sign_out = theme_display.isShowSignOutIcon()
 	sign_in_text = languageUtil.get(locale, "sign-in")
 	sign_in_url = htmlUtil.escape(theme_display.getURLSignIn())
-	/>
-</#if>
-
-<#assign show_sign_out = theme_display.isShowSignOutIcon() />
+/>
 
 <#if show_sign_out>
 	<#assign

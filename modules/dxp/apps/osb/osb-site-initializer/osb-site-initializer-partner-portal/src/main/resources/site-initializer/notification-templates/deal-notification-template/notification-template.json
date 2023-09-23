@@ -1,7 +1,8 @@
 {
 	"description": "",
-	"editorType": "richText",
-	"name": "Partner Deal Registration",
+	"editorType": "freeMarker",
+	"externalReferenceCode": "PRM-PARTNER-DEAL-REGISTRATION",
+	"name": "PRM Partner Deal Registration",
 	"recipientType": "email",
 	"recipients": [
 		{
@@ -12,7 +13,7 @@
 				"en-US": "Partner Portal"
 			},
 			"to": {
-				"en-US": "liferay@liferay.com"
+				"en-US": "partner-operations@liferay.com, partner-marketing@liferay.com, sales-engineering-channels@liferay.com, partners-internal@liferay.com"
 			}
 		}
 	],

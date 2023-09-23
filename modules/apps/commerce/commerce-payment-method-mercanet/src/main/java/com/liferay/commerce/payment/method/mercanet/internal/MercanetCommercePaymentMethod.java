@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.method.mercanet.internal;
 
-import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.payment.method.CommercePaymentMethod;
@@ -30,8 +20,8 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -121,8 +111,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 	@Override
 	public int getPaymentType() {
-		return CommercePaymentConstants.
-			COMMERCE_PAYMENT_METHOD_TYPE_ONLINE_REDIRECT;
+		return CommercePaymentMethodConstants.TYPE_ONLINE_REDIRECT;
 	}
 
 	@Override
@@ -185,7 +174,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 		URL automaticURL = new URL(
 			StringBundler.concat(
-				baseURL.toString(), "?groupId=", parameters.get("groupId")[0],
+				baseURL, "?groupId=", parameters.get("groupId")[0],
 				"&type=automatic&uuid=", parameters.get("uuid")[0]));
 
 		paymentRequest.setAutomaticResponseUrl(automaticURL);
@@ -221,7 +210,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 		paymentRequest.setTransactionReference(transactionId);
 
 		MercanetGroupServiceConfiguration mercanetGroupServiceConfiguration =
-			_getConfiguration(commerceOrder.getGroupId());
+			_getMercanetGroupServiceConfiguration(commerceOrder.getGroupId());
 
 		String environment = StringUtil.toUpperCase(
 			mercanetGroupServiceConfiguration.environment());
@@ -263,11 +252,12 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 		return new CommercePaymentResult(
 			transactionId, commerceOrder.getCommerceOrderId(),
-			CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED, true, url, null,
+			CommerceOrderPaymentConstants.STATUS_AUTHORIZED, true, url, null,
 			resultMessage, true);
 	}
 
-	private MercanetGroupServiceConfiguration _getConfiguration(long groupId)
+	private MercanetGroupServiceConfiguration
+			_getMercanetGroupServiceConfiguration(long groupId)
 		throws Exception {
 
 		return _configurationProvider.getConfiguration(

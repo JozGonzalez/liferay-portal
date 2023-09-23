@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -187,7 +187,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CannotViewAsGuestInAPWhenPermissionsAreRemoved {
-		property test.name.skip.portal.instance = "BlogsWidget#CannotViewAsGuestInAPWhenPermissionsAreRemoved";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Portlet.addPG(portletName = "Asset Publisher");
 
@@ -256,7 +257,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanViewBlogWithAbstractDisplay {
-		property test.name.skip.portal.instance = "BlogsWidget#CanViewBlogWithAbstractDisplay";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a blog entry with custom abstract") {
 			JSONBlog.addEntry(
@@ -300,7 +302,8 @@ definition {
 	@description = "This is a test for LPS-136809. It checks that a Blog entry can be viewed with the Menu Display configured."
 	@priority = 3
 	test CanViewBlogWithCardDisplay {
-		property test.name.skip.portal.instance = "BlogsWidget#CanViewBlogWithCardDisplay";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -354,6 +357,8 @@ definition {
 	@priority = 3
 	@refactorneeded
 	test CanViewBlogWithFutureDisplayDateViaBlogsAggregator {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Aggregator Page");
@@ -509,7 +514,8 @@ definition {
 	@refactordone
 	@uittest
 	test CanViewEntryInAP {
-		property test.name.skip.portal.instance = "BlogsWidget#CanViewEntryInAP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// This is lengthy but we'll keep this as a UI test to validate blogs behavior when used with AP.
 
@@ -782,7 +788,7 @@ definition {
 	@refactordone
 	test ConfiguringWidgetWillNotAffectAnother {
 		task ("Add two pages each with a blog widget") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",

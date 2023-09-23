@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.application.list;
@@ -33,11 +24,7 @@ import javax.servlet.http.HttpServletResponse;
  * <p>
  * To implement a JSP application, this class should be extended and {@link
  * #getJspPath()} should be implemented, which returns a path for the main JSP
- * application view in the current servlet context. The servlet context should
- * also be set using {@link #setServletContext(ServletContext)}, which uses the
- * appropriate servlet context for JSP pages. If the servlet context is not set,
- * {@link #include(HttpServletRequest, HttpServletResponse)} will throw a
- * <code>NullPointerException</code>.
+ * application view in the current servlet context.
  * </p>
  *
  * <p>
@@ -65,8 +52,10 @@ public abstract class BaseJSPPanelApp extends BasePanelApp {
 			return false;
 		}
 
+		ServletContext servletContext = getServletContext();
+
 		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher(jspPath);
+			servletContext.getRequestDispatcher(jspPath);
 
 		try {
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
@@ -80,13 +69,9 @@ public abstract class BaseJSPPanelApp extends BasePanelApp {
 		return true;
 	}
 
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
+	protected abstract ServletContext getServletContext();
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseJSPPanelApp.class);
-
-	private ServletContext _servletContext;
 
 }

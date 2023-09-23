@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.configuration.extender.internal.test;
@@ -19,6 +10,7 @@ import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.test.log.LogCapture;
@@ -68,17 +60,9 @@ public class ConfiguratorExtenderTest {
 	public void setUp() {
 		Bundle bundle = FrameworkUtil.getBundle(ConfiguratorExtenderTest.class);
 
-		BundleContext bundleContext = bundle.getBundleContext();
-
 		String symbolicName = "com.liferay.portal.configuration.extender";
 
-		for (Bundle curBundle : bundleContext.getBundles()) {
-			if (symbolicName.equals(curBundle.getSymbolicName())) {
-				_bundle = curBundle;
-
-				break;
-			}
-		}
+		_bundle = BundleUtil.getBundle(bundle.getBundleContext(), symbolicName);
 
 		Assert.assertNotNull(
 			"Unable to find bundle with symbolic name: " + symbolicName,
@@ -360,7 +344,8 @@ public class ConfiguratorExtenderTest {
 
 	private Object _createNamedConfigurationContent(
 			String factoryPid, String pid,
-			UnsafeSupplier<Dictionary<?, ?>, IOException> propertySupplier)
+			UnsafeSupplier<Dictionary<?, ?>, IOException>
+				propertyUnsafeSupplier)
 		throws Exception {
 
 		Class<?> clazz = _bundle.loadClass(
@@ -370,7 +355,7 @@ public class ConfiguratorExtenderTest {
 		Constructor<?> constructor = clazz.getDeclaredConstructor(
 			String.class, String.class, UnsafeSupplier.class);
 
-		return constructor.newInstance(factoryPid, pid, propertySupplier);
+		return constructor.newInstance(factoryPid, pid, propertyUnsafeSupplier);
 	}
 
 	private void _deleteConfigurations(String filter) throws Exception {

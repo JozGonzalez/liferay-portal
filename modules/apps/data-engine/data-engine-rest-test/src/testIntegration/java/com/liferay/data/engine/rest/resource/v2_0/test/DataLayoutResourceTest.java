@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.resource.v2_0.test;
@@ -29,17 +20,21 @@ import com.liferay.data.engine.rest.client.problem.Problem;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataLayoutTestUtil;
+import com.liferay.data.engine.rest.resource.v2_0.test.util.content.type.ModelResourceActionTestUtil;
 import com.liferay.data.engine.rest.strategy.util.DataRecordValueKeyUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,8 +43,10 @@ import java.util.Map;
 
 import org.hamcrest.CoreMatchers;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -59,6 +56,20 @@ import org.junit.runner.RunWith;
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		BaseDataLayoutResourceTestCase.setUpClass();
+
+		ModelResourceActionTestUtil.populateModelResourceAction(
+			_resourceActions);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		ModelResourceActionTestUtil.deleteModelResourceAction(
+			_resourceActionLocalService, _resourceActions);
+	}
 
 	@Before
 	@Override
@@ -279,32 +290,28 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 				dataDefinition.getId(),
 				new DataLayout() {
 					{
+						dataDefinitionId = dataDefinition.getId();
 						dataLayoutKey = RandomTestUtil.randomString();
-						paginationMode = "wizard";
-
-						setDataDefinitionId(dataDefinition.getId());
-						setDataLayoutPages(
-							new DataLayoutPage[] {
-								new DataLayoutPage() {
-									{
-										dataLayoutRows = new DataLayoutRow[] {
-											dataLayoutRow
-										};
-										description =
-											HashMapBuilder.<String, Object>put(
-												"en_US", "Page Description"
-											).build();
-										title =
-											HashMapBuilder.<String, Object>put(
-												"en_US", "Page Title"
-											).build();
-									}
+						dataLayoutPages = new DataLayoutPage[] {
+							new DataLayoutPage() {
+								{
+									dataLayoutRows = new DataLayoutRow[] {
+										dataLayoutRow
+									};
+									description =
+										HashMapBuilder.<String, Object>put(
+											"en_US", "Page Description"
+										).build();
+									title = HashMapBuilder.<String, Object>put(
+										"en_US", "Page Title"
+									).build();
 								}
-							});
-						setName(
-							HashMapBuilder.<String, Object>put(
-								"en_US", RandomTestUtil.randomString()
-							).build());
+							}
+						};
+						name = HashMapBuilder.<String, Object>put(
+							"en_US", RandomTestUtil.randomString()
+						).build();
+						paginationMode = "wizard";
 					}
 				});
 
@@ -558,6 +565,12 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 
 		dataLayoutResource.deleteDataLayout(dataLayout.getId());
 	}
+
+	@Inject
+	private static ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private static ResourceActions _resourceActions;
 
 	private DataDefinition _dataDefinition;
 	private DataDefinition _irrelevantDataDefinition;

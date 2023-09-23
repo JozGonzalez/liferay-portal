@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -21,6 +12,7 @@ import com.liferay.headless.delivery.resource.v1_0.MessageBoardThreadResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -61,12 +53,12 @@ import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -420,10 +412,10 @@ public abstract class BaseMessageBoardThreadResourceImpl
 	public Page<MessageBoardThread> getMessageBoardThreadsRankedPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("dateCreated")
-			java.util.Date dateCreated,
+			Date dateCreated,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("dateModified")
-			java.util.Date dateModified,
+			Date dateModified,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("messageBoardSectionId")
 			Long messageBoardSectionId,
@@ -597,25 +589,13 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		MessageBoardThread existingMessageBoardThread = getMessageBoardThread(
 			messageBoardThreadId);
 
-		if (messageBoardThread.getActions() != null) {
-			existingMessageBoardThread.setActions(
-				messageBoardThread.getActions());
-		}
-
 		if (messageBoardThread.getArticleBody() != null) {
 			existingMessageBoardThread.setArticleBody(
 				messageBoardThread.getArticleBody());
 		}
 
-		if (messageBoardThread.getDateCreated() != null) {
-			existingMessageBoardThread.setDateCreated(
-				messageBoardThread.getDateCreated());
-		}
-
-		if (messageBoardThread.getDateModified() != null) {
-			existingMessageBoardThread.setDateModified(
-				messageBoardThread.getDateModified());
-		}
+		existingMessageBoardThread.setCustomFields(
+			messageBoardThread.getCustomFields());
 
 		if (messageBoardThread.getEncodingFormat() != null) {
 			existingMessageBoardThread.setEncodingFormat(
@@ -642,34 +622,9 @@ public abstract class BaseMessageBoardThreadResourceImpl
 				messageBoardThread.getKeywords());
 		}
 
-		if (messageBoardThread.getLastPostDate() != null) {
-			existingMessageBoardThread.setLastPostDate(
-				messageBoardThread.getLastPostDate());
-		}
-
-		if (messageBoardThread.getLocked() != null) {
-			existingMessageBoardThread.setLocked(
-				messageBoardThread.getLocked());
-		}
-
-		if (messageBoardThread.getMessageBoardRootMessageId() != null) {
-			existingMessageBoardThread.setMessageBoardRootMessageId(
-				messageBoardThread.getMessageBoardRootMessageId());
-		}
-
 		if (messageBoardThread.getMessageBoardSectionId() != null) {
 			existingMessageBoardThread.setMessageBoardSectionId(
 				messageBoardThread.getMessageBoardSectionId());
-		}
-
-		if (messageBoardThread.getNumberOfMessageBoardAttachments() != null) {
-			existingMessageBoardThread.setNumberOfMessageBoardAttachments(
-				messageBoardThread.getNumberOfMessageBoardAttachments());
-		}
-
-		if (messageBoardThread.getNumberOfMessageBoardMessages() != null) {
-			existingMessageBoardThread.setNumberOfMessageBoardMessages(
-				messageBoardThread.getNumberOfMessageBoardMessages());
 		}
 
 		if (messageBoardThread.getSeen() != null) {
@@ -679,16 +634,6 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		if (messageBoardThread.getShowAsQuestion() != null) {
 			existingMessageBoardThread.setShowAsQuestion(
 				messageBoardThread.getShowAsQuestion());
-		}
-
-		if (messageBoardThread.getSiteId() != null) {
-			existingMessageBoardThread.setSiteId(
-				messageBoardThread.getSiteId());
-		}
-
-		if (messageBoardThread.getStatus() != null) {
-			existingMessageBoardThread.setStatus(
-				messageBoardThread.getStatus());
 		}
 
 		if (messageBoardThread.getSubscribed() != null) {
@@ -704,11 +649,6 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		if (messageBoardThread.getThreadType() != null) {
 			existingMessageBoardThread.setThreadType(
 				messageBoardThread.getThreadType());
-		}
-
-		if (messageBoardThread.getViewCount() != null) {
-			existingMessageBoardThread.setViewCount(
-				messageBoardThread.getViewCount());
 		}
 
 		if (messageBoardThread.getViewableBy() != null) {
@@ -1616,24 +1556,24 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardThread, Exception>
-			messageBoardThreadUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardThread, MessageBoardThread, Exception>
+			messageBoardThreadUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("messageBoardSectionId")) {
-				messageBoardThreadUnsafeConsumer =
+				messageBoardThreadUnsafeFunction =
 					messageBoardThread ->
 						postMessageBoardSectionMessageBoardThread(
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get(
 									"messageBoardSectionId")),
 							messageBoardThread);
 			}
 			else if (parameters.containsKey("siteId")) {
-				messageBoardThreadUnsafeConsumer =
+				messageBoardThreadUnsafeFunction =
 					messageBoardThread -> postSiteMessageBoardThread(
 						(Long)parameters.get("siteId"), messageBoardThread);
 			}
@@ -1643,19 +1583,23 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			}
 		}
 
-		if (messageBoardThreadUnsafeConsumer == null) {
+		if (messageBoardThreadUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardThread");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardThreads, messageBoardThreadUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardThreads, messageBoardThreadUnsafeConsumer);
+				messageBoardThreads, messageBoardThreadUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardThread messageBoardThread : messageBoardThreads) {
-				messageBoardThreadUnsafeConsumer.accept(messageBoardThread);
+				messageBoardThreadUnsafeFunction.apply(messageBoardThread);
 			}
 		}
 	}
@@ -1707,12 +1651,12 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		if (parameters.containsKey("siteId")) {
 			return getSiteMessageBoardThreadsPage(
 				(Long)parameters.get("siteId"),
-				Boolean.parseBoolean((String)parameters.get("flatten")), search,
-				null, filter, pagination, sorts);
+				_parseBoolean((String)parameters.get("flatten")), search, null,
+				filter, pagination, sorts);
 		}
 		else if (parameters.containsKey("messageBoardSectionId")) {
 			return getMessageBoardSectionMessageBoardThreadsPage(
-				Long.parseLong((String)parameters.get("messageBoardSectionId")),
+				_parseLong((String)parameters.get("messageBoardSectionId")),
 				search, null, filter, pagination, sorts);
 		}
 		else {
@@ -1749,47 +1693,67 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardThread, Exception>
-			messageBoardThreadUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardThread, MessageBoardThread, Exception>
+			messageBoardThreadUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardThreadUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			messageBoardThreadUnsafeFunction =
 				messageBoardThread -> patchMessageBoardThread(
 					messageBoardThread.getId() != null ?
 						messageBoardThread.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get("messageBoardThreadId")),
 					messageBoardThread);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardThreadUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			messageBoardThreadUnsafeFunction =
 				messageBoardThread -> putMessageBoardThread(
 					messageBoardThread.getId() != null ?
 						messageBoardThread.getId() :
-							Long.parseLong(
+							_parseLong(
 								(String)parameters.get("messageBoardThreadId")),
 					messageBoardThread);
 		}
 
-		if (messageBoardThreadUnsafeConsumer == null) {
+		if (messageBoardThreadUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for MessageBoardThread");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardThreads, messageBoardThreadUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardThreads, messageBoardThreadUnsafeConsumer);
+				messageBoardThreads, messageBoardThreadUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardThread messageBoardThread : messageBoardThreads) {
-				messageBoardThreadUnsafeConsumer.accept(messageBoardThread);
+				messageBoardThreadUnsafeFunction.apply(messageBoardThread);
 			}
 		}
+	}
+
+	private Boolean _parseBoolean(String value) {
+		if (value != null) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return null;
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	protected String getPermissionCheckerActionsResourceName(Object id)
@@ -1957,6 +1921,15 @@ public abstract class BaseMessageBoardThreadResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardThread>,
+			 UnsafeFunction<MessageBoardThread, MessageBoardThread, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2178,6 +2151,12 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -2208,7 +2187,19 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardThread>,
+		 UnsafeFunction<MessageBoardThread, MessageBoardThread, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardThread>,
 		 UnsafeConsumer<MessageBoardThread, Exception>, Exception>

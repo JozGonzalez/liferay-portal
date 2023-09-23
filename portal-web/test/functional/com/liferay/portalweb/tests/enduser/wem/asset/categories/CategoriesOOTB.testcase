@@ -1,6 +1,7 @@
 @component-name = "portal-categories"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Dashboard";
@@ -14,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -140,9 +141,11 @@ definition {
 		}
 	}
 
-	@description = ""
+	@description = "The user could add category via select category modal."
 	@priority = 4
 	test AddCategoryFromDMWithPermission {
+		property portal.acceptance = "true";
+
 		task ("Go to add Basic Document page in Global") {
 			DMNavigator.openToAddEntry(
 				groupName = "Global",
@@ -323,17 +326,17 @@ definition {
 
 			ContentDashboard.goToContentDashboard();
 
-			AssertTextPresent(
+			AssertTextEquals(
+				categoryIndex = 1,
 				locator1 = "ContentDashboard#X_AXIS_CATEGORIES_NAME",
-				value1 = "Audience 1",
-				xAxisCategoryName = "Audience 1");
+				value1 = "Audience 1");
 
 			ContentDashboard.moveVocabularyDisplayConfiguration(vocabularyName = "Audience");
 
-			AssertTextPresent(
+			AssertTextEquals(
+				categoryIndex = 1,
 				locator1 = "ContentDashboard#X_AXIS_CATEGORIES_NAME",
-				value1 = "Stage 1",
-				xAxisCategoryName = "Stage 1");
+				value1 = "Stage 1");
 		}
 	}
 
@@ -614,7 +617,7 @@ definition {
 
 			WaitForPageLoad();
 
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
 				value1 = "Blogs Entry Title");
 		}
@@ -753,8 +756,6 @@ definition {
 	@description = ""
 	@priority = 4
 	test CheckDMVocabularyAssetSubtypeBasicDocument {
-		property osgi.app.includes = "document-library-google-docs";
-
 		task ("Create a vocabulary with Associated Asset Type of Document > Basic Document") {
 			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
 
@@ -820,8 +821,6 @@ definition {
 	@description = ""
 	@priority = 4
 	test CheckDMVocabularyAssetSubtypeExternalVideoShortcut {
-		property osgi.app.includes = "document-library-google-docs";
-
 		task ("Create a vocabulary with Associated Asset Type of Document > External Video Shortcut") {
 			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
 
@@ -887,8 +886,6 @@ definition {
 	@description = ""
 	@priority = 4
 	test CheckDMVocabularyAssetSubtypeGoogleDriveShortcut {
-		property osgi.app.includes = "document-library-google-docs";
-
 		task ("Create a vocabulary with Associated Asset Type of Document > Google Drive Shortcut") {
 			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
 

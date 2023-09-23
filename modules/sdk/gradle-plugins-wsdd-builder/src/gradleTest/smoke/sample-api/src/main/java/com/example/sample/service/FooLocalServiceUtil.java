@@ -1,22 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.example.sample.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.example.sample.model.Foo;
+
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for Foo. This utility wraps
@@ -41,12 +39,14 @@ public class FooLocalServiceUtil {
 	/**
 	 * Adds the foo to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FooLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param foo the foo
 	 * @return the foo that was added
 	 */
-	public static com.example.sample.model.Foo addFoo(
-		com.example.sample.model.Foo foo) {
-
+	public static Foo addFoo(Foo foo) {
 		return getService().addFoo(foo);
 	}
 
@@ -56,49 +56,50 @@ public class FooLocalServiceUtil {
 	 * @param fooId the primary key for the new foo
 	 * @return the new foo
 	 */
-	public static com.example.sample.model.Foo createFoo(long fooId) {
+	public static Foo createFoo(long fooId) {
 		return getService().createFoo(fooId);
 	}
 
 	/**
 	 * Deletes the foo from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FooLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param foo the foo
 	 * @return the foo that was removed
 	 */
-	public static com.example.sample.model.Foo deleteFoo(
-		com.example.sample.model.Foo foo) {
-
+	public static Foo deleteFoo(Foo foo) {
 		return getService().deleteFoo(foo);
 	}
 
 	/**
 	 * Deletes the foo with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FooLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param fooId the primary key of the foo
 	 * @return the foo that was removed
 	 * @throws PortalException if a foo with the primary key could not be found
 	 */
-	public static com.example.sample.model.Foo deleteFoo(long fooId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static Foo deleteFoo(long fooId) throws PortalException {
 		return getService().deleteFoo(fooId);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
-
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -108,9 +109,7 @@ public class FooLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -126,9 +125,8 @@ public class FooLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -146,10 +144,9 @@ public class FooLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -161,9 +158,7 @@ public class FooLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -175,13 +170,13 @@ public class FooLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.example.sample.model.Foo fetchFoo(long fooId) {
+	public static Foo fetchFoo(long fooId) {
 		return getService().fetchFoo(fooId);
 	}
 
@@ -192,9 +187,7 @@ public class FooLocalServiceUtil {
 	 * @param groupId the primary key of the group
 	 * @return the matching foo, or <code>null</code> if a matching foo could not be found
 	 */
-	public static com.example.sample.model.Foo fetchFooByUuidAndGroupId(
-		String uuid, long groupId) {
-
+	public static Foo fetchFooByUuidAndGroupId(String uuid, long groupId) {
 		return getService().fetchFooByUuidAndGroupId(uuid, groupId);
 	}
 
@@ -219,9 +212,7 @@ public class FooLocalServiceUtil {
 	 * @return the foo
 	 * @throws PortalException if a foo with the primary key could not be found
 	 */
-	public static com.example.sample.model.Foo getFoo(long fooId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static Foo getFoo(long fooId) throws PortalException {
 		return getService().getFoo(fooId);
 	}
 
@@ -233,9 +224,8 @@ public class FooLocalServiceUtil {
 	 * @return the matching foo
 	 * @throws PortalException if a matching foo could not be found
 	 */
-	public static com.example.sample.model.Foo getFooByUuidAndGroupId(
-			String uuid, long groupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static Foo getFooByUuidAndGroupId(String uuid, long groupId)
+		throws PortalException {
 
 		return getService().getFooByUuidAndGroupId(uuid, groupId);
 	}
@@ -251,9 +241,7 @@ public class FooLocalServiceUtil {
 	 * @param end the upper bound of the range of foos (not inclusive)
 	 * @return the range of foos
 	 */
-	public static java.util.List<com.example.sample.model.Foo> getFoos(
-		int start, int end) {
-
+	public static List<Foo> getFoos(int start, int end) {
 		return getService().getFoos(start, end);
 	}
 
@@ -264,8 +252,8 @@ public class FooLocalServiceUtil {
 	 * @param companyId the primary key of the company
 	 * @return the matching foos, or an empty list if no matches were found
 	 */
-	public static java.util.List<com.example.sample.model.Foo>
-		getFoosByUuidAndCompanyId(String uuid, long companyId) {
+	public static List<Foo> getFoosByUuidAndCompanyId(
+		String uuid, long companyId) {
 
 		return getService().getFoosByUuidAndCompanyId(uuid, companyId);
 	}
@@ -280,11 +268,9 @@ public class FooLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the range of matching foos, or an empty list if no matches were found
 	 */
-	public static java.util.List<com.example.sample.model.Foo>
-		getFoosByUuidAndCompanyId(
-			String uuid, long companyId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.example.sample.model.Foo> orderByComparator) {
+	public static List<Foo> getFoosByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Foo> orderByComparator) {
 
 		return getService().getFoosByUuidAndCompanyId(
 			uuid, companyId, start, end, orderByComparator);
@@ -315,9 +301,11 @@ public class FooLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	/**
+	 * @throws PortalException
+	 */
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -325,32 +313,25 @@ public class FooLocalServiceUtil {
 	/**
 	 * Updates the foo in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FooLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param foo the foo
 	 * @return the foo that was updated
 	 */
-	public static com.example.sample.model.Foo updateFoo(
-		com.example.sample.model.Foo foo) {
-
+	public static Foo updateFoo(Foo foo) {
 		return getService().updateFoo(foo);
 	}
 
 	public static FooLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker<FooLocalService, FooLocalService>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(FooLocalService.class);
-
-		ServiceTracker<FooLocalService, FooLocalService> serviceTracker =
-			new ServiceTracker<FooLocalService, FooLocalService>(
-				bundle.getBundleContext(), FooLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
+	public static void setService(FooLocalService service) {
+		_service = service;
 	}
+
+	private static volatile FooLocalService _service;
 
 }

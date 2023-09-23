@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export type RequestFilterType = {
@@ -18,6 +12,31 @@ export type RequestFilterType = {
 	liferayBranch: string[];
 	organizationName: string;
 	requestStatus: string[];
+};
+
+export type FinancialFilterType = {
+	accountNumberCR: string;
+	accountNumberDB: string;
+	accountTypeCR: string;
+	accountTypeDB: string;
+	entityName: string;
+	territoryId: string;
+};
+
+export type PaymentConfirmationFilterType = {
+	accountNumberCR: string;
+	accountNumberDB: string;
+	accountTypeCR: string;
+	accountTypeDB: string;
+	entityName: string;
+	finalPaymentDate: string;
+	initialPaymentDate: string;
+	paymentDate: string;
+	paymentValue: string;
+	r_financial_c_evpFinancial: FinancialFilterType;
+	r_requestId_c_evpRequest: RequestType;
+	r_requestId_c_evpRequestId: number;
+	territoryId: string;
 };
 
 export type OrganizationFilterType = {
@@ -36,7 +55,7 @@ export type OrganizationFilterType = {
 	state: string;
 	status: string[];
 	street: string;
-	taxIdentificationNumber: string;
+	taxId: string;
 	zip: string;
 };
 
@@ -67,8 +86,15 @@ export enum FIELDSREPORT {
 	REQUESTSTATUS = 'requestStatus',
 }
 
+export enum FIELDS_PAYMENT_REPORT {
+	FINALPAYMENTDATE = 'finalPaymentDate',
+	INITIALPAYMENTDATE = 'initialPaymentDate',
+	TERRITORYID = 'territoryId',
+}
+
 export type RequestType = {
 	createDate: string;
+	creator: {name: string};
 	dateCreated: string;
 	dateModified: string;
 	emailAddress: string;

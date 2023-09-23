@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -40,7 +31,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 	<portlet:param name="portletResource" value="<%= portletResource %>" />
 </portlet:renderURL>
 
-<aui:form action="<%= importPortletActionURL %>" cssClass="lfr-export-dialog" method="post" name="fm1">
+<aui:form action="<%= importPortletActionURL %>" cssClass="lfr-export-dialog" method="post" name="fm1" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "publishPages();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.IMPORT %>" />
 	<aui:input name="tabs1" type="hidden" value="export_import" />
 	<aui:input name="tabs2" type="hidden" value="import" />
@@ -51,6 +42,14 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 
 	<div class="export-dialog-tree">
 		<clay:container-fluid>
+			<div class="alert alert-warning">
+				<liferay-ui:message key="import-lar-file-deletion-warning-message" />
+			</div>
+
+			<div class="alert alert-warning">
+				<liferay-ui:message key="import-process-deletion-warning-message" />
+			</div>
+
 			<div class="sheet">
 				<div class="panel-group panel-group-flush">
 					<aui:fieldset cssClass="options-group" label="file">
@@ -365,6 +364,34 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 		<aui:button type="submit" value="import" />
 	</aui:button-row>
 </aui:form>
+
+<aui:script>
+	function <portlet:namespace />publishPages() {
+		var deletePortletDataBeforeImportingCheckbox = document.getElementById(
+			'<portlet:namespace /><%= PortletDataHandlerKeys.DELETE_PORTLET_DATA %>'
+		);
+
+		var form = document.<portlet:namespace />fm1;
+
+		if (
+			deletePortletDataBeforeImportingCheckbox &&
+			deletePortletDataBeforeImportingCheckbox.checked
+		) {
+			Liferay.Util.openConfirmModal({
+				message:
+					'<%= UnicodeLanguageUtil.get(request, "delete-application-data-before-importing-confirmation") %>',
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						submitForm(form);
+					}
+				},
+			});
+		}
+		else {
+			submitForm(form);
+		}
+	}
+</aui:script>
 
 <aui:script use="liferay-export-import-export-import">
 	new Liferay.ExportImport({

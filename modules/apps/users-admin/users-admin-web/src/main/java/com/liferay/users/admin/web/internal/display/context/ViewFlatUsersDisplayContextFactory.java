@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.web.internal.display.context;
@@ -28,13 +19,15 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portlet.usersadmin.search.UserSearch;
-import com.liferay.portlet.usersadmin.search.UserSearchTerms;
+import com.liferay.users.admin.constants.UsersAdminPortletKeys;
 import com.liferay.users.admin.management.toolbar.FilterContributor;
+import com.liferay.users.admin.search.UserSearch;
+import com.liferay.users.admin.search.UserSearchTerms;
 import com.liferay.users.admin.web.internal.constants.UsersAdminWebKeys;
 import com.liferay.users.admin.web.internal.util.DisplayStyleUtil;
 
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -68,11 +61,25 @@ public class ViewFlatUsersDisplayContextFactory {
 		UserSearchTerms userSearchTerms =
 			(UserSearchTerms)searchContainer.getSearchTerms();
 
-		ManagementToolbarDisplayContext managementToolbarDisplayContext =
-			new ViewFlatUsersManagementToolbarDisplayContext(
-				liferayPortletRequest, liferayPortletResponse, searchContainer,
-				_isShowDeleteButton(userSearchTerms),
-				_isShowRestoreButton(userSearchTerms));
+		ManagementToolbarDisplayContext managementToolbarDisplayContext;
+
+		if (Objects.equals(
+				UsersAdminPortletKeys.SERVICE_ACCOUNTS,
+				PortalUtil.getPortletId(renderRequest))) {
+
+			managementToolbarDisplayContext =
+				new ViewServiceAccountUsersManagementToolbarDisplayContext(
+					liferayPortletRequest, liferayPortletResponse,
+					searchContainer, _isShowDeleteButton(userSearchTerms),
+					_isShowRestoreButton(userSearchTerms));
+		}
+		else {
+			managementToolbarDisplayContext =
+				new ViewFlatUsersManagementToolbarDisplayContext(
+					liferayPortletRequest, liferayPortletResponse,
+					searchContainer, _isShowDeleteButton(userSearchTerms),
+					_isShowRestoreButton(userSearchTerms));
+		}
 
 		FilterContributor[] filterContributors = _getFilterContributors(
 			httpServletRequest);

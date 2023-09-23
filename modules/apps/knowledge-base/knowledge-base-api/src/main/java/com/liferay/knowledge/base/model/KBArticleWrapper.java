@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.model;
@@ -72,6 +63,7 @@ public class KBArticleWrapper
 		attributes.put("latest", isLatest());
 		attributes.put("main", isMain());
 		attributes.put("sourceURL", getSourceURL());
+		attributes.put("displayDate", getDisplayDate());
 		attributes.put("expirationDate", getExpirationDate());
 		attributes.put("reviewDate", getReviewDate());
 		attributes.put("lastPublishDate", getLastPublishDate());
@@ -244,6 +236,12 @@ public class KBArticleWrapper
 			setSourceURL(sourceURL);
 		}
 
+		Date displayDate = (Date)attributes.get("displayDate");
+
+		if (displayDate != null) {
+			setDisplayDate(displayDate);
+		}
+
 		Date expirationDate = (Date)attributes.get("expirationDate");
 
 		if (expirationDate != null) {
@@ -318,6 +316,16 @@ public class KBArticleWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.repository.model.FileEntry
+			getAttachmentsFileEntryByExternalReferenceCode(
+				String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAttachmentsFileEntryByExternalReferenceCode(
+			externalReferenceCode);
+	}
+
+	@Override
 	public long getAttachmentsFolderId()
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -382,6 +390,16 @@ public class KBArticleWrapper
 	@Override
 	public String getDescription() {
 		return model.getDescription();
+	}
+
+	/**
+	 * Returns the display date of this kb article.
+	 *
+	 * @return the display date of this kb article
+	 */
+	@Override
+	public Date getDisplayDate() {
+		return model.getDisplayDate();
 	}
 
 	/**
@@ -881,6 +899,16 @@ public class KBArticleWrapper
 	@Override
 	public void setDescription(String description) {
 		model.setDescription(description);
+	}
+
+	/**
+	 * Sets the display date of this kb article.
+	 *
+	 * @param displayDate the display date of this kb article
+	 */
+	@Override
+	public void setDisplayDate(Date displayDate) {
+		model.setDisplayDate(displayDate);
 	}
 
 	/**

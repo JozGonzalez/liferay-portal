@@ -62,7 +62,7 @@
 </tr>
 <tr>
 	<td>FS_PRODUCT_SKU</td>
-	<td>//p/span[(normalize-space(text())='SKU:')]/following::span[text()='${key_productSku}']</td>
+	<td>//p/span[normalize-space(text())='SKU:']/following::span[normalize-space(text())='${key_productSku}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -107,7 +107,12 @@
 </tr>
 <tr>
 	<td>FS_PRODUCT_OPTIONS_SELECT</td>
-	<td>//div/label[text()='${key_optionName}']/..//div[contains (@class,'select-field-trigger')]//a</td>
+	<td>//div/label[text()='${key_optionName}']/..//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FS_PRODUCT_BOOLEAN_OPTION</td>
+	<td>//div/label[text()='${key_optionName}']/..//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,6 +133,16 @@
 <tr>
 	<td>MAX_QUANTITY_SELECTOR_PRODUCT_DETAILS</td>
 	<td>//div[contains(@class,"product-detail")]//div[contains(@class,"add-to-cart")]//input[contains(@max, '${key_value}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MODAL_TITLE</td>
+	<td>//*[@class='modal-title' and normalize-space(text())='${key_title}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXTAREA_FIELD</td>
+	<td>//input[contains(@class,'form-control')and contains(@value,'${key_value}')]/..//textarea</td>
 	<td></td>
 </tr>
 <tr>
@@ -172,12 +187,12 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_OPTION_POSITION</td>
-	<td>//div[contains(@class,'ddm-row')][${key_position}]//label[contains(text(),'${key_optionName}')]</td>
+	<td>//div[@class='product-detail-options']/form/div[${key_position}]//label[text()='${key_optionName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_OPTION_VALUE_POSITION</td>
-	<td>//button[contains(@data-testid,'dropdownItem-${key_index}')][contains(text(),'${key_optionValue}')]</td>
+	<td>//div/label[text()='${key_optionName}']/..//select/option[@value][${key_index}][text()='${key_optionValue}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -276,6 +291,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PRODUCT_CARD_STATUS_LABEL</td>
+	<td>//a[contains(@href,'${key_productName}')]//span[contains(@class,'m-0')]//*[text()='${key_status}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>QUANTITY_SELECTOR_POPOVER_LIST_ITEM</td>
 	<td>//div[contains(@class,'quantity-selector-popover')]//small[text()='${key_quantityConfigurationText}']/b[text()='${key_quantity}']</td>
 	<td></td>
@@ -296,6 +316,11 @@
 <tr>
 	<td>FS_DYNAMIC_FIELD</td>
 	<td>xpath=(//div[@class='dynamic-field'])[${key_index}]//${key_element}[@class='node-${key_node}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLECTION_DISPLAY_PRODUCT_CARD_N</td>
+	<td>//div[contains(@class,'lfr-layout-structure-item-collection')]//following::div[contains(@class,'cp-renderer')][${key_index}]//p[@class='card-title' and @title='${key_productName}']</td>
 	<td></td>
 </tr>
 </tbody>

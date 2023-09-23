@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
@@ -255,6 +246,8 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		jsonObject.put(
 			"segments", segmentJSONArray
 		).put(
+			"test_hotfix_changes", testHotfixChanges
+		).put(
 			"test_release_bundle", testReleaseBundle
 		).put(
 			"test_relevant_changes", testRelevantChanges
@@ -370,9 +363,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			}
 		}
 
-		testRelevantChanges = jsonObject.getBoolean("test_relevant_changes");
-		testReleaseBundle = jsonObject.getBoolean("test_release_bundle");
-		testRelevantIntegrationUnitOnly = jsonObject.getBoolean(
+		testHotfixChanges = jsonObject.optBoolean("test_hotfix_changes");
+		testRelevantChanges = jsonObject.optBoolean("test_relevant_changes");
+		testReleaseBundle = jsonObject.optBoolean("test_release_bundle");
+		testRelevantIntegrationUnitOnly = jsonObject.optBoolean(
 			"test_relevant_integration_unit_only");
 
 		if (portalTestClassJob instanceof TestSuiteJob) {
@@ -403,6 +397,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			testSuiteName = null;
 		}
 
+		_setTestHotfixChanges();
 		_setTestReleaseBundle();
 		_setTestRelevantChanges();
 
@@ -793,6 +788,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	protected JSONObject jsonObject;
 	protected final PortalGitWorkingDirectory portalGitWorkingDirectory;
 	protected final PortalTestClassJob portalTestClassJob;
+	protected boolean testHotfixChanges;
 	protected boolean testReleaseBundle;
 	protected boolean testRelevantChanges;
 	protected boolean testRelevantIntegrationUnitOnly;
@@ -1141,6 +1137,12 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 	private void _setIncludeStableTestSuite() {
 		includeStableTestSuite = testRelevantChanges;
+	}
+
+	private void _setTestHotfixChanges() {
+		Job job = getJob();
+
+		testHotfixChanges = job.testHotfixChanges();
 	}
 
 	private void _setTestReleaseBundle() {

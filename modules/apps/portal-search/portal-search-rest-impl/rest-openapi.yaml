@@ -1,5 +1,74 @@
 components:
     schemas:
+        FacetConfiguration:
+            properties:
+                aggregationName:
+                    description:
+                        The name of the aggregation.
+                    type: string
+                attributes:
+                    additionalProperties:
+                        type: object
+                    description:
+                        Additional attributes for the facet.
+                    type: object
+                frequencyThreshold:
+                    description:
+                        Frequency threshold for showing the terms.
+                    type: integer
+                maxTerms:
+                    description:
+                        Maximum number of terms to be shown.
+                    type: integer
+                name:
+                    description:
+                        The name of the facet.
+                    type: string
+                values:
+                    description:
+                        The values / selections to be filtered by.
+                    items:
+                        type: object
+                    type: array
+            type: object
+        SearchRequestBody:
+            properties:
+                attributes:
+                    additionalProperties:
+                        type: object
+                    type: object
+                facetConfigurations:
+                    items:
+                        $ref: "#/components/schemas/FacetConfiguration"
+                    type: array
+            type: object
+        SearchResult:
+            properties:
+                dateModified:
+                    description:
+                        The last time the item was changed.
+                    format: date-time
+                    type: string
+                description:
+                    description:
+                        The item's description.
+                    type: string
+                embedded:
+                    type: object
+                itemURL:
+                    description:
+                        The link to the embedded item.
+                    format: uri
+                    type: string
+                score:
+                    description:
+                        The item's score.
+                    format: float
+                    type: number
+                title:
+                    description:
+                        The item's title.
+                    type: string
         Suggestion:
             properties:
                 attributes:
@@ -35,7 +104,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.portal.search.rest.client', and version '1.0.7'."
+        'com.liferay.portal.search.rest.client', and version '1.0.12'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -43,6 +112,75 @@ info:
     version: v1.0
 openapi: 3.0.1
 paths:
+    "/search":
+        post:
+            description:
+                "Search the company index for matching content. This endpoint is beta and requires setting the
+                portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Beta."
+            operationId: postSearchPage
+            parameters:
+                - in: query
+                  description:
+                      Model class names to be searched for. Defaults to all.
+                  name: entryClassNames
+                  schema:
+                      type: string
+                - in: query
+                  description:
+                      The list of fields to be returned.
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SearchRequestBody"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SearchRequestBody"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SearchResult"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SearchResult"
+                                type: array
+            tags: ["SearchResult"]
     /suggestions:
         post:
             operationId: postSuggestionsPage
@@ -90,6 +228,7 @@ paths:
                             items:
                                 $ref: "#/components/schemas/SuggestionsContributorConfiguration"
                             type: array
+                required: false
             responses:
                 200:
                     content:

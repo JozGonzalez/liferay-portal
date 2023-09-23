@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
@@ -28,12 +19,14 @@ import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.LocalizedValue;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
@@ -59,12 +52,13 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.Serializable;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -97,14 +91,13 @@ public class DLFileVersionTest {
 		setUpParentFolder();
 		setUpResourcePermission();
 
-		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
-			DDMStructureTestUtil.addStructure(
-				_group.getGroupId(), DLFileEntryMetadata.class.getName());
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = DLFileEntryTypeServiceUtil.addFileEntryType(
-			_group.getGroupId(), StringUtil.randomString(),
-			StringUtil.randomString(),
-			new long[] {ddmStructure.getStructureId()},
+			_group.getGroupId(), ddmStructure.getStructureId(), null,
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
+			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		ExpandoTable expandoTable =
@@ -370,15 +363,13 @@ public class DLFileVersionTest {
 
 		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 
-		DLFileEntryType fileEntryType =
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
 			DLFileEntryTypeLocalServiceUtil.getFileEntryType(
-				_dlFileEntryType.getFileEntryTypeId());
-
-		List<DDMStructure> ddmStructures = fileEntryType.getDDMStructures();
+				_dlFileEntryType.getFileEntryTypeId()));
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			DDMFormValues ddmFormValues = createDDMFormValues(
-				ddmStructure.getDDMForm());
+				_ddmBeanTranslator.translate(ddmStructure.getDDMForm()));
 
 			for (String fieldName : ddmStructure.getFieldNames()) {
 				DDMFormFieldValue ddmFormFieldValue = createDDMFormFieldValue(
@@ -447,10 +438,8 @@ public class DLFileVersionTest {
 			return;
 		}
 
-		DLFileEntryType fileEntryType =
-			DLFileEntryTypeLocalServiceUtil.getFileEntryType(fileEntryTypeId);
-
-		List<DDMStructure> ddmStructures = fileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			DLFileEntryTypeLocalServiceUtil.getFileEntryType(fileEntryTypeId));
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			DDMFormValues ddmFormValues =
@@ -512,6 +501,9 @@ public class DLFileVersionTest {
 			_DATA_VERSION_3[i] = (byte)i;
 		}
 	}
+
+	@Inject
+	private DDMBeanTranslator _ddmBeanTranslator;
 
 	@DeleteAfterTestRun
 	private DLFileEntryType _dlFileEntryType;

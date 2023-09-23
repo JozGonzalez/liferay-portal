@@ -1,51 +1,33 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.internal.util;
 
 import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.SubscriptionSender;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Preston Crary
  */
-@Component(service = {})
 public class AdminSubscriptionSenderFactory {
 
 	public static SubscriptionSender createSubscriptionSender(
 		KBArticle kbArticle, ServiceContext serviceContext) {
 
 		return new AdminSubscriptionSender(
-			kbArticle, _kbArticleModelResourcePermission, serviceContext);
+			kbArticle, _kbArticleModelResourcePermissionSnapshot.get(),
+			serviceContext);
 	}
 
-	@Reference(
-		target = "(model.class.name=com.liferay.knowledge.base.model.KBArticle)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
-		ModelResourcePermission<KBArticle> modelResourcePermission) {
-
-		_kbArticleModelResourcePermission = modelResourcePermission;
-	}
-
-	private static ModelResourcePermission<KBArticle>
-		_kbArticleModelResourcePermission;
+	private static final Snapshot<ModelResourcePermission<KBArticle>>
+		_kbArticleModelResourcePermissionSnapshot = new Snapshot<>(
+			AdminSubscriptionSenderFactory.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.knowledge.base.model.KBArticle)");
 
 }

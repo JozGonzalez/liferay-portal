@@ -1,26 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.util;
 
+import com.liferay.poshi.core.PoshiProperties;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.lang.reflect.Field;
+
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Brian Wing Shun Chan
@@ -28,13 +22,23 @@ import java.util.Properties;
 public class PropsUtil {
 
 	public static void clear() {
-		_propsUtil._props.clear();
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
 
-		setProperties(_getClassProperties());
+		poshiProperties.clear();
+
+		_setProperties(_getClassProperties());
 	}
 
 	public static String get(String key) {
-		return _propsUtil._get(key);
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		String value = poshiProperties.getProperty(key);
+
+		if (Validator.isNull(value)) {
+			value = System.getProperty(key);
+		}
+
+		return value;
 	}
 
 	public static String getEnvironmentVariable(String name) {
@@ -42,23 +46,66 @@ public class PropsUtil {
 	}
 
 	public static Properties getProperties() {
-		return _propsUtil._props;
+		return PoshiProperties.getPoshiProperties();
 	}
 
 	public static void set(String key, String value) {
-		_propsUtil._set(key, value);
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		PoshiProperties.validateProperty(key, value);
+
+		poshiProperties.setProperty(key, value);
+
+		if (poshiProperties.debugStacktrace) {
+			System.out.println("Setting property \"" + key + "\" to: " + value);
+		}
+
+		Class<?> poshiPropertiesClass = poshiProperties.getClass();
+
+		try {
+			Object objectValue = value;
+
+			Field field = poshiPropertiesClass.getField(_toCamelCase(key));
+
+			Class<?> fieldType = field.getType();
+
+			String fieldTypeName = fieldType.getName();
+
+			if (fieldTypeName.equals("boolean") ||
+				fieldTypeName.equals("java.lang.Boolean")) {
+
+				objectValue = GetterUtil.getBoolean(value);
+			}
+			else if (fieldTypeName.equals("int") ||
+					 fieldTypeName.equals("java.lang.Integer")) {
+
+				objectValue = GetterUtil.getInteger(value);
+			}
+			else if (fieldType.isArray()) {
+				objectValue = StringUtil.split(value);
+			}
+
+			field.set(poshiProperties, objectValue);
+		}
+		catch (IllegalAccessException illegalAccessException) {
+			if (poshiProperties.debugStacktrace) {
+				System.out.println("Unable to set field " + _toCamelCase(key));
+			}
+		}
+		catch (NoSuchFieldException noSuchFieldException) {
+			if (poshiProperties.debugStacktrace) {
+				System.out.println(
+					"Field " + _toCamelCase(key) + " does not exist");
+			}
+		}
 	}
 
 	public static void setProperties(Properties properties) {
-		for (String propertyName : properties.stringPropertyNames()) {
-			String propertyValue = properties.getProperty(propertyName);
+		_setProperties(properties);
 
-			if (propertyValue == null) {
-				continue;
-			}
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
 
-			set(propertyName, propertyValue);
-		}
+		poshiProperties.printProperties(true);
 	}
 
 	private static Properties _getClassProperties() {
@@ -89,53 +136,46 @@ public class PropsUtil {
 		return classProperties;
 	}
 
-	private PropsUtil() {
-		Properties properties = _getClassProperties();
-
+	private static void _setProperties(Properties properties) {
 		for (String propertyName : properties.stringPropertyNames()) {
-			_props.setProperty(
-				propertyName, properties.getProperty(propertyName));
-		}
+			String propertyValue = properties.getProperty(propertyName);
 
-		_printProperties(false);
+			if (propertyValue == null) {
+				continue;
+			}
+
+			set(propertyName, propertyValue);
+		}
 	}
 
-	private String _get(String key) {
-		String value = System.getProperty(key);
+	private static String _toCamelCase(String propertyName) {
+		String[] terms = propertyName.split("\\.");
 
-		if (Validator.isNull(value)) {
-			value = _props.getProperty(key);
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < terms.length; i++) {
+			String term = terms[i];
+
+			if (i != 0) {
+				if (_upperCaseTerms.contains(term)) {
+					term = StringUtil.upperCase(term);
+				}
+				else {
+					term = StringUtil.capitalize(term);
+				}
+			}
+
+			sb.append(term);
 		}
 
-		return value;
+		return sb.toString();
 	}
 
-	private void _printProperties(boolean update) {
-		List<String> keys = Collections.list(
-			(Enumeration<String>)_props.propertyNames());
-
-		keys = ListUtil.sort(keys);
-
-		if (update) {
-			System.out.println("-- updated properties --");
+	private static final Set<String> _upperCaseTerms = new HashSet<String>() {
+		{
+			add("csv");
+			add("url");
 		}
-		else {
-			System.out.println("-- listing properties --");
-		}
-
-		for (String key : keys) {
-			System.out.println(key + "=" + _get(key));
-		}
-
-		System.out.println("");
-	}
-
-	private void _set(String key, String value) {
-		_props.setProperty(key, value);
-	}
-
-	private static final PropsUtil _propsUtil = new PropsUtil();
-
-	private final Properties _props = new Properties();
+	};
 
 }

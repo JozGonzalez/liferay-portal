@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.test.log;
@@ -43,7 +34,7 @@ public class LoggerTestUtil {
 		org.apache.logging.log4j.Level.ALL);
 
 	public static final String DEBUG = String.valueOf(
-		org.apache.log4j.Level.DEBUG);
+		org.apache.logging.log4j.Level.DEBUG);
 
 	public static final String ERROR = String.valueOf(
 		org.apache.logging.log4j.Level.ERROR);
@@ -105,9 +96,7 @@ public class LoggerTestUtil {
 				"Log " + name + " is not a Log4j logger");
 		}
 
-		Log4JUtil.setLevel(logger.getName(), priority, false);
-
-		Log4JLogCapture log4JLogCapture = new Log4JLogCapture(logger);
+		Log4JLogCapture log4JLogCapture = new Log4JLogCapture(logger, priority);
 
 		log4JLogCapture.start();
 
@@ -233,12 +222,16 @@ public class LoggerTestUtil {
 			return _logEntries;
 		}
 
-		private Log4JLogCapture(org.apache.logging.log4j.core.Logger logger) {
+		private Log4JLogCapture(
+			org.apache.logging.log4j.core.Logger logger, String priority) {
+
 			super(StringUtil.randomString(), null, null, true, null);
 
 			_logger = logger;
 
 			_level = logger.getLevel();
+
+			Log4JUtil.setLevel(logger.getName(), priority, false);
 
 			_loggerConfig = logger.get();
 

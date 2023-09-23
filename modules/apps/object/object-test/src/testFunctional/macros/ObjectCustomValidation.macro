@@ -23,7 +23,7 @@ definition {
 			key_validationType = ${validationType},
 			locator1 = "ObjectCustomValidation#CHOOSE_OPTION_TYPE_VALIDATION");
 
-		PortletEntry.save();
+		Button.clickSave();
 	}
 
 	macro assertValidationPresent {
@@ -68,12 +68,6 @@ definition {
 		Type.typeCodeMirrorEditorNoError(
 			locator1 = "ObjectCustomValidation#INSERT_SCRIPT_ON_VALIDATION",
 			value1 = ${scriptValidation});
-	}
-
-	macro viewCardsOnCustomValidation {
-		AssertElementPresent.assertVisible(
-			key_title = ${cardName},
-			locator1 = "Header#H3_TITLE");
 	}
 
 }

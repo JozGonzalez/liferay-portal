@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.exportimport.data.handler;
@@ -23,6 +14,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
@@ -145,11 +137,11 @@ public class SegmentsExperienceStagedModelDataHandler
 
 		Map<Long, Long> referenceClassPKs =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-				segmentsExperience.getClassName());
+				Layout.class.getName());
 
 		long referenceClassPK = MapUtil.getLong(
-			referenceClassPKs, segmentsExperience.getClassPK(),
-			segmentsExperience.getClassPK());
+			referenceClassPKs, segmentsExperience.getPlid(),
+			segmentsExperience.getPlid());
 
 		SegmentsExperience importedSegmentsExperience =
 			(SegmentsExperience)segmentsExperience.clone();
@@ -159,7 +151,7 @@ public class SegmentsExperienceStagedModelDataHandler
 		importedSegmentsExperience.setCompanyId(
 			portletDataContext.getCompanyId());
 		importedSegmentsExperience.setSegmentsEntryId(segmentsEntryId);
-		importedSegmentsExperience.setClassPK(referenceClassPK);
+		importedSegmentsExperience.setPlid(referenceClassPK);
 
 		SegmentsExperience existingSegmentsExperience =
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
@@ -171,8 +163,7 @@ public class SegmentsExperienceStagedModelDataHandler
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
 					portletDataContext.getScopeGroupId(),
 					importedSegmentsExperience.getSegmentsExperienceKey(),
-					importedSegmentsExperience.getClassNameId(),
-					importedSegmentsExperience.getClassPK());
+					importedSegmentsExperience.getPlid());
 		}
 
 		if ((existingSegmentsExperience == null) ||

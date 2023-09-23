@@ -5,7 +5,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Clay";
-	property testray.main.component.name = "User Interface";
+	property testray.main.component.name = "Clay";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -32,9 +32,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -44,7 +44,7 @@ definition {
 		}
 	}
 
-	@description = "Verify stripe alert contains close button"
+	@description = "LRQA-65932. Verify stripe alert contains close button"
 	@priority = 5
 	test CanDisplayCloseButton {
 		task ("When the alert is a stripe variation") {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.service.test;
@@ -18,12 +9,14 @@ import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalServic
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PasswordExpiredException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredRoleException;
 import com.liferay.portal.kernel.exception.UserLockoutException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
@@ -31,6 +24,7 @@ import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.Ticket;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.AuthException;
@@ -45,6 +39,7 @@ import com.liferay.portal.kernel.service.PasswordPolicyLocalService;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.TicketLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -66,11 +61,14 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.security.audit.AuditMessageProcessor;
+import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
@@ -81,13 +79,20 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.LongStream;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Michael C. Han
@@ -100,6 +105,24 @@ public class UserLocalServiceTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@Before
+	public void setUp() throws Exception {
+		_auditMessageProcessor = new TestAuditMessageProcessor();
+
+		_bundleActivator = new UserLocalServiceTestBundleActivator();
+
+		Bundle bundle = FrameworkUtil.getBundle(UserLocalServiceTest.class);
+
+		_bundleContext = bundle.getBundleContext();
+
+		_bundleActivator.start(_bundleContext);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		_bundleActivator.stop(_bundleContext);
+	}
 
 	@Test
 	public void testAuthenticateByEmailAddress() throws Exception {
@@ -150,6 +173,15 @@ public class UserLocalServiceTest {
 			_userLocalService.authenticateByEmailAddress(
 				user.getCompanyId(), user.getEmailAddress(), password, null,
 				null, null));
+	}
+
+	@Test
+	public void testAuthenticationWhenUserDoesNotExist() throws Exception {
+		Assert.assertEquals(
+			Authenticator.DNE,
+			_userLocalService.authenticateByEmailAddress(
+				RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), null, null, null));
 	}
 
 	@Test
@@ -212,7 +244,7 @@ public class UserLocalServiceTest {
 
 		User user = companyUsers.get(0);
 
-		Assert.assertFalse(user.isDefaultUser());
+		Assert.assertFalse(user.isGuestUser());
 	}
 
 	@Test
@@ -499,15 +531,78 @@ public class UserLocalServiceTest {
 	}
 
 	@Test
+	public void testSearch() throws Exception {
+		List<User> users = _userLocalService.search(
+			TestPropsValues.getCompanyId(), null,
+			WorkflowConstants.STATUS_APPROVED, null, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, (OrderByComparator<User>)null);
+
+		users = ListUtil.filter(
+			users, user -> user.getType() != UserConstants.TYPE_REGULAR);
+
+		Assert.assertTrue(users.isEmpty());
+
+		PermissionChecker oldPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
+
+			users = _userLocalService.search(
+				TestPropsValues.getCompanyId(), null,
+				WorkflowConstants.STATUS_APPROVED,
+				LinkedHashMapBuilder.<String, Object>put(
+					"types",
+					new long[] {UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT}
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				(OrderByComparator<User>)null);
+
+			Assert.assertEquals(users.toString(), 1, users.size());
+
+			User user = users.get(0);
+
+			Assert.assertEquals(
+				UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT, user.getType());
+			Assert.assertTrue(user.isServiceAccountUser());
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(UserTestUtil.addUser()));
+
+			users = _userLocalService.search(
+				TestPropsValues.getCompanyId(), null,
+				WorkflowConstants.STATUS_APPROVED,
+				LinkedHashMapBuilder.<String, Object>put(
+					"types",
+					new long[] {UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT}
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				(OrderByComparator<User>)null);
+
+			Assert.assertTrue(users.isEmpty());
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(oldPermissionChecker);
+		}
+	}
+
+	@Test
 	public void testSearchCounts() throws Exception {
 
 		// LPS-119805
 
+		long[] values = new long[2001];
+
+		int index = 0;
+
+		for (long i = 1000; i <= 3000; i++) {
+			values[index++] = i;
+		}
+
 		_userLocalService.searchCounts(
 			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
-			LongStream.rangeClosed(
-				1000, 3000
-			).toArray());
+			values);
 	}
 
 	@Test
@@ -655,14 +750,24 @@ public class UserLocalServiceTest {
 
 		Date oldPasswordModifiedDate = user.getPasswordModifiedDate();
 
-		_userLocalService.updatePassword(
-			user.getUserId(), password, password, false, true);
+		try {
+			ServiceContextThreadLocal.pushServiceContext(
+				ServiceContextTestUtil.getServiceContext(
+					user.getGroupId(), user.getUserId()));
 
-		user = _userLocalService.getUser(user.getUserId());
+			_userLocalService.updatePassword(
+				user.getUserId(), password, password, false, true);
 
-		Date passwordModifiedDate = user.getPasswordModifiedDate();
+			user = _userLocalService.getUser(user.getUserId());
 
-		Assert.assertTrue(passwordModifiedDate.after(oldPasswordModifiedDate));
+			Date passwordModifiedDate = user.getPasswordModifiedDate();
+
+			Assert.assertTrue(
+				passwordModifiedDate.after(oldPasswordModifiedDate));
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
 	}
 
 	@Test
@@ -762,6 +867,10 @@ public class UserLocalServiceTest {
 	private AnnouncementsDeliveryLocalService
 		_announcementsDeliveryLocalService;
 
+	private AuditMessageProcessor _auditMessageProcessor;
+	private BundleActivator _bundleActivator;
+	private BundleContext _bundleContext;
+
 	@Inject
 	private GroupLocalService _groupLocalService;
 
@@ -777,6 +886,8 @@ public class UserLocalServiceTest {
 	@Inject
 	private RoleLocalService _roleLocalService;
 
+	private ServiceRegistration<AuditMessageProcessor> _serviceRegistration;
+
 	@Inject
 	private TicketLocalService _ticketLocalService;
 
@@ -789,5 +900,49 @@ public class UserLocalServiceTest {
 	@Inject
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
+
+	private class TestAuditMessageProcessor implements AuditMessageProcessor {
+
+		@Override
+		public void process(AuditMessage auditMessage) {
+			Assert.assertNotNull(auditMessage);
+
+			JSONObject additionalInfoJSONObject =
+				auditMessage.getAdditionalInfo();
+
+			String authType = String.valueOf(
+				additionalInfoJSONObject.get("authType"));
+
+			Assert.assertEquals("emailAddress", authType);
+
+			String reason = String.valueOf(
+				additionalInfoJSONObject.get("reason"));
+
+			Assert.assertEquals("User does not exist", reason);
+
+			Assert.assertEquals(
+				EventTypes.LOGIN_DNE, auditMessage.getEventType());
+		}
+
+	}
+
+	private class UserLocalServiceTestBundleActivator
+		implements BundleActivator {
+
+		@Override
+		public void start(BundleContext bundleContext) {
+			_serviceRegistration = _bundleContext.registerService(
+				AuditMessageProcessor.class, _auditMessageProcessor,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"eventTypes", EventTypes.LOGIN_DNE
+				).build());
+		}
+
+		@Override
+		public void stop(BundleContext bundleContext) {
+			_serviceRegistration.unregister();
+		}
+
+	}
 
 }

@@ -1,41 +1,56 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
 import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.AssetType;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.ParentTaxonomyCategory;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyCategory;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyVocabulary;
 import com.liferay.headless.admin.taxonomy.client.pagination.Page;
 import com.liferay.headless.admin.taxonomy.client.pagination.Pagination;
+import com.liferay.headless.admin.taxonomy.client.problem.Problem;
+import com.liferay.headless.admin.taxonomy.client.resource.v1_0.TaxonomyCategoryResource;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,9 +70,166 @@ public class TaxonomyCategoryResourceTest
 		super.setUp();
 
 		_assetVocabulary = AssetVocabularyLocalServiceUtil.addVocabulary(
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
 			testGroup.getGroupId(), RandomTestUtil.randomString(),
 			new ServiceContext());
+
+		_testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null,
+			new ServiceContext() {
+				{
+					setCompanyId(testGroup.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+
+		_depotAssetVocabulary = AssetVocabularyLocalServiceUtil.addVocabulary(
+			UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
+			_testDepotEntry.getGroupId(), RandomTestUtil.randomString(),
+			new ServiceContext());
+
+		_globalAssetVocabulary = AssetVocabularyLocalServiceUtil.addVocabulary(
+			UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
+			testCompany.getGroupId(), RandomTestUtil.randomString(),
+			new ServiceContext());
+		_internalAssetVocabulary =
+			AssetVocabularyLocalServiceUtil.addVocabulary(
+				UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
+				testGroup.getGroupId(), null,
+				HashMapBuilder.put(
+					LocaleUtil.US, RandomTestUtil.randomString()
+				).build(),
+				null, null, AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL,
+				new ServiceContext());
+	}
+
+	@Override
+	@Test
+	public void testGetTaxonomyCategory() throws Exception {
+		super.testGetTaxonomyCategory();
+
+		TaxonomyCategory postTaxonomyCategory =
+			testGetTaxonomyCategory_addTaxonomyCategory();
+
+		TaxonomyCategory getTaxonomyCategory =
+			taxonomyCategoryResource.getTaxonomyCategory(
+				postTaxonomyCategory.getId());
+
+		assertValid(
+			getTaxonomyCategory.getActions(),
+			HashMapBuilder.<String, Map<String, String>>put(
+				"add-category",
+				HashMapBuilder.put(
+					"href",
+					StringBundler.concat(
+						"http://localhost:8080/o/headless-admin-taxonomy/v1.0",
+						"/taxonomy-categories/", getTaxonomyCategory.getId(),
+						"/taxonomy-categories")
+				).put(
+					"method", "POST"
+				).build()
+			).put(
+				"delete",
+				HashMapBuilder.put(
+					"href",
+					"http://localhost:8080/o/headless-admin-taxonomy/v1.0" +
+						"/taxonomy-categories/" + getTaxonomyCategory.getId()
+				).put(
+					"method", "DELETE"
+				).build()
+			).put(
+				"get",
+				HashMapBuilder.put(
+					"href",
+					"http://localhost:8080/o/headless-admin-taxonomy/v1.0" +
+						"/taxonomy-categories/" + getTaxonomyCategory.getId()
+				).put(
+					"method", "GET"
+				).build()
+			).put(
+				"replace",
+				HashMapBuilder.put(
+					"href",
+					"http://localhost:8080/o/headless-admin-taxonomy/v1.0" +
+						"/taxonomy-categories/" + getTaxonomyCategory.getId()
+				).put(
+					"method", "PUT"
+				).build()
+			).put(
+				"update",
+				HashMapBuilder.put(
+					"href",
+					"http://localhost:8080/o/headless-admin-taxonomy/v1.0" +
+						"/taxonomy-categories/" + getTaxonomyCategory.getId()
+				).put(
+					"method", "PATCH"
+				).build()
+			).build());
+
+		Assert.assertNull(postTaxonomyCategory.getTaxonomyCategoryUsageCount());
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			"headless-admin-taxonomy/v1.0/taxonomy-categories/" +
+				getTaxonomyCategory.getId() +
+					"?nestedFields=taxonomyCategoryUsageCount",
+			Http.Method.GET);
+
+		Assert.assertNotNull(jsonObject.get("taxonomyCategoryUsageCount"));
+
+		_addTaxonomyCategoryWithParentTaxonomyCategory(
+			postTaxonomyCategory.getId(), randomTaxonomyCategory());
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			StringBundler.concat(
+				"headless-admin-taxonomy/v1.0/taxonomy-categories/",
+				postTaxonomyCategory.getId(), "/taxonomy-categories",
+				"?nestedFields=taxonomyCategoryUsageCount"),
+			Http.Method.GET);
+
+		JSONArray itemsJSONArray = (JSONArray)jsonObject.get("items");
+
+		JSONObject itemJSONObject = (JSONObject)itemsJSONArray.get(0);
+
+		Assert.assertNotNull(itemJSONObject.get("taxonomyCategoryUsageCount"));
+	}
+
+	@Override
+	@Test
+	public void testGetTaxonomyCategoryTaxonomyCategoriesPageWithSortDateTime()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (ListUtil.isEmpty(entityFields)) {
+			return;
+		}
+
+		AssetCategory parentAssetCategory =
+			_assetCategoryLocalService.addCategory(
+				TestPropsValues.getUserId(), testGroup.getGroupId(),
+				RandomTestUtil.randomString(),
+				_assetVocabulary.getVocabularyId(),
+				ServiceContextTestUtil.getServiceContext());
+
+		AssetCategory assetCategory1 = _addAssetCategory(
+			_assetVocabulary, DateUtils.addMinutes(new Date(), -2),
+			parentAssetCategory);
+		AssetCategory assetCategory2 = _addAssetCategory(
+			_assetVocabulary, new Date(), parentAssetCategory);
+
+		for (EntityField entityField : entityFields) {
+			_assertTaxonomyCategoriesPageOrder(
+				entityField, assetCategory1, assetCategory2, "asc",
+				parentAssetCategory);
+			_assertTaxonomyCategoriesPageOrder(
+				entityField, assetCategory2, assetCategory1, "desc",
+				parentAssetCategory);
+		}
 	}
 
 	@Override
@@ -67,7 +239,52 @@ public class TaxonomyCategoryResourceTest
 
 		super.testGetTaxonomyVocabularyTaxonomyCategoriesPage();
 
-		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten();
+		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten(
+			_assetVocabulary);
+		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten(
+			_depotAssetVocabulary);
+		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten(
+			_globalAssetVocabulary);
+		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten(
+			_internalAssetVocabulary);
+		_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlattenWithOnlyNameField(
+			_assetVocabulary);
+	}
+
+	@Override
+	@Test
+	public void testGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode()
+		throws Exception {
+
+		super.
+			testGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode();
+
+		TaxonomyCategory taxonomyCategory =
+			testGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode_addTaxonomyCategory();
+
+		String externalReferenceCode = StringUtil.toLowerCase(
+			RandomTestUtil.randomString());
+
+		try {
+			taxonomyCategoryResource.
+				getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+					testGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode_getTaxonomyVocabularyId(
+						taxonomyCategory),
+					externalReferenceCode);
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("NOT_FOUND", problem.getStatus());
+			Assert.assertEquals(
+				StringBundler.concat(
+					"No AssetCategory exists with the key {",
+					"externalReferenceCode=", externalReferenceCode,
+					", groupId=", taxonomyCategory.getSiteId(), "}"),
+				problem.getTitle());
+		}
 	}
 
 	@Override
@@ -94,6 +311,15 @@ public class TaxonomyCategoryResourceTest
 	}
 
 	@Override
+	@Test
+	public void testPutTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode()
+		throws Exception {
+
+		super.
+			testPutTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode();
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"description", "name"};
 	}
@@ -103,7 +329,6 @@ public class TaxonomyCategoryResourceTest
 		TaxonomyCategory taxonomyCategory = super.randomTaxonomyCategory();
 
 		taxonomyCategory.setId(String.valueOf(RandomTestUtil.randomLong()));
-
 		taxonomyCategory.setTaxonomyVocabularyId(
 			_assetVocabulary.getVocabularyId());
 
@@ -239,9 +464,27 @@ public class TaxonomyCategoryResourceTest
 		return testGetTaxonomyCategory_addTaxonomyCategory();
 	}
 
+	private AssetCategory _addAssetCategory(
+			AssetVocabulary assetVocabulary, Date date,
+			AssetCategory parentAssetCategory)
+		throws Exception {
+
+		AssetCategory assetCategory = _assetCategoryLocalService.addCategory(
+			null, TestPropsValues.getUserId(), testGroup.getGroupId(),
+			parentAssetCategory.getCategoryId(),
+			RandomTestUtil.randomLocaleStringMap(), null,
+			assetVocabulary.getVocabularyId(), null,
+			ServiceContextTestUtil.getServiceContext());
+
+		assetCategory.setCreateDate(date);
+		assetCategory.setModifiedDate(date);
+
+		return _assetCategoryLocalService.updateAssetCategory(assetCategory);
+	}
+
 	private AssetVocabulary _addAssetVocabulary() throws Exception {
 		return AssetVocabularyLocalServiceUtil.addVocabulary(
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
 			testGroup.getGroupId(), RandomTestUtil.randomString(),
 			new ServiceContext());
 	}
@@ -260,6 +503,38 @@ public class TaxonomyCategoryResourceTest
 
 		return taxonomyCategoryResource.postTaxonomyCategoryTaxonomyCategory(
 			parentTaxonomyCategoryId, taxonomyCategory);
+	}
+
+	private void _assertTaxonomyCategoriesPageOrder(
+			EntityField entityField, AssetCategory firstAssetCategory,
+			AssetCategory secondAssetCategory, String orderBy,
+			AssetCategory parentAssetCategory)
+		throws Exception {
+
+		Page<TaxonomyCategory> taxonomyCategoriesPage =
+			taxonomyCategoryResource.getTaxonomyCategoryTaxonomyCategoriesPage(
+				String.valueOf(parentAssetCategory.getCategoryId()), null, null,
+				null, Pagination.of(1, 2),
+				entityField.getName() + ":" + orderBy);
+
+		Assert.assertEquals(
+			taxonomyCategoriesPage.toString(), 2,
+			taxonomyCategoriesPage.getTotalCount());
+
+		List<TaxonomyCategory> taxonomyCategories =
+			(List<TaxonomyCategory>)taxonomyCategoriesPage.getItems();
+
+		TaxonomyCategory taxonomyCategory = taxonomyCategories.get(0);
+
+		Assert.assertEquals(
+			String.valueOf(firstAssetCategory.getCategoryId()),
+			taxonomyCategory.getId());
+
+		taxonomyCategory = taxonomyCategories.get(1);
+
+		Assert.assertEquals(
+			String.valueOf(secondAssetCategory.getCategoryId()),
+			taxonomyCategory.getId());
 	}
 
 	private TaxonomyVocabulary _randomTaxonomyVocabulary() {
@@ -284,13 +559,14 @@ public class TaxonomyCategoryResourceTest
 		};
 	}
 
-	private void _testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten()
+	private void _testGetTaxonomyVocabularyTaxonomyCategoriesPageFlatten(
+			AssetVocabulary assetVocabulary)
 		throws Exception {
 
 		AssetVocabulary irrelevantAssetVocabulary = _addAssetVocabulary();
 
 		TaxonomyCategory taxonomyCategory1 =
-			_addTaxonomyCategoryWithParentAssetVocabulary(_assetVocabulary);
+			_addTaxonomyCategoryWithParentAssetVocabulary(assetVocabulary);
 
 		TaxonomyCategory taxonomyCategory2 =
 			_addTaxonomyCategoryWithParentTaxonomyCategory(
@@ -305,7 +581,7 @@ public class TaxonomyCategoryResourceTest
 		Page<TaxonomyCategory> page =
 			taxonomyCategoryResource.
 				getTaxonomyVocabularyTaxonomyCategoriesPage(
-					_assetVocabulary.getVocabularyId(), flatten, null, null,
+					assetVocabulary.getVocabularyId(), flatten, null, null,
 					null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(1, page.getTotalCount());
@@ -320,7 +596,7 @@ public class TaxonomyCategoryResourceTest
 		page =
 			taxonomyCategoryResource.
 				getTaxonomyVocabularyTaxonomyCategoriesPage(
-					_assetVocabulary.getVocabularyId(), flatten, null, null,
+					assetVocabulary.getVocabularyId(), flatten, null, null,
 					null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
@@ -375,6 +651,70 @@ public class TaxonomyCategoryResourceTest
 			taxonomyCategory1.getId());
 	}
 
+	private void
+			_testGetTaxonomyVocabularyTaxonomyCategoriesPageFlattenWithOnlyNameField(
+				AssetVocabulary assetVocabulary)
+		throws Exception {
+
+		AssetVocabulary irrelevantAssetVocabulary = _addAssetVocabulary();
+
+		TaxonomyCategory taxonomyCategory1 =
+			_addTaxonomyCategoryWithParentAssetVocabulary(assetVocabulary);
+
+		TaxonomyCategory taxonomyCategory2 =
+			_addTaxonomyCategoryWithParentTaxonomyCategory(
+				taxonomyCategory1.getId(), randomTaxonomyCategory());
+
+		TaxonomyCategory irrelevantTaxonomyCategory =
+			_addTaxonomyCategoryWithParentAssetVocabulary(
+				irrelevantAssetVocabulary);
+
+		TaxonomyCategoryResource.Builder builder =
+			TaxonomyCategoryResource.builder();
+
+		taxonomyCategoryResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
+			LocaleUtil.getDefault()
+		).parameters(
+			"fields", "name"
+		).build();
+
+		Page<TaxonomyCategory> page =
+			taxonomyCategoryResource.
+				getTaxonomyVocabularyTaxonomyCategoriesPage(
+					assetVocabulary.getVocabularyId(), true, null, null, null,
+					Pagination.of(1, 10), null);
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		TaxonomyCategory getTaxonomyCategory1 = new TaxonomyCategory() {
+			{
+				name = taxonomyCategory1.getName();
+			}
+		};
+		TaxonomyCategory getTaxonomyCategory2 = new TaxonomyCategory() {
+			{
+				name = taxonomyCategory2.getName();
+			}
+		};
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(getTaxonomyCategory1, getTaxonomyCategory2),
+			(List<TaxonomyCategory>)page.getItems());
+
+		assertValid(page);
+
+		taxonomyCategoryResource.deleteTaxonomyCategory(
+			irrelevantTaxonomyCategory.getId());
+
+		taxonomyCategoryResource.deleteTaxonomyCategory(
+			taxonomyCategory2.getId());
+
+		taxonomyCategoryResource.deleteTaxonomyCategory(
+			taxonomyCategory1.getId());
+	}
+
 	private void _testPatchTaxonomyCategoryWithExistingParentTaxonomyCategory(
 			TaxonomyCategory taxonomyCategory, AssetVocabulary assetVocabulary)
 		throws Exception {
@@ -398,9 +738,8 @@ public class TaxonomyCategoryResourceTest
 					{
 						parentTaxonomyCategory = new ParentTaxonomyCategory() {
 							{
-								setId(
-									Long.valueOf(
-										patchParentTaxonomyCategory.getId()));
+								id = Long.valueOf(
+									patchParentTaxonomyCategory.getId());
 							}
 						};
 					}
@@ -432,9 +771,8 @@ public class TaxonomyCategoryResourceTest
 					{
 						parentTaxonomyCategory = new ParentTaxonomyCategory() {
 							{
-								setId(
-									Long.valueOf(
-										randomTaxonomyCategory.getId()));
+								id = Long.valueOf(
+									randomTaxonomyCategory.getId());
 							}
 						};
 					}
@@ -489,6 +827,13 @@ public class TaxonomyCategoryResourceTest
 		}
 	}
 
+	@Inject
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
 	private AssetVocabulary _assetVocabulary;
+	private AssetVocabulary _depotAssetVocabulary;
+	private AssetVocabulary _globalAssetVocabulary;
+	private AssetVocabulary _internalAssetVocabulary;
+	private DepotEntry _testDepotEntry;
 
 }

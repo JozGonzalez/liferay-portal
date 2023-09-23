@@ -1,26 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.channel.web.internal.portlet.action;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.AccountEntryStatusException;
+import com.liferay.account.exception.AccountEntryTypeException;
 import com.liferay.account.settings.AccountEntryGroupSettings;
-import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
+import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.DuplicateCommerceChannelAccountEntryIdException;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.permission.CommerceChannelPermission;
 import com.liferay.commerce.product.service.CommerceChannelService;
@@ -33,8 +27,8 @@ import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -43,10 +37,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ObjectValuePair;
@@ -101,7 +95,11 @@ public class EditCommerceChannelMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof FileExtensionException ||
+			if (exception instanceof AccountEntryStatusException ||
+				exception instanceof AccountEntryTypeException ||
+				exception instanceof
+					DuplicateCommerceChannelAccountEntryIdException ||
+				exception instanceof FileExtensionException ||
 				exception instanceof InvalidFileException) {
 
 				SessionMessages.add(
@@ -154,7 +152,7 @@ public class EditCommerceChannelMVCActionCommand
 					CommerceAccountGroupServiceConfiguration.class,
 					new GroupServiceSettingsLocator(
 						commerceChannelGroupId,
-						CommerceAccountConstants.SERVICE_NAME));
+						CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		return AccountEntryAllowedTypesUtil.getAllowedTypes(
 			commerceAccountGroupServiceConfiguration.commerceSiteType());
@@ -181,10 +179,13 @@ public class EditCommerceChannelMVCActionCommand
 			_commerceChannelService.getCommerceChannel(commerceChannelId);
 
 		commerceChannel = _commerceChannelService.updateCommerceChannel(
-			commerceChannel.getCommerceChannelId(), siteGroupId,
+			commerceChannel.getCommerceChannelId(),
+			commerceChannel.getAccountEntryId(), siteGroupId,
 			commerceChannel.getName(), commerceChannel.getType(),
-			commerceChannel.getTypeSettingsProperties(),
-			commerceChannel.getCommerceCurrencyCode());
+			commerceChannel.getTypeSettingsUnicodeProperties(),
+			commerceChannel.getCommerceCurrencyCode(),
+			commerceChannel.getPriceDisplayType(),
+			commerceChannel.isDiscountsTargetNetPrice());
 
 		_accountEntryGroupSettings.setAllowedTypes(
 			commerceChannel.getSiteGroupId(),
@@ -197,7 +198,7 @@ public class EditCommerceChannelMVCActionCommand
 			ActionRequest actionRequest, CommerceChannel commerceChannel)
 		throws Exception {
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
 				CommerceConstants.SERVICE_NAME_COMMERCE_ORDER_FIELDS));
@@ -221,17 +222,6 @@ public class EditCommerceChannelMVCActionCommand
 		long commerceChannelId = ParamUtil.getLong(
 			actionRequest, "commerceChannelId");
 
-		String name = ParamUtil.getString(actionRequest, "name");
-
-		String commerceCurrencyCode = ParamUtil.getString(
-			actionRequest, "commerceCurrencyCode");
-
-		String priceDisplayType = ParamUtil.getString(
-			actionRequest, "priceDisplayType");
-
-		boolean discountsTargetNetPrice = ParamUtil.getBoolean(
-			actionRequest, "discountsTargetNetPrice");
-
 		CommerceChannel commerceChannel =
 			_commerceChannelService.getCommerceChannel(commerceChannelId);
 
@@ -243,17 +233,24 @@ public class EditCommerceChannelMVCActionCommand
 		_updateWorkflowDefinitionLinks(actionRequest, commerceChannel);
 
 		return _commerceChannelService.updateCommerceChannel(
-			commerceChannelId, commerceChannel.getSiteGroupId(), name,
+			commerceChannelId,
+			ParamUtil.getLong(
+				actionRequest, "accountEntryId",
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+			commerceChannel.getSiteGroupId(),
+			ParamUtil.getString(actionRequest, "name"),
 			commerceChannel.getType(),
-			commerceChannel.getTypeSettingsProperties(), commerceCurrencyCode,
-			priceDisplayType, discountsTargetNetPrice);
+			commerceChannel.getTypeSettingsUnicodeProperties(),
+			ParamUtil.getString(actionRequest, "commerceCurrencyCode"),
+			ParamUtil.getString(actionRequest, "priceDisplayType"),
+			ParamUtil.getBoolean(actionRequest, "discountsTargetNetPrice"));
 	}
 
 	private void _updatePurchaseOrderNumber(
 			ActionRequest actionRequest, CommerceChannel commerceChannel)
 		throws Exception {
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
 				CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
@@ -275,7 +272,7 @@ public class EditCommerceChannelMVCActionCommand
 			ActionRequest actionRequest, CommerceChannel commerceChannel)
 		throws Exception {
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
 				CommerceConstants.
@@ -298,7 +295,7 @@ public class EditCommerceChannelMVCActionCommand
 			ActionRequest actionRequest, CommerceChannel commerceChannel)
 		throws Exception {
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
 				CommerceConstants.SERVICE_NAME_COMMERCE_TAX));
@@ -320,10 +317,10 @@ public class EditCommerceChannelMVCActionCommand
 			ActionRequest actionRequest, CommerceChannel commerceChannel)
 		throws Exception {
 
-		Settings settings = _settingsFactory.getSettings(
+		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
-				CommerceAccountConstants.SERVICE_NAME));
+				CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
@@ -466,9 +463,6 @@ public class EditCommerceChannelMVCActionCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private UploadHandler _uploadHandler;

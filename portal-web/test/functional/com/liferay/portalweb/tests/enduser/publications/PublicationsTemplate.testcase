@@ -1,8 +1,7 @@
 @component-name = "portal-publications"
 definition {
 
-	property custom.properties = "feature.flag.LPS-161313=true${line.separator}jsonws.web.service.paths.excludes=";
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
+	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -16,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -71,6 +70,10 @@ definition {
 			userMissingPublicationsRole = "true");
 
 		PublicationsTemplate.viewPublicationTemplate(templateName = "Template Name");
+
+		PublicationsTemplate.viewTemplateInvitedUser(
+			templateName = "Template Name",
+			usersAndRoles = "userfn1/Editor,userfn2/Viewer");
 
 		Publications.createNewPublicationWithTemplate(
 			gotoPublicationsAdmin = "true",
@@ -211,6 +214,170 @@ definition {
 				locator1 = "Button#DISABLED_BUTTON",
 				value1 = "Create");
 		}
+	}
+
+	@description = "This is a use case for LPS-171576 - The publication template selection is gone for a created publication"
+	@priority = 3
+	test CanSelectAnotherPublicationTemplateAfterEditingPublication {
+		task ("Create Publications Templates and one Publication with template") {
+			PublicationsTemplate.gotoPublicationTemplate();
+
+			for (var order : list "1,2") {
+				PublicationsTemplate.addPublicationTemplate(
+					publicationName = "P${order}",
+					templateName = "Publication Template ${order}");
+			}
+
+			Publications.createNewPublicationWithTemplate(
+				gotoPublicationsAdmin = "true",
+				publicationName = "P1",
+				templateName = "Publication Template 1");
+		}
+
+		task ("Go to edit Publication and select another template") {
+			PublicationsNavigator.openPublicationsAdmin();
+
+			Click(
+				key_templateName = "P1",
+				locator1 = "PublicationsTemplate#TEMPLATE_DROPDOWN_MENU");
+
+			MenuItem.click(menuItem = "Edit");
+
+			Select(
+				locator1 = "Publications#TEMPLATE_OPTION",
+				value1 = "Publication Template 2");
+
+			Button.click(button = "Save");
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
+	@description = "This is the use case for LPS-176196."
+	@priority = 3
+	test UseDefaultTemplateWhenCreatingNewPublication {
+		task ("Add new user with publications permissions") {
+			JSONUser.addUser(
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONUser.addUserToSite(
+				groupName = "Guest",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONRole.assignSiteRoleToUser(
+				groupName = "Guest",
+				roleTitle = "Site Administrator",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONRole.assignRoleToUser(
+				roleTitle = "Publications User",
+				userEmailAddress = "userea@liferay.com");
+		}
+
+		task ("Enable publications with sandbox and add new publication template set as default") {
+			Publications.enableSandboxOnly();
+
+			PublicationsTemplate.gotoPublicationTemplate();
+
+			PublicationsTemplate.addPublicationTemplate(
+				defaultSandboxTemplate = "true",
+				defaultTemplate = "true",
+				publicationDescription = "Publications Description ${CURRENT_USERNAME} 1",
+				publicationName = "Publication Name ${CURRENT_USERNAME} 1",
+				templateDescription = "Template Description 1",
+				templateName = "Template Name 1");
+
+			PublicationsNavigator.openPublicationsAdmin();
+		}
+
+		task ("Assert that the template is set as default") {
+			Click(locator1 = "Button#PLUS");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Publications#TEMPLATE_OPTION",
+				value1 = "Template Name 1");
+
+			AssertTextEquals(
+				locator1 = "Publications#PUBLICATION_NAME",
+				value1 = "Publication Name test 1");
+		}
+
+		task ("Log out from test user, log in with new user") {
+			SignOut.signOut();
+
+			User.firstLoginUI(
+				password = "test",
+				userEmailAddress = "userea@liferay.com");
+		}
+
+		task ("Assert that the template is set as default for the new user") {
+			PublicationsNavigator.openPublicationsAdmin();
+
+			Click(locator1 = "Button#PLUS");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Publications#TEMPLATE_OPTION",
+				value1 = "Template Name 1");
+
+			AssertTextEquals(
+				locator1 = "Publications#PUBLICATION_NAME",
+				value1 = "Publication Name usersn 1");
+		}
+	}
+
+	@priority = 3
+	test UsePublicationNameSetInSelectedPublicationTemplate {
+		PublicationsTemplate.gotoPublicationTemplate();
+
+		PublicationsTemplate.addPublicationTemplate(
+			publicationDescription = "Publications Description ${CURRENT_USERNAME} 1",
+			publicationName = "Publication Name ${CURRENT_USERNAME} 1",
+			templateDescription = "Template Description 1",
+			templateName = "Template Name 1");
+
+		PublicationsTemplate.gotoPublicationTemplate();
+
+		PublicationsTemplate.addPublicationTemplate(
+			publicationDescription = "Publications Description ${CURRENT_USERNAME} 2",
+			publicationName = "Publication Name ${CURRENT_USERNAME} 2",
+			templateDescription = "Template Description 2",
+			templateName = "Template Name 2");
+
+		PublicationsNavigator.openPublicationsAdmin();
+
+		Click(locator1 = "Button#PLUS");
+
+		Select(
+			locator1 = "Publications#TEMPLATE_OPTION",
+			value1 = "Template Name 1");
+
+		AssertTextEquals(
+			locator1 = "Publications#PUBLICATION_NAME",
+			value1 = "Publication Name test 1");
+
+		AssertTextEquals(
+			locator1 = "Publications#PUBLICATION_DESCRIPTION",
+			value1 = "Publications Description test 1");
+
+		Select(
+			locator1 = "Publications#TEMPLATE_OPTION",
+			value1 = "Template Name 2");
+
+		AssertTextEquals(
+			locator1 = "Publications#PUBLICATION_NAME",
+			value1 = "Publication Name test 2");
+
+		AssertTextEquals(
+			locator1 = "Publications#PUBLICATION_DESCRIPTION",
+			value1 = "Publications Description test 2");
 	}
 
 }

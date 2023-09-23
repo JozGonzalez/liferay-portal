@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -39,7 +39,8 @@ definition {
 		property app.server.bundles.size = "1";
 		property cluster.enabled = "true";
 		property minimum.slave.ram = "24";
-		property test.name.skip.portal.instance = "AutoTaggingFramework#AutoTagImagesOnSeparateNodes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Clustering.viewClusterStatusInConsole();
 
@@ -51,12 +52,14 @@ definition {
 			password = "test",
 			userEmailAddress = "test@liferay.com");
 
-		User.firstLoginUI(
+		User.loginPG(
+			nodePort = 9080,
 			password = "test",
-			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
+
+		Navigator.openSpecificURL(url = "http://localhost:9080");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -159,7 +162,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanAddAndRemoveImageAutoTagViaGogoShell {
-		property test.name.skip.portal.instance = "AutoTaggingFramework#CanAddAndRemoveImageAutoTagViaGogoShell";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var companyId = JSONCompany.getCompanyId();
 
@@ -217,7 +221,8 @@ definition {
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "AutoTaggingFramework#CanAddAutoTagAfterEnablingOpenNLP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property websphere.ssl.truststore.enabled = "true";
 
 		AutoTagging.enableOpenNLP(
@@ -246,7 +251,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanCheckMaxNumberOfTagsBetweenInstanceLevelAndPortalLevel {
-		property test.name.skip.portal.instance = "AutoTaggingFramework#CanCheckMaxNumberOfTagsBetweenInstanceLevelAndPortalLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableAutoTagging(
 			enableAutoTaggingFor = "System Settings",
@@ -262,15 +268,16 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanConfigureImageAutoTaggingPerSite {
-		property test.name.skip.portal.instance = "AutoTaggingFramework#CanConfigureImageAutoTaggingPerSite";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		JSONGroup.addGroup(groupName = "Site Name AutoTag Enabled");
+		HeadlessSite.addSite(siteName = "Site Name AutoTag Enabled");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name AutoTag Enabled",
 			layoutName = "AutoTag Enabled Site Page");
 
-		JSONGroup.addGroup(groupName = "Site Name AutoTag Disabled");
+		HeadlessSite.addSite(siteName = "Site Name AutoTag Disabled");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name AutoTag Disabled",
@@ -316,7 +323,8 @@ definition {
 	@description = "This test asserts that Entry will not have its tags updated when updating the autotagging assets if auto tagging is disabled in Instance scope."
 	@priority = 3
 	test NoTagUpdatesAfterDisablingAutoTagsAtInstanceLevel {
-		property test.name.skip.portal.instance = "AutoTaggingFramework#NoTagUpdatesAfterDisablingAutoTagsAtInstanceLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.disableAutoTagging(disableAutoTaggingFor = "Instance Settings");
 
@@ -350,11 +358,12 @@ definition {
 	@description = "This test asserts that Entry will not have its tags updated when updating the autotagging assets if auto tagging is enabled at instance scope but disabled at site scope."
 	@priority = 3
 	test NoTagUpdatesAfterDisablingAutoTagsAtSiteLevel {
-		property test.name.skip.portal.instance = "AutoTaggingFramework#NoTagUpdatesAfterDiablingAutoTagsAtSiteLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableUpdateAutoTags(enableUpdateAutoTagsFor = "Instance Settings");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		AutoTagging.disableAutoTagging(
 			disableAutoTaggingFor = "Site Settings",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
@@ -28,6 +19,8 @@ import com.liferay.object.admin.rest.client.pagination.Page;
 import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.client.resource.v1_0.ObjectLayoutResource;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectLayoutSerDes;
+import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -64,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -207,7 +198,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		Page<ObjectLayout> page =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
-					externalReferenceCode, null, Pagination.of(1, 10));
+					externalReferenceCode, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -221,7 +212,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				objectLayoutResource.
 					getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
 						irrelevantExternalReferenceCode, null,
-						Pagination.of(1, 2));
+						Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -245,7 +236,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		page =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
-					externalReferenceCode, null, Pagination.of(1, 10));
+					externalReferenceCode, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -294,7 +285,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		Page<ObjectLayout> page1 =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
-					externalReferenceCode, null, Pagination.of(1, 2));
+					externalReferenceCode, null, Pagination.of(1, 2), null);
 
 		List<ObjectLayout> objectLayouts1 =
 			(List<ObjectLayout>)page1.getItems();
@@ -305,7 +296,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		Page<ObjectLayout> page2 =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
-					externalReferenceCode, null, Pagination.of(2, 2));
+					externalReferenceCode, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -318,11 +309,160 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		Page<ObjectLayout> page3 =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
-					externalReferenceCode, null, Pagination.of(1, 3));
+					externalReferenceCode, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectLayout1, objectLayout2, objectLayout3),
 			(List<ObjectLayout>)page3.getItems());
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSortDateTime()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(),
+					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSortDouble()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					objectLayout2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSortInteger()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					objectLayout2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSortString()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, objectLayout1, objectLayout2) -> {
+				Class<?> clazz = objectLayout1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void
+			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPageWithSort(
+				EntityField.Type type,
+				UnsafeTriConsumer
+					<EntityField, ObjectLayout, ObjectLayout, Exception>
+						unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPage_getExternalReferenceCode();
+
+		ObjectLayout objectLayout1 = randomObjectLayout();
+		ObjectLayout objectLayout2 = randomObjectLayout();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, objectLayout1, objectLayout2);
+		}
+
+		objectLayout1 =
+			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPage_addObjectLayout(
+				externalReferenceCode, objectLayout1);
+
+		objectLayout2 =
+			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPage_addObjectLayout(
+				externalReferenceCode, objectLayout2);
+
+		for (EntityField entityField : entityFields) {
+			Page<ObjectLayout> ascPage =
+				objectLayoutResource.
+					getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
+						externalReferenceCode, null, Pagination.of(1, 2),
+						entityField.getName() + ":asc");
+
+			assertEquals(
+				Arrays.asList(objectLayout1, objectLayout2),
+				(List<ObjectLayout>)ascPage.getItems());
+
+			Page<ObjectLayout> descPage =
+				objectLayoutResource.
+					getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
+						externalReferenceCode, null, Pagination.of(1, 2),
+						entityField.getName() + ":desc");
+
+			assertEquals(
+				Arrays.asList(objectLayout2, objectLayout1),
+				(List<ObjectLayout>)descPage.getItems());
+		}
 	}
 
 	protected ObjectLayout
@@ -381,7 +521,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Page<ObjectLayout> page =
 			objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-				objectDefinitionId, null, Pagination.of(1, 10));
+				objectDefinitionId, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -392,7 +532,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 					randomIrrelevantObjectLayout());
 
 			page = objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-				irrelevantObjectDefinitionId, null, Pagination.of(1, 2));
+				irrelevantObjectDefinitionId, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -414,7 +554,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				objectDefinitionId, randomObjectLayout());
 
 		page = objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-			objectDefinitionId, null, Pagination.of(1, 10));
+			objectDefinitionId, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -473,7 +613,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Page<ObjectLayout> page1 =
 			objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-				objectDefinitionId, null, Pagination.of(1, 2));
+				objectDefinitionId, null, Pagination.of(1, 2), null);
 
 		List<ObjectLayout> objectLayouts1 =
 			(List<ObjectLayout>)page1.getItems();
@@ -483,7 +623,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Page<ObjectLayout> page2 =
 			objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-				objectDefinitionId, null, Pagination.of(2, 2));
+				objectDefinitionId, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -495,11 +635,157 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Page<ObjectLayout> page3 =
 			objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
-				objectDefinitionId, null, Pagination.of(1, 3));
+				objectDefinitionId, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectLayout1, objectLayout2, objectLayout3),
 			(List<ObjectLayout>)page3.getItems());
+	}
+
+	@Test
+	public void testGetObjectDefinitionObjectLayoutsPageWithSortDateTime()
+		throws Exception {
+
+		testGetObjectDefinitionObjectLayoutsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(),
+					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionObjectLayoutsPageWithSortDouble()
+		throws Exception {
+
+		testGetObjectDefinitionObjectLayoutsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					objectLayout2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionObjectLayoutsPageWithSortInteger()
+		throws Exception {
+
+		testGetObjectDefinitionObjectLayoutsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, objectLayout1, objectLayout2) -> {
+				BeanTestUtil.setProperty(
+					objectLayout1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					objectLayout2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetObjectDefinitionObjectLayoutsPageWithSortString()
+		throws Exception {
+
+		testGetObjectDefinitionObjectLayoutsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, objectLayout1, objectLayout2) -> {
+				Class<?> clazz = objectLayout1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						objectLayout1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						objectLayout2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetObjectDefinitionObjectLayoutsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, ObjectLayout, ObjectLayout, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long objectDefinitionId =
+			testGetObjectDefinitionObjectLayoutsPage_getObjectDefinitionId();
+
+		ObjectLayout objectLayout1 = randomObjectLayout();
+		ObjectLayout objectLayout2 = randomObjectLayout();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, objectLayout1, objectLayout2);
+		}
+
+		objectLayout1 =
+			testGetObjectDefinitionObjectLayoutsPage_addObjectLayout(
+				objectDefinitionId, objectLayout1);
+
+		objectLayout2 =
+			testGetObjectDefinitionObjectLayoutsPage_addObjectLayout(
+				objectDefinitionId, objectLayout2);
+
+		for (EntityField entityField : entityFields) {
+			Page<ObjectLayout> ascPage =
+				objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
+					objectDefinitionId, null, Pagination.of(1, 2),
+					entityField.getName() + ":asc");
+
+			assertEquals(
+				Arrays.asList(objectLayout1, objectLayout2),
+				(List<ObjectLayout>)ascPage.getItems());
+
+			Page<ObjectLayout> descPage =
+				objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
+					objectDefinitionId, null, Pagination.of(1, 2),
+					entityField.getName() + ":desc");
+
+			assertEquals(
+				Arrays.asList(objectLayout2, objectLayout1),
+				(List<ObjectLayout>)descPage.getItems());
+		}
 	}
 
 	protected ObjectLayout
@@ -885,14 +1171,19 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1112,14 +1403,16 @@ public abstract class BaseObjectLayoutResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1149,18 +1442,18 @@ public abstract class BaseObjectLayoutResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1263,11 +1556,48 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		}
 
 		if (entityFieldName.equals("objectDefinitionExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					objectLayout.getObjectDefinitionExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				objectLayout.getObjectDefinitionExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

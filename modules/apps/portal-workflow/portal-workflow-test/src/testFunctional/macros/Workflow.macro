@@ -6,6 +6,25 @@ definition {
 		MenuItem.click(menuItem = "Pending");
 	}
 
+	macro _matchTaskCase {
+		var key_workflowAssetTitle = ${workflowAssetTitle};
+		var key_workflowTask = ${workflowTask};
+
+		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
+
+		if (IsTextNotEqual(locator1 = "MyWorkflowTasks#ASSIGNED_TO_ME_TABLE_TASK", value1 = ${workflowTask})) {
+			var workflowTask = StringUtil.upperCaseFirstLetter(${workflowTask});
+
+			if (isSet(workflowDefinitionTask)) {
+				var workflowDefinitionTask = StringUtil.upperCaseFirstLetter(${workflowDefinitionTask});
+
+				return ${workflowDefinitionTask};
+			}
+		}
+
+		return ${workflowTask};
+	}
+
 	macro _tearDownWorkflow {
 		var noWorkflow = "No Workflow";
 
@@ -23,20 +42,22 @@ definition {
 		}
 
 		for (var workflowResourceValue : list "Blogs Entry,Calendar Event,Comment,Content Page,Knowledge Base Article,Message Boards Message,Page Revision,Web Content Article,Wiki Page") {
-			AssertClick.pauseAssertTextClickAt(
-				key_rowEntry = ${workflowResourceValue},
-				locator1 = "Button#EDIT_ROW",
-				value1 = "Edit");
+			if (IsElementNotPresent(assetType = ${workflowResourceValue}, locator1 = "WorkflowConfiguration#ASSET_TYPE_WORKFLOW_ASSIGNED", workflowAssigned = "No Workflow")) {
+				AssertClick.pauseAssertTextClickAt(
+					key_rowEntry = ${workflowResourceValue},
+					locator1 = "Button#EDIT_ROW",
+					value1 = "Edit");
 
-			var key_workflowResourceValue = ${workflowResourceValue};
+				var key_workflowResourceValue = ${workflowResourceValue};
 
-			Select(
-				locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SELECT",
-				value1 = ${noWorkflow});
+				Select(
+					locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SELECT",
+					value1 = ${noWorkflow});
 
-			AssertClick(
-				locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SAVE",
-				value1 = "Save");
+				AssertClick(
+					locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SAVE",
+					value1 = "Save");
+			}
 		}
 	}
 
@@ -55,36 +76,6 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "MyWorkflowTasksTask#ACTIVITIES_LINE",
 			value1 = ${workflowActivityComment});
-	}
-
-	macro addAssigneeToRegularRole {
-		Role._goToRoleAssigneeType(
-			assigneeType = ${assigneeType},
-			roleTitle = ${roleTitle});
-
-		LexiconEntry.gotoAdd();
-
-		WaitForLiferayEvent.initializeLiferayEventLog();
-
-		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
-
-		Search.searchCP(searchTerm = ${assigneeName});
-
-		var key_userScreenName = ${assigneeName};
-
-		AssertTextEquals(
-			locator1 = "RolesAssignMembers#USER_TABLE_SCREEN_NAME",
-			value1 = ${assigneeName});
-
-		var key_assigneeName = ${assigneeName};
-
-		Check(locator1 = "RolesAssignMembers#ADD_ASSIGNEE_TABLE_CHECKBOX");
-
-		SelectFrameTop(value1 = "relative=top");
-
-		Button.clickAdd();
-
-		Alert.viewSuccessMessage();
 	}
 
 	macro addNewDefinition {
@@ -252,7 +243,7 @@ definition {
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to...");
 
 		AssertTextEquals(
-			locator1 = "IFrame#DIALOG_BOX",
+			locator1 = "WCPreview#PREVIEW_TITLE",
 			value1 = "Assign to...");
 
 		IFrame.selectConfigurationFrame();
@@ -411,7 +402,9 @@ definition {
 	macro configureWorkflow {
 		var key_workflowResourceValue = ${workflowResourceValue};
 
-		Search.searchCP(searchTerm = ${workflowResourceValue});
+		if (!(IsElementPresent(locator1 = "Pagination#ICON_DISABLED", type = "angle-right")) && (IsElementPresent(locator1 = "Pagination#FIRST_LINK"))) {
+			Pagination.changePagination(itemsPerPage = 40);
+		}
 
 		AssertClick.pauseAssertTextClickAt(
 			key_rowEntry = ${workflowResourceValue},
@@ -438,10 +431,6 @@ definition {
 			value1 = "Save");
 
 		Alert.viewSuccessMessage();
-
-		Workflow.viewConfigurationSelected(
-			workflowDefinition = ${workflowDefinition},
-			workflowResourceValue = ${workflowResourceValue});
 	}
 
 	macro configureWorkflowCancel {
@@ -511,7 +500,7 @@ definition {
 		MenuItem.clickNoError(menuItem = "Delete");
 
 		AssertTextEquals(
-			locator1 = "IFrame#DIALOG_BOX",
+			locator1 = "Modal#HEADER",
 			value1 = "Delete workflow?");
 
 		AssertTextEquals(
@@ -522,7 +511,7 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		AssertElementNotPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE");
+		WaitForElementNotPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE");
 	}
 
 	macro deleteWorkflowDefinitionExtra {
@@ -531,7 +520,7 @@ definition {
 		MenuItem.clickNoError(menuItem = "Delete");
 
 		AssertTextEquals(
-			locator1 = "IFrame#DIALOG_BOX",
+			locator1 = "Modal#HEADER",
 			value1 = "Delete workflow?");
 
 		AssertTextEquals(
@@ -572,15 +561,15 @@ definition {
 
 		MenuItem.clickNoError(menuItem = "Duplicate");
 
+		if (isSet(workflowName)) {
+			Type(
+				locator1 = "WorkflowDefinition#DUPLICATE_WORKFLOW_MODAL_INPUT",
+				value1 = ${workflowName});
+		}
+
 		Button.click(button = "Duplicate");
 
-		PortletEntry.inputTitle(title = ${workflowName});
-
-		ScrollWebElementIntoView(
-			key_text = "Update",
-			locator1 = "Button#ANY");
-
-		Button.click(button = "Update");
+		Alert.viewSuccessMessage();
 	}
 
 	macro gotoAssetViaTableTitle {
@@ -626,9 +615,27 @@ definition {
 	macro gotoPreviewView {
 		AssertVisible(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
 
+		var viewTitle = selenium.getTitle();
+		var portletTitle = selenium.getText("AppBuilder#WIDGET_DEPLOYED");
+
 		Click(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
 
-		AssertElementNotPresent(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
+		if (contains(${viewTitle}, "Review")) {
+			Navigator.closeSpecificWindow(
+				closeWindowTitle = "Review: ${viewTitle}",
+				selectWindowTitle = ${viewTitle});
+
+			AssertElementNotPresent(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
+		}
+
+		if (contains(${portletTitle}, "SINGLE APPROVER")) {
+			AssertElementNotPresent(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
+		}
+		else {
+			Close.closeAndSelectWindow(locator1 = "title=${viewTitle}");
+
+			AssertElementNotPresent(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
+		}
 	}
 
 	macro gotoTaskAssignedToMeActionsCmd {
@@ -987,7 +994,9 @@ definition {
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE",
 			value1 = "4/11/${futureYear}");
 
-		Type(
+		var startDateTime = StringUtil.removeSpaces(${workflowDueDateTime});
+
+		Type.sendKeys(
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE_TIME",
 			value1 = ${workflowDueDateTime});
 
@@ -1044,7 +1053,9 @@ definition {
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE",
 			value1 = "4/11/${futureYear}");
 
-		Type(
+		var startDateTime = StringUtil.removeSpaces(${workflowDueDateTime});
+
+		Type.sendKeys(
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE_TIME",
 			value1 = ${workflowDueDateTime});
 
@@ -1318,7 +1329,7 @@ definition {
 	macro viewDefinitionPublished {
 		var key_workflowDefinitionTitle = ${workflowDefinitionTitle};
 
-		AssertTextEquals(
+		AssertVisible(
 			locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE_PUBLISHED",
 			value1 = ${workflowDefinitionTitle});
 	}
@@ -1359,11 +1370,11 @@ definition {
 			value1 = "Preview of ${workflowAssetType}");
 
 		AssertTextEquals.assertPartialText(
-			locator1 = "MyWorkflowTasksTask#PREVIEW_TITLE",
+			locator1 = "WorkflowSubmissionsTask#PREVIEW_CONTENT_TITLE",
 			value1 = ${workflowAssetTitle});
 
 		AssertTextEquals.assertPartialText(
-			locator1 = "MyWorkflowTasksTask#PREVIEW_CONTENT",
+			locator1 = "WorkflowSubmissionsTask#PREVIEW_CONTENT_BODY",
 			value1 = ${workflowAssetContent});
 
 		Portlet.viewTitle(portletName = ${workflowSubmissionTitle});
@@ -1593,7 +1604,7 @@ definition {
 
 	macro viewTaskHeaderTitle {
 		AssertTextEquals(
-			locator1 = "Portlet#H2_HEADER",
+			locator1 = "ControlMenu#HEADING",
 			value1 = "${workflowTask}: ${kfProcessName}");
 	}
 

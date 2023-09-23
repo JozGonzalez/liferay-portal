@@ -22,9 +22,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -130,7 +130,21 @@ definition {
 	@refactordone
 	@uitest
 	test CanAddQuestionWithNonLatinCharacters {
-		Navigator.gotoPage(pageName = "Questions Page");
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		PagesAdmin.gotoPageEllipsisMenuItem(
+			menuItem = "View",
+			pageName = "Questions Page");
+
+		ScrollWebElementIntoView(
+			key_text = "New Topic",
+			locator1 = "Button#ANY");
+
+		Button.click(button = "New Topic");
 
 		Questions.addRootTopic(
 			rootTopicDescription = "トピック記述",

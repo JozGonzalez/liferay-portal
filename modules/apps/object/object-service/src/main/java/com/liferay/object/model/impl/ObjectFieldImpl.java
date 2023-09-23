@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
 
+import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Objects;
@@ -38,6 +31,11 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 	}
 
 	@Override
+	public String getI18nObjectFieldName() {
+		return getName() + "_i18n";
+	}
+
+	@Override
 	public ObjectDefinition getObjectDefinition() throws PortalException {
 		return ObjectDefinitionLocalServiceUtil.getObjectDefinition(
 			getObjectDefinitionId());
@@ -46,6 +44,28 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 	@Override
 	public List<ObjectFieldSetting> getObjectFieldSettings() {
 		return _objectFieldSettings;
+	}
+
+	@Override
+	public boolean isDeletionAllowed() throws PortalException {
+		if (Validator.isNotNull(getRelationshipType())) {
+			return false;
+		}
+
+		ObjectDefinition objectDefinition = getObjectDefinition();
+
+		if (objectDefinition.isUnmodifiableSystemObject() &&
+			!Objects.equals(
+				objectDefinition.getExtensionDBTableName(), getDBTableName())) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public boolean isMetadata() {
+		return ObjectFieldUtil.isMetadata(getName());
 	}
 
 	@Override

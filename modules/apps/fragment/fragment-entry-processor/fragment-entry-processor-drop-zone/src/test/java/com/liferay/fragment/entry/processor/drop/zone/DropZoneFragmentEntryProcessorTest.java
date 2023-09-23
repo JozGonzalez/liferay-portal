@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.entry.processor.drop.zone;
@@ -29,13 +20,16 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.uuid.PortalUUIDImpl;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -57,7 +51,8 @@ public class DropZoneFragmentEntryProcessorTest {
 
 	@BeforeClass
 	public static void setUpClass() {
-		_setUpDropZoneFragmentEntryProcessor();
+		_setUpDropZoneDocumentFragmentEntryProcessor();
+		_setUpDropZoneFragmentEntryValidator();
 
 		_setUpPortalUUIDUtil();
 	}
@@ -100,14 +95,11 @@ public class DropZoneFragmentEntryProcessorTest {
 				new KeyValuePair(
 					dropZoneId2,
 					fragmentDropZoneLayoutStructureItem2.getItemId())),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					dropZoneId1, newDropZoneId, dropZoneId2),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -127,14 +119,11 @@ public class DropZoneFragmentEntryProcessorTest {
 			_getExpectedHTML(
 				StringPool.BLANK,
 				fragmentDropZoneLayoutStructureItem.getItemId()),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					StringPool.BLANK),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -155,14 +144,11 @@ public class DropZoneFragmentEntryProcessorTest {
 
 		Assert.assertEquals(
 			_getExpectedHTML(elementDropZoneId, StringPool.BLANK),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					elementDropZoneId),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -186,14 +172,11 @@ public class DropZoneFragmentEntryProcessorTest {
 			_getExpectedHTML(
 				fragmentDropZoneId,
 				fragmentDropZoneLayoutStructureItem.getItemId()),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					fragmentDropZoneId),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -230,14 +213,11 @@ public class DropZoneFragmentEntryProcessorTest {
 				new KeyValuePair(
 					dropZoneId2,
 					fragmentDropZoneLayoutStructureItem2.getItemId())),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					dropZoneId1, dropZoneId2),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -275,14 +255,11 @@ public class DropZoneFragmentEntryProcessorTest {
 				new KeyValuePair(
 					dropZoneId2,
 					fragmentDropZoneLayoutStructureItem2.getItemId())),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					dropZoneId1, dropZoneId2),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test
@@ -328,78 +305,84 @@ public class DropZoneFragmentEntryProcessorTest {
 				new KeyValuePair(
 					dropZoneId1,
 					fragmentDropZoneLayoutStructureItem1.getItemId())),
-			_dropZoneFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			_processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				FragmentEntryProcessorDropZoneTestUtil.getHTML(
 					dropZoneId2, dropZoneId3, dropZoneId1),
-				new DefaultFragmentEntryProcessorContext(
-					_getMockHttpServletRequest(layoutStructure), null,
-					FragmentEntryLinkConstants.EDIT,
-					LocaleUtil.getMostRelevantLocale())));
+				layoutStructure));
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
 	public void testValidateFragmentEntryHTMLDuplicatedId() throws Exception {
 		String dropZoneId = RandomTestUtil.randomString();
 
-		_dropZoneFragmentEntryProcessor.validateFragmentEntryHTML(
+		_dropZoneFragmentEntryValidator.validateFragmentEntryHTML(
 			FragmentEntryProcessorDropZoneTestUtil.getHTML(
 				dropZoneId, dropZoneId),
-			null);
+			null, LocaleUtil.getDefault());
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
 	public void testValidateFragmentEntryHTMLMissingId() throws Exception {
-		_dropZoneFragmentEntryProcessor.validateFragmentEntryHTML(
+		_dropZoneFragmentEntryValidator.validateFragmentEntryHTML(
 			FragmentEntryProcessorDropZoneTestUtil.getHTML(
 				StringPool.BLANK, RandomTestUtil.randomString()),
-			null);
+			null, LocaleUtil.getDefault());
 	}
 
 	@Test
 	public void testValidateFragmentEntryHTMLValidWithIds() throws Exception {
-		_dropZoneFragmentEntryProcessor.validateFragmentEntryHTML(
+		_dropZoneFragmentEntryValidator.validateFragmentEntryHTML(
 			FragmentEntryProcessorDropZoneTestUtil.getHTML(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString()),
-			null);
+			null, LocaleUtil.getDefault());
 	}
 
 	@Test
 	public void testValidateFragmentEntryHTMLValidWithoutIds()
 		throws Exception {
 
-		_dropZoneFragmentEntryProcessor.validateFragmentEntryHTML(
+		_dropZoneFragmentEntryValidator.validateFragmentEntryHTML(
 			FragmentEntryProcessorDropZoneTestUtil.getHTML(
 				StringPool.BLANK, StringPool.BLANK),
-			null);
+			null, LocaleUtil.getDefault());
 	}
 
-	private static void _setUpDropZoneFragmentEntryProcessor() {
-		_dropZoneFragmentEntryProcessor = new DropZoneFragmentEntryProcessor();
-
-		_layoutPageTemplateStructureLocalService = Mockito.mock(
-			LayoutPageTemplateStructureLocalService.class);
+	private static void _setUpDropZoneDocumentFragmentEntryProcessor() {
+		_dropZoneDocumentFragmentEntryProcessor =
+			new DropZoneDocumentFragmentEntryProcessor();
 
 		ReflectionTestUtil.setFieldValue(
-			_dropZoneFragmentEntryProcessor,
+			_dropZoneDocumentFragmentEntryProcessor,
 			"_layoutPageTemplateStructureLocalService",
-			_layoutPageTemplateStructureLocalService);
+			Mockito.mock(LayoutPageTemplateStructureLocalService.class));
+	}
 
-		_language = Mockito.mock(Language.class);
-
-		ReflectionTestUtil.setFieldValue(
-			_dropZoneFragmentEntryProcessor, "_language", _language);
-
-		_portal = Mockito.mock(Portal.class);
+	private static void _setUpDropZoneFragmentEntryValidator() {
+		_dropZoneFragmentEntryValidator = new DropZoneFragmentEntryValidator();
 
 		ReflectionTestUtil.setFieldValue(
-			_dropZoneFragmentEntryProcessor, "_portal", _portal);
+			_dropZoneFragmentEntryValidator, "_language",
+			Mockito.mock(Language.class));
 	}
 
 	private static void _setUpPortalUUIDUtil() {
 		PortalUUIDUtil portalUUIDUtil = new PortalUUIDUtil();
 
 		portalUUIDUtil.setPortalUUID(new PortalUUIDImpl());
+	}
+
+	private Document _getDocument(String html) {
+		Document document = Jsoup.parseBodyFragment(html);
+
+		document.outputSettings(
+			new Document.OutputSettings() {
+				{
+					prettyPrint(false);
+				}
+			});
+
+		return document;
 	}
 
 	private String _getExpectedHTML(
@@ -453,11 +436,28 @@ public class DropZoneFragmentEntryProcessorTest {
 		return httpServletRequest;
 	}
 
-	private static DropZoneFragmentEntryProcessor
-		_dropZoneFragmentEntryProcessor;
-	private static Language _language;
-	private static LayoutPageTemplateStructureLocalService
-		_layoutPageTemplateStructureLocalService;
-	private static Portal _portal;
+	private String _processFragmentEntryLinkHTML(
+			FragmentEntryLink fragmentEntryLink, String html,
+			LayoutStructure layoutStructure)
+		throws Exception {
+
+		Document document = _getDocument(html);
+
+		_dropZoneDocumentFragmentEntryProcessor.processFragmentEntryLinkHTML(
+			fragmentEntryLink, document,
+			new DefaultFragmentEntryProcessorContext(
+				_getMockHttpServletRequest(layoutStructure), null,
+				FragmentEntryLinkConstants.EDIT,
+				LocaleUtil.getMostRelevantLocale()));
+
+		Element bodyElement = document.body();
+
+		return bodyElement.html();
+	}
+
+	private static DropZoneDocumentFragmentEntryProcessor
+		_dropZoneDocumentFragmentEntryProcessor;
+	private static DropZoneFragmentEntryValidator
+		_dropZoneFragmentEntryValidator;
 
 }

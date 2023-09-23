@@ -1,24 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.order;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceConstants;
@@ -32,6 +21,7 @@ import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.CommerceOrderValidatorResult;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -39,19 +29,21 @@ import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
@@ -67,6 +59,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.List;
@@ -110,15 +104,15 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			commerceCurrencyId = commerceCurrency.getCommerceCurrencyId();
 		}
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
-		if (commerceAccount != null) {
+		if (accountEntry != null) {
 			commerceOrder = _commerceOrderService.addCommerceOrder(
 				commerceContext.getCommerceChannelGroupId(),
-				commerceAccount.getCommerceAccountId(), commerceCurrencyId, 0);
+				accountEntry.getAccountEntryId(), commerceCurrencyId, 0);
 		}
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new CommerceOrderValidatorException(
 				Collections.singletonList(
 					new CommerceOrderValidatorResult(
@@ -303,7 +297,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		}
 
 		if (commerceOrder.getCommerceAccountId() ==
-				CommerceAccountConstants.ACCOUNT_ID_GUEST) {
+				AccountConstants.ACCOUNT_ENTRY_ID_GUEST) {
 
 			PortletURL checkoutPortletURL = portletURL;
 
@@ -323,6 +317,24 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 					httpServletRequest,
 					"com_liferay_login_web_portlet_LoginPortlet", layout,
 					PortletRequest.RENDER_PHASE);
+
+				CommerceContext commerceContext = _getCommerceContext(
+					httpServletRequest);
+
+				int commerceSiteType = commerceContext.getCommerceSiteType();
+
+				if (commerceSiteType ==
+						CommerceChannelConstants.SITE_TYPE_B2B) {
+
+					Group group = themeDisplay.getSiteGroup();
+
+					portletURL.setParameter(
+						"redirect", group.getDisplayURL(themeDisplay));
+				}
+				else {
+					portletURL.setParameter(
+						"redirect", checkoutPortletURL.toString());
+				}
 			}
 			else {
 				portletURL.setParameter(
@@ -345,16 +357,17 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				CookiesManagerUtil.addCookie(
 					CookiesConstants.CONSENT_TYPE_NECESSARY, cookie,
 					httpServletRequest, themeDisplay.getResponse());
-			}
 
-			portletURL.setParameter("redirect", checkoutPortletURL.toString());
+				portletURL.setParameter(
+					"redirect", checkoutPortletURL.toString());
+			}
 		}
 
 		return portletURL;
 	}
 
 	@Override
-	public int getCommerceOrderItemsQuantity(
+	public BigDecimal getCommerceOrderItemsQuantity(
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
@@ -362,7 +375,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			httpServletRequest);
 
 		if (commerceOrder == null) {
-			return 0;
+			return BigDecimal.ZERO;
 		}
 
 		return _commerceOrderItemService.getCommerceOrderItemsQuantity(
@@ -383,9 +396,9 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			return null;
 		}
 
@@ -405,7 +418,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			}
 			else {
 				if (commerceOrder.getCommerceAccountId() !=
-						commerceAccount.getCommerceAccountId()) {
+						accountEntry.getAccountEntryId()) {
 
 					return null;
 				}
@@ -492,15 +505,15 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			return null;
 		}
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			return null;
 		}
 
 		User user = _portal.getUser(httpServletRequest);
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return commerceOrder;
 		}
 
@@ -526,7 +539,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		CommerceOrder userCommerceOrder =
 			_commerceOrderService.fetchCommerceOrder(
-				commerceAccount.getCommerceAccountId(),
+				accountEntry.getAccountEntryId(),
 				commerceContext.getCommerceChannelGroupId(), user.getUserId(),
 				CommerceOrderConstants.ORDER_STATUS_OPEN);
 
@@ -535,7 +548,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 			return _commerceOrderLocalService.updateAccount(
 				commerceOrder.getCommerceOrderId(), user.getUserId(),
-				commerceAccount.getCommerceAccountId());
+				accountEntry.getAccountEntryId());
 		}
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -545,7 +558,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		try {
 			_commerceOrderLocalService.mergeGuestCommerceOrder(
-				commerceOrder.getCommerceOrderId(),
+				user.getUserId(), commerceOrder.getCommerceOrderId(),
 				userCommerceOrder.getCommerceOrderId(),
 				_getCommerceContext(httpServletRequest), serviceContext);
 		}
@@ -595,7 +608,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.fetchCommerceChannel(
@@ -617,24 +630,24 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				_commerceOrderThreadLocal.set(persistedCommerceOrder);
 			}
 
-			if ((commerceAccount == null) ||
-				(commerceAccount.getCommerceAccountId() ==
-					CommerceAccountConstants.ACCOUNT_ID_GUEST) ||
+			if ((accountEntry == null) ||
+				(accountEntry.getAccountEntryId() ==
+					AccountConstants.ACCOUNT_ENTRY_ID_GUEST) ||
 				(Validator.isNotNull(commerceOrderUuid) &&
 				 commerceOrderUuid.equals(commerceOrder.getUuid()) &&
-				 (commerceAccount.getCommerceAccountId() ==
+				 (accountEntry.getAccountEntryId() ==
 					 commerceOrder.getCommerceAccountId()))) {
 
 				return commerceOrder;
 			}
 		}
 
-		if ((commerceAccount == null) || (commerceChannel == null)) {
+		if ((accountEntry == null) || (commerceChannel == null)) {
 			return null;
 		}
 
-		if (commerceAccount.getCommerceAccountId() !=
-				CommerceAccountConstants.ACCOUNT_ID_GUEST) {
+		if (accountEntry.getAccountEntryId() !=
+				AccountConstants.ACCOUNT_ENTRY_ID_GUEST) {
 
 			commerceOrder =
 				_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
@@ -642,11 +655,11 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 			if ((commerceOrder == null) ||
 				(!commerceOrder.isGuestOrder() &&
-				 (commerceAccount.getCommerceAccountId() !=
+				 (accountEntry.getAccountEntryId() !=
 					 commerceOrder.getCommerceAccountId()))) {
 
 				commerceOrder = _commerceOrderService.fetchCommerceOrder(
-					commerceAccount.getCommerceAccountId(),
+					accountEntry.getAccountEntryId(),
 					commerceChannel.getGroupId(),
 					_portal.getUserId(httpServletRequest),
 					CommerceOrderConstants.ORDER_STATUS_OPEN);
@@ -723,7 +736,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		User user = themeDisplay.getUser();
 
-		if ((user != null) && !user.isDefaultUser()) {
+		if ((user != null) && !user.isGuestUser()) {
 			return;
 		}
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.service.http;
@@ -144,8 +135,9 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 					HttpPrincipal httpPrincipal, long groupId,
 					java.util.Map<java.util.Locale, String> nameMap,
 					java.util.Map<java.util.Locale, String> descriptionMap,
-					java.io.File imageFile, String engineKey, double priority,
-					boolean active)
+					boolean active, java.io.File imageFile,
+					String paymentIntegrationKey, double priority,
+					String typeSettings)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -155,8 +147,8 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 				_addCommercePaymentMethodGroupRelParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, nameMap, descriptionMap, imageFile,
-				engineKey, priority, active);
+				methodKey, groupId, nameMap, descriptionMap, active, imageFile,
+				paymentIntegrationKey, priority, typeSettings);
 
 			Object returnObj = null;
 
@@ -1032,8 +1024,8 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 		};
 	private static final Class<?>[]
 		_addCommercePaymentMethodGroupRelParameterTypes2 = new Class[] {
-			long.class, java.util.Map.class, java.util.Map.class,
-			java.io.File.class, String.class, double.class, boolean.class
+			long.class, java.util.Map.class, java.util.Map.class, boolean.class,
+			java.io.File.class, String.class, double.class, String.class
 		};
 	private static final Class<?>[]
 		_deleteCommerceAddressRestrictionParameterTypes3 = new Class[] {

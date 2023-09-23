@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -52,7 +43,16 @@ renderResponse.setTitle((auditEvent == null) ? "audit-event" : auditEvent.getEve
 			</aui:field-wrapper>
 
 			<aui:field-wrapper label="create-date">
+
+				<%
+				Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+				%>
+
 				<%= dateFormatDateTime.format(auditEvent.getCreateDate()) %>
+			</aui:field-wrapper>
+
+			<aui:field-wrapper label="group-id">
+				<%= auditEvent.getGroupId() %>
 			</aui:field-wrapper>
 
 			<aui:field-wrapper label="resource-id">
@@ -89,10 +89,6 @@ renderResponse.setTitle((auditEvent == null) ? "audit-event" : auditEvent.getEve
 
 			<aui:field-wrapper label="server-name">
 				<%= Validator.isNotNull(auditEvent.getServerName()) ? auditEvent.getServerName() : LanguageUtil.get(request, "none") %>
-			</aui:field-wrapper>
-
-			<aui:field-wrapper label="session-id">
-				<%= Validator.isNotNull(auditEvent.getSessionID()) ? auditEvent.getSessionID() : LanguageUtil.get(request, "none") %>
 			</aui:field-wrapper>
 
 			<aui:field-wrapper label="additional-information">

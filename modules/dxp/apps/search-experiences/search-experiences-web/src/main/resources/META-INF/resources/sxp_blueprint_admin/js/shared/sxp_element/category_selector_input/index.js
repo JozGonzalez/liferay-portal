@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
@@ -28,9 +22,9 @@ export const FETCH_URLS = {
 		`/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/${id}/taxonomy-categories`,
 	getCategory: (id) =>
 		`/o/headless-admin-taxonomy/v1.0/taxonomy-categories/${id}/`,
+	getSites: () => '/o/headless-admin-user/v1.0/my-user-account/sites',
 	getSubCategories: (id) =>
 		`/o/headless-admin-taxonomy/v1.0/taxonomy-categories/${id}/taxonomy-categories`,
-	getUserAccount: () => '/o/headless-admin-user/v1.0/my-user-account',
 	getVocabularies: (id) =>
 		`/o/headless-admin-taxonomy/v1.0/sites/${id}/taxonomy-vocabularies`,
 };
@@ -341,15 +335,31 @@ function CategorySelectorInput({
 		// be the start of the category tree, in which the children of the
 		// vocabulary get added on as the tree gets expanded (in modal).
 
-		fetch(FETCH_URLS.getUserAccount(), {
+		fetch(FETCH_URLS.getSites(), {
 			headers: DEFAULT_HEADERS,
 			method: 'GET',
 		})
 			.then((response) => response.json())
-			.then((userData) => {
+			.then(({items}) => {
+				const itemsWithGlobalSite = items.some(
+					({id}) =>
+						id.toString() ===
+						Liferay.ThemeDisplay.getCompanyGroupId().toString()
+				)
+					? items
+					: [
+							{
+								descriptiveName: Liferay.Language.get('global'),
+								id: Number(
+									Liferay.ThemeDisplay.getCompanyGroupId()
+								),
+							},
+							...items,
+					  ];
+
 				const tree = [];
 
-				userData.siteBriefs.forEach((site, siteIndex) => {
+				itemsWithGlobalSite.forEach((site, siteIndex) => {
 					fetch(FETCH_URLS.getVocabularies(site.id), {
 						headers: DEFAULT_HEADERS,
 						method: 'GET',
@@ -400,14 +410,33 @@ function CategorySelectorInput({
 						disabled={disabled}
 						id={id}
 						items={value || []}
-						menuRenderer={CategoryMenu}
+						loadingState={4}
 						onBlur={_handleBlur}
 						onChange={_handleMultiInputValueChange}
 						onItemsChange={_handleMultiItemsChange}
 						onKeyDown={_handleKeyDown}
 						sourceItems={matchingCategories}
 						value={inputValue}
-					/>
+					>
+						{(item) => (
+							<ClayMultiSelect.Item
+								key={item.value}
+								textValue={item.label}
+							>
+								<div className="autofit-col">
+									<span className="list-group-text">
+										{item.label}
+									</span>
+
+									{item.description && (
+										<span className="list-group-subtext">
+											{item.description}
+										</span>
+									)}
+								</div>
+							</ClayMultiSelect.Item>
+						)}
+					</ClayMultiSelect>
 				) : (
 					<ClayAutocomplete>
 						<ClayAutocomplete.Input

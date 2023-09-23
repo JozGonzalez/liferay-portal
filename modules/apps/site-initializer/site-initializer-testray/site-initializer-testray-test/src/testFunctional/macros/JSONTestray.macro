@@ -27,6 +27,7 @@ definition {
 			caseResultName = ${caseResultName},
 			casesId = ${casesId},
 			componentId = ${componentId},
+			messageError = ${messageError},
 			runId = ${runId});
 	}
 
@@ -43,13 +44,7 @@ definition {
 	}
 
 	macro addCases {
-		Variables.assertDefined(parameterList = "${caseName},${projectName},${componentName}");
-
-		if (!(isSet(caseType))) {
-			var caseType = "Case Type 1";
-		}
-
-		JSONTestray.addCaseType(caseType = ${caseType});
+		Variables.assertDefined(parameterList = "${caseName},${caseType},${projectName},${componentName}");
 
 		var caseTypeId = JSONTestraySetter.getCaseTypeId(caseType = ${caseType});
 		var componentId = JSONTestraySetter.getComponentId(componentName = ${componentName});
@@ -159,6 +154,7 @@ definition {
 		var requirementId = JSONTestrayAPI.createRequirementAPI(
 			componentId = ${componentId},
 			linkTitle = ${linkTitle},
+			linkURL = ${linkURL},
 			projectId = ${projectId},
 			requirementName = ${requirementName});
 	}
@@ -190,6 +186,7 @@ definition {
 
 		var subtaskId = JSONTestrayAPI.createSubtaskAPI(
 			key = ${key},
+			messageError = ${messageError},
 			score = ${score},
 			statusSubtask = ${statusSubtask},
 			subtaskName = ${subtaskName},

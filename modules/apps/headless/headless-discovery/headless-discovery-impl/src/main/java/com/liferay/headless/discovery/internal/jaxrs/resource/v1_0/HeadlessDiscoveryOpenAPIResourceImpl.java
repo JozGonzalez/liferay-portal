@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.discovery.internal.jaxrs.resource.v1_0;
@@ -56,6 +47,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -353,17 +345,17 @@ public class HeadlessDiscoveryOpenAPIResourceImpl {
 
 			@Override
 			public List<Object> getMatchedResources() {
-				return null;
+				return new ArrayList<>();
 			}
 
 			@Override
 			public List<String> getMatchedURIs() {
-				return null;
+				return new ArrayList<>();
 			}
 
 			@Override
 			public List<String> getMatchedURIs(boolean decode) {
-				return null;
+				return new ArrayList<>();
 			}
 
 			@Override
@@ -378,36 +370,36 @@ public class HeadlessDiscoveryOpenAPIResourceImpl {
 
 			@Override
 			public MultivaluedMap<String, String> getPathParameters() {
-				return null;
+				return new MultivaluedHashMap<>();
 			}
 
 			@Override
 			public MultivaluedMap<String, String> getPathParameters(
 				boolean decode) {
 
-				return null;
+				return new MultivaluedHashMap<>();
 			}
 
 			@Override
 			public List<PathSegment> getPathSegments() {
-				return null;
+				return new ArrayList<>();
 			}
 
 			@Override
 			public List<PathSegment> getPathSegments(boolean decode) {
-				return null;
+				return new ArrayList<>();
 			}
 
 			@Override
 			public MultivaluedMap<String, String> getQueryParameters() {
-				return null;
+				return new MultivaluedHashMap<>();
 			}
 
 			@Override
 			public MultivaluedMap<String, String> getQueryParameters(
 				boolean decode) {
 
-				return null;
+				return new MultivaluedHashMap<>();
 			}
 
 			@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.type.controller.asset.display.internal.portlet;
@@ -21,6 +12,7 @@ import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,7 +24,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.servlet.filters.i18n.I18nFilter;
+import com.liferay.portal.servlet.I18nServlet;
 
 import java.util.Locale;
 import java.util.Set;
@@ -49,21 +41,36 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 
 	@Override
 	public String getFriendlyURL(
-			String className, long classPK, Locale locale,
+			InfoItemReference infoItemReference, Locale locale,
+			ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return _getFriendlyURL(infoItemReference, locale, themeDisplay);
+	}
+
+	@Override
+	public String getFriendlyURL(
+			InfoItemReference infoItemReference, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return _getFriendlyURL(
+			infoItemReference, themeDisplay.getLocale(), themeDisplay);
+	}
+
+	private String _getFriendlyURL(
+			InfoItemReference infoItemReference, Locale locale,
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
 				getLayoutDisplayPageProviderByClassName(
-					_infoSearchClassMapperRegistry.getClassName(className));
+					_infoSearchClassMapperRegistry.getClassName(
+						infoItemReference.getClassName()));
 
 		if (layoutDisplayPageProvider == null) {
 			return null;
 		}
-
-		InfoItemReference infoItemReference = new InfoItemReference(
-			className, classPK);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
@@ -91,15 +98,6 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 		return _getFriendlyURL(
 			groupId, layoutDisplayPageProvider, layoutDisplayPageObjectProvider,
 			locale, themeDisplay);
-	}
-
-	@Override
-	public String getFriendlyURL(
-			String className, long classPK, ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		return getFriendlyURL(
-			className, classPK, themeDisplay.getLocale(), themeDisplay);
 	}
 
 	private String _getFriendlyURL(
@@ -164,13 +162,13 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 
 		String i18nPath = null;
 
-		Set<String> languageIds = I18nFilter.getLanguageIds();
+		Set<String> languageIds = I18nServlet.getLanguageIds();
 
 		int localePrependFriendlyURLStyle = PrefsPropsUtil.getInteger(
 			themeDisplay.getCompanyId(),
 			PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 
-		if ((languageIds.contains(locale.toString()) &&
+		if ((languageIds.contains(CharPool.SLASH + locale.toString()) &&
 			 (localePrependFriendlyURLStyle == 1) &&
 			 !locale.equals(LocaleUtil.getDefault())) ||
 			(localePrependFriendlyURLStyle == 2)) {

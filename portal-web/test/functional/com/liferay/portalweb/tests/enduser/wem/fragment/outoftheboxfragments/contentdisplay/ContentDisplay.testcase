@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -585,7 +586,8 @@ definition {
 	@description = "This is a test for LPS-101249 and LPS-100545. Can only select web content articles created with a specific structure when set itemSubtype."
 	@priority = 3
 	test ViewOnlyWebContentBasedOnCustomStructureAvailableWhenSetItemSubtype {
-		property test.name.skip.portal.instance = "ContentDisplay#ViewOnlyWebContentBasedOnCustomStructureAvailableWhenSetItemSubtype";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a WC based on Basic Web Content") {
 			JSONWebcontent.addWebContent(

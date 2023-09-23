@@ -4,50 +4,119 @@ definition {
 		LexiconEntry.gotoAdd();
 
 		Select(
-			key_fieldLabel = ${label},
+			key_fieldLabel = ${categoryField},
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = ${listOption});
 
-		Select(
-			key_fieldLabel = ${label1},
-			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = ${listOption1});
+		if (isSet(categoryField2)) {
+			Select(
+				key_fieldLabel = ${categoryField2},
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${listOption2});
+		}
 
 		Button.click(button = "Save");
-	}
-
-	macro assertValueRun {
-		AssertElementPresent(
-			key_title = ${valueRun},
-			locator1 = "TestrayRun#VERIFY_VALUES_RUN");
-	}
-
-	macro deleteRun {
-		RightClick.rightClick(
-			key_projectName = ${runName},
-			locator1 = "Testray#ITEM_NAME");
-
-		TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Delete");
 
 		Alert.viewSuccessMessage();
 	}
 
 	macro editRun {
-		RightClick.rightClick(
-			key_projectName = ${runName},
-			locator1 = "Testray#ITEM_NAME");
+		WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
 
-		TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Select Environment Factors");
+		TestrayManage.selectTableRowOption(
+			rowOption = "Select Environment Factors",
+			tableEntry = ${tableEntry});
 
-		Select(
-			key_fieldLabel = ${label},
-			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = ${listOption});
+		if (isSet(firstOption)) {
+			Select(
+				key_fieldLabel = "Category 1",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${firstOption});
+		}
 
-		Select(
-			key_fieldLabel = ${label1},
-			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = ${listOption1});
+		if (isSet(secondOption)) {
+			Select(
+				key_fieldLabel = "Category 2",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${secondOption});
+		}
+
+		if (isSet(applicationServer)) {
+			Select(
+				key_fieldLabel = "Application Server",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${applicationServer});
+		}
+
+		if (isSet(browser)) {
+			Select(
+				key_fieldLabel = "Browser",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${browser});
+		}
+
+		if (isSet(database)) {
+			Select(
+				key_fieldLabel = "Database",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${database});
+		}
+
+		if (isSet(javaJDK)) {
+			Select(
+				key_fieldLabel = "Java JDK",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${javaJDK});
+		}
+
+		if (isSet(liferayVersion)) {
+			Select(
+				key_fieldLabel = "Liferay Version",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${liferayVersion});
+		}
+
+		if (isSet(mobileBrowser)) {
+			Select(
+				key_fieldLabel = "Mobile Browser",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${mobileBrowser});
+		}
+
+		if (isSet(mobileDevice)) {
+			Select(
+				key_fieldLabel = "Mobile Device",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${mobileDevice});
+		}
+
+		if (isSet(mobileOperatingSystem)) {
+			Select(
+				key_fieldLabel = "Mobile Operating System",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${mobileOperatingSystem});
+		}
+
+		if (isSet(operatingSystem)) {
+			Select(
+				key_fieldLabel = "Operating System",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${operatingSystem});
+		}
+
+		if (isSet(portalEdition)) {
+			Select(
+				key_fieldLabel = "Portal Edition",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${portalEdition});
+		}
+
+		if (isSet(productEdition)) {
+			Select(
+				key_fieldLabel = "Product Edition",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${productEdition});
+		}
 
 		Button.click(button = "Save");
 

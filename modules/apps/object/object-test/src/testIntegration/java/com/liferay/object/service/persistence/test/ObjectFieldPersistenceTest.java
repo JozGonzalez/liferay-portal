@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.persistence.test;
@@ -152,8 +143,6 @@ public class ObjectFieldPersistenceTest {
 
 		newObjectField.setDBType(RandomTestUtil.randomString());
 
-		newObjectField.setDefaultValue(RandomTestUtil.randomString());
-
 		newObjectField.setIndexed(RandomTestUtil.randomBoolean());
 
 		newObjectField.setIndexedAsKeyword(RandomTestUtil.randomBoolean());
@@ -162,7 +151,14 @@ public class ObjectFieldPersistenceTest {
 
 		newObjectField.setLabel(RandomTestUtil.randomString());
 
+		newObjectField.setLocalized(RandomTestUtil.randomBoolean());
+
 		newObjectField.setName(RandomTestUtil.randomString());
+
+		newObjectField.setReadOnly(RandomTestUtil.randomString());
+
+		newObjectField.setReadOnlyConditionExpression(
+			RandomTestUtil.randomString());
 
 		newObjectField.setRelationshipType(RandomTestUtil.randomString());
 
@@ -218,9 +214,6 @@ public class ObjectFieldPersistenceTest {
 		Assert.assertEquals(
 			existingObjectField.getDBType(), newObjectField.getDBType());
 		Assert.assertEquals(
-			existingObjectField.getDefaultValue(),
-			newObjectField.getDefaultValue());
-		Assert.assertEquals(
 			existingObjectField.isIndexed(), newObjectField.isIndexed());
 		Assert.assertEquals(
 			existingObjectField.isIndexedAsKeyword(),
@@ -231,7 +224,14 @@ public class ObjectFieldPersistenceTest {
 		Assert.assertEquals(
 			existingObjectField.getLabel(), newObjectField.getLabel());
 		Assert.assertEquals(
+			existingObjectField.isLocalized(), newObjectField.isLocalized());
+		Assert.assertEquals(
 			existingObjectField.getName(), newObjectField.getName());
+		Assert.assertEquals(
+			existingObjectField.getReadOnly(), newObjectField.getReadOnly());
+		Assert.assertEquals(
+			existingObjectField.getReadOnlyConditionExpression(),
+			newObjectField.getReadOnlyConditionExpression());
 		Assert.assertEquals(
 			existingObjectField.getRelationshipType(),
 			newObjectField.getRelationshipType());
@@ -298,6 +298,14 @@ public class ObjectFieldPersistenceTest {
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByODI_I(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByODI_L() throws Exception {
+		_persistence.countByODI_L(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByODI_L(0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
@@ -369,10 +377,11 @@ public class ObjectFieldPersistenceTest {
 			true, "userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "listTypeDefinitionId", true,
 			"objectDefinitionId", true, "businessType", true, "dbColumnName",
-			true, "dbTableName", true, "dbType", true, "defaultValue", true,
-			"indexed", true, "indexedAsKeyword", true, "indexedLanguageId",
-			true, "label", true, "name", true, "relationshipType", true,
-			"required", true, "state", true, "system", true);
+			true, "dbTableName", true, "dbType", true, "indexed", true,
+			"indexedAsKeyword", true, "indexedLanguageId", true, "label", true,
+			"localized", true, "name", true, "readOnly", true,
+			"relationshipType", true, "required", true, "state", true, "system",
+			true);
 	}
 
 	@Test
@@ -696,8 +705,6 @@ public class ObjectFieldPersistenceTest {
 
 		objectField.setDBType(RandomTestUtil.randomString());
 
-		objectField.setDefaultValue(RandomTestUtil.randomString());
-
 		objectField.setIndexed(RandomTestUtil.randomBoolean());
 
 		objectField.setIndexedAsKeyword(RandomTestUtil.randomBoolean());
@@ -706,7 +713,14 @@ public class ObjectFieldPersistenceTest {
 
 		objectField.setLabel(RandomTestUtil.randomString());
 
+		objectField.setLocalized(RandomTestUtil.randomBoolean());
+
 		objectField.setName(RandomTestUtil.randomString());
+
+		objectField.setReadOnly(RandomTestUtil.randomString());
+
+		objectField.setReadOnlyConditionExpression(
+			RandomTestUtil.randomString());
 
 		objectField.setRelationshipType(RandomTestUtil.randomString());
 

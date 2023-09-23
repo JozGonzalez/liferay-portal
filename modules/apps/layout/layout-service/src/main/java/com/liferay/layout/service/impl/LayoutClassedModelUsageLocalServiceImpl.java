@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.service.impl;
@@ -20,7 +11,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.service.base.LayoutClassedModelUsageLocalServiceBaseImpl;
 import com.liferay.layout.util.constants.LayoutClassedModelUsageConstants;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -45,18 +35,9 @@ public class LayoutClassedModelUsageLocalServiceImpl
 	extends LayoutClassedModelUsageLocalServiceBaseImpl {
 
 	@Override
-	public LayoutClassedModelUsage addDefaultLayoutClassedModelUsage(
-		long groupId, long classNameId, long classPK,
-		ServiceContext serviceContext) {
-
-		return addLayoutClassedModelUsage(
-			groupId, classNameId, classPK, StringPool.BLANK, 0, 0,
-			serviceContext);
-	}
-
-	@Override
 	public LayoutClassedModelUsage addLayoutClassedModelUsage(
-		long groupId, long classNameId, long classPK, String containerKey,
+		long groupId, long classNameId, long classPK,
+		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid, ServiceContext serviceContext) {
 
 		long layoutClassedModelUsageId = counterLocalService.increment();
@@ -80,6 +61,8 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 		layoutClassedModelUsage.setClassNameId(classNameId);
 		layoutClassedModelUsage.setClassPK(classPK);
+		layoutClassedModelUsage.setClassedModelExternalReferenceCode(
+			classedModelExternalReferenceCode);
 		layoutClassedModelUsage.setContainerKey(containerKey);
 		layoutClassedModelUsage.setContainerType(containerType);
 		layoutClassedModelUsage.setPlid(plid);
@@ -109,11 +92,13 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 	@Override
 	public LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK, String containerKey, long containerType,
-		long plid) {
+		long classNameId, long classPK,
+		String classedModelExternalReferenceCode, String containerKey,
+		long containerType, long plid) {
 
-		return layoutClassedModelUsagePersistence.fetchByCN_CPK_CK_CT_P(
-			classNameId, classPK, containerKey, containerType, plid);
+		return layoutClassedModelUsagePersistence.fetchByCN_CPK_CMERC_CK_CT_P(
+			classNameId, classPK, classedModelExternalReferenceCode,
+			containerKey, containerType, plid);
 	}
 
 	@Override
@@ -171,28 +156,6 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 		return layoutClassedModelUsagePersistence.countByCN_CPK_T(
 			classNameId, classPK, type);
-	}
-
-	@Override
-	public int getUniqueLayoutClassedModelUsagesCount(
-		long classNameId, long classPK) {
-
-		return layoutClassedModelUsageFinder.countByC_C(classNameId, classPK);
-	}
-
-	@Override
-	public boolean hasDefaultLayoutClassedModelUsage(
-		long classNameId, long classPK) {
-
-		LayoutClassedModelUsage layoutClassedModelUsage =
-			layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
-				classNameId, classPK, StringPool.BLANK, 0, 0);
-
-		if (layoutClassedModelUsage != null) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private int _getType(long plid) {

@@ -1,24 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
+import {useResource} from '@clayui/data-provider';
 import ClayForm, {ClayInput, ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayModal from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
 import classNames from 'classnames';
-import {openToast, sub} from 'frontend-js-web';
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import {fetch, openToast, sub} from 'frontend-js-web';
+import React, {useContext, useMemo, useState} from 'react';
 
 import ChartContext from '../ChartContext';
-import {createAccount, getAccounts, updateAccount} from '../data/accounts';
+import {createAccount, updateAccount} from '../data/accounts';
 
 function showNotFoundError(name) {
 	openToast({
@@ -26,6 +21,8 @@ function showNotFoundError(name) {
 		type: 'danger',
 	});
 }
+
+const ACCOUNTS_ROOT_ENDPOINT = '/o/headless-admin-user/v1.0/accounts';
 
 export default function AddOrganizationModal({
 	closeModal,
@@ -36,28 +33,34 @@ export default function AddOrganizationModal({
 
 	const [accountsQuery, setAccountsQuery] = useState('');
 	const [newAccountName, setNewAccountName] = useState('');
-	const [fetchedAccounts, setFetchedAccounts] = useState([]);
 	const [selectedAccounts, setSelectedAccounts] = useState([]);
 	const [errors, setErrors] = useState([]);
 	const [newAccountMode, setNewAccountMode] = useState(false);
 
-	useEffect(() => {
-		if (accountsQuery) {
-			getAccounts(accountsQuery).then((response) => {
-				setFetchedAccounts(response.items);
-			});
-		}
-		else {
-			setFetchedAccounts([]);
-		}
-	}, [accountsQuery]);
+	const [networkStatus, setNetworkStatus] = useState(4);
+	const {resource = {}} = useResource({
+		fetch,
+		fetchPolicy: 'cache-first',
+		link: new URL(
+			`${themeDisplay.getPathContext()}${ACCOUNTS_ROOT_ENDPOINT}`,
+			themeDisplay.getPortalURL()
+		).toString(),
+		onNetworkStatusChange: setNetworkStatus,
+		variables: {
+			search: accountsQuery,
+		},
+	});
 
 	const accountOptions = useMemo(() => {
 		const selectedAccountIds = new Set(
 			selectedAccounts.map((account) => account.id)
 		);
 
-		return fetchedAccounts.filter((account) => {
+		if (!resource) {
+			return [];
+		}
+
+		return resource.items.filter((account) => {
 			const alreadySelected = selectedAccountIds.has(account.id);
 			const alreadyDefinedAsChild = account.organizationIds.some(
 				(organizationId) =>
@@ -66,7 +69,7 @@ export default function AddOrganizationModal({
 
 			return !alreadySelected && !alreadyDefinedAsChild;
 		});
-	}, [parentData, selectedAccounts, fetchedAccounts]);
+	}, [parentData, selectedAccounts, resource]);
 
 	function handleSave() {
 		if (newAccountMode) {
@@ -250,6 +253,7 @@ export default function AddOrganizationModal({
 						<ClayMultiSelect
 							id="searchAccountInput"
 							items={selectedAccounts}
+							loadingState={networkStatus}
 							locator={{label: 'name', value: 'id'}}
 							onChange={setAccountsQuery}
 							onItemsChange={handleItemsChange}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service;
@@ -18,9 +9,11 @@ import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -81,8 +74,10 @@ public interface CTCollectionLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection addCTCollection(CTCollection ctCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection addCTCollection(
-			long companyId, long userId, String name, String description)
+			String externalReferenceCode, long companyId, long userId,
+			long ctRemoteId, String name, String description)
 		throws PortalException;
 
 	public Map<Long, List<ConflictInfo>> checkConflicts(
@@ -156,11 +151,6 @@ public interface CTCollectionLocalService
 	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
-		throws PortalException;
-
-	public void discardCTEntries(
-			long ctCollectionId, long modelClassNameId, long modelClassPK,
-			boolean force)
 		throws PortalException;
 
 	public void discardCTEntry(
@@ -244,6 +234,21 @@ public interface CTCollectionLocalService
 	public CTCollection fetchCTCollection(long ctCollectionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTCollection fetchCTCollectionByExternalReferenceCode(
+		String externalReferenceCode, long companyId);
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection, or <code>null</code> if a matching ct collection could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTCollection fetchCTCollectionByUuidAndCompanyId(
+		String uuid, long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	/**
@@ -255,6 +260,24 @@ public interface CTCollectionLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CTCollection getCTCollection(long ctCollectionId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTCollection getCTCollectionByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection
+	 * @throws PortalException if a matching ct collection could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTCollection getCTCollectionByUuidAndCompanyId(
+			String uuid, long companyId)
 		throws PortalException;
 
 	/**
@@ -288,13 +311,13 @@ public interface CTCollectionLocalService
 	public List<CTMappingTableInfo> getCTMappingTableInfos(long ctCollectionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CTEntry> getDiscardCTEntries(
-		long ctCollectionId, long modelClassNameId, long modelClassPK);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTCollection> getExclusivePublishedCTCollections(
 			long modelClassNameId, long modelClassPK)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		PortletDataContext portletDataContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -316,7 +339,13 @@ public interface CTCollectionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTEntry> getRelatedCTEntries(
-		long ctCollectionId, long[] ctEntryIds);
+			long ctCollectionId, long[] ctEntryIds)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Map<Long, List<CTEntry>> getRelatedCTEntriesMap(
+			long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasUnapprovedChanges(long ctCollectionId)
@@ -325,6 +354,11 @@ public interface CTCollectionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean isCTEntryEnclosed(
 		long ctCollectionId, long modelClassNameId, long modelClassPK);
+
+	public void moveCTEntry(
+			long fromCTCollectionId, long toCTCollectionId,
+			long modelClassNameId, long modelClassPK)
+		throws PortalException;
 
 	public CTCollection undoCTCollection(
 			long ctCollectionId, long userId, String name, String description)
@@ -343,6 +377,7 @@ public interface CTCollectionLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection updateCTCollection(CTCollection ctCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection updateCTCollection(
 			long userId, long ctCollectionId, String name, String description)
 		throws PortalException;

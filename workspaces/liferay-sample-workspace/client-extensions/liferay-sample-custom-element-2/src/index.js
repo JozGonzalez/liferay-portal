@@ -1,16 +1,22 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 
-import DadJoke from './common/components/DadJoke';
-import api from './common/services/liferay/api';
-import {Liferay} from './common/services/liferay/liferay';
-import HelloBar from './routes/hello-bar/pages/HelloBar';
-import HelloFoo from './routes/hello-foo/pages/HelloFoo';
-import HelloWorld from './routes/hello-world/pages/HelloWorld';
+import Comic from './common/components/Comic.js';
+import DadJoke from './common/components/DadJoke.js';
+import api from './common/services/liferay/api.js';
+import {Liferay} from './common/services/liferay/liferay.js';
+import HelloBar from './routes/hello-bar/pages/HelloBar.js';
+import HelloFoo from './routes/hello-foo/pages/HelloFoo.js';
+import HelloWorld from './routes/hello-world/pages/HelloWorld.js';
 
 import './common/styles/index.scss';
 
-const App = ({oAuth2Client, route}) => {
+const App = ({route}) => {
 	if (route === 'hello-bar') {
 		return <HelloBar />;
 	}
@@ -25,7 +31,11 @@ const App = ({oAuth2Client, route}) => {
 
 			{Liferay.ThemeDisplay.isSignedIn() && (
 				<div>
-					<DadJoke oAuth2Client={oAuth2Client} />
+					<Comic />
+
+					<hr />
+
+					<DadJoke />
 				</div>
 			)}
 		</div>
@@ -33,20 +43,9 @@ const App = ({oAuth2Client, route}) => {
 };
 
 class WebComponent extends HTMLElement {
-	constructor() {
-		super();
-
-		this.oAuth2Client = Liferay.OAuth2Client.FromUserAgentApplication(
-			'liferay-sample-oauth-application-user-agent'
-		);
-	}
-
 	connectedCallback() {
 		createRoot(this).render(
-			<App
-				oAuth2Client={this.oAuth2Client}
-				route={this.getAttribute('route')}
-			/>,
+			<App route={this.getAttribute('route')} />,
 			this
 		);
 
@@ -63,6 +62,10 @@ class WebComponent extends HTMLElement {
 							nameElements[0].innerHTML = response.givenName;
 						}
 					}
+				})
+				.catch((error) => {
+					// eslint-disable-next-line no-console
+					console.log(error);
 				});
 		}
 	}

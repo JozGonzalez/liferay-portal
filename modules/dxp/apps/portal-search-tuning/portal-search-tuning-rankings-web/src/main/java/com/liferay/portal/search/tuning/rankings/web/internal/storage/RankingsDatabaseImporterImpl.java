@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.rankings.web.internal.storage;
@@ -24,10 +15,10 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 import com.liferay.portal.search.tuning.rankings.storage.RankingsDatabaseImporter;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DocumentToRankingTranslator;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexReindexer;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.storage.helper.RankingJSONStorageHelper;
@@ -70,8 +61,10 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 	@Reference
 	protected RankingIndexNameBuilder rankingIndexNameBuilder;
 
-	@Reference
-	protected RankingIndexReindexer rankingIndexReindexer;
+	@Reference(
+		target = "(component.name=com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexReindexer)"
+	)
+	protected IndexReindexer rankingIndexReindexer;
 
 	@Reference
 	protected RankingJSONStorageHelper rankingJSONStorageHelper;
@@ -126,10 +119,7 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 						ranking.getRankingDocumentId());
 			}
 
-			rankingJSONStorageHelper.addJSONStorageEntry(
-				companyId, ranking.getAliases(), ranking.getHiddenDocumentIds(),
-				ranking.isInactive(), ranking.getIndexName(), ranking.getName(),
-				ranking.getPins(), ranking.getQueryString());
+			rankingJSONStorageHelper.addJSONStorageEntry(ranking);
 		}
 
 		if (_log.isInfoEnabled()) {

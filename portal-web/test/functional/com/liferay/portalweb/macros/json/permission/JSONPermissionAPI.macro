@@ -3,12 +3,23 @@ definition {
 	macro _addResourcePermission {
 		Variables.assertDefined(parameterList = "${groupId},${name},${scope},${primKey},${roleId},${actionId}");
 
-		var portalURL = JSONCompany.getPortalURL();
-		var companyId = JSONCompany.getCompanyIdNoSelenium();
+		if (isSet(specificURL)) {
+			var portalURL = ${specificURL};
+			var portalInstanceName = JSONCompany.parsePortalInstanceURL(portalURL = ${specificURL});
+		}
+		else {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(companyId))) {
+			var companyId = JSONCompany.getCompanyIdNoSelenium(portalInstanceName = ${portalInstanceName});
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser(domain = ${specificURL});
 
 		var curl = '''
 			${portalURL}/api/jsonws/resourcepermission/add-resource-permission \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d companyId=${companyId} \
 				-d name=${name} \
@@ -26,10 +37,11 @@ definition {
 
 		var portalURL = JSONCompany.getPortalURL();
 		var companyId = JSONCompany.getCompanyId();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/resourcepermission/remove-resource-permission \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d companyId=${companyId} \
 				-d name=${name} \

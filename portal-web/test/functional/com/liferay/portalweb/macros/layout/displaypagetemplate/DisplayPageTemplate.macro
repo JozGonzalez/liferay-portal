@@ -15,7 +15,9 @@ definition {
 	}
 
 	macro clickPencil {
-		Click(locator1 = "Button#PENCIL");
+		WaitForPageLoad();
+
+		Click.waitForMenuToggleJSClick(locator1 = "Button#PENCIL");
 	}
 
 	macro clickPencilItem {

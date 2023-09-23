@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.method.paypal.internal;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
@@ -32,13 +23,13 @@ import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -229,7 +220,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 					}
 
 					success = true;
-					status = CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED;
+					status = CommerceOrderPaymentConstants.STATUS_AUTHORIZED;
 					transactionId = authorizeOrder.id();
 				}
 			}
@@ -331,7 +322,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			Capture capture = captureHttpResponse.result();
 
 			success = true;
-			status = CommerceOrderConstants.PAYMENT_STATUS_PAID;
+			status = CommerceOrderPaymentConstants.STATUS_COMPLETED;
 			transactionId = capture.id();
 		}
 
@@ -372,14 +363,14 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 				return new CommercePaymentResult(
 					captureOrder.id(),
 					commercePaymentRequest.getCommerceOrderId(),
-					CommerceOrderConstants.PAYMENT_STATUS_PAID, false, null,
+					CommerceOrderPaymentConstants.STATUS_COMPLETED, false, null,
 					null, Collections.emptyList(), success);
 			}
 
 			return new CommercePaymentResult(
 				commercePaymentRequest.getTransactionId(),
 				commercePaymentRequest.getCommerceOrderId(),
-				CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED, true, null,
+				CommerceOrderPaymentConstants.STATUS_AUTHORIZED, true, null,
 				null, Collections.emptyList(), success);
 		}
 		catch (IOException ioException) {
@@ -395,7 +386,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			return new CommercePaymentResult(
 				commercePaymentRequest.getTransactionId(),
 				commercePaymentRequest.getCommerceOrderId(),
-				CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED, true, null,
+				CommerceOrderPaymentConstants.STATUS_AUTHORIZED, true, null,
 				null, errorMessages, false);
 		}
 	}
@@ -435,8 +426,8 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			return new CommercePaymentResult(
 				activeAgreement.getId(),
 				commercePaymentRequest.getCommerceOrderId(),
-				CommerceOrderConstants.PAYMENT_STATUS_PAID, false, null, null,
-				messages, success);
+				CommerceOrderPaymentConstants.STATUS_COMPLETED, false, null,
+				null, messages, success);
 		}
 		catch (PayPalRESTException payPalRESTException) {
 			_log.error(payPalRESTException);
@@ -444,7 +435,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			return new CommercePaymentResult(
 				commercePaymentRequest.getTransactionId(),
 				commercePaymentRequest.getCommerceOrderId(),
-				CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED, true, null,
+				CommerceOrderPaymentConstants.STATUS_AUTHORIZED, true, null,
 				null,
 				Collections.singletonList(payPalRESTException.getMessage()),
 				false);
@@ -477,8 +468,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 	@Override
 	public int getPaymentType() {
-		return CommercePaymentConstants.
-			COMMERCE_PAYMENT_METHOD_TYPE_ONLINE_REDIRECT;
+		return CommercePaymentMethodConstants.TYPE_ONLINE_REDIRECT;
 	}
 
 	@Override
@@ -671,7 +661,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 				}
 
 				success = true;
-				status = CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED;
+				status = CommerceOrderPaymentConstants.STATUS_AUTHORIZED;
 
 				transactionId = createOrder.id();
 			}
@@ -746,7 +736,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 				Validator.isNotNull(token)) {
 
 				success = true;
-				status = CommerceOrderConstants.PAYMENT_STATUS_AUTHORIZED;
+				status = CommerceOrderPaymentConstants.STATUS_AUTHORIZED;
 			}
 
 			List<String> messages = Arrays.asList(plan.getState());
@@ -802,7 +792,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			Refund refund = refundHttpResponse.result();
 
 			success = true;
-			status = CommerceOrderConstants.ORDER_STATUS_REFUNDED;
+			status = CommerceOrderPaymentConstants.STATUS_REFUNDED;
 
 			refundId = refund.id();
 		}
@@ -953,9 +943,14 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 				new com.paypal.orders.Money();
 
 			unitAmountMoney.currencyCode(commerceCurrency.getCode());
+
+			BigDecimal finalPrice = commerceOrderItem.getFinalPrice();
+
+			BigDecimal unitAmount = finalPrice.divide(
+				commerceOrderItem.getQuantity());
+
 			unitAmountMoney.value(
-				_getAmountValue(
-					commerceOrderItem.getUnitPrice(), commerceCurrency));
+				_getAmountValue(unitAmount, commerceCurrency));
 
 			item.unitAmount(unitAmountMoney);
 
@@ -1076,11 +1071,10 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 		CommerceAddress commerceAddress = commerceOrder.getShippingAddress();
 
 		if (commerceAddress == null) {
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 			commerceAddress = _commerceAddressLocalService.fetchCommerceAddress(
-				commerceAccount.getDefaultShippingAddressId());
+				accountEntry.getDefaultShippingAddressId());
 		}
 
 		if (commerceAddress == null) {

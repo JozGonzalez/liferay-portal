@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context;
@@ -20,6 +11,7 @@ import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -42,39 +34,51 @@ public class ObjectDefinitionsStateManagerDisplayContext
 		HttpServletRequest httpServletRequest,
 		ListTypeDefinitionService listTypeDefinitionService,
 		ModelResourcePermission<ObjectDefinition>
-			objectDefinitionModelResourcePermission) {
+			objectDefinitionModelResourcePermission,
+		ObjectFieldSettingLocalService objectFieldSettingLocalService) {
 
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
 		_listTypeDefinitionService = listTypeDefinitionService;
+		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 	}
 
 	public CreationMenu getCreationMenu() throws PortalException {
 		return new CreationMenu();
 	}
 
+	public String getEditObjectValidationURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_state"
+		).setParameter(
+			"objectFieldId", "{id}"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
+	}
+
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
 
+		boolean hasUpdatePermission = hasUpdateObjectDefinitionPermission();
+
 		return Collections.singletonList(
 			new FDSActionDropdownItem(
-				PortletURLBuilder.create(
-					getPortletURL()
-				).setMVCRenderCommandName(
-					"/object_definitions/edit_object_state"
-				).setParameter(
-					"objectFieldId", "{id}"
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString(),
-				"view", "view",
-				LanguageUtil.get(objectRequestHelper.getRequest(), "view"),
+				getEditObjectValidationURL(),
+				hasUpdatePermission ? "pencil" : "view",
+				hasUpdatePermission ? "edit" : "view",
+				LanguageUtil.get(
+					objectRequestHelper.getRequest(),
+					hasUpdatePermission ? "edit" : "view"),
 				"get", null, "sidePanel"));
 	}
 
 	public JSONObject getObjectFieldJSONObject(ObjectField objectField) {
 		return ObjectFieldUtil.toJSONObject(
-			_listTypeDefinitionService, objectField);
+			_listTypeDefinitionService, objectField,
+			_objectFieldSettingLocalService);
 	}
 
 	@Override
@@ -83,5 +87,7 @@ public class ObjectDefinitionsStateManagerDisplayContext
 	}
 
 	private final ListTypeDefinitionService _listTypeDefinitionService;
+	private final ObjectFieldSettingLocalService
+		_objectFieldSettingLocalService;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.defaults.internal.util;
@@ -24,23 +15,11 @@ import com.github.jk1.license.render.ReportRenderer;
 
 import com.liferay.gradle.util.Validator;
 
-import groovy.json.JsonSlurper;
-
 import java.io.File;
 import java.io.IOException;
 
-import java.net.URL;
-
-import java.sql.Timestamp;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
@@ -54,7 +33,6 @@ import org.w3c.dom.Element;
 
 /**
  * @author Andrea Di Giorgi
- * @author Yuxing Wu
  */
 public class VersionsXmlReportRenderer implements ReportRenderer {
 
@@ -104,9 +82,8 @@ public class VersionsXmlReportRenderer implements ReportRenderer {
 	}
 
 	private void _appendLibraryElement(
-			Document document, Element librariesElement, String moduleFileName,
-			ModuleData moduleData)
-		throws Exception {
+		Document document, Element librariesElement, String moduleFileName,
+		ModuleData moduleData) {
 
 		List<String> moduleLicenseInfo =
 			LicenseDataCollector.singleModuleLicenseInfo(moduleData);
@@ -139,73 +116,6 @@ public class VersionsXmlReportRenderer implements ReportRenderer {
 			document, licenseElement, "license-name", licenseName);
 		XMLUtil.appendElement(
 			document, licenseElement, "license-url", licenseUrl);
-
-		JsonSlurper jsonSlurper = new JsonSlurper();
-
-		Map<String, Object> map = (Map<String, Object>)jsonSlurper.parse(
-			_getMavenURL(moduleData.getGroup(), moduleData.getName()));
-
-		Map<String, Object> responseMap = (Map<String, Object>)map.get(
-			"response");
-
-		int numFound = (Integer)responseMap.get("numFound");
-
-		if (numFound > 0) {
-			List<Map<String, Object>> docsList =
-				(List<Map<String, Object>>)responseMap.get("docs");
-
-			Map<String, Object> docMap = docsList.get(0);
-
-			long latestVersionTimestamp = (Long)docMap.get("timestamp");
-
-			StringBuilder sb = new StringBuilder();
-
-			sb.append(moduleData.getGroup());
-			sb.append(":");
-			sb.append(moduleData.getName());
-			sb.append(":");
-			sb.append(moduleData.getVersion());
-
-			Iterator<Map<String, Object>> iterator = docsList.iterator();
-
-			while (iterator.hasNext()) {
-				docMap = (Map<String, Object>)iterator.next();
-
-				String id = (String)docMap.get("id");
-
-				if (Objects.equals(id, sb.toString())) {
-					break;
-				}
-			}
-
-			long currentVersionTimestamp = (Long)docMap.get("timestamp");
-
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-			dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-			XMLUtil.appendElement(
-				document, libraryElement, "current-version-publish-date",
-				dateFormat.format(new Timestamp(currentVersionTimestamp)));
-			XMLUtil.appendElement(
-				document, libraryElement, "latest-version-publish-date",
-				dateFormat.format(new Timestamp(latestVersionTimestamp)));
-		}
-	}
-
-	private URL _getMavenURL(String groupId, String artifactId)
-		throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("https://search.maven.org/solrsearch/select?q=g:");
-		sb.append(groupId);
-		sb.append("+AND+");
-		sb.append("a:");
-		sb.append(artifactId);
-		sb.append("&core=gav&rows=200&wt=json");
-
-		return new URL(sb.toString());
 	}
 
 	private String _getProjectName(ModuleData moduleData) {

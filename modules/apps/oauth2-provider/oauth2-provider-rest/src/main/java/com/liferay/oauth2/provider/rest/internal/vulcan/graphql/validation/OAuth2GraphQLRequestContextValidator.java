@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.rest.internal.vulcan.graphql.validation;
@@ -18,7 +9,6 @@ import com.liferay.oauth2.provider.rest.internal.scope.logic.ScopeLogic;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.oauth2.provider.scope.liferay.OAuth2ProviderScopeLiferayAccessControlContext;
 import com.liferay.oauth2.provider.scope.liferay.ScopeContext;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.security.access.control.AccessControlUtil;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.auth.AccessControlContext;
@@ -32,7 +22,6 @@ import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContext;
 import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContextValidator;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,16 +52,12 @@ public class OAuth2GraphQLRequestContextValidator
 	public void validate(GraphQLRequestContext graphQLRequestContext)
 		throws Exception {
 
-		if (!graphQLRequestContext.isValidationRequired()) {
+		if (!graphQLRequestContext.isJaxRsResourceInvocation()) {
 			return;
 		}
 
 		if (OAuth2ProviderScopeLiferayAccessControlContext.
 				isOAuth2AuthVerified()) {
-
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-158259")) {
-				throw new ForbiddenException();
-			}
 
 			ServiceReference<?> serviceReference = _getServiceReference(
 				graphQLRequestContext.getApplicationName());
@@ -82,14 +67,11 @@ public class OAuth2GraphQLRequestContextValidator
 			_checkScope(graphQLRequestContext, serviceReference);
 		}
 
-		Method method = graphQLRequestContext.getResourceMethod();
+		_setServiceDepth();
 
-		if (method != null) {
-			_setServiceDepth();
-
-			_accessControlAdvisor.accept(
-				method, new Object[0], _NULL_ACCESS_CONTROLLED);
-		}
+		_accessControlAdvisor.accept(
+			graphQLRequestContext.getResourceMethod(), new Object[0],
+			_NULL_ACCESS_CONTROLLED);
 	}
 
 	@Activate
@@ -123,6 +105,10 @@ public class OAuth2GraphQLRequestContextValidator
 		_scopeContext.setCompanyId(graphQLRequestContext.getCompanyId());
 
 		try {
+			if (serviceReferences.isEmpty()) {
+				throw new ForbiddenException();
+			}
+
 			for (ServiceReference<ScopeLogic> serviceReference :
 					serviceReferences) {
 
@@ -138,6 +124,9 @@ public class OAuth2GraphQLRequestContextValidator
 					throw new ForbiddenException();
 				}
 			}
+		}
+		catch (Exception exception) {
+			throw new ForbiddenException(exception);
 		}
 		finally {
 			_scopeContext.setApplicationName(null);

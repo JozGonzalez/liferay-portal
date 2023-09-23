@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.service.base;
@@ -55,8 +46,6 @@ import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUti
 import com.liferay.site.navigation.service.persistence.SiteNavigationMenuItemPersistence;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -282,6 +271,25 @@ public abstract class SiteNavigationMenuItemLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return siteNavigationMenuItemPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public SiteNavigationMenuItem
+		fetchSiteNavigationMenuItemByExternalReferenceCode(
+			String externalReferenceCode, long groupId) {
+
+		return siteNavigationMenuItemPersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public SiteNavigationMenuItem
+			getSiteNavigationMenuItemByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return siteNavigationMenuItemPersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -561,7 +569,7 @@ public abstract class SiteNavigationMenuItemLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		SiteNavigationMenuItemLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -578,7 +586,8 @@ public abstract class SiteNavigationMenuItemLocalServiceBaseImpl
 		siteNavigationMenuItemLocalService =
 			(SiteNavigationMenuItemLocalService)aopProxy;
 
-		_setLocalServiceUtilService(siteNavigationMenuItemLocalService);
+		SiteNavigationMenuItemLocalServiceUtil.setService(
+			siteNavigationMenuItemLocalService);
 	}
 
 	/**
@@ -636,23 +645,6 @@ public abstract class SiteNavigationMenuItemLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		SiteNavigationMenuItemLocalService siteNavigationMenuItemLocalService) {
-
-		try {
-			Field field =
-				SiteNavigationMenuItemLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, siteNavigationMenuItemLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

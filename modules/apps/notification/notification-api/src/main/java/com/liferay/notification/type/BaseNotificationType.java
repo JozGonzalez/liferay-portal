@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.type;
 
 import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.context.NotificationContext;
+import com.liferay.notification.exception.NotificationQueueEntrySubjectException;
 import com.liferay.notification.exception.NotificationTemplateAttachmentObjectFieldIdException;
+import com.liferay.notification.exception.NotificationTemplateDescriptionException;
 import com.liferay.notification.exception.NotificationTemplateEditorTypeException;
 import com.liferay.notification.exception.NotificationTemplateNameException;
 import com.liferay.notification.exception.NotificationTemplateObjectDefinitionIdException;
@@ -62,6 +55,41 @@ import org.osgi.service.component.annotations.Reference;
 public abstract class BaseNotificationType implements NotificationType {
 
 	@Override
+	public NotificationQueueEntry createNotificationQueueEntry(
+		User user, String body, NotificationContext notificationContext,
+		String subject) {
+
+		NotificationQueueEntry notificationQueueEntry =
+			notificationQueueEntryLocalService.createNotificationQueueEntry(0L);
+
+		notificationQueueEntry.setCompanyId(user.getCompanyId());
+		notificationQueueEntry.setUserId(user.getUserId());
+		notificationQueueEntry.setUserName(user.getFullName());
+
+		NotificationTemplate notificationTemplate =
+			notificationContext.getNotificationTemplate();
+
+		if (notificationTemplate == null) {
+			notificationQueueEntry.setNotificationTemplateId(0L);
+		}
+		else {
+			notificationQueueEntry.setNotificationTemplateId(
+				notificationTemplate.getNotificationTemplateId());
+		}
+
+		notificationQueueEntry.setBody(body);
+		notificationQueueEntry.setClassName(notificationContext.getClassName());
+		notificationQueueEntry.setClassPK(notificationContext.getClassPK());
+		notificationQueueEntry.setPriority(0);
+		notificationQueueEntry.setSubject(subject);
+		notificationQueueEntry.setType(getType());
+		notificationQueueEntry.setStatus(
+			NotificationQueueEntryConstants.STATUS_UNSENT);
+
+		return notificationQueueEntry;
+	}
+
+	@Override
 	public List<NotificationRecipientSetting>
 		createNotificationRecipientSettings(
 			long notificationRecipientId, Object[] recipients, User user) {
@@ -84,14 +112,14 @@ public abstract class BaseNotificationType implements NotificationType {
 					notificationRecipientId);
 				notificationRecipientSetting.setName(entry.getKey());
 
-				if (entry.getValue() instanceof String) {
-					notificationRecipientSetting.setValue(
-						String.valueOf(entry.getValue()));
-				}
-				else {
+				if (entry.getValue() instanceof LinkedHashMap) {
 					notificationRecipientSetting.setValueMap(
 						LocalizedMapUtil.getLocalizedMap(
 							(LinkedHashMap)entry.getValue()));
+				}
+				else {
+					notificationRecipientSetting.setValue(
+						String.valueOf(entry.getValue()));
 				}
 
 				notificationRecipientSettings.add(notificationRecipientSetting);
@@ -119,6 +147,13 @@ public abstract class BaseNotificationType implements NotificationType {
 	}
 
 	@Override
+	public void sendNotification(NotificationQueueEntry notificationQueueEntry)
+		throws PortalException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Object[] toRecipients(
 		List<NotificationRecipientSetting> notificationRecipientSettings) {
 
@@ -129,6 +164,19 @@ public abstract class BaseNotificationType implements NotificationType {
 				notificationRecipientSetting.getValue()
 			).build(),
 			Object.class);
+	}
+
+	@Override
+	public void validateNotificationQueueEntry(
+			NotificationContext notificationContext)
+		throws PortalException {
+
+		NotificationQueueEntry notificationQueueEntry =
+			notificationContext.getNotificationQueueEntry();
+
+		if (Validator.isNull(notificationQueueEntry.getSubject())) {
+			throw new NotificationQueueEntrySubjectException("Subject is null");
+		}
 	}
 
 	@Override
@@ -147,6 +195,13 @@ public abstract class BaseNotificationType implements NotificationType {
 			if (objectDefinition == null) {
 				throw new NotificationTemplateObjectDefinitionIdException();
 			}
+		}
+
+		String description = notificationTemplate.getDescription();
+
+		if (description.length() > 255) {
+			throw new NotificationTemplateDescriptionException(
+				"The description cannot contain more than 255 characters");
 		}
 
 		if (Validator.isNull(notificationTemplate.getEditorType())) {
@@ -182,34 +237,6 @@ public abstract class BaseNotificationType implements NotificationType {
 		}
 	}
 
-	protected NotificationQueueEntry createNotificationQueueEntry(
-		User user, String body, NotificationContext notificationContext,
-		String subject) {
-
-		NotificationTemplate notificationTemplate =
-			notificationContext.getNotificationTemplate();
-
-		NotificationQueueEntry notificationQueueEntry =
-			notificationQueueEntryLocalService.createNotificationQueueEntry(0L);
-
-		notificationQueueEntry.setUserId(user.getUserId());
-		notificationQueueEntry.setUserId(user.getUserId());
-		notificationQueueEntry.setUserName(user.getFullName());
-
-		notificationQueueEntry.setNotificationTemplateId(
-			notificationTemplate.getNotificationTemplateId());
-		notificationQueueEntry.setBody(body);
-		notificationQueueEntry.setClassName(notificationContext.getClassName());
-		notificationQueueEntry.setClassPK(notificationContext.getClassPK());
-		notificationQueueEntry.setPriority(0);
-		notificationQueueEntry.setSubject(subject);
-		notificationQueueEntry.setType(getType());
-		notificationQueueEntry.setStatus(
-			NotificationQueueEntryConstants.STATUS_UNSENT);
-
-		return notificationQueueEntry;
-	}
-
 	protected NotificationRecipient createNotificationRecipient(
 		User user, long notificationQueueEntryId) {
 
@@ -219,7 +246,6 @@ public abstract class BaseNotificationType implements NotificationType {
 		notificationRecipient.setCompanyId(user.getCompanyId());
 		notificationRecipient.setUserId(user.getUserId());
 		notificationRecipient.setUserName(user.getFullName());
-
 		notificationRecipient.setClassName(
 			NotificationQueueEntry.class.getName());
 		notificationRecipient.setClassPK(notificationQueueEntryId);
@@ -245,7 +271,6 @@ public abstract class BaseNotificationType implements NotificationType {
 			notificationRecipientSetting.setCompanyId(user.getCompanyId());
 			notificationRecipientSetting.setUserId(user.getUserId());
 			notificationRecipientSetting.setUserName(user.getFullName());
-
 			notificationRecipientSetting.setNotificationRecipientId(
 				notificationRecipientId);
 			notificationRecipientSetting.setName(entry.getKey());
@@ -304,7 +329,7 @@ public abstract class BaseNotificationType implements NotificationType {
 
 		List<String> termNames = new ArrayList<>();
 
-		Matcher matcher = _pattern.matcher(content);
+		Matcher matcher = _termNamePattern.matcher(content);
 
 		while (matcher.find()) {
 			termNames.add(matcher.group());
@@ -397,7 +422,7 @@ public abstract class BaseNotificationType implements NotificationType {
 	@Reference
 	protected UserLocalService userLocalService;
 
-	private static final Pattern _pattern = Pattern.compile(
+	private static final Pattern _termNamePattern = Pattern.compile(
 		"\\[%[^\\[%]+%\\]", Pattern.CASE_INSENSITIVE);
 
 }

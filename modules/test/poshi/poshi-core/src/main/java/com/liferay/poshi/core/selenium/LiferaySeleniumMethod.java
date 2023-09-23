@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.selenium;
@@ -58,6 +49,10 @@ public class LiferaySeleniumMethod {
 		return _defaultParameterNames.subList(0, parameterCount);
 	}
 
+	public Class<?>[] getParameterTypes() {
+		return _method.getParameterTypes();
+	}
+
 	private static final List<String> _defaultParameterNames = Arrays.asList(
 		"locator1", "value1", "locator2");
 	private static final List<String> _javaScriptMethodNames = Arrays.asList(
@@ -69,6 +64,7 @@ public class LiferaySeleniumMethod {
 				put(
 					"assertCSSValue",
 					new String[] {"locator1", "locator2", "value1"});
+				put("executeCDPCommand", new String[] {"value1", "value2"});
 				put(
 					"ocularAssertElementImage",
 					new String[] {"locator1", "value1", "value2"});

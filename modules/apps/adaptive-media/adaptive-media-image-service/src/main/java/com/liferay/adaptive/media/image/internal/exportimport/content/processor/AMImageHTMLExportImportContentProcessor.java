@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.exportimport.content.processor;
 
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
 import com.liferay.adaptive.media.image.html.constants.AMImageHTMLConstants;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -82,11 +76,27 @@ public class AMImageHTMLExportImportContentProcessor
 			"[" + AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID + "]";
 
 		for (Element element : document.select(elementSelector)) {
-			long fileEntryId = Long.valueOf(
-				element.attr(
-					AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID));
+			try {
+				long fileEntryId = GetterUtil.getLong(
+					element.attr(
+						AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID));
 
-			_dlAppLocalService.getFileEntry(fileEntryId);
+				_dlAppLocalService.getFileEntry(fileEntryId);
+			}
+			catch (NoSuchFileEntryException noSuchFileEntryException) {
+				if (!ExportImportThreadLocal.isImportInProcess()) {
+					throw noSuchFileEntryException;
+				}
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						StringBundler.concat(
+							"An invalid file entry was detected during import ",
+							"when validating the content below. This is not ",
+							"an error. It typically means the file entry was ",
+							"deleted.\n", content));
+				}
+			}
 		}
 	}
 

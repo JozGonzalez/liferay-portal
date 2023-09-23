@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.groups.admin.web.internal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
@@ -47,8 +37,6 @@ import com.liferay.users.admin.test.util.search.GroupSearchFixture;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -91,21 +79,22 @@ public class UserGroupIndexerTest {
 
 		long companyId = role.getCompanyId();
 
-		int count = userGroupLocalService.searchCount(
+		groupLocalService.addRoleGroup(role.getRoleId(), _group.getGroupId());
+
+		int originalUserGroupCount = userGroupLocalService.searchCount(
 			companyId, null, new LinkedHashMap<String, Object>());
 
 		String baseName = RandomTestUtil.randomString();
-		int i = 2;
 
-		List<UserGroup> userGroups = Stream.generate(
-			() -> addUserGroup(baseName)
-		).limit(
-			i
-		).collect(
-			Collectors.toList()
-		);
+		int newUserGroupCount = 2;
 
-		groupLocalService.addRoleGroup(role.getRoleId(), _group.getGroupId());
+		List<String> userGroupNames = new ArrayList<>();
+
+		for (int i = 0; i < newUserGroupCount; i++) {
+			UserGroup userGroup = addUserGroup(baseName);
+
+			userGroupNames.add(userGroup.getName());
+		}
 
 		SearchRequestBuilder searchRequestBuilder1 = _getSearchRequestBuilder(
 			companyId);
@@ -117,8 +106,7 @@ public class UserGroupIndexerTest {
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
 			searchResponse1.getRequestString(), searchResponse1.getDocuments(),
-			Field.NAME,
-			TransformUtil.transform(userGroups, UserGroup::getName));
+			Field.NAME, userGroupNames);
 
 		SearchRequestBuilder searchRequestBuilder2 = _getSearchRequestBuilder(
 			companyId);
@@ -130,7 +118,9 @@ public class UserGroupIndexerTest {
 				0
 			).build());
 
-		Assert.assertEquals(count + i, searchResponse2.getCount());
+		Assert.assertEquals(
+			originalUserGroupCount + newUserGroupCount,
+			searchResponse2.getCount());
 	}
 
 	@Rule

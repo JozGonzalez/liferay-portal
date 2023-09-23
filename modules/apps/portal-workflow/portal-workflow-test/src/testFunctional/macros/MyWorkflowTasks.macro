@@ -9,7 +9,9 @@ definition {
 			locator1 = "MyWorkflowTasks#MY_WORKFLOW_TASKS_SEARCH_INPUT_FIELD",
 			value1 = ${searchTerm});
 
-		Click(locator1 = "MyWorkflowTasks#MY_WORKFLOW_TASKS_SEARCH_ICON");
+		Click(
+			ariaLabel = "Search",
+			locator1 = "Button#ANY_WITH_ARIA_LABEL");
 	}
 
 	macro updateDueDateAtMyWorkflowTasks {
@@ -38,7 +40,9 @@ definition {
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE",
 			value1 = ${dueDate});
 
-		Type(
+		var startDateTime = StringUtil.removeSpaces(${workflowDueDateTime});
+
+		Type.sendKeys(
 			locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE_TIME",
 			value1 = ${dueDateTime});
 
@@ -79,7 +83,9 @@ definition {
 				locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE",
 				value1 = "${displayDateMonth}/${futureDay}/${displayDateYear}");
 
-			Type(
+			var startDateTime = StringUtil.removeSpaces(${workflowDueDateTime});
+
+			Type.sendKeys(
 				locator1 = "MyWorkflowTasks#DIALOG_BOX_DUE_DATE_TIME",
 				value1 = "07:30 PM");
 		}

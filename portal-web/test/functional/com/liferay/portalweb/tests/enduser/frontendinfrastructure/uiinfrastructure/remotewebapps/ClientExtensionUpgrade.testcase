@@ -4,6 +4,8 @@ definition {
 	property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Client Extensions";
 	property testray.main.component.name = "Upgrades Remote Apps";
 
@@ -28,13 +30,13 @@ definition {
 		property test.run.environment = "EE";
 
 		task ("Assert custom remote app is present after upgrade") {
-			ClientExtensionUpgrade.assertRemoteAppEntry(
+			ValidateClientExtensionsUpgrade.assertRemoteAppEntry(
 				upgradeName = "Vanilla Counter",
 				upgradeType = "Custom Element");
 		}
 
 		task ("Assert custom remote app fields are saved after upgrade") {
-			ClientExtensionUpgrade.assertCustomRemoteAppEntryFields(
+			ValidateClientExtensionsUpgrade.assertCustomRemoteAppEntryFields(
 				upgradeCssurl = "https://liferay.github.io/liferay-frontend-projects/index.css",
 				upgradeHtmlName = "vanilla-counter",
 				upgradeName = "Vanilla Counter",
@@ -67,13 +69,13 @@ definition {
 		var remoteAppURL = "http://www.liferay.com";
 
 		task ("Assert remote app is present after upgrade") {
-			ClientExtensionUpgrade.assertRemoteAppEntry(
+			ValidateClientExtensionsUpgrade.assertRemoteAppEntry(
 				upgradeName = ${remoteAppName},
 				upgradeType = ${remoteAppType});
 		}
 
 		task ("Assert remote app fields are saved after upgrade") {
-			ClientExtensionUpgrade.assertRemoteAppEntryFields(
+			ValidateClientExtensionsUpgrade.assertRemoteAppEntryFields(
 				upgradeName = ${remoteAppName},
 				upgradeURL = ${remoteAppURL});
 		}

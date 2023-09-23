@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -37,6 +28,10 @@ public class PropertiesSQLStylingCheck extends BaseFileCheck {
 			String fileName, String absolutePath, String content)
 		throws IOException {
 
+		if (!fileName.endsWith("/test.properties")) {
+			return content;
+		}
+
 		Matcher matcher = _sqlPattern1.matcher(content);
 
 		outerLoop:
@@ -45,7 +40,8 @@ public class PropertiesSQLStylingCheck extends BaseFileCheck {
 
 			String sqlClauses = originalSqlClauses.replaceAll("\\\\\n *", "");
 
-			sqlClauses = _removeRedundantParenthesis(sqlClauses);
+			sqlClauses = sqlClauses.replaceAll("\\( +\\(", "((");
+			sqlClauses = sqlClauses.replaceAll("\\) +\\)", "))");
 
 			int x = sqlClauses.indexOf("(");
 
@@ -65,19 +61,16 @@ public class PropertiesSQLStylingCheck extends BaseFileCheck {
 
 				s = sqlClauses.substring(x, y + 1);
 
-				int level = getLevel(s, "(", ")");
+				int level = getLevel(s);
 
 				if (level != 0) {
 					continue;
 				}
 
-				if ((s.indexOf(" AND ") != -1) || (s.indexOf(" OR ") != -1)) {
-					sqlClauses = StringUtil.insert(sqlClauses, "\\\n", y);
-					sqlClauses = StringUtil.insert(sqlClauses, "\\\n", x + 1);
-				}
+				sqlClauses = StringUtil.replaceFirst(
+					sqlClauses, s, _removeRedundantParenthesis(s), x);
 
-				x = x + 1;
-				x = sqlClauses.indexOf("(", x);
+				x = sqlClauses.indexOf("(", x + 1);
 
 				if (x == -1) {
 					break;
@@ -128,11 +121,8 @@ public class PropertiesSQLStylingCheck extends BaseFileCheck {
 					continue;
 				}
 
-				int x = line.indexOf(" AND \\");
-
-				if (x == -1) {
-					x = line.indexOf(" OR \\");
-				}
+				int x = StringUtil.indexOfAny(
+					line, new String[] {" AND \\", " OR \\"});
 
 				if (x == -1) {
 					x = line.lastIndexOf("\\");
@@ -233,43 +223,31 @@ public class PropertiesSQLStylingCheck extends BaseFileCheck {
 	}
 
 	private String _removeRedundantParenthesis(String sqlClause) {
-		int x = sqlClause.indexOf("(((");
-
-		if (x == -1) {
-			return sqlClause;
-		}
-
-		int y = x;
-		String s = StringPool.BLANK;
+		int x = -1;
 
 		while (true) {
-			y = sqlClause.indexOf(")))", y + 1);
-
-			if (y == -1) {
-				return sqlClause;
-			}
-
-			s = sqlClause.substring(x, y + 3);
-
-			int level = getLevel(s, "(((", ")))");
-
-			if (level != 0) {
-				continue;
-			}
-
-			s = s.substring(1, s.length() - 1);
-
-			sqlClause =
-				sqlClause.substring(0, x) + s + sqlClause.substring(y + 3);
-
-			x = x + 1;
-			x = sqlClause.indexOf("(((", x);
+			x = StringUtil.indexOfAny(
+				sqlClause, new String[] {" AND ", " OR "}, x + 1);
 
 			if (x == -1) {
 				break;
 			}
 
-			y = x;
+			int level1 = getLevel(sqlClause.substring(0, x));
+			int level2 = getLevel(sqlClause.substring(x));
+
+			if ((level1 == 1) && (level2 == -1)) {
+				sqlClause = StringUtil.insert(
+					sqlClause, "\\\n", sqlClause.length() - 1);
+				sqlClause = StringUtil.insert(sqlClause, "\\\n", 1);
+
+				return sqlClause;
+			}
+		}
+
+		if (sqlClause.startsWith("((")) {
+			return _removeRedundantParenthesis(
+				sqlClause.substring(1, sqlClause.length() - 1));
 		}
 
 		return sqlClause;

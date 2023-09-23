@@ -41,6 +41,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_N</td>
+	<td>xpath=(//div[label[contains(.,'${key_text}')]]//input[not(contains(@type,'checkbox'))])[${key_indexNumber}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_SPECIFIC</td>
 	<td>//div/label[text()='${key_text}']/..//input[not(contains(@type,'checkbox'))]</td>
 	<td></td>
@@ -58,6 +63,11 @@
 <tr>
 	<td>ANY_WITH_AIRA_LABEL</td>
 	<td>//input[@aria-label='${ariaLabel}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_WITH_NAME</td>
+	<td>//input[@name='${name}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -266,8 +276,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ENTER_AGAIN</td>
-	<td>//div[label[contains(.,'Enter Again')]]/input</td>
+	<td>REENTER_PASSWORD</td>
+	<td>//div[label[contains(.,'Reenter Password')]]/input</td>
 	<td></td>
 </tr>
 <tr>
@@ -316,6 +326,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FRAGMENT_CONFIGURATION_FORM_FRAGMENT</td>
+	<td>//tr[td[normalize-space(text())='${key_tableEntry}']]//input</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FRIENDLY_URL_SITE_SETTINGS</td>
 	<td>//input[contains(@id,'FriendlyURL')]</td>
 	<td></td>
@@ -357,7 +372,7 @@
 </tr>
 <tr>
 	<td>GROUPED_TEXT_INPUT</td>
-	<td>//div[contains(@class,'panel-group')][contains(.,'${key_groupLabel}')]//div[contains(@class,'form-group')][label[normalize-space(text())='${key_fieldLabel}']]//input</td>
+	<td>//div[contains(@class,'panel')][@role='tablist'][contains(.,'${key_groupLabel}')]//div[contains(@class,'form-group')][label[normalize-space(text())='${key_fieldLabel}']]//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -383,6 +398,16 @@
 <tr>
 	<td>INPUT_ID</td>
 	<td>//input[contains(@id,'${inputFieldId}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INPUT_ID_N</td>
+	<td>xpath=(//input[contains(@id,'${inputFieldId}')])[${key_indexNumber}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXT_INPUT_ID</td>
+	<td>//input[contains(@id,'${inputFieldId}')][@type='text']</td>
 	<td></td>
 </tr>
 <tr>
@@ -412,27 +437,27 @@
 </tr>
 <tr>
 	<td>VIRTUAL_INSTANCE_SCREEN_NAME</td>
-	<td>//input[contains(@id,'screenNameAdmin')]</td>
+	<td>//input[contains(@id,'defaultAdminScreenName')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>VIRTUAL_INSTANCE_EMAIL</td>
-	<td>//input[contains(@id,'emailAdmin')]</td>
+	<td>//input[contains(@id,'defaultAdminEmailAddress')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>VIRTUAL_INSTANCE_PASSWORD</td>
-	<td>//input[contains(@id,'passwordAdmin')]</td>
+	<td>//input[contains(@id,'defaultAdminPassword')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>VIRTUAL_INSTANCE_FIRST_NAME</td>
-	<td>//input[contains(@id,'firstNameAdmin')]</td>
+	<td>//input[contains(@id,'defaultAdminFirstName')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>VIRTUAL_INSTANCE_LAST_NAME</td>
-	<td>//input[contains(@id,'lastNameAdmin')]</td>
+	<td>//input[contains(@id,'defaultAdminLastName')]</td>
 	<td></td>
 </tr>
 <tr>

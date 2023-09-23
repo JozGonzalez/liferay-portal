@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.index;
@@ -22,7 +13,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.IndexStatusManagerThreadLocal;
 import com.liferay.portal.search.configuration.IndexStatusManagerConfiguration;
 import com.liferay.portal.search.index.IndexStatusManager;
-import com.liferay.portal.search.internal.index.configuration.IndexStatusManagerInternalConfiguration;
+import com.liferay.portal.tools.DBUpgrader;
 
 import java.util.Collections;
 import java.util.Map;
@@ -37,21 +28,15 @@ import org.osgi.service.component.annotations.Modified;
  * @author Michael C. Han
  */
 @Component(
-	configurationPid = {
-		"com.liferay.portal.search.configuration.IndexStatusManagerConfiguration",
-		"com.liferay.portal.search.internal.index.configuration.IndexStatusManagerInternalConfiguration"
-	},
+	configurationPid = "com.liferay.portal.search.configuration.IndexStatusManagerConfiguration",
 	service = IndexStatusManager.class
 )
 public class IndexStatusManagerImpl implements IndexStatusManager {
 
 	@Override
 	public boolean isIndexReadOnly() {
-		if (_suppressIndexReadOnly) {
-			return false;
-		}
-
-		if (IndexStatusManagerThreadLocal.isIndexReadOnly() || _indexReadOnly ||
+		if (DBUpgrader.isUpgradeClient() ||
+			IndexStatusManagerThreadLocal.isIndexReadOnly() || _indexReadOnly ||
 			StartupHelperUtil.isUpgrading()) {
 
 			return true;
@@ -133,14 +118,6 @@ public class IndexStatusManagerImpl implements IndexStatusManager {
 				IndexStatusManagerConfiguration.class, properties);
 
 		_indexReadOnly = indexStatusManagerConfiguration.indexReadOnly();
-
-		IndexStatusManagerInternalConfiguration
-			indexStatusManagerInternalConfiguration =
-				ConfigurableUtil.createConfigurable(
-					IndexStatusManagerInternalConfiguration.class, properties);
-
-		_suppressIndexReadOnly =
-			indexStatusManagerInternalConfiguration.suppressIndexReadOnly();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -152,6 +129,5 @@ public class IndexStatusManagerImpl implements IndexStatusManager {
 		new ConcurrentHashMap<>());
 	private boolean _readWriteRequired;
 	private Throwable _requireIndexReadWriteCallStackThrowable;
-	private volatile boolean _suppressIndexReadOnly;
 
 }

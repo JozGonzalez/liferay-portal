@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.trash.web.internal.display.context;
@@ -56,17 +47,6 @@ public class TrashContainerModelDisplayContext {
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
-	}
-
-	public String getBackURL() {
-		if (Validator.isNotNull(_backURL)) {
-			return _backURL;
-		}
-
-		_backURL = ParamUtil.getString(
-			_httpServletRequest, "backURL", getRedirect());
-
-		return _backURL;
 	}
 
 	public String getClassName() {
@@ -209,18 +189,6 @@ public class TrashContainerModelDisplayContext {
 		).buildPortletURL();
 	}
 
-	public String getEventName() {
-		if (Validator.isNotNull(_eventName)) {
-			return _eventName;
-		}
-
-		_eventName = ParamUtil.getString(
-			_httpServletRequest, "eventName",
-			_liferayPortletResponse.getNamespace() + "selectContainer");
-
-		return _eventName;
-	}
-
 	public Object[] getMissingContainerMessageArguments()
 		throws PortalException {
 
@@ -303,34 +271,6 @@ public class TrashContainerModelDisplayContext {
 		return _trashRenderer;
 	}
 
-	public boolean isShowBackIcon() throws PortalException {
-		if (_showBackIcon != null) {
-			return _showBackIcon;
-		}
-
-		ContainerModel containerModel = null;
-
-		if (getContainerModelId() > 0) {
-			TrashHandler containerTrashHandler =
-				TrashHandlerRegistryUtil.getTrashHandler(
-					getContainerModelClassName());
-
-			containerModel = containerTrashHandler.getContainerModel(
-				getContainerModelId());
-		}
-
-		boolean showBackIcon = false;
-
-		if (containerModel != null) {
-			showBackIcon = true;
-		}
-
-		_showBackIcon = showBackIcon;
-
-		return _showBackIcon;
-	}
-
-	private String _backURL;
 	private String _className;
 	private Long _classNameId;
 	private Long _classPK;
@@ -340,14 +280,12 @@ public class TrashContainerModelDisplayContext {
 	private String _containerModelName;
 	private List<ContainerModel> _containerModels;
 	private Integer _containerModelsCount;
-	private String _eventName;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private Object[] _missingContainerMessageArguments;
 	private String _redirect;
 	private SearchContainer<?> _searchContainer;
-	private Boolean _showBackIcon;
 	private TrashHandler _trashHandler;
 	private TrashRenderer _trashRenderer;
 

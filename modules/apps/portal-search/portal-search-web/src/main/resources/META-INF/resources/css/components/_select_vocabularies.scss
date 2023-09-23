@@ -1,38 +1,20 @@
-.select-vocabularies {
-	&.disabled {
-		.alert-info {
-			opacity: 0.5;
-		}
+html#{$cadmin-selector} {
+	.portlet-category-facet .cadmin {
+		.select-vocabularies {
+			.treeview-group {
+				.treeview-link {
+					padding-left: 36px !important;
 
-		.select-vocabularies-helptext {
-			color: #a7a9bc;
-		}
-
-		.treeview {
-			.autofit-col,
-			.custom-control-label-text {
-				color: #a7a9bc;
+					.c-inner {
+						margin-right: -36px !important;
+					}
+				}
 			}
-		}
-	}
 
-	.btn-group-item:first-of-type {
-		margin-right: 6px;
-	}
-
-	.select-vocabularies-helptext {
-		color: #6b6c7e;
-		margin-bottom: 16px;
-		margin-top: 8px;
-	}
-
-	.treeview-group {
-		.treeview-link {
-			cursor: unset;
-			padding-left: 36px !important;
-
-			.c-inner {
-				margin-right: -36px !important;
+			.treeview-link-site-row {
+				.lexicon-icon {
+					font-size: 10px;
+				}
 			}
 		}
 	}

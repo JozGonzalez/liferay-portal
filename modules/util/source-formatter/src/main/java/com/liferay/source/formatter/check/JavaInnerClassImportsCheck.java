@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -18,14 +9,11 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.tools.JavaImportsFormatter;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.check.util.JavaSourceUtil;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,7 +52,7 @@ public class JavaInnerClassImportsCheck extends BaseFileCheck {
 			// cases where we get long lines that are hard to resolve
 
 			if (imports == null) {
-				imports = _getImports(content);
+				imports = JavaSourceUtil.getImportNames(content);
 			}
 
 			if ((innerClassName.length() + outerClassName.length()) > 40) {
@@ -152,21 +140,6 @@ public class JavaInnerClassImportsCheck extends BaseFileCheck {
 		}
 
 		return null;
-	}
-
-	private List<String> _getImports(String content) {
-		List<String> imports = new ArrayList<>();
-
-		String[] importLines = StringUtil.splitLines(
-			JavaImportsFormatter.getImports(content));
-
-		for (String importLine : importLines) {
-			if (Validator.isNotNull(importLine)) {
-				imports.add(importLine.substring(7, importLine.length() - 1));
-			}
-		}
-
-		return imports;
 	}
 
 	private boolean _isRedundantImport(

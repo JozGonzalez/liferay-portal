@@ -1,31 +1,30 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.info.item.provider;
 
 import com.liferay.info.exception.InfoItemPermissionException;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.web.internal.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
+import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 /**
  * @author Lourdes Fernández Besada
@@ -35,9 +34,11 @@ public class ObjectEntryInfoItemPermissionProvider
 
 	public ObjectEntryInfoItemPermissionProvider(
 		ObjectDefinition objectDefinition,
+		ObjectEntryManager objectEntryManager,
 		ObjectEntryService objectEntryService) {
 
 		_objectDefinition = objectDefinition;
+		_objectEntryManager = objectEntryManager;
 		_objectEntryService = objectEntryService;
 	}
 
@@ -47,11 +48,65 @@ public class ObjectEntryInfoItemPermissionProvider
 			InfoItemReference infoItemReference, String actionId)
 		throws InfoItemPermissionException {
 
-		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
-			(ClassPKInfoItemIdentifier)
-				infoItemReference.getInfoItemIdentifier();
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
 
-		return _hasPermission(actionId, classPKInfoItemIdentifier.getClassPK());
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier) &&
+			!(infoItemIdentifier instanceof ERCInfoItemIdentifier)) {
+
+			return false;
+		}
+
+		if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)
+					infoItemReference.getInfoItemIdentifier();
+
+			return _hasPermission(
+				actionId, classPKInfoItemIdentifier.getClassPK());
+		}
+
+		ERCInfoItemIdentifier ercInfoItemIdentifier =
+			(ERCInfoItemIdentifier)infoItemIdentifier;
+
+		try {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			if (serviceContext == null) {
+				return false;
+			}
+
+			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+			if (themeDisplay == null) {
+				return false;
+			}
+
+			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
+				_objectEntryManager.getObjectEntry(
+					themeDisplay.getCompanyId(),
+					new DefaultDTOConverterContext(
+						false, null, null, null, null, themeDisplay.getLocale(),
+						null, themeDisplay.getUser()),
+					ercInfoItemIdentifier.getExternalReferenceCode(),
+					_objectDefinition, null);
+
+			if (objectEntry != null) {
+				hasPermission(
+					permissionChecker,
+					ObjectEntryUtil.toObjectEntry(
+						_objectDefinition.getObjectDefinitionId(), objectEntry),
+					actionId);
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -83,6 +138,7 @@ public class ObjectEntryInfoItemPermissionProvider
 		ObjectEntryInfoItemPermissionProvider.class);
 
 	private final ObjectDefinition _objectDefinition;
+	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectEntryService _objectEntryService;
 
 }

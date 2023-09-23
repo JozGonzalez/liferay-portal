@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
@@ -19,7 +10,6 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.dynamic.data.mapping.form.field.type.constants.ObjectDDMFormFieldTypeConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
-import com.liferay.object.field.render.ObjectFieldRenderingContext;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -28,13 +18,12 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
@@ -78,34 +67,14 @@ public class RelationshipObjectFieldBusinessType
 	}
 
 	@Override
-	public Map<String, Object> getProperties(
-			ObjectField objectField,
-			ObjectFieldRenderingContext objectFieldRenderingContext)
-		throws PortalException {
-
-		return HashMapBuilder.<String, Object>put(
-			"accountEntryRestrictedObjectField",
-			() -> {
-				ObjectDefinition objectDefinition =
-					_objectDefinitionLocalService.getObjectDefinition(
-						objectField.getObjectDefinitionId());
-
-				return objectDefinition.isAccountEntryRestricted() &&
-					   Objects.equals(
-						   objectDefinition.
-							   getAccountEntryRestrictedObjectFieldId(),
-						   objectField.getObjectFieldId());
-			}
-		).build();
-	}
-
-	@Override
 	public PropertyDefinition.PropertyType getPropertyType() {
 		return PropertyDefinition.PropertyType.LONG;
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray(
 			ObjectFieldSettingConstants.NAME_OBJECT_DEFINITION_1_SHORT_NAME,
 			ObjectFieldSettingConstants.
@@ -113,7 +82,8 @@ public class RelationshipObjectFieldBusinessType
 	}
 
 	@Override
-	public Object getValue(ObjectField objectField, Map<String, Object> values)
+	public Object getValue(
+			ObjectField objectField, long userId, Map<String, Object> values)
 		throws PortalException {
 
 		if (!Objects.equals(
@@ -150,14 +120,14 @@ public class RelationshipObjectFieldBusinessType
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId1());
 
-		if (objectDefinition.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
 			BaseModel<?> baseModel =
-				systemObjectDefinitionMetadata.
+				systemObjectDefinitionManager.
 					getBaseModelByExternalReferenceCode(
 						externalReferenceCode, objectDefinition.getCompanyId());
 
@@ -168,11 +138,6 @@ public class RelationshipObjectFieldBusinessType
 			externalReferenceCode, objectDefinition.getObjectDefinitionId());
 
 		return objectEntry.getObjectEntryId();
-	}
-
-	@Override
-	public boolean isVisible() {
-		return true;
 	}
 
 	@Reference
@@ -188,7 +153,7 @@ public class RelationshipObjectFieldBusinessType
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.order.status;
@@ -19,6 +10,7 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -56,7 +48,8 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 	public static final int PRIORITY = 20;
 
 	@Override
-	public CommerceOrder doTransition(CommerceOrder commerceOrder, long userId)
+	public CommerceOrder doTransition(
+			CommerceOrder commerceOrder, long userId, boolean secure)
 		throws PortalException {
 
 		ServiceContext serviceContext = new ServiceContext();
@@ -85,7 +78,16 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 		commerceOrder.setOrderStatus(KEY);
 
-		return _commerceOrderService.updateCommerceOrder(commerceOrder);
+		if (secure) {
+			commerceOrder = _commerceOrderService.updateCommerceOrder(
+				commerceOrder);
+		}
+		else {
+			commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+				commerceOrder);
+		}
+
+		return commerceOrder;
 	}
 
 	@Override
@@ -114,6 +116,13 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 	}
 
 	@Override
+	public boolean isEnabled(CommerceOrder commerceOrder)
+		throws PortalException {
+
+		return !commerceOrder.isQuote();
+	}
+
+	@Override
 	public boolean isTransitionCriteriaMet(CommerceOrder commerceOrder)
 		throws PortalException {
 
@@ -136,6 +145,9 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 		return false;
 	}
+
+	@Reference
+	private volatile CommerceOrderLocalService _commerceOrderLocalService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.model.CommerceOrder)"

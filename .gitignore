@@ -41,6 +41,7 @@
 /benchmarks/benchmarks-actual.properties
 /benchmarks/benchmarks.*.properties
 /benchmarks/liferay
+/benchmarks/output
 /bin
 /build
 /build.*.properties
@@ -193,5 +194,6 @@
 /util-taglib/util-taglib*.asc
 /util-taglib/util-taglib*.jar
 /working.dir.properties
+/workspaces/node_modules
 _sass_cache_*.css
 poshi-warnings.xml

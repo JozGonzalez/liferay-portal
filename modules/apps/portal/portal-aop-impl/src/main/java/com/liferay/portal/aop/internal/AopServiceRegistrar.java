@@ -1,28 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.aop.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.module.util.BundleUtil;
 import com.liferay.portal.spring.aop.AopCacheManager;
 import com.liferay.portal.spring.aop.AopInvocationHandler;
-import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.spring.transaction.TransactionExecutor;
 
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -53,7 +45,10 @@ public class AopServiceRegistrar {
 		_aopService = aopService;
 		_aopServiceInterfaces = aopServiceInterfaces;
 
-		if (BundleUtil.isLiferayServiceBundle(serviceReference.getBundle())) {
+		if (BundleUtil.isLiferayServiceBundle(serviceReference.getBundle()) &&
+			GetterUtil.getBoolean(
+				serviceReference.getProperty("liferay.service"), true)) {
+
 			_liferayService = true;
 		}
 		else {
@@ -65,7 +60,11 @@ public class AopServiceRegistrar {
 		return _liferayService;
 	}
 
-	public void register(TransactionHandler transactionHandler) {
+	public void register(TransactionExecutor transactionExecutor) {
+		if (_serviceRegistration != null) {
+			return;
+		}
+
 		Bundle bundle = _serviceReference.getBundle();
 
 		BundleContext bundleContext = bundle.getBundleContext();
@@ -77,7 +76,7 @@ public class AopServiceRegistrar {
 		}
 
 		_serviceRegistration = bundleContext.registerService(
-			aopServiceNames, _getService(bundleContext, transactionHandler),
+			aopServiceNames, _getService(bundleContext, transactionExecutor),
 			_getProperties(_serviceReference));
 	}
 
@@ -123,7 +122,7 @@ public class AopServiceRegistrar {
 	}
 
 	private Object _getService(
-		BundleContext bundleContext, TransactionHandler transactionHandler) {
+		BundleContext bundleContext, TransactionExecutor transactionExecutor) {
 
 		Object serviceScope = _serviceReference.getProperty(
 			Constants.SERVICE_SCOPE);
@@ -131,11 +130,11 @@ public class AopServiceRegistrar {
 		if (Constants.SCOPE_PROTOTYPE.equals(serviceScope)) {
 			return new AopServicePrototypeServiceFactory(
 				bundleContext.getServiceObjects(_serviceReference),
-				transactionHandler);
+				transactionExecutor);
 		}
 
 		_aopInvocationHandler = AopCacheManager.create(
-			_aopService, transactionHandler);
+			_aopService, transactionExecutor);
 
 		Class<? extends AopService> aopServiceClass = _aopService.getClass();
 
@@ -189,7 +188,7 @@ public class AopServiceRegistrar {
 			}
 
 			AopInvocationHandler aopInvocationHandler = AopCacheManager.create(
-				aopService, _transactionHandler);
+				aopService, _transactionExecutor);
 
 			_aopServices.put(aopInvocationHandler, aopService);
 
@@ -219,16 +218,16 @@ public class AopServiceRegistrar {
 
 		private AopServicePrototypeServiceFactory(
 			ServiceObjects<AopService> serviceObjects,
-			TransactionHandler transactionHandler) {
+			TransactionExecutor transactionExecutor) {
 
 			_serviceObjects = serviceObjects;
-			_transactionHandler = transactionHandler;
+			_transactionExecutor = transactionExecutor;
 		}
 
 		private final Map<AopInvocationHandler, AopService> _aopServices =
 			new ConcurrentHashMap<>();
 		private final ServiceObjects<AopService> _serviceObjects;
-		private final TransactionHandler _transactionHandler;
+		private final TransactionExecutor _transactionExecutor;
 
 	}
 

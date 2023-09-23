@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.attachments.test;
@@ -39,6 +30,8 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.wiki.model.WikiNode;
@@ -333,15 +326,20 @@ public class WikiAttachmentsTest {
 	}
 
 	private void _addFileEntry(String title) throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"org.apache.xmlbeans.impl.common.SAXHelper",
+				LoggerTestUtil.WARN)) {
 
-		_dlAppLocalService.addFileEntry(
-			null, serviceContext.getUserId(), _group.getGroupId(),
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			StringUtil.randomString(), ContentTypes.TEXT_PLAIN, title,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-			_CONTENT.getBytes(), null, null, serviceContext);
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			_dlAppLocalService.addFileEntry(
+				null, serviceContext.getUserId(), _group.getGroupId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				StringUtil.randomString(), ContentTypes.TEXT_PLAIN, title,
+				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+				_CONTENT.getBytes(), null, null, serviceContext);
+		}
 	}
 
 	private void _addWikiPageWithAttachmentFileName(String fileName)
@@ -380,30 +378,13 @@ public class WikiAttachmentsTest {
 
 		String fileName = RandomTestUtil.randomString() + ".docx";
 
-		WikiTestUtil.addWikiAttachment(
-			TestPropsValues.getUserId(), _node.getNodeId(), _page.getTitle(),
-			fileName, getClass());
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"org.apache.xmlbeans.impl.common.SAXHelper",
+				LoggerTestUtil.WARN)) {
 
-		Assert.assertEquals(
-			initialNotInTrashCount + 1, _page.getAttachmentsFileEntriesCount());
-		Assert.assertEquals(
-			initialTrashEntriesCount,
-			_page.getDeletedAttachmentsFileEntriesCount());
-
-		FileEntry fileEntry = _wikiPageLocalService.movePageAttachmentToTrash(
-			TestPropsValues.getUserId(), _page.getNodeId(), _page.getTitle(),
-			fileName);
-
-		Assert.assertEquals(
-			initialNotInTrashCount, _page.getAttachmentsFileEntriesCount());
-		Assert.assertEquals(
-			initialTrashEntriesCount + 1,
-			_page.getDeletedAttachmentsFileEntriesCount());
-
-		if (restore) {
-			_wikiPageLocalService.restorePageAttachmentFromTrash(
-				TestPropsValues.getUserId(), _page.getNodeId(),
-				_page.getTitle(), fileEntry.getFileName());
+			WikiTestUtil.addWikiAttachment(
+				TestPropsValues.getUserId(), _node.getNodeId(),
+				_page.getTitle(), fileName, getClass());
 
 			Assert.assertEquals(
 				initialNotInTrashCount + 1,
@@ -412,18 +393,43 @@ public class WikiAttachmentsTest {
 				initialTrashEntriesCount,
 				_page.getDeletedAttachmentsFileEntriesCount());
 
-			_wikiPageLocalService.deletePageAttachment(
-				_page.getNodeId(), _page.getTitle(), fileName);
-		}
-		else {
-			_wikiPageLocalService.deletePageAttachment(
-				_page.getNodeId(), _page.getTitle(), fileEntry.getTitle());
+			FileEntry fileEntry =
+				_wikiPageLocalService.movePageAttachmentToTrash(
+					TestPropsValues.getUserId(), _page.getNodeId(),
+					_page.getTitle(), fileName);
 
 			Assert.assertEquals(
 				initialNotInTrashCount, _page.getAttachmentsFileEntriesCount());
 			Assert.assertEquals(
-				initialTrashEntriesCount,
+				initialTrashEntriesCount + 1,
 				_page.getDeletedAttachmentsFileEntriesCount());
+
+			if (restore) {
+				_wikiPageLocalService.restorePageAttachmentFromTrash(
+					TestPropsValues.getUserId(), _page.getNodeId(),
+					_page.getTitle(), fileEntry.getFileName());
+
+				Assert.assertEquals(
+					initialNotInTrashCount + 1,
+					_page.getAttachmentsFileEntriesCount());
+				Assert.assertEquals(
+					initialTrashEntriesCount,
+					_page.getDeletedAttachmentsFileEntriesCount());
+
+				_wikiPageLocalService.deletePageAttachment(
+					_page.getNodeId(), _page.getTitle(), fileName);
+			}
+			else {
+				_wikiPageLocalService.deletePageAttachment(
+					_page.getNodeId(), _page.getTitle(), fileEntry.getTitle());
+
+				Assert.assertEquals(
+					initialNotInTrashCount,
+					_page.getAttachmentsFileEntriesCount());
+				Assert.assertEquals(
+					initialTrashEntriesCount,
+					_page.getDeletedAttachmentsFileEntriesCount());
+			}
 		}
 	}
 

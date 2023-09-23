@@ -1,18 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import {openSelectionModal, openToast} from 'frontend-js-web';
@@ -24,6 +16,7 @@ import {GlobalCETOrderHelpIcon} from './GlobalCETOrderHelpIcon';
 export default function GlobalCSSCETsConfiguration({
 	globalCSSCETSelectorURL,
 	globalCSSCETs: initialGlobalCSSCETs,
+	isReadOnly,
 	portletNamespace,
 	selectGlobalCSSCETsEventName,
 }: IProps) {
@@ -68,6 +61,10 @@ export default function GlobalCSSCETsConfiguration({
 	};
 
 	const handleClick = () => {
+		if (isReadOnly) {
+			return;
+		}
+
 		openSelectionModal<{value: string[]}>({
 			multiple: true,
 			onSelect(selectedItems) {
@@ -145,17 +142,21 @@ export default function GlobalCSSCETsConfiguration({
 				/>
 			))}
 
-			<h3 className="sheet-subtitle">
-				{Liferay.Language.get('css-client-extensions')}
-			</h3>
+			<p className="text-secondary">
+				{Liferay.Language.get(
+					'extend-this-page-css-with-client-extensions.-they-will-be-loaded-after-the-theme-css-and-after-master-extensions'
+				)}
+			</p>
 
 			<ClayButton
-				className="mb-3"
+				className="c-mb-3"
+				disabled={isReadOnly}
 				displayType="secondary"
 				onClick={handleClick}
-				small
 				type="button"
 			>
+				<ClayIcon className="c-mr-2" symbol="plus" />
+
 				{Liferay.Language.get('add-css-client-extensions')}
 			</ClayButton>
 
@@ -254,6 +255,7 @@ interface IGlobalCSSCET {
 interface IProps {
 	globalCSSCETSelectorURL: string;
 	globalCSSCETs: IGlobalCSSCET[];
+	isReadOnly: boolean;
 	portletNamespace: string;
 	selectGlobalCSSCETsEventName: string;
 }

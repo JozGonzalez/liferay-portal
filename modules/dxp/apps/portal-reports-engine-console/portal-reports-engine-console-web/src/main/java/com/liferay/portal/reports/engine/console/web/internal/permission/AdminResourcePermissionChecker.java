@@ -1,31 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.reports.engine.console.web.internal.permission;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.reports.engine.console.constants.ReportsEngineConsoleConstants;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Leon Chi
  */
-@Component(service = {})
 public class AdminResourcePermissionChecker {
 
 	public static final String RESOURCE_NAME =
@@ -35,26 +23,27 @@ public class AdminResourcePermissionChecker {
 			PermissionChecker permissionChecker, long groupId, String actionId)
 		throws PortalException {
 
-		_portletResourcePermission.check(permissionChecker, groupId, actionId);
+		PortletResourcePermission portletResourcePermission =
+			_portletResourcePermissionSnapshot.get();
+
+		portletResourcePermission.check(permissionChecker, groupId, actionId);
 	}
 
 	public static boolean contains(
 		PermissionChecker permissionChecker, long groupId, String actionId) {
 
-		return _portletResourcePermission.contains(
+		PortletResourcePermission portletResourcePermission =
+			_portletResourcePermissionSnapshot.get();
+
+		return portletResourcePermission.contains(
 			permissionChecker, groupId, actionId);
 	}
 
-	@Reference(
-		target = "(resource.name=" + ReportsEngineConsoleConstants.RESOURCE_NAME + ")",
-		unbind = "-"
-	)
-	protected void setPortletResourcePermission(
-		PortletResourcePermission portletResourcePermission) {
-
-		_portletResourcePermission = portletResourcePermission;
-	}
-
-	private static PortletResourcePermission _portletResourcePermission;
+	private static final Snapshot<PortletResourcePermission>
+		_portletResourcePermissionSnapshot = new Snapshot<>(
+			AdminResourcePermissionChecker.class,
+			PortletResourcePermission.class,
+			"(resource.name=" + ReportsEngineConsoleConstants.RESOURCE_NAME +
+				")");
 
 }

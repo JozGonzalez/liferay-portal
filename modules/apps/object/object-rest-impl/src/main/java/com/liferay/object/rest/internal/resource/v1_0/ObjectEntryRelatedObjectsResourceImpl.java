@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.resource.v1_0;
@@ -18,11 +9,13 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
-import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectRelationshipService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,14 +37,14 @@ public class ObjectEntryRelatedObjectsResourceImpl
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryManagerRegistry objectEntryManagerRegistry,
 		ObjectRelatedModelsProviderRegistry objectRelatedModelsProviderRegistry,
-		ObjectRelationshipService objectRelationshipService,
+		ObjectRelationshipLocalService objectRelationshipLocalService,
 		PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry) {
 
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryManagerRegistry = objectEntryManagerRegistry;
 		_objectRelatedModelsProviderRegistry =
 			objectRelatedModelsProviderRegistry;
-		_objectRelationshipService = objectRelationshipService;
+		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_persistedModelLocalServiceRegistry =
 			persistedModelLocalServiceRegistry;
 	}
@@ -62,14 +55,16 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			Long relatedObjectEntryId)
 		throws Exception {
 
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				_objectDefinition.getStorageType());
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getStorageType()));
 
-		_checkCurrentObjectEntry(objectEntryManager, currentObjectEntryId);
+		_checkCurrentObjectEntry(
+			defaultObjectEntryManager, currentObjectEntryId);
 
 		ObjectRelationship objectRelationship =
-			_objectRelationshipService.getObjectRelationship(
+			_objectRelationshipLocalService.getObjectRelationship(
 				_objectDefinition.getObjectDefinitionId(),
 				objectRelationshipName);
 
@@ -77,13 +72,13 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId2());
 
-		if (relatedObjectDefinition.isSystem()) {
+		if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
 			_checkSystemObjectEntry(
 				relatedObjectEntryId, relatedObjectDefinition);
 		}
 		else {
 			_checkRelatedObjectEntry(
-				objectEntryManager, objectRelationshipName,
+				defaultObjectEntryManager, objectRelationshipName,
 				relatedObjectEntryId);
 		}
 
@@ -105,12 +100,13 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			Pagination pagination)
 		throws Exception {
 
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				_objectDefinition.getStorageType());
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getStorageType()));
 
 		ObjectRelationship objectRelationship =
-			_objectRelationshipService.getObjectRelationship(
+			_objectRelationshipLocalService.getObjectRelationship(
 				_objectDefinition.getObjectDefinitionId(),
 				objectRelationshipName);
 
@@ -118,14 +114,14 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId2());
 
-		if (relatedObjectDefinition.isSystem()) {
-			return objectEntryManager.getRelatedSystemObjectEntries(
+		if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
+			return defaultObjectEntryManager.getRelatedSystemObjectEntries(
 				_objectDefinition, currentObjectEntryId, objectRelationshipName,
 				pagination);
 		}
 
 		Page<ObjectEntry> page =
-			objectEntryManager.getObjectEntryRelatedObjectEntries(
+			defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
 				_getDTOConverterContext(currentObjectEntryId),
 				_objectDefinition, currentObjectEntryId, objectRelationshipName,
 				pagination);
@@ -135,7 +131,8 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			transform(
 				page.getItems(),
 				objectEntry -> _getRelatedObjectEntry(
-					relatedObjectDefinition, objectEntry)));
+					relatedObjectDefinition, objectEntry)),
+			pagination, page.getTotalCount());
 	}
 
 	@Override
@@ -144,12 +141,13 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			Long relatedObjectEntryId)
 		throws Exception {
 
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				_objectDefinition.getStorageType());
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getStorageType()));
 
 		ObjectRelationship objectRelationship =
-			_objectRelationshipService.getObjectRelationship(
+			_objectRelationshipLocalService.getObjectRelationship(
 				_objectDefinition.getObjectDefinitionId(),
 				objectRelationshipName);
 
@@ -157,8 +155,8 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId2());
 
-		if (relatedObjectDefinition.isSystem()) {
-			return objectEntryManager.
+		if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
+			return defaultObjectEntryManager.
 				addSystemObjectRelationshipMappingTableValues(
 					relatedObjectDefinition, objectRelationship,
 					currentObjectEntryId, relatedObjectEntryId);
@@ -166,30 +164,32 @@ public class ObjectEntryRelatedObjectsResourceImpl
 
 		return _getRelatedObjectEntry(
 			relatedObjectDefinition,
-			objectEntryManager.addObjectRelationshipMappingTableValues(
+			defaultObjectEntryManager.addObjectRelationshipMappingTableValues(
 				_getDTOConverterContext(currentObjectEntryId),
 				objectRelationship, currentObjectEntryId,
 				relatedObjectEntryId));
 	}
 
 	private void _checkCurrentObjectEntry(
-			ObjectEntryManager objectEntryManager, long relatedObjectEntryId)
+			DefaultObjectEntryManager defaultObjectEntryManager,
+			long relatedObjectEntryId)
 		throws Exception {
 
-		objectEntryManager.getObjectEntry(
+		defaultObjectEntryManager.getObjectEntry(
 			_getDTOConverterContext(relatedObjectEntryId), _objectDefinition,
 			relatedObjectEntryId);
 	}
 
 	private void _checkRelatedObjectEntry(
-			ObjectEntryManager objectEntryManager,
+			DefaultObjectEntryManager defaultObjectEntryManager,
 			String objectRelationshipName, long relatedObjectEntryId)
 		throws Exception {
 
-		objectEntryManager.getObjectEntry(
+		defaultObjectEntryManager.getObjectEntry(
 			_getDTOConverterContext(relatedObjectEntryId),
-			_getRelatedObjectDefinition(
-				_objectRelationshipService.getObjectRelationship(
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				_objectDefinition,
+				_objectRelationshipLocalService.getObjectRelationship(
 					_objectDefinition.getObjectDefinitionId(),
 					objectRelationshipName)),
 			relatedObjectEntryId);
@@ -214,21 +214,6 @@ public class ObjectEntryRelatedObjectsResourceImpl
 			contextHttpServletRequest, objectEntryId,
 			contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 			contextUser);
-	}
-
-	private ObjectDefinition _getRelatedObjectDefinition(
-			ObjectRelationship objectRelationship)
-		throws Exception {
-
-		long objectDefinitionId1 = objectRelationship.getObjectDefinitionId1();
-
-		if (objectDefinitionId1 != _objectDefinition.getObjectDefinitionId()) {
-			return _objectDefinitionLocalService.getObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
-		}
-
-		return _objectDefinitionLocalService.getObjectDefinition(
-			objectRelationship.getObjectDefinitionId2());
 	}
 
 	private ObjectEntry _getRelatedObjectEntry(
@@ -269,7 +254,8 @@ public class ObjectEntryRelatedObjectsResourceImpl
 	private final ObjectEntryManagerRegistry _objectEntryManagerRegistry;
 	private final ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
-	private final ObjectRelationshipService _objectRelationshipService;
+	private final ObjectRelationshipLocalService
+		_objectRelationshipLocalService;
 	private final PersistedModelLocalServiceRegistry
 		_persistedModelLocalServiceRegistry;
 

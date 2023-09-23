@@ -1,16 +1,7 @@
 /* eslint-disable no-console */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -27,7 +18,7 @@ import createUrlByERC from '../../utils/createUrlByERC';
 import {PostType} from './postTypes';
 
 const initialPagination = {
-	page: 1,
+	pageSize: 7,
 	totalCount: 0,
 };
 
@@ -37,13 +28,15 @@ const NotificationSidebar: React.FC = () => {
 		initialPagination.totalCount
 	);
 	const [postsWithLinks, setPostsWithLinks] = useState<PostType[]>([]);
-	const [page, setPage] = useState<number>(initialPagination.page);
 	const hasMorePostsToLoad = posts.length < totalCount;
+	const [isRead, setIsRead] = useState<boolean[]>([]);
+	const [pageSize, setPageSize] = useState<number>(
+		initialPagination.pageSize
+	);
 
 	const parameters = {
 		order: 'desc',
-		page,
-		pageSize: 7,
+		pageSize,
 		sortBy: 'dateCreated',
 	};
 	const notificationCategory = 'Application ';
@@ -51,6 +44,14 @@ const NotificationSidebar: React.FC = () => {
 	const markAsRead = (post: PostType) => {
 		if (!post.read) {
 			putUserNotificationRead(post.id);
+		}
+	};
+
+	const markAsReadState = (_post: PostType, index: number) => {
+		if (!isRead[index]) {
+			const arrayOfReads = [...isRead];
+			arrayOfReads[index] = !arrayOfReads[index];
+			setIsRead(arrayOfReads);
 		}
 	};
 
@@ -67,10 +68,7 @@ const NotificationSidebar: React.FC = () => {
 
 			if (notifications) {
 				setTotalCount(notifications.totalCount);
-				setPosts((previousPosts: PostType[]) => [
-					...previousPosts,
-					...notifications.items,
-				]);
+				setPosts(() => [...notifications.items]);
 			}
 
 			return response;
@@ -104,8 +102,10 @@ const NotificationSidebar: React.FC = () => {
 	}
 
 	const generateLinks = async () => {
+		const arrayRead: boolean[] = [];
 		const newLinks = await Promise.all(
 			posts.map(async (post) => {
+				arrayRead.push(post.read as boolean);
 				const postId = extractNumber(post.message as string);
 				const isMatchingApplication = post.message?.includes(
 					notificationCategory + postId
@@ -128,19 +128,19 @@ const NotificationSidebar: React.FC = () => {
 				return {...post, link: genericRoute};
 			})
 		);
-
+		setIsRead(arrayRead);
 		setPostsWithLinks(newLinks);
 	};
 
 	const loadMore = () => {
-		const nextPage = page + 1;
-		setPage(nextPage);
+		const nextPage = pageSize + 7;
+		setPageSize(nextPage);
 	};
 
 	useEffect(() => {
 		getNotifications();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [page]);
+	}, [pageSize]);
 
 	useEffect(() => {
 		generateLinks();
@@ -149,26 +149,45 @@ const NotificationSidebar: React.FC = () => {
 
 	return (
 		<div className="notification-container">
-			{!postsWithLinks && (
-				<p className="align-items-center d-flex justify-content-center pt-8 vh-100">
+			{!postsWithLinks.length && (
+				<p className="align-items-center d-flex justify-content-center pt-8 vh-80">
 					No notifications
 				</p>
 			)}
 
-			{!!postsWithLinks && (
-				<div className="vh-100">
+			{!!postsWithLinks.length && (
+				<div>
 					{postsWithLinks.map((item: PostType, index: number) => (
 						<div
 							className={classNames({
-								'post-container-unread align-items-center d-flex justify-content-center position-relative bubble-unread': !item.read,
+								'post-container-unread align-items-center justify-content-center position-relative bubble-unread': !isRead[
+									index
+								],
 							})}
 							key={index}
-							onClick={() => {
-								markAsRead(item);
-							}}
 						>
 							<div className="align-items-center dotted-line h-100 post-container">
-								<a href={item.link}>
+								<a
+									href={item.link}
+									onClick={() => {
+										if (!item.read) {
+											markAsRead(item);
+											markAsReadState(item, index);
+
+											return true;
+										}
+
+										return false;
+									}}
+								>
+									{item.message?.includes(
+										notificationCategory
+									) && (
+										<p className="align-items-center d-flex text-left text-uppercase title">
+											{notificationCategory}
+										</p>
+									)}
+
 									<p className="mt-0 my-0">{item.message}</p>
 								</a>
 
@@ -181,11 +200,11 @@ const NotificationSidebar: React.FC = () => {
 
 					{hasMorePostsToLoad && (
 						<ClayButton
-							className="align-items-center mb-7 mt-9 pb-7 shadow-none w-100"
+							className="align-items-center mt-5 pt-7 shadow-none w-100"
 							displayType="link"
 							onClick={() => loadMore()}
 						>
-							Load More
+							Load older notifications
 						</ClayButton>
 					)}
 				</div>

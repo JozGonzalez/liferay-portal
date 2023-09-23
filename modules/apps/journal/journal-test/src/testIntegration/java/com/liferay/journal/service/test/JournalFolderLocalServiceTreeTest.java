@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.test;
@@ -18,7 +9,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalService;
-import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.test.util.JournalFolderFixture;
 import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.search.Hits;
@@ -80,13 +70,13 @@ public class JournalFolderLocalServiceTreeTest
 
 		folders.add(folderAAA);
 
-		JournalFolderLocalServiceUtil.moveFolder(
+		_journalFolderLocalService.moveFolder(
 			folderAA.getFolderId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		for (JournalFolder folder : folders) {
-			folder = JournalFolderLocalServiceUtil.fetchFolder(
+			folder = _journalFolderLocalService.fetchFolder(
 				folder.getFolderId());
 
 			Assert.assertEquals(folder.buildTreePath(), folder.getTreePath());
@@ -148,25 +138,24 @@ public class JournalFolderLocalServiceTreeTest
 
 		folder.setTreePath("/0/");
 
-		return JournalFolderLocalServiceUtil.updateJournalFolder(folder);
+		return _journalFolderLocalService.updateJournalFolder(folder);
 	}
 
 	@Override
 	protected void deleteTreeModel(TreeModel treeModel) throws Exception {
 		JournalFolder folder = (JournalFolder)treeModel;
 
-		JournalFolderLocalServiceUtil.deleteFolder(folder);
+		_journalFolderLocalService.deleteFolder(folder);
 	}
 
 	@Override
 	protected TreeModel getTreeModel(long primaryKey) throws Exception {
-		return JournalFolderLocalServiceUtil.getFolder(primaryKey);
+		return _journalFolderLocalService.getFolder(primaryKey);
 	}
 
 	@Override
 	protected void rebuildTree() throws Exception {
-		JournalFolderLocalServiceUtil.rebuildTree(
-			TestPropsValues.getCompanyId());
+		_journalFolderLocalService.rebuildTree(TestPropsValues.getCompanyId());
 	}
 
 	@Inject

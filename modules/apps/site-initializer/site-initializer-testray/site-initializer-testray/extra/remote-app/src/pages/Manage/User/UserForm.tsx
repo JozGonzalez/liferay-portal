@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayCheckbox} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
-import {useCallback, useEffect, useMemo} from 'react';
+import {useCallback, useContext, useEffect, useMemo} from 'react';
 import {useForm} from 'react-hook-form';
 import {useLocation, useNavigate, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {TestrayContext} from '~/context/TestrayContext';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
@@ -27,11 +21,16 @@ import useFormActions from '../../../hooks/useFormActions';
 import i18n from '../../../i18n';
 import yupSchema, {yupResolver} from '../../../schema/yup';
 import {Liferay} from '../../../services/liferay';
-import {UserAccount, liferayUserAccountsImpl} from '../../../services/rest';
+import {
+	UserAccount,
+	UserActions,
+	liferayUserAccountsImpl,
+} from '../../../services/rest';
 import {liferayUserRolesRest} from '../../../services/rest/TestrayRolesUser';
 import {RoleTypes} from '../../../util/constants';
 
 type UserFormDefault = {
+	actions: UserActions;
 	alternateName: string;
 	emailAddress: string;
 	familyName: string;
@@ -61,6 +60,8 @@ type OutletContext = {
 };
 
 const UserForm = () => {
+	const [{myUserAccount}] = useContext(TestrayContext);
+
 	const {data} = useFetch(`/roles?types=${RoleTypes.REGULAR}`);
 	const navigate = useNavigate();
 
@@ -71,11 +72,11 @@ const UserForm = () => {
 		useOutletContext<OutletContext>() || {};
 
 	const {
-		form: {onClose, onError, onSave, onSubmit},
+		form: {onClose, onError, onSave, onSubmit, onSuccess},
 	} = useFormActions();
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -148,12 +149,14 @@ const UserForm = () => {
 
 		setValue('roles', rolesFiltered);
 	};
-
 	const inputProps = {
 		errors,
 		register,
 		required: true,
 	};
+	const hasDeletePermission =
+		myUserAccount?.id !== Number(userAccount?.id) &&
+		userAccount?.actions['delete-user-account'];
 
 	return (
 		<Container className="container">
@@ -280,13 +283,57 @@ const UserForm = () => {
 					</ClayLayout.Col>
 				</ClayLayout.Row>
 
+				<Form.Divider />
+
+				{hasDeletePermission && (
+					<ClayLayout.Row className="mb-6" justify="start">
+						<ClayLayout.Col size={3} sm={12} xl={3}>
+							<h5 className="font-weight-normal">
+								{i18n.translate('delete-user')}
+							</h5>
+						</ClayLayout.Col>
+
+						<ClayLayout.Col size={3} sm={12} xl={3}>
+							<ClayForm.Group className="form-group-sm">
+								<ClayButton
+									displayType="danger"
+									onClick={() =>
+										liferayUserAccountsImpl
+											.removeResource(userAccount?.id)
+											?.then(() => {
+												navigate('/manage/user');
+												onSuccess();
+											})
+											.catch(onError)
+									}
+								>
+									{i18n.translate('delete-user')}
+								</ClayButton>
+							</ClayForm.Group>
+						</ClayLayout.Col>
+					</ClayLayout.Row>
+				)}
+
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{
+						loading: isSubmitting,
+					}}
 				/>
 			</ClayForm>
 		</Container>
 	);
 };
 
-export default UserForm;
+export default withPagePermission(UserForm, {
+	createPath: 'manage/user/create',
+	deniedChildren: (
+		<ClayAlert displayType="danger">
+			{i18n.translate(
+				'you-do-not-have-permission-to-access-the-requested-resource.'
+			)}
+		</ClayAlert>
+	),
+	restImpl: liferayUserAccountsImpl,
+});

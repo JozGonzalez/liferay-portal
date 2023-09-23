@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.model.impl;
@@ -105,8 +96,8 @@ public class CommercePaymentMethodGroupRelQualifierCacheModel
 		sb.append(classNameId);
 		sb.append(", classPK=");
 		sb.append(classPK);
-		sb.append(", CommercePaymentMethodGroupRelId=");
-		sb.append(CommercePaymentMethodGroupRelId);
+		sb.append(", commercePaymentMethodGroupRelId=");
+		sb.append(commercePaymentMethodGroupRelId);
 		sb.append("}");
 
 		return sb.toString();
@@ -151,7 +142,7 @@ public class CommercePaymentMethodGroupRelQualifierCacheModel
 		commercePaymentMethodGroupRelQualifierImpl.setClassNameId(classNameId);
 		commercePaymentMethodGroupRelQualifierImpl.setClassPK(classPK);
 		commercePaymentMethodGroupRelQualifierImpl.
-			setCommercePaymentMethodGroupRelId(CommercePaymentMethodGroupRelId);
+			setCommercePaymentMethodGroupRelId(commercePaymentMethodGroupRelId);
 
 		commercePaymentMethodGroupRelQualifierImpl.resetOriginalValues();
 
@@ -175,7 +166,7 @@ public class CommercePaymentMethodGroupRelQualifierCacheModel
 
 		classPK = objectInput.readLong();
 
-		CommercePaymentMethodGroupRelId = objectInput.readLong();
+		commercePaymentMethodGroupRelId = objectInput.readLong();
 	}
 
 	@Override
@@ -202,7 +193,7 @@ public class CommercePaymentMethodGroupRelQualifierCacheModel
 
 		objectOutput.writeLong(classPK);
 
-		objectOutput.writeLong(CommercePaymentMethodGroupRelId);
+		objectOutput.writeLong(commercePaymentMethodGroupRelId);
 	}
 
 	public long mvccVersion;
@@ -214,6 +205,6 @@ public class CommercePaymentMethodGroupRelQualifierCacheModel
 	public long modifiedDate;
 	public long classNameId;
 	public long classPK;
-	public long CommercePaymentMethodGroupRelId;
+	public long commercePaymentMethodGroupRelId;
 
 }

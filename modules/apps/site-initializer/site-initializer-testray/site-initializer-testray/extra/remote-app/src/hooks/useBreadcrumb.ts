@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useCallback, useMemo, useRef, useState} from 'react';
@@ -19,6 +10,7 @@ import i18n from '../i18n';
 import {
 	APIResponse,
 	TestrayCaseResult,
+	TestrayRun,
 	testrayCaseResultImpl,
 } from '../services/rest';
 import useDebounce from './useDebounce';
@@ -126,7 +118,7 @@ const defaultEntities: Entity[] = [
 			`/projects?filter=${SearchBuilder.contains(
 				'name',
 				search
-			)}&pageSize=100`,
+			)}&fields=id,name&pageSize=100`,
 		name: i18n.translate('project'),
 	},
 	{
@@ -137,7 +129,10 @@ const defaultEntities: Entity[] = [
 			`/routines?filter=${SearchBuilder.eq(
 				'projectId',
 				projectId
-			)} and ${SearchBuilder.contains('name', search)}&pageSize=50`,
+			)} and ${SearchBuilder.contains(
+				'name',
+				search
+			)}&fields=id,name&pageSize=50`,
 		name: i18n.translate('routine'),
 	},
 	{
@@ -145,21 +140,43 @@ const defaultEntities: Entity[] = [
 		getPage: ([projectId, routineId, buildId]) =>
 			`/project/${projectId}/routines/${routineId}/build/${buildId}`,
 		getResource: ([, routineId], search) =>
-			`/builds?filter=${SearchBuilder.eq(
-				'routineId',
-				routineId
-			)} and ${SearchBuilder.contains('name', search)}&pageSize=100`,
+			`/builds?filter=${new SearchBuilder()
+				.eq('routineId', routineId)
+				.and()
+				.contains('name', search)
+				.build()}&fields=id,name&pageSize=100`,
 		name: i18n.translate('build'),
 	},
 	{
-		entity: 'caseresults',
-		getPage: ([projectId, routineId, buildId, caseResultsId]) =>
-			`/project/${projectId}/routines/${routineId}/build/${buildId}/case-result/${caseResultsId}`,
-		getResource: ([, , buildId]) =>
-			`/caseresults?filter=${SearchBuilder.eq(
-				'buildId',
+		entity: 'runs',
+		getPage: ([projectId, routineId, buildId, runId]) =>
+			`/project/${projectId}/routines/${routineId}/build/${buildId}?runId=${runId}`,
+		getResource: ([, , buildId], search) =>
+			`/runs?filter=${SearchBuilder.eq(
+				'r_buildToRuns_c_buildId',
 				buildId
-			)}&nestedFields=case,r_runToCaseResult_c_runId&pageSize=20&fields=r_caseToCaseResult_c_case,id,run`,
+			)} ${search ? `and number eq ${search}` : ''} &fields=id,number`,
+		name: i18n.translate('run'),
+		transformer: (response: APIResponse<TestrayRun>) => ({
+			...response,
+			items: response.items.map(({id, number}) => ({
+				label: number,
+				value: id,
+			})),
+		}),
+	},
+	{
+		entity: 'caseresults',
+		getPage: ([projectId, routineId, buildId, , caseResultsId]) =>
+			`/project/${projectId}/routines/${routineId}/build/${buildId}/case-result/${caseResultsId}`,
+		getResource: ([, , buildId, runId], search) =>
+			`/caseresults?filter=${new SearchBuilder()
+				.eq('buildId', buildId)
+				.and()
+				.eq('r_runToCaseResult_c_runId', runId)
+				.and()
+				.contains('caseToCaseResult/name', search)
+				.build()}&nestedFields=case,r_runToCaseResult_c_runId&pageSize=20&fields=r_caseToCaseResult_c_case,id,run`,
 		name: i18n.translate('case-result'),
 		transformer: (response: APIResponse<TestrayCaseResult>) => {
 			const transformedResponse = testrayCaseResultImpl.transformDataFromList(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.internal.servlet;
@@ -82,7 +73,6 @@ import com.liferay.portal.service.impl.LayoutTemplateLocalServiceImpl;
 import com.liferay.portal.servlet.EncryptedServletRequest;
 import com.liferay.portal.servlet.I18nServlet;
 import com.liferay.portal.servlet.filters.absoluteredirects.AbsoluteRedirectsResponse;
-import com.liferay.portal.servlet.filters.i18n.I18nFilter;
 import com.liferay.portal.setup.SetupWizardSampleDataUtil;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.PortalRequestProcessor;
@@ -390,8 +380,8 @@ public class MainServlet extends HttpServlet {
 			_log.error(exception);
 		}
 
-		if (PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-			DBUpgrader.upgradeModules();
+		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
+			DBUpgrader.upgradeModules(true);
 
 			StartupHelperUtil.setUpgrading(false);
 		}
@@ -403,13 +393,13 @@ public class MainServlet extends HttpServlet {
 		_registerPortalInitialized();
 
 		if ((_releaseManager != null) && _log.isWarnEnabled()) {
-			String message = _releaseManager.getStatusMessage(true);
+			String message = _releaseManager.getShortStatusMessage(true);
 
 			if (Validator.isNotNull(message)) {
 				_log.warn(message);
 			}
 			else if (_log.isInfoEnabled()) {
-				message = _releaseManager.getStatusMessage(false);
+				message = _releaseManager.getShortStatusMessage(false);
 
 				if (Validator.isNotNull(message)) {
 					_log.info(message);
@@ -463,7 +453,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Get company id");
+			_log.debug("Get company ID");
 		}
 
 		long companyId = PortalInstances.getCompanyId(httpServletRequest);
@@ -621,8 +611,6 @@ public class MainServlet extends HttpServlet {
 		Document document = UnsecureSAXReaderUtil.read(xml);
 
 		I18nServlet.setLanguageIds(document.getRootElement());
-
-		I18nFilter.setLanguageIds(I18nServlet.getLanguageIds());
 	}
 
 	private void _checkWebXml(String xml) throws DocumentException {
@@ -752,22 +740,26 @@ public class MainServlet extends HttpServlet {
 				GetterUtil.getString(
 					PropsValues.COMPANY_DEFAULT_VIRTUAL_HOST_MAIL_DOMAIN,
 					PropsValues.COMPANY_DEFAULT_WEB_ID),
-				0, true);
+				0, true, null, null, null, null, null, null);
 		}
 
-		String[] webIds = PortalInstances.getWebIds();
-
-		for (String webId : webIds) {
-			boolean skipCheck = false;
-
-			if (StartupHelperUtil.isDBNew() &&
-				webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
-
-				skipCheck = true;
-			}
-
-			PortalInstances.initCompany(webId, skipCheck);
+		if (Validator.isNull(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+			throw new RuntimeException("Company default web ID is null");
 		}
+
+		CompanyLocalServiceUtil.forEachCompany(
+			company -> {
+				if (StartupHelperUtil.isDBNew() &&
+					Objects.equals(
+						PropsValues.COMPANY_DEFAULT_WEB_ID,
+						company.getWebId())) {
+
+					PortalInstances.initCompany(company, true);
+				}
+				else {
+					PortalInstances.initCompany(company, false);
+				}
+			});
 	}
 
 	private void _initLayoutTemplates(PluginPackage pluginPackage) {
@@ -977,7 +969,7 @@ public class MainServlet extends HttpServlet {
 
 		User user = UserLocalServiceUtil.getUserById(userId);
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_PRE, PropsValues.LOGIN_EVENTS_PRE,
 				httpServletRequest, httpServletResponse);
@@ -1004,7 +996,7 @@ public class MainServlet extends HttpServlet {
 
 		httpSession.removeAttribute("j_remoteuser");
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_POST, PropsValues.LOGIN_EVENTS_POST,
 				httpServletRequest, httpServletResponse);
@@ -1262,19 +1254,6 @@ public class MainServlet extends HttpServlet {
 					"original.bean", Boolean.TRUE
 				).put(
 					"service.vendor", ReleaseInfo.getVendor()
-				).build()));
-
-		_serviceRegistrations.add(
-			bundleContext.registerService(
-				ModuleServiceLifecycle.class,
-				new ModuleServiceLifecycle() {
-				},
-				HashMapDictionaryBuilder.<String, Object>put(
-					"module.service.lifecycle", "system.check"
-				).put(
-					"service.vendor", ReleaseInfo.getVendor()
-				).put(
-					"service.version", ReleaseInfo.getVersion()
 				).build()));
 
 		_serviceRegistrations.add(

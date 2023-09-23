@@ -35,6 +35,8 @@ definition {
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
+		Portlet.expandTree();
+
 		if (${multipleVocabularies} == "true") {
 			Click(
 				key_site = "Minium",
@@ -74,6 +76,28 @@ definition {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		Button.clickSave();
+	}
+
+	macro addFixedTaxRateTaxConfiguration {
+		CommerceEntry.gotoMenuTab(menuTab = "Tax Rates");
+
+		Click(locator1 = "Button#PLUS");
+
+		SelectFrameTop();
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Select(
+			key_fieldLabel = "Tax Category",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = ${taxCategory});
+
+		Type(
+			key_fieldLabel = ${fieldLabel},
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${quantity});
+
+		Button.clickSubmitButton();
 	}
 
 	macro addOverrideDefaultProductDisplayPageTemplate {
@@ -683,6 +707,49 @@ definition {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 	}
 
+	macro editTaxCalculation {
+		Click(
+			key_entryName = ${taxCalculationName},
+			locator1 = "CommerceEntry#CHANNELS_GENERAL_TAB_EDITS");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (${percentage} == "true") {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Percentage",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		if (${percentage} == "false") {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Percentage",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		if (${active} == "true") {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Active",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		if (${active} == "false") {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Active",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		Button.clickSave();
+
+		if (${taxCalculationName} == "Fixed Tax Rate") {
+			CommerceChannels.addFixedTaxRateTaxConfiguration(
+				fieldLabel = ${fieldLabel},
+				quantity = ${quantity},
+				taxCategory = ${taxCategory});
+		}
+	}
+
 	macro gotoShippingMethodShippingOptions {
 		CommerceEntry.clickTableEntryEditButton(
 			entryName = ${shippingMethod},
@@ -697,6 +764,12 @@ definition {
 		Navigator.openWithAppendToBaseURL(
 			baseURL = ${baseURL},
 			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_channel_web_internal_portlet_CommerceChannelsPortlet");
+	}
+
+	macro openMercanetConfigurationFrame {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_payment_web_internal_portlet_CommercePaymentMethodPortlet&p_p_lifecycle=0&p_p_state=pop_up&p_p_mode=view&_com_liferay_commerce_payment_web_internal_portlet_CommercePaymentMethodPortlet_screenNavigationCategoryKey=configuration&_com_liferay_commerce_payment_web_internal_portlet_CommercePaymentMethodPortlet_commerceChannelId=${channelId}&_com_liferay_commerce_payment_web_internal_portlet_CommercePaymentMethodPortlet_commercePaymentMethodEngineKey=mercanet&p_p_auth=wSmJjGYh");
 	}
 
 	macro overrideCategoryDisplayPage {

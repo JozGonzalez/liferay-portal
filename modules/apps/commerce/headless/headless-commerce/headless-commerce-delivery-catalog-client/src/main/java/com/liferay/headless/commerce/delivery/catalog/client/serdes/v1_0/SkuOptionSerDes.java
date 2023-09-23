@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
@@ -63,6 +54,106 @@ public class SkuOptionSerDes {
 			sb.append(skuOption.getKey());
 		}
 
+		if (skuOption.getPrice() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"price\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getPrice()));
+
+			sb.append("\"");
+		}
+
+		if (skuOption.getPriceType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getPriceType()));
+
+			sb.append("\"");
+		}
+
+		if (skuOption.getQuantity() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"quantity\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getQuantity()));
+
+			sb.append("\"");
+		}
+
+		if (skuOption.getSkuId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuId\": ");
+
+			sb.append(skuOption.getSkuId());
+		}
+
+		if (skuOption.getSkuOptionId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionId\": ");
+
+			sb.append(skuOption.getSkuOptionId());
+		}
+
+		if (skuOption.getSkuOptionKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getSkuOptionKey()));
+
+			sb.append("\"");
+		}
+
+		if (skuOption.getSkuOptionValueId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionValueId\": ");
+
+			sb.append(skuOption.getSkuOptionValueId());
+		}
+
+		if (skuOption.getSkuOptionValueKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuOptionValueKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuOption.getSkuOptionValueKey()));
+
+			sb.append("\"");
+		}
+
 		if (skuOption.getValue() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -98,6 +189,67 @@ public class SkuOptionSerDes {
 			map.put("key", String.valueOf(skuOption.getKey()));
 		}
 
+		if (skuOption.getPrice() == null) {
+			map.put("price", null);
+		}
+		else {
+			map.put("price", String.valueOf(skuOption.getPrice()));
+		}
+
+		if (skuOption.getPriceType() == null) {
+			map.put("priceType", null);
+		}
+		else {
+			map.put("priceType", String.valueOf(skuOption.getPriceType()));
+		}
+
+		if (skuOption.getQuantity() == null) {
+			map.put("quantity", null);
+		}
+		else {
+			map.put("quantity", String.valueOf(skuOption.getQuantity()));
+		}
+
+		if (skuOption.getSkuId() == null) {
+			map.put("skuId", null);
+		}
+		else {
+			map.put("skuId", String.valueOf(skuOption.getSkuId()));
+		}
+
+		if (skuOption.getSkuOptionId() == null) {
+			map.put("skuOptionId", null);
+		}
+		else {
+			map.put("skuOptionId", String.valueOf(skuOption.getSkuOptionId()));
+		}
+
+		if (skuOption.getSkuOptionKey() == null) {
+			map.put("skuOptionKey", null);
+		}
+		else {
+			map.put(
+				"skuOptionKey", String.valueOf(skuOption.getSkuOptionKey()));
+		}
+
+		if (skuOption.getSkuOptionValueId() == null) {
+			map.put("skuOptionValueId", null);
+		}
+		else {
+			map.put(
+				"skuOptionValueId",
+				String.valueOf(skuOption.getSkuOptionValueId()));
+		}
+
+		if (skuOption.getSkuOptionValueKey() == null) {
+			map.put("skuOptionValueKey", null);
+		}
+		else {
+			map.put(
+				"skuOptionValueKey",
+				String.valueOf(skuOption.getSkuOptionValueKey()));
+		}
+
 		if (skuOption.getValue() == null) {
 			map.put("value", null);
 		}
@@ -129,6 +281,50 @@ public class SkuOptionSerDes {
 				if (jsonParserFieldValue != null) {
 					skuOption.setKey(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "price")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setPrice((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "priceType")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setPriceType((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setQuantity((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuId")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setSkuId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuOptionId")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setSkuOptionId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuOptionKey")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setSkuOptionKey((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuOptionValueId")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setSkuOptionValueId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuOptionValueKey")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setSkuOptionValueKey(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "value")) {

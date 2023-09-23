@@ -1,0 +1,38 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.source.formatter.dependencies.upgrade;
+
+import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
+
+import java.util.Optional;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.PortletPreferences;
+
+/**
+ * @author Nícolas Moura
+ */
+public class UpgradeJavaPortletSharedSearchSettingsCheck {
+
+	public void method(
+		ActionRequest actionRequest,
+		PortletSharedSearchSettings portletSharedSearchSettings) {
+
+		// Replacement cases
+
+		Optional<String[]> parameterValuesOptional =
+			portletSharedSearchSettings.getParameterValues("parameterName");
+
+		Optional<PortletPreferences> portletPreferencesOptional =
+			portletSharedSearchSettings.getPortletPreferences();
+
+		// Method of another class
+
+		Optional<String[]> extensionsOptional =
+			actionRequest.getParameterValues("testExtensions");
+	}
+
+}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.persistence.test;
@@ -147,9 +138,23 @@ public class CPDefinitionLinkPersistenceTest {
 
 		newCPDefinitionLink.setCProductId(RandomTestUtil.nextLong());
 
+		newCPDefinitionLink.setDisplayDate(RandomTestUtil.nextDate());
+
+		newCPDefinitionLink.setExpirationDate(RandomTestUtil.nextDate());
+
 		newCPDefinitionLink.setPriority(RandomTestUtil.nextDouble());
 
 		newCPDefinitionLink.setType(RandomTestUtil.randomString());
+
+		newCPDefinitionLink.setLastPublishDate(RandomTestUtil.nextDate());
+
+		newCPDefinitionLink.setStatus(RandomTestUtil.nextInt());
+
+		newCPDefinitionLink.setStatusByUserId(RandomTestUtil.nextLong());
+
+		newCPDefinitionLink.setStatusByUserName(RandomTestUtil.randomString());
+
+		newCPDefinitionLink.setStatusDate(RandomTestUtil.nextDate());
 
 		_cpDefinitionLinks.add(_persistence.update(newCPDefinitionLink));
 
@@ -191,11 +196,34 @@ public class CPDefinitionLinkPersistenceTest {
 		Assert.assertEquals(
 			existingCPDefinitionLink.getCProductId(),
 			newCPDefinitionLink.getCProductId());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingCPDefinitionLink.getDisplayDate()),
+			Time.getShortTimestamp(newCPDefinitionLink.getDisplayDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(
+				existingCPDefinitionLink.getExpirationDate()),
+			Time.getShortTimestamp(newCPDefinitionLink.getExpirationDate()));
 		AssertUtils.assertEquals(
 			existingCPDefinitionLink.getPriority(),
 			newCPDefinitionLink.getPriority());
 		Assert.assertEquals(
 			existingCPDefinitionLink.getType(), newCPDefinitionLink.getType());
+		Assert.assertEquals(
+			Time.getShortTimestamp(
+				existingCPDefinitionLink.getLastPublishDate()),
+			Time.getShortTimestamp(newCPDefinitionLink.getLastPublishDate()));
+		Assert.assertEquals(
+			existingCPDefinitionLink.getStatus(),
+			newCPDefinitionLink.getStatus());
+		Assert.assertEquals(
+			existingCPDefinitionLink.getStatusByUserId(),
+			newCPDefinitionLink.getStatusByUserId());
+		Assert.assertEquals(
+			existingCPDefinitionLink.getStatusByUserName(),
+			newCPDefinitionLink.getStatusByUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingCPDefinitionLink.getStatusDate()),
+			Time.getShortTimestamp(newCPDefinitionLink.getStatusDate()));
 	}
 
 	@Test
@@ -249,12 +277,44 @@ public class CPDefinitionLinkPersistenceTest {
 	}
 
 	@Test
+	public void testCountByCPD_S() throws Exception {
+		_persistence.countByCPD_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+
+		_persistence.countByCPD_S(0L, 0);
+	}
+
+	@Test
 	public void testCountByCP_T() throws Exception {
 		_persistence.countByCP_T(RandomTestUtil.nextLong(), "");
 
 		_persistence.countByCP_T(0L, "null");
 
 		_persistence.countByCP_T(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByCP_S() throws Exception {
+		_persistence.countByCP_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+
+		_persistence.countByCP_S(0L, 0);
+	}
+
+	@Test
+	public void testCountByLtD_S() throws Exception {
+		_persistence.countByLtD_S(
+			RandomTestUtil.nextDate(), RandomTestUtil.nextInt());
+
+		_persistence.countByLtD_S(RandomTestUtil.nextDate(), 0);
+	}
+
+	@Test
+	public void testCountByLtE_S() throws Exception {
+		_persistence.countByLtE_S(
+			RandomTestUtil.nextDate(), RandomTestUtil.nextInt());
+
+		_persistence.countByLtE_S(RandomTestUtil.nextDate(), 0);
 	}
 
 	@Test
@@ -265,6 +325,26 @@ public class CPDefinitionLinkPersistenceTest {
 		_persistence.countByC_C_T(0L, 0L, "null");
 
 		_persistence.countByC_C_T(0L, 0L, (String)null);
+	}
+
+	@Test
+	public void testCountByCPD_T_S() throws Exception {
+		_persistence.countByCPD_T_S(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
+
+		_persistence.countByCPD_T_S(0L, "null", 0);
+
+		_persistence.countByCPD_T_S(0L, (String)null, 0);
+	}
+
+	@Test
+	public void testCountByCP_T_S() throws Exception {
+		_persistence.countByCP_T_S(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
+
+		_persistence.countByCP_T_S(0L, "null", 0);
+
+		_persistence.countByCP_T_S(0L, (String)null, 0);
 	}
 
 	@Test
@@ -296,7 +376,10 @@ public class CPDefinitionLinkPersistenceTest {
 			"uuid", true, "CPDefinitionLinkId", true, "groupId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "CPDefinitionId", true, "CProductId",
-			true, "priority", true, "type", true);
+			true, "displayDate", true, "expirationDate", true, "priority", true,
+			"type", true, "lastPublishDate", true, "status", true,
+			"statusByUserId", true, "statusByUserName", true, "statusDate",
+			true);
 	}
 
 	@Test
@@ -623,9 +706,23 @@ public class CPDefinitionLinkPersistenceTest {
 
 		cpDefinitionLink.setCProductId(RandomTestUtil.nextLong());
 
+		cpDefinitionLink.setDisplayDate(RandomTestUtil.nextDate());
+
+		cpDefinitionLink.setExpirationDate(RandomTestUtil.nextDate());
+
 		cpDefinitionLink.setPriority(RandomTestUtil.nextDouble());
 
 		cpDefinitionLink.setType(RandomTestUtil.randomString());
+
+		cpDefinitionLink.setLastPublishDate(RandomTestUtil.nextDate());
+
+		cpDefinitionLink.setStatus(RandomTestUtil.nextInt());
+
+		cpDefinitionLink.setStatusByUserId(RandomTestUtil.nextLong());
+
+		cpDefinitionLink.setStatusByUserName(RandomTestUtil.randomString());
+
+		cpDefinitionLink.setStatusDate(RandomTestUtil.nextDate());
 
 		_cpDefinitionLinks.add(_persistence.update(cpDefinitionLink));
 

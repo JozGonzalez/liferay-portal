@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -17,6 +8,7 @@ package com.liferay.document.library.kernel.service;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -166,26 +158,26 @@ public class DLFileEntryLocalServiceWrapper
 
 	@Override
 	public DLFileEntry copyFileEntry(
-			long userId, long groupId, long repositoryId, long fileEntryId,
-			long destFolderId, String fileName,
+			long userId, long groupId, long repositoryId,
+			long sourceFileEntryId, long targetFolderId, String fileName,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileEntryLocalService.copyFileEntry(
-			userId, groupId, repositoryId, fileEntryId, destFolderId, fileName,
-			serviceContext);
+			userId, groupId, repositoryId, sourceFileEntryId, targetFolderId,
+			fileName, serviceContext);
 	}
 
 	@Override
 	public void copyFileEntryMetadata(
 			long companyId, long fileEntryTypeId, long fileEntryId,
-			long fromFileVersionId, long toFileVersionId,
+			long sourceFileVersionId, long targetFileVersionId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlFileEntryLocalService.copyFileEntryMetadata(
-			companyId, fileEntryTypeId, fileEntryId, fromFileVersionId,
-			toFileVersionId, serviceContext);
+			companyId, fileEntryTypeId, fileEntryId, sourceFileVersionId,
+			targetFileVersionId, serviceContext);
 	}
 
 	/**
@@ -826,6 +818,14 @@ public class DLFileEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.Map<Long, Long> getFileEntryTypeIds(
+		long companyId, long[] groupIds, String treePath) {
+
+		return _dlFileEntryLocalService.getFileEntryTypeIds(
+			companyId, groupIds, treePath);
+	}
+
+	@Override
 	public java.util.List<DLFileEntry> getGroupFileEntries(
 		long groupId, int start, int end) {
 
@@ -1147,6 +1147,11 @@ public class DLFileEntryLocalServiceWrapper
 
 		return _dlFileEntryLocalService.verifyFileEntryLock(
 			fileEntryId, lockUuid);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _dlFileEntryLocalService.getBasePersistence();
 	}
 
 	@Override

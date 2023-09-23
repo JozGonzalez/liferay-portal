@@ -1,6 +1,11 @@
-import checkFill from '../../assets/icons/check_fill.svg';
-import circleFill from '../../assets/icons/circle_fill.svg';
-import radioSelected from '../../assets/icons/radio-button-checked-2.svg';
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import checkFill from '../../assets/icons/check_fill_icon.svg';
+import circleFill from '../../assets/icons/circle_fill_icon.svg';
+import radioSelected from '../../assets/icons/radio_button_checked_2_icon.svg';
 
 import './AppFlowListItem.scss';
 

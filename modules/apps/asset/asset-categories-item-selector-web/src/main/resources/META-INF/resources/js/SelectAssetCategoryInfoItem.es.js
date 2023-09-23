@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -65,12 +56,15 @@ function SelectAssetCategory({
 					<div className="input-group">
 						<div className="input-group-item">
 							<input
+								aria-label={Liferay.Language.get(
+									'search-categories'
+								)}
 								className="form-control h-100 input-group-inset input-group-inset-after"
 								onChange={(event) =>
 									setFilterQuery(event.target.value)
 								}
 								placeholder={Liferay.Language.get('search')}
-								type="text"
+								type="search"
 							/>
 
 							<div className="input-group-inset-item input-group-inset-item-after pr-3">
@@ -148,7 +142,7 @@ function SelectAssetCategory({
 									'no-categories-were-found'
 								)}
 								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
-								title={null}
+								title={Liferay.Language.get('no-results-found')}
 							/>
 						)}
 					</div>

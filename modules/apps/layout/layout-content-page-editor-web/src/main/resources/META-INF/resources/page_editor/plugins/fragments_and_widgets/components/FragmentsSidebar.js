@@ -1,18 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
+import {
+	SearchForm,
+	SearchResultsMessage,
+	isNullOrUndefined,
+} from '@liferay/layout-js-components-web';
+import {useSessionState} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
@@ -28,11 +25,7 @@ import {
 } from '../../../app/contexts/StoreContext';
 import selectWidgetFragmentEntryLinks from '../../../app/selectors/selectWidgetFragmentEntryLinks';
 import loadWidgets from '../../../app/thunks/loadWidgets';
-import isNullOrUndefined from '../../../app/utils/isNullOrUndefined';
-import SearchForm from '../../../common/components/SearchForm';
-import SearchResultsMessage from '../../../common/components/SearchResultsMessage';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
-import {useSessionState} from '../../../common/hooks/useSessionState';
 import SearchResultsPanel from './SearchResultsPanel';
 import TabsPanel from './TabsPanel';
 
@@ -209,8 +202,11 @@ export default function FragmentsSidebar() {
 		() =>
 			isNullOrUndefined(searchValue)
 				? null
-				: filteredTabs.flatMap((tab) => tab.collections).length,
-
+				: filteredTabs.flatMap((tab) =>
+						tab.collections.flatMap(
+							(collection) => collection.children
+						)
+				  ).length,
 		[filteredTabs, searchValue]
 	);
 
@@ -230,7 +226,7 @@ export default function FragmentsSidebar() {
 		Liferay.Language.get('switch-to-x-view'),
 		displayStyle === FRAGMENTS_DISPLAY_STYLES.LIST
 			? Liferay.Language.get('card')
-			: Liferay.Language.get('list')
+			: Liferay.Language.get('list[noun]')
 	);
 
 	return (

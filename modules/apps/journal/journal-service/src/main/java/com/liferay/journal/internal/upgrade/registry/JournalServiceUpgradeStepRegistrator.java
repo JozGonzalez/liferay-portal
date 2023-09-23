@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.registry;
@@ -21,6 +12,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
@@ -68,9 +60,10 @@ import com.liferay.journal.internal.upgrade.v4_4_3.JournalArticleLayoutClassedMo
 import com.liferay.journal.internal.upgrade.v4_4_4.JournalFeedTypeUpgradeProcess;
 import com.liferay.journal.internal.upgrade.v5_1_0.JournalArticleDDMStructureIdUpgradeProcess;
 import com.liferay.journal.internal.upgrade.v5_1_1.JournalArticleAssetEntryClassTypeIdUpgradeProcess;
+import com.liferay.journal.internal.upgrade.v5_2_0.JournalFeedDDMStructureIdUpgradeProcess;
+import com.liferay.journal.internal.upgrade.v6_1_0.JournalArticleSmallImageSourceUpgradeProcess;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.util.JournalConverter;
-import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.change.tracking.store.CTStoreFactory;
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -93,7 +86,7 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
@@ -105,8 +98,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
-import java.io.PrintWriter;
-
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -114,11 +105,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Eduardo García
  */
-@Component(
-	service = {
-		JournalServiceUpgradeStepRegistrator.class, UpgradeStepRegistrator.class
-	}
-)
+@Component(service = UpgradeStepRegistrator.class)
 public class JournalServiceUpgradeStepRegistrator
 	implements UpgradeStepRegistrator {
 
@@ -151,15 +138,13 @@ public class JournalServiceUpgradeStepRegistrator
 				_portletPreferencesLocalService),
 			new UpgradeJournalDisplayPreferences(),
 			new UpgradeLastPublishDate(),
-			new UpgradePortletSettings(_settingsFactory),
-			dbProcessContext -> {
+			new UpgradePortletSettings(_settingsLocatorHelper),
+			() -> {
 				try {
 					_deleteTempImages();
 				}
 				catch (Exception exception) {
-					exception.printStackTrace(
-						new PrintWriter(
-							dbProcessContext.getOutputStream(), true));
+					_log.error(exception);
 				}
 			});
 
@@ -359,10 +344,7 @@ public class JournalServiceUpgradeStepRegistrator
 		registry.register(
 			"4.4.2", "4.4.3",
 			new JournalArticleLayoutClassedModelUsageUpgradeProcess(
-				_assetEntryLocalService, _classNameLocalService,
-				_layoutLocalService, _layoutClassedModelUsageLocalService,
-				_portletPreferencesLocalService,
-				_portletPreferenceValueLocalService));
+				_classNameLocalService));
 
 		registry.register(
 			"4.4.3", "4.4.4",
@@ -380,12 +362,35 @@ public class JournalServiceUpgradeStepRegistrator
 		registry.register(
 			"5.0.0", "5.1.0",
 			new JournalArticleDDMStructureIdUpgradeProcess(
-				_classNameLocalService, _ddmStructureLocalService, _portal));
+				_classNameLocalService, _siteConnectedGroupGroupProvider));
 
 		registry.register(
 			"5.1.0", "5.1.1",
 			new JournalArticleAssetEntryClassTypeIdUpgradeProcess(
 				_classNameLocalService));
+
+		registry.register(
+			"5.1.1", "5.2.0",
+			new JournalFeedDDMStructureIdUpgradeProcess(
+				_classNameLocalService, _siteConnectedGroupGroupProvider));
+
+		registry.register(
+			"5.2.0", "5.2.1",
+			new com.liferay.journal.internal.upgrade.v5_2_1.
+				JournalArticleLayoutClassedModelUsageUpgradeProcess());
+
+		registry.register(
+			"5.2.1", "6.0.0",
+			UpgradeProcessFactory.dropColumns(
+				"JournalArticle", "DDMStructureKey"),
+			UpgradeProcessFactory.dropColumns(
+				"JournalFeed", "DDMStructureKey"));
+
+		registry.register(
+			"6.0.0", "6.1.0",
+			UpgradeProcessFactory.addColumns(
+				"JournalArticle", "smallImageSource INTEGER"),
+			new JournalArticleSmallImageSourceUpgradeProcess());
 	}
 
 	private void _deleteTempImages() throws Exception {
@@ -475,10 +480,6 @@ public class JournalServiceUpgradeStepRegistrator
 	private Language _language;
 
 	@Reference
-	private LayoutClassedModelUsageLocalService
-		_layoutClassedModelUsageLocalService;
-
-	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -519,7 +520,10 @@ public class JournalServiceUpgradeStepRegistrator
 	private ResourceLocalService _resourceLocalService;
 
 	@Reference
-	private SettingsFactory _settingsFactory;
+	private SettingsLocatorHelper _settingsLocatorHelper;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 	@Reference(target = "(default=true)")
 	private Store _store;

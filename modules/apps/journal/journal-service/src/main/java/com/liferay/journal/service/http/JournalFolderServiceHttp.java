@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.http;
@@ -730,7 +721,7 @@ public class JournalFolderServiceHttp {
 
 	public static java.util.List<Object> getFoldersAndArticles(
 		HttpPrincipal httpPrincipal, long groupId, long userId, long folderId,
-		String ddmStructureKey, int status, java.util.Locale locale, int start,
+		long ddmStructureId, int status, java.util.Locale locale, int start,
 		int end,
 		com.liferay.portal.kernel.util.OrderByComparator<?> orderByComparator) {
 
@@ -740,7 +731,7 @@ public class JournalFolderServiceHttp {
 				_getFoldersAndArticlesParameterTypes18);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, userId, folderId, ddmStructureKey, status,
+				methodKey, groupId, userId, folderId, ddmStructureId, status,
 				locale, start, end, orderByComparator);
 
 			Object returnObj = null;
@@ -896,7 +887,7 @@ public class JournalFolderServiceHttp {
 
 	public static int getFoldersAndArticlesCount(
 		HttpPrincipal httpPrincipal, long groupId, long userId, long folderId,
-		String ddmStructureKey, int status) {
+		long ddmStructureId, int status) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -904,7 +895,7 @@ public class JournalFolderServiceHttp {
 				_getFoldersAndArticlesCountParameterTypes23);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, userId, folderId, ddmStructureKey, status);
+				methodKey, groupId, userId, folderId, ddmStructureId, status);
 
 			Object returnObj = null;
 
@@ -1261,6 +1252,48 @@ public class JournalFolderServiceHttp {
 		}
 	}
 
+	public static int searchDDMStructuresCount(
+			HttpPrincipal httpPrincipal, long companyId, long[] groupIds,
+			long folderId, int restrictionType, String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				JournalFolderServiceUtil.class, "searchDDMStructuresCount",
+				_searchDDMStructuresCountParameterTypes33);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, groupIds, folderId, restrictionType,
+				keywords);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static void subscribe(
 			HttpPrincipal httpPrincipal, long groupId, long folderId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1268,7 +1301,7 @@ public class JournalFolderServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				JournalFolderServiceUtil.class, "subscribe",
-				_subscribeParameterTypes33);
+				_subscribeParameterTypes34);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, folderId);
@@ -1304,7 +1337,7 @@ public class JournalFolderServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				JournalFolderServiceUtil.class, "unsubscribe",
-				_unsubscribeParameterTypes34);
+				_unsubscribeParameterTypes35);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, folderId);
@@ -1343,7 +1376,7 @@ public class JournalFolderServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				JournalFolderServiceUtil.class, "updateFolder",
-				_updateFolderParameterTypes35);
+				_updateFolderParameterTypes36);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, folderId, parentFolderId, name, description,
@@ -1388,7 +1421,7 @@ public class JournalFolderServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				JournalFolderServiceUtil.class, "updateFolder",
-				_updateFolderParameterTypes36);
+				_updateFolderParameterTypes37);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, folderId, parentFolderId, name, description,
@@ -1494,7 +1527,7 @@ public class JournalFolderServiceHttp {
 		};
 	private static final Class<?>[] _getFoldersAndArticlesParameterTypes18 =
 		new Class[] {
-			long.class, long.class, long.class, String.class, int.class,
+			long.class, long.class, long.class, long.class, int.class,
 			java.util.Locale.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
@@ -1516,7 +1549,7 @@ public class JournalFolderServiceHttp {
 		};
 	private static final Class<?>[]
 		_getFoldersAndArticlesCountParameterTypes23 = new Class[] {
-			long.class, long.class, long.class, String.class, int.class
+			long.class, long.class, long.class, long.class, int.class
 		};
 	private static final Class<?>[] _getFoldersCountParameterTypes24 =
 		new Class[] {long.class, long.class};
@@ -1547,19 +1580,23 @@ public class JournalFolderServiceHttp {
 			int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _subscribeParameterTypes33 = new Class[] {
+	private static final Class<?>[] _searchDDMStructuresCountParameterTypes33 =
+		new Class[] {
+			long.class, long[].class, long.class, int.class, String.class
+		};
+	private static final Class<?>[] _subscribeParameterTypes34 = new Class[] {
 		long.class, long.class
 	};
-	private static final Class<?>[] _unsubscribeParameterTypes34 = new Class[] {
+	private static final Class<?>[] _unsubscribeParameterTypes35 = new Class[] {
 		long.class, long.class
 	};
-	private static final Class<?>[] _updateFolderParameterTypes35 =
+	private static final Class<?>[] _updateFolderParameterTypes36 =
 		new Class[] {
 			long.class, long.class, long.class, String.class, String.class,
 			boolean.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateFolderParameterTypes36 =
+	private static final Class<?>[] _updateFolderParameterTypes37 =
 		new Class[] {
 			long.class, long.class, long.class, String.class, String.class,
 			long[].class, int.class, boolean.class,

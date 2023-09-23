@@ -1,41 +1,50 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
+import com.liferay.headless.delivery.client.dto.v1_0.Creator;
 import com.liferay.headless.delivery.client.dto.v1_0.Document;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
+import com.liferay.headless.delivery.client.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentSerDes;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.io.File;
 
@@ -43,6 +52,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -51,6 +62,84 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class DocumentResourceTest extends BaseDocumentResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Override
+	@Test
+	public void testDeleteDocumentMyRating() throws Exception {
+		super.testDeleteDocumentMyRating();
+
+		Document document = testDeleteDocumentMyRating_addDocument();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentResource.deleteDocumentMyRatingHttpResponse(
+				document.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			documentResource.deleteDocumentMyRatingHttpResponse(
+				document.getId()));
+
+		Document irrelevantDocument = randomIrrelevantDocument();
+
+		assertHttpResponseStatusCode(
+			404,
+			documentResource.deleteDocumentMyRatingHttpResponse(
+				irrelevantDocument.getId()));
+	}
+
+	@Override
+	@Test
+	public void testGetDocument() throws Exception {
+		super.testGetDocument();
+
+		Document document1 = documentResource.postSiteDocument(
+			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+
+		Assert.assertTrue(Validator.isNotNull(document1.getContentUrl()));
+
+		Document document2 = documentResource.postSiteDocument(
+			testGroup.getGroupId(), randomDocument(),
+			HashMapBuilder.put(
+				"file", () -> FileUtil.createTempFile(new byte[0])
+			).build());
+
+		Assert.assertTrue(Validator.isNull(document2.getContentUrl()));
+
+		Role guestRole = _roleLocalService.getRole(
+			testCompany.getCompanyId(), RoleConstants.GUEST);
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			testCompany.getCompanyId(), DLFileEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(document1.getId()), guestRole.getRoleId(),
+			ActionKeys.DOWNLOAD);
+
+		DocumentResource.Builder builder = DocumentResource.builder();
+
+		String password = StringUtil.randomString();
+
+		User user = UserTestUtil.addUser(
+			testCompany.getCompanyId(), testCompany.getUserId(), password,
+			RandomTestUtil.randomString() + "@liferay.com",
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			ServiceContextTestUtil.getServiceContext());
+
+		DocumentResource regularUserDocumentResource = builder.authentication(
+			user.getLogin(), password
+		).build();
+
+		document1 = regularUserDocumentResource.getDocument(document1.getId());
+
+		Assert.assertTrue(Validator.isNull(document1.getContentUrl()));
+	}
 
 	@Override
 	@Test
@@ -119,7 +208,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
-		return new String[] {"description", "title"};
+		return new String[] {"description", "fileName", "title"};
 	}
 
 	@Override
@@ -164,6 +253,17 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	}
 
 	@Override
+	protected Document testDeleteDocumentMyRating_addDocument()
+		throws Exception {
+
+		Document document = super.testDeleteDocumentMyRating_addDocument();
+
+		documentResource.putDocumentMyRating(document.getId(), randomRating());
+
+		return document;
+	}
+
+	@Override
 	protected Document
 			testGetAssetLibraryDocumentByExternalReferenceCode_addDocument()
 		throws Exception {
@@ -181,6 +281,20 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	}
 
 	@Override
+	protected Document testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+			Long assetLibraryId, Document document)
+		throws Exception {
+
+		Document addedDocument =
+			super.testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, document);
+
+		_addDocumentRatingsEntry(addedDocument);
+
+		return addedDocument;
+	}
+
+	@Override
 	protected Long testGetDocumentFolderDocumentsPage_getDocumentFolderId()
 		throws Exception {
 
@@ -189,12 +303,25 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 		serviceContext.setAddGuestPermissions(true);
 
 		Folder folder = DLAppLocalServiceUtil.addFolder(
-			null,
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			null, UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
 			testGroup.getGroupId(), 0, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), serviceContext);
 
 		return folder.getFolderId();
+	}
+
+	@Override
+	protected Document testGetSiteDocumentsRatedByMePage_addDocument(
+			Long siteId, Document document)
+		throws Exception {
+
+		Document addedDocument =
+			super.testGetSiteDocumentsRatedByMePage_addDocument(
+				siteId, document);
+
+		_addDocumentRatingsEntry(addedDocument);
+
+		return addedDocument;
 	}
 
 	@Override
@@ -227,6 +354,14 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 		return testDepotEntry.getDepotEntryId();
 	}
 
+	private void _addDocumentRatingsEntry(Document document) throws Exception {
+		Creator creator = document.getCreator();
+
+		_ratingsEntryLocalService.updateEntry(
+			creator.getId(), DLFileEntry.class.getName(), document.getId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId()));
+	}
+
 	private String _read(String url) throws Exception {
 		HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
 
@@ -245,5 +380,14 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private RatingsEntryLocalService _ratingsEntryLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 }

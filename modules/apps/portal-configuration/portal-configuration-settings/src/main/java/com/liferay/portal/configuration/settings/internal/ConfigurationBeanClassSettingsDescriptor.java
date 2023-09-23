@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.configuration.settings.internal;
 
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
 
 import java.lang.reflect.Method;
@@ -31,43 +23,47 @@ public class ConfigurationBeanClassSettingsDescriptor
 		Class<?> configurationBeanClass) {
 
 		_configurationBeanClass = configurationBeanClass;
-
-		_initAllKeys();
-		_initMultiValuedKeys();
 	}
 
 	@Override
 	public Set<String> getAllKeys() {
-		return new HashSet<>(_allKeys);
+		return new HashSet<>(
+			_allKeysDCLSingleton.getSingleton(this::_createAllKeys));
 	}
 
 	@Override
 	public Set<String> getMultiValuedKeys() {
-		return new HashSet<>(_multiValuedKeys);
+		return new HashSet<>(
+			_multiValuedKeysDCLSingleton.getSingleton(
+				this::_createMultiValuedKeys));
 	}
 
-	private void _initAllKeys() {
-		Method[] methods = _configurationBeanClass.getMethods();
+	private Set<String> _createAllKeys() {
+		Set<String> allKeys = new HashSet<>();
 
-		for (Method method : methods) {
-			_allKeys.add(method.getName());
+		for (Method method : _configurationBeanClass.getMethods()) {
+			allKeys.add(method.getName());
 		}
+
+		return allKeys;
 	}
 
-	private void _initMultiValuedKeys() {
-		Method[] methods = _configurationBeanClass.getMethods();
+	private Set<String> _createMultiValuedKeys() {
+		Set<String> multiValuedKeys = new HashSet<>();
 
-		for (Method method : methods) {
-			Class<?> returnType = method.getReturnType();
-
-			if (returnType.equals(String[].class)) {
-				_multiValuedKeys.add(method.getName());
+		for (Method method : _configurationBeanClass.getMethods()) {
+			if (method.getReturnType() == String[].class) {
+				multiValuedKeys.add(method.getName());
 			}
 		}
+
+		return multiValuedKeys;
 	}
 
-	private final Set<String> _allKeys = new HashSet<>();
+	private final DCLSingleton<Set<String>> _allKeysDCLSingleton =
+		new DCLSingleton<>();
 	private final Class<?> _configurationBeanClass;
-	private final Set<String> _multiValuedKeys = new HashSet<>();
+	private final DCLSingleton<Set<String>> _multiValuedKeysDCLSingleton =
+		new DCLSingleton<>();
 
 }

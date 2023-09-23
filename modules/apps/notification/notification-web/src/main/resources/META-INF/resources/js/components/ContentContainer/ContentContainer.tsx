@@ -1,32 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {Text} from '@clayui/core';
 import {
-	API,
 	Card,
 	FormError,
-	InputLocalized,
 	RichTextLocalized,
 	SingleSelect,
 } from '@liferay/object-js-components-web';
-import React, {useEffect, useState} from 'react';
+import {InputLocalized} from 'frontend-js-components-web';
+import React from 'react';
 
 import {Attachments} from './Attachments';
-import {DefinitionOfTerms} from './DefinitionOfTerms';
 import {FreeMarkerTemplateEditor} from './FreeMarkerTemplateEditor';
-import {GeneralTerms} from './GeneralTerms';
 
 const EDITOR_TYPES = [
 	{
@@ -47,6 +35,7 @@ interface ContentContainerProps {
 	baseResourceURL: string;
 	editorConfig: object;
 	errors: FormError<NotificationTemplate>;
+	objectDefinitions: ObjectDefinition[];
 	selectedLocale: Locale;
 	setSelectedLocale: React.Dispatch<
 		React.SetStateAction<Liferay.Language.Locale>
@@ -59,25 +48,12 @@ export default function ContentContainer({
 	baseResourceURL,
 	editorConfig,
 	errors,
+	objectDefinitions,
 	selectedLocale,
 	setSelectedLocale,
 	setValues,
 	values,
 }: ContentContainerProps) {
-	const [objectDefinitions, setObjectDefinitions] = useState<
-		ObjectDefinition[]
-	>([]);
-
-	useEffect(() => {
-		const makeFetch = async () => {
-			const objectDefinitionsItems = await API.getObjectDefinitions();
-
-			setObjectDefinitions(objectDefinitionsItems);
-		};
-
-		makeFetch();
-	}, []);
-
 	return (
 		<Card title={Liferay.Language.get('content')}>
 			<Text as="span" color="secondary">
@@ -160,15 +136,6 @@ export default function ContentContainer({
 						</>
 					)}
 				</>
-			)}
-
-			<DefinitionOfTerms
-				baseResourceURL={baseResourceURL}
-				objectDefinitions={objectDefinitions}
-			/>
-
-			{Liferay.FeatureFlags['LPS-171625'] && (
-				<GeneralTerms baseResourceURL={baseResourceURL} />
 			)}
 
 			{values.type === 'email' && (

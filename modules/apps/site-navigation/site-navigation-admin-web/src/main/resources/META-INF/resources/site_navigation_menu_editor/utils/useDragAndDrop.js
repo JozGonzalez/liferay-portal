@@ -1,51 +1,39 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useContext, useEffect, useState} from 'react';
+import React, {
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
 import {ACCEPTING_ITEM_TYPE} from '../constants/acceptingItemType';
 import {NESTING_MARGIN} from '../constants/nestingMargin';
 import {useConstants} from '../contexts/ConstantsContext';
-import {useItems, useSetItems} from '../contexts/ItemsContext';
-import updateItemParent from '../utils/updateItemParent';
-import getDescendantsCount from './getDescendantsCount';
+import {useItems} from '../contexts/ItemsContext';
+import getFlatItems from './getFlatItems';
 import getItemPath from './getItemPath';
-import moveItem from './moveItem';
-
-const DIRECTIONS = {
-	down: 'down',
-	inside: 'inside',
-	outside: 'outside',
-	up: 'up',
-};
 
 const DragDropContext = React.createContext({});
 
 export function DragDropProvider({children}) {
-	const [parentId, setParentId] = useState(null);
-	const [horizontalOffset, setHorizontalOffset] = useState(0);
-	const [verticalOffset, setVerticalOffset] = useState(0);
+	const [nestingLevel, setNestingLevel] = useState(0);
+	const [order, setOrder] = useState(null);
+	const [targetItemId, setTargetItemId] = useState(null);
 
 	const dragDropValues = {
-		horizontalOffset,
-		parentId,
-		setHorizontalOffset,
-		setParentId,
-		setVerticalOffset,
-		verticalOffset,
+		nestingLevel,
+		order,
+		setNestingLevel,
+		setOrder,
+		setTargetItemId,
+		targetItemId,
 	};
 
 	return (
@@ -56,33 +44,37 @@ export function DragDropProvider({children}) {
 }
 
 export function useDragItem(item, onDragEnd) {
-	const {parentSiteNavigationMenuItemId, siteNavigationMenuItemId} = item;
+	const {siteNavigationMenuItemId} = item;
 
 	const items = useItems();
 	const itemPath = getItemPath(siteNavigationMenuItemId, items);
 
 	const {portletNamespace: namespace} = useConstants();
 
-	const {
-		parentId,
-		setHorizontalOffset,
-		setParentId,
-		setVerticalOffset,
-	} = useContext(DragDropContext);
+	const {setTargetItemId, targetItemId} = useContext(DragDropContext);
 
 	const [{isDragging}, handlerRef, previewRef] = useDrag({
-		begin() {
-			setParentId(parentSiteNavigationMenuItemId);
-		},
 		collect: (monitor) => ({
 			isDragging: !!monitor.isDragging(),
 		}),
-		end() {
-			onDragEnd(item.siteNavigationMenuItemId, parentId);
+		end(_, monitor) {
+			if (!targetItemId) {
+				return;
+			}
 
-			setHorizontalOffset(0);
-			setParentId(null);
-			setVerticalOffset(null);
+			const dropResult = monitor.getDropResult();
+
+			setTargetItemId(null);
+
+			if (!dropResult) {
+				return;
+			}
+
+			onDragEnd(
+				item.siteNavigationMenuItemId,
+				dropResult.parentId,
+				dropResult.order
+			);
 		},
 		isDragging(monitor) {
 			return itemPath.includes(monitor.getItem().id);
@@ -107,227 +99,220 @@ export function useDragItem(item, onDragEnd) {
 export function useDropTarget(item) {
 	const {siteNavigationMenuItemId} = item;
 
+	const cardWidthRef = useRef();
+	const nextItemNestingRef = useRef(null);
 	const items = useItems();
 	const itemPath = getItemPath(siteNavigationMenuItemId, items);
-	const setItems = useSetItems();
-
 	const {languageId} = useConstants();
+	const {
+		nestingLevel,
+		setNestingLevel,
+		setTargetItemId,
+		targetItemId,
+	} = useContext(DragDropContext);
+	const previousItemPathRef = useRef(null);
+	const targetRef = useRef();
+	const targetRectRef = useRef(null);
+
 	const rtl = Liferay.Language.direction[languageId] === 'rtl';
 
-	const {
-		horizontalOffset,
-		setHorizontalOffset,
-		setParentId,
-		setVerticalOffset,
-		verticalOffset,
-	} = useContext(DragDropContext);
+	const isFirstItem =
+		itemPath.length === 1 &&
+		items[0]?.siteNavigationMenuItemId === siteNavigationMenuItemId;
 
-	const [, targetRef] = useDrop({
+	const [, dndTargetRef] = useDrop({
 		accept: ACCEPTING_ITEM_TYPE,
-		canDrop(source, monitor) {
+		canDrop(_, monitor) {
 			return monitor.isOver();
+		},
+		drop() {
+			if (targetItemId === '0') {
+				return {
+					order: 0,
+					parentId: '0',
+				};
+			}
+
+			const targetItemPath = getItemPath(targetItemId, items);
+
+			if (targetItemPath.length < nestingLevel) {
+				return {
+					order: 0,
+					parentId: targetItemId,
+				};
+			}
+
+			const childPath = targetItemPath.slice(0, nestingLevel);
+
+			const childId = childPath[childPath.length - 1];
+			const parentId = targetItemPath[childPath.length - 2] || '0';
+
+			const children = items.filter(
+				(item) => item.parentSiteNavigationMenuItemId === parentId
+			);
+
+			const order = children.findIndex(
+				(item) => item.siteNavigationMenuItemId === childId
+			);
+
+			return {
+				order: order === -1 ? children.length : order + 1,
+				parentId,
+			};
 		},
 		hover(source, monitor) {
 			if (monitor.canDrop(source, monitor)) {
-				if (itemPath.includes(source.id)) {
-					const data = computeHoverItself({
-						initialOffset: horizontalOffset,
-						items,
-						monitor,
-						rtl,
-						source,
-					});
+				if (!targetRef.current) {
+					setTargetItemId(null);
 
-					if (data) {
-						const {currentOffset, newParentId} = data;
+					return;
+				}
 
-						setParentId(newParentId);
-						setHorizontalOffset(currentOffset);
+				cardWidthRef.current =
+					cardWidthRef.current ||
+					targetRef.current
+						.querySelector('.card')
+						.getBoundingClientRect().width;
 
-						const newItems = updateItemParent(
-							items,
-							source.id,
-							newParentId
+				targetRectRef.current =
+					targetRectRef.current ||
+					targetRef.current.getBoundingClientRect();
+
+				nextItemNestingRef.current =
+					nextItemNestingRef.current ||
+					(() => {
+						const flatItems = getFlatItems(items);
+
+						const itemIndex = flatItems.findIndex(
+							(otherItem) =>
+								otherItem.siteNavigationMenuItemId ===
+								siteNavigationMenuItemId
 						);
 
-						setItems(newItems);
-					}
+						for (let i = itemIndex + 1; i < flatItems.length; i++) {
+							const nextItem = flatItems[i];
+
+							const nextItemPath = getItemPath(
+								nextItem.siteNavigationMenuItemId,
+								items
+							);
+
+							if (!nextItemPath.includes(source.id)) {
+								return nextItemPath.length;
+							}
+						}
+
+						return 1;
+					})();
+
+				const itemPosition = monitor.getSourceClientOffset();
+				const targetRect = targetRectRef.current;
+
+				if (
+					isFirstItem &&
+					itemPosition.y < targetRect.top + targetRect.height * 0.25
+				) {
+					setTargetItemId('0');
+
+					return;
+				}
+
+				let nesting = 1;
+
+				if (rtl) {
+					nesting =
+						Math.round(
+							(targetRect.right -
+								(itemPosition.x + cardWidthRef.current)) /
+								NESTING_MARGIN
+						) + 1;
 				}
 				else {
-					const {
-						currentOffset,
-						direction,
-						newIndex,
-						newParentId,
-					} = computeHoverAnotherItem({
-						initialOffset: verticalOffset,
-						items,
-						monitor,
-						source,
-						targetId: siteNavigationMenuItemId,
-					});
+					nesting =
+						Math.round(
+							(itemPosition.x - targetRect.left) / NESTING_MARGIN
+						) + 1;
+				}
 
-					if (newParentId) {
-						setParentId(newParentId);
-						setHorizontalOffset(0);
-						setVerticalOffset(currentOffset);
+				if (source.id === siteNavigationMenuItemId) {
+					previousItemPathRef.current =
+						previousItemPathRef.current ||
+						(() => {
+							const flatItems = getFlatItems(items);
 
-						const newItems = moveItem(
-							items,
-							source.id,
-							newParentId,
-							newIndex,
-							direction
+							const itemIndex = flatItems.findIndex(
+								(otherItem) =>
+									otherItem.siteNavigationMenuItemId ===
+									siteNavigationMenuItemId
+							);
+
+							const previousItemId =
+								flatItems[itemIndex - 1]
+									?.siteNavigationMenuItemId || null;
+
+							if (previousItemId) {
+								return getItemPath(previousItemId, items);
+							}
+
+							return null;
+						})();
+
+					if (previousItemPathRef.current) {
+						setNestingLevel(
+							Math.max(
+								nextItemNestingRef.current,
+								Math.min(
+									previousItemPathRef.current.length + 1,
+									nesting
+								)
+							)
 						);
 
-						setItems(newItems);
+						setTargetItemId(
+							previousItemPathRef.current[
+								previousItemPathRef.current.length - 1
+							]
+						);
 					}
+				}
+				else if (itemPath.includes(source.id)) {
+					setNestingLevel(0);
+					setTargetItemId(null);
+				}
+				else {
+					setNestingLevel(
+						Math.max(
+							nextItemNestingRef.current,
+							Math.min(itemPath.length + 1, nesting)
+						)
+					);
+
+					setTargetItemId(siteNavigationMenuItemId);
 				}
 			}
 		},
 	});
 
-	return {
-		targetRef,
-	};
-}
-
-function getHorizontalMovementDirection(initialOffset, currentOffset, rtl) {
-	if (rtl) {
-		return initialOffset < currentOffset
-			? DIRECTIONS.outside
-			: DIRECTIONS.inside;
-	}
-	else {
-		return initialOffset > currentOffset
-			? DIRECTIONS.outside
-			: DIRECTIONS.inside;
-	}
-}
-
-function computeHoverItself({initialOffset, items, monitor, rtl, source}) {
-	const currentOffset = monitor.getDifferenceFromInitialOffset().x;
-
-	if (Math.abs(initialOffset - currentOffset) < NESTING_MARGIN) {
-		return;
-	}
-
-	const direction = getHorizontalMovementDirection(
-		initialOffset,
-		currentOffset,
-		rtl
+	const updateTargetRef = useCallback(
+		(nextTargetElement) => {
+			dndTargetRef(nextTargetElement);
+			targetRef.current = nextTargetElement;
+		},
+		[dndTargetRef]
 	);
 
-	const sourceItem = items.find(
-		(item) => item.siteNavigationMenuItemId === source.id
-	);
-	const sourceItemIndex = items.indexOf(sourceItem);
-
-	let newParentId;
-
-	if (direction === DIRECTIONS.inside) {
-		const previousSibling = items
-			.filter(
-				(item, index) =>
-					item.parentSiteNavigationMenuItemId ===
-						sourceItem.parentSiteNavigationMenuItemId &&
-					item.siteNavigationMenuItemId !== source.id &&
-					index < sourceItemIndex
-			)
-			.pop();
-
-		newParentId = previousSibling?.siteNavigationMenuItemId;
-	}
-	else {
-		const nextSiblings = items.filter(
-			(item, index) =>
-				item.parentSiteNavigationMenuItemId ===
-					sourceItem.parentSiteNavigationMenuItemId &&
-				item.siteNavigationMenuItemId !== source.id &&
-				index > sourceItemIndex
-		);
-
-		if (!nextSiblings.length) {
-			const parent = items.find(
-				(item) =>
-					item.siteNavigationMenuItemId ===
-					sourceItem.parentSiteNavigationMenuItemId
-			);
-
-			newParentId = parent?.parentSiteNavigationMenuItemId;
-		}
-	}
-
-	if (
-		!newParentId ||
-		newParentId === sourceItem.siteNavigationMenuItemId ||
-		itemIsDynamic(newParentId, items)
-	) {
-		return;
-	}
-
-	return {currentOffset, newParentId};
-}
-
-function computeHoverAnotherItem({
-	initialOffset,
-	items,
-	monitor,
-	source,
-	targetId,
-}) {
-	const sourceItem = items.find(
-		(item) => item.siteNavigationMenuItemId === source.id
-	);
-	const targetItem = items.find(
-		(item) => item.siteNavigationMenuItemId === targetId
-	);
-
-	const currentOffset = monitor.getDifferenceFromInitialOffset().y;
-
-	if (initialOffset === currentOffset) {
-		return;
-	}
-
-	const direction =
-		initialOffset > currentOffset ? DIRECTIONS.up : DIRECTIONS.down;
-
-	const newIndex = items.indexOf(targetItem);
-
-	if (newIndex === items.indexOf(sourceItem)) {
-		return;
-	}
-
-	let newParentId;
-
-	if (direction === DIRECTIONS.up) {
-		newParentId = targetItem.parentSiteNavigationMenuItemId;
-	}
-
-	if (direction === DIRECTIONS.down) {
-		const targetItemDescendantsCount = getDescendantsCount(items, targetId);
-
-		newParentId = targetItemDescendantsCount
-			? targetItem.siteNavigationMenuItemId
-			: targetItem.parentSiteNavigationMenuItemId;
-	}
-
-	if (itemIsDynamic(newParentId, items)) {
-		return;
-	}
+	useEffect(() => {
+		cardWidthRef.current = null;
+		nextItemNestingRef.current = null;
+		previousItemPathRef.current = null;
+		targetRectRef.current = null;
+	}, [targetItemId]);
 
 	return {
-		currentOffset,
-		direction,
-		newIndex,
-		newParentId,
+		isOver: targetItemId === siteNavigationMenuItemId,
+		isOverFirstItem: isFirstItem && targetItemId === '0',
+		nestingLevel:
+			targetItemId === siteNavigationMenuItemId ? nestingLevel : 0,
+		targetRef: updateTargetRef,
 	};
-}
-
-function itemIsDynamic(siteNavigationMenuItemId, items) {
-	const item = items.find(
-		(item) => item.siteNavigationMenuItemId === siteNavigationMenuItemId
-	);
-
-	return item?.dynamic;
 }

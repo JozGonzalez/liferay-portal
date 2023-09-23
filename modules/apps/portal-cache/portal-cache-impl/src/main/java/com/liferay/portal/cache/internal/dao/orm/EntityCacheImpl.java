@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.cache.internal.dao.orm;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
@@ -28,12 +20,13 @@ import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LRUMap;
@@ -49,17 +42,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-@Component(service = {CacheRegistryItem.class, EntityCache.class})
+@Component(service = EntityCache.class)
 public class EntityCacheImpl
-	implements CacheRegistryItem, EntityCache, PortalCacheManagerListener {
+	implements EntityCache, PortalCacheManagerListener {
 
 	@Override
 	public void clearCache() {
@@ -92,8 +88,6 @@ public class EntityCacheImpl
 
 	@Override
 	public void dispose() {
-		_notifyFinderCache(null, null, true);
-
 		_portalCaches.clear();
 	}
 
@@ -136,15 +130,10 @@ public class EntityCacheImpl
 			mvcc = true;
 		}
 
-		boolean sharded = false;
-
-		if (_dbPartitionEnabled && ShardedModel.class.isAssignableFrom(clazz)) {
-			sharded = true;
-		}
-
 		portalCache =
 			(PortalCache<Serializable, Serializable>)
-				_multiVMPool.getPortalCache(groupKey, mvcc, sharded);
+				_multiVMPool.getPortalCache(
+					groupKey, mvcc, DBPartition.isPartitionedModel(clazz));
 
 		PortalCache<Serializable, Serializable> previousPortalCache =
 			_portalCaches.putIfAbsent(className, portalCache);
@@ -154,11 +143,6 @@ public class EntityCacheImpl
 		}
 
 		return portalCache;
-	}
-
-	@Override
-	public String getRegistryName() {
-		return EntityCache.class.getName();
 	}
 
 	@Override
@@ -220,8 +204,6 @@ public class EntityCacheImpl
 			cacheName = portalCacheName.substring(_GROUP_KEY_PREFIX.length());
 		}
 
-		_notifyFinderCache(cacheName, null, true);
-
 		_portalCaches.remove(cacheName);
 	}
 
@@ -264,9 +246,7 @@ public class EntityCacheImpl
 	}
 
 	@Activate
-	protected void activate() {
-		_dbPartitionEnabled = GetterUtil.getBoolean(
-			_props.get("database.partition.enabled"));
+	protected void activate(BundleContext bundleContext) {
 		_valueObjectEntityCacheEnabled = GetterUtil.getBoolean(
 			_props.get(PropsKeys.VALUE_OBJECT_ENTITY_CACHE_ENABLED));
 		_valueObjectMVCCEntityCacheEnabled = GetterUtil.getBoolean(
@@ -276,7 +256,7 @@ public class EntityCacheImpl
 			_props.get(
 				PropsKeys.VALUE_OBJECT_ENTITY_THREAD_LOCAL_CACHE_MAX_SIZE));
 
-		if (!_dbPartitionEnabled && (localCacheMaxSize > 0)) {
+		if (!DBPartition.isPartitionEnabled() && (localCacheMaxSize > 0)) {
 			_localCache = new CentralizedThreadLocal<>(
 				EntityCacheImpl.class + "._localCache",
 				() -> new LRUMap<>(localCacheMaxSize));
@@ -289,11 +269,27 @@ public class EntityCacheImpl
 			portalCacheManager = _multiVMPool.getPortalCacheManager();
 
 		portalCacheManager.registerPortalCacheManagerListener(this);
+
+		_serviceRegistration = bundleContext.registerService(
+			CacheRegistryItem.class, new EntityCacheCacheRegistryItem(), null);
 	}
 
-	@Reference(unbind = "-")
-	protected void setFinderCacheImpl(FinderCacheImpl finderCacheImpl) {
-		_finderCacheImpl = finderCacheImpl;
+	@Deactivate
+	protected void deactivate() {
+		_serviceRegistration.unregister();
+	}
+
+	private FinderCacheImpl _getFinderCacheImpl() {
+		try {
+			return (FinderCacheImpl)_finderCacheSnapshot.get();
+		}
+		catch (IllegalStateException | NullPointerException exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return null;
+		}
 	}
 
 	private boolean _isLocalCacheEnabled() {
@@ -305,39 +301,40 @@ public class EntityCacheImpl
 	}
 
 	private void _notify(
-		String className, BaseModel<?> baseModel, Boolean removePortalCache,
-		long companyId) {
+		long companyId, String className, BaseModel<?> baseModel,
+		Boolean removePortalCache) {
 
 		try (SafeCloseable safeCloseable =
 				CompanyThreadLocal.setWithSafeCloseable(companyId)) {
 
-			FinderCacheImpl finderCacheImpl = _finderCacheImpl;
+			_notify(className, baseModel, removePortalCache);
+		}
+	}
 
-			if (finderCacheImpl == null) {
-				return;
-			}
+	private void _notify(
+		String className, BaseModel<?> baseModel, Boolean removePortalCache) {
 
-			if (removePortalCache == null) {
-				finderCacheImpl.updateByEntityCache(className, baseModel);
-			}
-			else if (baseModel != null) {
-				finderCacheImpl.removeByEntityCache(className, baseModel);
-			}
-			else if (removePortalCache) {
-				if (className == null) {
-					finderCacheImpl.dispose();
-				}
-				else {
-					finderCacheImpl.removeCacheByEntityCache(className);
-				}
+		FinderCacheImpl finderCacheImpl = _getFinderCacheImpl();
+
+		if (finderCacheImpl == null) {
+			return;
+		}
+
+		if (removePortalCache == null) {
+			finderCacheImpl.updateByEntityCache(className, baseModel);
+		}
+		else if (baseModel != null) {
+			finderCacheImpl.removeByEntityCache(className, baseModel);
+		}
+		else if (removePortalCache) {
+			finderCacheImpl.removeCacheByEntityCache(className);
+		}
+		else {
+			if (className == null) {
+				finderCacheImpl.clearCache();
 			}
 			else {
-				if (className == null) {
-					finderCacheImpl.clearCache();
-				}
-				else {
-					finderCacheImpl.clearByEntityCache(className);
-				}
+				finderCacheImpl.clearByEntityCache(className);
 			}
 		}
 	}
@@ -345,9 +342,7 @@ public class EntityCacheImpl
 	private void _notifyFinderCache(
 		String className, BaseModel<?> baseModel, Boolean removePortalCache) {
 
-		_notify(
-			className, baseModel, removePortalCache,
-			CompanyThreadLocal.getCompanyId());
+		_notify(className, baseModel, removePortalCache);
 
 		if (!_clusterExecutor.isEnabled() ||
 			!ClusterInvokeThreadLocal.isEnabled()) {
@@ -359,8 +354,8 @@ public class EntityCacheImpl
 			MethodHandler methodHandler = new MethodHandler(
 				_notifyMethodKey,
 				new Object[] {
-					className, baseModel, removePortalCache,
-					CompanyThreadLocal.getCompanyId()
+					CompanyThreadLocal.getCompanyId(), className, baseModel,
+					removePortalCache
 				});
 
 			ClusterRequest clusterRequest =
@@ -458,15 +453,15 @@ public class EntityCacheImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		EntityCacheImpl.class);
 
-	private static volatile FinderCacheImpl _finderCacheImpl;
+	private static final Snapshot<FinderCache> _finderCacheSnapshot =
+		new Snapshot<>(EntityCacheImpl.class, FinderCache.class);
 	private static final MethodKey _notifyMethodKey = new MethodKey(
-		EntityCacheImpl.class, "_notify", String.class, BaseModel.class,
-		Boolean.class, long.class);
+		EntityCacheImpl.class, "_notify", long.class, String.class,
+		BaseModel.class, Boolean.class);
 
 	@Reference
 	private ClusterExecutor _clusterExecutor;
 
-	private boolean _dbPartitionEnabled;
 	private ThreadLocal<LRUMap<Serializable, Serializable>> _localCache;
 
 	@Reference
@@ -478,6 +473,7 @@ public class EntityCacheImpl
 	@Reference
 	private Props _props;
 
+	private ServiceRegistration<CacheRegistryItem> _serviceRegistration;
 	private boolean _valueObjectEntityCacheEnabled;
 	private boolean _valueObjectMVCCEntityCacheEnabled;
 
@@ -510,6 +506,20 @@ public class EntityCacheImpl
 
 		private final String _className;
 		private final Serializable _primaryKey;
+
+	}
+
+	private class EntityCacheCacheRegistryItem implements CacheRegistryItem {
+
+		@Override
+		public String getRegistryName() {
+			return EntityCache.class.getName();
+		}
+
+		@Override
+		public void invalidate() {
+			clearCache();
+		}
 
 	}
 

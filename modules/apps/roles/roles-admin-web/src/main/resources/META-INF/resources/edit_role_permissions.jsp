@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -124,132 +115,67 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 <aui:script use="aui-loading-mask-deprecated,aui-parse-content,aui-toggler,autocomplete-base,autocomplete-filters">
 	var AParseContent = A.Plugin.ParseContent;
 
-	var permissionNavigationDataContainer = A.one(
-		'#<portlet:namespace />permissionNavigationDataContainer'
-	);
-
-	var togglerDelegate;
-
-	function createLiveSearch() {
-		var instance = this;
-
-		var PermissionNavigationSearch = A.Component.create({
-			AUGMENTS: [A.AutoCompleteBase],
-
-			EXTENDS: A.Base,
-
-			NAME: 'searchpermissioNnavigation',
-
-			prototype: {
-				initializer: function () {
-					var instance = this;
-
-					instance._bindUIACBase();
-					instance._syncUIACBase();
-				},
-			},
-		});
-
-		var getItems = function () {
-			var results = [];
-
-			permissionNavigationItems.each((item, index, collection) => {
-				results.push({
-					data: item.text().trim(),
-					node: item,
-				});
-			});
-
-			return results;
-		};
-
-		var getNoResultsNode = function () {
-			if (!noResultsNode) {
-				noResultsNode = A.Node.create(
-					'<div class="alert"><liferay-ui:message key="there-are-no-results" /></div>'
-				);
-			}
-
-			return noResultsNode;
-		};
-
-		var permissionNavigationItems = permissionNavigationDataContainer.all(
-			'.permission-navigation-item-container'
-		);
-
-		var permissionNavigationSectionsNode = permissionNavigationDataContainer.all(
-			'.permission-navigation-section'
-		);
-
-		var noResultsNode;
-
-		var permissionNavigationSearch = new PermissionNavigationSearch({
-			inputNode: '#<portlet:namespace />permissionNavigationSearch',
-			minQueryLength: 0,
-			nodes: '.permission-navigation-item-container',
-			resultFilters: 'subWordMatch',
-			resultTextLocator: 'data',
-			source: getItems(),
-		});
-
-		permissionNavigationSearch.on('query', (event) => {
-			if (event.query) {
-				togglerDelegate.expandAll();
-			}
-			else {
-				togglerDelegate.collapseAll();
-			}
-		});
-
-		permissionNavigationSearch.on('results', (event) => {
-			permissionNavigationItems.each((item, index, collection) => {
-				item.addClass('hide');
-			});
-
-			event.results.forEach((item, index) => {
-				item.raw.node.removeClass('hide');
-			});
-
-			var foundVisibleSection;
-
-			permissionNavigationSectionsNode.each((item, index, collection) => {
-				var action = 'addClass';
-
-				var visibleItem = item.one(
-					'.permission-navigation-item-container:not(.hide)'
-				);
-
-				if (visibleItem) {
-					action = 'removeClass';
-
-					foundVisibleSection = true;
-				}
-
-				item[action]('hide');
-			});
-
-			var noResultsNode = getNoResultsNode();
-
-			if (foundVisibleSection) {
-				noResultsNode.remove();
-			}
-			else {
-				permissionNavigationDataContainer.appendChild(noResultsNode);
-			}
-		});
-	}
-
 	var originalSelectedValues = [];
 
+	var permissionContainerNode = A.one(
+		'#<portlet:namespace />permissionContainer'
+	);
+
+	var permissionContentContainerNode = permissionContainerNode.one(
+		'#<portlet:namespace />permissionContentContainer'
+	);
+
+	window['<portlet:namespace />loadContent'] = function (href) {
+		permissionContentContainerNode.plug(A.LoadingMask);
+
+		permissionContentContainerNode.loadingmask.show();
+
+		permissionContentContainerNode.unplug(AParseContent);
+
+		Liferay.Util.fetch(href)
+			.then((response) => {
+				if (response.status === 401) {
+					window.location.reload();
+				}
+				else if (response.ok) {
+					return response.text();
+				}
+				else {
+					throw new Error(
+						'<liferay-ui:message key="sorry,-we-were-not-able-to-access-the-server" />'
+					);
+				}
+			})
+			.then((response) => {
+				permissionContentContainerNode.loadingmask.hide();
+
+				permissionContentContainerNode.unplug(A.LoadingMask);
+
+				permissionContentContainerNode.plug(AParseContent);
+
+				permissionContentContainerNode.empty();
+
+				permissionContentContainerNode.setContent(response);
+
+				var checkedNodes = permissionContentContainerNode.all(':checked');
+
+				originalSelectedValues = checkedNodes.val();
+
+				setPortletResource(href);
+			})
+			.catch((error) => {
+				permissionContentContainerNode.loadingmask.hide();
+
+				permissionContentContainerNode.unplug(A.LoadingMask);
+
+				Liferay.Util.openToast({
+					message: error.message,
+					type: 'warning',
+				});
+			});
+	};
+
 	function processNavigationLinks() {
-		var permissionContainerNode = A.one(
-			'#<portlet:namespace />permissionContainer'
-		);
-
-		var permissionContentContainerNode = permissionContainerNode.one(
-			'#<portlet:namespace />permissionContentContainer'
-		);
-
 		permissionContainerNode.delegate(
 			'click',
 			(event) => {
@@ -259,57 +185,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 				href = Liferay.Util.addParams('p_p_isolated=true', href);
 
-				permissionContentContainerNode.plug(A.LoadingMask);
-
-				permissionContentContainerNode.loadingmask.show();
-
-				permissionContentContainerNode.unplug(AParseContent);
-
-				Liferay.Util.fetch(href)
-					.then((response) => {
-						if (response.status === 401) {
-							window.location.reload();
-						}
-						else if (response.ok) {
-							return response.text();
-						}
-						else {
-							throw new Error(
-								'<liferay-ui:message key="sorry,-we-were-not-able-to-access-the-server" />'
-							);
-						}
-					})
-					.then((response) => {
-						permissionContentContainerNode.loadingmask.hide();
-
-						permissionContentContainerNode.unplug(A.LoadingMask);
-
-						permissionContentContainerNode.plug(AParseContent);
-
-						permissionContentContainerNode.empty();
-
-						permissionContentContainerNode.setContent(response);
-
-						var checkedNodes = permissionContentContainerNode.all(
-							':checked'
-						);
-
-						originalSelectedValues = checkedNodes.val();
-
-						A.all('.permission-navigation-link').removeClass('active');
-
-						event.currentTarget.addClass('active');
-					})
-					.catch((error) => {
-						permissionContentContainerNode.loadingmask.hide();
-
-						permissionContentContainerNode.unplug(A.LoadingMask);
-
-						Liferay.Util.openToast({
-							message: error.message,
-							type: 'warning',
-						});
-					});
+				<portlet:namespace />loadContent(href);
 			},
 			'.permission-navigation-link'
 		);
@@ -356,14 +232,26 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 		);
 	}
 
-	A.on('domready', (event) => {
-		togglerDelegate = new A.TogglerDelegate({
-			container: <portlet:namespace />permissionNavigationDataContainer,
-			content: '.permission-navigation-item-content',
-			header: '.permission-navigation-item-header',
-		});
+	function setPortletResource(href) {
+		const url = new URL(href);
 
-		createLiveSearch();
+		const cmdKey = '<portlet:namespace />cmd';
+		const portletResourceKey = '<portlet:namespace />portletResource';
+
+		const cmd = url.searchParams.get(cmdKey);
+		const portletResource = url.searchParams.get(portletResourceKey);
+
+		const currentURL = new URL(window.location.href);
+
+		currentURL.searchParams.set(cmdKey, cmd);
+		currentURL.searchParams.set(portletResourceKey, portletResource);
+
+		const path = currentURL.toString();
+
+		window.history.replaceState({path}, document.title, path);
+	}
+
+	A.on('domready', (event) => {
 		processNavigationLinks();
 		processTargetCheckboxes();
 	});

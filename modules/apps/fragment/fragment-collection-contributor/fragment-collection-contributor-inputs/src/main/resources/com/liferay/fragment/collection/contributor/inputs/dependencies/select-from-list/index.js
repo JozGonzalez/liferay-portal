@@ -1,3 +1,5 @@
+const isRTL = document.documentElement.classList.contains('rtl');
+
 const buttonElement = fragmentElement.querySelector('.btn');
 const dropdownElement = fragmentElement.querySelector('.dropdown-menu');
 const optionListElement = fragmentElement.querySelector('.list-unstyled');
@@ -50,7 +52,25 @@ window.addEventListener('scroll', handleWindowResizeOrScroll, {
 const MAX_ITEMS = 10;
 
 let lastSearchAbortController = new AbortController();
-let lastSearchQuery = null;
+let lastSearchQuery = input.value ? input.value : null;
+
+valueInputElement.value = input.value ? input.value : '';
+
+if (input.value) {
+	lastSearchQuery = input.value;
+	valueInputElement.value = input.value;
+
+	const selectedOption = optionListElement.querySelector(
+		'.active.dropdown-item'
+	);
+
+	if (selectedOption) {
+		optionListElement.setAttribute(
+			'aria-activedescendant',
+			selectedOption.id
+		);
+	}
+}
 
 const KEYS = {
 	ArrowDown: 'ArrowDown',
@@ -396,7 +416,10 @@ function repositionDropdownElement() {
 	}
 
 	dropdownElement.style.transform = `
-		translateX(${uiInputRect.left + window.scrollX}px)
+		translateX(${
+			(isRTL ? uiInputRect.right - window.innerWidth : uiInputRect.left) +
+			window.scrollX
+		}px)
 		translateY(${uiInputRect.bottom + window.scrollY}px)
 	`;
 }

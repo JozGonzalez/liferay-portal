@@ -86,4 +86,33 @@ definition {
 		return ${staticObjectFieldId};
 	}
 
+	macro updateFieldOfEntryById {
+		Variables.assertDefined(parameterList = "${en_US_plural_label},${entryId},${fieldLabel},${fieldValue},${requiredFieldLabel},${requiredFieldValue}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/c/${en_US_plural_label}/${entryId} \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d {
+					"${requiredFieldLabel}": "${requiredFieldValue}",
+		''';
+
+		if (isSet(picklist)) {
+			var fieldInBody = '''"${fieldLabel}": {"key":"${fieldValue}"}''';
+		}
+
+		if (isSet(multiselectPicklist)) {
+			var fieldInBody = '''"${fieldLabel}": ["${fieldValue}","${fieldValue2}"]''';
+		}
+		else {
+			var fieldInBody = '''"${fieldLabel}": "${fieldValue}"''';
+		}
+
+		var curl = StringUtil.add(${curl}, "${fieldInBody}}", "");
+
+		JSONCurlUtil.patch(${curl});
+	}
+
 }

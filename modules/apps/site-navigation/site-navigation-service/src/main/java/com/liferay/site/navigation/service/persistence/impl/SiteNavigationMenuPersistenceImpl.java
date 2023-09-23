@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.service.persistence.impl;
@@ -55,7 +46,6 @@ import com.liferay.site.navigation.service.persistence.impl.constants.SiteNaviga
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -729,21 +719,21 @@ public class SiteNavigationMenuPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			SiteNavigationMenu.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			SiteNavigationMenu.class);
 
 		if (result instanceof SiteNavigationMenu) {
 			SiteNavigationMenu siteNavigationMenu = (SiteNavigationMenu)result;
@@ -753,6 +743,15 @@ public class SiteNavigationMenuPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						SiteNavigationMenu.class,
+						siteNavigationMenu.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3475,21 +3474,21 @@ public class SiteNavigationMenuPersistenceImpl
 
 		name = Objects.toString(name, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			SiteNavigationMenu.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, name};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByG_N, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			SiteNavigationMenu.class);
 
 		if (result instanceof SiteNavigationMenu) {
 			SiteNavigationMenu siteNavigationMenu = (SiteNavigationMenu)result;
@@ -3499,6 +3498,15 @@ public class SiteNavigationMenuPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						SiteNavigationMenu.class,
+						siteNavigationMenu.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -8197,30 +8205,14 @@ public class SiteNavigationMenuPersistenceImpl
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "auto_"}, false);
 
-		_setSiteNavigationMenuUtilPersistence(this);
+		SiteNavigationMenuUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setSiteNavigationMenuUtilPersistence(null);
+		SiteNavigationMenuUtil.setPersistence(null);
 
 		entityCache.removeCache(SiteNavigationMenuImpl.class.getName());
-	}
-
-	private void _setSiteNavigationMenuUtilPersistence(
-		SiteNavigationMenuPersistence siteNavigationMenuPersistence) {
-
-		try {
-			Field field = SiteNavigationMenuUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, siteNavigationMenuPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

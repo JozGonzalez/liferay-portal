@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.initializer.util;
@@ -72,6 +63,7 @@ public class CommerceDiscountsImporter {
 		boolean usePercentage = jsonObject.getBoolean("usePercentage");
 		BigDecimal maximumDiscountAmount = BigDecimal.valueOf(
 			jsonObject.getDouble("maximumDiscountAmount"));
+		String levelType = jsonObject.getString("level");
 		BigDecimal level1 = BigDecimal.valueOf(jsonObject.getDouble("level1"));
 
 		boolean active = jsonObject.getBoolean("active");
@@ -79,10 +71,10 @@ public class CommerceDiscountsImporter {
 		return _commerceDiscountLocalService.addCommerceDiscount(
 			serviceContext.getUserId(), title,
 			CommerceDiscountConstants.TARGET_CATEGORIES, useCouponCode,
-			couponCode, usePercentage, maximumDiscountAmount, level1,
+			couponCode, usePercentage, maximumDiscountAmount, levelType, level1,
 			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-			CommerceDiscountConstants.LIMITATION_TYPE_UNLIMITED, 0, active, 1,
-			1, 2019, -1, -1, 0, 0, 0, 0, 0, true, serviceContext);
+			CommerceDiscountConstants.LIMITATION_TYPE_UNLIMITED, 0, false,
+			active, 1, 1, 2019, -1, -1, 0, 0, 0, 0, 0, true, serviceContext);
 	}
 
 	private void _importCommerceDiscount(
@@ -115,9 +107,8 @@ public class CommerceDiscountsImporter {
 						_commerceDiscountRelLocalService.addCommerceDiscountRel(
 							commerceDiscount.getCommerceDiscountId(),
 							AssetCategory.class.getName(),
-							assetCategory.getPrimaryKey(), serviceContext);
-
-						break;
+							assetCategory.getPrimaryKey(), null,
+							serviceContext);
 					}
 				}
 			}

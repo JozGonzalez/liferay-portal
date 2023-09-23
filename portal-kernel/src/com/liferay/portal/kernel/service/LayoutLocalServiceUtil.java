@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -376,6 +367,18 @@ public class LayoutLocalServiceUtil {
 		return getService().addLayout(
 			userId, groupId, privateLayout, parentLayoutId, name, title,
 			description, type, hidden, friendlyURL, serviceContext);
+	}
+
+	public static Layout copyLayout(
+			long userId, long groupId, boolean privateLayout,
+			Map<java.util.Locale, String> nameMap, boolean hidden,
+			boolean system, boolean copyPermissions, long sourcePlid,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().copyLayout(
+			userId, groupId, privateLayout, nameMap, hidden, system,
+			copyPermissions, sourcePlid, serviceContext);
 	}
 
 	/**
@@ -1285,6 +1288,13 @@ public class LayoutLocalServiceUtil {
 	}
 
 	public static int getLayoutsCount(
+		long groupId, boolean privateLayout, long parentLayoutId) {
+
+		return getService().getLayoutsCount(
+			groupId, privateLayout, parentLayoutId);
+	}
+
+	public static int getLayoutsCount(
 			long groupId, long userId, boolean privateLayout, String keywords,
 			String[] types)
 		throws PortalException {
@@ -1962,6 +1972,10 @@ public class LayoutLocalServiceUtil {
 
 	public static LayoutLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(LayoutLocalService service) {
+		_service = service;
 	}
 
 	private static volatile LayoutLocalService _service;

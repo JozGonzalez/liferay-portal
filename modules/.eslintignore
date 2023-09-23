@@ -23,10 +23,10 @@
     apps/frontend-editor/frontend-editor-tinymce-web
     apps/frontend-js/frontend-js-jquery-web
     build/**
-    tmp/**
     classes/**
     css/clay/**
     node_modules/**
+    tmp/**
     types/**/*.d.ts
     yarn-*.js
     zippableResources/**
@@ -64,3 +64,9 @@
     /**/*-min.js
     /test/jenkins-results-parser/**
     /test/poshi/**
+
+    #
+    # LRAC-12941 Temporarily ignore SF on FARO files
+    #
+    dxp/apps/osb/osb-faro/osb-faro-web
+    dxp/apps/osb/osb-faro/osb-faro-theme

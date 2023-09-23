@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -78,10 +78,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50557."
-	@ignore = "true"
 	@priority = 4
 	test AddListWithXSSWorkflowDefinition {
-		property test.name.skip.portal.instance = "DynamicdatalistUsecase#AddListWithXSSWorkflowDefinition";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -691,6 +691,8 @@ definition {
 	@description = "This is a use case for LPS-69273."
 	@priority = 4
 	test AddRepeatableFieldAsNonAdminUser {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
 		JSONRole.addRegularRole(
 			roleKey = "DDMRegRole Name",
 			roleTitle = "DDMRegRole Name");
@@ -714,40 +716,22 @@ definition {
 				roleTitle = "DDMRegRole Name");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			userEmailAddress = "userea1@liferay.com",
-			userScreenName = "usersn1");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea1@liferay.com");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "DDMRegRole Name",
 			userEmailAddress = "userea1@liferay.com");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
 		DDLDataDefinition.addCP();
 
@@ -760,11 +744,7 @@ definition {
 
 		DDLDataDefinition.save();
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
 		DDLList.addCP();
 
@@ -776,11 +756,7 @@ definition {
 			userLoginEmailAddress = "userea1@liferay.com",
 			userLoginFullName = "userfn1 userln1");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
 		DDLRecord.addCP();
 
@@ -901,7 +877,6 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50549."
-	@ignore = "true"
 	@priority = 4
 	test AddXSSToHTMLField {
 		var ddlRecordFieldData1 = '''<img src=x onerror=alert(/xss/) />''';
@@ -1617,7 +1592,7 @@ definition {
 	@description = "This is a use case for LPS-50557."
 	@priority = 3
 	test CreateSiteAndViewDefaultDataDefinitions {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "site-name");
 
@@ -1706,7 +1681,8 @@ definition {
 	@description = "This is a use case for LPS-59154 and LPS-62523."
 	@priority = 3
 	test EditDefaultLanguageAndPublishRecord {
-		property test.name.skip.portal.instance = "DynamicdatalistUsecase#EditDefaultLanguageAndPublishRecord";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -2021,7 +1997,7 @@ definition {
 			Click.mouseOverClick(locator1 = "DDMEditStructure#FORM_FIELD_DELETE_BUTTON_2");
 
 			AssertTextEquals(
-				locator1 = "IFrame#DIALOG_BOX",
+				locator1 = "Modal#HEADER",
 				value1 = "Boolean");
 
 			AssertTextEquals(
@@ -2043,7 +2019,8 @@ definition {
 	@description = "This is a use case for LPS-65479."
 	@priority = 4
 	test RemoveRepeatableDateField {
-		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#RemoveRepeatableDateField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -2368,62 +2345,70 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69667."
-	@ignore = "true"
 	@priority = 2
 	test SelectLinkToPagePage {
-		property portal.upstream = "quarantine";
-
-		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
-
-		for (var pageName : list "P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12") {
-			PagesAdmin.addPage(pageName = ${pageName});
+		for (var pageNumber : list "1,2,3,4,5,6,7,8,9,10,11,12") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page ${pageNumber}");
 		}
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+		task ("Given multiple pages with a field linked") {
+			DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
-		DDLDataDefinition.addCP(ddlDataDefinitionName = "Link To Page Data Definition");
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Dynamic Data Lists");
 
-		DynamicDataMapping.addField(
-			field = "Link to Page",
-			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
+			DDLDataDefinition.addCP(ddlDataDefinitionName = "Link To Page Data Definition");
 
-		DDLDataDefinition.save();
+			DynamicDataMapping.addField(
+				field = "Link to Page",
+				fieldFieldLabel = "Link to Page",
+				fieldName = "LinkToPage");
 
-		Navigator.openURL();
+			DDLDataDefinition.save();
+		}
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+		task ("When a Link to Page list is created") {
+			Navigator.openURL();
 
-		DDLList.addCP(ddlListName = "List Name");
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Link To Page Data Definition");
+			DDLList.addCP(ddlListName = "List Name");
 
-		DDLDataDefinition.save();
+			DDLDataDefinition.selectCP(ddlDataDefinitionName = "Link To Page Data Definition");
 
-		Navigator.openURL();
+			DDLDataDefinition.save();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
+			Navigator.openURL();
 
-		DDLRecord.addCP(
-			ddlDataDefinitionName = "Link To Page Data Definition",
-			ddlListName = "List Name");
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Dynamic Data Lists");
 
-		DDLRecord.populateFieldLinkToPage(
-			ddlRecordFieldData = "P10",
-			fieldName = "LinkToPage",
-			pagePrivacy = "Public");
+			DDLRecord.addCP(
+				ddlDataDefinitionName = "Link To Page Data Definition",
+				ddlListName = "List Name");
 
-		PortletEntry.publish();
+			DDLRecord.populateFieldLinkToPage(
+				ddlRecordFieldData = "Test Page 10",
+				fieldName = "LinkToPage");
 
-		DDLRecord.viewFirstFieldCP(
-			ddlRecordFieldData = "P10",
-			fieldFieldLabel = "Link to Page");
+			SelectFrameTop();
+
+			Button.clickPublish();
+		}
+
+		task ("Then the user is able to select and view the Link to Page") {
+			Alert.viewSuccessMessage();
+
+			DDLRecord.viewFirstFieldCP(
+				ddlRecordFieldData = "Test Page 10",
+				fieldFieldLabel = "Link to Page");
+		}
 	}
 
 	@description = "This is a use case for LPS-48743."
@@ -2483,7 +2468,7 @@ definition {
 			Click.mouseOverClick(locator1 = "DDMEditStructure#FORM_FIELD_DELETE_BUTTON_2");
 
 			AssertTextEquals(
-				locator1 = "IFrame#DIALOG_BOX",
+				locator1 = "Modal#HEADER",
 				value1 = "Boolean");
 
 			AssertTextEquals(
@@ -2503,7 +2488,8 @@ definition {
 	@description = "This is a use case for LPS-52865."
 	@priority = 4
 	test ViewCannotSaveWithDuplicateFieldNames {
-		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewCannotSaveWithDuplicateFieldNames";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -2535,7 +2521,8 @@ definition {
 	@description = "This is a use case for LPS-66228."
 	@priority = 4
 	test ViewDisplayTemplateClassLinks {
-		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewDisplayTemplateClassLinks";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -2723,91 +2710,6 @@ definition {
 			field = "Text Box",
 			fieldFieldLabel = "Text Box",
 			fieldName = "TextBox");
-	}
-
-	@description = "This is a use case for LPS-67478 ."
-	@ignore = "true"
-	@priority = 3
-	test ViewLinkToPageBreadcrumb {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "Parent Page Name");
-
-		PagesAdmin.addChildPage(
-			childPageName = "Child Page Name",
-			parentPageName = "Parent Page Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
-
-		DynamicDataMapping.addField(
-			field = "Link to Page",
-			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
-
-		DDLDataDefinition.save();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLDataDefinition.viewCP(
-			ddlDataDefinitionName = "Data Definition",
-			fieldFieldLabel = "Link to Page");
-
-		DynamicDataMapping.viewField(
-			field = "Link to Page",
-			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLList.addCP(ddlListName = "List Name");
-
-		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Data Definition");
-
-		DDLDataDefinition.save();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLRecord.addCP(
-			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name");
-
-		DDLRecord.populateFieldLinkToPage(
-			ddlRecordFieldData = "Child Page Name",
-			fieldName = "LinkToPage",
-			pagePrivacy = "Public",
-			parentPage = "Parent Page Name");
-
-		DDLRecord.gotoLinkToPageSelect(fieldName = "LinkToPage");
-
-		DDLRecord.viewLinkToPageBreadcrumbCount(count = 2);
-
-		DDLRecord.gotoLinkToPageNavItem(pagePrivacy = "Private");
-
-		DDLRecord.gotoLinkToPageNavItem(pagePrivacy = "Public");
-
-		DDLRecord.gotoLinkToPageChildPages(parentPage = "Parent Page Name");
-
-		DDLRecord.selectLinkToPageRadio(ddlRecordFieldData = "Child Page Name");
-
-		DDLRecord.viewLinkToPageBreadcrumbCount(count = 2);
 	}
 
 	@description = "This is a use case for LPS-57993"
@@ -3055,7 +2957,8 @@ definition {
 	@description = "This is a use case for LPS-63290 and LPS-72216."
 	@priority = 4
 	test ViewRepeatableNestedFields {
-		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewRepeatableNestedFields";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -3189,7 +3092,8 @@ definition {
 	@description = "This is a use case for LPS-51684."
 	@priority = 4
 	test ViewUniqueFieldLabels {
-		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewUniqueFieldLabels";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 

@@ -30,6 +30,209 @@ definition {
 		CommerceConfiguration.commerceTearDown();
 	}
 
+	@description = "COMMERCE-9601. As an Operations Manager, I can configure Channel payment method permission for different users"
+	@priority = 3
+	test CanAssignChannelPaymentMethodPermissionsPermission {
+		property portal.acceptance = "false";
+
+		task ("Given two users are created with the Operations Manager and Discount Manager role") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Operations Manager",
+				userEmailAddress = "om@liferay.com",
+				userFirstName = "Operations",
+				userLastName = "Manager",
+				userScreenName = "operationsmanager");
+
+			JSONUser.addUserWithRole(
+				roleTitle = "Discount Manager",
+				userEmailAddress = "dm@liferay.com",
+				userFirstName = "Discount",
+				userLastName = "Manager",
+				userScreenName = "discountmanager");
+
+			for (var roleTitle : list "Operations Manager,Discount Manager") {
+				CommercePermissions.defineChannelPermissionsViaJSONAPI(
+					currency = "true",
+					roleTitle = ${roleTitle},
+					tax = "true",
+					update = "true",
+					view = "true");
+			}
+		}
+
+		task ("And given 2 Payment Methods are enabled(Money Order,PayPal)") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			for (var paymentMethod : list "Money Order,PayPal") {
+				CommerceChannels.editPaymentMethod(
+					active = "true",
+					paymentMethod = ${paymentMethod});
+			}
+		}
+
+		task ("And on PayPal payment method, Permissions permission is added for Operations Manager") {
+			CommerceEntry.clickEntryDropdownMenuItem(
+				entryName = "PayPal",
+				menuItem = "Permissions");
+
+			CommercePermissions.definePermissionsPG(
+				permissionDefinitionKey = "INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX",
+				roleTitles = "Operations Manager");
+
+			Role.viewPermissionPG(
+				permissionDefinitionKey = "INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX",
+				permissionFlagged = "true",
+				roleTitle = "Operations Manager");
+
+			IFrame.closeFrame();
+		}
+
+		task ("And on Money Order payment method, Permissions permission is not set for Operations Manager") {
+			CommerceEntry.clickEntryDropdownMenuItem(
+				entryName = "Money Order",
+				menuItem = "Permissions");
+
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Role.viewPermissionPG(
+				permissionDefinitionKey = "INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX",
+				permissionFlagged = "false",
+				roleTitle = "Operations Manager");
+
+			IFrame.closeFrame();
+		}
+
+		task ("And the Operations Manager login") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "om@liferay.com",
+				userLoginFullName = "Operations Manager");
+
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("And the Operations Manager can only view permissions for PayPal") {
+			AssertElementNotPresent(
+				key_value = "Money Order",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			CommerceEntry.clickEntryDropdownMenuItem(
+				entryName = "PayPal",
+				menuItem = "Permissions");
+		}
+
+		task ("And the Operations Manager can set a permission for the Discount Manager") {
+			CommercePermissions.definePermissionsPG(
+				permissionDefinitionKey = "INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX",
+				roleTitles = "Discount Manager");
+
+			Role.viewPermissionPG(
+				permissionDefinitionKey = "INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX",
+				permissionFlagged = "true",
+				roleTitle = "Operations Manager");
+
+			IFrame.closeFrame();
+		}
+
+		task ("When the Discount Manager login") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "dm@liferay.com",
+				userLoginFullName = "Discount Manager");
+
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("Then the Discount Manager can view permissions for PayPal") {
+			AssertElementNotPresent(
+				key_value = "Money Order",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			Click(
+				key_value = "PayPal",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			AssertElementPresent(
+				key_menuItem = "Permissions",
+				locator1 = "MenuItem#ANY_MENU_ITEM");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-9979. The Operations Manager can edit the selected payment method of a placed order without items"
+	@priority = 3
+	test CanOperationsManagerEditEmptyPlacedOrderSelectedPaymentMethod {
+		property portal.acceptance = "false";
+
+		task ("Given a user with the Operations Manager role") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Operations Manager",
+				userEmailAddress = "om@liferay.com",
+				userFirstName = "Operations",
+				userLastName = "Manager",
+				userScreenName = "operationsmanager");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_COMMERCE_ORDER_PAYMENT_METHODS",
+				resourceName = "com.liferay.commerce.order",
+				roleTitle = "Operations Manager");
+		}
+
+		task ("And 2 Payment Methods are enabled(Money Order, PayPal)") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			for (var paymentMethod : list "Money Order,PayPal") {
+				CommerceChannels.editPaymentMethod(
+					active = "true",
+					paymentMethod = ${paymentMethod});
+			}
+		}
+
+		task ("And a placed order without order items is created") {
+			CommerceJSONOrdersAPI._addCommerceOrder(
+				accountEntryName = "Commerce Account",
+				orderStatus = 1,
+				paymentMethod = "money-order",
+				paymentStatus = 2);
+		}
+
+		task ("When the Operations Manager opens the order from the orders page and goes to the Payment tab") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "om@liferay.com",
+				userLoginFullName = "Operations Manager");
+
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			Click(
+				key_menuTab = "Payments",
+				locator1 = "CommerceEntry#MENU_TAB");
+		}
+
+		task ("Then the preset payment method 'Money Order' can be updated to 'Paypal'") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceOrders#ORDER_DETAILS_PAYMENT_METHOD_NAME",
+				value1 = "Money Order");
+
+			CommerceOrders.editPaymentMethod(
+				eligiblePaymentMethods = "Money Order,PayPal",
+				notEligiblePaymentMethods = "Authorize.Net",
+				paymentMethod = "PayPal");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "CommerceOrders#ORDER_DETAILS_PAYMENT_METHOD_NAME",
+				value1 = "PayPal");
+		}
+	}
+
 	@description = "COMMERCE-9506. As a user of the storefront, I should have access only to payment methods that are assigned to my role"
 	@priority = 5
 	test CanSFUsersSelectPaymentMethodsDuringCheckoutBasedOnViewPermissionForEachPaymentMethod {
@@ -224,7 +427,6 @@ definition {
 				locator1 = "CommerceEntry#MENU_TAB");
 
 			AssertTextEquals.assertPartialText(
-				key_paymentMethod = "PayPal",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PAYMENT_METHOD_NAME",
 				value1 = "PayPal");
 		}
@@ -319,7 +521,6 @@ definition {
 				locator1 = "CommerceEntry#MENU_TAB");
 
 			AssertTextEquals.assertPartialText(
-				key_paymentMethod = "Money Order",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PAYMENT_METHOD_NAME",
 				value1 = "Money Order");
 
@@ -471,7 +672,6 @@ definition {
 				locator1 = "CommerceEntry#MENU_TAB");
 
 			AssertTextEquals.assertPartialText(
-				key_paymentMethod = "Money Order",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PAYMENT_METHOD_NAME",
 				value1 = "Money Order");
 

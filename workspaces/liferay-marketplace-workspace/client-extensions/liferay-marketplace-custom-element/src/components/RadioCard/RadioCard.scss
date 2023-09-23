@@ -8,13 +8,23 @@
 		padding: 1rem;
 		width: 100%;
 
+		&-disabled {
+			opacity: 0.5;
+		}
+
+		&:hover {
+			background-color: #e6edfb;
+			border: 1px solid #004ad7;
+		}
+
 		&-selected {
 			background-color: #e6edfb;
 			border: 1px solid #004ad7;
 		}
 
-		&-disabled {
-			opacity: 0.5;
+		&-small {
+			height: auto;
+			width: 270px;
 		}
 
 		transition: background-color 0.5s;
@@ -25,6 +35,33 @@
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
+
+		&-small {
+			align-items: center;
+			display: flex;
+			gap: 4px;
+			justify-content: center;
+
+			&-background {
+				background-color: #fff;
+				border: #e2e2e4 1px solid;
+				border-radius: 4px;
+				display: flex;
+				height: 28px;
+				justify-content: center;
+				padding-top: 4px;
+				width: 40px;
+
+				img {
+					height: 18px;
+					width: 15px;
+				}
+			}
+
+			&-text-small {
+				font-size: 13px;
+			}
+		}
 	}
 
 	&-button {
@@ -43,13 +80,12 @@
 	}
 
 	&-title {
-		align-items: flex-start;
+		align-items: center;
 		display: flex;
 		gap: 0.5rem;
 		justify-content: center;
 
 		&-text {
-			font-family: 'Source Sans Pro', sans-serif;
 			font-size: 1.125rem;
 			font-weight: 600;
 			line-height: 1.25rem;
@@ -57,7 +93,6 @@
 			&-selected {
 				color: #004ad7;
 			}
-
 			transition: color 0.5s;
 		}
 
@@ -69,6 +104,12 @@
 				brightness(86%) contrast(110%);
 
 			transition: filter 0.5s;
+
+			&-rounded {
+				border-radius: 50%;
+				height: 32px;
+				width: 32px;
+			}
 		}
 
 		&-tooltip {
@@ -78,7 +119,6 @@
 
 	&-description {
 		color: #54555f;
-		font-family: 'Source Sans Pro', sans-serif;
 		font-size: 0.813rem;
 		font-weight: 400;
 		line-height: 1rem;

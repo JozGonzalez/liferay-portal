@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.configuration.settings.internal.scoped.configuration.admin.service;
@@ -21,7 +12,6 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.settings.LocationVariableResolver;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,9 +27,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
@@ -50,10 +37,9 @@ public class ScopedConfigurationManagedServiceFactory
 	implements ManagedServiceFactory {
 
 	public ScopedConfigurationManagedServiceFactory(
-		BundleContext bundleContext, Class<?> configurationBeanClass,
+		Class<?> configurationBeanClass,
 		LocationVariableResolver locationVariableResolver) {
 
-		_bundleContext = bundleContext;
 		_configurationBeanClass = configurationBeanClass;
 		_locationVariableResolver = locationVariableResolver;
 
@@ -89,19 +75,6 @@ public class ScopedConfigurationManagedServiceFactory
 	@Override
 	public String getName() {
 		return _factoryPid;
-	}
-
-	public void register() {
-		_managedServiceFactoryServiceRegistration =
-			_bundleContext.registerService(
-				ManagedServiceFactory.class, this,
-				HashMapDictionaryBuilder.<String, Object>put(
-					Constants.SERVICE_PID, _factoryPid + ".scoped"
-				).build());
-	}
-
-	public void unregister() {
-		_managedServiceFactoryServiceRegistration.unregister();
 	}
 
 	@Override
@@ -206,14 +179,11 @@ public class ScopedConfigurationManagedServiceFactory
 			});
 	}
 
-	private final BundleContext _bundleContext;
 	private final Class<?> _configurationBeanClass;
 	private final Map<ScopeKey, Map<String, Object>> _configurationBeans =
 		new ConcurrentHashMap<>();
 	private final String _factoryPid;
 	private final LocationVariableResolver _locationVariableResolver;
-	private ServiceRegistration<ManagedServiceFactory>
-		_managedServiceFactoryServiceRegistration;
 	private final Map<String, Set<ScopeKey>> _pidScopeKeys =
 		new ConcurrentHashMap<>();
 

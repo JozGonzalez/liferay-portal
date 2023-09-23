@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -17,6 +8,7 @@ package com.liferay.source.formatter.check;
 import aQute.bnd.version.Version;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -24,6 +16,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.check.util.BNDSourceUtil;
 import com.liferay.source.formatter.check.util.JavaSourceUtil;
+import com.liferay.source.formatter.check.util.SourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.ParseException;
@@ -35,6 +28,9 @@ import java.io.IOException;
 
 import java.util.List;
 import java.util.Objects;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Hugo Huijser
@@ -52,14 +48,28 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 		if (GetterUtil.getBoolean(
 				BNDSourceUtil.getDefinitionValue(content, "Liferay-Service"))) {
 
-			if (schemaVersion != null) {
-				return _fixSchemaVersion(absolutePath, content, schemaVersion);
-			}
-
 			int pos = absolutePath.lastIndexOf(CharPool.SLASH);
 
 			File serviceXMLfile = new File(
 				absolutePath.substring(0, pos + 1) + "service.xml");
+
+			if (schemaVersion != null) {
+				if (!serviceXMLfile.exists() ||
+					_isAllEmptyEntity(serviceXMLfile)) {
+
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"Do not include the header Liferay-Require-",
+							"SchemaVersion and Liferay-Service when the ",
+							"service.xml only contains empty entity with no ",
+							"columns"));
+
+					return content;
+				}
+
+				return _fixSchemaVersion(absolutePath, content, schemaVersion);
+			}
 
 			if (serviceXMLfile.exists()) {
 				addMessage(fileName, "Missing 'Liferay-Require-SchemaVersion'");
@@ -90,9 +100,7 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 
 		int x = absolutePath.lastIndexOf(CharPool.SLASH);
 
-		absolutePath.substring(0, x + 1);
-
-		List<String> upgradeFileNames = SourceFormatterUtil.scanForFiles(
+		List<String> upgradeFileNames = SourceFormatterUtil.scanForFileNames(
 			absolutePath.substring(0, x + 1), new String[0],
 			new String[] {"**/upgrade/*.java", "**/upgrade/**/*.java"},
 			new SourceFormatterExcludes(), false);
@@ -117,10 +125,11 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 		Version expectedSchemaVersion = null;
 
 		for (String fileName : fileNames) {
-			fileName = StringUtil.replace(
-				fileName, CharPool.BACK_SLASH, CharPool.SLASH);
-
 			File file = new File(fileName);
+
+			if (!file.exists()) {
+				continue;
+			}
 
 			String content = FileUtil.read(file);
 
@@ -182,6 +191,28 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 		}
 
 		return null;
+	}
+
+	private boolean _isAllEmptyEntity(File file) throws IOException {
+		Document document = SourceUtil.readXML(FileUtil.read(file));
+
+		if (document == null) {
+			return true;
+		}
+
+		Element rootElement = document.getRootElement();
+
+		for (Element entityElement :
+				(List<Element>)rootElement.elements("entity")) {
+
+			List<Element> columnElements = entityElement.elements("column");
+
+			if (!columnElements.isEmpty()) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

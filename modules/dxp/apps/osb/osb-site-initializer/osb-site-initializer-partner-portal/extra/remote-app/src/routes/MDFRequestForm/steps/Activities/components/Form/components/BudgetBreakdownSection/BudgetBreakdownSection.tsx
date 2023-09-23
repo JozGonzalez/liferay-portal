@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button, {ClayButtonWithIcon} from '@clayui/button';
@@ -19,17 +13,15 @@ import PRMFormik from '../../../../../../../../common/components/PRMFormik';
 import ResumeCard from '../../../../../../../../common/components/ResumeCard';
 import LiferayPicklist from '../../../../../../../../common/interfaces/liferayPicklist';
 import MDFRequestBudget from '../../../../../../../../common/interfaces/mdfRequestBudget';
-import deleteMDFRequestActivityBudgets from '../../../../../../../../common/services/liferay/object/budgets/deleteMDFRequestActivityBudgets';
-import {ResourceName} from '../../../../../../../../common/services/liferay/object/enum/resourceName';
 import getIntlNumberFormat from '../../../../../../../../common/utils/getIntlNumberFormat';
 import getPicklistOptions from '../../../../../../../../common/utils/getPicklistOptions';
-import handleError from '../../../../../../../../common/utils/handleError';
 import useBudgetsAmount from './hooks/useBudgetsAmount';
 import getNewBudget from './utils/getNewBudget';
 
 interface IProps {
 	arrayHelpers: ArrayHelpers;
 	budgets: MDFRequestBudget[];
+	claimPercent: number;
 	currency: LiferayPicklist;
 	currentActivityIndex: number;
 	expenseEntries: React.OptionHTMLAttributes<HTMLOptionElement>[];
@@ -43,6 +35,7 @@ interface IProps {
 const BudgetBreakdownSection = ({
 	arrayHelpers,
 	budgets = [],
+	claimPercent,
 	currency,
 	currentActivityIndex,
 	expenseEntries,
@@ -71,30 +64,18 @@ const BudgetBreakdownSection = ({
 
 				setFieldValue(
 					`activities[${currentActivityIndex}].mdfRequestAmount`,
-					amountValue * 0.5
+					amountValue * claimPercent
 				);
 			},
-			[currentActivityIndex, setFieldValue]
+			[claimPercent, currentActivityIndex, setFieldValue]
 		)
 	);
 
-	const onRemove = async (index: number) => {
-		if (budgets[index].id) {
-			try {
-				await deleteMDFRequestActivityBudgets(
-					ResourceName.BUDGET,
-					budgets[index].id as number
-				);
-			}
-			catch (error: any) {
-				handleError(error.message);
-
-				return;
-			}
-		}
-
-		arrayHelpers.remove(index);
-	};
+	const onRemove = (index: number) =>
+		setFieldValue(
+			`activities[${currentActivityIndex}].budgets[${index}].removed`,
+			true
+		);
 
 	return (
 		<PRMForm.Section
@@ -102,43 +83,51 @@ const BudgetBreakdownSection = ({
 			title="Budget Breakdown"
 		>
 			<div>
-				{budgets.map((_, index) => (
-					<div className="align-items-center d-flex" key={index}>
-						<PRMForm.Group className="mr-4">
-							<PRMFormik.Field
-								component={PRMForm.Select}
-								label="Expense"
-								name={`activities[${currentActivityIndex}].budgets[${index}].expense`}
-								onChange={(
-									event: React.ChangeEvent<HTMLInputElement>
-								) => onExpenseSelected(event, index)}
-								options={expensesOptions}
-								required
-							/>
+				{budgets.map(
+					({removed}, index) =>
+						!removed && (
+							<div
+								className="align-items-center d-flex"
+								key={index}
+							>
+								<PRMForm.Group className="mr-4">
+									<PRMFormik.Field
+										component={PRMForm.Select}
+										label="Expense"
+										name={`activities[${currentActivityIndex}].budgets[${index}].expense`}
+										onChange={(
+											event: React.ChangeEvent<
+												HTMLInputElement
+											>
+										) => onExpenseSelected(event, index)}
+										options={expensesOptions}
+										required
+									/>
 
-							<PRMFormik.Field
-								component={PRMForm.InputCurrency}
-								label="Budget"
-								name={`activities[${currentActivityIndex}].budgets[${index}].cost`}
-								onAccept={(value: number) =>
-									setFieldValue(
-										`activities[${currentActivityIndex}].budgets[${index}].cost`,
-										value
-									)
-								}
-								required
-							/>
-						</PRMForm.Group>
+									<PRMFormik.Field
+										component={PRMForm.InputCurrency}
+										label="Budget"
+										name={`activities[${currentActivityIndex}].budgets[${index}].cost`}
+										onAccept={(value: number) =>
+											setFieldValue(
+												`activities[${currentActivityIndex}].budgets[${index}].cost`,
+												value
+											)
+										}
+										required
+									/>
+								</PRMForm.Group>
 
-						<ClayButtonWithIcon
-							className="mt-2"
-							displayType="secondary"
-							onClick={() => onRemove(index)}
-							small
-							symbol="hr"
-						/>
-					</div>
-				))}
+								<ClayButtonWithIcon
+									className="mt-2"
+									displayType="secondary"
+									onClick={() => onRemove(index)}
+									small
+									symbol="hr"
+								/>
+							</div>
+						)
+				)}
 
 				<Button
 					className="align-items-center d-flex"
@@ -164,7 +153,7 @@ const BudgetBreakdownSection = ({
 				<ResumeCard
 					className="mt-3"
 					leftContent="Claim Percent"
-					rightContent={`${0.5 * 100}%`}
+					rightContent={`${claimPercent * 100}%`}
 				/>
 			</div>
 

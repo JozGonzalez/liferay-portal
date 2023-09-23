@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -26,6 +17,8 @@ export default function ChangeTrackingCollectionEditView({
 	ctCollectionId,
 	ctCollectionTemplates,
 	ctCollectionTemplatesData,
+	ctRemoteId,
+	defaultCTCollectionTemplateId,
 	descriptionFieldMaxLength,
 	inviteUsersURL,
 	nameFieldMaxLength,
@@ -37,24 +30,34 @@ export default function ChangeTrackingCollectionEditView({
 	saveButtonLabel,
 	showTemplates,
 }) {
-	const [nameField, setNameField] = useState(publicationName);
+	const templates = JSON.parse(ctCollectionTemplates);
+	const data = JSON.parse(ctCollectionTemplatesData);
+
+	const [nameField, setNameField] = useState(
+		defaultCTCollectionTemplateId > 0
+			? data[defaultCTCollectionTemplateId].name
+			: publicationName
+	);
 	const [descriptionField, setDescriptionField] = useState(
-		publicationDescription
+		defaultCTCollectionTemplateId > 0
+			? data[defaultCTCollectionTemplateId].description
+			: publicationDescription
 	);
 	const [publishTimeField, setPublishTimeField] = useState(null);
 	const [saveButtonDisabled, setSaveButtonDisabled] = useState(
 		revertingPublication
 	);
-	const [ctCollectionTemplateId, setCtCollectionTemplateId] = useState(0);
-
-	const templates = JSON.parse(ctCollectionTemplates);
-	const data = JSON.parse(ctCollectionTemplatesData);
-
+	const [ctCollectionTemplateId, setCtCollectionTemplateId] = useState(
+		defaultCTCollectionTemplateId ? defaultCTCollectionTemplateId : 0
+	);
 	const handleSubmit = (event) => {
 		event.preventDefault();
 
+		setSaveButtonDisabled(true);
+
 		const bodyContent = objectToFormData({
 			[`${namespace}ctCollectionId`]: ctCollectionId,
+			[`${namespace}ctRemoteId`]: ctRemoteId,
 			[`${namespace}name`]: nameField,
 			[`${namespace}description`]: descriptionField,
 			[`${namespace}publishTime`]: publishTimeField,
@@ -66,31 +69,32 @@ export default function ChangeTrackingCollectionEditView({
 		})
 			.then((response) => {
 				if (response.status === 200) {
-					let action = 'created';
-
-					if (revertingPublication) {
-						action = 'reverted';
-					}
-					else if (ctCollectionId > 0) {
-						action = 'updated';
-					}
-
-					showNotification(
-						`Successfully ${action} the collection`,
-						false
-					);
-
-					return response;
+					return response.json();
 				}
 
 				showNotification(response.statusText, true);
 			})
-			.then((response) => {
-				if (response.status === 200) {
-					return response.json();
-				}
-			})
 			.then((responseJson) => {
+				if (responseJson.errorMessage) {
+					showNotification(responseJson.errorMessage, true);
+
+					return responseJson;
+				}
+
+				let action = 'created';
+
+				if (revertingPublication) {
+					action = 'reverted';
+				}
+				else if (ctCollectionId > 0) {
+					action = 'updated';
+				}
+
+				showNotification(
+					`Successfully ${action} the collection`,
+					false
+				);
+
 				if (
 					ctCollectionTemplateId > 0 &&
 					responseJson.ctCollectionId &&
@@ -116,6 +120,9 @@ export default function ChangeTrackingCollectionEditView({
 						navigate(redirect);
 					}
 				}
+				else {
+					setSaveButtonDisabled(false);
+				}
 			})
 			.catch((error) => {
 				showNotification(error.message, true);
@@ -140,6 +147,10 @@ export default function ChangeTrackingCollectionEditView({
 		roleValues,
 		userIds
 	) => {
+		if (!userIds || !userIds.length) {
+			return;
+		}
+
 		const formData = {
 			[`${namespace}ctCollectionId`]: ctCollectionId,
 			[`${namespace}publicationsUserRoleUserIds`]: publicationsUserRoleUserIds.join(
@@ -199,7 +210,11 @@ export default function ChangeTrackingCollectionEditView({
 								Liferay.Language.get('select-x'),
 								Liferay.Language.get('template')
 							)}
-							defaultValue={0}
+							defaultValue={
+								defaultCTCollectionTemplateId
+									? defaultCTCollectionTemplateId
+									: 0
+							}
 							id="templateSelector"
 							onChange={(event) => {
 								onSelectValueChange(event.target.value);

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.messaging;
@@ -65,55 +56,6 @@ public class IndividualSegmentsChecker {
 	public void checkIndividualSegments() throws Exception {
 		_checkIndividualSegments();
 		_checkIndividualSegmentsMemberships();
-	}
-
-	public void checkIndividualSegments(long companyId, String individualPK)
-		throws Exception {
-
-		if ((_asahSegmentsEntryCache.getSegmentsEntryIds(individualPK) !=
-				null) ||
-			!_analyticsSettingsManager.isAnalyticsEnabled(companyId)) {
-
-			return;
-		}
-
-		Individual individual = _asahFaroBackendClient.getIndividual(
-			companyId, individualPK);
-
-		if (individual == null) {
-			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get individual " + individualPK);
-			}
-
-			return;
-		}
-
-		List<String> individualSegmentIds =
-			individual.getIndividualSegmentIds();
-
-		if (ListUtil.isEmpty(individualSegmentIds)) {
-			return;
-		}
-
-		ServiceContext serviceContext = _getServiceContext(companyId);
-
-		List<Long> segmentsEntryIds = TransformUtil.transform(
-			individualSegmentIds,
-			individualSegmentId -> {
-				SegmentsEntry segmentsEntry =
-					_segmentsEntryLocalService.fetchSegmentsEntry(
-						serviceContext.getScopeGroupId(), individualSegmentId,
-						true);
-
-				if (segmentsEntry != null) {
-					return segmentsEntry.getSegmentsEntryId();
-				}
-
-				return null;
-			});
-
-		_asahSegmentsEntryCache.putSegmentsEntryIds(
-			individualPK, ArrayUtil.toLongArray(segmentsEntryIds));
 	}
 
 	@Activate
@@ -229,6 +171,31 @@ public class IndividualSegmentsChecker {
 						if (userId != null) {
 							userIds.add(userId);
 						}
+						else {
+							List<String> individualSegmentIds =
+								individual.getIndividualSegmentIds();
+
+							if (ListUtil.isNotEmpty(individualSegmentIds)) {
+								String individualPK = _getIndividualPK(
+									analyticsConfiguration.
+										liferayAnalyticsDataSourceId(),
+									individual);
+
+								if (individualPK != null) {
+									try {
+										_putSegmentsEntryIdsCache(
+											segmentsEntry.getCompanyId(),
+											individualPK, individualSegmentIds);
+									}
+									catch (PortalException portalException) {
+										_log.error(
+											"Unable to cache segments entry " +
+												"IDs for user ID " + userId,
+											portalException);
+									}
+								}
+							}
+						}
 					});
 
 				curPage++;
@@ -311,6 +278,32 @@ public class IndividualSegmentsChecker {
 		}
 	}
 
+	private String _getIndividualPK(
+		String dataSourceId, Individual individual) {
+
+		for (Individual.DataSourceIndividualPK dataSourceIndividualPK :
+				individual.getDataSourceIndividualPKs()) {
+
+			if (Objects.equals(
+					dataSourceId, dataSourceIndividualPK.getDataSourceId())) {
+
+				for (String individualPK :
+						dataSourceIndividualPK.getIndividualPKs()) {
+
+					return individualPK;
+				}
+			}
+		}
+
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Unable to find a user corresponding to individual " +
+					individual.getId());
+		}
+
+		return null;
+	}
+
 	private ServiceContext _getServiceContext(long companyId)
 		throws PortalException {
 
@@ -320,7 +313,7 @@ public class IndividualSegmentsChecker {
 
 		serviceContext.setScopeGroupId(company.getGroupId());
 
-		User user = company.getDefaultUser();
+		User user = company.getGuestUser();
 
 		serviceContext.setUserId(user.getUserId());
 
@@ -358,6 +351,31 @@ public class IndividualSegmentsChecker {
 		}
 
 		return null;
+	}
+
+	private void _putSegmentsEntryIdsCache(
+			long companyId, String userId, List<String> individualSegmentIds)
+		throws PortalException {
+
+		ServiceContext serviceContext = _getServiceContext(companyId);
+
+		List<Long> segmentsEntryIds = TransformUtil.transform(
+			individualSegmentIds,
+			individualSegmentId -> {
+				SegmentsEntry curSegmentsEntry =
+					_segmentsEntryLocalService.fetchSegmentsEntry(
+						serviceContext.getScopeGroupId(), individualSegmentId,
+						true);
+
+				if (curSegmentsEntry != null) {
+					return curSegmentsEntry.getSegmentsEntryId();
+				}
+
+				return null;
+			});
+
+		_asahSegmentsEntryCache.putSegmentsEntryIds(
+			userId, ArrayUtil.toLongArray(segmentsEntryIds));
 	}
 
 	private static final int _DELTA = 100;

@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.source.formatter.check.util.JavaSourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaParameter;
 import com.liferay.source.formatter.parser.JavaSignature;
@@ -39,7 +32,7 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 		String fileName, String absolutePath, JavaTerm javaTerm,
 		String fileContent) {
 
-		if (!javaTerm.isPublic() || !fileName.endsWith("Test.java")) {
+		if (!fileName.endsWith("Test.java")) {
 			return javaTerm.getContent();
 		}
 
@@ -49,19 +42,24 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 			return javaTerm.getContent();
 		}
 
-		_checkAnnotationForMethod(
-			fileName, javaTerm, "^tearDown(?!Class)", false, "After",
-			"AfterEach");
-		_checkAnnotationForMethod(
-			fileName, javaTerm, "^tearDownClass", true, "AfterAll",
-			"AfterClass");
-		_checkAnnotationForMethod(
-			fileName, javaTerm, "^setUp(?!Class)", false, "Before",
-			"BeforeEach");
-		_checkAnnotationForMethod(
-			fileName, javaTerm, "^setUpClass", true, "BeforeAll",
-			"BeforeClass");
-		_checkAnnotationForMethod(fileName, javaTerm, "^test", false, "Test");
+		if (javaTerm.isPublic()) {
+			_checkAnnotationForMethod(
+				fileName, javaTerm, "^tearDown(?!Class)", false, "After",
+				"AfterEach");
+			_checkAnnotationForMethod(
+				fileName, javaTerm, "^tearDownClass", true, "AfterAll",
+				"AfterClass");
+			_checkAnnotationForMethod(
+				fileName, javaTerm, "^setUp(?!Class)", false, "Before",
+				"BeforeEach");
+			_checkAnnotationForMethod(
+				fileName, javaTerm, "^setUpClass", true, "BeforeAll",
+				"BeforeClass");
+			_checkAnnotationForMethod(
+				fileName, javaTerm, "^test", false, "Test");
+		}
+
+		_checkFeatureFlagsAnnotation(fileName, javaTerm);
 
 		return javaTerm.getContent();
 	}
@@ -140,9 +138,50 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"Annotation ", sb.toString(), " required for '", methodName,
-					"'"),
+					"Annotation ", sb, " required for '", methodName, "'"),
 				javaTerm.getLineNumber());
+		}
+	}
+
+	private void _checkFeatureFlagsAnnotation(
+		String fileName, JavaTerm javaTerm) {
+
+		String javaTermContent = javaTerm.getContent();
+
+		int x = -1;
+
+		while (true) {
+			x = javaTermContent.indexOf("PropsUtil.addProperties(", x + 1);
+
+			if (x == -1) {
+				break;
+			}
+
+			List<String> parameterList = JavaSourceUtil.getParameterList(
+				JavaSourceUtil.getMethodCall(javaTerm.getContent(), x));
+
+			if ((parameterList.size() != 1) ||
+				!StringUtil.startsWith(
+					parameterList.get(0),
+					"UnicodePropertiesBuilder.setProperty(")) {
+
+				continue;
+			}
+
+			parameterList = JavaSourceUtil.getParameterList(
+				JavaSourceUtil.getMethodCall(parameterList.get(0), 0));
+
+			if ((parameterList.size() == 2) &&
+				StringUtil.startsWith(
+					parameterList.get(0), "\"feature.flag.")) {
+
+				addMessage(
+					fileName,
+					"Use annotation '@FeatureFlags' instead of 'PropsUtil." +
+						"addProperties' for feature flag",
+					javaTerm.getLineNumber() +
+						getLineNumber(javaTermContent, x) - 1);
+			}
 		}
 	}
 

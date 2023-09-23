@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.taglib.servlet.taglib;
@@ -20,7 +11,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManagerUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.theme.NavItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -30,10 +21,9 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
+import com.liferay.portlet.display.template.util.PortletDisplayTemplateUtil;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUtil;
-import com.liferay.site.navigation.taglib.internal.portlet.display.template.PortletDisplayTemplateUtil;
-import com.liferay.site.navigation.taglib.internal.servlet.NavItemClassNameIdUtil;
 import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.site.navigation.taglib.internal.util.NavItemUtil;
 import com.liferay.site.navigation.taglib.internal.util.SiteNavigationMenuNavItemImpl;
@@ -95,17 +85,10 @@ public class NavigationMenuTag extends IncludeTag {
 
 	@Override
 	public int processEndTag() throws Exception {
-		PortletDisplayTemplate portletDisplayTemplate =
-			PortletDisplayTemplateUtil.getPortletDisplayTemplate();
-
-		if (portletDisplayTemplate == null) {
-			return EVAL_PAGE;
-		}
-
 		DDMTemplate portletDisplayDDMTemplate =
-			portletDisplayTemplate.getPortletDisplayTemplateDDMTemplate(
+			PortletDisplayTemplateUtil.getPortletDisplayTemplateDDMTemplate(
 				getDisplayStyleGroupId(),
-				NavItemClassNameIdUtil.getNavItemClassNameId(),
+				ClassNameLocalServiceUtil.getClassNameId(NavItem.class),
 				getDisplayStyle(), true);
 
 		if (portletDisplayDDMTemplate == null) {
@@ -138,9 +121,9 @@ public class NavigationMenuTag extends IncludeTag {
 		HttpServletResponse httpServletResponse =
 			(HttpServletResponse)pageContext.getResponse();
 
-		String result = portletDisplayTemplate.renderDDMTemplate(
-			httpServletRequest, httpServletResponse, portletDisplayDDMTemplate,
-			navItems,
+		String result = PortletDisplayTemplateUtil.renderDDMTemplate(
+			httpServletRequest, httpServletResponse,
+			portletDisplayDDMTemplate.getTemplateId(), navItems,
 			HashMapBuilder.<String, Object>put(
 				"branchNavItems", branchNavItems
 			).put(
@@ -234,8 +217,10 @@ public class NavigationMenuTag extends IncludeTag {
 
 	protected String getDisplayStyle() {
 		if (Validator.isNotNull(_ddmTemplateKey)) {
-			return PortletDisplayTemplateManagerUtil.getDisplayStyle(
-				_ddmTemplateKey);
+			PortletDisplayTemplate portletDisplayTemplate =
+				ServletContextUtil.getPortletDisplayTemplate();
+
+			return portletDisplayTemplate.getDisplayStyle(_ddmTemplateKey);
 		}
 
 		return StringPool.BLANK;

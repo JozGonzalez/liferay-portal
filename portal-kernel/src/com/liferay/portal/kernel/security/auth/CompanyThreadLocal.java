@@ -1,28 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.security.auth;
 
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
 
@@ -30,19 +25,67 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import java.util.Locale;
-import java.util.TimeZone;
-
 /**
  * @author Brian Wing Shun Chan
  */
 public class CompanyThreadLocal {
 
+	public static User fetchGuestUser() {
+		Long companyId = _companyId.get();
+
+		if (companyId == CompanyConstants.SYSTEM) {
+			return null;
+		}
+
+		User guestUser = null;
+
+		try {
+			guestUser = UserLocalServiceUtil.fetchGuestUser(companyId);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		if (guestUser != null) {
+			return guestUser;
+		}
+
+		try (Connection connection = DataAccess.getConnection();
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				"select userId, languageId, timeZoneId from User_ where " +
+					"companyId = ? and type_ = ?")) {
+
+			preparedStatement.setLong(1, companyId);
+			preparedStatement.setInt(2, UserConstants.TYPE_GUEST);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (!resultSet.next()) {
+					return null;
+				}
+
+				guestUser = UserLocalServiceUtil.createUser(
+					resultSet.getLong("userId"));
+
+				guestUser.setLanguageId(resultSet.getString("languageId"));
+				guestUser.setTimeZoneId(resultSet.getString("timeZoneId"));
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return guestUser;
+	}
+
 	public static Long getCompanyId() {
 		Long companyId = _companyId.get();
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("getCompanyId " + companyId);
+			_log.debug("Get company ID " + companyId);
 		}
 
 		return companyId;
@@ -57,12 +100,31 @@ public class CompanyThreadLocal {
 	}
 
 	public static SafeCloseable lock(long companyId) {
-		SafeCloseable safeCloseable = setWithSafeCloseable(companyId);
+		if (isLocked()) {
+			Long currentCompanyId = _companyId.get();
+
+			if (companyId == currentCompanyId.longValue()) {
+				return () -> {
+				};
+			}
+
+			throw new UnsupportedOperationException(
+				StringBundler.concat(
+					"Company ID ", companyId, " and company ID ",
+					currentCompanyId.longValue(), " are different"));
+		}
+
+		_syncLastDBPartitionSessionState();
+
+		SafeCloseable safeCloseable = _companyId.setWithSafeCloseable(
+			companyId);
 
 		_locked.set(true);
 
 		return () -> {
 			_locked.set(false);
+
+			_syncLastDBPartitionSessionState();
 
 			safeCloseable.close();
 		};
@@ -100,70 +162,43 @@ public class CompanyThreadLocal {
 		Long companyId, Long ctCollectionId) {
 
 		long currentCompanyId = _companyId.get();
-		Locale defaultLocale = LocaleThreadLocal.getDefaultLocale();
-		TimeZone defaultTimeZone = TimeZoneThreadLocal.getDefaultTimeZone();
 
-		_setCompanyId(companyId);
+		boolean changed = _setCompanyId(companyId);
 
 		SafeCloseable ctCollectionSafeCloseable =
 			CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 				ctCollectionId);
 
 		return () -> {
+			if (changed) {
+				_syncLastDBPartitionSessionState();
+			}
+
 			_companyId.set(currentCompanyId);
-			LocaleThreadLocal.setDefaultLocale(defaultLocale);
-			TimeZoneThreadLocal.setDefaultTimeZone(defaultTimeZone);
+
+			_clearUserThreadLocals();
 
 			ctCollectionSafeCloseable.close();
 		};
 	}
 
-	private static User _fetchDefaultUser(long companyId) throws Exception {
-		User defaultUser = null;
-
-		try {
-			defaultUser = UserLocalServiceUtil.fetchDefaultUser(companyId);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-		}
-
-		if (defaultUser != null) {
-			return defaultUser;
-		}
-
-		try (Connection connection = DataAccess.getConnection()) {
-			try (PreparedStatement preparedStatement =
-					connection.prepareStatement(
-						"select userId, languageId, timeZoneId from User_ " +
-							"where companyId = ? and defaultUser = ?")) {
-
-				preparedStatement.setLong(1, companyId);
-				preparedStatement.setBoolean(2, true);
-
-				try (ResultSet resultSet = preparedStatement.executeQuery()) {
-					if (!resultSet.next()) {
-						return null;
-					}
-
-					defaultUser = UserLocalServiceUtil.createUser(
-						resultSet.getLong("userId"));
-
-					defaultUser.setLanguageId(
-						resultSet.getString("languageId"));
-					defaultUser.setTimeZoneId(
-						resultSet.getString("timeZoneId"));
-				}
-			}
-		}
-
-		return defaultUser;
+	private static void _clearUserThreadLocals() {
+		LocaleThreadLocal.removeDefaultLocale();
+		TimeZoneThreadLocal.removeDefaultTimeZone();
 	}
 
 	private static boolean _setCompanyId(Long companyId) {
 		if (companyId.equals(_companyId.get())) {
+			if (!isLocked()) {
+				return false;
+			}
+
+			if ((LocaleThreadLocal.getDefaultLocale() == null) ||
+				(TimeZoneThreadLocal.getDefaultTimeZone() == null)) {
+
+				_clearUserThreadLocals();
+			}
+
 			return false;
 		}
 
@@ -172,6 +207,8 @@ public class CompanyThreadLocal {
 				"CompanyThreadLocal modification is not allowed");
 		}
 
+		_syncLastDBPartitionSessionState();
+
 		if (_log.isDebugEnabled()) {
 			_log.debug("setCompanyId " + companyId);
 		}
@@ -179,43 +216,27 @@ public class CompanyThreadLocal {
 		if (companyId > 0) {
 			_companyId.set(companyId);
 
-			try {
-				User defaultUser = _fetchDefaultUser(companyId);
-
-				if (defaultUser == null) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(
-							"No default user was found for company " +
-								companyId);
-					}
-				}
-				else {
-					LocaleThreadLocal.setDefaultLocale(defaultUser.getLocale());
-					TimeZoneThreadLocal.setDefaultTimeZone(
-						defaultUser.getTimeZone());
-				}
-			}
-			catch (Exception exception) {
-				_log.error(exception);
-			}
+			_clearUserThreadLocals();
 		}
 		else {
 			_companyId.set(CompanyConstants.SYSTEM);
 
-			LocaleThreadLocal.setDefaultLocale(null);
-			TimeZoneThreadLocal.setDefaultTimeZone(null);
+			_clearUserThreadLocals();
 		}
 
 		return true;
 	}
 
+	private static void _syncLastDBPartitionSessionState() {
+		if (DBPartition.isPartitionEnabled()) {
+			LastSessionRecorderHelperUtil.syncLastSessionState(false);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CompanyThreadLocal.class);
 
-	private static final CentralizedThreadLocal<Long> _companyId =
-		new CentralizedThreadLocal<>(
-			CompanyThreadLocal.class + "._companyId",
-			() -> CompanyConstants.SYSTEM);
+	private static final CentralizedThreadLocal<Long> _companyId;
 	private static final CentralizedThreadLocal<Boolean>
 		_initializingPortalInstance = new CentralizedThreadLocal<>(
 			CompanyThreadLocal.class + "._initializingPortalInstance",
@@ -223,5 +244,11 @@ public class CompanyThreadLocal {
 	private static final ThreadLocal<Boolean> _locked =
 		new CentralizedThreadLocal<>(
 			CompanyThreadLocal.class + "._locked", () -> Boolean.FALSE);
+
+	static {
+		_companyId = new CentralizedThreadLocal<>(
+			CompanyThreadLocal.class + "._companyId",
+			() -> CompanyConstants.SYSTEM);
+	}
 
 }

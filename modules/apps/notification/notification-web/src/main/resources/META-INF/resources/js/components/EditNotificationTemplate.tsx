@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -29,6 +20,7 @@ import {defaultLanguageId} from '../util/constants';
 import './EditNotificationTemplate.scss';
 import {BasicInfoContainer} from './BasicInfoContainer/BasicInfoContainer';
 import ContentContainer from './ContentContainer/ContentContainer';
+import DefinitionOfTermsContainer from './DefinitionOfTermsContainer/DefinitionOfTermsContainer';
 import {SettingsContainer} from './SettingsContainer/SettingsContainer';
 
 const HEADERS = new Headers({
@@ -71,6 +63,10 @@ export default function EditNotificationTemplate({
 	notificationTemplateId = Number(notificationTemplateId);
 
 	const [isSubmitted, setIsSubmitted] = useState(false);
+
+	const [objectDefinitions, setObjectDefinitions] = useState<
+		ObjectDefinition[]
+	>([]);
 
 	const [selectedLocale, setSelectedLocale] = useState<Locale>(
 		Liferay.ThemeDisplay.getDefaultLanguageId
@@ -134,9 +130,13 @@ export default function EditNotificationTemplate({
 
 			window.location.assign(document.referrer);
 		}
-		else if (response.status === 404) {
+		else if (response.status === 400) {
+			const {title} = (await response.json()) as {
+				title: string;
+			};
+
 			openToast({
-				message: Liferay.Language.get('an-error-occurred'),
+				message: title,
 				type: 'danger',
 			});
 		}
@@ -162,6 +162,7 @@ export default function EditNotificationTemplate({
 				fromName: {
 					[defaultLanguageId]: '',
 				},
+				singleRecipient: !Liferay.FeatureFlags['LPS-187854'],
 				to: {
 					[defaultLanguageId]: '',
 				},
@@ -241,6 +242,9 @@ export default function EditNotificationTemplate({
 					Liferay.Language.get('untitled-notification-template')
 				);
 			}
+			const objectDefinitionsItems = await API.getObjectDefinitions();
+
+			setObjectDefinitions(objectDefinitionsItems);
 		};
 
 		makeFetch();
@@ -310,10 +314,16 @@ export default function EditNotificationTemplate({
 						baseResourceURL={baseResourceURL}
 						editorConfig={editorConfig}
 						errors={errors}
+						objectDefinitions={objectDefinitions}
 						selectedLocale={selectedLocale}
 						setSelectedLocale={setSelectedLocale}
 						setValues={setValues}
 						values={values}
+					/>
+
+					<DefinitionOfTermsContainer
+						baseResourceURL={baseResourceURL}
+						objectDefinitions={objectDefinitions}
 					/>
 				</div>
 			</div>

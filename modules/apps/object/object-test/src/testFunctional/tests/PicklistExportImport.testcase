@@ -16,9 +16,9 @@ definition {
 
 		Picklist.deleteAllPicklistsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -34,9 +34,45 @@ definition {
 	@description = "LPS-167536 - It's possible to add an object entry with a multi select picklist field of a picklist previously imported"
 	@priority = 4
 	test CanAddEntryWithMultiSelectPicklistImported {
+		task ("Given: A picklist imported and an object created") {
+			Picklist.gotoPicklists();
 
-		// TODO pending implementation
+			Picklist.importPicklist(
+				picklistFileName = "simple_picklist",
+				picklistName = "ImportedPicklist1");
 
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 175680",
+				objectName = "CustomObject175680",
+				pluralLabelName = "Custom Objects 175680");
+		}
+
+		task ("When: User adds a multiselect picklist field and adds an object entry") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 175680");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Field Picklist",
+				fieldPicklist = "ImportedPicklist1",
+				fieldType = "Multiselect Picklist");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject175680");
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject175680");
+
+			ObjectAdmin.addObjectMultiPicklistFieldEntryViaUI(picklistOptionList = "Picklist Item 1,Picklist Item 2");
+
+			PortletEntry.save();
+		}
+
+		task ("Then: The object entry is added") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject175680");
+
+			ObjectPortlet.viewEntry(entry = "Picklist Item 1");
+		}
 	}
 
 	@description = "LPS-167536 - It's possible to add an object entry with a picklist and a object previously imported"
@@ -150,7 +186,7 @@ definition {
 				fieldPicklist = "ImportedPicklist175681",
 				fieldType = "Picklist",
 				itemName = "Picklist Item 1",
-				maskAsState = "true");
+				markAsState = "true");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject175681");
 		}
@@ -249,6 +285,8 @@ definition {
 			Picklist.optionsPicklist(
 				menuItem = "Export as JSON",
 				picklistName = "Export Picklist");
+
+			DownloadTempFile();
 		}
 
 		task ("Then Picklist is exported successfully") {
@@ -274,12 +312,41 @@ definition {
 		}
 	}
 
-	@description = "LPS-167536 - It’s possible to overwrite Picklist when ERC is duplicated (Update Existing Picklist)"
+	@description = "LPS-167536 - It's possible to overwrite Picklist when ERC is duplicated (Update Existing Picklist)"
 	@priority = 5
 	test CanOverwritePicklistWhenERCisDuplicated {
+		property custom.properties = "feature.flag.LPS-167536=true";
+		property portal.acceptance = "true";
 
-		// TODO pending implementation
+		task ("Given a picklist with its ERC edited") {
+			JSONObject.addPicklist(
+				externalReferenceCode = "testoverwrite001",
+				picklistName = "Picklist Test");
 
+			Picklist.gotoPicklists();
+		}
+
+		task ("When a picklist is imported with the same ERC as an existing picklist") {
+			Click(locator1 = "ObjectAdmin#KEBAB_MENU");
+
+			Click(locator1 = "Picklist#IMPORT_PICKLIST");
+
+			Picklist.selectPicklistImportFile(
+				picklistFileName = "ListType_New_Picklist_44198_20230322182913922",
+				picklistName = "Updated Picklist");
+
+			IFrame.selectTopFrame();
+
+			Click(
+				key_text = "Continue",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		task ("Then the existing Picklist is updated") {
+			AssertElementPresent(
+				key_picklistName = "Updated Picklist",
+				locator1 = "Picklist#ASSERT_PICKLIST");
+		}
 	}
 
 }

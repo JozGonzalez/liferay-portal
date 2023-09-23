@@ -1,19 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {StatusBadgeType} from '../../components/StatusBadge/StatusBadge';
 import {DescriptionType} from '../../types';
+
+export type ActionPermissionProperties = {
+	href: string;
+	method: string;
+};
 
 type Facets = {
 	facetCriteria: string;
@@ -27,8 +23,22 @@ export type FacetAggregation = {
 	facets: Facets[];
 };
 
+type ObjectActions = {
+	create?: ActionPermissionProperties;
+	createBatch?: ActionPermissionProperties;
+	deleteBatch?: ActionPermissionProperties;
+	updateBatch?: ActionPermissionProperties;
+};
+
+export type ObjectActionsItems = {
+	delete?: ActionPermissionProperties;
+	get?: ActionPermissionProperties;
+	replace?: ActionPermissionProperties;
+	update?: ActionPermissionProperties;
+};
+
 export type APIResponse<Query = any> = {
-	actions: Object;
+	actions: ObjectActions;
 	facets: Facets[];
 	items: Query[];
 	lastPage: number;
@@ -54,7 +64,15 @@ export type UserGroup = {
 	name: string;
 };
 
+export type UserActions = {
+	'delete-user-account': ActionPermissionProperties;
+	'get-my-user-account': ActionPermissionProperties;
+	'patch-user-account': ActionPermissionProperties;
+	'put-user-account': ActionPermissionProperties;
+};
+
 export type UserAccount = {
+	actions: UserActions;
 	additionalName: string;
 	alternateName: string;
 	emailAddress: string;
@@ -68,6 +86,16 @@ export type UserAccount = {
 	uuid: number;
 };
 
+export type CaseResultAggregation = {
+	caseResultBlocked: number | string;
+	caseResultFailed: number | string;
+	caseResultInProgress: number | string;
+	caseResultIncomplete: number | string;
+	caseResultPassed: number | string;
+	caseResultTestFix: number | string;
+	caseResultUntested: number | string;
+};
+
 export type UserRole = {
 	roles: number;
 	rolesBriefs: Role[];
@@ -75,14 +103,8 @@ export type UserRole = {
 };
 
 export type TestrayBuild = {
+	actions: ObjectActionsItems;
 	buildToTasks: TestrayTask[];
-	caseResultBlocked: string;
-	caseResultFailed: string;
-	caseResultInProgress: string;
-	caseResultIncomplete: string;
-	caseResultPassed: string;
-	caseResultTestFix: string;
-	caseResultUntested: string;
 	creator: {
 		name: string;
 	};
@@ -102,9 +124,10 @@ export type TestrayBuild = {
 	tasks: TestrayTask[];
 	template: boolean;
 	templateTestrayBuildId: string;
-};
+} & CaseResultAggregation;
 
 export type TestrayCase = {
+	actions: ObjectActionsItems;
 	caseResults?: TestrayCaseResult[];
 	caseToCaseResult?: TestrayCaseResult[];
 	caseType?: TestrayCaseType;
@@ -128,6 +151,7 @@ export type TestrayCase = {
 };
 
 export type TestrayCaseResult = {
+	actions: ObjectActionsItems;
 	assignedUserId: string;
 	attachments: string;
 	build?: TestrayBuild;
@@ -158,7 +182,7 @@ export type TestrayCaseResult = {
 	startDate: string;
 	user?: UserAccount;
 	warnings: number;
-};
+} & CaseResultAggregation;
 
 export type TestrayCaseResultIssue = {
 	caseResult?: TestrayCaseResult;
@@ -211,6 +235,7 @@ export type TestrayProductVersion = {
 };
 
 export type TestrayProject = {
+	actions: ObjectActionsItems;
 	creator: {
 		name: string;
 	};
@@ -221,6 +246,7 @@ export type TestrayProject = {
 };
 
 export type TestrayRequirement = {
+	actions: ObjectActionsItems;
 	component?: TestrayComponent;
 	components: string;
 	description: string;
@@ -258,9 +284,10 @@ export type TestrayRun = {
 	number: string;
 	r_buildToRuns_c_build?: TestrayBuild;
 	status: string;
-};
+} & CaseResultAggregation;
 
 export type TestraySubTask = {
+	actions: ObjectActionsItems;
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
@@ -302,6 +329,7 @@ export type TestraySubTaskIssue = {
 };
 
 export type TestraySuite = {
+	actions: ObjectActionsItems;
 	caseParameters: string;
 	creator: {
 		name: string;
@@ -316,6 +344,7 @@ export type TestraySuite = {
 
 export type TestraySuiteCase = {
 	case: TestrayCase;
+	caseId: Number;
 	id: number;
 	r_caseToSuitesCases_c_case: TestrayCase;
 	r_caseToSuitesCases_c_caseId: number;
@@ -324,6 +353,7 @@ export type TestraySuiteCase = {
 };
 
 export type TestrayTask = {
+	actions: ObjectActionsItems;
 	build?: TestrayBuild;
 	dateCreated: string;
 	dispatchTriggerId: number;
@@ -379,7 +409,7 @@ export type TestrayComponent = {
 	status: string;
 	team?: TestrayTeam;
 	teamId: number;
-};
+} & CaseResultAggregation;
 
 export type TestrayFactorCategory = {
 	dateCreated: string;
@@ -391,6 +421,7 @@ export type TestrayFactorCategory = {
 };
 
 export type TestrayRoutine = {
+	actions: ObjectActionsItems;
 	builds: TestrayBuild[];
 	dateCreated: string;
 	id: number;

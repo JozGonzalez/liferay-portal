@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -43,10 +34,10 @@ if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
 	totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 }
 
-CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerceAccount();
+AccountEntry accountEntry = commerceOrderContentDisplayContext.getAccountEntry();
 
 if (commerceOrder != null) {
-	commerceAccount = commerceOrder.getCommerceAccount();
+	accountEntry = commerceOrder.getAccountEntry();
 }
 
 String backURL = ParamUtil.getString(request, "backURL", null);
@@ -83,7 +74,7 @@ if (backURL != null) {
 		<div class="align-items-center row">
 			<div class="col-md-3">
 				<div class="commerce-order-title">
-					<%= HtmlUtil.escape(commerceAccount.getName()) %>
+					<%= HtmlUtil.escape(accountEntry.getName()) %>
 				</div>
 			</div>
 
@@ -116,7 +107,7 @@ if (backURL != null) {
 			<div class="col-md-3">
 				<dl class="commerce-list">
 					<dt><liferay-ui:message key="account-id" /></dt>
-					<dd><%= commerceAccount.getCommerceAccountId() %></dd>
+					<dd><%= accountEntry.getAccountEntryId() %></dd>
 				</dl>
 			</div>
 
@@ -161,7 +152,7 @@ if (backURL != null) {
 			<div class="col-md-3">
 				<dl class="commerce-list">
 					<dt><liferay-ui:message key="order-status" /></dt>
-					<dd><%= commerceOrderContentDisplayContext.getCommerceOrderStatus(commerceOrder) %></dd>
+					<dd><%= commerceOrderContentDisplayContext.getCommerceOrderStatusLabel(commerceOrder) %></dd>
 				</dl>
 			</div>
 		</div>
@@ -192,7 +183,7 @@ if (backURL != null) {
 		<div class="commerce-panel">
 			<div class="commerce-panel__title"><liferay-ui:message key="billing-address" /></div>
 			<div class="commerce-panel__content">
-				<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) && (billingCommerceAddress != null) %>">
+				<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) && (billingCommerceAddress != null) %>">
 					<p><%= HtmlUtil.escape(billingCommerceAddress.getName()) %></p>
 
 					<p><%= HtmlUtil.escape(billingCommerceAddress.getStreet1()) %></p>
@@ -296,6 +287,10 @@ if (backURL != null) {
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="commerceOrderId" type="hidden" value="<%= String.valueOf(commerceOrder.getCommerceOrderId()) %>" />
 	</aui:form>
+
+	<c:if test="<%= commerceOrderContentDisplayContext.isShowProcessQuote() %>">
+		<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "processQuote();" %>' value="process-quote" />
+	</c:if>
 
 	<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "reorderCommerceOrder();" %>' value="reorder" />
 
@@ -435,6 +430,13 @@ if (backURL != null) {
 	function <portlet:namespace />reorderCommerceOrder() {
 		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value =
 			'reorder';
+
+		submitForm(document.<portlet:namespace />fm);
+	}
+
+	function <portlet:namespace />processQuote() {
+		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value =
+			'processQuote';
 
 		submitForm(document.<portlet:namespace />fm);
 	}

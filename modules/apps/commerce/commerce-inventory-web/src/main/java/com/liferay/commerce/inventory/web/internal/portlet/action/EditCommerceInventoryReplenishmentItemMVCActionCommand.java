@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.web.internal.portlet.action;
 
 import com.liferay.commerce.inventory.exception.MVCCException;
+import com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryReplenishmentItemService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -25,6 +17,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
+
+import java.math.BigDecimal;
 
 import java.util.Calendar;
 
@@ -85,12 +79,8 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 			ActionRequest actionRequest)
 		throws PortalException {
 
-		String sku = ParamUtil.getString(actionRequest, "sku");
-
 		long commerceInventoryWarehouseId = ParamUtil.getLong(
 			actionRequest, "commerceInventoryWarehouseId");
-
-		int quantity = ParamUtil.getInteger(actionRequest, "quantity");
 
 		int day = ParamUtil.getInteger(actionRequest, "dateDay");
 		int month = ParamUtil.getInteger(actionRequest, "dateMonth");
@@ -100,10 +90,16 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 
 		calendar.set(year, month, day);
 
+		BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
+			actionRequest, "quantity", BigDecimal.ZERO);
+		String sku = ParamUtil.getString(actionRequest, "sku");
+		String unitOfMeasureKey = ParamUtil.getString(
+			actionRequest, "unitOfMeasureKey");
+
 		_commerceInventoryReplenishmentItemService.
 			addCommerceInventoryReplenishmentItem(
-				null, commerceInventoryWarehouseId, sku, calendar.getTime(),
-				quantity);
+				null, commerceInventoryWarehouseId, calendar.getTime(),
+				quantity, sku, unitOfMeasureKey);
 	}
 
 	private void _deleteCommerceInventoryReplenishmentItem(
@@ -125,21 +121,28 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 		long commerceInventoryReplenishmentItemId = ParamUtil.getLong(
 			actionRequest, "commerceInventoryReplenishmentItemId");
 
-		int quantity = ParamUtil.getInteger(actionRequest, "quantity");
+		CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem =
+			_commerceInventoryReplenishmentItemService.
+				getCommerceInventoryReplenishmentItem(
+					commerceInventoryReplenishmentItemId);
+
+		BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
+			actionRequest, "quantity", BigDecimal.ZERO);
 
 		int day = ParamUtil.getInteger(actionRequest, "dateDay");
 		int month = ParamUtil.getInteger(actionRequest, "dateMonth");
 		int year = ParamUtil.getInteger(actionRequest, "dateYear");
 
-		long mvccVersion = ParamUtil.getLong(actionRequest, "mvccVersion");
-
 		Calendar calendar = Calendar.getInstance();
 
 		calendar.set(year, month, day);
 
+		long mvccVersion = ParamUtil.getLong(actionRequest, "mvccVersion");
+
 		_commerceInventoryReplenishmentItemService.
 			updateCommerceInventoryReplenishmentItem(
-				null, commerceInventoryReplenishmentItemId, calendar.getTime(),
+				commerceInventoryReplenishmentItem.getExternalReferenceCode(),
+				commerceInventoryReplenishmentItemId, calendar.getTime(),
 				quantity, mvccVersion);
 	}
 

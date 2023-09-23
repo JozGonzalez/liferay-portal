@@ -1,17 +1,22 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import classNames from 'classnames';
 
-import circleFill from '../../assets/icons/circle_fill.svg';
+import circleFill from '../../assets/icons/circle_fill_icon.svg';
 
 import './DashboardNavigationListItem.scss';
+import {getThumbnailByProductAttachment, showAppImage} from '../../utils/util';
 import {AppProps} from '../DashboardTable/DashboardTable';
 import {DashboardListItems} from './DashboardNavigation';
-
 interface DashboardNavigationListItem {
 	dashboardNavigationItems: DashboardListItems[];
 	item: AppProps;
 	items: AppProps[];
 	listName: string;
-	onSelectAppChange: (value: AppProps) => void;
+	onSelectAppChange?: (value: AppProps) => void;
 	setDashboardNavigationItems: (values: DashboardListItems[]) => void;
 }
 
@@ -23,7 +28,8 @@ export function DashboardNavigationListItem({
 	onSelectAppChange,
 	setDashboardNavigationItems,
 }: DashboardNavigationListItem) {
-	const {image, name, selected, status, version} = item;
+	const {attachments, name, selected, status, version} = item;
+	const thumbnail = getThumbnailByProductAttachment(attachments);
 
 	return (
 		<div
@@ -45,8 +51,8 @@ export function DashboardNavigationListItem({
 					};
 				});
 
-				const newDashboardNavigationItems =
-					dashboardNavigationItems.map((navigationItem) => {
+				const newDashboardNavigationItems = dashboardNavigationItems.map(
+					(navigationItem) => {
 						if (navigationItem.itemName === listName) {
 							return {
 								...navigationItem,
@@ -55,18 +61,21 @@ export function DashboardNavigationListItem({
 						}
 
 						return navigationItem;
-					});
+					}
+				);
 
 				setDashboardNavigationItems(newDashboardNavigationItems);
 
-				onSelectAppChange(item);
+				if (onSelectAppChange) {
+					onSelectAppChange(item);
+				}
 			}}
 		>
 			<div>
 				<img
 					alt="App Image"
 					className="dashboard-navigation-body-list-item-app-logo"
-					src={image}
+					src={showAppImage(thumbnail)}
 				/>
 
 				<span className="dashboard-navigation-body-list-item-app-title">

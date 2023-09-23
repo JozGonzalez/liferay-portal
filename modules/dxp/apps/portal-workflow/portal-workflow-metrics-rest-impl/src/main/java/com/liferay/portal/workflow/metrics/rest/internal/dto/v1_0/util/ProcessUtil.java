@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util;
@@ -25,12 +16,10 @@ import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.Field;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Process;
 
-import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Rafael Praxedes
@@ -68,26 +57,25 @@ public class ProcessUtil {
 	}
 
 	private static Map<String, String> _createTitleMap(Document document) {
-		return Stream.of(
-			document.getFields()
-		).map(
-			Map::entrySet
-		).flatMap(
-			Collection::stream
-		).filter(
-			entry ->
-				StringUtil.startsWith(entry.getKey(), "title_") &&
-				!StringUtil.endsWith(entry.getKey(), "_sortable")
-		).collect(
-			Collectors.toMap(
-				entry -> _toLanguageTag(
-					StringUtil.removeSubstring(entry.getKey(), "title_")),
-				entry -> {
-					Field field = entry.getValue();
+		Map<String, String> titleMap = new HashMap<>();
 
-					return String.valueOf(field.getValue());
-				})
-		);
+		Map<String, Field> fields = document.getFields();
+
+		for (Map.Entry<String, Field> entry : fields.entrySet()) {
+			String key = entry.getKey();
+
+			if (StringUtil.startsWith(key, "title_") &&
+				!StringUtil.endsWith(key, "_sortable")) {
+
+				Field field = entry.getValue();
+
+				titleMap.put(
+					_toLanguageTag(StringUtil.removeSubstring(key, "title_")),
+					String.valueOf(field.getValue()));
+			}
+		}
+
+		return titleMap;
 	}
 
 	private static Date _parseDate(String dateString) {

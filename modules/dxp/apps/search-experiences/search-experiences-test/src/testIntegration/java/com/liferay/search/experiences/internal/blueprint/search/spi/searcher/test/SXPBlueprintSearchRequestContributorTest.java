@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.internal.blueprint.search.spi.searcher.test;
@@ -18,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -37,7 +29,6 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -171,11 +162,27 @@ public class SXPBlueprintSearchRequestContributorTest {
 				"[charlie delta, beta delta, alpha delta]", "", "delta"));
 	}
 
+	@Test
+	public void testSXPBlueprintIdAttribute() throws Exception {
+		_test(
+			new String[] {"alpha", "beta", "charlie"},
+			() -> _assertSearch(
+				"[beta]", "", "beta", _sxpBlueprint.getSXPBlueprintId()));
+	}
+
 	@Rule
 	public TestName testName = new TestName();
 
 	private void _assertSearch(
 			String expected, String ipAddress, String keywords)
+		throws Exception {
+
+		_assertSearch(expected, ipAddress, keywords, 0);
+	}
+
+	private void _assertSearch(
+			String expected, String ipAddress, String keywords,
+			long sxpBlueprintId)
 		throws Exception {
 
 		SearchResponse searchResponse = _searcher.search(
@@ -187,9 +194,18 @@ public class SXPBlueprintSearchRequestContributorTest {
 					keywords
 				).withSearchContext(
 					_searchContext -> {
-						_searchContext.setAttribute(
-							"search.experiences.blueprint.id",
-							_sxpBlueprint.getSXPBlueprintId());
+						if (sxpBlueprintId > 0) {
+							_searchContext.setAttribute(
+								"search.experiences.blueprint.id",
+								sxpBlueprintId);
+						}
+						else {
+							_searchContext.setAttribute(
+								"search.experiences.blueprint.external." +
+									"reference.code",
+								_sxpBlueprint.getExternalReferenceCode());
+						}
+
 						_searchContext.setAttribute(
 							"search.experiences.ip.address", ipAddress);
 						_searchContext.setAttribute(

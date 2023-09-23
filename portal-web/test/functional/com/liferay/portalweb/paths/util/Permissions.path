@@ -175,6 +175,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX</td>
+	<td>//input[@id='${key_roleTitle}_ACTION_DOWNLOAD']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INLINE_PERMISSIONS_SUBSCRIBE_CHECKBOX</td>
 	<td>//input[@id='${key_roleTitle}_ACTION_SUBSCRIBE']</td>
 	<td></td>
@@ -210,6 +215,11 @@
 <tr>
 	<td>INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX_INDETERMINATE</td>
 	<td>//input[@id='${key_roleTitle}_ACTION_ADD_DISCUSSION' and @value='indeterminate']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX_INDETERMINATE</td>
+	<td>//input[@id='${key_roleTitle}_ACTION_DOWNLOAD' and @value='indeterminate']</td>
 	<td></td>
 </tr>
 <tr>

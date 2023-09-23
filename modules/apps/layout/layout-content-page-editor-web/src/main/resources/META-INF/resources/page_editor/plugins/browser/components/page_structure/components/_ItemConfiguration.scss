@@ -21,7 +21,6 @@ html#{$cadmin-selector}
 		font-size: 12px;
 	}
 
-	.btn,
 	.btn-group,
 	.form-group,
 	.form-group-autofit {
@@ -34,10 +33,5 @@ html#{$cadmin-selector}
 
 	.form-group .btn {
 		border-color: $cadmin-gray-300;
-	}
-
-	.nav-underline {
-		border-bottom: 1px solid $cadmin-secondary-l3;
-		flex-shrink: 0;
 	}
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.dto.v1_0;
@@ -272,6 +263,60 @@ public class ObjectValidationRule implements Cloneable, Serializable {
 
 	protected Long objectDefinitionId;
 
+	public ObjectValidationRuleSetting[] getObjectValidationRuleSettings() {
+		return objectValidationRuleSettings;
+	}
+
+	public void setObjectValidationRuleSettings(
+		ObjectValidationRuleSetting[] objectValidationRuleSettings) {
+
+		this.objectValidationRuleSettings = objectValidationRuleSettings;
+	}
+
+	public void setObjectValidationRuleSettings(
+		UnsafeSupplier<ObjectValidationRuleSetting[], Exception>
+			objectValidationRuleSettingsUnsafeSupplier) {
+
+		try {
+			objectValidationRuleSettings =
+				objectValidationRuleSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ObjectValidationRuleSetting[] objectValidationRuleSettings;
+
+	public OutputType getOutputType() {
+		return outputType;
+	}
+
+	public String getOutputTypeAsString() {
+		if (outputType == null) {
+			return null;
+		}
+
+		return outputType.toString();
+	}
+
+	public void setOutputType(OutputType outputType) {
+		this.outputType = outputType;
+	}
+
+	public void setOutputType(
+		UnsafeSupplier<OutputType, Exception> outputTypeUnsafeSupplier) {
+
+		try {
+			outputType = outputTypeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected OutputType outputType;
+
 	public String getScript() {
 		return script;
 	}
@@ -292,6 +337,27 @@ public class ObjectValidationRule implements Cloneable, Serializable {
 	}
 
 	protected String script;
+
+	public Boolean getSystem() {
+		return system;
+	}
+
+	public void setSystem(Boolean system) {
+		this.system = system;
+	}
+
+	public void setSystem(
+		UnsafeSupplier<Boolean, Exception> systemUnsafeSupplier) {
+
+		try {
+			system = systemUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean system;
 
 	@Override
 	public ObjectValidationRule clone() throws CloneNotSupportedException {
@@ -323,6 +389,40 @@ public class ObjectValidationRule implements Cloneable, Serializable {
 
 	public String toString() {
 		return ObjectValidationRuleSerDes.toJSON(this);
+	}
+
+	public static enum OutputType {
+
+		FULL_VALIDATION("fullValidation"),
+		PARTIAL_VALIDATION("partialValidation");
+
+		public static OutputType create(String value) {
+			for (OutputType outputType : values()) {
+				if (Objects.equals(outputType.getValue(), value) ||
+					Objects.equals(outputType.name(), value)) {
+
+					return outputType;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private OutputType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
 	}
 
 }

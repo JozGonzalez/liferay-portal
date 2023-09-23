@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.test;
@@ -17,15 +8,19 @@ package com.liferay.batch.engine.internal.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.batch.engine.unit.BatchEngineUnit;
 import com.liferay.batch.engine.unit.BatchEngineUnitProcessor;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.BooleanWrapper;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.IntegerWrapper;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
-import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
+import com.liferay.portal.kernel.zip.ZipWriterFactory;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.FileInputStream;
@@ -34,6 +29,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import java.util.Enumeration;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,9 +40,11 @@ import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.util.promise.Promise;
 
 /**
  * @author Raymond Augé
@@ -76,6 +74,12 @@ public class BatchEngineBundleTrackerTest {
 		_testProcessBatchEngineBundle("batch6", 2);
 		_testProcessBatchEngineBundle("batch7", 1);
 		_testProcessBatchEngineBundle("batch8", 3);
+
+		_testProcessBatchEngineBundle("batch9", 1);
+
+		_company = CompanyTestUtil.addCompany();
+
+		_testProcessBatchEngineBundle("batch9", 2);
 	}
 
 	private void _testProcessBatchEngineBundle(
@@ -85,6 +89,17 @@ public class BatchEngineBundleTrackerTest {
 		Bundle bundle = _bundleContext.installBundle(
 			RandomTestUtil.randomString(), _toInputStream(dirName));
 
+		Class<?> clazz = _batchEngineUnitProcessor.getClass();
+
+		ComponentDescriptionDTO componentDescriptionDTO =
+			_serviceComponentRuntime.getComponentDescriptionDTO(
+				FrameworkUtil.getBundle(clazz), clazz.getName());
+
+		Promise<Void> promise = _serviceComponentRuntime.disableComponent(
+			componentDescriptionDTO);
+
+		promise.getValue();
+
 		IntegerWrapper actualCount = new IntegerWrapper();
 		BooleanWrapper processed = new BooleanWrapper();
 
@@ -93,16 +108,20 @@ public class BatchEngineBundleTrackerTest {
 				BatchEngineUnitProcessor.class,
 				batchEngineUnits -> {
 					for (BatchEngineUnit batchEngineUnit : batchEngineUnits) {
-						if (batchEngineUnit.isValid()) {
+						if (batchEngineUnit.isValid() &&
+							StringUtil.startsWith(
+								batchEngineUnit.getDataFileName(),
+								"/" + dirName)) {
+
 							actualCount.increment();
 						}
 					}
 
 					processed.setValue(true);
+
+					return CompletableFuture.completedFuture(null);
 				},
-				HashMapDictionaryBuilder.put(
-					Constants.SERVICE_RANKING, 1000
-				).build());
+				null);
 
 		try {
 			bundle.start();
@@ -127,11 +146,16 @@ public class BatchEngineBundleTrackerTest {
 			bundle.uninstall();
 
 			serviceRegistration.unregister();
+
+			promise = _serviceComponentRuntime.enableComponent(
+				componentDescriptionDTO);
+
+			promise.getValue();
 		}
 	}
 
 	private InputStream _toInputStream(String dirName) throws Exception {
-		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
+		ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
 
 		String basePath = StringBundler.concat(
 			"com/liferay/batch/engine/internal/test/dependencies/", dirName,
@@ -162,7 +186,19 @@ public class BatchEngineBundleTrackerTest {
 		return new FileInputStream(zipWriter.getFile());
 	}
 
+	@Inject
+	private BatchEngineUnitProcessor _batchEngineUnitProcessor;
+
 	private Bundle _bundle;
 	private BundleContext _bundleContext;
+
+	@DeleteAfterTestRun
+	private Company _company;
+
+	@Inject
+	private ServiceComponentRuntime _serviceComponentRuntime;
+
+	@Inject
+	private ZipWriterFactory _zipWriterFactory;
 
 }

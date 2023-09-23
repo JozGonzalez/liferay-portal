@@ -54,9 +54,9 @@ definition {
 
 				if (isSet(supportedFieldTypes)) {
 					for (var supportedFieldType : list ${supportedFieldTypes}) {
-						Check.checkNotVisible(
-							checkboxName = ${supportedFieldType},
-							locator1 = "Checkbox#ANY_CHECKBOX");
+						Check.checkNotVisibleNoErrors(
+							key_fieldLabel = ${supportedFieldType},
+							locator1 = "Checkbox#CHECKBOX_LABEL");
 					}
 				}
 
@@ -286,6 +286,12 @@ definition {
 		LexiconCard.viewCardLabel(
 			card = ${entry},
 			cardLabel = ${workflowStatus});
+	}
+
+	macro viewFormFragementForEachFieldType {
+		LexiconTable.viewTableEntryFormFragment(
+			fieldType = ${fieldType},
+			tableEntryInfo = ${formFragmentName});
 	}
 
 	macro viewSiteUsages {

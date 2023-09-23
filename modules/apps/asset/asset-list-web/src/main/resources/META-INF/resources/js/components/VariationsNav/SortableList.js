@@ -1,19 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayList from '@clayui/list';
-import {openConfirmModal, openToast} from 'frontend-js-web';
+import {openConfirmModal, openToast, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 import {DndProvider} from 'react-dnd';
@@ -23,7 +14,7 @@ import {saveVariationsListPriorityService} from '../../api/index';
 import SortableListItem from './SortableListItem';
 import {buildItemsPriorityURL} from './utils/index';
 
-const savePriority = async ({url}) => {
+const savePriority = async ({itemIndex, itemName, url}) => {
 	try {
 		const {ok, status} = await saveVariationsListPriorityService({url});
 
@@ -32,8 +23,10 @@ const savePriority = async ({url}) => {
 		}
 
 		openToast({
-			message: Liferay.Language.get(
-				'your-request-completed-successfully'
+			message: sub(
+				Liferay.Language.get('variation-x-moved-to-position-x'),
+				itemName,
+				itemIndex + 1
 			),
 			type: 'success',
 		});
@@ -55,22 +48,28 @@ const SortableList = ({items, namespace, savePriorityURL}) => {
 		index,
 		saveAfterMove = false,
 	}) => {
-		const start = hoverIndex ?? index + direction;
+		const nextIndex = hoverIndex ?? index + direction;
 		const tempList = [...listItems];
 
 		tempList.splice(index, 1);
 
-		tempList.splice(start, 0, listItems[index]);
+		tempList.splice(nextIndex, 0, listItems[index]);
 
 		setListItems(tempList);
 
 		if (saveAfterMove) {
-			handleSavePriority(tempList);
+			handleSavePriority({
+				itemIndex: nextIndex,
+				itemName: listItems[index].name,
+				items: tempList,
+			});
 		}
 	};
 
-	const handleSavePriority = (items = listItems) => {
+	const handleSavePriority = ({itemIndex, itemName, items = listItems}) => {
 		savePriority({
+			itemIndex,
+			itemName,
 			url: buildItemsPriorityURL({
 				items,
 				namespace,

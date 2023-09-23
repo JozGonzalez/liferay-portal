@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Helper function to add a Bookmarks entry via JSON"
 	macro _addBookmarks {
 		Variables.assertDefined(parameterList = "${groupId},${folderId},${serviceContext},${url}");
 
@@ -13,9 +12,11 @@ definition {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksentry/add-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d folderId=${folderId} \
 				-d name=${name} \
@@ -27,7 +28,6 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a Bookmarks Folder via JSON"
 	macro _addFolder {
 		Variables.assertDefined(parameterList = "${folderName},${parentFolderId},${serviceContext}");
 
@@ -40,9 +40,11 @@ definition {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksfolder/add-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d parentFolderId=${parentFolderId} \
 				-d name=${folderName} \
 				-d description=${description} \
@@ -52,15 +54,15 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to get the 'folderId' for the folder '${folderName}'"
 	macro _getFolderIdByFolderName {
 		Variables.assertDefined(parameterList = "${groupId},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksfolder/get-folders \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
@@ -22,6 +13,7 @@ import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import {
 	TestrayCase,
+	TestrayProject,
 	TestrayRequirementCase,
 	testrayCaseRequirementsImpl,
 } from '../../../services/rest';
@@ -30,9 +22,12 @@ import useCaseRequirementActions from './useCaseRequirementActions';
 
 const CaseRequirement = () => {
 	const {
-		projectId,
 		testrayCase,
-	}: {projectId: number; testrayCase: TestrayCase} = useOutletContext();
+		testrayProject,
+	}: {
+		testrayCase: TestrayCase;
+		testrayProject: TestrayProject;
+	} = useOutletContext();
 
 	const {formModal} = useCaseRequirementActions({caseId: testrayCase.id});
 
@@ -131,7 +126,7 @@ const CaseRequirement = () => {
 						},
 					],
 					navigateTo: ({requirement}: TestrayRequirementCase) =>
-						`/project/${projectId}/requirements/${requirement?.id}`,
+						`/project/${testrayProject.id}/requirements/${requirement?.id}`,
 				}}
 				transformData={(response) =>
 					testrayCaseRequirementsImpl.transformDataFromList(response)
@@ -140,14 +135,12 @@ const CaseRequirement = () => {
 					filter: SearchBuilder.eq('caseId', testrayCase.id),
 				}}
 			>
-				{(response) => {
-					return (
-						<CaseRequirementLinkModal
-							items={response?.items}
-							modal={formModal}
-						/>
-					);
-				}}
+				{(response) => (
+					<CaseRequirementLinkModal
+						items={response?.items}
+						modal={formModal}
+					/>
+				)}
 			</ListView>
 		</Container>
 	);

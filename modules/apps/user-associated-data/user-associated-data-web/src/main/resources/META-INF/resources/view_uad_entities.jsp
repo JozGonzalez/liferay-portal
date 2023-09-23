@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,7 +12,7 @@ ViewUADEntitiesDisplay viewUADEntitiesDisplay = (ViewUADEntitiesDisplay)request.
 
 boolean topLevelView = true;
 
-String parentContainerClass = ParamUtil.getString(request, "parentContainerClass");
+String parentContainerTypeKey = ParamUtil.getString(request, "parentContainerTypeKey");
 
 long parentContainerId = ParamUtil.getLong(request, "parentContainerId");
 
@@ -44,7 +35,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 	<aui:input name="p_u_i_d" type="hidden" value="<%= String.valueOf(selectedUser.getUserId()) %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="groupIds" type="hidden" value='<%= (groupIds != null) ? StringUtil.merge(groupIds) : "" %>' />
-	<aui:input name="parentContainerClass" type="hidden" value="<%= parentContainerClass %>" />
+	<aui:input name="parentContainerTypeKey" type="hidden" value="<%= parentContainerTypeKey %>" />
 	<aui:input name="parentContainerId" type="hidden" value="<%= String.valueOf(parentContainerId) %>" />
 	<aui:input name="scope" type="hidden" value="<%= viewUADEntitiesDisplay.getScope() %>" />
 
@@ -57,11 +48,12 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 			<aui:input name="uadRegistryKey" type="hidden" value="<%= viewUADEntitiesDisplay.getUADRegistryKey() %>" />
 
 			<%
-			for (Class<?> typeClass : viewUADEntitiesDisplay.getTypeClasses()) {
+			for (String typeKey : viewUADEntitiesDisplay.getTypeKeys()) {
+				String normalizedTypeKey = AUIUtil.normalizeId(typeKey);
 			%>
 
-				<aui:input name='<%= "primaryKeys__" + typeClass.getSimpleName() %>' type="hidden" />
-				<aui:input name='<%= "uadRegistryKey__" + typeClass.getSimpleName() %>' type="hidden" value="<%= typeClass.getName() %>" />
+				<aui:input name='<%= "primaryKeys__" + normalizedTypeKey %>' type="hidden" />
+				<aui:input name='<%= "uadRegistryKey__" + normalizedTypeKey %>' type="hidden" value="<%= typeKey %>" />
 
 			<%
 			}
@@ -222,24 +214,24 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 					}
 				</c:when>
 				<c:otherwise>
+					let primaryKeysInput;
 
 					<%
-					for (Class<?> typeClass : viewUADEntitiesDisplay.getTypeClasses()) {
-						String primaryKeysVar = "primaryKeys" + typeClass.getSimpleName();
+					for (String typeKey : viewUADEntitiesDisplay.getTypeKeys()) {
+						typeKey = AUIUtil.normalizeId(typeKey);
 					%>
 
-						var <%= primaryKeysVar %> = form.querySelector(
-							'#<portlet:namespace />primaryKeys__<%= typeClass.getSimpleName() %>'
-						);
+						primaryKeysInput =
+							form['<portlet:namespace />primaryKeys__<%= typeKey %>'];
 
-						if (<%= primaryKeysVar %>) {
+						if (primaryKeysInput) {
 							var primaryKeys = Liferay.Util.getCheckedCheckboxes(
 								form,
 								'<portlet:namespace />allRowIds',
-								'<portlet:namespace />rowIds<%= typeClass.getSimpleName() %>'
+								'<portlet:namespace />rowIds<%= typeKey %>'
 							);
 
-							<%= primaryKeysVar %>.setAttribute('value', primaryKeys);
+							primaryKeysInput.setAttribute('value', primaryKeys);
 
 							var primaryKeyArray = primaryKeys.split(',');
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.resource.v2_0;
@@ -20,6 +11,7 @@ import com.liferay.data.engine.rest.resource.v2_0.DataLayoutResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -47,7 +40,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -592,17 +584,17 @@ public abstract class BaseDataLayoutResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataLayout, Exception> dataLayoutUnsafeConsumer = null;
+		UnsafeFunction<DataLayout, DataLayout, Exception>
+			dataLayoutUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("dataDefinitionId")) {
-				dataLayoutUnsafeConsumer =
+				dataLayoutUnsafeFunction =
 					dataLayout -> postDataDefinitionDataLayout(
-						Long.parseLong(
-							(String)parameters.get("dataDefinitionId")),
+						_parseLong((String)parameters.get("dataDefinitionId")),
 						dataLayout);
 			}
 			else {
@@ -611,19 +603,23 @@ public abstract class BaseDataLayoutResourceImpl
 			}
 		}
 
-		if (dataLayoutUnsafeConsumer == null) {
+		if (dataLayoutUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for DataLayout");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataLayouts, dataLayoutUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataLayouts, dataLayoutUnsafeConsumer);
+				dataLayouts, dataLayoutUnsafeFunction::apply);
 		}
 		else {
 			for (DataLayout dataLayout : dataLayouts) {
-				dataLayoutUnsafeConsumer.accept(dataLayout);
+				dataLayoutUnsafeFunction.apply(dataLayout);
 			}
 		}
 	}
@@ -674,7 +670,7 @@ public abstract class BaseDataLayoutResourceImpl
 
 		if (parameters.containsKey("dataDefinitionId")) {
 			return getDataDefinitionDataLayoutsPage(
-				Long.parseLong((String)parameters.get("dataDefinitionId")),
+				_parseLong((String)parameters.get("dataDefinitionId")),
 				(String)parameters.get("keywords"), pagination, sorts);
 		}
 		else {
@@ -711,37 +707,59 @@ public abstract class BaseDataLayoutResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataLayout, Exception> dataLayoutUnsafeConsumer = null;
+		UnsafeFunction<DataLayout, DataLayout, Exception>
+			dataLayoutUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			dataLayoutUnsafeConsumer = dataLayout -> putDataLayout(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			dataLayoutUnsafeFunction = dataLayout -> putDataLayout(
 				dataLayout.getId() != null ? dataLayout.getId() :
-					Long.parseLong((String)parameters.get("dataLayoutId")),
+					_parseLong((String)parameters.get("dataLayoutId")),
 				dataLayout);
 		}
 
-		if (dataLayoutUnsafeConsumer == null) {
+		if (dataLayoutUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for DataLayout");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataLayouts, dataLayoutUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataLayouts, dataLayoutUnsafeConsumer);
+				dataLayouts, dataLayoutUnsafeFunction::apply);
 		}
 		else {
 			for (DataLayout dataLayout : dataLayouts) {
-				dataLayoutUnsafeConsumer.accept(dataLayout);
+				dataLayoutUnsafeFunction.apply(dataLayout);
 			}
 		}
 	}
 
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<DataLayout>,
+			 UnsafeFunction<DataLayout, DataLayout, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -957,6 +975,12 @@ public abstract class BaseDataLayoutResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -987,7 +1011,19 @@ public abstract class BaseDataLayoutResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<DataLayout>,
+		 UnsafeFunction<DataLayout, DataLayout, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<DataLayout>, UnsafeConsumer<DataLayout, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

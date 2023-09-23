@@ -1,6 +1,7 @@
 @component-name = "portal-lima"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -13,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,7 +43,7 @@ definition {
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
-		BlogsNavigator.gotoEntryCP(entryTitle = "Blogs Entry Title");
+		LexiconEntry.gotoEntry(rowEntry = "Blogs Entry Title");
 
 		BlogsEntry.viewEntryCP(
 			entryContent = "Blogs Entry Content",
@@ -77,6 +78,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanSearchForContentInAdmin {
+		property portal.acceptance = "false";
+
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		JSONBlog.addEntry(
@@ -84,8 +87,8 @@ definition {
 			entryTitle = "Unique Title");
 
 		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Text",
-			entryTitle = "Blogs Entry Title");
+			entryContent = "Some Text",
+			entryTitle = "Some Title");
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 

@@ -5,22 +5,37 @@ definition {
 
 		var baseURL = ${baseURL};
 
+		if (!(isSet(accountId))) {
+			var accountId = 0;
+		}
+
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(accountId))) {
+			var accountId = "";
 		}
 
 		if (!(isSet(externalReferenceCode))) {
 			var externalReferenceCode = "";
 		}
 
+		if (!(isSet(siteGroupId))) {
+			var siteGroupId = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
+					"accountId": "${accountId}",
 					"externalReferenceCode": "${externalReferenceCode}",
-					"siteGroupId": 0,
+					"siteGroupId": ${siteGroupId},
 					"name": "${channelName}",
 					"type": "${channelType}",
 					"currencyCode": "${currencyCode}"
@@ -47,9 +62,11 @@ definition {
 			for (var channelId : list ${channelIds}) {
 				echo("Deleting Commerce channel with id: ${channelId}");
 
+				var userLoginInfo = JSONUtil2.formatJSONUser();
+
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-channel/v1.0/channels/${channelId} \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-H 'accept: application/json' \
 				''';
 
@@ -59,6 +76,27 @@ definition {
 		else {
 			echo("No Commerce Channels to be deleted");
 		}
+	}
+
+	macro _getCommerceAccountIdByChannelId {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var channelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels/${channelId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var accountId = JSONCurlUtil.get(${curl}, "$..['accountId']");
+
+		return ${accountId};
 	}
 
 	macro _getCommerceChannelIdByName {
@@ -77,9 +115,11 @@ definition {
 			var channelsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels?pageSize=${channelsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -102,9 +142,11 @@ definition {
 			var channelsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels?pageSize=${channelsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -120,9 +162,11 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
@@ -131,6 +175,48 @@ definition {
 		echo("The Commerce channels count is: ${channelsCount}");
 
 		return ${channelsCount};
+	}
+
+	macro _patchCommerceChannel {
+		Variables.assertDefined(parameterList = ${channelName});
+
+		var baseURL = ${baseURL};
+		var fieldsList = ListUtil.newList();
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (isSet(accountId)) {
+			var accountId = '''"accountId": ${accountId}''';
+
+			ListUtil.add(${fieldsList}, ${accountId});
+		}
+		else {
+			if (isSet(accountIdByName)) {
+				var accountId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountIdByName});
+
+				var accountId = '''"accountId": ${accountId}''';
+
+				ListUtil.add(${fieldsList}, ${accountId});
+			}
+		}
+
+		var fieldsList = ListUtil.toString(${fieldsList});
+
+		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels/${commerceChannelId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{${payload}}'
+		''';
+
+		JSONCurlUtil.patch(${curl});
 	}
 
 }

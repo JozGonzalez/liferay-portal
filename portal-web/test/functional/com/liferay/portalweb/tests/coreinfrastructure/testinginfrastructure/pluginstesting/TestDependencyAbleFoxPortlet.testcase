@@ -17,6 +17,9 @@ definition {
 
 	@priority = 4
 	test ViewDependencyAbleFox {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");

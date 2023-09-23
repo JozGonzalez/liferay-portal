@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.aop;
@@ -22,7 +13,7 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.search.IndexableAdvice;
 import com.liferay.portal.security.access.control.AccessControlAdvice;
 import com.liferay.portal.service.ServiceContextAdvice;
-import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.systemevent.SystemEventAdvice;
 import com.liferay.portal.util.PropsValues;
 
@@ -44,12 +35,12 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class AopCacheManager {
 
 	public static synchronized AopInvocationHandler create(
-		Object target, TransactionHandler transactionHandler) {
+		Object target, TransactionExecutor transactionExecutor) {
 
 		AopInvocationHandler aopInvocationHandler = new AopInvocationHandler(
 			target,
 			_chainableMethodAdvices.toArray(new ChainableMethodAdvice[0]),
-			transactionHandler);
+			transactionExecutor);
 
 		_aopInvocationHandlers.add(aopInvocationHandler);
 

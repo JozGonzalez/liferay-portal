@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {TreeView as ClayTreeView} from '@clayui/core';
@@ -30,6 +21,8 @@ import {
 	selectedDataOutputTransfomer,
 	visit,
 } from './treeUtils';
+
+import '../../../css/TreeFilter.scss';
 
 const SEARCH_QUERY_MIN_LENGHT = 2;
 const SEARCH_INPUT_DEBOUNCE = 300;
@@ -196,11 +189,11 @@ const TreeFilter = ({
 	return (
 		<div className="tree-filter">
 			<form
-				className="pb-3 pt-3 tree-filter-search"
+				className="c-pb-3 c-pt-3 tree-filter-search"
 				onSubmit={(event) => event.preventDefault()}
 				role="search"
 			>
-				<ClayLayout.ContainerFluid className="d-flex px-4">
+				<ClayLayout.ContainerFluid className="c-px-4 d-flex">
 					<div className="input-group">
 						<div className="input-group-item">
 							<input
@@ -211,7 +204,7 @@ const TreeFilter = ({
 								type="text"
 							/>
 
-							<div className="input-group-inset-item input-group-inset-item-after pr-3">
+							<div className="c-pr-3 input-group-inset-item input-group-inset-item-after">
 								<ClayIcon
 									className={classNames({
 										'tree-filter-clear': filterQuery,
@@ -229,7 +222,7 @@ const TreeFilter = ({
 
 			{!!selectedItemsCount && (
 				<ClayLayout.Container
-					className="px-4 tree-filter-count-feedback"
+					className="align-items-center c-px-4 d-flex tree-filter-count-feedback"
 					containerElement="section"
 					fluid
 				>
@@ -259,11 +252,11 @@ const TreeFilter = ({
 
 			<form name={`${portletNamespace}selectFilterFm`}>
 				<ClayLayout.ContainerFluid
-					className="px-4"
+					className="c-px-4"
 					containerElement="fieldset"
 				>
 					<div
-						className="tree-filter-type-tree"
+						className="c-mt-3 tree-filter-type-tree"
 						id={`${portletNamespace}typeContainer`}
 					>
 						{treeItems.length ? (
@@ -313,7 +306,7 @@ const TreeFilter = ({
 									'no-results-were-found'
 								)}
 								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
-								title={null}
+								title={Liferay.Language.get('no-results-found')}
 							/>
 						)}
 					</div>

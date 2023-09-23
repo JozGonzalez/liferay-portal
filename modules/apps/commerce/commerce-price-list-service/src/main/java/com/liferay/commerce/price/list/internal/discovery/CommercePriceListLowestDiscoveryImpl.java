@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.internal.discovery;
 
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.price.list.discovery.CommercePriceListDiscovery;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
@@ -34,14 +25,15 @@ public class CommercePriceListLowestDiscoveryImpl
 	@Override
 	public CommercePriceList getCommercePriceList(
 			long groupId, long commerceAccountId, long commerceChannelId,
-			long commerceOrderTypeId, String cpInstanceUuid, String type)
+			long commerceOrderTypeId, String cpInstanceUuid, String type,
+			String unitOfMeasureKey)
 		throws PortalException {
 
 		return _commercePriceListLocalService.getCommercePriceListByLowestPrice(
 			groupId, commerceAccountId,
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceAccountId),
-			commerceChannelId, commerceOrderTypeId, cpInstanceUuid, type);
+			_accountGroupLocalService.getAccountGroupIds(commerceAccountId),
+			commerceChannelId, commerceOrderTypeId, cpInstanceUuid, type,
+			unitOfMeasureKey);
 	}
 
 	@Override
@@ -50,7 +42,7 @@ public class CommercePriceListLowestDiscoveryImpl
 	}
 
 	@Reference
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommercePriceListLocalService _commercePriceListLocalService;

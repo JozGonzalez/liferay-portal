@@ -1,9 +1,11 @@
 @component-name = "portal-ab-test"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property property.group = "analytics.cloud.profile";
+	property test.run.type = "single";
 	property testray.main.component.name = "Content Performance";
 
 	setUp {
@@ -22,11 +24,11 @@ definition {
 
 			Navigator.openURL();
 
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloudWithTryAgain(siteName = "Test Site Name");
 		}
 
 		task ("Create content page") {
@@ -37,25 +39,6 @@ definition {
 
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
 		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
-
-		ACUtils.tearDownDXP();
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-
-		JSONUser.tearDownNonAdminUsers();
-
-		JSONRole.deleteTestRoles();
 	}
 
 	@description = "LPS-144031: When the user accesses to the content performance panel of a blog's display page, the author's field is NOT shown in the content performance panel"
@@ -178,7 +161,7 @@ definition {
 	@description = "LPS-126044: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
 	@priority = 3
 	test ChangeLanguageInBlogDisplayPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInBlogDisplayPage";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -235,7 +218,7 @@ definition {
 	@description = "LPS-126044: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
 	@priority = 3
 	test ChangeLanguageInDocumentDisplayPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInDocumentDisplayPage";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -296,7 +279,7 @@ definition {
 	@description = "LPS-126047: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
 	@priority = 3
 	test ChangeLanguageInWidgetPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInWidgetPage";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -505,7 +488,7 @@ definition {
 	@description = "LPS-110920: When the user selects a language in the switcher, the title, the URL and the metrics change accordingly"
 	@priority = 5
 	test LanguageSelector {
-		property test.name.skip.portal.instance = "ContentPerformance#LanguageSelector";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -1276,7 +1259,7 @@ definition {
 		task ("Check the value of engagement data") {
 			for (var channel : list "Referral,Social,Paid,Direct,Organic") {
 				ContentPerformance.viewTrafficViews(
-					key_numberViews = 0,
+					key_numberViews = "-",
 					trafficChannel = ${channel});
 			}
 		}

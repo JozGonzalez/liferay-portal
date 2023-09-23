@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -24,8 +15,10 @@ import {flushSync} from 'react-dom';
 import SaveFragmentCompositionModal from '../../../../../app/components/SaveFragmentCompositionModal';
 import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
 import {FRAGMENT_ENTRY_TYPES} from '../../../../../app/config/constants/fragmentEntryTypes';
+import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
 import {useSelectItem} from '../../../../../app/contexts/ControlsContext';
+import {useSetMovementText} from '../../../../../app/contexts/KeyboardMovementContext';
 import {
 	useDispatch,
 	useSelector,
@@ -45,7 +38,7 @@ import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
 export default function StructureTreeNodeActions({
 	item,
-	setEditingName,
+	setEditingNodeId,
 	visible,
 }) {
 	const [active, setActive] = useState(false);
@@ -75,15 +68,23 @@ export default function StructureTreeNodeActions({
 				aria-haspopup="true"
 				aria-label={Liferay.Language.get('options')}
 				className={classNames(
-					'page-editor__page-structure__tree-node__actions-button',
+					'ml-0 page-editor__page-structure__tree-node__actions-button',
 					{
 						'page-editor__page-structure__tree-node__actions-button--visible': visible,
 					}
 				)}
 				displayType="unstyled"
-				onClick={() => updateActive(!active)}
+				onClick={(event) => {
+					event.stopPropagation();
+					updateActive(!active);
+				}}
 				ref={alignElementRef}
 				size="sm"
+				tabIndex={
+					document.activeElement.dataset.id?.includes(item.id)
+						? '0'
+						: '-1'
+				}
 				title={Liferay.Language.get('options')}
 			>
 				<ClayIcon symbol="ellipsis-v" />
@@ -102,7 +103,7 @@ export default function StructureTreeNodeActions({
 					<ActionList
 						item={item}
 						setActive={updateActive}
-						setEditingName={setEditingName}
+						setEditingNodeId={setEditingNodeId}
 						setOpenSaveModal={setOpenSaveModal}
 					/>
 				)}
@@ -110,7 +111,7 @@ export default function StructureTreeNodeActions({
 
 			{openSaveModal && (
 				<SaveFragmentCompositionModal
-					itemId={item.itemId}
+					itemId={item.id}
 					onCloseModal={() => setOpenSaveModal(false)}
 				/>
 			)}
@@ -118,10 +119,11 @@ export default function StructureTreeNodeActions({
 	);
 }
 
-const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
+const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 	const dispatch = useDispatch();
-	const hasRequiredChild = useHasRequiredChild(item.itemId);
+	const hasRequiredChild = useHasRequiredChild(item.id);
 	const selectItem = useSelectItem();
+	const setText = useSetMovementText();
 	const widgets = useSelector((state) => state.widgets);
 
 	const {fragmentEntryLinks, layoutData, selectedViewportSize} = useSelector(
@@ -147,7 +149,7 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 				action: () => {
 					updateItemStyle({
 						dispatch,
-						itemId: item.itemId,
+						itemId: item.id,
 						selectedViewportSize,
 						styleName: 'display',
 						styleValue: isHidden ? 'block' : 'none',
@@ -163,6 +165,16 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 							type: 'warning',
 						});
 					}
+
+					selectItem(item.id, {
+						origin: ITEM_ACTIVATION_ORIGINS.itemActions,
+					});
+
+					setText(
+						isHidden
+							? Liferay.Language.get('item-shown')
+							: Liferay.Language.get('hidden-item')
+					);
 				},
 				icon: isHidden ? 'view' : 'hidden',
 				label: isHidden
@@ -187,13 +199,16 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 
 		if (canBeDuplicated(fragmentEntryLinks, item, layoutData, widgets)) {
 			items.push({
-				action: () =>
+				action: () => {
 					dispatch(
 						duplicateItem({
-							itemId: item.itemId,
+							itemId: item.id,
 							selectItem,
 						})
-					),
+					);
+
+					setText(Liferay.Language.get('item-duplicated'));
+				},
 				icon: 'copy',
 				label: Liferay.Language.get('duplicate'),
 			});
@@ -202,7 +217,7 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 		if (canBeRenamed(item)) {
 			items.push({
 				action: () => {
-					setEditingName(true);
+					setEditingNodeId(item.id);
 				},
 				label: Liferay.Language.get('rename'),
 			});
@@ -214,13 +229,16 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 
 		if (canBeRemoved(item, layoutData)) {
 			items.push({
-				action: () =>
+				action: () => {
 					dispatch(
 						deleteItem({
-							itemId: item.itemId,
+							itemId: item.id,
 							selectItem,
 						})
-					),
+					);
+
+					setText(Liferay.Language.get('item-removed'));
+				},
 				icon: 'trash',
 				label: Liferay.Language.get('delete'),
 			});
@@ -238,8 +256,9 @@ const ActionList = ({item, setActive, setEditingName, setOpenSaveModal}) => {
 		selectItem,
 		widgets,
 		setOpenSaveModal,
+		setText,
 		isHidden,
-		setEditingName,
+		setEditingNodeId,
 	]);
 
 	return (

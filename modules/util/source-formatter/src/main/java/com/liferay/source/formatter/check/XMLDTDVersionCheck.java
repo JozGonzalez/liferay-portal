@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -31,36 +22,10 @@ import java.util.regex.Pattern;
  */
 public class XMLDTDVersionCheck extends BaseFileCheck {
 
-	@Override
-	protected String doProcess(
-			String fileName, String absolutePath, String content)
-		throws IOException {
-
-		if (fileName.endsWith(".xml")) {
-			return _checkDTDVersion(content);
-		}
-
-		return content;
-	}
-
-	protected String getLPVersion() {
-		return _releaseProperties.getProperty("lp.version");
-	}
-
-	protected String getLPVersionDTD() {
-		return _releaseProperties.getProperty("lp.version.dtd");
-	}
-
-	private String _checkDTDVersion(String content) throws IOException {
+	protected String checkDTDVersion(String content) throws IOException {
 		Matcher matcher = _doctypePattern.matcher(content);
 
 		if (!matcher.find()) {
-			return content;
-		}
-
-		_readReleaseProperties();
-
-		if (_releaseProperties == null) {
 			return content;
 		}
 
@@ -82,6 +47,28 @@ public class XMLDTDVersionCheck extends BaseFileCheck {
 				matcher.group(1), lpVersion, matcher.group(3), lpVersionDTD,
 				matcher.group(5)),
 			matcher.start());
+	}
+
+	@Override
+	protected String doProcess(
+			String fileName, String absolutePath, String content)
+		throws IOException {
+
+		_readReleaseProperties();
+
+		if ((_releaseProperties == null) || !fileName.endsWith(".xml")) {
+			return content;
+		}
+
+		return checkDTDVersion(content);
+	}
+
+	protected String getLPVersion() {
+		return _releaseProperties.getProperty("lp.version");
+	}
+
+	protected String getLPVersionDTD() {
+		return _releaseProperties.getProperty("lp.version.dtd");
 	}
 
 	private void _readReleaseProperties() throws IOException {
@@ -106,9 +93,9 @@ public class XMLDTDVersionCheck extends BaseFileCheck {
 		"release.properties";
 
 	private static final Pattern _doctypePattern = Pattern.compile(
-		"(<!DOCTYPE .+ PUBLIC \"-//Liferay//DTD .+ )" +
-			"([0-9]+\\.[0-9]+\\.[0-9]+)(//EN\" \"http://www.liferay.com/dtd/" +
-				".+_)([0-9]+_[0-9]+_[0-9]+)(\\.dtd\">)");
+		"(<!DOCTYPE .+ PUBLIC \"-//Liferay//DTD .+ )([0-9]+\\.[0-9]+" +
+			"\\.[0-9]+)(//EN\"\\s*\"http://www.liferay.com/dtd/.+_)([0-9]" +
+				"+_[0-9]+_[0-9]+)(\\.dtd\">)");
 
 	private Properties _releaseProperties;
 

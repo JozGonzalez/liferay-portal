@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClientContext} from 'graphql-hooks';
@@ -33,17 +24,7 @@ export default function App(props) {
 
 	const packageName = props.npmResolvedPackageName;
 
-	const questionComponent = Liferay.FeatureFlags['LPS-167151']
-		? `${packageName}/js/pages/questions/Question.new.es`
-		: `${packageName}/js/pages/questions/Question.es`;
-
-	const questionsComponent = Liferay.FeatureFlags['LPS-165491']
-		? `${packageName}/js/pages/questions/Questions.new.es`
-		: `${packageName}/js/pages/questions/Questions.es`;
-
-	const userActivityPage = Liferay.FeatureFlags['LPS-167151']
-		? `${packageName}/js/pages/home/UserActivity.new.es`
-		: `${packageName}/js/pages/home/UserActivity.es`;
+	const questionsComponent = `${packageName}/js/pages/questions/Questions.es`;
 
 	let path = props.historyRouterBasePath;
 
@@ -103,7 +84,7 @@ export default function App(props) {
 								<Route
 									component={(props) => (
 										<Component
-											module={userActivityPage}
+											module={`${packageName}/js/pages/home/UserActivity.es`}
 											props={props}
 										/>
 									)}
@@ -200,9 +181,7 @@ export default function App(props) {
 												<Route
 													component={(props) => (
 														<Component
-															module={
-																questionComponent
-															}
+															module={`${packageName}/js/pages/questions/Question.es`}
 															props={props}
 														/>
 													)}

@@ -1,24 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.legacy.searcher;
 
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.search.aggregation.AggregationResult;
 import com.liferay.portal.search.groupby.GroupByResponse;
+import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.hits.SearchHitsBuilder;
+import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
+import com.liferay.portal.search.internal.hits.SearchHitsBuilderFactoryImpl;
 import com.liferay.portal.search.internal.searcher.SearchResponseImpl;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -28,6 +25,7 @@ import com.liferay.portal.search.stats.StatsResponse;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -66,6 +64,8 @@ public class SearchResponseBuilderImpl implements SearchResponseBuilder {
 
 	@Override
 	public SearchResponse build() {
+		_filterSearchHits();
+
 		return _withSearchResponseGet(Function.identity());
 	}
 
@@ -168,6 +168,67 @@ public class SearchResponseBuilderImpl implements SearchResponseBuilder {
 		searchContext.setAttribute(key, value);
 
 		return value;
+	}
+
+	private void _filterSearchHits() {
+		_withSearchResponseImpl(
+			searchResponseImpl -> {
+				SearchHits searchHits = searchResponseImpl.getSearchHits();
+
+				List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+				if (searchHitsList.isEmpty()) {
+					return;
+				}
+
+				Hits hits = searchResponseImpl.withHitsGet(Function.identity());
+
+				if (hits == null) {
+					return;
+				}
+
+				Document[] documents = hits.getDocs();
+
+				if (documents.length == searchHitsList.size()) {
+					return;
+				}
+
+				SearchHitsBuilder searchHitsBuilder = _getSearchHitsBuilder();
+
+				if (documents.length == 0) {
+					searchResponseImpl.setSearchHits(searchHitsBuilder.build());
+
+					return;
+				}
+
+				List<String> ids = new ArrayList<>();
+
+				ArrayUtil.isNotEmptyForEach(
+					documents, document -> ids.add(document.get("uid")));
+
+				int originalSearchHitsListSize = searchHitsList.size();
+
+				if (!ids.isEmpty() &&
+					searchHitsList.removeIf(
+						searchHit -> !ids.contains(searchHit.getId()))) {
+
+					searchHitsBuilder.addSearchHits(searchHitsList);
+					searchHitsBuilder.maxScore(searchHits.getMaxScore());
+					searchHitsBuilder.searchTime(searchHits.getSearchTime());
+					searchHitsBuilder.totalHits(
+						searchHits.getTotalHits() - originalSearchHitsListSize -
+							searchHitsList.size());
+
+					searchResponseImpl.setSearchHits(searchHitsBuilder.build());
+				}
+			});
+	}
+
+	private SearchHitsBuilder _getSearchHitsBuilder() {
+		SearchHitsBuilderFactory searchHitsBuilderFactory =
+			new SearchHitsBuilderFactoryImpl();
+
+		return searchHitsBuilderFactory.getSearchHitsBuilder();
 	}
 
 	private SearchResponseImpl _getSearchResponseImpl(

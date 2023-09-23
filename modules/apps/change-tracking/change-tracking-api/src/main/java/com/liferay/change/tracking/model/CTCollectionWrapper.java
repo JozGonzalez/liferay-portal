@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -43,14 +35,19 @@ public class CTCollectionWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("ctRemoteId", getCtRemoteId());
 		attributes.put("schemaVersionId", getSchemaVersionId());
 		attributes.put("name", getName());
 		attributes.put("description", getDescription());
+		attributes.put("onDemandUserId", getOnDemandUserId());
+		attributes.put("shareable", isShareable());
 		attributes.put("status", getStatus());
 		attributes.put("statusByUserId", getStatusByUserId());
 		attributes.put("statusDate", getStatusDate());
@@ -64,6 +61,19 @@ public class CTCollectionWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
@@ -96,6 +106,12 @@ public class CTCollectionWrapper
 			setModifiedDate(modifiedDate);
 		}
 
+		Long ctRemoteId = (Long)attributes.get("ctRemoteId");
+
+		if (ctRemoteId != null) {
+			setCtRemoteId(ctRemoteId);
+		}
+
 		Long schemaVersionId = (Long)attributes.get("schemaVersionId");
 
 		if (schemaVersionId != null) {
@@ -112,6 +128,18 @@ public class CTCollectionWrapper
 
 		if (description != null) {
 			setDescription(description);
+		}
+
+		Long onDemandUserId = (Long)attributes.get("onDemandUserId");
+
+		if (onDemandUserId != null) {
+			setOnDemandUserId(onDemandUserId);
+		}
+
+		Boolean shareable = (Boolean)attributes.get("shareable");
+
+		if (shareable != null) {
+			setShareable(shareable);
 		}
 
 		Integer status = (Integer)attributes.get("status");
@@ -169,6 +197,16 @@ public class CTCollectionWrapper
 	}
 
 	/**
+	 * Returns the ct remote ID of this ct collection.
+	 *
+	 * @return the ct remote ID of this ct collection
+	 */
+	@Override
+	public long getCtRemoteId() {
+		return model.getCtRemoteId();
+	}
+
+	/**
 	 * Returns the description of this ct collection.
 	 *
 	 * @return the description of this ct collection
@@ -176,6 +214,16 @@ public class CTCollectionWrapper
 	@Override
 	public String getDescription() {
 		return model.getDescription();
+	}
+
+	/**
+	 * Returns the external reference code of this ct collection.
+	 *
+	 * @return the external reference code of this ct collection
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -209,6 +257,26 @@ public class CTCollectionWrapper
 	}
 
 	/**
+	 * Returns the on demand user ID of this ct collection.
+	 *
+	 * @return the on demand user ID of this ct collection
+	 */
+	@Override
+	public long getOnDemandUserId() {
+		return model.getOnDemandUserId();
+	}
+
+	/**
+	 * Returns the on demand user uuid of this ct collection.
+	 *
+	 * @return the on demand user uuid of this ct collection
+	 */
+	@Override
+	public String getOnDemandUserUuid() {
+		return model.getOnDemandUserUuid();
+	}
+
+	/**
 	 * Returns the primary key of this ct collection.
 	 *
 	 * @return the primary key of this ct collection
@@ -226,6 +294,16 @@ public class CTCollectionWrapper
 	@Override
 	public long getSchemaVersionId() {
 		return model.getSchemaVersionId();
+	}
+
+	/**
+	 * Returns the shareable of this ct collection.
+	 *
+	 * @return the shareable of this ct collection
+	 */
+	@Override
+	public boolean getShareable() {
+		return model.getShareable();
 	}
 
 	/**
@@ -293,9 +371,29 @@ public class CTCollectionWrapper
 		return model.getUserUuid();
 	}
 
+	/**
+	 * Returns the uuid of this ct collection.
+	 *
+	 * @return the uuid of this ct collection
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
 	@Override
 	public boolean isProduction() {
 		return model.isProduction();
+	}
+
+	/**
+	 * Returns <code>true</code> if this ct collection is shareable.
+	 *
+	 * @return <code>true</code> if this ct collection is shareable; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isShareable() {
+		return model.isShareable();
 	}
 
 	@Override
@@ -334,6 +432,16 @@ public class CTCollectionWrapper
 	}
 
 	/**
+	 * Sets the ct remote ID of this ct collection.
+	 *
+	 * @param ctRemoteId the ct remote ID of this ct collection
+	 */
+	@Override
+	public void setCtRemoteId(long ctRemoteId) {
+		model.setCtRemoteId(ctRemoteId);
+	}
+
+	/**
 	 * Sets the description of this ct collection.
 	 *
 	 * @param description the description of this ct collection
@@ -341,6 +449,16 @@ public class CTCollectionWrapper
 	@Override
 	public void setDescription(String description) {
 		model.setDescription(description);
+	}
+
+	/**
+	 * Sets the external reference code of this ct collection.
+	 *
+	 * @param externalReferenceCode the external reference code of this ct collection
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**
@@ -374,6 +492,26 @@ public class CTCollectionWrapper
 	}
 
 	/**
+	 * Sets the on demand user ID of this ct collection.
+	 *
+	 * @param onDemandUserId the on demand user ID of this ct collection
+	 */
+	@Override
+	public void setOnDemandUserId(long onDemandUserId) {
+		model.setOnDemandUserId(onDemandUserId);
+	}
+
+	/**
+	 * Sets the on demand user uuid of this ct collection.
+	 *
+	 * @param onDemandUserUuid the on demand user uuid of this ct collection
+	 */
+	@Override
+	public void setOnDemandUserUuid(String onDemandUserUuid) {
+		model.setOnDemandUserUuid(onDemandUserUuid);
+	}
+
+	/**
 	 * Sets the primary key of this ct collection.
 	 *
 	 * @param primaryKey the primary key of this ct collection
@@ -391,6 +529,16 @@ public class CTCollectionWrapper
 	@Override
 	public void setSchemaVersionId(long schemaVersionId) {
 		model.setSchemaVersionId(schemaVersionId);
+	}
+
+	/**
+	 * Sets whether this ct collection is shareable.
+	 *
+	 * @param shareable the shareable of this ct collection
+	 */
+	@Override
+	public void setShareable(boolean shareable) {
+		model.setShareable(shareable);
 	}
 
 	/**
@@ -453,9 +601,24 @@ public class CTCollectionWrapper
 		model.setUserUuid(userUuid);
 	}
 
+	/**
+	 * Sets the uuid of this ct collection.
+	 *
+	 * @param uuid the uuid of this ct collection
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
 	@Override
 	public String toXmlString() {
 		return model.toXmlString();
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

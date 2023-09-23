@@ -1,25 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.test.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
 import com.liferay.commerce.discount.model.CommerceDiscount;
-import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRel;
-import com.liferay.commerce.discount.service.CommerceDiscountCommerceAccountGroupRelLocalServiceUtil;
 import com.liferay.commerce.discount.service.CommerceDiscountLocalServiceUtil;
 import com.liferay.commerce.discount.service.CommerceDiscountRelLocalServiceUtil;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -39,20 +27,6 @@ import java.util.Calendar;
  */
 public class CommerceDiscountTestUtil {
 
-	public static CommerceDiscountCommerceAccountGroupRel
-			addAccountGroupToDiscount(
-				long userId, CommerceDiscount commerceDiscount)
-		throws Exception {
-
-		CommerceAccountGroup commerceAccountGroup = null;
-
-		return CommerceDiscountCommerceAccountGroupRelLocalServiceUtil.
-			addCommerceDiscountCommerceAccountGroupRel(
-				userId, commerceDiscount.getCommerceDiscountId(),
-				commerceAccountGroup.getCommerceAccountGroupId(),
-				ServiceContextTestUtil.getServiceContext());
-	}
-
 	public static CommerceDiscount addCouponDiscount(
 			long groupId, double amount, String couponCode, String target,
 			long... targetIds)
@@ -71,23 +45,6 @@ public class CommerceDiscountTestUtil {
 			commerceDiscount);
 	}
 
-	public static CommerceDiscountCommerceAccountGroupRel
-			addDiscountCommerceAccountGroupRel(
-				CommerceDiscount commerceDiscount,
-				CommerceAccountGroup commerceAccountGroup)
-		throws Exception {
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext();
-
-		return CommerceDiscountCommerceAccountGroupRelLocalServiceUtil.
-			addCommerceDiscountCommerceAccountGroupRel(
-				serviceContext.getUserId(),
-				commerceDiscount.getCommerceDiscountId(),
-				commerceAccountGroup.getCommerceAccountGroupId(),
-				serviceContext);
-	}
-
 	public static CommerceDiscount addFixedCommerceDiscount(
 			long groupId, double amount, String target, long... targetIds)
 		throws Exception {
@@ -97,7 +54,7 @@ public class CommerceDiscountTestUtil {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
 
-		User user = UserLocalServiceUtil.getDefaultUser(
+		User user = UserLocalServiceUtil.getGuestUser(
 			serviceContext.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());
@@ -129,7 +86,7 @@ public class CommerceDiscountTestUtil {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
 
-		User user = UserLocalServiceUtil.getDefaultUser(
+		User user = UserLocalServiceUtil.getGuestUser(
 			serviceContext.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());
@@ -167,7 +124,7 @@ public class CommerceDiscountTestUtil {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
 
-		User user = UserLocalServiceUtil.getDefaultUser(
+		User user = UserLocalServiceUtil.getGuestUser(
 			serviceContext.getCompanyId());
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());
@@ -200,7 +157,7 @@ public class CommerceDiscountTestUtil {
 		for (long id : targetIds) {
 			CommerceDiscountRelLocalServiceUtil.addCommerceDiscountRel(
 				commerceDiscount.getCommerceDiscountId(),
-				AssetCategory.class.getName(), id, serviceContext);
+				AssetCategory.class.getName(), id, null, serviceContext);
 		}
 	}
 
@@ -214,7 +171,7 @@ public class CommerceDiscountTestUtil {
 		for (long id : targetIds) {
 			CommerceDiscountRelLocalServiceUtil.addCommerceDiscountRel(
 				commerceDiscount.getCommerceDiscountId(),
-				CPDefinition.class.getName(), id, serviceContext);
+				CPDefinition.class.getName(), id, null, serviceContext);
 		}
 	}
 

@@ -17,7 +17,7 @@ definition {
 		var privateLayout = JSONLayoutSetter.setPrivateLayout(privateLayout = ${privateLayout});
 		var layoutSetPrototypeUuid = JSONSiteTemplateAPI._getSiteTemplateUuidByName(siteTemplateName = ${siteTemplateName});
 
-		JSONGroup.addGroup(groupName = ${groupName});
+		HeadlessSite.addSite(siteName = ${groupName});
 
 		var groupId = JSONGroupSetter.setGroupId(groupName = ${groupName});
 
@@ -55,6 +55,28 @@ definition {
 		var layoutSetPrototypeId = JSONSiteTemplateAPI._getSiteTemplateIdByName(companyId = ${companyId});
 
 		JSONSiteTemplateAPI._deleteSiteTemplateById(layoutSetPrototypeId = ${layoutSetPrototypeId});
+	}
+
+	macro getPlid {
+		Variables.assertDefined(parameterList = "${layoutName},${siteTemplateName}");
+
+		if (!(isSet(site))) {
+			var site = "false";
+		}
+
+		var layoutSetPrototypeId = JSONSiteTemplateAPI._getSiteTemplateIdByName(siteTemplateName = ${siteTemplateName});
+
+		var groupId = ${layoutSetPrototypeId} + 1;
+
+		if (!(isSet(privateLayout))) {
+			var privateLayout = "true";
+		}
+
+		JSONLayoutAPI._getPlidByName(
+			groupId = ${groupId},
+			layoutName = ${layoutName},
+			portalURL = ${portalURL},
+			privateLayout = ${privateLayout});
 	}
 
 	macro getSiteTemplateIdByName {

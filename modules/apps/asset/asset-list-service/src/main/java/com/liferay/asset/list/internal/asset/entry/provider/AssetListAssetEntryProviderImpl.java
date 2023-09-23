@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.internal.asset.entry.provider;
@@ -24,10 +15,8 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
-import com.liferay.asset.list.asset.entry.query.processor.AssetListAssetEntryQueryProcessor;
 import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.internal.configuration.AssetListConfiguration;
-import com.liferay.asset.list.internal.dynamic.data.mapping.util.DDMIndexerUtil;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.model.AssetListEntryAssetEntryRel;
 import com.liferay.asset.list.model.AssetListEntryAssetEntryRelModel;
@@ -40,8 +29,10 @@ import com.liferay.asset.util.AssetHelper;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -77,8 +68,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -145,7 +136,8 @@ public class AssetListAssetEntryProviderImpl
 
 	@Activate
 	@Modified
-	protected void activate(Map<String, Object> properties)
+	protected void activate(
+			BundleContext bundleContext, Map<String, Object> properties)
 		throws ConfigurationException {
 
 		_assetListConfiguration = ConfigurableUtil.createConfigurable(
@@ -161,13 +153,11 @@ public class AssetListAssetEntryProviderImpl
 			assetListEntry.getTypeSettings(segmentsEntryId)
 		).build();
 
-		return _createAssetEntryQuery(
-			assetListEntry, userId, unicodeProperties);
+		return _createAssetEntryQuery(assetListEntry, unicodeProperties);
 	}
 
 	private AssetEntryQuery _createAssetEntryQuery(
-		AssetListEntry assetListEntry, String userId,
-		UnicodeProperties unicodeProperties) {
+		AssetListEntry assetListEntry, UnicodeProperties unicodeProperties) {
 
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
@@ -230,18 +220,18 @@ public class AssetListAssetEntryProviderImpl
 
 			if (dlFileEntryType != null) {
 				List<DDMStructure> ddmStructures =
-					dlFileEntryType.getDDMStructures();
+					DLFileEntryTypeUtil.getDDMStructures(dlFileEntryType);
 
 				if (!ddmStructures.isEmpty()) {
 					DDMStructure ddmStructure = ddmStructures.get(0);
 
 					assetEntryQuery.setAttribute(
 						"ddmStructureFieldName",
-						DDMIndexerUtil.encodeName(
+						_ddmIndexer.encodeName(
 							ddmStructure.getStructureId(),
 							_getFieldReference(
 								ddmStructure, ddmStructureFieldName),
-							LocaleUtil.getMostRelevantLocale()));
+							LocaleUtil.getSiteDefault()));
 				}
 			}
 			else {
@@ -249,11 +239,11 @@ public class AssetListAssetEntryProviderImpl
 
 				assetEntryQuery.setAttribute(
 					"ddmStructureFieldName",
-					DDMIndexerUtil.encodeName(
+					_ddmIndexer.encodeName(
 						ddmStructureId,
 						_getFieldReference(
 							ddmStructureId, ddmStructureFieldName),
-						LocaleUtil.getMostRelevantLocale()));
+						LocaleUtil.getSiteDefault()));
 			}
 
 			assetEntryQuery.setAttribute(
@@ -276,10 +266,6 @@ public class AssetListAssetEntryProviderImpl
 		assetEntryQuery.setOrderByType2(
 			GetterUtil.getString(
 				unicodeProperties.getProperty("orderByType2", "ASC")));
-
-		_processAssetEntryQuery(
-			assetListEntry.getCompanyId(), userId, unicodeProperties,
-			assetEntryQuery);
 
 		return assetEntryQuery;
 	}
@@ -753,7 +739,7 @@ public class AssetListAssetEntryProviderImpl
 
 	private String _getFieldReference(long ddmStructureId, String fieldName) {
 		try {
-			com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
+			DDMStructure ddmStructure =
 				_ddmStructureLocalService.getDDMStructure(ddmStructureId);
 
 			return ddmStructure.getFieldProperty(fieldName, "fieldReference");
@@ -938,19 +924,6 @@ public class AssetListAssetEntryProviderImpl
 		return searchContext;
 	}
 
-	private void _processAssetEntryQuery(
-		long companyId, String userId, UnicodeProperties unicodeProperties,
-		AssetEntryQuery assetEntryQuery) {
-
-		for (AssetListAssetEntryQueryProcessor
-				assetListAssetEntryQueryProcessor :
-					_assetListAssetEntryQueryProcessors) {
-
-			assetListAssetEntryQueryProcessor.processAssetEntryQuery(
-				companyId, userId, unicodeProperties, assetEntryQuery);
-		}
-	}
-
 	private void _setCategoriesAndTagsAndKeywords(
 		AssetEntryQuery assetEntryQuery, UnicodeProperties unicodeProperties,
 		long[] overrideAllAssetCategoryIds, String[] overrideAllAssetTagNames,
@@ -1118,8 +1091,6 @@ public class AssetListAssetEntryProviderImpl
 	@Reference
 	private AssetHelper _assetHelper;
 
-	private final List<AssetListAssetEntryQueryProcessor>
-		_assetListAssetEntryQueryProcessors = new CopyOnWriteArrayList<>();
 	private volatile AssetListConfiguration _assetListConfiguration;
 
 	@Reference
@@ -1136,6 +1107,9 @@ public class AssetListAssetEntryProviderImpl
 
 	@Reference
 	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private DDMIndexer _ddmIndexer;
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;

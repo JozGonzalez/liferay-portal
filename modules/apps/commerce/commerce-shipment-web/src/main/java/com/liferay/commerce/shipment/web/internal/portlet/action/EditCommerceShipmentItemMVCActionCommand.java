@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.portlet.action;
@@ -18,10 +9,12 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.exception.DuplicateCommerceShipmentItemException;
 import com.liferay.commerce.exception.NoSuchShipmentException;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
-import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseLocalService;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.model.CommerceShipmentItem;
+import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,14 +26,20 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -227,10 +226,19 @@ public class EditCommerceShipmentItemMVCActionCommand
 
 		CommerceShipmentItem commerceShipmentItem = null;
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.fetchCommerceChannelByGroupClassPK(
+				commerceOrderItem.getGroupId());
+
+		_commerceChannelModelResourcePermission.check(
+			PermissionThreadLocal.getPermissionChecker(),
+			commerceChannel.getCommerceChannelId(), ActionKeys.VIEW);
+
 		List<CommerceInventoryWarehouse> commerceInventoryWarehouses =
-			_commerceInventoryWarehouseService.getCommerceInventoryWarehouses(
-				commerceOrderItem.getCompanyId(),
-				commerceOrderItem.getGroupId(), true);
+			_commerceInventoryWarehouseLocalService.
+				getCommerceInventoryWarehouses(
+					commerceOrderItem.getCompanyId(),
+					commerceOrderItem.getGroupId(), true);
 
 		for (CommerceInventoryWarehouse commerceInventoryWarehouse :
 				commerceInventoryWarehouses) {
@@ -243,10 +251,12 @@ public class EditCommerceShipmentItemMVCActionCommand
 					commerceShipmentId, commerceOrderItemId,
 					commerceInventoryWarehouseId);
 
-			int quantity = ParamUtil.getInteger(
+			BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
 				actionRequest, commerceInventoryWarehouseId + "_quantity");
 
-			if ((initialCommerceShipmentItem != null) && (quantity > 0)) {
+			if ((initialCommerceShipmentItem != null) &&
+				BigDecimalUtil.gt(quantity, BigDecimal.ZERO)) {
+
 				commerceShipmentItem =
 					_commerceShipmentItemService.updateCommerceShipmentItem(
 						initialCommerceShipmentItem.getCommerceShipmentItemId(),
@@ -254,11 +264,13 @@ public class EditCommerceShipmentItemMVCActionCommand
 
 				initialCommerceShipmentItem = null;
 			}
-			else if ((commerceShipmentItem == null) && (quantity > 0)) {
+			else if ((commerceShipmentItem == null) &&
+					 BigDecimalUtil.gt(quantity, BigDecimal.ZERO)) {
+
 				commerceShipmentItem =
 					_commerceShipmentItemService.addCommerceShipmentItem(
 						null, commerceShipmentId, commerceOrderItemId,
-						commerceInventoryWarehouseId, quantity, true,
+						commerceInventoryWarehouseId, quantity, null, true,
 						serviceContext);
 			}
 			else if ((commerceShipmentItem != null) &&
@@ -269,7 +281,7 @@ public class EditCommerceShipmentItemMVCActionCommand
 						commerceShipmentItem.getCommerceShipmentItemId(),
 						commerceInventoryWarehouseId, quantity, true);
 
-				if (quantity == 0) {
+				if (BigDecimalUtil.eq(quantity, BigDecimal.ZERO)) {
 					commerceShipmentItem =
 						_commerceShipmentItemService.updateCommerceShipmentItem(
 							commerceShipmentItem.getCommerceShipmentItemId(), 0,
@@ -292,8 +304,17 @@ public class EditCommerceShipmentItemMVCActionCommand
 		EditCommerceShipmentItemMVCActionCommand.class);
 
 	@Reference
-	private CommerceInventoryWarehouseService
-		_commerceInventoryWarehouseService;
+	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
+	)
+	private ModelResourcePermission<CommerceChannel>
+		_commerceChannelModelResourcePermission;
+
+	@Reference
+	private CommerceInventoryWarehouseLocalService
+		_commerceInventoryWarehouseLocalService;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.service.internal.scheduler.test;
@@ -20,10 +11,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.scheduler.SchedulerJobConfiguration;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinition;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionLocalService;
 import com.liferay.portal.workflow.metrics.service.util.BaseWorkflowMetricsIndexerTestCase;
 
@@ -42,14 +34,14 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 	public void testProcess() throws Exception {
 		assertCount(
 			4,
-			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_NODE,
 			"WorkflowMetricsNodeType", "companyId",
 			workflowDefinition.getCompanyId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId());
 		assertCount(
-			_processWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS,
 			"WorkflowMetricsProcessType", "companyId",
 			workflowDefinition.getCompanyId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId());
@@ -71,8 +63,8 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 
 		assertCount(
 			0,
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId(), "slaDefinitionId",
@@ -85,16 +77,16 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 		completeKaleoInstance(kaleoInstance);
 
 		assertCount(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
 			"WorkflowMetricsInstanceType", "className",
 			kaleoInstance.getClassName(), "classPK", kaleoInstance.getClassPK(),
 			"companyId", kaleoInstance.getCompanyId(), "completed", true,
 			"instanceId", kaleoInstance.getKaleoInstanceId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId());
 		assertCount(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
 			"WorkflowMetricsInstanceType", "className",
 			kaleoInstance.getClassName(), "classPK", kaleoInstance.getClassPK(),
 			"companyId", kaleoInstance.getCompanyId(), "completed", true,
@@ -102,8 +94,8 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 			workflowDefinition.getWorkflowDefinitionId());
 		assertCount(
 			0,
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
 			"WorkflowMetricsInstanceType", "className",
 			kaleoInstance.getClassName(), "classPK", kaleoInstance.getClassPK(),
 			"companyId", kaleoInstance.getCompanyId(), "completed", false,
@@ -117,8 +109,8 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 
 		assertCount(
 			0,
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId(), "slaDefinitionId",
@@ -136,8 +128,8 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 		kaleoInstance = getKaleoInstance(addBlogsEntry());
 
 		assertCount(
-			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
 			"WorkflowMetricsInstanceType", "className",
 			kaleoInstance.getClassName(), "classPK", kaleoInstance.getClassPK(),
 			"companyId", kaleoInstance.getCompanyId(), "completed", false,
@@ -147,23 +139,23 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 		jobExecutorUnsafeRunnable.run();
 
 		assertCount(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId(), "slaDefinitionId",
 			workflowMetricsSLADefinition.getWorkflowMetricsSLADefinitionId(),
 			"status", "RUNNING");
 		assertCount(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "instanceId",
 			kaleoInstance.getKaleoInstanceId(), "processId",
 			workflowDefinition.getWorkflowDefinitionId());
 		assertCount(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "instanceId",
 			kaleoInstance.getKaleoInstanceId(), "processId",
@@ -173,8 +165,8 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 		jobExecutorUnsafeRunnable.run();
 
 		assertCount(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				workflowDefinition.getCompanyId()),
+			_indexNameBuilder.getIndexName(workflowDefinition.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT,
 			"WorkflowMetricsSLAInstanceResultType", "companyId",
 			workflowDefinition.getCompanyId(), "instanceId",
 			kaleoInstance.getKaleoInstanceId(), "processId",
@@ -182,26 +174,13 @@ public class WorkflowMetricsSLAProcessSchedulerJobConfigurationTest
 			workflowMetricsSLADefinition.getWorkflowMetricsSLADefinitionId());
 	}
 
-	@Inject(filter = "workflow.metrics.index.entity.name=instance")
-	private WorkflowMetricsIndexNameBuilder
-		_instanceWorkflowMetricsIndexNameBuilder;
-
-	@Inject(filter = "workflow.metrics.index.entity.name=node")
-	private WorkflowMetricsIndexNameBuilder
-		_nodeWorkflowMetricsIndexNameBuilder;
-
-	@Inject(filter = "workflow.metrics.index.entity.name=process")
-	private WorkflowMetricsIndexNameBuilder
-		_processWorkflowMetricsIndexNameBuilder;
+	@Inject
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Inject(
-		filter = "component.name=*.WorkflowMetricsSLAProcessSchedulerJobConfiguration"
+		filter = "component.name=com.liferay.portal.workflow.metrics.internal.scheduler.WorkflowMetricsSLAProcessSchedulerJobConfiguration"
 	)
 	private SchedulerJobConfiguration _schedulerJobConfiguration;
-
-	@Inject(filter = "workflow.metrics.index.entity.name=sla-instance-result")
-	private WorkflowMetricsIndexNameBuilder
-		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
 
 	@Inject
 	private WorkflowMetricsSLADefinitionLocalService

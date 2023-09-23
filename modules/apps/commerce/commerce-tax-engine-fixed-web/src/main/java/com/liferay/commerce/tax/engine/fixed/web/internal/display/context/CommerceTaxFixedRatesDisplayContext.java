@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.tax.engine.fixed.web.internal.display.context;
 
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.constants.CommerceTaxScreenNavigationConstants;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -22,7 +14,6 @@ import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRate;
 import com.liferay.commerce.tax.engine.fixed.service.CommerceTaxFixedRateService;
-import com.liferay.commerce.tax.engine.fixed.web.internal.frontend.taglib.servlet.taglib.CommerceTaxMethodFixedRatesScreenNavigationCategory;
 import com.liferay.commerce.tax.service.CommerceTaxMethodService;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -108,7 +99,8 @@ public class CommerceTaxFixedRatesDisplayContext
 
 	@Override
 	public String getScreenNavigationCategoryKey() {
-		return CommerceTaxMethodFixedRatesScreenNavigationCategory.CATEGORY_KEY;
+		return CommerceTaxScreenNavigationConstants.
+			CATEGORY_KEY_COMMERCE_TAX_RATES;
 	}
 
 	private final CommerceTaxFixedRateService _commerceTaxFixedRateService;

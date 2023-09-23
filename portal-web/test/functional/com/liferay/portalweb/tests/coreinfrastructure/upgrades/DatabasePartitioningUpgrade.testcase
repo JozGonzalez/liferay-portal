@@ -8,20 +8,27 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
 	property test.run.environment = "EE";
+	property test.run.type = "single";
 	property testray.main.component.name = "Database Partitioning";
 
 	@priority = 5
-	test CanAutoUpgradeLargePartitionedDatabase7413U47 {
-		property custom.properties = "upgrade.database.auto.run=true";
+	test CanAutoUpgradeLargePartitionedDatabase7413 {
+		property custom.properties = "upgrade.report.enabled=true";
 		property custom.startup.timeout = "300";
 		property data.archive.type = "data-archive-portal-partition-large";
+		property database.auto.upgrade.enabled = "true";
 		property minimum.slave.ram = "24";
 		property portal.release = "false";
 		property portal.upstream = "false";
-		property portal.version = "7.4.13.u47";
+		property portal.version = "7.4.13.u72";
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "false";
+
+		task ("Print the upgrade execution time") {
+			UpgradeReport.printUpgradeExecutionTime(upgradeType = "auto");
+		}
 
 		User.firstLoginUI(
 			password = 1234,
@@ -30,14 +37,47 @@ definition {
 	}
 
 	@priority = 5
-	test CanUpgradeLargePartitionedDatabase7413U47 {
+	test CanAutoUpgradeLargePartitionedDatabase7413Benchmark {
+		property custom.properties = "upgrade.report.enabled=true";
+		property data.archive.type = "data-archive-portal-partition-large";
+		property database.auto.upgrade.enabled = "true";
+		property minimum.slave.ram = "24";
+		property portal.release = "false";
+		property portal.upstream = "false";
+		property portal.version = "7.4.13.u72";
+		property skip.upgrade-legacy-database = "true";
+		property test.assert.warning.exceptions = "false";
+
+		task ("Print the upgrade execution time") {
+			UpgradeReport.printUpgradeExecutionTime(upgradeType = "auto");
+		}
+
+		User.firstLoginUI(
+			password = 1234,
+			specificURL = "http://www.able.com:8080",
+			userEmailAddress = "test@www.able.com");
+
+		task ("Print the upgrade report") {
+			var reportFileContent = UpgradeReport.getAutoUpgradeReportFileContent();
+
+			echo(${reportFileContent});
+		}
+	}
+
+	@priority = 5
+	test CanUpgradeLargePartitionedDatabase7413 {
 		property custom.startup.timeout = "490";
 		property data.archive.type = "data-archive-portal-partition-large";
 		property minimum.slave.ram = "24";
 		property portal.release = "false";
 		property portal.upstream = "false";
-		property portal.version = "7.4.13.u47";
+		property portal.version = "7.4.13.u72";
 		property test.assert.warning.exceptions = "false";
+		property upgrade.reports.enabled = "true";
+
+		task ("Print the upgrade execution time") {
+			UpgradeReport.printUpgradeExecutionTime(upgradeType = "client");
+		}
 
 		User.firstLoginUI(
 			password = 1234,
@@ -46,9 +86,36 @@ definition {
 	}
 
 	@priority = 5
+	test CanUpgradeLargePartitionedDatabase7413Benchmark {
+		property data.archive.type = "data-archive-portal-partition-large";
+		property minimum.slave.ram = "24";
+		property portal.release = "false";
+		property portal.upstream = "false";
+		property portal.version = "7.4.13.u72";
+		property test.assert.warning.exceptions = "false";
+		property upgrade.reports.enabled = "true";
+
+		task ("Print the upgrade execution time") {
+			UpgradeReport.printUpgradeExecutionTime(upgradeType = "client");
+		}
+
+		User.firstLoginUI(
+			password = 1234,
+			specificURL = "http://www.able.com:8080",
+			userEmailAddress = "test@www.able.com");
+
+		task ("Print the upgrade report") {
+			var reportFileContent = UpgradeReport.getUpgradeReportFileContent();
+
+			echo(${reportFileContent});
+		}
+	}
+
+	@priority = 5
 	test CanUpgradePartitionedDatabase7413U33 {
 		property data.archive.type = "data-archive-portal-partition";
-		property portal.upgrades = "true";
+		property liferay.online.properties = "true";
+		property portal.smoke.upgrades = "true";
 		property portal.version = "7.4.13.u33";
 
 		User.loginPG(
@@ -58,7 +125,7 @@ definition {
 
 		SearchAdministration.executeReindex();
 
-		Upgrade.viewUpgradeDBPartition();
+		ValidateDatabasePartitioningUpgrade.viewUpgradeDBPartition();
 	}
 
 }

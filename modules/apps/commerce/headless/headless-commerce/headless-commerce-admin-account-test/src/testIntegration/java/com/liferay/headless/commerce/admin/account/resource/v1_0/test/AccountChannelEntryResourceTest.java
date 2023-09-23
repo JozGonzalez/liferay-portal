@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.resource.v1_0.test;
@@ -40,6 +31,7 @@ import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.AddressLocalServiceUtil;
 import com.liferay.portal.kernel.service.CountryLocalServiceUtil;
@@ -161,8 +153,9 @@ public class AccountChannelEntryResourceTest
 			RandomTestUtil.randomString() + "@liferay.com",
 			LocaleUtil.getSiteDefault(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), 0, 0,
-			true, 1, 1, 2022, RandomTestUtil.randomString(), null, null, null,
-			null, false, serviceContext);
+			true, 1, 1, 2022, RandomTestUtil.randomString(),
+			UserConstants.TYPE_REGULAR, null, null, null, null, false,
+			serviceContext);
 
 		Role role = RoleLocalServiceUtil.getRole(
 			testCompany.getCompanyId(), RoleConstants.ADMINISTRATOR);

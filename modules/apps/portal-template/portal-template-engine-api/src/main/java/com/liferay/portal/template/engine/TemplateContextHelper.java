@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.engine;
@@ -18,6 +9,8 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
@@ -25,7 +18,6 @@ import com.liferay.portal.kernel.audit.AuditRouterUtil;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -56,8 +48,9 @@ import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
-import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.service.permission.UserPermissionUtil_IW;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
+import com.liferay.portal.kernel.template.TemplateContextContributor;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
@@ -115,6 +108,8 @@ import javax.portlet.RenderResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.framework.BundleContext;
+
 /**
  * @author Tina Tian
  * @author Jorge Ferrer
@@ -157,6 +152,10 @@ public class TemplateContextHelper {
 		return templateVariableGroups;
 	}
 
+	public void destory() {
+		_serviceTrackerList.close();
+	}
+
 	public Map<String, Object> getHelperUtilities(boolean restricted) {
 		if (_helperUtilitiesMapArray == null) {
 			_helperUtilitiesMapArray = (Map<String, Object>[])new Map<?, ?>[2];
@@ -191,6 +190,12 @@ public class TemplateContextHelper {
 
 	public Set<String> getRestrictedVariables() {
 		return Collections.emptySet();
+	}
+
+	public void init(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, TemplateContextContributor.class,
+			"(type=" + TemplateContextContributor.TYPE_GLOBAL + ")");
 	}
 
 	public void prepare(
@@ -359,6 +364,12 @@ public class TemplateContextHelper {
 
 	public void removeAllHelperUtilities() {
 		_helperUtilitiesMapArray = null;
+	}
+
+	protected Iterable<TemplateContextContributor>
+		getTemplateContextContributors() {
+
+		return _serviceTrackerList;
 	}
 
 	protected void populateCommonHelperUtilities(
@@ -535,8 +546,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"unicodeLanguageUtil",
-				UnicodeLanguageUtil.getUnicodeLanguage());
+				"unicodeLanguageUtil", UnicodeFormatter_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -747,7 +757,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"userPermission", UserPermissionUtil.getUserPermission());
+				"userPermission", UserPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -844,6 +854,8 @@ public class TemplateContextHelper {
 		TemplateContextHelper.class);
 
 	private Map<String, Object>[] _helperUtilitiesMapArray;
+	private volatile ServiceTrackerList<TemplateContextContributor>
+		_serviceTrackerList;
 
 	private static class HttpWrapper implements Http {
 
@@ -1019,7 +1031,7 @@ public class TemplateContextHelper {
 			if (!HTTP.equals(protocol) && !HTTPS.equals(protocol)) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						". $httpUtil template variable supports only HTTP and ",
 						"HTTPS protocols."));
 			}
@@ -1027,7 +1039,7 @@ public class TemplateContextHelper {
 			if (isLocationAccessDenied(url.toString())) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						" using $httpUtil variable from a template. Please ",
 						"use restricted variable $httpUtilUnsafe to access ",
 						"local network."));

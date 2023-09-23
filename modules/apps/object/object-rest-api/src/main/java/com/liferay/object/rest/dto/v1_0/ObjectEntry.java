@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.dto.v1_0;
@@ -95,6 +86,39 @@ public class ObjectEntry implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
+
+	@Schema(
+		description = "Optional field with the audit events associated with this object entry, can be embedded with nestedFields"
+	)
+	@Valid
+	public AuditEvent[] getAuditEvents() {
+		return auditEvents;
+	}
+
+	public void setAuditEvents(AuditEvent[] auditEvents) {
+		this.auditEvents = auditEvents;
+	}
+
+	@JsonIgnore
+	public void setAuditEvents(
+		UnsafeSupplier<AuditEvent[], Exception> auditEventsUnsafeSupplier) {
+
+		try {
+			auditEvents = auditEventsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "Optional field with the audit events associated with this object entry, can be embedded with nestedFields"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected AuditEvent[] auditEvents;
 
 	@Schema
 	@Valid
@@ -206,7 +230,7 @@ public class ObjectEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String externalReferenceCode;
 
 	@Schema
@@ -351,7 +375,7 @@ public class ObjectEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Status status;
 
 	@Schema(description = "The categories associated with this object entry.")
@@ -458,6 +482,26 @@ public class ObjectEntry implements Serializable {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(actions));
+		}
+
+		if (auditEvents != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"auditEvents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < auditEvents.length; i++) {
+				sb.append(String.valueOf(auditEvents[i]));
+
+				if ((i + 1) < auditEvents.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (creator != null) {
@@ -714,5 +758,7 @@ public class ObjectEntry implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

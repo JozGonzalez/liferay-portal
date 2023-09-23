@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.service;
@@ -246,14 +237,6 @@ public class LayoutPageTemplateStructureLocalServiceUtil {
 		return getService().fetchLayoutPageTemplateStructure(groupId, plid);
 	}
 
-	public static LayoutPageTemplateStructure fetchLayoutPageTemplateStructure(
-			long groupId, long plid, boolean rebuildStructure)
-		throws PortalException {
-
-		return getService().fetchLayoutPageTemplateStructure(
-			groupId, plid, rebuildStructure);
-	}
-
 	/**
 	 * Returns the layout page template structure matching the UUID and group.
 	 *
@@ -400,13 +383,6 @@ public class LayoutPageTemplateStructureLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static LayoutPageTemplateStructure
-			rebuildLayoutPageTemplateStructure(long groupId, long plid)
-		throws PortalException {
-
-		return getService().rebuildLayoutPageTemplateStructure(groupId, plid);
-	}
-
 	/**
 	 * Updates the layout page template structure in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -444,6 +420,12 @@ public class LayoutPageTemplateStructureLocalServiceUtil {
 
 	public static LayoutPageTemplateStructureLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(
+		LayoutPageTemplateStructureLocalService service) {
+
+		_service = service;
 	}
 
 	private static volatile LayoutPageTemplateStructureLocalService _service;

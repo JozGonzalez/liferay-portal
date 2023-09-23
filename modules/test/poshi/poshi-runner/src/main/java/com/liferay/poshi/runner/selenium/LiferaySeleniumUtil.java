@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.selenium;
 
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.OSDetector;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.Validator;
 import com.liferay.poshi.runner.exception.JavaScriptException;
 import com.liferay.poshi.runner.exception.LiferayLogException;
@@ -42,8 +33,11 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +62,9 @@ import org.sikuli.api.robot.desktop.DesktopKeyboard;
 public class LiferaySeleniumUtil {
 
 	public static void assertConsoleErrors() throws Exception {
-		if (!PropsValues.TEST_ASSERT_CONSOLE_ERRORS) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (!poshiProperties.testAssertConsoleErrors) {
 			return;
 		}
 
@@ -183,7 +179,9 @@ public class LiferaySeleniumUtil {
 	}
 
 	public static void assertNoPoshiWarnings() throws Exception {
-		if (!PropsValues.TEST_ASSERT_WARNING_EXCEPTIONS) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (!poshiProperties.testAssertWarningExceptions) {
 			return;
 		}
 
@@ -223,7 +221,9 @@ public class LiferaySeleniumUtil {
 	}
 
 	public static void captureScreen(String fileName) throws Exception {
-		if (!PropsValues.SAVE_SCREENSHOT) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (!poshiProperties.saveScreenshot) {
 			return;
 		}
 
@@ -335,18 +335,20 @@ public class LiferaySeleniumUtil {
 	public static String getSourceDirFilePath(String fileName)
 		throws Exception {
 
-		List<String> filePaths = new ArrayList<>();
+		Set<String> filePaths = new HashSet<>();
 
 		List<String> baseDirNames = new ArrayList<>();
 
-		baseDirNames.add(PropsValues.TEST_BASE_DIR_NAME);
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
 
-		if (Validator.isNotNull(PropsValues.TEST_DIRS)) {
-			Collections.addAll(baseDirNames, PropsValues.TEST_DIRS);
+		baseDirNames.add(poshiProperties.testBaseDirName);
+
+		if (Validator.isNotNull(poshiProperties.testDirs)) {
+			Collections.addAll(baseDirNames, poshiProperties.testDirs);
 		}
 
-		if (Validator.isNotNull(PropsValues.TEST_SUPPORT_DIRS)) {
-			Collections.addAll(baseDirNames, PropsValues.TEST_SUPPORT_DIRS);
+		if (Validator.isNotNull(poshiProperties.testSupportDirs)) {
+			Collections.addAll(baseDirNames, poshiProperties.testSupportDirs);
 		}
 
 		for (String baseDirName : baseDirNames) {
@@ -374,25 +376,30 @@ public class LiferaySeleniumUtil {
 			throw new Exception("File not found " + fileName);
 		}
 
-		return filePaths.get(0);
+		Iterator<String> iterator = filePaths.iterator();
+
+		return iterator.next();
 	}
 
 	public static String getTestConsoleLogFileContent() throws Exception {
-		if (Validator.isNull(PropsValues.TEST_CONSOLE_LOG_FILE_NAME)) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (Validator.isNull(poshiProperties.testLiferayConsoleLogFileName)) {
 			return "";
 		}
 
-		String baseDirName = PropsValues.TEST_CONSOLE_LOG_FILE_NAME;
+		String baseDirName = poshiProperties.testLiferayConsoleLogFileName;
 
-		int x = PropsValues.TEST_CONSOLE_LOG_FILE_NAME.lastIndexOf("/");
+		int x = poshiProperties.testLiferayConsoleLogFileName.lastIndexOf("/");
 
 		if (x != -1) {
-			baseDirName = PropsValues.TEST_CONSOLE_LOG_FILE_NAME.substring(
-				0, x);
+			baseDirName =
+				poshiProperties.testLiferayConsoleLogFileName.substring(0, x);
 		}
 
 		List<URL> urls = FileUtil.getIncludedResourceURLs(
-			new String[] {PropsValues.TEST_CONSOLE_LOG_FILE_NAME}, baseDirName);
+			new String[] {poshiProperties.testLiferayConsoleLogFileName},
+			baseDirName);
 
 		try {
 			urls.sort(
@@ -415,7 +422,7 @@ public class LiferaySeleniumUtil {
 		catch (RuntimeException runtimeException) {
 			throw new PoshiRunnerWarningException(
 				"Unable to get console log file content. Please check log " +
-					"file(s): " + PropsValues.TEST_CONSOLE_LOG_FILE_NAME,
+					"file(s): " + poshiProperties.testLiferayConsoleLogFileName,
 				runtimeException);
 		}
 
@@ -430,8 +437,10 @@ public class LiferaySeleniumUtil {
 
 			if (consoleLogSize > _BYTES_MAX_SIZE_CONSOLE_LOG) {
 				String largeConsoleLogSizeMessage =
-					"Console log " + PropsValues.TEST_CONSOLE_LOG_FILE_NAME +
-						" exceeded " + _BYTES_MAX_SIZE_CONSOLE_LOG + " bytes";
+					"Console log " +
+						poshiProperties.testLiferayConsoleLogFileName +
+							" exceeded " + _BYTES_MAX_SIZE_CONSOLE_LOG +
+								" bytes";
 
 				System.out.println(largeConsoleLogSizeMessage);
 
@@ -500,11 +509,14 @@ public class LiferaySeleniumUtil {
 			return true;
 		}
 
-		if ((Objects.equals(PropsValues.LIFERAY_PORTAL_BUNDLE, "6.2.10.1") ||
-			 Objects.equals(PropsValues.LIFERAY_PORTAL_BUNDLE, "6.2.10.2") ||
-			 Objects.equals(PropsValues.LIFERAY_PORTAL_BUNDLE, "6.2.10.3") ||
-			 Objects.equals(PropsValues.LIFERAY_PORTAL_BUNDLE, "6.2.10.4") ||
-			 Objects.equals(PropsValues.LIFERAY_PORTAL_BRANCH, "ee-6.2.10")) &&
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if ((Objects.equals(poshiProperties.liferayPortalBundle, "6.2.10.1") ||
+			 Objects.equals(poshiProperties.liferayPortalBundle, "6.2.10.2") ||
+			 Objects.equals(poshiProperties.liferayPortalBundle, "6.2.10.3") ||
+			 Objects.equals(poshiProperties.liferayPortalBundle, "6.2.10.4") ||
+			 Objects.equals(
+				 poshiProperties.liferayPortalBranch, "ee-6.2.10")) &&
 			(line.contains(
 				"com.liferay.portal.kernel.search.SearchException: " +
 					"java.nio.channels.ClosedByInterruptException") ||
@@ -513,16 +525,16 @@ public class LiferaySeleniumUtil {
 			return true;
 		}
 
-		if (Validator.isNotNull(PropsValues.IGNORE_ERRORS)) {
-			if (Validator.isNotNull(PropsValues.IGNORE_ERRORS_DELIMITER)) {
+		if (Validator.isNotNull(poshiProperties.ignoreErrors)) {
+			if (Validator.isNotNull(poshiProperties.ignoreErrorsDelimiter)) {
 				String ignoreErrorsDelimiter =
-					PropsValues.IGNORE_ERRORS_DELIMITER;
+					poshiProperties.ignoreErrorsDelimiter;
 
 				if (ignoreErrorsDelimiter.equals("|")) {
 					ignoreErrorsDelimiter = "\\|";
 				}
 
-				String[] ignoreErrors = PropsValues.IGNORE_ERRORS.split(
+				String[] ignoreErrors = poshiProperties.ignoreErrors.split(
 					ignoreErrorsDelimiter);
 
 				for (String ignoreError : ignoreErrors) {
@@ -531,7 +543,7 @@ public class LiferaySeleniumUtil {
 					}
 				}
 			}
-			else if (line.contains(PropsValues.IGNORE_ERRORS)) {
+			else if (line.contains(poshiProperties.ignoreErrors)) {
 				return true;
 			}
 		}
@@ -542,10 +554,13 @@ public class LiferaySeleniumUtil {
 	public static boolean isInIgnoreErrorsFile(String line, String errorType)
 		throws Exception {
 
-		if (Validator.isNotNull(PropsValues.IGNORE_ERRORS_FILE_NAME)) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (Validator.isNotNull(poshiProperties.ignoreErrorsFileName)) {
 			SAXReader saxReader = new SAXReader();
 
-			String content = FileUtil.read(PropsValues.IGNORE_ERRORS_FILE_NAME);
+			String content = FileUtil.read(
+				poshiProperties.ignoreErrorsFileName);
 
 			InputStream inputStream = new ByteArrayInputStream(
 				content.getBytes("UTF-8"));
@@ -601,7 +616,9 @@ public class LiferaySeleniumUtil {
 	}
 
 	public static void printJavaProcessStacktrace() throws Exception {
-		if (Validator.isNull(PropsValues.PRINT_JAVA_PROCESS_ON_FAIL)) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (Validator.isNull(poshiProperties.printJavaProcessOnFail)) {
 			return;
 		}
 
@@ -613,11 +630,11 @@ public class LiferaySeleniumUtil {
 		while ((line = bufferedReader.readLine()) != null) {
 			System.out.println(line);
 
-			if (line.contains(PropsValues.PRINT_JAVA_PROCESS_ON_FAIL)) {
+			if (line.contains(poshiProperties.printJavaProcessOnFail)) {
 				pid = line.substring(0, line.indexOf(" "));
 
 				System.out.println(
-					PropsValues.PRINT_JAVA_PROCESS_ON_FAIL + " PID: " + pid);
+					poshiProperties.printJavaProcessOnFail + " PID: " + pid);
 			}
 		}
 
@@ -668,8 +685,10 @@ public class LiferaySeleniumUtil {
 			sb.append("]]></value>\n");
 		}
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		FileUtil.write(
-			PropsValues.TEST_POSHI_WARNINGS_FILE_NAME, sb.toString());
+			poshiProperties.testPoshiWarningsFileName, sb.toString());
 	}
 
 	private static BufferedReader _execute(String command) throws Exception {

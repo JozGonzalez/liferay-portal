@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.announcements.service.persistence.test;
@@ -125,6 +116,8 @@ public class AnnouncementsEntryPersistenceTest {
 
 		newAnnouncementsEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		newAnnouncementsEntry.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newAnnouncementsEntry.setUuid(RandomTestUtil.randomString());
 
 		newAnnouncementsEntry.setCompanyId(RandomTestUtil.nextLong());
@@ -166,6 +159,9 @@ public class AnnouncementsEntryPersistenceTest {
 		Assert.assertEquals(
 			existingAnnouncementsEntry.getMvccVersion(),
 			newAnnouncementsEntry.getMvccVersion());
+		Assert.assertEquals(
+			existingAnnouncementsEntry.getCtCollectionId(),
+			newAnnouncementsEntry.getCtCollectionId());
 		Assert.assertEquals(
 			existingAnnouncementsEntry.getUuid(),
 			newAnnouncementsEntry.getUuid());
@@ -314,12 +310,12 @@ public class AnnouncementsEntryPersistenceTest {
 
 	protected OrderByComparator<AnnouncementsEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"AnnouncementsEntry", "mvccVersion", true, "uuid", true, "entryId",
-			true, "companyId", true, "userId", true, "userName", true,
-			"createDate", true, "modifiedDate", true, "classNameId", true,
-			"classPK", true, "title", true, "url", true, "type", true,
-			"displayDate", true, "expirationDate", true, "priority", true,
-			"alert", true);
+			"AnnouncementsEntry", "mvccVersion", true, "ctCollectionId", true,
+			"uuid", true, "entryId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true,
+			"classNameId", true, "classPK", true, "title", true, "url", true,
+			"type", true, "displayDate", true, "expirationDate", true,
+			"priority", true, "alert", true);
 	}
 
 	@Test
@@ -542,6 +538,8 @@ public class AnnouncementsEntryPersistenceTest {
 		AnnouncementsEntry announcementsEntry = _persistence.create(pk);
 
 		announcementsEntry.setMvccVersion(RandomTestUtil.nextLong());
+
+		announcementsEntry.setCtCollectionId(RandomTestUtil.nextLong());
 
 		announcementsEntry.setUuid(RandomTestUtil.randomString());
 

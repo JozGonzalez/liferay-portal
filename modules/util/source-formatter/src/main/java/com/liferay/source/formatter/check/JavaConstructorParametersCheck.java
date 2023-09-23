@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.check.util.SourceUtil;
 import com.liferay.source.formatter.parser.JavaParameter;
 import com.liferay.source.formatter.parser.JavaSignature;
@@ -52,7 +45,8 @@ public class JavaConstructorParametersCheck extends BaseJavaTermCheck {
 			content = _fixIncorrectEmptyLines(
 				content, _missingLineBreakPattern2, parameters);
 
-			return content;
+			return _fixPassedInVariables(
+				absolutePath, content, parameters, fileContent);
 		}
 
 		return javaTerm.getContent();
@@ -156,13 +150,196 @@ public class JavaConstructorParametersCheck extends BaseJavaTermCheck {
 
 			if (Validator.isNull(nextStatementsBlock) ||
 				!nextStatementsBlock.matches(
-					StringBundler.concat(
-						"(?s).*\\W(", matcher.group(2), ")?", name2,
-						"\\W.*"))) {
+					"(?s).*\\W(_" + name2 + "\\W).*")) {
 
 				return StringUtil.replaceFirst(
 					content, StringPool.NEW_LINE, StringPool.BLANK,
 					matcher.start(4));
+			}
+		}
+
+		return content;
+	}
+
+	private String _fixPassedInVariables(
+		String content, int pos, String globalVariableName,
+		String parameterName) {
+
+		Pattern pattern = Pattern.compile(
+			StringBundler.concat(
+				"\\b(", globalVariableName, "|", parameterName, ")\\b"));
+
+		Matcher matcher1 = pattern.matcher(content);
+
+		outerLoop:
+		while (matcher1.find()) {
+			int start = matcher1.start();
+
+			if ((start < pos) || ToolsUtil.isInsideQuotes(content, start)) {
+				continue;
+			}
+
+			String followingCode = StringUtil.trimLeading(
+				content.substring(matcher1.end()));
+
+			if (followingCode.startsWith("=") &&
+				!followingCode.startsWith("==")) {
+
+				break;
+			}
+
+			String matchedGlobalVariableName = matcher1.group();
+
+			if (followingCode.startsWith("!=") ||
+				followingCode.startsWith("==") ||
+				followingCode.startsWith(">") ||
+				followingCode.startsWith("<")) {
+
+				if (!StringUtil.equals(
+						matchedGlobalVariableName, globalVariableName)) {
+
+					continue;
+				}
+
+				return StringUtil.replaceFirst(
+					content, globalVariableName, parameterName, start);
+			}
+
+			if (followingCode.startsWith(".")) {
+				if (!followingCode.startsWith(".get") &&
+					!followingCode.startsWith(".is")) {
+
+					break;
+				}
+
+				if (!StringUtil.equals(
+						matchedGlobalVariableName, globalVariableName)) {
+
+					continue;
+				}
+
+				return StringUtil.replaceFirst(
+					content, globalVariableName, parameterName, start);
+			}
+
+			char previousChar = content.charAt(start - 1);
+
+			if ((previousChar != CharPool.OPEN_PARENTHESIS) &&
+				(previousChar != CharPool.SPACE) &&
+				(previousChar != CharPool.TAB)) {
+
+				continue;
+			}
+
+			int previousOpenParenthesisPosition = start;
+
+			while (true) {
+				previousOpenParenthesisPosition = content.lastIndexOf(
+					StringPool.OPEN_PARENTHESIS,
+					previousOpenParenthesisPosition - 1);
+
+				if (previousOpenParenthesisPosition == -1) {
+					continue outerLoop;
+				}
+
+				if (ToolsUtil.isInsideQuotes(
+						content, previousOpenParenthesisPosition)) {
+
+					continue;
+				}
+
+				String methodCall = content.substring(
+					previousOpenParenthesisPosition, start);
+
+				if (ToolsUtil.getLevel(methodCall) == 1) {
+					break;
+				}
+			}
+
+			Matcher matcher2 = _methodCallPattern.matcher(content);
+
+			while (matcher2.find()) {
+				int parenthesisIndex = matcher2.end() - 1;
+
+				if (parenthesisIndex > previousOpenParenthesisPosition) {
+					break;
+				}
+
+				if (parenthesisIndex != previousOpenParenthesisPosition) {
+					continue;
+				}
+
+				if (Validator.isNull(matcher2.group(2))) {
+					String previousCode = content.substring(
+						0, matcher2.start());
+
+					if (previousCode.endsWith("new ")) {
+						continue;
+					}
+				}
+
+				String methodFullName = matcher2.group();
+				String methodName = matcher2.group(3);
+
+				if (!methodName.startsWith("_get") &&
+					!methodName.startsWith("_is") &&
+					!methodName.startsWith("get") &&
+					!methodName.startsWith("is") &&
+					!methodFullName.startsWith("StringBundler.concat(")) {
+
+					return content;
+				}
+
+				if (StringUtil.equals(
+						matchedGlobalVariableName, globalVariableName)) {
+
+					return StringUtil.replaceFirst(
+						content, globalVariableName, parameterName, start);
+				}
+			}
+		}
+
+		return content;
+	}
+
+	private String _fixPassedInVariables(
+		String absolutePath, String content, List<JavaParameter> parameters,
+		String fileContent) {
+
+		if (!isAttributeValue(_CHECK_PASSED_IN_VARIABLES_KEY, absolutePath)) {
+			return content;
+		}
+
+		for (JavaParameter parameter : parameters) {
+			String parameterName = parameter.getParameterName();
+
+			Pattern pattern = Pattern.compile(
+				StringBundler.concat(
+					"\n\t*?(_", parameterName, ") =[ \t\n]+", parameterName,
+					";"));
+
+			Matcher matcher = pattern.matcher(content);
+
+			if (!matcher.find()) {
+				continue;
+			}
+
+			String globalVariableName = matcher.group(1);
+
+			String globalVariableTypeName = getVariableTypeName(
+				content, fileContent, globalVariableName, true);
+
+			String parameterTypeName = parameter.getParameterType();
+
+			if (!StringUtil.equals(parameterTypeName, globalVariableTypeName)) {
+				continue;
+			}
+
+			String newContent = _fixPassedInVariables(
+				content, matcher.end(), globalVariableName, parameterName);
+
+			if (!StringUtil.equals(content, newContent)) {
+				return newContent;
 			}
 		}
 
@@ -325,8 +502,13 @@ public class JavaConstructorParametersCheck extends BaseJavaTermCheck {
 		return content;
 	}
 
+	private static final String _CHECK_PASSED_IN_VARIABLES_KEY =
+		"checkPassedInVariables";
+
 	private static final Pattern _assignCallPattern = Pattern.compile(
 		"\t(_|this\\.)(\\w+) (=[^;]+;)\n");
+	private static final Pattern _methodCallPattern = Pattern.compile(
+		"((\\w+)\\.\\s*)?(\\w+)\\(");
 	private static final Pattern _missingLineBreakPattern1 = Pattern.compile(
 		"\n(\t+)(_)(\\w+) =[ \t\n]+\\3;(?=(\n\n)\\1_(\\w+) =[ \t\n]+\\5(;)\n)");
 	private static final Pattern _missingLineBreakPattern2 = Pattern.compile(

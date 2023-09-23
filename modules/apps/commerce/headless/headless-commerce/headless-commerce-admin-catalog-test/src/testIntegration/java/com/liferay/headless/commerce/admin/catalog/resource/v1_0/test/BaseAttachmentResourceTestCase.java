@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.AttachmentResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.AttachmentSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -63,8 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -202,6 +192,66 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAttachmentByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Attachment attachment =
+			testDeleteAttachmentByExternalReferenceCode_addAttachment();
+
+		assertHttpResponseStatusCode(
+			204,
+			attachmentResource.
+				deleteAttachmentByExternalReferenceCodeHttpResponse(
+					attachment.getExternalReferenceCode()));
+	}
+
+	protected Attachment
+			testDeleteAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAttachment() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Attachment attachment = testDeleteAttachment_addAttachment();
+
+		assertHttpResponseStatusCode(
+			204,
+			attachmentResource.deleteAttachmentHttpResponse(
+				attachment.getId()));
+	}
+
+	protected Attachment testDeleteAttachment_addAttachment() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAttachment() throws Exception {
+		Attachment attachment = testGraphQLDeleteAttachment_addAttachment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAttachment",
+						new HashMap<String, Object>() {
+							{
+								put("id", attachment.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteAttachment"));
+	}
+
+	protected Attachment testGraphQLDeleteAttachment_addAttachment()
+		throws Exception {
+
+		return testGraphQLAttachment_addAttachment();
+	}
+
+	@Test
 	public void testGetProductByExternalReferenceCodeAttachmentsPage()
 		throws Exception {
 
@@ -259,6 +309,10 @@ public abstract class BaseAttachmentResourceTestCase {
 			page,
 			testGetProductByExternalReferenceCodeAttachmentsPage_getExpectedActions(
 				externalReferenceCode));
+
+		attachmentResource.deleteAttachment(attachment1.getId());
+
+		attachmentResource.deleteAttachment(attachment2.getId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -466,6 +520,10 @@ public abstract class BaseAttachmentResourceTestCase {
 			page,
 			testGetProductByExternalReferenceCodeImagesPage_getExpectedActions(
 				externalReferenceCode));
+
+		attachmentResource.deleteAttachment(attachment1.getId());
+
+		attachmentResource.deleteAttachment(attachment2.getId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -660,6 +718,10 @@ public abstract class BaseAttachmentResourceTestCase {
 			(List<Attachment>)page.getItems());
 		assertValid(
 			page, testGetProductIdAttachmentsPage_getExpectedActions(id));
+
+		attachmentResource.deleteAttachment(attachment1.getId());
+
+		attachmentResource.deleteAttachment(attachment2.getId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -829,6 +891,10 @@ public abstract class BaseAttachmentResourceTestCase {
 			Arrays.asList(attachment1, attachment2),
 			(List<Attachment>)page.getItems());
 		assertValid(page, testGetProductIdImagesPage_getExpectedActions(id));
+
+		attachmentResource.deleteAttachment(attachment1.getId());
+
+		attachmentResource.deleteAttachment(attachment2.getId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -1103,6 +1169,14 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("fileEntryId", additionalAssertFieldName)) {
+				if (attachment.getFileEntryId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("neverExpire", additionalAssertFieldName)) {
 				if (attachment.getNeverExpire() == null) {
 					valid = false;
@@ -1182,14 +1256,19 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1352,6 +1431,17 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("fileEntryId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getFileEntryId(),
+						attachment2.getFileEntryId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						attachment1.getId(), attachment2.getId())) {
@@ -1462,14 +1552,16 @@ public abstract class BaseAttachmentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1499,18 +1591,18 @@ public abstract class BaseAttachmentResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1527,9 +1619,47 @@ public abstract class BaseAttachmentResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("attachment")) {
-			sb.append("'");
-			sb.append(String.valueOf(attachment.getAttachment()));
-			sb.append("'");
+			Object object = attachment.getAttachment();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1540,17 +1670,93 @@ public abstract class BaseAttachmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("cdnURL")) {
-			sb.append("'");
-			sb.append(String.valueOf(attachment.getCdnURL()));
-			sb.append("'");
+			Object object = attachment.getCdnURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("contentType")) {
-			sb.append("'");
-			sb.append(String.valueOf(attachment.getContentType()));
-			sb.append("'");
+			Object object = attachment.getContentType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1625,11 +1831,54 @@ public abstract class BaseAttachmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(attachment.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = attachment.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fileEntryId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("id")) {
@@ -1654,9 +1903,47 @@ public abstract class BaseAttachmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("src")) {
-			sb.append("'");
-			sb.append(String.valueOf(attachment.getSrc()));
-			sb.append("'");
+			Object object = attachment.getSrc();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1726,6 +2013,7 @@ public abstract class BaseAttachmentResourceTestCase {
 				expirationDate = RandomTestUtil.nextDate();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				fileEntryId = RandomTestUtil.randomLong();
 				id = RandomTestUtil.randomLong();
 				neverExpire = RandomTestUtil.randomBoolean();
 				priority = RandomTestUtil.randomDouble();

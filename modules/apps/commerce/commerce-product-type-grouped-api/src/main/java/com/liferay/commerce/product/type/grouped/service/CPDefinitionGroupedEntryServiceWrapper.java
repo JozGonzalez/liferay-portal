@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service;
@@ -87,11 +78,34 @@ public class CPDefinitionGroupedEntryServiceWrapper
 	}
 
 	@Override
+	public java.util.List
+		<com.liferay.commerce.product.type.grouped.model.
+			CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+					long companyId, long cpDefinitionId, String keywords,
+					int start, int end,
+					com.liferay.portal.kernel.search.Sort sort)
+				throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionGroupedEntryService.getCPDefinitionGroupedEntries(
+			companyId, cpDefinitionId, keywords, start, end, sort);
+	}
+
+	@Override
 	public int getCPDefinitionGroupedEntriesCount(long cpDefinitionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionGroupedEntryService.
 			getCPDefinitionGroupedEntriesCount(cpDefinitionId);
+	}
+
+	@Override
+	public int getCPDefinitionGroupedEntriesCount(
+			long companyId, long cpDefinitionId, String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionGroupedEntryService.
+			getCPDefinitionGroupedEntriesCount(
+				companyId, cpDefinitionId, keywords);
 	}
 
 	@Override

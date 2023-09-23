@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.resource.v1_0.test;
@@ -25,6 +16,7 @@ import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.problem.Problem;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -32,7 +24,6 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -76,7 +67,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		Long[] accountEntryIds = ListUtil.toArray(
@@ -89,7 +80,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			1,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		AccountEntry accountEntry = accountEntries.get(0);
@@ -121,7 +112,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		String[] externalReferenceCodes = TransformUtil.transformToArray(
@@ -134,7 +125,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			1,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		AccountEntry accountEntry = accountEntries.get(0);
@@ -188,7 +179,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization1.getOrganizationId()));
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
@@ -196,7 +187,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization2.getOrganizationId()));
 
 		accountResource.patchOrganizationMoveAccounts(
@@ -208,13 +199,13 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization1.getOrganizationId()));
 
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization2.getOrganizationId()));
 	}
 
@@ -238,7 +229,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization1.getOrganizationId()));
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
@@ -246,7 +237,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization2.getOrganizationId()));
 
 		String[] externalReferenceCodes = TransformUtil.transformToArray(
@@ -260,13 +251,13 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization1.getOrganizationId()));
 
 		Assert.assertEquals(
 			3,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization2.getOrganizationId()));
 	}
 
@@ -311,7 +302,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		List<AccountEntry> accountEntries = Arrays.asList(
@@ -341,7 +332,7 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		Assert.assertEquals(
 			0,
 			_accountEntryOrganizationRelLocalService.
-				getAccountEntryOrganizationRelsByOrganizationIdCount(
+				getAccountEntryOrganizationRelsCountByOrganizationId(
 					organization.getOrganizationId()));
 
 		List<AccountEntry> accountEntries = Arrays.asList(
@@ -366,6 +357,11 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"name", "type"};
+	}
+
+	@Override
+	protected String[] getIgnoredEntityFieldNames() {
+		return new String[] {"type"};
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useMemo} from 'react';
@@ -38,7 +29,8 @@ const getEditableTitle = (editable, languageId) => {
 const getEditableValues = (
 	fragmentEntryLinks,
 	segmentsExperienceId,
-	layoutData
+	layoutData,
+	restrictedItemIds
 ) =>
 	Object.values(fragmentEntryLinks)
 		.filter((fragmentEntryLink) => {
@@ -48,7 +40,10 @@ const getEditableValues = (
 					fragmentEntryLink.fragmentEntryLinkId
 				);
 
-				if (item && hasRestrictedParent(item, layoutData)) {
+				if (
+					item &&
+					hasRestrictedParent(item, layoutData, restrictedItemIds)
+				) {
 					return;
 				}
 			}
@@ -112,6 +107,7 @@ export default function ContentsSidebar() {
 	const languageId = useSelector(selectLanguageId);
 	const layoutData = useSelector((state) => state.layoutData);
 	const pageContents = useSelector(selectPageContents);
+	const restrictedItemIds = useSelector((state) => state.restrictedItemIds);
 	const segmentsExperienceId = useSelector(
 		(state) => state.segmentsExperienceId
 	);
@@ -121,13 +117,20 @@ export default function ContentsSidebar() {
 			getEditableValues(
 				fragmentEntryLinks,
 				segmentsExperienceId,
-				layoutData
+				layoutData,
+				restrictedItemIds
 			)
 				.map((editable) =>
 					normalizeEditableValues(editable, languageId)
 				)
 				.filter((editable) => editable.title),
-		[fragmentEntryLinks, languageId, segmentsExperienceId, layoutData]
+		[
+			fragmentEntryLinks,
+			languageId,
+			restrictedItemIds,
+			segmentsExperienceId,
+			layoutData,
+		]
 	);
 
 	const contents = normalizePageContents(pageContents);

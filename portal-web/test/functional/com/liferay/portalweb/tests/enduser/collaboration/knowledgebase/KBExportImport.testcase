@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +26,7 @@ definition {
 	@e2etest
 	@priority = 5
 	test CanImportArticleViaCenterPaneButton {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -48,8 +48,6 @@ definition {
 	@description = "This test ensures that users can import content to a KB folder rom the navigation pane."
 	@priority = 5
 	test CanImportArticleViaNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
 			kbFolderName = "KB Folder");
@@ -111,9 +109,7 @@ definition {
 	@priority = 4
 	@refactorneeded
 	test ViewImportedKBArticleWithImagesAsKBAttachments {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -159,7 +155,8 @@ definition {
 	@priority = 4
 	@refactorneeded
 	test ViewImportedKBArticleWithSourceURLMetadata {
-		property test.name.skip.portal.instance = "KBExportImport#ViewImportedKBArticleWithSourceURLMetadata";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",

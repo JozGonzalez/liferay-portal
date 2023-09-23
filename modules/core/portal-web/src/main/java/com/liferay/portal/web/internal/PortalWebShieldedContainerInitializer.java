@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.web.internal;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.servlet.SerializableSessionAttributeListener;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.PortalSessionListener;
+import com.liferay.portal.servlet.filters.healthcheckdatasource.HealthCheckDataSourceFilter;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.web.internal.session.replication.SessionReplicationFilter;
 import com.liferay.shielded.container.Ordered;
@@ -71,6 +63,16 @@ public class PortalWebShieldedContainerInitializer
 
 			dynamic.addMappingForUrlPatterns(
 				EnumSet.of(DispatcherType.REQUEST), false, "/*");
+		}
+
+		if (PropsValues.HEALTH_CHECK_DATA_SOURCE_ENABLED) {
+			FilterRegistration.Dynamic dynamic = servletContext.addFilter(
+				HealthCheckDataSourceFilter.class.getName(),
+				new HealthCheckDataSourceFilter());
+
+			dynamic.addMappingForUrlPatterns(
+				EnumSet.of(DispatcherType.REQUEST), false,
+				"/health_check/data_source");
 		}
 
 		DocumentBuilderFactory documentBuilderFactory =

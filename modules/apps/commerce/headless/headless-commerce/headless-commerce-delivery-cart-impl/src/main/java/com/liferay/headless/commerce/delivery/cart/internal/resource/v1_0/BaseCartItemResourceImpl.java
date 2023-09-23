@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
@@ -19,6 +10,7 @@ import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartItemResourc
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -30,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -46,7 +39,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
@@ -193,7 +185,7 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "settings": ___, "skuId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuId": ___, "settings": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Retrive information of the given Cart."
@@ -224,11 +216,6 @@ public abstract class BaseCartItemResourceImpl
 
 		CartItem existingCartItem = getCartItem(cartItemId);
 
-		if (cartItem.getAdaptiveMediaImageHTMLTag() != null) {
-			existingCartItem.setAdaptiveMediaImageHTMLTag(
-				cartItem.getAdaptiveMediaImageHTMLTag());
-		}
-
 		if (cartItem.getCustomFields() != null) {
 			existingCartItem.setCustomFields(cartItem.getCustomFields());
 		}
@@ -237,49 +224,24 @@ public abstract class BaseCartItemResourceImpl
 			existingCartItem.setErrorMessages(cartItem.getErrorMessages());
 		}
 
-		if (cartItem.getName() != null) {
-			existingCartItem.setName(cartItem.getName());
-		}
-
 		if (cartItem.getOptions() != null) {
 			existingCartItem.setOptions(cartItem.getOptions());
-		}
-
-		if (cartItem.getParentCartItemId() != null) {
-			existingCartItem.setParentCartItemId(
-				cartItem.getParentCartItemId());
 		}
 
 		if (cartItem.getProductId() != null) {
 			existingCartItem.setProductId(cartItem.getProductId());
 		}
 
-		if (cartItem.getProductURLs() != null) {
-			existingCartItem.setProductURLs(cartItem.getProductURLs());
-		}
-
 		if (cartItem.getQuantity() != null) {
 			existingCartItem.setQuantity(cartItem.getQuantity());
 		}
 
-		if (cartItem.getSku() != null) {
-			existingCartItem.setSku(cartItem.getSku());
+		if (cartItem.getReplacedSkuId() != null) {
+			existingCartItem.setReplacedSkuId(cartItem.getReplacedSkuId());
 		}
 
 		if (cartItem.getSkuId() != null) {
 			existingCartItem.setSkuId(cartItem.getSkuId());
-		}
-
-		if (cartItem.getSubscription() != null) {
-			existingCartItem.setSubscription(cartItem.getSubscription());
-		}
-
-		if (cartItem.getThumbnail() != null) {
-			existingCartItem.setThumbnail(cartItem.getThumbnail());
-		}
-
-		if (cartItem.getValid() != null) {
-			existingCartItem.setValid(cartItem.getValid());
 		}
 
 		preparePatch(cartItem, existingCartItem);
@@ -290,7 +252,7 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "settings": ___, "skuId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuId": ___, "settings": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "update the given Cart."
@@ -418,7 +380,7 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "settings": ___, "skuId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items' -d $'{"cartItems": ___, "customFields": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuId": ___, "settings": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Add new Items to a Cart, return the whole Cart updated."
@@ -537,44 +499,66 @@ public abstract class BaseCartItemResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<CartItem, Exception> cartItemUnsafeConsumer = null;
+		UnsafeFunction<CartItem, CartItem, Exception> cartItemUnsafeFunction =
+			null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartItemUnsafeConsumer = cartItem -> patchCartItem(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			cartItemUnsafeFunction = cartItem -> patchCartItem(
 				cartItem.getId() != null ? cartItem.getId() :
-					Long.parseLong((String)parameters.get("cartItemId")),
+					_parseLong((String)parameters.get("cartItemId")),
 				cartItem);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartItemUnsafeConsumer = cartItem -> putCartItem(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			cartItemUnsafeFunction = cartItem -> putCartItem(
 				cartItem.getId() != null ? cartItem.getId() :
-					Long.parseLong((String)parameters.get("cartItemId")),
+					_parseLong((String)parameters.get("cartItemId")),
 				cartItem);
 		}
 
-		if (cartItemUnsafeConsumer == null) {
+		if (cartItemUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for CartItem");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				cartItems, cartItemUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				cartItems, cartItemUnsafeConsumer);
+				cartItems, cartItemUnsafeFunction::apply);
 		}
 		else {
 			for (CartItem cartItem : cartItems) {
-				cartItemUnsafeConsumer.accept(cartItem);
+				cartItemUnsafeFunction.apply(cartItem);
 			}
 		}
 	}
 
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<CartItem>,
+			 UnsafeFunction<CartItem, CartItem, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -793,6 +777,12 @@ public abstract class BaseCartItemResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -823,7 +813,18 @@ public abstract class BaseCartItemResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<CartItem>, UnsafeFunction<CartItem, CartItem, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<CartItem>, UnsafeConsumer<CartItem, Exception>, Exception>
 			contextBatchUnsafeConsumer;

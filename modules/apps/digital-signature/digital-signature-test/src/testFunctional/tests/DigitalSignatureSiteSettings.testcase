@@ -1,14 +1,6 @@
 @component-name = "portal-solutions"
 definition {
 
-	var digitalSignatureAccountBaseUri = PropsUtil.get("digital.signature.account.base.uri");
-	var digitalSignatureApiAccountId = PropsUtil.get("digital.signature.api.accountId");
-	var digitalSignatureApiUsername = PropsUtil.get("digital.signature.api.username");
-	var digitalSignatureIntegrationKey = PropsUtil.get("digital.signature.integration.key");
-	var digitalSignatureRsaPrivateKey = PropsUtil.get("digital.signature.rsa.private.key");
-
-	property osgi.module.configuration.file.names = "com.liferay.digital.signature.configuration.DigitalSignatureConfiguration.config";
-	property osgi.module.configurations = "enabled=\"TRUE\"${line.separator}apiUsername=\"${digitalSignatureApiUsername}\"${line.separator}apiAccountId=\"${digitalSignatureApiAccountId}\"${line.separator}accountBaseURI=\"digitalSignatureAccountBaseUri\"${line.separator}integrationKey=\"${digitalSignatureIntegrationKey}\"${line.separator}rsaPrivateKey=\"digitalSignatureRsaPrivateKey\"${line.separator}siteSettingsStrategy=\"always-inherit\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Digital Signature";
@@ -17,12 +9,26 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginUI();
+
+		task ("Configure digital signature with credentials") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "Instance Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Digital Signature",
+				configurationName = "Digital Signature Configuration",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.enableCheckbox(fieldName = "enabled");
+		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,149 +39,67 @@ definition {
 	@description = "This is a test for LPS-131427. Verify if Digital Signature can be enable in Site Settings, using the Always Override Strategy"
 	@priority = 5
 	test CanEnableDigitalSignatureBySiteSettings {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		task ("Given that the digital signature site strategy is set as 'Always Override'") {
+			DigitalSignature.selectSiteStrategy(siteStrategy = "Always Override");
 
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Digital Signature",
-			configurationName = "Digital Signature Configuration",
-			configurationScope = "Virtual Instance Scope");
+			SystemSettings.saveConfiguration();
+		}
 
-		DigitalSignature.enableDigitalSignature(siteStrategy = "Always Override");
+		task ("When the user set the credentials by site settings") {
+			DigitalSignature.goToDigitalSignatureByPortlet(nameComponent = "Digital Signature");
 
-		SystemSettings.saveConfiguration();
+			DigitalSignature.enableDigitalSignature();
 
-		Navigator.openURL();
+			SystemSettings.saveConfiguration();
+		}
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			portlet = "Site Settings");
+		task ("And creates a Digital Signature envelope") {
+			DigitalSignature.createEnvelope(
+				addEmail = "test@liferay.com",
+				addFullName = "Recipient Full Name",
+				addMessage = "Email Message",
+				addName = "Poshi Test CannotCreateEnvelopeWithUnsupportedFiles",
+				addSubject = "Email Subject",
+				dmDocumentFile = "Document_2.docx");
 
-		Click(
-			key_itemName = "Digital Signature",
-			locator1 = "ListGroupItem#ITEM_TEXT");
+			Button.click(button = "Send");
+		}
 
-		Type(
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_USER_ID",
-			value1 = ${digitalSignatureApiUsername});
-
-		Type(
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_ACCOUNT_ID",
-			value1 = ${digitalSignatureApiAccountId});
-
-		Type(
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_BASE_URI",
-			value1 = ${digitalSignatureAccountBaseUri});
-
-		Type(
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_INTEGRATION_KEY",
-			value1 = ${digitalSignatureIntegrationKey});
-
-		Type(
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_RSA_PRIVATE_KEY",
-			value1 = ${digitalSignatureRsaPrivateKey});
-
-		SystemSettings.saveConfiguration();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Digital Signature");
-
-		var dsStatus = "Sent";
-
-		AssertElementPresent(
-			dsStatus = ${dsStatus},
-			locator1 = "DigitalSignatureListView#DIGITAL_SIGNATURE_STATUS");
+		task ("Then the user can see that digital signature can be enabled using the Always Override strategy") {
+			DigitalSignature.viewDigitalSignatureEnabled(dsStatus = "Sent");
+		}
 	}
 
 	@description = "This is a test for LPS-131427. Verify if Digital Signature data persists in site settings after enabled with Always Inherit strategy"
 	@priority = 5
 	test DataPersistsAfterEnabledAlwaysInheritStrategy {
-		DigitalSignature.enableDigitalSignature(siteStrategy = "Always Inherit");
+		task ("Given the digital signature credentials are set with Always Inherit strategy") {
+			DigitalSignature.enableDigitalSignature(siteStrategy = "Always Inherit");
+		}
 
-		Navigator.openURL();
+		task ("When the user goes to Digital Signature by portlet") {
+			DigitalSignature.goToDigitalSignatureByPortlet(nameComponent = "Digital Signature");
+		}
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			portlet = "Site Settings");
-
-		Click(
-			key_itemName = "Digital Signature",
-			locator1 = "ListGroupItem#ITEM_TEXT");
-
-		var siteSettingsStrategy = "Always Inherit";
-
-		AssertElementPresent(
-			locator1 = "ClickToChatConfiguration#SITE_SETTINGS_STRATEGY_CHOOSEN",
-			siteSettingsStrategy = ${siteSettingsStrategy});
-
-		AssertElementPresent(locator1 = "ClickToChatConfiguration#CHECK_INPUT_ENABLED");
-
-		AssertElementPresent(
-			digitalSignatureApiUsername = ${digitalSignatureApiUsername},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_USER_ID");
-
-		AssertElementPresent(
-			digitalSignatureApiAccountId = ${digitalSignatureApiAccountId},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_ACCOUNT_ID");
-
-		AssertElementPresent(
-			digitalSignatureAccountBaseUri = ${digitalSignatureAccountBaseUri},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_BASE_URI");
-
-		AssertElementPresent(
-			digitalSignatureIntegrationKey = ${digitalSignatureIntegrationKey},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_INTEGRATION_KEY");
-
-		AssertElementPresent(
-			digitalSignatureRsaPrivateKey = ${digitalSignatureRsaPrivateKey},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_RSA_PRIVATE_KEY");
+		task ("Then Digital Signature data persists in site settings after enabled with Always Inherit strategy") {
+			DigitalSignature.canSeeDataPersistAfterEnabled(siteStrategy = "Always Inherit");
+		}
 	}
 
 	@description = "This is a test for LPS-131427. Verify if Digital Signature data persists in site settings after enabled with Inherit or Override strategy"
 	@priority = 5
 	test DataPersistsAfterEnabledInheritOrOverrideStrategy {
-		DigitalSignature.enableDigitalSignature(siteStrategy = "Inherit or Override");
+		task ("Given the digital signature using the Inherit or Override strategy") {
+			DigitalSignature.enableDigitalSignature(siteStrategy = "Inherit or Override");
+		}
 
-		Navigator.openURL();
+		task ("When the user goes to Digital Signature by portlet") {
+			DigitalSignature.goToDigitalSignatureByPortlet(nameComponent = "Digital Signature");
+		}
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			portlet = "Site Settings");
-
-		Click(
-			key_itemName = "Digital Signature",
-			locator1 = "ListGroupItem#ITEM_TEXT");
-
-		var siteSettingsStrategy = "Inherit or Override";
-
-		AssertElementPresent(
-			locator1 = "ClickToChatConfiguration#SITE_SETTINGS_STRATEGY_CHOOSEN",
-			siteSettingsStrategy = ${siteSettingsStrategy});
-
-		AssertElementPresent(locator1 = "ClickToChatConfiguration#CHECK_INPUT_ENABLED");
-
-		AssertElementPresent(
-			digitalSignatureApiUsername = ${digitalSignatureApiUsername},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_USER_ID");
-
-		AssertElementPresent(
-			digitalSignatureApiAccountId = ${digitalSignatureApiAccountId},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_ACCOUNT_ID");
-
-		AssertElementPresent(
-			digitalSignatureAccountBaseUri = ${digitalSignatureAccountBaseUri},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_BASE_URI");
-
-		AssertElementPresent(
-			digitalSignatureIntegrationKey = ${digitalSignatureIntegrationKey},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_INTEGRATION_KEY");
-
-		AssertElementPresent(
-			digitalSignatureRsaPrivateKey = ${digitalSignatureRsaPrivateKey},
-			locator1 = "DigitalSignatureConfiguration#DIGITAL_SIGNATURE_RSA_PRIVATE_KEY");
+		task ("Then Digital Signature data persists in site settings after enabled with Inherit or Override strategy") {
+			DigitalSignature.canSeeDataPersistAfterEnabled(siteStrategy = "Inherit or Override");
+		}
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.log4j.internal;
@@ -24,10 +15,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.File;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,81 +49,45 @@ public class Log4jConfigUtil {
 
 			Element rootElement = document.getRootElement();
 
+			if (!Objects.equals(rootElement.getName(), "Configuration")) {
+				_log.error("Log4J 2 <Configuration> is required");
+
+				return Collections.emptyMap();
+			}
+
+			if (!GetterUtil.getBoolean(rootElement.attributeValue("strict"))) {
+				_log.error("<Configuration> strict attribute requires true");
+
+				return Collections.emptyMap();
+			}
+
 			Map<String, String> priorities = new HashMap<>();
 
-			AbstractConfiguration abstractConfiguration;
+			for (Element element : rootElement.elements()) {
+				_removeAppender(element, removedAppenderNames);
 
-			if (Objects.equals(rootElement.getName(), "Configuration")) {
-				if (!GetterUtil.getBoolean(
-						rootElement.attributeValue("strict"))) {
-
-					_log.error(
-						"<Configuration> strict attribute requires true");
-
-					return Collections.emptyMap();
-				}
-
-				for (Element element : rootElement.elements()) {
-					_removeAppender(
-						element, "AppenderRef", "Appender",
-						removedAppenderNames);
-
-					for (Element childElement : element.elements("Logger")) {
-						priorities.put(
-							childElement.attributeValue("name"),
-							childElement.attributeValue("level"));
-					}
-				}
-
-				if (removedAppenderNames.length > 0) {
-					xmlContent = document.asXML();
-				}
-
-				abstractConfiguration = new XmlConfiguration(
-					_loggerContext,
-					new ConfigurationSource(
-						new UnsyncByteArrayInputStream(
-							xmlContent.getBytes(StringPool.UTF8)))) {
-
-					@Override
-					protected void setToDefault() {
-					}
-
-				};
-			}
-			else {
-				_removeAppender(
-					rootElement, "appender-ref", "appender",
-					removedAppenderNames);
-
-				for (Element childElement : rootElement.elements("category")) {
-					Element priorityElement = childElement.element("priority");
-
+				for (Element childElement : element.elements("Logger")) {
 					priorities.put(
 						childElement.attributeValue("name"),
-						priorityElement.attributeValue("value"));
+						childElement.attributeValue("level"));
 				}
-
-				if ((removedAppenderNames.length > 0) ||
-					_renameLog4j1Appenders(rootElement)) {
-
-					xmlContent = document.asXML();
-				}
-
-				abstractConfiguration =
-					new org.apache.log4j.xml.XmlConfiguration(
-						_loggerContext,
-						new ConfigurationSource(
-							new UnsyncByteArrayInputStream(
-								xmlContent.getBytes(StringPool.UTF8))),
-						0) {
-
-						@Override
-						protected void setToDefault() {
-						}
-
-					};
 			}
+
+			if (removedAppenderNames.length > 0) {
+				xmlContent = document.asXML();
+			}
+
+			AbstractConfiguration abstractConfiguration = new XmlConfiguration(
+				_loggerContext,
+				new ConfigurationSource(
+					new UnsyncByteArrayInputStream(
+						xmlContent.getBytes(StringPool.UTF8)))) {
+
+				@Override
+				protected void setToDefault() {
+				}
+
+			};
 
 			_centralizedConfiguration.addConfiguration(abstractConfiguration);
 
@@ -210,32 +163,8 @@ public class Log4jConfigUtil {
 		LogManager.shutdown();
 	}
 
-	private static String _getLog4j1AppenderSuffix(Element element) {
-		String suffix = StringUtil.randomString();
-
-		for (Element childElement : element.elements("rollingPolicy")) {
-			for (Element paramElement : childElement.elements("param")) {
-				if (Objects.equals(
-						paramElement.attributeValue("name"),
-						"FileNamePattern")) {
-
-					String value = paramElement.attributeValue("value");
-
-					value = value.substring(
-						value.lastIndexOf(StringPool.SLASH) + 1);
-
-					suffix = value.substring(
-						0, value.indexOf(StringPool.PERIOD));
-				}
-			}
-		}
-
-		return StringPool.UNDERLINE.concat(suffix);
-	}
-
 	private static void _removeAppender(
-		Element parentElement, String appenderRefTagName,
-		String appenderTagName, String... removedAppenderNames) {
+		Element parentElement, String... removedAppenderNames) {
 
 		if (removedAppenderNames.length == 0) {
 			return;
@@ -243,18 +172,17 @@ public class Log4jConfigUtil {
 
 		for (Element element : parentElement.elements()) {
 			for (String appenderName : removedAppenderNames) {
-				if (Objects.equals(appenderTagName, element.getName()) &&
+				if (Objects.equals(element.getName(), "Appender") &&
 					Objects.equals(
-						appenderName, element.attributeValue("name"))) {
+						element.attributeValue("name"), appenderName)) {
 
 					parentElement.remove(element);
 				}
 
 				for (Element childElement : element.elements()) {
-					if (Objects.equals(
-							appenderRefTagName, childElement.getName()) &&
+					if (Objects.equals(childElement.getName(), "AppenderRef") &&
 						Objects.equals(
-							appenderName, childElement.attributeValue("ref"))) {
+							childElement.attributeValue("ref"), appenderName)) {
 
 						element.remove(childElement);
 					}
@@ -263,48 +191,12 @@ public class Log4jConfigUtil {
 		}
 	}
 
-	private static boolean _renameLog4j1Appenders(Element parentElement) {
-		Map<String, String> newAppenderNames = new HashMap<>();
-
-		for (Element element : parentElement.elements("appender")) {
-			String appenderName = element.attributeValue("name");
-
-			if (_reservedAppenderNames.contains(appenderName)) {
-				String newAppenderName = appenderName.concat(
-					_getLog4j1AppenderSuffix(element));
-
-				newAppenderNames.put(appenderName, newAppenderName);
-
-				element.addAttribute("name", newAppenderName);
-			}
-		}
-
-		if (newAppenderNames.isEmpty()) {
-			return false;
-		}
-
-		for (Element element : parentElement.elements()) {
-			for (Element childElement : element.elements("appender-ref")) {
-				String newAppenderName = newAppenderNames.get(
-					childElement.attributeValue("ref"));
-
-				if (newAppenderName != null) {
-					childElement.addAttribute("ref", newAppenderName);
-				}
-			}
-		}
-
-		return true;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		Log4jConfigUtil.class);
 
 	private static final CentralizedConfiguration _centralizedConfiguration;
 	private static final LoggerContext _loggerContext =
 		LoggerContext.getContext();
-	private static final List<String> _reservedAppenderNames = Arrays.asList(
-		"TEXT_FILE", "XML_FILE");
 
 	static {
 		PluginManager.addPackage("com.liferay.portal.log4j.internal");

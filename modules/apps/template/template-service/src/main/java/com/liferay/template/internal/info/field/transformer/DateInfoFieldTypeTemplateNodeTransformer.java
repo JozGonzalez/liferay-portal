@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.internal.info.field.transformer;
@@ -17,12 +8,14 @@ package com.liferay.template.internal.info.field.transformer;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.templateparser.TemplateNode;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.template.info.field.transformer.BaseTemplateNodeTransformer;
 import com.liferay.template.info.field.transformer.TemplateNodeTransformer;
 
@@ -38,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -59,6 +53,8 @@ public class DateInfoFieldTypeTemplateNodeTransformer
 
 		Object value = infoFieldValue.getValue(themeDisplay.getLocale());
 
+		InfoField infoField = infoFieldValue.getInfoField();
+
 		if (value instanceof Date) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
 				_getShortTimeStylePattern(themeDisplay.getLocale()),
@@ -67,8 +63,25 @@ public class DateInfoFieldTypeTemplateNodeTransformer
 			stringValue = dateFormat.format((Date)value);
 		}
 		else if (value instanceof String) {
+			Locale dateLocale = LocaleUtil.getSiteDefault();
+
+			if (infoField.isLocalizable()) {
+				InfoLocalizedValue<String> infoLocalizedValue =
+					(InfoLocalizedValue<String>)infoFieldValue.getValue();
+
+				dateLocale = infoLocalizedValue.getDefaultLocale();
+
+				Set<Locale> availableLocales =
+					infoLocalizedValue.getAvailableLocales();
+
+				if (availableLocales.contains(themeDisplay.getLocale())) {
+					dateLocale = themeDisplay.getLocale();
+				}
+			}
+
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				"MM/dd/yy hh:mm a", themeDisplay.getLocale());
+				_getShortTimeStylePattern(dateLocale),
+				themeDisplay.getLocale());
 
 			try {
 				Date date = dateFormat.parse(value.toString());
@@ -85,7 +98,7 @@ public class DateInfoFieldTypeTemplateNodeTransformer
 				}
 
 				dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-					"MM/dd/yy", themeDisplay.getLocale());
+					_getDefaultPattern(dateLocale), themeDisplay.getLocale());
 
 				try {
 					Date date = dateFormat.parse(value.toString());
@@ -105,8 +118,6 @@ public class DateInfoFieldTypeTemplateNodeTransformer
 				}
 			}
 		}
-
-		InfoField infoField = infoFieldValue.getInfoField();
 
 		InfoFieldType infoFieldType = infoField.getInfoFieldType();
 

@@ -1,37 +1,33 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			HeadlessSite.addSite(siteName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
 
@@ -41,7 +37,7 @@ definition {
 		task ("Create an experience and add on content page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.gotoPageEditor();
 
@@ -57,7 +53,7 @@ definition {
 		task ("Go to the view mode of the page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Switch to the new experience") {
@@ -75,7 +71,7 @@ definition {
 		task ("Create an experience and add on content page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.gotoPageEditor();
 
@@ -91,7 +87,7 @@ definition {
 		task ("Go to the view mode of the page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Assert the Active label is present") {
@@ -105,7 +101,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -130,7 +126,7 @@ definition {
 		task ("View cannot prioritize, deprioritize, edit, duplicate, delete experiences at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.openExperienceMenu();
 
@@ -152,7 +148,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -173,7 +169,7 @@ definition {
 		}
 
 		task ("View cannot prioritize, deprioritize, edit, duplicate, delete experiences on preview draft page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Preview Draft",
@@ -204,14 +200,14 @@ definition {
 	test CreatePageTemplateFromContentPageBasedOnNonDefaultExperience {
 		task ("Add a page template collection") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 		}
 
 		task ("Add a new experience for Anyone") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addExperience(
 				experienceName = "New Experience",
@@ -231,7 +227,7 @@ definition {
 		}
 
 		task ("View the content page template shown in Page Templates admin") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -249,13 +245,68 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-143321. After clicking on discard draft the page continues to run."
+	@priority = 5
+	test DiscardContentPageDraft {
+		task ("Given a page designer has a content page with draft and experience") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph",
+				targetFragmentName = "Heading");
+
+			PageEditor.publish();
+
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteName});
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "Test Page Name");
+
+			PageEditor.addExperience(
+				experienceName = "Experience Name",
+				segmentName = "Anyone");
+
+			PageEditor.clickBack();
+		}
+
+		task ("When the page designer discards draft via Pages admin") {
+			PagesAdmin.discardDraft(pageName = "Test Page Name");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the page editor should be rendered well") {
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "Test Page Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Heading Example");
+
+			PageEditor.viewFragmentEditableText(
+				editableText = "A paragraph is a self-contained unit of a discourse in writing dealing with a particular point or idea. Paragraphs are usually an expected part of formal writing, used to organize longer prose.",
+				fragmentName = "Paragraph",
+				id = "element-text");
+		}
+	}
+
 	@description = "LPS-157033 Given the View mode of a page When an experience is inactive in the Control Menu Then the INACTIVE label will appear next to the experience name"
 	@priority = 3
 	test InactiveExperienceLabelInControlMenu {
 		task ("Create an experience and add on content page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.gotoPageEditor();
 
@@ -269,7 +320,7 @@ definition {
 		task ("Go to the view mode of the page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Switch to the new experience") {
@@ -287,7 +338,7 @@ definition {
 		task ("Create an experience and add on content page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.gotoPageEditor();
 
@@ -301,7 +352,7 @@ definition {
 		task ("Go to the view mode of the page") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Assert the Inactive label is present") {
@@ -313,14 +364,9 @@ definition {
 	@priority = 4
 	test PreviewCurrentExperienceInANewTab {
 		task ("Given a page creator has a Heading fragment on a content page with a new experience") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -354,7 +400,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -379,7 +425,7 @@ definition {
 		task ("View the current experience is Default at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewCurrentExperience(experienceName = "Default");
 
@@ -463,7 +509,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -484,7 +530,7 @@ definition {
 		}
 
 		task ("View the current experience is Default on preview draft page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Preview Draft",
@@ -572,154 +618,55 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-128810. View collection items on content page when select segment."
+	@description = "This is a test for LPS-187444. Deleted experience resets widget configuration on default experience"
 	@priority = 4
-	test ViewCollectionItemsOnContentPageWhenSelectSegment {
-		task ("Add a segment with a Regular Role field") {
-			var roleId = JSONPermissionSetter.setRoleId(roleTitle = "Owner");
+	test ViewDisplayedWebContentPersistedInAssetPublisherAfterDeleteExperience {
+		property asset.publisher.selection.style = "asset-list";
 
-			JSONSegmentsentry.addSegment(
-				fieldName = "Regular Role",
-				groupName = "Test Site Name",
-				operator = "equals",
-				segmentName = "New Segment",
-				text = ${roleId});
-		}
-
-		task ("Add a web content without tag") {
+		task ("Given a page designer has an experienced content page with an Asset Publisher widget") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title 1");
-		}
 
-		task ("Add a web content with tag") {
-			JSONWebcontent.addWebContent(
-				assetTagNames = "tag name",
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title 2");
-		}
-
-		task ("Add a dynamic collection for Web Content Article and Basic Web Content") {
-			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name",
-				itemSubtype = "Basic Web Content",
-				itemType = "Web Content Article",
-				title = "Dynamic Collection");
-		}
-
-		task ("Add a new personalized variation with new segment") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.editAssetList(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.addPersonalizedVariation(segmentName = "New Segment");
-		}
-
-		task ("Select the Web Content Article item type and Basic Web Content item subtype") {
-			AssetListsAdmin.configureItemTypeInDynamicCollection(
-				itemSubtype = "Basic Web Content",
-				itemType = "Web Content Article");
-		}
-
-		task ("Add a tag filter") {
-			AssetListsAdmin.addTagsFilter(tagNameList = "tag name");
-		}
-
-		task ("View both web contents shown in collection items when select Anyone personalized variation") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.viewContent(
-				assetListTitle = "Dynamic Collection",
-				assetTitleList = "Web Content Title 1,Web Content Title 2");
-		}
-
-		task ("View only the web content with tag is shown in collection items when select New Segment personalized variation") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.viewContent(
-				assetListTitle = "Dynamic Collection",
-				assetTitle = "Web Content Title 2",
-				assetType = "Web Content Article",
-				personalizedVariation = "New Segment");
-
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.viewNoContent(
-				assetListTitle = "Dynamic Collection",
-				assetTitle = "Web Content Title 1",
-				assetType = "Web Content Article",
-				personalizedVariation = "New Segment");
-		}
-
-		task ("Add a Collection Display fragment to content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
+			PageEditor.addWidget(portletName = "Asset Publisher");
 
-		task ("Select the dynamic collection in Collection Display") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-		}
+			AssertVisible(
+				key_portletName = "Asset Publisher",
+				key_text = "Select a collection to make it visible.",
+				locator1 = "Portlet#PORTLET_SELECTOR");
 
-		task ("Add a Heading fragment into Collection Display") {
-			PageEditor.addFragmentToCollectionDisplay(
-				collectionName = "Basic Components",
-				entryTitle = "Web Content Title 2",
-				fragmentName = "Heading");
-		}
-
-		task ("Map the Title field to editable field of Heading") {
-			PageEditorMapping.mapEditableFieldToCollectionItems(
-				field = "Title",
-				fragmentName = "Heading",
-				id = "element-text");
+			AssetPublisherPortlet.configureDynamicAssetSelectionPG(portletName = "Asset Publisher");
 
 			PageEditor.publish();
-		}
 
-		task ("View both web contents shown in simulation modal by default") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
-			MobileDevice.previewPG();
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
 
-			var n = 1;
-
-			for (var title : list "Web Content Title 2,Web Content Title 1") {
-				ContentPages.viewFragmentTextInCollectionDisplay(
-					row = ${n},
-					text = ${title});
-
-				var n = ${n} + 1;
-			}
-
-			SelectFrameTop();
+			PageEditor.addExperience(
+				experienceName = "New Experience",
+				segmentName = "Anyone");
 		}
 
-		task ("Select the segment on Simulation panel") {
-			Check.checkNotVisible(
-				checkboxName = "New Segment",
-				locator1 = "Checkbox#ANY_CHECKBOX");
+		task ("When the page designer deletes the experience") {
+			PageEditor.deleteExperience(experienceName = "New Experience");
+
+			Refresh();
 		}
 
-		task ("View only the web content with tag shown in simulation modal when select segment") {
-			SelectFrame.selectFrameNoLoading(locator1 = "ControlMenuPreviewPanel#PREVIEW_DEVICE_GENERAL_IFRAME");
-
-			ContentPages.viewFragmentTextInCollectionDisplay(text = "Web Content Title 2");
-
-			AssertElementNotPresent(
-				column = 1,
-				locator1 = "Fragment#FRAGMENT_TEXT_IN_COLLECTION_DISPLAY",
-				row = 2);
+		task ("Then the page designer still can see the web content displayed in Asset Publisher") {
+			AssetPublisherPortlet.viewAssetPG(
+				assetContent = "Web Content Content",
+				assetTitle = "Web Content Title 1");
 		}
 	}
 
@@ -731,7 +678,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -756,7 +703,7 @@ definition {
 		task ("View the page and view the new experience shown in experience selector") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.changeExperience(experienceName = "New Experience");
 		}
@@ -796,7 +743,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -821,7 +768,7 @@ definition {
 		task ("Edit the inline text of Button in Default experience") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.editFragmentText(
 				fragmentName = "Button",
@@ -889,7 +836,7 @@ definition {
 		task ("Add a new experience") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addExperience(
 				experienceName = "New Experience",

@@ -1,6 +1,7 @@
 @component-name = "portal-lima"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -30,9 +31,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -71,6 +72,8 @@ definition {
 	@refactordone
 	test CanAddAnnouncementsEntryFutureDate {
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AnnouncementsNavigator.openToEntriesTab(
 			layoutName = "announcements-page",
@@ -81,7 +84,8 @@ definition {
 			distributionScope = "General",
 			entryContent = "Announcements Entry Content",
 			entryTitle = "Announcements Entry Title",
-			entryURL = "http://www.liferay.com");
+			entryURL = "http://www.liferay.com",
+			minutesAdjustmentValue = 2);
 
 		var currentTime = DateUtil.getFormattedCurrentDate("h:mm", "UTC");
 
@@ -213,7 +217,7 @@ definition {
 			announcementTitle = "Announcements Entry Title",
 			announcementURL = "http://www.liferay.com");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",

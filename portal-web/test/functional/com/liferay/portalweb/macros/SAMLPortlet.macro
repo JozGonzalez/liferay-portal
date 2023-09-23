@@ -39,6 +39,11 @@ definition {
 
 			echo("## * IdP Metadata XML File Name: ${idPMetadataXML}");
 		}
+		else if (isSet(idpMetadataURLRaw)) {
+			Type(
+				locator1 = "TextInput#SAML_METADATA_URL_FIELD",
+				value1 = ${idpMetadataURLRaw});
+		}
 		else {
 			Type(
 				locator1 = "TextInput#SAML_METADATA_URL_FIELD",
@@ -82,6 +87,15 @@ definition {
 		}
 		else if (isSet(idpCustomFieldAttributeMapping)) {
 			SAMLPortlet.addIdentityProviderConnectionCustomFieldAttributeMapping(idpCustomFieldAttributeMapping = ${idpCustomFieldAttributeMapping});
+		}
+
+		if (isSet(idpUserMembershipsAttributeMappingText)) {
+			SAMLPortlet.addIdentityProviderConnectionUserMembershipsAttributeMappingWithUserMemberships(
+				idpUserMembershipsAttributeMapping = ${idpUserMembershipsAttributeMapping},
+				idpUserMembershipsAttributeMappingText = ${idpUserMembershipsAttributeMappingText});
+		}
+		else if (isSet(idpUserMembershipsAttributeMapping)) {
+			SAMLPortlet.addIdentityProviderConnectionUserMembershipsAttributeMappingWithUserMemberships(idpUserMembershipsAttributeMapping = ${idpUserMembershipsAttributeMapping});
 		}
 
 		if (${userResolution} == "attribute") {
@@ -198,6 +212,19 @@ definition {
 		}
 	}
 
+	@description = "Adding User Group related Attribute mapping for Service provider at Identity Provider Connection configuration"
+	macro addIdentityProviderConnectionUserMembershipsAttributeMappingWithUserMemberships {
+		Select(
+			key_index = 0,
+			locator1 = "CPSAMLAdminIdentityProviderConnection#IDENTITY_PROVIDER_CONNECTION_USER_MEMBERSHIPS_EXPRESSION_DROPDOWN",
+			value1 = ${idpUserMembershipsAttributeMapping});
+
+		Type(
+			key_index = 0,
+			locator1 = "CPSAMLAdminIdentityProviderConnection#IDENTITY_PROVIDER_CONNECTION_USER_MEMBERSHIPS_ATTRIBUTE_TEXT",
+			value1 = ${idpUserMembershipsAttributeMappingText});
+	}
+
 	@description = "Add Identity Provider Connection with only the Name and Entity ID filled out"
 	macro addIdentityProviderConnectionWithBasicSetup {
 		AssertClick(
@@ -312,6 +339,13 @@ definition {
 		}
 		else {
 			Check(locator1 = "CPSAMLAdminIdentityProvider#IDENTITY_PROVIDER_AUTHN_REQUEST_SIGNATURE_REQUIRED_CHECKBOX");
+		}
+
+		if (${authnrequestsigningallowsdynamicacsurl} == "disable") {
+			Uncheck(locator1 = "CPSAMLAdminIdentityProvider#IDENTITY_PROVIDER_AUTHN_REQUEST_SIGNING_ALLOWS_DYNAMIC_ACS_URL_CHECKBOX");
+		}
+		else {
+			Check(locator1 = "CPSAMLAdminIdentityProvider#IDENTITY_PROVIDER_AUTHN_REQUEST_SIGNING_ALLOWS_DYNAMIC_ACS_URL_CHECKBOX");
 		}
 
 		PortletEntry.save();
@@ -461,6 +495,14 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro viewIdentityProviderConfigurations {
+		AssertValue(
+			locator1 = "CPSAMLAdminIdentityProvider#IDENTITY_PROVIDER_SESSION_MAXIMUM_AGE_INPUT",
+			value1 = ${sessionMaximum});
+
+		AssertNotChecked(locator1 = "CPSAMLAdminIdentityProvider#IDENTITY_PROVIDER_AUTHN_REQUEST_SIGNATURE_REQUIRED_CHECKBOX");
+	}
+
 	@description = "View metadata configurations of SP, in Identity Provider Configurations"
 	macro viewMetadataConfigurationsOfSP {
 		AssertClick(
@@ -483,6 +525,14 @@ definition {
 		}
 
 		PortletEntry.save();
+	}
+
+	macro viewServiceProviderConfigurations {
+		AssertValue(
+			locator1 = "CPSAMLAdminServiceProvider#SERVICE_PROVIDER_CLOCK_SKEW_INPUT",
+			value1 = ${clockSkew});
+
+		AssertChecked(locator1 = "CPSAMLAdminServiceProvider#SERVICE_PROVIDER_LDAP_IMPORT_ENABLED_CHECKBOX");
 	}
 
 }

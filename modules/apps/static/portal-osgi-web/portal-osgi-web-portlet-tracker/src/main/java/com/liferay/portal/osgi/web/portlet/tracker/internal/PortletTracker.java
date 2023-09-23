@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.portlet.tracker.internal;
@@ -18,7 +9,6 @@ import com.liferay.osgi.util.StringPlus;
 import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.application.type.ApplicationType;
 import com.liferay.portal.kernel.bean.BeanProperties;
 import com.liferay.portal.kernel.configuration.Configuration;
@@ -111,7 +101,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
-import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -284,56 +273,36 @@ public class PortletTracker
 		_serviceTracker = new ServiceTracker<>(
 			_bundleContext, Portlet.class, this);
 
-		FutureTask<Void> futureTask = new FutureTask<>(
-			() -> {
-				_portalPortletModel = _portletLocalService.getPortletById(
-					CompanyConstants.SYSTEM, PortletKeys.PORTAL);
+		DependencyManagerSyncUtil.registerSyncFutureTask(
+			new FutureTask<>(
+				() -> {
+					_portalPortletModel = _portletLocalService.getPortletById(
+						CompanyConstants.SYSTEM, PortletKeys.PORTAL);
 
-				ServiceRegistration<IndividualPortletResourcePermissionProvider>
-					serviceRegistration = bundleContext.registerService(
-						IndividualPortletResourcePermissionProvider.class,
-						new StartupIndividualPortletResourcePermissionProvider(
-							_resourcePermissionLocalService),
-						null);
+					ServiceRegistration
+						<IndividualPortletResourcePermissionProvider>
+							serviceRegistration = bundleContext.registerService(
+								IndividualPortletResourcePermissionProvider.
+									class,
+								new StartupIndividualPortletResourcePermissionProvider(
+									_resourcePermissionLocalService),
+								null);
 
-				DependencyManagerSyncUtil.registerSyncCallable(
-					() -> {
-						serviceRegistration.unregister();
+					DependencyManagerSyncUtil.registerSyncCallable(
+						() -> {
+							serviceRegistration.unregister();
 
-						return null;
-					});
+							return null;
+						});
 
-				_serviceTracker.open();
+					_serviceTracker.open();
 
-				return null;
-			});
-
-		Thread serviceTrackerOpenerThread = new Thread(
-			futureTask,
+					return null;
+				}),
 			PortletTracker.class.getName() + "-ServiceTrackerOpener");
-
-		serviceTrackerOpenerThread.setDaemon(true);
-
-		serviceTrackerOpenerThread.start();
-
-		DependencyManagerSyncUtil.registerSyncFuture(futureTask);
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Activated");
-		}
-
-		List<String> httpServiceEndpoints = StringPlus.asList(
-			properties.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT));
-
-		if (!httpServiceEndpoints.isEmpty()) {
-			_httpServiceEndpoint = httpServiceEndpoints.get(0);
-		}
-
-		if ((_httpServiceEndpoint.length() > 0) &&
-			_httpServiceEndpoint.endsWith("/")) {
-
-			_httpServiceEndpoint = _httpServiceEndpoint.substring(
-				0, _httpServiceEndpoint.length() - 1);
 		}
 	}
 
@@ -1475,7 +1444,6 @@ public class PortletTracker
 	private DelegateProxyFactory _delegateProxyFactory;
 
 	private ExecutorService _executorService;
-	private String _httpServiceEndpoint = StringPool.BLANK;
 
 	@Reference
 	private HttpServiceRuntime _httpServiceRuntime;

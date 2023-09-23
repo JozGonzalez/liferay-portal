@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
+import {ClayCheckbox} from '@clayui/form';
 import {fetch, navigate, objectToFormData} from 'frontend-js-web';
 import React, {useState} from 'react';
 
@@ -26,6 +18,8 @@ export default function PublicationTemplateEditView({
 	actionUrl,
 	collaboratorsProps,
 	ctCollectionTemplateId,
+	defaultCTCollectionTemplate,
+	defaultSandboxCTCollectionTemplate,
 	description,
 	getTemplateCollaboratorsURL,
 	name,
@@ -36,17 +30,26 @@ export default function PublicationTemplateEditView({
 	saveButtonLabel,
 	tokens,
 }) {
-	const [showModal, setShowModal] = useState(false);
 	const [collaboratorData, setCollaboratorData] = useState(null);
-	const [nameField, setNameField] = useState(name);
+	const [
+		defaultCTCollectionTemplateField,
+		setDefaultCTCollectionTemplateField,
+	] = useState(defaultCTCollectionTemplate);
+	const [
+		defaultSandboxCTCollectionTemplateField,
+		setDefaultSandboxCTCollectionTemplateField,
+	] = useState(defaultSandboxCTCollectionTemplate);
 	const [descriptionField, setDescriptionField] = useState(description);
-	const [publicationNameField, setPublicationNameField] = useState(
-		publicationName
-	);
+	const [nameField, setNameField] = useState(name);
 	const [
 		publicationDescriptionField,
 		setPublicationDescriptionField,
 	] = useState(publicationDescription);
+	const [publicationNameField, setPublicationNameField] = useState(
+		publicationName
+	);
+
+	const [showModal, setShowModal] = useState(false);
 
 	const afterSubmitNotification = () => {
 		setShowModal(false);
@@ -69,6 +72,8 @@ export default function PublicationTemplateEditView({
 			[`${namespace}userIds`]: collaboratorData
 				? collaboratorData['userIds']
 				: null,
+			[`${namespace}defaultCTCollectionTemplate`]: defaultCTCollectionTemplateField,
+			[`${namespace}defaultSandboxCTCollectionTemplate`]: defaultSandboxCTCollectionTemplateField,
 		});
 
 		fetch(actionUrl, {
@@ -147,6 +152,26 @@ export default function PublicationTemplateEditView({
 					'publication-template-description-placeholder'
 				)}
 				required={false}
+			/>
+
+			<ClayCheckbox
+				checked={defaultCTCollectionTemplateField}
+				label={Liferay.Language.get('default-template')}
+				onChange={() =>
+					setDefaultCTCollectionTemplateField(
+						!defaultCTCollectionTemplateField
+					)
+				}
+			/>
+
+			<ClayCheckbox
+				checked={defaultSandboxCTCollectionTemplateField}
+				label={Liferay.Language.get('default-sandbox-template')}
+				onChange={() =>
+					setDefaultSandboxCTCollectionTemplateField(
+						!defaultSandboxCTCollectionTemplateField
+					)
+				}
 			/>
 
 			<CollapsablePanel

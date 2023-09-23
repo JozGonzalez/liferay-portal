@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -17,6 +8,7 @@ import {FocusEvent, useEffect, useMemo} from 'react';
 import {useForm} from 'react-hook-form';
 import {useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
@@ -31,8 +23,7 @@ import {
 	APIResponse,
 	TestrayComponent,
 	TestrayRequirement,
-	createRequirement,
-	updateRequirement,
+	testrayRequirementsImpl,
 } from '../../../services/rest';
 
 type RequirementsFormType = typeof yupSchema.requirement.__outputType;
@@ -57,14 +48,14 @@ const RequirementsForm = () => {
 	const {
 		form: {onClose, onError, onSave, onSubmit},
 	} = useFormActions();
-	useHeader({tabs: [], timeout: 100});
+	useHeader({headerActions: {actions: []}, tabs: [], timeout: 150});
 	const {projectId, requirementId} = useParams();
 	const {
 		mutateTestrayRequirement,
 		testrayRequirement,
 	}: OutletContext = useOutletContext();
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -73,14 +64,16 @@ const RequirementsForm = () => {
 		defaultValues: requirementId ? (testrayRequirement as any) : {},
 		resolver: yupResolver(yupSchema.requirement),
 	});
+
 	const {data: testrayComponentsData} = useFetch<
 		APIResponse<TestrayComponent>
-	>(
-		`/components?fields=id,name&filter=${SearchBuilder.eq(
-			'projectId',
-			projectId as string
-		)}&pageSize=1000`
-	);
+	>('/components', {
+		params: {
+			fields: 'id,name',
+			filter: SearchBuilder.eq('projectId', projectId as string),
+			pageSize: 1000,
+		},
+	});
 
 	const testrayComponents = useMemo(
 		() => testrayComponentsData?.items ?? [],
@@ -92,11 +85,11 @@ const RequirementsForm = () => {
 			form.key = `R-${Math.ceil(Math.random() * 1000)}`;
 		}
 
-		onSubmit(
+		return onSubmit(
 			{...form, projectId},
 			{
-				create: createRequirement,
-				update: updateRequirement,
+				create: (data) => testrayRequirementsImpl.create(data),
+				update: (data, id) => testrayRequirementsImpl.update(data, id),
 			}
 		)
 			.then(mutateTestrayRequirement)
@@ -196,10 +189,14 @@ const RequirementsForm = () => {
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			</ClayForm>
 		</Container>
 	);
 };
 
-export default RequirementsForm;
+export default withPagePermission(RequirementsForm, {
+	createPath: '/project/:projectId/requirements/create',
+	restImpl: testrayRequirementsImpl,
+});

@@ -1,25 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
 
 import com.liferay.poshi.core.PoshiContext;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.script.PoshiScriptParserException;
 import com.liferay.poshi.core.script.PoshiScriptParserUtil;
 import com.liferay.poshi.core.util.Dom4JUtil;
 import com.liferay.poshi.core.util.NaturalOrderStringComparator;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.RegexUtil;
 import com.liferay.poshi.core.util.StringPool;
 import com.liferay.poshi.core.util.StringUtil;
@@ -288,7 +279,7 @@ public abstract class PoshiElement
 		try {
 			parsePoshiScript(poshiScript.trim());
 
-			if (PropsValues.TEST_POSHI_SCRIPT_VALIDATION &&
+			if (poshiProperties.testPoshiScriptValidation &&
 				!PoshiNodeFactory.validationInitialized.contains(
 					getFilePathURL())) {
 
@@ -314,6 +305,21 @@ public abstract class PoshiElement
 		String blockName = getBlockName();
 
 		sb.append(blockName);
+
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (poshiProperties.generateCommandSignature &&
+			(blockName.startsWith("function") ||
+			 blockName.startsWith("macro"))) {
+
+			sb.append("(");
+
+			if (Validator.isNotNull(attributeValue("arguments"))) {
+				sb.append(attributeValue("arguments"));
+			}
+
+			sb.append(")");
+		}
 
 		sb.append(" {");
 
@@ -921,6 +927,10 @@ public abstract class PoshiElement
 
 	protected boolean isVarAssignedToMacroInvocation(String poshiScript) {
 		poshiScript = poshiScript.trim();
+
+		if (!poshiScript.startsWith("var")) {
+			return false;
+		}
 
 		String value = getValueFromAssignment(poshiScript);
 

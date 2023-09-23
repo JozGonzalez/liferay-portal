@@ -27,9 +27,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -59,7 +59,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test AbstractDescriptionPersistsWhenTypingInContentField {
-		property test.name.skip.portal.instance = "BlogsPage#AbstractDescriptionPersistsWhenTypingInContentField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Blogs Page",
@@ -80,6 +81,65 @@ definition {
 		AssertTextEquals(
 			locator1 = "TextInput#DESCRIPTION",
 			value1 = "Blogs Entry Abstract Description");
+	}
+
+	@description = "This checks that users can add a comment to a blog entry through the page comment widget when a blog entry is displayed through a DPT."
+	@priority = 5
+	test CanAddCommentToBlogEntryWhenEntryIsDisplayedWithDPT {
+		property custom.properties = "virtual.hosts.default.site.name=Guest";
+
+		var portalURL = PropsUtil.get("portal.url");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+			contentType = "Blogs Entry",
+			displayPageTemplateEntryName = "Display Page Name",
+			groupName = "Guest");
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "guest");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+		PageEditor.addWidget(portletName = "Blogs");
+
+		PageEditor.addWidget(
+			portletName = "Page Comments",
+			targetFragmentName = "Blogs");
+
+		PageEditor.publish();
+
+		JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+			groupName = "Guest",
+			layoutPageTemplateEntryName = "Display Page Name",
+			type = "Display Page Template");
+
+		Navigator.openSpecificURL(url = "${portalURL}/b/blogs-entry-title");
+
+		Comments.addPG(entryComment = "Blogs Entry Comment");
+
+		Comments.viewPG(
+			commentCount = 1,
+			entryComment = "Blogs Entry Comment",
+			userFullName = "Test Test");
+
+		JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsNonDefault(
+			groupName = "Guest",
+			layoutPageTemplateEntryName = "Display Page Name",
+			type = "Display Page Template");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		BlogsNavigator.gotoEntryPG(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		Comments.viewPG(
+			commentCount = 1,
+			entryComment = "Blogs Entry Comment",
+			userFullName = "Test Test");
 	}
 
 	@description = "This checks that a comment can be deleted from a blog entry."
@@ -111,7 +171,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanDisplayViewCountForEntry {
-		property test.name.skip.portal.instance = "BlogsPage#CanDisplayViewCountForEntry";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Portlet.gotoPortletOptions(
 			portletName = "Blogs",
@@ -426,7 +487,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanSubscribeToComment {
-		property test.name.skip.portal.instance = "BlogsPage#CanSubscribeToComment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Comment";
 
 		JSONBlog.addEntry(
@@ -502,7 +564,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewAbstractDisplayingFirst400Characters {
-		property test.name.skip.portal.instance = "BlogsPage#CanViewAbstractDisplayingFirst400Characters";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
@@ -514,12 +577,12 @@ definition {
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		BlogsEntry.viewAbstractDisplay(
-			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares...",
+			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares represent...",
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
 		BlogsNavigator.gotoEntryWithAbstractPG(
-			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares...",
+			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares represent...",
 			entryTitle = "Blogs Entry Title");
 
 		BlogsEntry.viewEntryPG(
@@ -530,7 +593,8 @@ definition {
 	@priority = 4
 	@refactorneeded
 	test CanViewEntriesOnMultiplePagesWithDifferentScopes {
-		property test.name.skip.portal.instance = "BlogsPage#CanViewEntriesOnMultiplePagesWithDifferentScopes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -618,6 +682,11 @@ definition {
 	@description = "This is a test for LPS-94990. It checks that a blog entry can be viewed when using a display page template."
 	@priority = 5
 	test CanViewEntryUsingDisplayPageTemplate {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// To avoid interference from other tests about the NPE assertion，skip run it on virtal instance, see LPS-185660.
+
 		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 			contentType = "Web Content Article",
 			displayPageTemplateEntryName = "Display Page Template Name",
@@ -691,7 +760,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanViewReadingTime {
-		property test.name.skip.portal.instance = "BlogsPage#CanViewReadingTime";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		BlogsConfiguration.enableReadingTime();
 
@@ -710,6 +780,47 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
 			readingTime = "Less Than a Minute Read");
+	}
+
+	@description = "This checks that the comment section is hidden when viewing a blog entry through the blogs widget in a DPT."
+	@priority = 5
+	test CommentsSectionOfBlogsWidgetIsHiddenWhenViewingEntryInDPT {
+		var portalURL = PropsUtil.get("portal.url");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+			contentType = "Blogs Entry",
+			displayPageTemplateEntryName = "Display Page Name",
+			groupName = "Guest");
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "guest");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+		PageEditor.addWidget(portletName = "Blogs");
+
+		AssertElementNotPresent(
+			key_href = "discussionContainer",
+			key_text = "Comment",
+			locator1 = "Link#ANY_HREF_2");
+
+		PageEditor.publish();
+
+		JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+			groupName = "Guest",
+			layoutPageTemplateEntryName = "Display Page Name",
+			type = "Display Page Template");
+
+		Navigator.openSpecificURL(url = "${portalURL}/b/blogs-entry-title");
+
+		AssertElementNotPresent(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		AssertElementNotPresent(
+			key_text = "comments",
+			locator1 = "Icon#ANY");
 	}
 
 	@description = "This is a usecase for LPS-66970. It checks that both the old and new blog URLs lead to the current entry."

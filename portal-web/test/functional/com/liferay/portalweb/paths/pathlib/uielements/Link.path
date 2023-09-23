@@ -26,6 +26,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_N</td>
+	<td>xpath=(//a[contains(.,'${key_text}')])[${key_indexNumber}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_WITH_ARIA_LABEL</td>
 	<td>//a[@aria-label='${ariaLabel}']</td>
 	<td></td>
@@ -33,6 +38,11 @@
 <tr>
 	<td>ANY_HREF</td>
 	<td>//a[contains(.,'${key_text}')][@href='${key_href}']</td>
+	<td>Page</td>
+</tr>
+<tr>
+	<td>ANY_HREF_2</td>
+	<td>//a[contains(.,'${key_text}')][contains(@href,'${key_href}')]</td>
 	<td>Page</td>
 </tr>
 <tr>

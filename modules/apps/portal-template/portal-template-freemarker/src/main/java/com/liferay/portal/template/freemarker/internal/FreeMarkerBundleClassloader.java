@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.freemarker.internal;
@@ -24,10 +15,8 @@ import java.net.URLClassLoader;
 
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.osgi.framework.Bundle;
 
 /**
  * @author Miguel Pastor
@@ -35,24 +24,20 @@ import org.osgi.framework.Bundle;
  */
 public class FreeMarkerBundleClassloader extends URLClassLoader {
 
-	public FreeMarkerBundleClassloader(Bundle... bundles) {
+	public FreeMarkerBundleClassloader(Set<ClassLoader> classLoaders) {
 		super(new URL[0]);
 
-		if (bundles.length == 0) {
-			throw new IllegalArgumentException("Bundles are empty");
-		}
+		_classLoaders = new HashSet<>(classLoaders);
 
-		Collections.addAll(_bundles, bundles);
-	}
+		Class<?> clazz = FreeMarkerBundleClassloader.class;
 
-	public void addBundle(Bundle bundle) {
-		_bundles.add(bundle);
+		_classLoaders.add(clazz.getClassLoader());
 	}
 
 	@Override
 	public URL findResource(String name) {
-		for (Bundle bundle : _bundles) {
-			URL url = bundle.getResource(name);
+		for (ClassLoader classLoader : _classLoaders) {
+			URL url = classLoader.getResource(name);
 
 			if (url != null) {
 				return url;
@@ -64,9 +49,9 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 
 	@Override
 	public Enumeration<URL> findResources(String name) {
-		for (Bundle bundle : _bundles) {
+		for (ClassLoader classLoader : _classLoaders) {
 			try {
-				Enumeration<URL> enumeration = bundle.getResources(name);
+				Enumeration<URL> enumeration = classLoader.getResources(name);
 
 				if ((enumeration != null) && enumeration.hasMoreElements()) {
 					return enumeration;
@@ -92,15 +77,11 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 		return findResources(name);
 	}
 
-	public void removeBundle(Bundle bundle) {
-		_bundles.remove(bundle);
-	}
-
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		for (Bundle bundle : _bundles) {
+		for (ClassLoader classLoader : _classLoaders) {
 			try {
-				return bundle.loadClass(name);
+				return classLoader.loadClass(name);
 			}
 			catch (ClassNotFoundException classNotFoundException) {
 				if (_log.isDebugEnabled()) {
@@ -128,6 +109,10 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 	private static final Log _log = LogFactoryUtil.getLog(
 		FreeMarkerBundleClassloader.class);
 
-	private final Set<Bundle> _bundles = ConcurrentHashMap.newKeySet();
+	static {
+		ClassLoader.registerAsParallelCapable();
+	}
+
+	private final Set<ClassLoader> _classLoaders;
 
 }

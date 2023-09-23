@@ -105,16 +105,15 @@ definition {
 	}
 
 	macro getSiteName {
-		var testNameSkipPortalInstance = PropsUtil.get("test.name.skip.portal.instance");
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		if ((${siteName} == "Liferay") || !(isSet(siteName))) {
-			if ((${testPortalInstance} == "true") && !(IsTestName(locator1 = "", value1 = ${testNameSkipPortalInstance}))) {
+			if (${testLiferayVirtualInstance} == "true") {
 				var portalURL = PropsUtil.get("portal.url");
 
-				var portalURL = StringUtil.replace(${portalURL}, "http://", "");
+				var portalURL = Regex.removeHTTP(url = ${portalURL});
 
-				var portalURL = StringUtil.replace(${portalURL}, ":8080", "");
+				var portalURL = Regex.removePortNumber(url = ${portalURL});
 
 				return ${portalURL};
 			}
@@ -162,10 +161,9 @@ definition {
 	}
 
 	macro setUpCustomPortalInstance {
-		var testNameSkipPortalInstance = PropsUtil.get("test.name.skip.portal.instance");
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (!(IsTestName(locator1 = "", value1 = ${testNameSkipPortalInstance}))) {
+		if (${testLiferayVirtualInstance} == "true") {
 			var portalURL = PropsUtil.get("portal.url");
 
 			var portalURL = StringUtil.replace(${portalURL}, "http://", "");
@@ -174,32 +172,36 @@ definition {
 
 			HeadlessPortalInstanceAPI.deletePortalInstance(portalInstanceId = ${portalInstanceId});
 
-			if (${testPortalInstance} == "true") {
-				SignIn.signInPortalInstanceSetUp();
-			}
+			SignIn.signInPortalInstanceSetUp();
 		}
 	}
 
 	macro setUpPortalInstance {
-		var testNameSkipPortalInstance = PropsUtil.get("test.name.skip.portal.instance");
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (!(IsTestName(locator1 = "", value1 = ${testNameSkipPortalInstance}))) {
+		if (${testLiferayVirtualInstance} == "true") {
 			HeadlessPortalInstanceAPI.cleanAllPortalInstances(authenticationMethod = ${authenticationMethod});
 
-			if (${testPortalInstance} == "true") {
-				SignIn.signInPortalInstanceSetUp();
-			}
+			SignIn.signInPortalInstanceSetUp();
 		}
 	}
 
 	macro setUpPortalInstanceNoSelenium {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
 		HeadlessPortalInstanceAPI.cleanAllPortalInstances(authenticationMethod = ${authenticationMethod});
 
-		if (${testPortalInstance} == "true") {
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
 			SignIn.signInPortalInstanceSetUp();
+		}
+	}
+
+	macro updatePortalProperties {
+		if (isSet(oldProperty)) {
+			AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dupdate.properties=${newProperty} -Dupdate.properties.original=${oldProperty}");
+		}
+		else {
+			AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=${newProperty}");
 		}
 	}
 

@@ -1,22 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core;
 
+import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -45,88 +40,135 @@ public final class PoshiStackTrace {
 	}
 
 	public void emptyStackTrace() {
-		while (!_stackTrace.isEmpty()) {
-			_stackTrace.pop();
+		while (!_stackTraceElements.isEmpty()) {
+			_stackTraceElements.pop();
 		}
 	}
 
 	public String getCurrentFilePath() {
-		return _filePaths.peek();
+		PoshiFilePath poshiFilePath = _poshiFilePaths.peek();
+
+		return poshiFilePath.getFilePath();
 	}
 
 	public String getCurrentNamespace() {
-		if (_filePaths.isEmpty()) {
+		if (_poshiFilePaths.isEmpty()) {
 			return PoshiContext.getDefaultNamespace();
 		}
 
 		String filePath = getCurrentFilePath();
 
-		int x = filePath.indexOf("[");
-
-		return PoshiContext.getNamespaceFromFilePath(filePath.substring(0, x));
+		return PoshiContext.getNamespaceFromFilePath(filePath);
 	}
 
 	public String getCurrentNamespace(String namespacedClassCommandName) {
-		String defaultNamespace = PoshiContext.getDefaultNamespace();
-
 		String namespace =
 			PoshiGetterUtil.getNamespaceFromNamespacedClassCommandName(
 				namespacedClassCommandName);
 
-		if (Validator.isNull(namespace) || namespace.equals(defaultNamespace)) {
+		if (Validator.isNull(namespace)) {
 			namespace = getCurrentNamespace();
 		}
 
 		return namespace;
 	}
 
-	public String getSimpleStackTrace() {
+	public String getNamespaceFromNamespacedClassCommandName(
+		String namespacedClassCommandName) {
+
+		String namespace =
+			PoshiGetterUtil.getNamespaceFromNamespacedClassCommandName(
+				namespacedClassCommandName);
+
+		if (Validator.isNull(namespace)) {
+			namespace = getCurrentNamespace();
+		}
+
+		return namespace;
+	}
+
+	public String getSimpleStackTraceMessage() {
 		StringBuilder sb = new StringBuilder();
 
-		for (String filePath : _stackTrace) {
-			if (filePath.contains(".function")) {
+		for (StackTraceElement stackTraceElement : _stackTraceElements) {
+			String fileName = stackTraceElement.getFileName();
+
+			if (fileName.contains(".function")) {
 				continue;
 			}
 
-			sb.append(PoshiGetterUtil.getFileNameFromFilePath(filePath));
+			sb.append(
+				_getStackTraceLine(
+					PoshiGetterUtil.getFileNameFromFilePath(fileName),
+					stackTraceElement.getMethodName(),
+					stackTraceElement.getLineNumber()));
 		}
 
-		String currentFilePath = _filePaths.peek();
+		PoshiFilePath poshiFilePath = _poshiFilePaths.peek();
+
+		String currentFilePath = poshiFilePath.getFilePath();
 
 		if (!currentFilePath.contains(".function")) {
-			sb.append(PoshiGetterUtil.getFileNameFromFilePath(currentFilePath));
-			sb.append(":");
-			sb.append(PoshiGetterUtil.getLineNumber(_currentElement));
+			sb.append(
+				_getStackTraceLine(
+					PoshiGetterUtil.getFileNameFromFilePath(currentFilePath),
+					poshiFilePath.getCommandName(),
+					PoshiGetterUtil.getLineNumber(_currentElement)));
 		}
 
 		return sb.toString();
 	}
 
-	public String getStackTrace(String msg) {
+	public StackTraceElement[] getStackTrace() {
+		List<StackTraceElement> stackTraceElements = new ArrayList<>(
+			(Stack<StackTraceElement>)_stackTraceElements.clone());
+
+		PoshiFilePath poshiFilePath = _poshiFilePaths.peek();
+
+		stackTraceElements.add(
+			new StackTraceElement(
+				poshiFilePath.getClassName(), poshiFilePath.getCommandName(),
+				poshiFilePath.getFilePath(),
+				PoshiGetterUtil.getLineNumber(_currentElement)));
+
+		Collections.reverse(stackTraceElements);
+
+		return stackTraceElements.toArray(new StackTraceElement[0]);
+	}
+
+	public String getStackTraceMessage(String msg) {
 		StringBuilder sb = new StringBuilder();
 
 		if (Validator.isNotNull(msg)) {
 			sb.append(msg);
 		}
 
-		Stack<String> stackTrace = (Stack<String>)_stackTrace.clone();
+		PoshiFilePath poshiFilePath = _poshiFilePaths.peek();
 
 		sb.append("\n");
-		sb.append(_filePaths.peek());
-		sb.append(":");
-		sb.append(PoshiGetterUtil.getLineNumber(_currentElement));
 
-		while (!stackTrace.isEmpty()) {
+		sb.append(
+			_getStackTraceLine(
+				poshiFilePath.getFilePath(), poshiFilePath.getCommandName(),
+				PoshiGetterUtil.getLineNumber(_currentElement)));
+
+		Stack<StackTraceElement> stackTraceElements =
+			(Stack<StackTraceElement>)_stackTraceElements.clone();
+
+		while (!stackTraceElements.isEmpty()) {
 			sb.append("\n");
-			sb.append(stackTrace.pop());
+
+			StackTraceElement stackTraceElement = stackTraceElements.pop();
+
+			sb.append(_getStackTraceLine(stackTraceElement));
 		}
 
 		return sb.toString();
 	}
 
 	public void popStackTrace() {
-		_filePaths.pop();
-		_stackTrace.pop();
+		_poshiFilePaths.pop();
+		_stackTraceElements.pop();
 	}
 
 	public void printStackTrace() {
@@ -134,12 +176,17 @@ public final class PoshiStackTrace {
 	}
 
 	public void printStackTrace(String msg) {
-		System.out.println(getStackTrace(msg));
+		System.out.println(getStackTraceMessage(msg));
 	}
 
 	public void pushStackTrace(Element element) throws Exception {
-		_stackTrace.push(
-			_filePaths.peek() + ":" + PoshiGetterUtil.getLineNumber(element));
+		PoshiFilePath poshiFilePath = _poshiFilePaths.peek();
+
+		_stackTraceElements.push(
+			new StackTraceElement(
+				poshiFilePath.getClassName(), poshiFilePath.getCommandName(),
+				poshiFilePath.getFilePath(),
+				PoshiGetterUtil.getLineNumber(element)));
 
 		String namespacedClassCommandName = null;
 		String classType = null;
@@ -188,6 +235,19 @@ public final class PoshiStackTrace {
 	private PoshiStackTrace() {
 	}
 
+	private String _getStackTraceLine(StackTraceElement stackTraceElement) {
+		return _getStackTraceLine(
+			stackTraceElement.getFileName(), stackTraceElement.getMethodName(),
+			stackTraceElement.getLineNumber());
+	}
+
+	private String _getStackTraceLine(
+		String filePath, String commandName, int lineNumber) {
+
+		return StringUtil.combine(
+			filePath, "[", commandName + "]:", String.valueOf(lineNumber));
+	}
+
 	private void _pushFilePath(
 		String namespacedClassCommandName, String classType) {
 
@@ -216,14 +276,43 @@ public final class PoshiStackTrace {
 			PoshiGetterUtil.getCommandNameFromNamespacedClassCommandName(
 				namespacedClassCommandName);
 
-		_filePaths.push(filePath + "[" + commandName + "]");
+		_poshiFilePaths.push(
+			new PoshiFilePath(className, commandName, filePath));
 	}
 
 	private static final Map<String, PoshiStackTrace> _poshiStackTraces =
 		new HashMap<>();
 
 	private Element _currentElement;
-	private final Stack<String> _filePaths = new Stack<>();
-	private final Stack<String> _stackTrace = new Stack<>();
+	private final Stack<PoshiFilePath> _poshiFilePaths = new Stack<>();
+	private final Stack<StackTraceElement> _stackTraceElements = new Stack<>();
+
+	private class PoshiFilePath {
+
+		public PoshiFilePath(
+			String className, String commandName, String filePath) {
+
+			_className = className;
+			_commandName = commandName;
+			_filePath = filePath;
+		}
+
+		public String getClassName() {
+			return _className;
+		}
+
+		public String getCommandName() {
+			return _commandName;
+		}
+
+		public String getFilePath() {
+			return _filePath;
+		}
+
+		private final String _className;
+		private final String _commandName;
+		private final String _filePath;
+
+	}
 
 }

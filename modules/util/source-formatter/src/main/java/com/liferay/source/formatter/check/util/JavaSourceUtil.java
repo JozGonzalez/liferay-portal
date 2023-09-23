@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check.util;
@@ -22,13 +13,17 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.tools.JavaImportsFormatter;
 import com.liferay.portal.tools.ToolsUtil;
 
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,11 +32,82 @@ import java.util.regex.Pattern;
  */
 public class JavaSourceUtil extends SourceUtil {
 
+	public static String addImports(String content, String... newImports) {
+		if (newImports.length == 0) {
+			return content;
+		}
+
+		Set<String> missingImports = new TreeSet<>();
+
+		Collections.addAll(missingImports, newImports);
+
+		for (String importName : getImportNames(content)) {
+			missingImports.remove(importName);
+		}
+
+		if (missingImports.isEmpty()) {
+			return content;
+		}
+
+		String packageName = getPackageName(content);
+
+		StringBundler sb = new StringBundler();
+
+		sb.append(packageName);
+		sb.append(StringPool.SEMICOLON);
+		sb.append(StringPool.NEW_LINE);
+		sb.append(StringPool.NEW_LINE);
+
+		for (String missingImport : missingImports) {
+			sb.append("import ");
+			sb.append(missingImport);
+			sb.append(";\n");
+		}
+
+		return StringUtil.replace(content, packageName + ";\n", sb.toString());
+	}
+
+	public static String addMethodNewParameters(
+		String indent, int[] indexNewParameters, String methodStart,
+		String[] newParameters, List<String> parameterList) {
+
+		for (int i = 0; i < indexNewParameters.length; i++) {
+			parameterList.add(indexNewParameters[i], newParameters[i]);
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(methodStart);
+		sb.append(StringPool.NEW_LINE);
+		sb.append(indent);
+		sb.append(StringPool.TAB);
+		sb.append(StringUtil.merge(parameterList, StringPool.COMMA_AND_SPACE));
+		sb.append(StringPool.CLOSE_PARENTHESIS);
+
+		return sb.toString();
+	}
+
 	public static String getClassName(String fileName) {
 		int x = fileName.lastIndexOf(CharPool.SLASH);
 		int y = fileName.lastIndexOf(CharPool.PERIOD);
 
 		return fileName.substring(x + 1, y);
+	}
+
+	public static List<String> getImportNames(String content) {
+		List<String> importNames = new ArrayList<>();
+
+		String[] importLines = StringUtil.splitLines(
+			JavaImportsFormatter.getImports(content));
+
+		for (String importLine : importLines) {
+			if (Validator.isNotNull(importLine)) {
+				importNames.add(
+					importLine.substring(7, importLine.length() - 1));
+			}
+		}
+
+		return importNames;
 	}
 
 	public static File getJavaFile(
@@ -162,6 +228,10 @@ public class JavaSourceUtil extends SourceUtil {
 	}
 
 	public static List<String> getParameterList(String methodCall) {
+		return splitParameters(getParameters(methodCall));
+	}
+
+	public static String getParameters(String methodCall) {
 		String parameters = null;
 
 		int x = -1;
@@ -180,9 +250,7 @@ public class JavaSourceUtil extends SourceUtil {
 
 		x = parameters.indexOf(StringPool.OPEN_PARENTHESIS);
 
-		parameters = parameters.substring(x + 1, parameters.length() - 1);
-
-		return splitParameters(parameters);
+		return parameters.substring(x + 1, parameters.length() - 1);
 	}
 
 	public static boolean isValidJavaParameter(String javaParameter) {

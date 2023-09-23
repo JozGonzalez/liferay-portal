@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.processor;
@@ -68,13 +59,15 @@ public class JSONSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testJSONDeprecatedPackagesCheck() throws Exception {
 		test(
-			"JSONDeprecatedPackages/package.testjson",
-			new String[] {
+			SourceProcessorTestParameters.create(
+				"JSONDeprecatedPackages/package.testjson"
+			).addExpectedMessage(
 				"Do not use deprecated package " +
 					"'liferay-module-config-generator'",
-				"Do not use deprecated package 'metal-cli'"
-			},
-			new Integer[] {4, 5});
+				4
+			).addExpectedMessage(
+				"Do not use deprecated package 'metal-cli'", 5
+			));
 	}
 
 	@Test

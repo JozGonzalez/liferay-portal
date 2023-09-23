@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.document.library.web.internal.optimizer;
@@ -20,12 +11,13 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper
 import com.liferay.adaptive.media.image.counter.AMImageCounter;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.adaptive.media.image.optimizer.AMImageOptimizer;
-import com.liferay.adaptive.media.image.processor.AMImageProcessor;
-import com.liferay.adaptive.media.image.size.AMImageSizeProvider;
 import com.liferay.adaptive.media.image.validator.AMImageValidator;
+import com.liferay.adaptive.media.processor.AMProcessor;
+import com.liferay.document.library.configuration.DLFileEntryConfiguration;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusMessageSender;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
@@ -39,19 +31,24 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
  */
 @Component(
+	configurationPid = "com.liferay.document.library.configuration.DLFileEntryConfiguration",
 	property = "adaptive.media.key=document-library",
 	service = AMImageOptimizer.class
 )
@@ -91,6 +88,13 @@ public class DLAMImageOptimizer implements AMImageOptimizer {
 			errorCounter);
 	}
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_dlFileEntryConfiguration = ConfigurableUtil.createConfigurable(
+			DLFileEntryConfiguration.class, properties);
+	}
+
 	private void _optimize(
 		long companyId, String configurationEntryUuid, int total,
 		AtomicInteger successCounter, AtomicInteger errorCounter) {
@@ -123,7 +127,9 @@ public class DLAMImageOptimizer implements AMImageOptimizer {
 				Property sizeProperty = PropertyFactoryUtil.forName("size");
 
 				dynamicQuery.add(
-					sizeProperty.le(_amImageSizeProvider.getImageMaxSize()));
+					sizeProperty.le(
+						_dlFileEntryConfiguration.
+							previewableProcessorMaxSize()));
 
 				DynamicQuery dlFileVersionDynamicQuery =
 					_dlFileVersionLocalService.dynamicQuery();
@@ -157,7 +163,7 @@ public class DLAMImageOptimizer implements AMImageOptimizer {
 				FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
 
 				try {
-					_amImageProcessor.process(
+					_amProcessor.process(
 						fileEntry.getFileVersion(), configurationEntryUuid);
 
 					_sendStatusMessage(
@@ -225,17 +231,16 @@ public class DLAMImageOptimizer implements AMImageOptimizer {
 	private AMImageMimeTypeProvider _amImageMimeTypeProvider;
 
 	@Reference
-	private AMImageProcessor _amImageProcessor;
-
-	@Reference
-	private AMImageSizeProvider _amImageSizeProvider;
-
-	@Reference
 	private AMImageValidator _amImageValidator;
+
+	@Reference
+	private AMProcessor<FileVersion> _amProcessor;
 
 	@Reference
 	private BackgroundTaskStatusMessageSender
 		_backgroundTaskStatusMessageSender;
+
+	private volatile DLFileEntryConfiguration _dlFileEntryConfiguration;
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;

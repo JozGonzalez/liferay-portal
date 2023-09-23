@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -52,8 +43,8 @@ if (messageId > 0) {
 			<div class="card-row card-row-padded">
 				<div class="card-col-field">
 					<div class="list-group-card-icon">
-						<liferay-ui:user-portrait
-							cssClass="sticker-lg"
+						<liferay-user:user-portrait
+							size="lg"
 							userId="<%= !message.isAnonymous() ? message.getUserId() : 0 %>"
 						/>
 					</div>
@@ -83,7 +74,7 @@ if (messageId > 0) {
 						<%= HtmlUtil.escape(message.getSubject()) %>
 
 						<c:if test="<%= message.isAnswer() %>">
-							(<liferay-ui:message key="answer" />)
+							(<liferay-ui:message key="answer[noun]" />)
 						</c:if>
 					</h4>
 
@@ -91,7 +82,7 @@ if (messageId > 0) {
 					User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 					%>
 
-					<c:if test="<%= (messageUser != null) && !messageUser.isDefaultUser() %>">
+					<c:if test="<%= (messageUser != null) && !messageUser.isGuestUser() %>">
 
 						<%
 						String[] ranks = MBStatsUserLocalServiceUtil.getUserRank(themeDisplay.getSiteGroupId(), themeDisplay.getLanguageId(), message.getUserId());

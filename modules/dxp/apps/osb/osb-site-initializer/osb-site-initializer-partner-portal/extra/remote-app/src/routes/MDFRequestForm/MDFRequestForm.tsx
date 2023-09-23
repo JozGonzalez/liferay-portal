@@ -1,21 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
+import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {FormikHelpers, setNestedObjectValues} from 'formik';
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 
+import PRMForm from '../../common/components/PRMForm/PRMForm';
 import PRMFormik from '../../common/components/PRMFormik';
+import {ObjectActionName} from '../../common/enums/objectActionName';
+import {PermissionActionType} from '../../common/enums/permissionActionType';
 import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
+import usePermissionActions from '../../common/hooks/usePermissionActions';
 import MDFRequestDTO from '../../common/interfaces/dto/mdfRequestDTO';
 import MDFRequest from '../../common/interfaces/mdfRequest';
 import {Liferay} from '../../common/services/liferay';
@@ -36,8 +36,8 @@ import submitForm from './utils/submitForm';
 const initialFormValues: MDFRequest = {
 	activities: [],
 	additionalOption: {},
+	claimPercent: 0,
 	company: {},
-	country: {},
 	currency: {},
 	liferayBusinessSalesGoals: [],
 	maxDateActivity: '',
@@ -45,6 +45,8 @@ const initialFormValues: MDFRequest = {
 	minDateActivity: '',
 	overallCampaignDescription: '',
 	overallCampaignName: '',
+	partnerCountry: {},
+	submitted: false,
 	targetAudienceRoles: [],
 	targetMarkets: [],
 	totalCostOfExpense: 0,
@@ -67,6 +69,35 @@ const MDFRequestForm = () => {
 
 	const {data, isValidating} = useGetMDFRequestById(mdfRequestId);
 	const {data: myUserAccountData} = useGetMyUserAccount();
+	const actions = usePermissionActions(ObjectActionName.MDF_REQUEST);
+
+	const hasPermissionToAccess = useMemo(
+		() =>
+			actions?.some(
+				(action) =>
+					action === PermissionActionType.CREATE ||
+					action === PermissionActionType.UPDATE
+			),
+		[actions]
+	);
+
+	const hasPermissionToByPass = useMemo(
+		() =>
+			actions?.some(
+				(action) =>
+					action === PermissionActionType.UPDATE_WO_CHANGE_STATUS
+			),
+		[actions]
+	);
+
+	const currentMDFRequestHasValidStatus =
+		data?.mdfRequestStatus.key === Status.DRAFT.key ||
+		data?.mdfRequestStatus.key === Status.REQUEST_MORE_INFO.key;
+
+	const hasPermissionShowForm = mdfRequestId
+		? (hasPermissionToAccess && currentMDFRequestHasValidStatus) ||
+		  hasPermissionToByPass
+		: hasPermissionToAccess;
 
 	const onCancel = () =>
 		Liferay.Util.navigate(
@@ -93,6 +124,7 @@ const MDFRequestForm = () => {
 	const StepFormComponent: StepComponent = {
 		[StepType.GOALS]: (
 			<Goals
+				disableCompany={Boolean(mdfRequestId) && hasPermissionToByPass}
 				onCancel={onCancel}
 				onContinue={onContinue}
 				onSaveAsDraft={(
@@ -101,7 +133,22 @@ const MDFRequestForm = () => {
 						FormikHelpers<MDFRequest>,
 						'setFieldValue'
 					>
-				) => submitForm(values, formikHelpers, siteURL, Status.DRAFT)}
+				) =>
+					actions &&
+					submitForm(
+						values,
+						formikHelpers,
+						siteURL,
+						Status.DRAFT,
+						mdfRequestId
+							? actions.every(
+									(action) =>
+										action !==
+										PermissionActionType.UPDATE_WO_CHANGE_STATUS
+							  )
+							: true
+					)
+				}
 				validationSchema={goalsSchema}
 			/>
 		),
@@ -118,7 +165,22 @@ const MDFRequestForm = () => {
 						FormikHelpers<MDFRequest>,
 						'setFieldValue'
 					>
-				) => submitForm(values, formikHelpers, siteURL, Status.DRAFT)}
+				) =>
+					actions &&
+					submitForm(
+						values,
+						formikHelpers,
+						siteURL,
+						Status.DRAFT,
+						mdfRequestId
+							? actions.every(
+									(action) =>
+										action !==
+										PermissionActionType.UPDATE_WO_CHANGE_STATUS
+							  )
+							: true
+					)
+				}
 				validationSchema={activitiesSchema}
 			/>
 		),
@@ -132,13 +194,60 @@ const MDFRequestForm = () => {
 						FormikHelpers<MDFRequest>,
 						'setFieldValue'
 					>
-				) => submitForm(values, formikHelpers, siteURL, Status.DRAFT)}
+				) =>
+					actions &&
+					submitForm(
+						values,
+						formikHelpers,
+						siteURL,
+						Status.DRAFT,
+						mdfRequestId
+							? actions.every(
+									(action) =>
+										action !==
+										PermissionActionType.UPDATE_WO_CHANGE_STATUS
+							  )
+							: true
+					)
+				}
 			/>
 		),
 	};
 
-	if (((isValidating || !data) && mdfRequestId) || !myUserAccountData) {
+	if (
+		((isValidating || !data) && mdfRequestId) ||
+		!myUserAccountData ||
+		!actions
+	) {
 		return <ClayLoadingIndicator />;
+	}
+
+	if (!hasPermissionShowForm) {
+		return (
+			<PRMForm name="" title="MDF Claim">
+				<div className="d-flex justify-content-center mt-4">
+					<ClayAlert
+						className="m-0 w-100"
+						displayType="info"
+						title="Info:"
+					>
+						This MDF Request can not be edited.
+					</ClayAlert>
+				</div>
+
+				<PRMForm.Footer>
+					<div className="d-flex mr-auto">
+						<ClayButton
+							className="mr-4"
+							displayType="secondary"
+							onClick={() => onCancel()}
+						>
+							Cancel
+						</ClayButton>
+					</div>
+				</PRMForm.Footer>
+			</PRMForm>
+		);
 	}
 
 	return (
@@ -154,7 +263,13 @@ const MDFRequestForm = () => {
 					formikHelpers,
 					siteURL,
 					Status.PENDING,
-					myUserAccountData.roleBriefs
+					mdfRequestId
+						? actions.every(
+								(action) =>
+									action !==
+									PermissionActionType.UPDATE_WO_CHANGE_STATUS
+						  )
+						: true
 				)
 			}
 		>

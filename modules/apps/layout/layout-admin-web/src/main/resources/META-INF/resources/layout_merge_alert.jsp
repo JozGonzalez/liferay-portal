@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,7 +12,7 @@ LayoutPrototype layoutPrototype = (LayoutPrototype)request.getAttribute("edit_la
 String redirect = (String)request.getAttribute("edit_layout_prototype.jsp-redirect");
 long selPlid = GetterUtil.getLong((String)request.getAttribute("edit_layout_prototype.jsp-selPlid"));
 
-int mergeFailCount = SitesUtil.getMergeFailCount(layoutPrototype);
+int mergeFailCount = layoutPrototype.getMergeFailCount();
 %>
 
 <c:if test="<%= mergeFailCount > PropsValues.LAYOUT_PROTOTYPE_MERGE_FAIL_THRESHOLD %>">
@@ -30,13 +21,21 @@ int mergeFailCount = SitesUtil.getMergeFailCount(layoutPrototype);
 	String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_layout_prototypes_merge_alert") + StringPool.UNDERLINE;
 	%>
 
-	<span class="alert alert-warning">
+	<clay:alert
+		displayType="warning"
+	>
 		<liferay-ui:message arguments='<%= new Object[] {mergeFailCount, LanguageUtil.get(request, "page-template")} %>' key="the-propagation-of-changes-from-the-x-has-been-disabled-temporarily-after-x-errors" translateArguments="<%= false %>" />
 
 		<liferay-ui:message arguments="page-template" key="click-reset-and-propagate-to-reset-the-failure-count-and-propagate-changes-from-the-x" />
 
-		<aui:button id='<%= randomNamespace + "resetButton" %>' useNamespace="<%= false %>" value="reset-and-propagate" />
-	</span>
+		<clay:button
+			cssClass="alert-btn"
+			displayType="primary"
+			id='<%= randomNamespace + "resetButton" %>'
+			label="reset-and-propagate"
+			small="<%= true %>"
+		/>
+	</clay:alert>
 
 	<script>
 		(function () {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.service.persistence.impl;
@@ -49,7 +40,6 @@ import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -699,21 +689,21 @@ public class FragmentEntryVersionPersistenceImpl
 	public FragmentEntryVersion fetchByFragmentEntryId_Version(
 		long fragmentEntryId, int version, boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntryVersion.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {fragmentEntryId, version};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByFragmentEntryId_Version, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryVersion.class);
 
 		if (result instanceof FragmentEntryVersion) {
 			FragmentEntryVersion fragmentEntryVersion =
@@ -725,6 +715,15 @@ public class FragmentEntryVersionPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntryVersion.class,
+						fragmentEntryVersion.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2707,21 +2706,21 @@ public class FragmentEntryVersionPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntryVersion.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId, version};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G_Version, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryVersion.class);
 
 		if (result instanceof FragmentEntryVersion) {
 			FragmentEntryVersion fragmentEntryVersion =
@@ -2733,6 +2732,15 @@ public class FragmentEntryVersionPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntryVersion.class,
+						fragmentEntryVersion.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -9268,21 +9276,21 @@ public class FragmentEntryVersionPersistenceImpl
 
 		fragmentEntryKey = Objects.toString(fragmentEntryKey, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			FragmentEntryVersion.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, fragmentEntryKey, version};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByG_FEK_Version, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryVersion.class);
 
 		if (result instanceof FragmentEntryVersion) {
 			FragmentEntryVersion fragmentEntryVersion =
@@ -9296,6 +9304,15 @@ public class FragmentEntryVersionPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						FragmentEntryVersion.class,
+						fragmentEntryVersion.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -17652,30 +17669,14 @@ public class FragmentEntryVersionPersistenceImpl
 			},
 			false);
 
-		_setFragmentEntryVersionUtilPersistence(this);
+		FragmentEntryVersionUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setFragmentEntryVersionUtilPersistence(null);
+		FragmentEntryVersionUtil.setPersistence(null);
 
 		entityCache.removeCache(FragmentEntryVersionImpl.class.getName());
-	}
-
-	private void _setFragmentEntryVersionUtilPersistence(
-		FragmentEntryVersionPersistence fragmentEntryVersionPersistence) {
-
-		try {
-			Field field = FragmentEntryVersionUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, fragmentEntryVersionPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

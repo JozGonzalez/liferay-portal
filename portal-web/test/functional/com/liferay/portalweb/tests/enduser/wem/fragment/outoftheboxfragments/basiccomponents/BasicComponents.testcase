@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -70,7 +71,7 @@ definition {
 
 			PageEditor.configureFragment(
 				size = "Large",
-				type = "Link");
+				style = "Link");
 
 			PageEditor.gotoStyle(fragmentName = "Button");
 
@@ -82,7 +83,7 @@ definition {
 				alignment = "center",
 				fragmentName = "Button",
 				size = "lg",
-				type = "link");
+				style = "link");
 		}
 
 		task ("Remove the Button") {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.converter;
@@ -17,8 +8,8 @@ package com.liferay.headless.delivery.internal.dto.v1_0.converter;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
@@ -48,12 +39,6 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import javax.ws.rs.core.UriInfo;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -62,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.message.boards.model.MBThread",
-	service = {DTOConverter.class, MessageBoardThreadDTOConverter.class}
+	service = DTOConverter.class
 )
 public class MessageBoardThreadDTOConverter
 	implements DTOConverter<MBThread, MessageBoardThread> {
@@ -100,15 +85,11 @@ public class MessageBoardThreadDTOConverter
 				dateModified = mbMessage.getModifiedDate();
 				encodingFormat = mbMessage.getFormat();
 				friendlyUrlPath = mbMessage.getUrlSubject();
-				hasValidAnswer = Stream.of(
+				hasValidAnswer = ListUtil.exists(
 					_mbMessageLocalService.getChildMessages(
 						mbMessage.getMessageId(),
-						WorkflowConstants.STATUS_APPROVED)
-				).flatMap(
-					List::stream
-				).anyMatch(
-					MBMessage::isAnswer
-				);
+						WorkflowConstants.STATUS_APPROVED),
+					MBMessage::isAnswer);
 				headline = mbMessage.getSubject();
 				id = mbThread.getThreadId();
 				keywords = ListUtil.toArray(
@@ -152,18 +133,15 @@ public class MessageBoardThreadDTOConverter
 				setCreatorStatistics(
 					() -> {
 						if (mbMessage.isAnonymous() || (user == null) ||
-							user.isDefaultUser()) {
+							user.isGuestUser()) {
 
 							return null;
 						}
 
-						Optional<UriInfo> uriInfoOptional =
-							dtoConverterContext.getUriInfoOptional();
-
 						return CreatorStatisticsUtil.toCreatorStatistics(
 							mbMessage.getGroupId(), languageId,
 							_mbStatsUserLocalService,
-							uriInfoOptional.orElse(null), user);
+							dtoConverterContext.getUriInfo(), user);
 					});
 			}
 		};
@@ -176,9 +154,9 @@ public class MessageBoardThreadDTOConverter
 		MBGroupServiceSettings mbGroupServiceSettings =
 			MBGroupServiceSettings.getInstance(siteId);
 
-		String[] priorities = mbGroupServiceSettings.getPriorities(languageId);
+		for (String priorityString :
+				mbGroupServiceSettings.getPriorities(languageId)) {
 
-		for (String priorityString : priorities) {
 			String[] parts = StringUtil.split(priorityString, StringPool.PIPE);
 
 			if (priority == GetterUtil.getDouble(parts[2])) {

@@ -41,6 +41,7 @@ definition {
 		JSONRoleAPI._addRole(
 			descriptionMap = ${descriptionMap},
 			name = ${name},
+			specificURL = ${specificURL},
 			titleMap = ${titleMap},
 			type = ${type});
 	}
@@ -113,11 +114,14 @@ definition {
 	}
 
 	macro assignSiteRoleToUser {
-		Variables.assertDefined(parameterList = "${groupName},${roleTitle},${userEmailAddress}");
+		Variables.assertDefined(parameterList = "${roleTitle},${userEmailAddress}");
 
-		var groupId = JSONUserSetter.setGroupId(
-			groupName = ${groupName},
-			parentGroupName = ${parentGroupName});
+		if (!(isSet(groupId))) {
+			var groupId = JSONUserSetter.setGroupId(
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName});
+		}
+
 		var roleId = JSONRoleSetter.setRoleId(name = ${roleTitle});
 		var userId = JSONRoleSetter.setUserId(userEmailAddress = ${userEmailAddress});
 
@@ -135,7 +139,6 @@ definition {
 		JSONRoleAPI._deleteRoleById(roleId = ${roleId});
 	}
 
-	@summary = "Gets all users that contains 'Test' and deletes them"
 	macro deleteTestRoles {
 		var rolesIds = JSONRoleAPI._searchRolesIds(roleName = "Test");
 

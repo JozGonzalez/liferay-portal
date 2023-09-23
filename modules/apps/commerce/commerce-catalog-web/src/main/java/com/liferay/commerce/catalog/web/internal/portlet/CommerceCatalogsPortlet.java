@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.catalog.web.internal.portlet;
 
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.catalog.web.internal.display.context.CommerceCatalogDisplayContext;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.inventory.method.CommerceInventoryMethodRegistry;
@@ -26,7 +18,7 @@ import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
@@ -81,7 +73,7 @@ public class CommerceCatalogsPortlet extends MVCPortlet {
 
 		CommerceCatalogDisplayContext commerceCatalogDisplayContext =
 			new CommerceCatalogDisplayContext(
-				_attachmentsConfiguration,
+				_accountEntryService, _attachmentsConfiguration,
 				_portal.getHttpServletRequest(renderRequest),
 				_commerceCatalogDefaultImage, _commerceCatalogService,
 				_commerceCatalogModelResourcePermission,
@@ -101,6 +93,9 @@ public class CommerceCatalogsPortlet extends MVCPortlet {
 		_attachmentsConfiguration = ConfigurableUtil.createConfigurable(
 			AttachmentsConfiguration.class, properties);
 	}
+
+	@Reference
+	private AccountEntryService _accountEntryService;
 
 	private volatile AttachmentsConfiguration _attachmentsConfiguration;
 

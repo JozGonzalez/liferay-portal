@@ -23,6 +23,17 @@ definition {
 				var api = "user-accounts/${userAccountId}/${relationshipName}/${customObjectEntryId}";
 			}
 		}
+		else if (isSet(nestedFieldsDepth)) {
+			if (!(isSet(longParameterValue))) {
+				var api = "user-accounts?nestedFieldsDepth=${nestedFieldsDepth}";
+			}
+			else if (isSet(fieldsValue)) {
+				var api = "user-accounts?${longParameterValue}\&nestedFieldsDepth=${nestedFieldsDepth}\&fields=${fieldsValue}";
+			}
+			else {
+				var api = "user-accounts?${longParameterValue}\&nestedFieldsDepth=${nestedFieldsDepth}";
+			}
+		}
 		else {
 			var api = "user-accounts";
 		}
@@ -35,6 +46,108 @@ definition {
 		''';
 
 		return ${curl};
+	}
+
+	macro _nUsersBodyAsNestedFieldToCreate {
+		Variables.assertDefined(parameterList = "${body},${nestedField},${numberOfRelatedUsers},${alternateName},${emailDomain},${familyName},${givenName}");
+
+		var size = ${numberOfRelatedUsers};
+
+		if (${oneToManyChild} == "true") {
+			var nestedUserBody = '''"${nestedField}": {''';
+		}
+		else {
+			var nestedUserBody = '''"${nestedField}": [''';
+		}
+
+		var i = 0;
+
+		while ((${i} != ${size}) && (maxIterations = "10")) {
+			var j = ${i} + 1;
+
+			var relatedUser = '''
+					"alternateName": "${alternateName}${j}",
+					"emailAddress": "${alternateName}${j}@${emailDomain}",
+					"familyName": "${familyName}${j}",
+					"givenName": "${givenName}${j}"
+				''';
+
+			if (${oneToManyChild} == "true") {
+				var nestedUserBody = StringUtil.add(${nestedUserBody}, "${relatedUser}}", "");
+			}
+			else {
+				if (${j} == ${size}) {
+					var nestedUserBody = StringUtil.add(${nestedUserBody}, "{${relatedUser}}]", "");
+				}
+				else {
+					var nestedUserBody = StringUtil.add(${nestedUserBody}, "{${relatedUser}},", "");
+				}
+			}
+
+			var i = ${i} + 1;
+		}
+
+		var body = StringUtil.add("${body},", ${nestedUserBody}, "");
+
+		return ${body};
+	}
+
+	macro _nUsersBodyAsNestedFieldToUpdate {
+		Variables.assertDefined(parameterList = "${body},${nestedField},${alternateName},${emailDomain},${familyName},${givenName},${userExternalReferenceCodes}");
+
+		if (${oneToManyChild} == "true") {
+			var nestedUserBody = '''"${nestedField}": {''';
+		}
+		else {
+			var nestedUserBody = '''"${nestedField}": [''';
+		}
+
+		var i = 0;
+		var userExternalReferenceCodes = ListUtil.newListFromString(${userExternalReferenceCodes});
+
+		var size = ListUtil.size(${userExternalReferenceCodes});
+
+		for (var externalReferenceCode : list ${userExternalReferenceCodes}) {
+			var j = ${i} + 1;
+
+			var relatedUser = '''
+				"alternateName": "${alternateName}${j}-update",
+				"emailAddress": "${alternateName}${j}-update@${emailDomain}",
+				"familyName": "${familyName}${j}-update",
+				"givenName": "${givenName}${j}-update",
+				"externalReferenceCode": "${externalReferenceCode}"
+			''';
+
+			if (${oneToManyChild} == "true") {
+				var nestedUserBody = StringUtil.add(${nestedUserBody}, "${relatedUser}}", "");
+			}
+			else {
+				if (${j} == ${size}) {
+					var nestedUserBody = StringUtil.add(${nestedUserBody}, "{${relatedUser}}]", "");
+				}
+				else {
+					var nestedUserBody = StringUtil.add(${nestedUserBody}, "{${relatedUser}},", "");
+				}
+			}
+
+			var i = ${i} + 1;
+		}
+
+		var body = StringUtil.add("${body},", ${nestedUserBody}, "");
+
+		return ${body};
+	}
+
+	macro assertCorrectUserAlternateNameInResponse {
+		Variables.assertDefined(parameterList = ${expectedNames});
+
+		var actualAlternateNames = UserAccountAPI.getUserFieldWithFilter(
+			filter = "alternateName%20ne%20%27test%27",
+			jsonPath = "$..alternateName");
+
+		TestUtils.assertEquals(
+			actual = ${actualAlternateNames},
+			expected = ${expectedNames});
 	}
 
 	macro assertResponseHasCorrectRelatedEntryName {
@@ -72,7 +185,39 @@ definition {
 		var body = '''"alternateName": "${alternateName}","emailAddress": "${emailAddress}","familyName": "${familyName}","givenName": "${givenName}"''';
 
 		if (isSet(fieldName) && isSet(fieldValue)) {
+			if (${dbType} == "Integer") {
+				var body = StringUtil.add(${body}, ",\"${fieldName}\": ${fieldValue}", "");
+			}
+			else {
+				var body = StringUtil.add("${body},", "\"${fieldName}\":\"${fieldValue}\"", "");
+			}
+		}
+
+		var curl = StringUtil.add(${curl}, "-d {${body}}", " ");
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+	macro createUserAccountAndRelatedObjects {
+		Variables.assertDefined(parameterList = "${alternateName},${emailAddress},${familyName},${givenName},${nestedField},${numberOfRelatedObjectEntries},${relatedEntryFieldName}");
+
+		var curl = UserAccountAPI._curlUserAccount(virtualHost = ${virtualHost});
+		var body = '''"alternateName": "${alternateName}","emailAddress": "${emailAddress}","familyName": "${familyName}","givenName": "${givenName}"''';
+
+		if (isSet(fieldName) && isSet(fieldValue)) {
 			var body = StringUtil.add("${body},", "\"${fieldName}\":\"${fieldValue}\"", "");
+		}
+
+		if (isSet(nestedField)) {
+			var body = CustomObjectAPI.nObjectEntryBodyAsNestedField(
+				body = ${body},
+				nestedField = ${nestedField},
+				numberOfRelatedObjectEntries = ${numberOfRelatedObjectEntries},
+				oneToManyChild = ${oneToManyChild},
+				relatedEntryExternalReferenceCode = ${relatedEntryExternalReferenceCode},
+				relatedEntryFieldName = ${relatedEntryFieldName});
 		}
 
 		var curl = StringUtil.add(${curl}, "-d {${body}}", " ");
@@ -163,6 +308,17 @@ definition {
 		return ${response};
 	}
 
+	macro getSystemObjectsWithNestedFieldAndNestedFieldsDepth {
+		var curl = UserAccountAPI._curlUserAccount(
+			fieldsValue = ${fieldsValue},
+			longParameterValue = ${longParameterValue},
+			nestedFieldsDepth = ${nestedFieldsDepth});
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
 	macro getUpdatedFieldOfUserAccountWithPatchRequest {
 		Variables.assertDefined(parameterList = "${fieldName},${updatedFieldValue}");
 
@@ -205,6 +361,53 @@ definition {
 		return ${valueOfField};
 	}
 
+	macro getUserFieldWithFilter {
+		Variables.assertDefined(parameterList = "${filter},${jsonPath}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/headless-admin-user/v1.0/user-accounts?filter='${filter}' \
+				-H accept: application/json \
+				-H Content-Type: application/json \
+				-u test@liferay.com:test \
+		''';
+
+		var fieldValue = JSONCurlUtil.get(${curl}, ${jsonPath});
+
+		return ${fieldValue};
+	}
+
+	macro partialUpdateUserAccountAndRelatedObjects {
+		Variables.assertDefined(parameterList = "${emailAddress},${nestedField},${numberOfRelatedObjectEntries},${relatedEntryFieldName},${userAccountId}");
+
+		var curl = UserAccountAPI._curlUserAccount(
+			userAccountId = ${userAccountId},
+			virtualHost = ${virtualHost});
+		var body = '''"emailAddress": "${emailAddress}"''';
+
+		if (isSet(fieldName) && isSet(fieldValue)) {
+			var body = StringUtil.add("${body},", "\"${fieldName}\":\"${fieldValue}\"", "");
+		}
+
+		if (isSet(nestedField)) {
+			var body = CustomObjectAPI.nObjectEntryBodyAsNestedField(
+				body = ${body},
+				nestedField = ${nestedField},
+				numberOfRelatedObjectEntries = ${numberOfRelatedObjectEntries},
+				oneToManyChild = ${oneToManyChild},
+				relatedEntryExternalReferenceCode = ${relatedEntryExternalReferenceCode},
+				relatedEntryFieldName = ${relatedEntryFieldName},
+				userAccountId = ${userAccountId});
+		}
+
+		var curl = StringUtil.add(${curl}, "-d {${body}}", " ");
+
+		var response = JSONCurlUtil.patch(${curl});
+
+		return ${response};
+	}
+
 	macro relateObjectEntries {
 		Variables.assertDefined(parameterList = "${userAccountId},${customObjectId},${relationshipName}");
 
@@ -225,6 +428,7 @@ definition {
 	macro setUpGlobalUserAccountId {
 		var response = UserAccountAPI.createUserAccount(
 			alternateName = ${alternateName},
+			dbType = ${dbType},
 			emailAddress = ${emailAddress},
 			familyName = ${familyName},
 			fieldName = ${fieldName},
@@ -272,6 +476,36 @@ definition {
 
 			return ${staticUserAccountId2};
 		}
+	}
+
+	macro updateUserAccountAndRelatedObjects {
+		Variables.assertDefined(parameterList = "${alternateName},${emailAddress},${familyName},${givenName},${nestedField},${numberOfRelatedObjectEntries},${relatedEntryFieldName},${userAccountId}");
+
+		var curl = UserAccountAPI._curlUserAccount(
+			userAccountId = ${userAccountId},
+			virtualHost = ${virtualHost});
+		var body = '''"alternateName": "${alternateName}","emailAddress": "${emailAddress}","familyName": "${familyName}","givenName": "${givenName}"''';
+
+		if (isSet(fieldName) && isSet(fieldValue)) {
+			var body = StringUtil.add("${body},", "\"${fieldName}\":\"${fieldValue}\"", "");
+		}
+
+		if (isSet(nestedField)) {
+			var body = CustomObjectAPI.nObjectEntryBodyAsNestedField(
+				body = ${body},
+				nestedField = ${nestedField},
+				numberOfRelatedObjectEntries = ${numberOfRelatedObjectEntries},
+				oneToManyChild = ${oneToManyChild},
+				relatedEntryExternalReferenceCode = ${relatedEntryExternalReferenceCode},
+				relatedEntryFieldName = ${relatedEntryFieldName},
+				userAccountId = ${userAccountId});
+		}
+
+		var curl = StringUtil.add(${curl}, "-d {${body}}", " ");
+
+		var response = JSONCurlUtil.put(${curl});
+
+		return ${response};
 	}
 
 }

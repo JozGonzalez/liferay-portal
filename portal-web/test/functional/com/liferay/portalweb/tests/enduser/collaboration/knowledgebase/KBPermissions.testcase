@@ -23,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -68,7 +68,7 @@ definition {
 	@priority = 4
 	@refactorneeded
 	test ViewSuggestionsWithPermissions {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}feature.flag.LPS-156421=true";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
@@ -131,9 +131,7 @@ definition {
 
 		KBArticle.openPageTreePanel(section = "Suggestions");
 
-		KBArticle.viewDefaultCP(
-			featureFlag = "true",
-			suggestions = "true");
+		KBArticle.viewDefaultCP(suggestions = "true");
 
 		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
 

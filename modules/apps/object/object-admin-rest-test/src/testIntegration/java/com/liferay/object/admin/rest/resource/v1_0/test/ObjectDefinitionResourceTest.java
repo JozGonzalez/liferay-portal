@@ -1,40 +1,46 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
+import com.liferay.object.admin.rest.client.dto.v1_0.Status;
 import com.liferay.object.admin.rest.client.pagination.Page;
+import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.client.problem.Problem;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
-import com.liferay.object.admin.rest.resource.v1_0.test.BaseObjectDefinitionResourceTestCase.GraphQLField;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFolderConstants;
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.language.LanguageResources;
+import com.liferay.portal.odata.entity.EntityField;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +48,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,9 +56,31 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
+@FeatureFlags(
+	{
+		"LPS-148856", "LPS-167253", "LPS-170122", "LPS-172017", "LPS-181663",
+		"LPS-187142"
+	}
+)
 @RunWith(Arquillian.class)
 public class ObjectDefinitionResourceTest
 	extends BaseObjectDefinitionResourceTestCase {
+
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+
+		_objectFolder1 = _objectFolderLocalService.addObjectFolder(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString());
+
+		_objectFolder2 = _objectFolderLocalService.addObjectFolder(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString());
+	}
 
 	@After
 	@Override
@@ -197,12 +226,102 @@ public class ObjectDefinitionResourceTest
 					objectDefinitionsJSONObject.getString("items"))));
 	}
 
+	@Override
 	@Test
-	public void testPutObjectDefinitionWithStorageType() throws Exception {
-		ObjectDefinition postObjectDefinition =
-			testPutObjectDefinition_addObjectDefinition();
+	public void testPostObjectDefinition() throws Exception {
+		super.testPostObjectDefinition();
 
 		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
+
+		Status status = new Status() {
+			{
+				code = WorkflowConstants.STATUS_APPROVED;
+				label = WorkflowConstants.getStatusLabel(
+					WorkflowConstants.STATUS_APPROVED);
+				label_i18n = _language.get(
+					LanguageResources.getResourceBundle(
+						LocaleUtil.getDefault()),
+					WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_APPROVED));
+			}
+		};
+
+		randomObjectDefinition.setStatus(status);
+
+		ObjectDefinition postObjectDefinition =
+			testPostObjectDefinition_addObjectDefinition(
+				randomObjectDefinition);
+
+		assertEquals(postObjectDefinition, randomObjectDefinition);
+		assertValid(postObjectDefinition);
+	}
+
+	@Override
+	@Test
+	public void testPutObjectDefinition() throws Exception {
+		super.testPutObjectDefinition();
+
+		// Account entry restricted
+
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
+
+		randomObjectDefinition.setSystem(false);
+
+		ObjectDefinition postObjectDefinition =
+			objectDefinitionResource.postObjectDefinition(
+				randomObjectDefinition);
+
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderAccountEntryObjectDefinition =
+				_objectDefinitionLocalService.fetchSystemObjectDefinition(
+					AccountEntry.class.getSimpleName());
+
+		_objectDefinitionLocalService.enableAccountEntryRestricted(
+			_objectRelationshipLocalService.addObjectRelationship(
+				TestPropsValues.getUserId(),
+				serviceBuilderAccountEntryObjectDefinition.
+					getObjectDefinitionId(),
+				postObjectDefinition.getId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				"a" + RandomTestUtil.randomString(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY));
+
+		postObjectDefinition = objectDefinitionResource.getObjectDefinition(
+			postObjectDefinition.getId());
+
+		Assert.assertTrue(postObjectDefinition.getAccountEntryRestricted());
+
+		String accountEntryRestrictedObjectFieldName =
+			postObjectDefinition.getAccountEntryRestrictedObjectFieldName();
+
+		ObjectDefinition accountEntryObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				serviceBuilderAccountEntryObjectDefinition.
+					getObjectDefinitionId());
+
+		accountEntryObjectDefinition.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
+		objectDefinitionResource.putObjectDefinition(
+			accountEntryObjectDefinition.getId(), accountEntryObjectDefinition);
+
+		postObjectDefinition = objectDefinitionResource.getObjectDefinition(
+			postObjectDefinition.getId());
+
+		Assert.assertTrue(postObjectDefinition.getAccountEntryRestricted());
+		Assert.assertEquals(
+			accountEntryRestrictedObjectFieldName,
+			postObjectDefinition.getAccountEntryRestrictedObjectFieldName());
+
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			postObjectDefinition.getId());
+
+		// Storage type
+
+		postObjectDefinition = testPutObjectDefinition_addObjectDefinition();
+
+		randomObjectDefinition = randomObjectDefinition();
 
 		randomObjectDefinition.setStorageType(
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT);
@@ -225,12 +344,12 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
-		return new String[] {"name"};
+		return new String[] {"name", "status"};
 	}
 
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
-		return new String[] {"dateCreated", "dateModified", "userId"};
+		return new String[] {"dateCreated", "dateModified", "label", "userId"};
 	}
 
 	@Override
@@ -243,12 +362,11 @@ public class ObjectDefinitionResourceTest
 		objectDefinition.setLabel(
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
-			objectDefinition.setModifiable((Boolean)null);
-		}
-
+		objectDefinition.setEnableLocalization(true);
+		objectDefinition.setModifiable(true);
 		objectDefinition.setName("O" + objectDefinition.getName());
+		objectDefinition.setObjectFolderExternalReferenceCode(
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_UNCATEGORIZED);
 		objectDefinition.setPluralLabel(
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
@@ -261,13 +379,29 @@ public class ObjectDefinitionResourceTest
 						indexed = false;
 						indexedAsKeyword = false;
 						label = Collections.singletonMap("en_US", "Column");
+						localized = !objectDefinition.getSystem();
 						name = StringUtil.randomId();
+						readOnly = ReadOnly.FALSE;
 						required = false;
 						system = false;
 					}
 				}
 			});
 		objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_COMPANY);
+		objectDefinition.setStatus(
+			new Status() {
+				{
+					code = WorkflowConstants.STATUS_DRAFT;
+					label = WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_DRAFT);
+					label_i18n = _language.get(
+						LanguageResources.getResourceBundle(
+							LocaleUtil.getDefault()),
+						WorkflowConstants.getStatusLabel(
+							WorkflowConstants.STATUS_DRAFT));
+				}
+			});
+		objectDefinition.setSystem(false);
 
 		if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 			objectDefinition.setStorageType(StringPool.BLANK);
@@ -307,6 +441,45 @@ public class ObjectDefinitionResourceTest
 	}
 
 	@Override
+	protected void testGetObjectDefinitionsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		ObjectDefinition objectDefinition1 = randomObjectDefinition();
+
+		objectDefinition1.setObjectFolderExternalReferenceCode(
+			_objectFolder1.getExternalReferenceCode());
+
+		objectDefinition1 = testGetObjectDefinitionsPage_addObjectDefinition(
+			objectDefinition1);
+
+		ObjectDefinition objectDefinition2 = randomObjectDefinition();
+
+		objectDefinition2.setObjectFolderExternalReferenceCode(
+			_objectFolder2.getExternalReferenceCode());
+
+		testGetObjectDefinitionsPage_addObjectDefinition(objectDefinition2);
+
+		for (EntityField entityField : entityFields) {
+			Page<ObjectDefinition> page =
+				objectDefinitionResource.getObjectDefinitionsPage(
+					null, null,
+					getFilterString(entityField, operator, objectDefinition1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(objectDefinition1),
+				(List<ObjectDefinition>)page.getItems());
+		}
+	}
+
+	@Override
 	protected ObjectDefinition testGraphQLObjectDefinition_addObjectDefinition()
 		throws Exception {
 
@@ -330,10 +503,11 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected ObjectDefinition
-			testPostObjectDefinitionPublish_addObjectDefinition()
+			testPostObjectDefinitionPublish_addObjectDefinition(
+				ObjectDefinition objectDefinition)
 		throws Exception {
 
-		return _addObjectDefinition(randomObjectDefinition());
+		return _addObjectDefinition(objectDefinition);
 	}
 
 	@Override
@@ -364,9 +538,21 @@ public class ObjectDefinitionResourceTest
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectDefinitionResourceTest.class);
 
+	@Inject
+	private Language _language;
+
 	private ObjectDefinition _objectDefinition;
 
 	@Inject
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	private ObjectFolder _objectFolder1;
+	private ObjectFolder _objectFolder2;
+
+	@Inject
+	private ObjectFolderLocalService _objectFolderLocalService;
+
+	@Inject
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

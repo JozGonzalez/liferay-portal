@@ -27,7 +27,7 @@ definition {
 			var siteName = "Site Name";
 		}
 
-		JSONGroup.addGroup(groupName = ${siteName});
+		HeadlessSite.addSite(siteName = ${siteName});
 
 		if (!(isSet(layoutName))) {
 			var layoutName = "AC Page";
@@ -252,7 +252,7 @@ definition {
 
 		var actual = JSONUtil.getWithJSONPath("[${postDataText}]", "$..[?(@['applicationId'] == '${applicationId}' && @['eventId'] == '${eventId}')]['eventId']");
 
-		TestUtils.assertEquals(
+		TestUtils.assertPartialEquals(
 			actual = ${actual},
 			expected = ${eventId});
 	}
@@ -301,7 +301,6 @@ definition {
 			expected = "");
 	}
 
-	@summary = "Asserts a list of items by the name"
 	macro assertItemsName {
 		for (var key_itemName : list ${itemList}) {
 			AssertElementPresent(
@@ -310,7 +309,6 @@ definition {
 		}
 	}
 
-	@summary = "Asserts an element not present in the list of items by the name"
 	macro assertItemsNameNotPresent {
 		for (var itemName : list ${itemList}) {
 			AssertElementNotPresent(
@@ -455,9 +453,7 @@ definition {
 	}
 
 	macro closeAllSessions {
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "clear-redis");
+		AntCommands.runCommand("build-test.xml", "clear-redis");
 
 		var analyticsCloudAsahCuratorBatchURL = PropsUtil.get("analytics.cloud.asah.curator.batch.url");
 
@@ -470,7 +466,6 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${cleanCurl});
 	}
 
-	@summary = "This macro close all open AC sessions. It needs a 30 second pause which is the time required for the command to be executed. For more information about pause see LRAC-9518"
 	macro closeAllSessionsAndWait {
 		ACUtils.closeAllSessions();
 
@@ -633,7 +628,6 @@ definition {
 		ACUtils.clearSearchBar();
 	}
 
-	@summary = "Dismiss Onboarding Modal if it appears when launching AC"
 	macro dismissOnboardingModal {
 		if (IsElementPresent(locator1 = "ACSettings#MODAL_SCREEN")) {
 			Click(locator1 = "ACSettings#CLOSE_ONBOARDING_MODAL");
@@ -745,6 +739,12 @@ definition {
 			var emailAddress = "test@liferay.com";
 		}
 
+		if ((IsElementNotPresent(locator1 = "ACLogin#EMAIL_LOGIN_FIELD")) || (IsElementNotPresent(locator1 = "ACWorkspace#FARO_DEMO_WORKSPACE"))) {
+			Refresh();
+
+			WaitForPageLoad();
+		}
+
 		if (IsElementPresent(locator1 = "ACLogin#EMAIL_LOGIN_FIELD")) {
 			if (!(isSet(password))) {
 				ACLogin.loginAs(emailAddress = ${emailAddress});
@@ -792,7 +792,6 @@ definition {
 		Pause(locator1 = 5000);
 	}
 
-	@summary = "This macro access a page/document"
 	macro navigateToSitePage {
 		for (var documentTitle : list ${documentTitleList}) {
 			Navigator.gotoSitePage(
@@ -849,7 +848,6 @@ definition {
 		}
 	}
 
-	@summary = "This macro access a page/document with different users. Pause is necessary because poshi logs in from one user to another very quickly. For more information about pause see LRAC-9514"
 	macro navigateToSitePageWithUser {
 		for (var email : list ${emailList}) {
 			User.logoutAndLoginPG(userLoginEmailAddress = ${email});
@@ -906,9 +904,7 @@ definition {
 	macro restartDockerContainer {
 		var containerName = ${containerName};
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "restart-docker-container -Ddocker.container=${containerName}");
+		AntCommands.runCommand("build-test.xml", "restart-docker-container -Ddocker.container=${containerName}");
 	}
 
 	macro saveButton {
@@ -966,13 +962,14 @@ definition {
 		var localStorageItem = selenium.getEval(${javaScript});
 	}
 
-	macro tearDownAC {
-		ACUtils.launchAC();
+	//macro tearDownAC {
 
-		ACSettings.deleteAllProperties();
+	// // It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
-		ACSettings.deleteAllDataSource();
-	}
+	//	ACUtils.launchAC();
+	//	ACSettings.deleteAllProperties();
+	//	ACSettings.deleteAllDataSource();
+	//}
 
 	macro tearDownCommerce {
 		JSONUser.tearDownNonAdminUsers();
@@ -1136,6 +1133,8 @@ definition {
 	}
 
 	macro viewResultsMessage {
+		WaitForElementPresent(locator1 = "ACUtils#RESULT_MESSAGE");
+
 		AssertTextEquals(
 			locator1 = "ACUtils#RESULT_MESSAGE",
 			value1 = ${results});

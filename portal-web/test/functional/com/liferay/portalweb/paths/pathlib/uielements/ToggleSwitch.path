@@ -31,6 +31,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_TOGGLE_SWITCH_INDEX</td>
+	<td>xpath=(//label[(contains(.,'${key_toggleSwitchLabel}')) or (contains(@for,'${key_toggleSwitchLabel}'))]//input[not(@disabled)])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_TOGGLE_SWITCH_IN_FIELDSET</td>
 	<td>//legend[normalize-space()='${key_fieldsetLabel}']//following-sibling::div//label[contains(.,'${key_fieldLabel}')]//input[contains(@type,'checkbox')]</td>
 	<td></td>
@@ -73,6 +78,11 @@
 <tr>
 	<td>ENABLE_SPECIFIC_TOGGLE_SWITCH</td>
 	<td>//h4[contains(.,"${key_name}")]//span[contains(@id,'toggle-switch')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLE_BETA_TOGGLE_SWITCH</td>
+	<td>//*[@id="${key_featureFlag}-toggle"]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util;
@@ -63,11 +54,13 @@ public class TensorFlowProcessHolder {
 	}
 
 	public TensorFlowProcessHolder(
-			ProcessExecutor processExecutor, Bundle bundle)
+			Bundle bundle, ProcessExecutor processExecutor,
+			TensorFlowDownloadHelper tensorFlowDownloadHelper)
 		throws Exception {
 
-		_processExecutor = processExecutor;
 		_bundle = bundle;
+		_processExecutor = processExecutor;
+		_tensorFlowDownloadHelper = tensorFlowDownloadHelper;
 
 		_tensorFlowWorkDir = bundle.getDataFile("tensorflow-workdir");
 
@@ -132,10 +125,10 @@ public class TensorFlowProcessHolder {
 		}
 
 		try (InputStream inputStream =
-				TensorFlowDownloadUtil.getNativeLibraryInputStream()) {
+				_tensorFlowDownloadHelper.getNativeLibraryInputStream()) {
 
 			Path targetPath = tempPath.resolve(
-				TensorFlowDownloadUtil.NATIVE_LIBRARY_FILE_NAME);
+				TensorFlowDownloadHelper.NATIVE_LIBRARY_FILE_NAME);
 
 			sb.append(targetPath);
 
@@ -240,7 +233,7 @@ public class TensorFlowProcessHolder {
 
 			Future<String> future = processChannel.write(
 				new InitializeProcessCallable(
-					TensorFlowDownloadUtil.getGraphBytes()));
+					_tensorFlowDownloadHelper.getGraphBytes()));
 
 			future.get();
 
@@ -271,6 +264,7 @@ public class TensorFlowProcessHolder {
 		_processChannelDCLSingleton = new DCLSingleton<>();
 	private ProcessConfig _processConfig;
 	private final ProcessExecutor _processExecutor;
+	private final TensorFlowDownloadHelper _tensorFlowDownloadHelper;
 	private final File _tensorFlowWorkDir;
 
 }

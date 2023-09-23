@@ -55,13 +55,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -72,8 +74,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8523 | Test Summary: Assert segment membership list shows all known individuals"
 	@priority = 4
 	test AssertSegmentMembershipListShowsAllKnownIndividuals {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsMembership#AssertSegmentMembershipListShowsAllKnownIndividuals";
+		property test.run.type = "single";
 
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
 		var nameList = "user1 user1,user2 user2,user3 user3";
@@ -125,8 +126,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8512 | Test Summary: Segment membership list is searchable"
 	@priority = 5
 	test CanSearchMembershipList {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsMembership#CanSearchMembershipList";
+		property test.run.type = "single";
 
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
 		var nameList = "user1 user1,user2 user2,user3 user3";
@@ -180,10 +180,14 @@ definition {
 	}
 
 	@description = "Bug: LRAC-8091 | Automation ID: LRAC-10582 | Test Summary: Dynamic segment is updating membership number"
+	@ignore = "true"
 	@priority = 4
 	test CanUpdateNumberOfMembersForDynamicSegment {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsMembership#CanUpdateNumberOfMembersForDynamicSegment";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		var nameList1 = "user2 user2,user3 user3";
 		var nameList2 = "user1 user1,user2 user2";
@@ -344,8 +348,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8513 | Test Summary: Order the Segment Profile Membership List"
 	@priority = 3
 	test OrderSegmentProfileMembershipList {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsMembership#OrderSegmentProfileMembershipList";
+		property test.run.type = "single";
 
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
 		var nameList = "user1 user1,user2 user2,user3 user3";
@@ -427,8 +430,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8519 | Test Summary: Search a Dynamic Segment's Membership Preview Modal"
 	@priority = 3
 	test SearchDynamicSegmentsMembershipPreviewModal {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsMembership#SearchDynamicSegmentsMembershipPreviewModal";
+		property test.run.type = "single";
 
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
 		var nameList = "user1 user1,user2 user2,user3 user3";
@@ -463,11 +465,9 @@ definition {
 
 			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
 
-			ACSegments.addSegmentField(segmentField = "fullName");
+			ACSegments.addSegmentField(segmentField = "givenName");
 
-			ACSegments.editFormControlCriterion(
-				criterionName = "fullName",
-				option = "is unknown");
+			ACSegments.selectOperator(operator = "is unknown");
 		}
 
 		task ("View members of preview segment") {

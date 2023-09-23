@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.login.web.internal.portlet.action;
@@ -18,6 +9,7 @@ import com.liferay.captcha.configuration.CaptchaConfiguration;
 import com.liferay.captcha.util.CaptchaUtil;
 import com.liferay.login.web.constants.LoginPortletKeys;
 import com.liferay.login.web.internal.portlet.util.LoginUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.captcha.CaptchaConfigurationException;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
@@ -25,7 +17,6 @@ import com.liferay.portal.kernel.exception.RequiredReminderQueryException;
 import com.liferay.portal.kernel.exception.SendPasswordException;
 import com.liferay.portal.kernel.exception.UserActiveException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
-import com.liferay.portal.kernel.exception.UserLockoutException;
 import com.liferay.portal.kernel.exception.UserReminderQueryException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -33,7 +24,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -122,8 +112,7 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 			else if (exception instanceof NoSuchUserException ||
 					 exception instanceof RequiredReminderQueryException ||
 					 exception instanceof SendPasswordException ||
-					 exception instanceof UserActiveException ||
-					 exception instanceof UserLockoutException) {
+					 exception instanceof UserActiveException) {
 
 				if (PropsValues.LOGIN_SECURE_FORGOT_PASSWORD) {
 					SessionMessages.add(
@@ -266,8 +255,6 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 					"Inactive user " + user.getUuid());
 			}
 
-			_userLocalService.checkLockout(user);
-
 			return user;
 		}
 		catch (Exception exception) {
@@ -284,26 +271,25 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		User defaultUser = _userLocalService.getDefaultUser(
+		User guestUser = _userLocalService.getGuestUser(
 			themeDisplay.getCompanyId());
 
 		Set<String> reminderQueryQuestions =
-			defaultUser.getReminderQueryQuestions();
+			guestUser.getReminderQueryQuestions();
 
 		if (!reminderQueryQuestions.isEmpty()) {
 			Iterator<String> iterator = reminderQueryQuestions.iterator();
 
-			defaultUser.setReminderQueryQuestion(iterator.next());
+			guestUser.setReminderQueryQuestion(iterator.next());
 		}
 		else {
-			defaultUser.setReminderQueryQuestion(
+			guestUser.setReminderQueryQuestion(
 				"what-is-your-library-card-number");
 		}
 
-		defaultUser.setReminderQueryAnswer(
-			defaultUser.getReminderQueryQuestion());
+		guestUser.setReminderQueryAnswer(guestUser.getReminderQueryQuestion());
 
-		return defaultUser;
+		return guestUser;
 	}
 
 	private void _sendPassword(
@@ -316,7 +302,7 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 				user.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_ENABLED,
 				PropsValues.USERS_REMINDER_QUERIES_ENABLED)) {
 
-			if (user.isDefaultUser()) {
+			if (user.isGuestUser()) {
 				throw new UserReminderQueryException(
 					"Reminder query answer does not match answer");
 			}
@@ -342,7 +328,7 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 
-		if (user.isDefaultUser()) {
+		if (user.isGuestUser()) {
 			SessionMessages.add(
 				_portal.getHttpServletRequest(actionRequest),
 				"forgotPasswordSent");

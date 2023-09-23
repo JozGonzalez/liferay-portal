@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.theme.minium.full.site.initializer.internal.importer;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.machine.learning.forecast.AssetCategoryCommerceMLForecast;
 import com.liferay.commerce.machine.learning.forecast.AssetCategoryCommerceMLForecastManager;
 import com.liferay.commerce.machine.learning.forecast.CommerceAccountCommerceMLForecast;
@@ -169,12 +160,12 @@ public class CommerceMLForecastImporter {
 
 		String accountName = jsonObject.getString("account");
 
-		CommerceAccount commerceAccount =
-			_commerceAccountLocalService.fetchByExternalReferenceCode(
-				serviceContext.getCompanyId(),
-				_friendlyURLNormalizer.normalize(accountName));
+		AccountEntry accountEntry =
+			_accountEntryLocalService.fetchAccountEntryByExternalReferenceCode(
+				_friendlyURLNormalizer.normalize(accountName),
+				serviceContext.getCompanyId());
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("No commerce account with name: " + accountName);
 			}
@@ -183,7 +174,7 @@ public class CommerceMLForecastImporter {
 		}
 
 		assetCategoryCommerceMLForecast.setCommerceAccountId(
-			commerceAccount.getCommerceAccountId());
+			accountEntry.getAccountEntryId());
 
 		_assetCategoryCommerceMLForecastManager.
 			addAssetCategoryCommerceMLForecast(assetCategoryCommerceMLForecast);
@@ -201,12 +192,12 @@ public class CommerceMLForecastImporter {
 
 		String accountName = jsonObject.getString("account");
 
-		CommerceAccount commerceAccount =
-			_commerceAccountLocalService.fetchByExternalReferenceCode(
-				serviceContext.getCompanyId(),
-				_friendlyURLNormalizer.normalize(accountName));
+		AccountEntry accountEntry =
+			_accountEntryLocalService.fetchAccountEntryByExternalReferenceCode(
+				_friendlyURLNormalizer.normalize(accountName),
+				serviceContext.getCompanyId());
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("No commerce account with name: " + accountName);
 			}
@@ -215,7 +206,7 @@ public class CommerceMLForecastImporter {
 		}
 
 		commerceAccountCommerceMLForecast.setCommerceAccountId(
-			commerceAccount.getCommerceAccountId());
+			accountEntry.getAccountEntryId());
 
 		_commerceAccountCommerceMLForecastManager.
 			addCommerceAccountCommerceMLForecast(
@@ -255,6 +246,9 @@ public class CommerceMLForecastImporter {
 		CommerceMLForecastImporter.class);
 
 	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
 	private AssetCategoryCommerceMLForecastManager
 		_assetCategoryCommerceMLForecastManager;
 
@@ -267,9 +261,6 @@ public class CommerceMLForecastImporter {
 	@Reference
 	private CommerceAccountCommerceMLForecastManager
 		_commerceAccountCommerceMLForecastManager;
-
-	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

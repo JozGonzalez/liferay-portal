@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.search.web.internal.portlet.shared.search;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.search.web.internal.util.CPSpecificationOptionFacetsUtil;
@@ -26,6 +17,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.search.facet.SerializableFacet;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -41,6 +33,7 @@ import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -49,7 +42,6 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSe
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -81,43 +73,47 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 			SerializableFacet serializableFacet = new SerializableFacet(
 				CPField.SPECIFICATION_NAMES, searchContext);
 
-			Optional<String[]> parameterValuesOptional =
-				portletSharedSearchSettings.getParameterValues71(
+			String[] parameterValues =
+				portletSharedSearchSettings.getParameterValues(
 					CPField.SPECIFICATION_NAMES);
 
-			if (parameterValuesOptional.isPresent()) {
-				serializableFacet.select(parameterValuesOptional.get());
+			if (ArrayUtil.isNotEmpty(parameterValues)) {
+				serializableFacet.select(parameterValues);
 
 				searchContext.setAttribute(
-					CPField.SPECIFICATION_NAMES, parameterValuesOptional.get());
+					CPField.SPECIFICATION_NAMES, parameterValues);
 			}
 
-			portletSharedSearchSettings.addFacet(serializableFacet);
-
-			Optional<PortletPreferences> portletPreferencesOptional =
-				portletSharedSearchSettings.getPortletPreferencesOptional();
+			PortletPreferences portletPreferences =
+				portletSharedSearchSettings.getPortletPreferences();
 
 			int frequencyThreshold = 1;
 			int maxTerms = 10;
 
-			if (portletPreferencesOptional.isPresent()) {
-				PortletPreferences portletPreferences =
-					portletPreferencesOptional.get();
-
+			if (portletPreferences != null) {
 				frequencyThreshold = GetterUtil.getInteger(
 					portletPreferences.getValue("frequencyThreshold", null), 1);
 				maxTerms = GetterUtil.getInteger(
 					portletPreferences.getValue("maxTerms", null), 10);
 			}
 
-			for (Facet facet : getFacets(renderRequest)) {
+			serializableFacet.setFacetConfiguration(
+				_buildFacetConfiguration(
+					serializableFacet.getFieldName(), frequencyThreshold,
+					maxTerms));
+
+			portletSharedSearchSettings.addFacet(serializableFacet);
+
+			for (Facet facet :
+					getFacets(frequencyThreshold, maxTerms, renderRequest)) {
+
 				String cpSpecificationOptionKey =
 					CPSpecificationOptionFacetsUtil.
 						getCPSpecificationOptionKeyFromIndexFieldName(
 							facet.getFieldName());
 
-				parameterValuesOptional =
-					portletSharedSearchSettings.getParameterValues71(
+				parameterValues =
+					portletSharedSearchSettings.getParameterValues(
 						cpSpecificationOptionKey);
 
 				serializableFacet = new SerializableFacet(
@@ -125,13 +121,13 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 
 				serializableFacet.setFacetConfiguration(
 					_buildFacetConfiguration(
-						facet, frequencyThreshold, maxTerms));
+						facet.getFieldName(), frequencyThreshold, maxTerms));
 
-				if (parameterValuesOptional.isPresent()) {
-					serializableFacet.select(parameterValuesOptional.get());
+				if (ArrayUtil.isNotEmpty(parameterValues)) {
+					serializableFacet.select(parameterValues);
 
 					searchContext.setAttribute(
-						facet.getFieldName(), parameterValuesOptional.get());
+						facet.getFieldName(), parameterValues);
 				}
 
 				portletSharedSearchSettings.addFacet(serializableFacet);
@@ -170,16 +166,16 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 			searchContext.setAttribute(
 				"commerceChannelGroupId", commerceChannel.getGroupId());
 
-			CommerceAccount commerceAccount =
-				_commerceAccountHelper.getCurrentCommerceAccount(
+			AccountEntry accountEntry =
+				_commerceAccountHelper.getCurrentAccountEntry(
 					commerceChannel.getGroupId(),
 					_portal.getHttpServletRequest(renderRequest));
 
-			if (commerceAccount != null) {
+			if (accountEntry != null) {
 				searchContext.setAttribute(
 					"commerceAccountGroupIds",
-					_commerceAccountHelper.getCommerceAccountGroupIds(
-						commerceAccount.getCommerceAccountId()));
+					_accountGroupLocalService.getAccountGroupIds(
+						accountEntry.getAccountEntryId()));
 			}
 		}
 
@@ -188,7 +184,8 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 		return searchContext;
 	}
 
-	protected List<Facet> getFacets(RenderRequest renderRequest)
+	protected List<Facet> getFacets(
+			int frequencyThreshold, int maxTerms, RenderRequest renderRequest)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
@@ -208,14 +205,17 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 
 		Facet facet = new SimpleFacet(searchContext);
 
-		facet.setFieldName(CPField.SPECIFICATION_NAMES);
+		String fieldName = CPField.SPECIFICATION_NAMES;
+
+		facet.setFacetConfiguration(
+			_buildFacetConfiguration(fieldName, frequencyThreshold, maxTerms));
+		facet.setFieldName(fieldName);
 
 		searchContext.addFacet(facet);
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 
-		queryConfig.addSelectedFieldNames(CPField.SPECIFICATION_NAMES);
-
+		queryConfig.addSelectedFieldNames(fieldName);
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
 
@@ -247,11 +247,11 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 	}
 
 	private FacetConfiguration _buildFacetConfiguration(
-		Facet facet, int frequencyThreshold, int maxTerms) {
+		String fieldName, int frequencyThreshold, int maxTerms) {
 
 		FacetConfiguration facetConfiguration = new FacetConfiguration();
 
-		facetConfiguration.setFieldName(facet.getFieldName());
+		facetConfiguration.setFieldName(fieldName);
 		facetConfiguration.setLabel("any-category");
 		facetConfiguration.setOrder("OrderHitsDesc");
 		facetConfiguration.setStatic(false);
@@ -270,6 +270,9 @@ public class CPSpecificationOptionFacetsPortletSharedSearchContributor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPSpecificationOptionFacetsPortletSharedSearchContributor.class);
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;

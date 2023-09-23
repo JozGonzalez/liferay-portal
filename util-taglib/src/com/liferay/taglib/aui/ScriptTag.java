@@ -1,26 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.taglib.aui;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.servlet.FileAvailabilityUtil;
 import com.liferay.portal.kernel.servlet.taglib.BodyContentWrapper;
 import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.base.BaseScriptTag;
 import com.liferay.taglib.util.PortalIncludeUtil;
@@ -114,14 +103,12 @@ public class ScriptTag extends BaseScriptTag {
 				portletId = portlet.getPortletId();
 			}
 
-			String load = getLoad();
 			String require = getRequire();
 			String use = getUse();
 
-			if ((use != null) && ((load != null) || (require != null))) {
+			if ((use != null) && (require != null)) {
 				throw new JspException(
-					"Attribute \"use\" cannot be used with \"load\" or " +
-						"\"require\"");
+					"Attribute \"use\" cannot be used with \"require\"");
 			}
 
 			StringBundler bodyContentSB = getBodyContentAsStringBundler();
@@ -138,65 +125,6 @@ public class ScriptTag extends BaseScriptTag {
 
 				if ((require == null) && (use == null)) {
 					sb.append("})();");
-				}
-
-				bodyContentSB = sb;
-			}
-
-			if (load != null) {
-				StringBundler sb = null;
-
-				String[] modulesAndVariables = StringUtil.split(load);
-
-				if (modulesAndVariables.length == 1) {
-					sb = new StringBundler(9);
-
-					sb.append("(function() {window[Symbol.for('");
-					sb.append("__LIFERAY_WEBPACK_GET_MODULE__')]('");
-
-					String moduleAndVariable = modulesAndVariables[0];
-
-					String[] parts = StringUtil.split(
-						moduleAndVariable, " as ");
-
-					sb.append(parts[0]);
-
-					sb.append("').then((");
-					sb.append(parts[1]);
-					sb.append(") => {");
-					sb.append(bodyContentSB);
-					sb.append("});})();");
-				}
-				else {
-					sb = new StringBundler(
-						6 + (5 * modulesAndVariables.length));
-
-					sb.append("(function() {Promise.all([");
-
-					for (String moduleAndVariable : modulesAndVariables) {
-						String[] parts = StringUtil.split(
-							moduleAndVariable, " as ");
-
-						sb.append(StringPool.APOSTROPHE);
-						sb.append(parts[0]);
-						sb.append("', ");
-					}
-
-					sb.append("].map(window[Symbol.for('");
-					sb.append("__LIFERAY_WEBPACK_GET_MODULE__')])).then(([");
-
-					for (String moduleAndVariable : modulesAndVariables) {
-						String[] parts = StringUtil.split(
-							moduleAndVariable, " as ");
-
-						sb.append(parts[1]);
-
-						sb.append(StringPool.COMMA);
-					}
-
-					sb.append("]) => {");
-					sb.append(bodyContentSB);
-					sb.append("});})();");
 				}
 
 				bodyContentSB = sb;

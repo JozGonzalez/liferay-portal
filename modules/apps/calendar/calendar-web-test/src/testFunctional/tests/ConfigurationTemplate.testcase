@@ -10,48 +10,49 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
-		TestCase.setUpPortalInstance();
+		var portalURL = PropsUtil.get("portal.url");
 
-		User.firstLoginPG();
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+			User.firstLoginPG();
+		}
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = "Test Site Name");
+		}
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		task ("Add a content page and configure it") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Calendar Page");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
+			JSONLayout.updateLayoutTemplateOfPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Calendar Page",
+				layoutTemplate = "1 Column");
+		}
 
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		task ("Add a calendar widget") {
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Calendar Page",
+				widgetName = "Calendar");
+		}
+
+		task ("Navigate to page") {
+			Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name/calendar-page");
+		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Navigator.gotoPage(pageName = "Calendar Page");
-
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
-
-			CalendarConfiguration.tearDown();
-
-			PagesAdmin.tearDownCP();
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
 
@@ -116,8 +117,6 @@ definition {
 	@description = "LRQA-71891 - Verify that the user can filter by Name"
 	@priority = 2
 	test CanFilterByTemplateName {
-		property portal.upstream = "quarantine";
-
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",
 			portletOption = "Configuration Templates");
@@ -134,7 +133,7 @@ definition {
 
 		IFrame.selectModalFrame();
 
-		ManagementBar.setFilterAndOrder(orderBy = "Name");
+		ManagementBar.viewFilterAndOrderSelectedItem(menuItem = "Name");
 
 		ConfigurationTemplate.viewOrderConfigurationsTemplate(tableOrder = "First Configuration Templates Name,Second Configuration Templates Name");
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal;
@@ -21,6 +12,7 @@ import com.liferay.portal.kernel.configuration.ConfigurationFactory;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -39,14 +31,15 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.constants.SamlProviderConfigurationKeys;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBindingProvider;
-import com.liferay.saml.opensaml.integration.internal.bootstrap.OpenSamlBootstrap;
 import com.liferay.saml.opensaml.integration.internal.credential.FileSystemKeyStoreManagerImpl;
 import com.liferay.saml.opensaml.integration.internal.credential.KeyStoreCredentialResolver;
 import com.liferay.saml.opensaml.integration.internal.identifier.SamlIdentifierGeneratorStrategyFactory;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataGeneratorUtil;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManagerImpl;
+import com.liferay.saml.opensaml.integration.internal.provider.CachingChainingMetadataResolver;
 import com.liferay.saml.opensaml.integration.internal.servlet.profile.IdentifierGenerationStrategyFactory;
-import com.liferay.saml.opensaml.integration.internal.velocity.VelocityEngineFactory;
+import com.liferay.saml.opensaml.integration.internal.transport.HttpClientFactory;
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.persistence.model.SamlPeerBinding;
 import com.liferay.saml.persistence.model.impl.SamlPeerBindingImpl;
 import com.liferay.saml.persistence.service.SamlPeerBindingLocalService;
@@ -93,6 +86,8 @@ import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.credential.Credential;
 
+import org.osgi.framework.BundleContext;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
@@ -104,7 +99,7 @@ public abstract class BaseSamlTestCase {
 	public void setUp() throws Exception {
 		_setupProps();
 
-		OpenSamlBootstrap.bootstrap();
+		Class.forName(ConfigurationServiceBootstrapUtil.class.getName());
 
 		_setupConfiguration();
 		_setupIdentifiers();
@@ -638,10 +633,6 @@ public abstract class BaseSamlTestCase {
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_localEntityManager", credentialResolver);
 
-		metadataManagerImpl.setMetadataResolver(new MockMetadataResolver());
-
-		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_parserPool", parserPool);
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_portal", portal);
 		ReflectionTestUtil.setFieldValue(
@@ -649,7 +640,20 @@ public abstract class BaseSamlTestCase {
 			samlProviderConfigurationHelper);
 
 		ReflectionTestUtil.invoke(
-			metadataManagerImpl, "activate", new Class<?>[0]);
+			metadataManagerImpl, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
+
+		ReflectionTestUtil.invoke(
+			metadataManagerImpl.getMetadataResolver(), "doDestroy",
+			new Class<?>[0]);
+
+		CachingChainingMetadataResolver cachingChainingMetadataResolver =
+			(CachingChainingMetadataResolver)
+				metadataManagerImpl.getMetadataResolver();
+
+		cachingChainingMetadataResolver.addMetadataResolver(
+			new MockMetadataResolver());
 	}
 
 	private void _setupParserPool() {
@@ -744,28 +748,18 @@ public abstract class BaseSamlTestCase {
 	}
 
 	private void _setupSamlBindings() {
-		VelocityEngineFactory velocityEngineFactory =
-			new VelocityEngineFactory();
-
-		Thread currentThread = Thread.currentThread();
-
-		ReflectionTestUtil.setFieldValue(
-			velocityEngineFactory, "_velocityEngine",
-			velocityEngineFactory.getVelocityEngine(
-				currentThread.getContextClassLoader()));
-
 		samlBindingProvider = new SamlBindingProvider();
 
 		ReflectionTestUtil.setFieldValue(
-			samlBindingProvider, "_httpClient", httpClient);
-		ReflectionTestUtil.setFieldValue(
-			samlBindingProvider, "_parserPool", parserPool);
-		ReflectionTestUtil.setFieldValue(
-			samlBindingProvider, "_velocityEngineFactory",
-			velocityEngineFactory);
+			samlBindingProvider, "_httpClientFactory",
+			new HttpClientFactory() {
 
-		ReflectionTestUtil.invoke(
-			samlBindingProvider, "activate", new Class<?>[0]);
+				@Override
+				public HttpClient getHttpClient() {
+					return httpClient;
+				}
+
+			});
 	}
 
 	private void _setupSamlPeerBindingsLocalService() throws Exception {

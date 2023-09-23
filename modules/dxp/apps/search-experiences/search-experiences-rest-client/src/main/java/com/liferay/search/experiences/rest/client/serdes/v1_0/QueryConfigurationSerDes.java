@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.client.serdes.v1_0;
@@ -23,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -158,14 +148,18 @@ public class QueryConfigurationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "queryEntries")) {
 				if (jsonParserFieldValue != null) {
-					queryConfiguration.setQueryEntries(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> QueryEntrySerDes.toDTO((String)object)
-						).toArray(
-							size -> new QueryEntry[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					QueryEntry[] queryEntriesArray =
+						new QueryEntry[jsonParserFieldValues.length];
+
+					for (int i = 0; i < queryEntriesArray.length; i++) {
+						queryEntriesArray[i] = QueryEntrySerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					queryConfiguration.setQueryEntries(queryEntriesArray);
 				}
 			}
 		}

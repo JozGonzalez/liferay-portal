@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
@@ -45,7 +36,7 @@ const TERTIARY_TAB = (
 
 const TABS_ACTIVE_BAR_COMPONENTS = [
 	{
-		className: 'nav-underline nav-active-bar-top',
+		className: 'nav-tabs nav-active-bar-top',
 		type: 'underline',
 	},
 	{
@@ -61,7 +52,7 @@ const TABS_ACTIVE_BAR_COMPONENTS = [
 
 const TABS_DISABLED_COMPONENTS = [
 	{
-		className: 'nav-underline',
+		className: 'nav-tabs',
 		disabled: true,
 	},
 	{
@@ -81,7 +72,7 @@ const TABS_DISABLED_COMPONENTS = [
 ];
 
 const TABS_COMPONENTS = [
-	{className: 'nav-underline'},
+	{className: 'nav-tabs'},
 	{className: 'nav-secondary'},
 	{
 		child: TERTIARY_TAB,
@@ -91,8 +82,8 @@ const TABS_COMPONENTS = [
 ];
 
 const TABS_ICONS_COMPONENTS = [
-	{className: 'nav-underline', icon: 'after'},
-	{className: 'nav-underline', icon: 'before'},
+	{className: 'nav-tabs', icon: 'after'},
+	{className: 'nav-tabs', icon: 'before'},
 	{className: 'nav-secondary', icon: 'after'},
 	{className: 'nav-secondary', icon: 'before'},
 	{className: 'nav-segment', icon: 'after'},
@@ -100,7 +91,7 @@ const TABS_ICONS_COMPONENTS = [
 ];
 
 const TABS_VERTICAL_COMPONENTS = [
-	{className: 'nav-vertical nav-underline'},
+	{className: 'nav-vertical nav-tabs'},
 	{className: 'nav-vertical nav-secondary'},
 	{
 		child: TERTIARY_TAB,

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -29,7 +20,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
 /**
@@ -40,7 +30,7 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		if (fileName.startsWith(getBaseDirName() + "build") ||
 			(fileName.contains("/build") && !fileName.contains("/tools/"))) {
@@ -72,9 +62,13 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 
 	private void _checkBuildXML(
 			String fileName, String absolutePath, String content)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return;
+		}
 
 		_checkBuildProjectName(fileName, document);
 
@@ -134,7 +128,7 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 
 	private void _checkTargetName(
 			String targetName, String buildFileName, String fileName)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		List<String> targetNames = _getTargetNames(
 			buildFileName, fileName, null, false);
@@ -156,9 +150,13 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 
 	private void _checkTargetNames(
 			String fileName, String absolutePath, String content)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return;
+		}
 
 		Element rootElement = document.getRootElement();
 
@@ -239,7 +237,7 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 	private List<String> _getTargetNames(
 			String buildFileName, String fileName, List<String> targetNames,
 			boolean importFile)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		if (buildFileName.contains(StringPool.OPEN_CURLY_BRACE)) {
 			return null;
@@ -261,6 +259,10 @@ public class XMLBuildFileCheck extends BaseFileCheck {
 		}
 
 		Document document = SourceUtil.readXML(FileUtil.read(file));
+
+		if (document == null) {
+			return null;
+		}
 
 		Element rootElement = document.getRootElement();
 

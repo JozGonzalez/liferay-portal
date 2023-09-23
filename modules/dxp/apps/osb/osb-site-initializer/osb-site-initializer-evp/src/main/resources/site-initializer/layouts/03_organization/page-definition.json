@@ -16,6 +16,29 @@
 				"pageElements": [
 					{
 						"definition": {
+							"indexed": true,
+							"layout": {
+								"opacity": 100,
+								"widthType": "Fluid"
+							},
+							"name": "Breadcrumb container"
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"widgetInstance": {
+										"widgetConfig": {
+										},
+										"widgetName": "com_liferay_site_navigation_breadcrumb_web_portlet_SiteNavigationBreadcrumbPortlet"
+									}
+								},
+								"type": "Widget"
+							}
+						],
+						"type": "Section"
+					},
+					{
+						"definition": {
 							"fragmentStyle": {
 								"marginBottom": "4"
 							},
@@ -438,7 +461,7 @@
 								"definition": {
 									"collectionConfig": {
 										"collectionReference": {
-											"className": "com.liferay.object.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider_[$COMPANY_ID$]_C_EVPOrganization"
+											"className": "com.liferay.object.web.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider_[$COMPANY_ID$]_C_EVPOrganization"
 										},
 										"collectionType": "CollectionProvider"
 									},

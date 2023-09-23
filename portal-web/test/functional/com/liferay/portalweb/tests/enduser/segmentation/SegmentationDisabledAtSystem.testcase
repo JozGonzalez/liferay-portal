@@ -1,6 +1,7 @@
 @component-name = "portal-segmentation"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -11,17 +12,17 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		Navigator.openURL();
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Segmentation.resetSegmentationAtSystemSettings();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +34,8 @@ definition {
 	@priority = 4
 	test CheckAssignRolesDisabledAlertAtInstanceSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SegmentationDisabledAtSystem#CheckAssignRolesDisabledAlertAtInstanceSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the 'Assign Roles by Segments' is disabled at System Settings") {
 			Segmentation.disableConfigurationAtSystemSettings(checkLabel = "Enable Assign Roles by Segment");
@@ -58,7 +60,8 @@ definition {
 	@priority = 4
 	test CheckSegmentationDisabledAlertAtInstanceSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SegmentationDisabledAtSystem#CheckSegmentationDisabledAlertAtInstanceSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the 'Enable Segmentation' is disabled at System Settings") {
 			Segmentation.disableConfigurationAtSystemSettings(checkLabel = "Enable Segmentation");
@@ -82,7 +85,8 @@ definition {
 	@description = "LPS-152542: Add breadcrumbs to Instance Settings alerts"
 	@priority = 3
 	test ViewAssignRoleBySegmentDisabledWarningUserWithoutsPermissionToSystemSettings {
-		property test.name.skip.portal.instance = "SegmentationDisabled#ViewAssignRoleBySegmentDisabledWarningUserWithoutsPermissionToSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the 'Assign Roles by Segments' is disabled at System Settings") {
 			Segmentation.disableConfigurationAtSystemSettings(checkLabel = "Enable Assign Roles by Segment");
@@ -128,7 +132,8 @@ definition {
 	@description = "LPS-152542: Add breadcrumbs to Instance Settings alerts"
 	@priority = 3
 	test ViewSegmentationDisabledWarningUserWithoutsPermissionToSystemSettings {
-		property test.name.skip.portal.instance = "SegmentationDisabled#ViewSegmentationDisabledWarningUserWithoutsPermissionToSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given 'Segmentation' is disabled at System Settings") {
 			Segmentation.disableConfigurationAtSystemSettings(checkLabel = "Enable Segmentation");

@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Workflow";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -183,10 +183,6 @@ definition {
 			locator1 = "Message#WARNING_SPECIFIC",
 			value1 = "This publication contains unapproved changes.");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
-
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
@@ -194,7 +190,8 @@ definition {
 	@priority = 4
 	test CannotPublishPublicationWithPendingAssetEntries {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#CannotPublishPublicationWithPendingAssetEntries";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -323,7 +320,8 @@ definition {
 	@priority = 4
 	test CanPublishPublicationWithApprovedAssetEntries {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#CanPublishPublicationWithApprovedAssetEntries";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -344,7 +342,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "site-name");
 
@@ -406,8 +404,6 @@ definition {
 			changeType = "Added",
 			changeUser = "userfn userln");*/
 
-		PublicationsNavigator.gotoPublish(publicationName = "Publication Name");
-
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
@@ -415,7 +411,8 @@ definition {
 	@priority = 4
 	test NotificationCanInformUserToSwitchToRelevantPublication {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#NotificationCanInformUserToSwitchToRelevantPublication";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",

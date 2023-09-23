@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context;
@@ -23,6 +14,7 @@ import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.object.web.internal.util.ObjectFieldBusinessTypeUtil;
@@ -62,12 +54,14 @@ public class ObjectDefinitionsFieldsDisplayContext
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectFieldBusinessTypeRegistry objectFieldBusinessTypeRegistry,
+		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService) {
 
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
 		_listTypeDefinitionService = listTypeDefinitionService;
 		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
+		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 	}
 
@@ -92,27 +86,36 @@ public class ObjectDefinitionsFieldsDisplayContext
 		return creationMenu;
 	}
 
+	public String getEditObjectFieldURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_field"
+		).setParameter(
+			"objectFieldId", "{id}"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
+	}
+
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
 
+		boolean hasUpdatePermission = hasUpdateObjectDefinitionPermission();
+
 		return Arrays.asList(
 			new FDSActionDropdownItem(
-				PortletURLBuilder.create(
-					getPortletURL()
-				).setMVCRenderCommandName(
-					"/object_definitions/edit_object_field"
-				).setParameter(
-					"objectFieldId", "{id}"
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString(),
-				"view", "view",
-				LanguageUtil.get(objectRequestHelper.getRequest(), "view"),
+				getEditObjectFieldURL(),
+				hasUpdatePermission ? "pencil" : "view",
+				hasUpdatePermission ? "edit" : "view",
+				LanguageUtil.get(
+					objectRequestHelper.getRequest(),
+					hasUpdatePermission ? "edit" : "view"),
 				"get", null, "sidePanel"),
 			new FDSActionDropdownItem(
-				"/o/object-admin/v1.0/object-fields/{id}", "trash", "delete",
+				null, "trash", "deleteObjectField",
 				LanguageUtil.get(objectRequestHelper.getRequest(), "delete"),
-				"delete", "delete", "async"));
+				"delete", "delete", null));
 	}
 
 	public String[] getForbiddenLastCharacters() {
@@ -142,7 +145,7 @@ public class ObjectDefinitionsFieldsDisplayContext
 			ListUtil.filter(
 				_objectFieldBusinessTypeRegistry.getObjectFieldBusinessTypes(),
 				objectFieldBusinessType ->
-					objectFieldBusinessType.isVisible() &&
+					objectFieldBusinessType.isVisible(getObjectDefinition()) &&
 					(!StringUtil.equals(
 						objectFieldBusinessType.getName(),
 						ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP) ||
@@ -150,22 +153,42 @@ public class ObjectDefinitionsFieldsDisplayContext
 	}
 
 	public List<Map<String, Object>> getObjectFieldCodeEditorElements() {
-		if (FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
+		return ObjectCodeEditorUtil.getCodeEditorElements(
+			ddmExpressionFunction ->
+				!ObjectCodeEditorUtil.DDMExpressionFunction.OLD_VALUE.equals(
+					ddmExpressionFunction),
+			ddmExpressionOperator -> true, true,
+			objectRequestHelper.getLocale(), getObjectDefinitionId(),
+			objectField -> !objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION));
+	}
+
+	public List<Map<String, Object>> getObjectFieldCodeEditorElements(
+		String businessType) {
+
+		if (StringUtil.equals(
+				businessType, ObjectFieldConstants.BUSINESS_TYPE_FORMULA) &&
+			FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
+
 			return ObjectCodeEditorUtil.getCodeEditorElements(
+				ddmExpressionFunction -> false,
 				ddmExpressionOperator ->
 					_filterableDDMExpressionOperators.contains(
 						ddmExpressionOperator),
-				objectRequestHelper.getLocale(), getObjectDefinitionId(),
+				false, objectRequestHelper.getLocale(), getObjectDefinitionId(),
 				objectField -> _filterableObjectFieldBusinessTypes.contains(
 					objectField.getBusinessType()));
 		}
 
-		return null;
+		return ObjectCodeEditorUtil.getCodeEditorElements(
+			true, false, objectRequestHelper.getLocale(),
+			getObjectDefinitionId(), objectField -> !objectField.isSystem());
 	}
 
 	public JSONObject getObjectFieldJSONObject(ObjectField objectField) {
 		return ObjectFieldUtil.toJSONObject(
-			_listTypeDefinitionService, objectField);
+			_listTypeDefinitionService, objectField,
+			_objectFieldSettingLocalService);
 	}
 
 	public Long getObjectRelationshipId(ObjectField objectField) {
@@ -207,6 +230,8 @@ public class ObjectDefinitionsFieldsDisplayContext
 	private final ListTypeDefinitionService _listTypeDefinitionService;
 	private final ObjectFieldBusinessTypeRegistry
 		_objectFieldBusinessTypeRegistry;
+	private final ObjectFieldSettingLocalService
+		_objectFieldSettingLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 

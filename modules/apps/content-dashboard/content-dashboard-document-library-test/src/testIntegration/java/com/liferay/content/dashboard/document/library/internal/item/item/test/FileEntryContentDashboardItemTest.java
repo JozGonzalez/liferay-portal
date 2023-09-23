@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.document.library.internal.item.item.test;
@@ -53,6 +44,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -66,7 +58,6 @@ import java.net.URLEncoder;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -457,57 +448,63 @@ public class FileEntryContentDashboardItemTest {
 				versionableContentDashboardItem.getSpecificInformationList(
 					LocaleUtil.getDefault());
 
-		Stream<ContentDashboardItem.SpecificInformation<?>> stream =
-			specificInformationList.stream();
-
 		ContentDashboardItem.SpecificInformation<?>
-			extensionSpecificInformation = stream.filter(
-				specificInformation -> Objects.equals(
-					specificInformation.getKey(), "extension")
-			).findFirst(
-			).orElseThrow(
-				() -> new AssertionError("extension not found")
-			);
+			extensionSpecificInformation = null;
+
+		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
+				specificInformationList) {
+
+			if (Objects.equals(specificInformation.getKey(), "extension")) {
+				extensionSpecificInformation = specificInformation;
+
+				break;
+			}
+		}
+
+		Assert.assertNotNull(
+			"extension not found", extensionSpecificInformation);
 
 		Assert.assertEquals("jpg", extensionSpecificInformation.getValue());
 
-		stream = specificInformationList.stream();
-
 		ContentDashboardItem.SpecificInformation<?> sizeSpecificInformation =
-			stream.filter(
-				specificInformation -> Objects.equals(
-					specificInformation.getKey(), "size")
-			).findFirst(
-			).orElseThrow(
-				() -> new AssertionError("size not found")
-			);
+			null;
 
+		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
+				specificInformationList) {
+
+			if (Objects.equals(specificInformation.getKey(), "size")) {
+				sizeSpecificInformation = specificInformation;
+
+				break;
+			}
+		}
+
+		Assert.assertNotNull("size not found", sizeSpecificInformation);
 		Assert.assertEquals("0 B", sizeSpecificInformation.getValue());
 
-		stream = specificInformationList.stream();
-
-		ContentDashboardItem.SpecificInformation<?>
-			fileNameSpecificInformation = stream.filter(
+		Assert.assertTrue(
+			ListUtil.exists(
+				specificInformationList,
 				specificInformation -> Objects.equals(
-					specificInformation.getKey(), "file-name")
-			).findFirst(
-			).orElseThrow(
-				() -> new AssertionError("file-name not found")
-			);
-
-		Assert.assertNotNull(fileNameSpecificInformation.getValue());
-
-		stream = specificInformationList.stream();
+					specificInformation.getKey(), "file-name")));
 
 		ContentDashboardItem.SpecificInformation<URL>
-			webDAVSpecificInformation =
-				(ContentDashboardItem.SpecificInformation<URL>)stream.filter(
-					specificInformation -> Objects.equals(
-						specificInformation.getKey(), "web-dav-url")
-				).findFirst(
-				).orElseThrow(
-					() -> new AssertionError("web-dav-url not found")
-				);
+			webDAVSpecificInformation = null;
+
+		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
+				specificInformationList) {
+
+			if (Objects.equals(specificInformation.getKey(), "web-dav-url")) {
+				webDAVSpecificInformation =
+					(ContentDashboardItem.SpecificInformation<URL>)
+						specificInformation;
+
+				break;
+			}
+		}
+
+		Assert.assertNotNull(
+			"web-dav-url not found", webDAVSpecificInformation);
 
 		String url = String.valueOf(webDAVSpecificInformation.getValue());
 
@@ -667,7 +664,6 @@ public class FileEntryContentDashboardItemTest {
 		mockHttpServletRequest.setAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
-
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
 

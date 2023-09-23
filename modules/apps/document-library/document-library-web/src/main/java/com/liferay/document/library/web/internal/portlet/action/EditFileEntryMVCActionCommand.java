@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.portlet.action;
@@ -42,13 +33,14 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.document.library.web.internal.exception.FileEntryExpirationDateException;
 import com.liferay.document.library.web.internal.exception.FileEntryReviewDateException;
 import com.liferay.document.library.web.internal.exception.FileNameExtensionException;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
 import com.liferay.dynamic.data.mapping.exception.StorageFieldRequiredException;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
@@ -562,10 +554,13 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		MultiSessionMessages.add(
-			actionRequest, "friendlyURLChanged",
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			actionRequest);
+
+		SessionMessages.add(
+			httpServletRequest, "friendlyURLChanged_requestProcessedWarning",
 			_language.format(
-				_portal.getHttpServletRequest(actionRequest),
+				httpServletRequest,
 				"the-friendly-url-x-was-changed-to-x-to-ensure-uniqueness",
 				new Object[] {
 					"<strong>" + _html.escapeURL(originalUrlTitle) +
@@ -1195,7 +1190,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		DLFileEntryType dlFileEntryType =
 			_dlFileEntryTypeLocalService.getDLFileEntryType(fileEntryTypeId);
 
-		for (DDMStructure ddmStructure : dlFileEntryType.getDDMStructures()) {
+		for (DDMStructure ddmStructure :
+				DLFileEntryTypeUtil.getDDMStructures(dlFileEntryType)) {
+
 			String className =
 				com.liferay.dynamic.data.mapping.kernel.DDMFormValues.class.
 					getName();
@@ -1203,7 +1200,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			DDMFormValues ddmFormValues = _ddmFormValuesFactory.create(
 				_getDDMStructureHttpServletRequest(
 					serviceContext.getRequest(), ddmStructure.getStructureId()),
-				_ddmBeanTranslator.translate(ddmStructure.getDDMForm()));
+				ddmStructure.getDDMForm());
 
 			serviceContext.setAttribute(
 				className + StringPool.POUND + ddmStructure.getStructureId(),

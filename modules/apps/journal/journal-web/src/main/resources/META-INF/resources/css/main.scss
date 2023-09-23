@@ -9,8 +9,7 @@ $toolbarZIndex: 971;
 $controlMenuHeight: 56px;
 $sidebarHeaderHeight: 104px;
 $sidebarWidth: 398px;
-
-$portletLayoutMargin: 35px;
+$sidebarWidthClosed: 40px;
 
 $productMenuTransitionDuration: 0.5s;
 $productMenuWidth: 320px;
@@ -42,43 +41,10 @@ $productMenuWidth: 320px;
 			}
 		}
 
-		.alloy-editor-container .alloy-editor-wrapper {
-			padding-top: 0;
-		}
-
-		.alloy-editor-switch {
-			margin-top: -40px;
-		}
-
-		.ddm-form-builder-app .CodeMirror {
-			height: 100%;
-		}
-
-		.form-builder-field {
-			box-shadow: none;
-			margin: 0;
-			padding-bottom: 0;
-			padding-right: 0;
-		}
-
 		.input-localized.input-localized-editor .form-control {
 			border-width: 1px;
 			min-height: 2.5rem;
 			padding: 0.5rem 1rem;
-		}
-
-		.input-localized-content {
-			margin-bottom: 24px;
-		}
-
-		.lfr-ddm-field-group {
-			margin-bottom: 10px;
-			margin-top: 10px;
-			padding: 28px 24px;
-		}
-
-		.lfr-ddm-container > .lfr-ddm-field-group {
-			padding: 0;
 		}
 	}
 
@@ -179,13 +145,19 @@ $productMenuWidth: 320px;
 			}
 		}
 
-		.contextual-sidebar-content {
-			margin-top: $toolbarHeight;
-
+		.article-content-content {
 			@include media-breakpoint-up(lg) {
 				margin-top: $toolbarDesktopHeight;
 			}
 
+			.ddm-form-builder-app {
+				@include media-breakpoint-down(md) {
+					margin-top: $toolbarHeight;
+				}
+			}
+		}
+
+		.contextual-sidebar-content {
 			@include media-breakpoint-down(md) {
 				> .container-fluid {
 					margin: 0 auto;
@@ -199,7 +171,13 @@ $productMenuWidth: 320px;
 			}
 
 			.contextual-sidebar-mr {
-				margin-right: $sidebarWidth;
+				margin: 0 $sidebarWidthClosed + 4px 0 4px;
+				padding-top: $toolbarHeight + 1.5rem;
+
+				@include media-breakpoint-up(lg) {
+					margin: 0 $sidebarWidth + 8px 0 0;
+					padding-top: $toolbarDesktopHeight;
+				}
 			}
 
 			.contextual-sidebar-mr-n {
@@ -230,19 +208,6 @@ $productMenuWidth: 320px;
 
 			@include media-breakpoint-up(lg) {
 				margin-top: $toolbarDesktopHeight;
-			}
-
-			.article-content-description {
-				@extend .article-content-content;
-
-				.language-value,
-				.input-localized-content {
-					margin-bottom: 0;
-				}
-
-				.alloy-editor-switch {
-					display: none;
-				}
 			}
 
 			.schedule {
@@ -288,15 +253,7 @@ $productMenuWidth: 320px;
 		}
 	}
 
-	.check-circle-center {
-		.green {
-			color: #008000;
-		}
-	}
-
-	.entry-thumbnail .label {
-		border-bottom-left-radius: 0;
-		border-top-left-radius: 0;
-		border-top-right-radius: 0;
+	.nav-tabs + .tab-content .tab-pane {
+		padding: 1rem;
 	}
 }

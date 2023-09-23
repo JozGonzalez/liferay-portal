@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 interface Region {
@@ -223,10 +214,12 @@ export function openAlertModal({message}: {message: string}): void;
 export function openConfirmModal({
 	message,
 	onConfirm,
+	status,
 	title,
 }: {
 	message: string;
 	onConfirm: (confirmed: boolean) => void;
+	status?: string;
 	title?: string;
 }): void;
 
@@ -857,7 +850,7 @@ type Storage = {
 
 	setItem(
 		key: string,
-		value: string,
+		value: string | boolean,
 		type: TYPE_VALUES,
 		options?: {
 			'domain'?: string;
@@ -877,3 +870,31 @@ type Storage = {
 export const localStorage: Storage;
 
 export const sessionStorage: Storage;
+
+export const COOKIE_TYPES: {
+	FUNCTIONAL: 'CONSENT_TYPE_FUNCTIONAL';
+	NECESSARY: 'CONSENT_TYPE_NECESSARY';
+	PERFORMANCE: 'CONSENT_TYPE_PERFORMANCE';
+	PERSONALIZATION: 'CONSENT_TYPE_PERSONALIZATION';
+};
+
+export function checkConsent(type: TYPE_VALUES): boolean;
+
+export function setSessionValue(
+	key: string,
+	value: Record<string, any> | string | boolean,
+	options?: {useHttpSession: boolean}
+): Promise<any>;
+
+export function isReducedMotion(): boolean;
+
+/**
+ * Renderer API
+ */
+export {default as getRenderer} from './renderer/getRenderer';
+
+export type {
+	IClientExtensionRenderer,
+	IInternalRenderer,
+	TRenderer,
+} from './renderer/types';

@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.token.definition.internal;
 
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -32,8 +24,6 @@ import java.io.InputStream;
 
 import java.net.URL;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,30 +49,27 @@ public class FrontendTokenDefinitionRegistryImpl
 
 	@Override
 	public FrontendTokenDefinition getFrontendTokenDefinition(String themeId) {
-		return themeIdFrontendTokenDefinitionImpls.get(themeId);
-	}
+		Map<String, FrontendTokenDefinitionImpl>
+			themeIdFrontendTokenDefinitionImpls =
+				_themeIdFrontendTokenDefinitionImplsDCLSingleton.getSingleton(
+					() -> {
+						_bundleTracker.open();
 
-	@Override
-	public Collection<FrontendTokenDefinition> getFrontendTokenDefinitions() {
-		return new ArrayList<>(bundleFrontendTokenDefinitionImpls.values());
+						return _themeIdFrontendTokenDefinitionImpls;
+					});
+
+		return themeIdFrontendTokenDefinitionImpls.get(themeId);
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		bundleTracker = new BundleTracker<>(
+		_bundleTracker = new BundleTracker<>(
 			bundleContext, Bundle.ACTIVE, _bundleTrackerCustomizer);
-
-		bundleTracker.open();
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		bundleTracker.close();
-
-		synchronized (this) {
-			bundleFrontendTokenDefinitionImpls.clear();
-			themeIdFrontendTokenDefinitionImpls.clear();
-		}
+		_bundleTracker.close();
 	}
 
 	protected FrontendTokenDefinitionImpl getFrontendTokenDefinitionImpl(
@@ -175,18 +162,11 @@ public class FrontendTokenDefinitionRegistryImpl
 		}
 	}
 
-	protected Map<Bundle, FrontendTokenDefinitionImpl>
-		bundleFrontendTokenDefinitionImpls = new ConcurrentHashMap<>();
-	protected BundleTracker<Bundle> bundleTracker;
-
 	@Reference
 	protected JSONFactory jsonFactory;
 
 	@Reference
 	protected Portal portal;
-
-	protected Map<String, FrontendTokenDefinitionImpl>
-		themeIdFrontendTokenDefinitionImpls = new ConcurrentHashMap<>();
 
 	private String _getFrontendTokenDefinitionJSON(Bundle bundle) {
 		URL url = bundle.getEntry("WEB-INF/frontend-token-definition.json");
@@ -211,58 +191,52 @@ public class FrontendTokenDefinitionRegistryImpl
 	private static final Pattern _themeIdPattern = Pattern.compile(
 		".*<theme id=\"([^\"]*)\"[^>]*>.*");
 
-	private final BundleTrackerCustomizer<Bundle> _bundleTrackerCustomizer =
-		new BundleTrackerCustomizer<Bundle>() {
+	private BundleTracker<FrontendTokenDefinitionImpl> _bundleTracker;
 
-			@Override
-			public Bundle addingBundle(Bundle bundle, BundleEvent bundleEvent) {
-				FrontendTokenDefinitionImpl frontendTokenDefinitionImpl =
-					getFrontendTokenDefinitionImpl(bundle);
+	private final BundleTrackerCustomizer<FrontendTokenDefinitionImpl>
+		_bundleTrackerCustomizer =
+			new BundleTrackerCustomizer<FrontendTokenDefinitionImpl>() {
 
-				if (frontendTokenDefinitionImpl == null) {
-					return null;
-				}
+				@Override
+				public FrontendTokenDefinitionImpl addingBundle(
+					Bundle bundle, BundleEvent bundleEvent) {
 
-				synchronized (FrontendTokenDefinitionRegistryImpl.this) {
-					bundleFrontendTokenDefinitionImpls.put(
-						bundle, frontendTokenDefinitionImpl);
-
-					if (frontendTokenDefinitionImpl.getThemeId() != null) {
-						themeIdFrontendTokenDefinitionImpls.put(
-							frontendTokenDefinitionImpl.getThemeId(),
-							frontendTokenDefinitionImpl);
-					}
-				}
-
-				return bundle;
-			}
-
-			@Override
-			public void modifiedBundle(
-				Bundle bundle1, BundleEvent bundleEvent, Bundle bundle2) {
-
-				removedBundle(bundle1, bundleEvent, null);
-
-				addingBundle(bundle1, bundleEvent);
-			}
-
-			@Override
-			public void removedBundle(
-				Bundle bundle1, BundleEvent bundleEvent, Bundle bundle2) {
-
-				synchronized (FrontendTokenDefinitionRegistryImpl.this) {
 					FrontendTokenDefinitionImpl frontendTokenDefinitionImpl =
-						bundleFrontendTokenDefinitionImpls.remove(bundle1);
+						getFrontendTokenDefinitionImpl(bundle);
 
 					if ((frontendTokenDefinitionImpl != null) &&
 						(frontendTokenDefinitionImpl.getThemeId() != null)) {
 
-						themeIdFrontendTokenDefinitionImpls.remove(
-							frontendTokenDefinitionImpl.getThemeId());
-					}
-				}
-			}
+						_themeIdFrontendTokenDefinitionImpls.put(
+							frontendTokenDefinitionImpl.getThemeId(),
+							frontendTokenDefinitionImpl);
 
-		};
+						return frontendTokenDefinitionImpl;
+					}
+
+					return null;
+				}
+
+				@Override
+				public void modifiedBundle(
+					Bundle bundle, BundleEvent bundleEvent,
+					FrontendTokenDefinitionImpl frontendTokenDefinitionImpl) {
+				}
+
+				@Override
+				public void removedBundle(
+					Bundle bundle, BundleEvent bundleEvent,
+					FrontendTokenDefinitionImpl frontendTokenDefinitionImpl) {
+
+					_themeIdFrontendTokenDefinitionImpls.remove(
+						frontendTokenDefinitionImpl.getThemeId());
+				}
+
+			};
+
+	private final Map<String, FrontendTokenDefinitionImpl>
+		_themeIdFrontendTokenDefinitionImpls = new ConcurrentHashMap<>();
+	private final DCLSingleton<Map<String, FrontendTokenDefinitionImpl>>
+		_themeIdFrontendTokenDefinitionImplsDCLSingleton = new DCLSingleton<>();
 
 }

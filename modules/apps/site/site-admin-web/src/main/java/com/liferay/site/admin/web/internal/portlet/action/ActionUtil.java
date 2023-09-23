@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.admin.web.internal.portlet.action;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.asset.link.model.AssetLink;
+import com.liferay.asset.link.service.AssetLinkLocalServiceUtil;
 import com.liferay.portal.kernel.exception.AvailableLocaleException;
-import com.liferay.portal.kernel.exception.GroupNameException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -23,58 +17,30 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
-import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
-import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.sites.kernel.util.SitesUtil;
+import com.liferay.sites.kernel.util.Sites;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 import javax.portlet.PortletRequest;
-import javax.portlet.ResourceRequest;
 
 /**
  * @author Jürgen Kappler
  */
 public class ActionUtil {
-
-	public static List<Group> getGroups(ResourceRequest request)
-		throws Exception {
-
-		long[] groupIds = ParamUtil.getLongValues(request, "rowIds");
-
-		List<Group> groups = new ArrayList<>();
-
-		for (long groupId : groupIds) {
-			groups.add(GroupServiceUtil.getGroup(groupId));
-		}
-
-		return groups;
-	}
-
-	public static String getHistoryKey(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-		return HttpComponentsUtil.getParameter(
-			redirect, actionResponse.getNamespace() + "historyKey", false);
-	}
 
 	public static long getRefererGroupId(ThemeDisplay themeDisplay)
 		throws Exception {
@@ -115,6 +81,32 @@ public class ActionUtil {
 		}
 
 		return roleIds;
+	}
+
+	public static ServiceContext getServiceContext(
+			ActionRequest actionRequest, long groupId)
+		throws PortalException {
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			Group.class.getName(), actionRequest);
+
+		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+			Group.class.getName(), groupId);
+
+		if (assetEntry == null) {
+			return serviceContext;
+		}
+
+		serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
+		serviceContext.setAssetLinkEntryIds(
+			ListUtil.toLongArray(
+				AssetLinkLocalServiceUtil.getDirectLinks(
+					assetEntry.getEntryId()),
+				AssetLink.ENTRY_ID2_ACCESSOR));
+		serviceContext.setAssetPriority(assetEntry.getPriority());
+		serviceContext.setAssetTagNames(assetEntry.getTagNames());
+
+		return serviceContext;
 	}
 
 	public static List<Long> getTeamIds(PortletRequest portletRequest) {
@@ -169,7 +161,7 @@ public class ActionUtil {
 	}
 
 	public static void updateLayoutSetPrototypesLinks(
-			ActionRequest actionRequest, Group liveGroup)
+			ActionRequest actionRequest, Group liveGroup, Sites sites)
 		throws Exception {
 
 		long privateLayoutSetPrototypeId = ParamUtil.getLong(
@@ -231,48 +223,10 @@ public class ActionUtil {
 			group = liveGroup;
 		}
 
-		SitesUtil.updateLayoutSetPrototypesLinks(
+		sites.updateLayoutSetPrototypesLinks(
 			group, publicLayoutSetPrototypeId, privateLayoutSetPrototypeId,
 			publicLayoutSetPrototypeLinkEnabled,
 			privateLayoutSetPrototypeLinkEnabled);
-	}
-
-	public static void updateWorkflowDefinitionLinks(
-			ActionRequest actionRequest, Group liveGroup)
-		throws PortalException {
-
-		long layoutSetPrototypeId = ParamUtil.getLong(
-			actionRequest, "layoutSetPrototypeId");
-
-		Group layoutSetPrototypeGroup =
-			GroupLocalServiceUtil.getLayoutSetPrototypeGroup(
-				liveGroup.getCompanyId(), layoutSetPrototypeId);
-
-		List<WorkflowDefinitionLink> workflowDefinitionLinks =
-			WorkflowDefinitionLinkLocalServiceUtil.getWorkflowDefinitionLinks(
-				liveGroup.getCompanyId(), layoutSetPrototypeGroup.getGroupId(),
-				0);
-
-		for (WorkflowDefinitionLink workflowDefinitionLink :
-				workflowDefinitionLinks) {
-
-			WorkflowDefinitionLinkLocalServiceUtil.addWorkflowDefinitionLink(
-				liveGroup.getCreatorUserId(), liveGroup.getCompanyId(),
-				liveGroup.getGroupId(), workflowDefinitionLink.getClassName(),
-				workflowDefinitionLink.getClassPK(),
-				workflowDefinitionLink.getTypePK(),
-				workflowDefinitionLink.getWorkflowDefinitionName(),
-				workflowDefinitionLink.getWorkflowDefinitionVersion());
-		}
-	}
-
-	public static void validateDefaultLocaleGroupName(
-			Map<Locale, String> nameMap, Locale defaultLocale)
-		throws PortalException {
-
-		if ((nameMap == null) || Validator.isNull(nameMap.get(defaultLocale))) {
-			throw new GroupNameException();
-		}
 	}
 
 	private static final int _LAYOUT_SET_VISIBILITY_PRIVATE = 1;

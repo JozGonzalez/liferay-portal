@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Helper function to send an attachment to wiki page via JSON"
 	macro _addAttachmentToWikiPage {
 		Variables.assertDefined(parameterList = "${nodeId},${title},${mimeType},${fileName}");
 
@@ -9,10 +8,11 @@ definition {
 		var dependenciesDir = PropsUtil.get("test.dependencies.dir.name");
 
 		var filePath = "${baseDir}${dependenciesDir}/${fileName}";
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikipage/add-page-attachment \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-F nodeId=${nodeId} \
 				-F fileName=${fileName} \
 				-F mimeType=${mimeType} \
@@ -29,7 +29,6 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a wiki child page via JSON"
 	macro _addWikiChildPage {
 		Variables.assertDefined(parameterList = "${parentResourcePrimKey},${headline}");
 
@@ -82,7 +81,6 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a wiki node via JSON"
 	macro _addWikiNode {
 		Variables.assertDefined(parameterList = ${name});
 
@@ -95,9 +93,11 @@ definition {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikinode/add-node \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d name=${name} \
 				-d description=${description} \
 				-d serviceContext=${serviceContext}
@@ -106,7 +106,6 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a wiki page via JSON"
 	macro _addWikiPage {
 		Variables.assertDefined(parameterList = "${nodeId},${headline}");
 
@@ -176,7 +175,6 @@ definition {
 		return ${response};
 	}
 
-	@summary = "Get the nodeId from any existing site by using groupName"
 	macro _getNodeIdByName {
 		Variables.assertDefined(parameterList = "${groupId},${name}");
 
@@ -184,9 +182,11 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikinode/get-nodes/group-id/${groupId} \
-				-u test@liferay.com:test
+				-u ${userLoginInfo}
 		''';
 
 		var nodeId = JSONCurlUtil.get(${curl}, "$.[?(@['name'] == '${name}')]['nodeId']");
@@ -200,7 +200,6 @@ definition {
 		return ${nodeId};
 	}
 
-	@summary = "Get the pageId from any existing node by nodeName"
 	macro _getPageIdByName {
 		Variables.assertDefined(parameterList = "${nodeId},${title}");
 
@@ -208,9 +207,11 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikipage/get-page \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d nodeId=${nodeId} \
 				-d title=${title}
 		''';
@@ -226,7 +227,6 @@ definition {
 		return ${pageId};
 	}
 
-	@summary = "Get the resourcePrimKey by pagename"
 	macro _getPageResourcePrimKey {
 		Variables.assertDefined(parameterList = "${nodeId},${title}");
 
@@ -234,9 +234,11 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikipage/get-page \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d nodeId=${nodeId} \
 				-d title=${title}
 		''';
@@ -259,9 +261,11 @@ definition {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/wiki-pages/${wikiPageId} \
-				-u test@liferay.com:test
+				-u ${userLoginInfo}
 		''';
 
 		var wikiPage = JSONCurlUtil.get(${curl});
@@ -269,15 +273,15 @@ definition {
 		return ${wikiPage};
 	}
 
-	@summary = "Helper function to move the wiki page to trash via JSON."
 	macro _movePageToTrash {
 		Variables.assertDefined(parameterList = "${title},${nodeId}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/wiki.wikipage/move-page-to-trash \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d nodeId=${nodeId} \
 				-d title=${title}
 		''';
@@ -285,7 +289,6 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to update the existing wiki page via JSON."
 	macro _updateWikiPage {
 		Variables.assertDefined(parameterList = ${resourcePrimKey});
 

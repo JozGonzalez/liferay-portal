@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
@@ -19,6 +10,7 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.sort.SortOrder;
@@ -27,11 +19,10 @@ import com.liferay.portal.workflow.metrics.rest.dto.v1_0.SLAResult;
 import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.SLAResultUtil;
 import com.liferay.portal.workflow.metrics.rest.internal.resource.exception.NoSuchSLAResultException;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.SLAResultResource;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionLocalService;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,8 +44,8 @@ public class SLAResultResourceImpl extends BaseSLAResultResourceImpl {
 		searchSearchRequest.addSorts(
 			_sorts.field("modifiedDate", SortOrder.DESC));
 		searchSearchRequest.setIndexNames(
-			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
-				contextCompany.getCompanyId()));
+			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT);
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
@@ -70,39 +61,34 @@ public class SLAResultResourceImpl extends BaseSLAResultResourceImpl {
 
 		searchSearchRequest.setSize(1);
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> SLAResultUtil.toSLAResult(
-				document,
-				_workflowMetricsSLADefinitionLocalService::
-					fetchWorkflowMetricsSLADefinition)
-		).orElseThrow(
-			() -> new NoSuchSLAResultException(
-				"No SLA result exists with process ID " + processId)
-		);
+		SearchSearchResponse searchSearchResponses =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		SearchHits searchHits = searchSearchResponses.getSearchHits();
+
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			throw new NoSuchSLAResultException(
+				"No SLA result exists with process ID " + processId);
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		return SLAResultUtil.toSLAResult(
+			searchHit.getDocument(),
+			_workflowMetricsSLADefinitionLocalService::
+				fetchWorkflowMetricsSLADefinition);
 	}
+
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Queries _queries;
 
 	@Reference
 	private SearchRequestExecutor _searchRequestExecutor;
-
-	@Reference(
-		target = "(workflow.metrics.index.entity.name=sla-instance-result)"
-	)
-	private WorkflowMetricsIndexNameBuilder
-		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
 
 	@Reference
 	private Sorts _sorts;

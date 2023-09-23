@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.converter;
@@ -20,12 +11,12 @@ import com.liferay.adaptive.media.image.finder.AMImageFinder;
 import com.liferay.adaptive.media.image.finder.AMImageQueryBuilder;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.adaptive.media.image.processor.AMImageAttribute;
-import com.liferay.adaptive.media.image.processor.AMImageProcessor;
+import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
@@ -33,12 +24,13 @@ import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.headless.delivery.dto.v1_0.AdaptedImage;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
@@ -59,10 +51,13 @@ import com.liferay.journal.service.JournalArticleService;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -92,7 +87,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
-	service = {DocumentDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class DocumentDTOConverter
 	implements DTOConverter<DLFileEntry, Document> {
@@ -129,8 +124,6 @@ public class DocumentDTOConverter
 						DLFileEntry.class.getName(),
 						fileEntry.getFileEntryId()));
 				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
-				contentUrl = _dlURLHelper.getPreviewURL(
-					fileEntry, fileVersion, null, "");
 				contentValue = ContentValueUtil.toContentValue(
 					"contentValue", fileEntry::getContentStream,
 					dtoConverterContext.getUriInfo());
@@ -150,6 +143,7 @@ public class DocumentDTOConverter
 				encodingFormat = fileEntry.getMimeType();
 				externalReferenceCode = fileEntry.getExternalReferenceCode();
 				fileExtension = fileEntry.getExtension();
+				fileName = fileEntry.getFileName();
 				id = fileEntry.getFileEntryId();
 				keywords = ListUtil.toArray(
 					_assetTagLocalService.getTags(
@@ -175,6 +169,19 @@ public class DocumentDTOConverter
 					TaxonomyCategoryBrief.class);
 				title = fileEntry.getTitle();
 
+				setContentUrl(
+					() -> {
+						if ((fileVersion.getSize() == 0) ||
+							!fileEntry.containsPermission(
+								PermissionThreadLocal.getPermissionChecker(),
+								ActionKeys.DOWNLOAD)) {
+
+							return StringPool.BLANK;
+						}
+
+						return _dlURLHelper.getDownloadURL(
+							fileEntry, fileVersion, null, StringPool.BLANK);
+					});
 				setRenderedContents(
 					() -> DisplayPageRendererUtil.getRenderedContent(
 						BaseDocumentResourceImpl.class,
@@ -218,7 +225,9 @@ public class DocumentDTOConverter
 
 		List<DDMFormValues> ddmFormValues = new ArrayList<>();
 
-		for (DDMStructure ddmStructure : dlFileEntryType.getDDMStructures()) {
+		for (DDMStructure ddmStructure :
+				DLFileEntryTypeUtil.getDDMStructures(dlFileEntryType)) {
+
 			DLFileEntryMetadata dlFileEntryMetadata =
 				_dlFileEntryMetadataLocalService.fetchFileEntryMetadata(
 					ddmStructure.getStructureId(),
@@ -229,9 +238,8 @@ public class DocumentDTOConverter
 			}
 
 			ddmFormValues.add(
-				_ddmBeanTranslator.translate(
-					StorageEngineManagerUtil.getDDMFormValues(
-						dlFileEntryMetadata.getDDMStorageId())));
+				_ddmStorageEngineManager.getDDMFormValues(
+					dlFileEntryMetadata.getDDMStorageId()));
 		}
 
 		return ddmFormValues;
@@ -254,15 +262,15 @@ public class DocumentDTOConverter
 			return 0;
 		}
 
-		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
-			_ddmStructureService.getStructure(
-				dlFileEntryType.getDataDefinitionId());
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			dlFileEntryType.getDataDefinitionId());
 
 		return ddmStructure.getStructureId();
 	}
 
 	private AdaptedImage _toAdaptedImage(
-			AdaptiveMedia<AMImageProcessor> adaptiveMedia, UriInfo uriInfo)
+			AdaptiveMedia<AMProcessor<FileVersion>> adaptiveMedia,
+			UriInfo uriInfo)
 		throws Exception {
 
 		if (adaptiveMedia == null) {
@@ -372,6 +380,9 @@ public class DocumentDTOConverter
 
 	@Reference
 	private DDMBeanTranslator _ddmBeanTranslator;
+
+	@Reference
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Reference
 	private DDMStructureService _ddmStructureService;

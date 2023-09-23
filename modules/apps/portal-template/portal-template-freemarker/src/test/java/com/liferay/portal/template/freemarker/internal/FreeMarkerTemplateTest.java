@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.freemarker.internal;
 
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.template.StringTemplateResource;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateException;
@@ -51,6 +43,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -84,7 +77,8 @@ public class FreeMarkerTemplateTest {
 			_freeMarkerTemplateResourceLoader,
 			"_freeMarkerTemplateResourceCache", _templateResourceCache);
 
-		_freeMarkerTemplateResourceLoader.activate(Collections.emptyMap());
+		_freeMarkerTemplateResourceLoader.activate(
+			SystemBundleUtil.getBundleContext(), Collections.emptyMap());
 
 		_freeMarkerManager = new FreeMarkerManager();
 
@@ -92,6 +86,13 @@ public class FreeMarkerTemplateTest {
 			_freeMarkerManager, "_freeMarkerEngineConfiguration",
 			ConfigurableUtil.createConfigurable(
 				FreeMarkerEngineConfiguration.class, Collections.emptyMap()));
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		if (_freeMarkerTemplateResourceLoader != null) {
+			_freeMarkerTemplateResourceLoader.deactivate();
+		}
 	}
 
 	@Before

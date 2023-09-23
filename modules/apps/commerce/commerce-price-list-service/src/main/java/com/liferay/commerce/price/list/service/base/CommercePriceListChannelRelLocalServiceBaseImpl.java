@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.base;
@@ -56,8 +47,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -534,7 +523,7 @@ public abstract class CommercePriceListChannelRelLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		CommercePriceListChannelRelLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -551,7 +540,8 @@ public abstract class CommercePriceListChannelRelLocalServiceBaseImpl
 		commercePriceListChannelRelLocalService =
 			(CommercePriceListChannelRelLocalService)aopProxy;
 
-		_setLocalServiceUtilService(commercePriceListChannelRelLocalService);
+		CommercePriceListChannelRelLocalServiceUtil.setService(
+			commercePriceListChannelRelLocalService);
 	}
 
 	/**
@@ -610,24 +600,6 @@ public abstract class CommercePriceListChannelRelLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		CommercePriceListChannelRelLocalService
-			commercePriceListChannelRelLocalService) {
-
-		try {
-			Field field =
-				CommercePriceListChannelRelLocalServiceUtil.class.
-					getDeclaredField("_service");
-
-			field.setAccessible(true);
-
-			field.set(null, commercePriceListChannelRelLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

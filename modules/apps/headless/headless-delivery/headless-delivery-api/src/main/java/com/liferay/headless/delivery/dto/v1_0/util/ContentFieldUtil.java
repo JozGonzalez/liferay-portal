@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0.util;
@@ -52,8 +43,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.text.ParseException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -220,6 +213,55 @@ public class ContentFieldUtil {
 				};
 			}
 			else if (Objects.equals(
+						DDMFormFieldTypeConstants.GRID,
+						ddmFormField.getType())) {
+
+				Map<String, Object> properties = ddmFormField.getProperties();
+
+				DDMFormFieldOptions rowsDDMFormFieldOptions =
+					(DDMFormFieldOptions)properties.get("rows");
+				DDMFormFieldOptions columnsDDMFormFieldOptions =
+					(DDMFormFieldOptions)properties.get("columns");
+
+				JSONObject localizedSelectedDataJSONObject =
+					JSONFactoryUtil.createJSONObject();
+				JSONObject selectedValuesJSONObject =
+					JSONFactoryUtil.createJSONObject();
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					valueString);
+
+				Iterator<String> iterator = jsonObject.keys();
+
+				while (iterator.hasNext()) {
+					String key = iterator.next();
+
+					LocalizedValue optionKeyLabelsLocalizedValue =
+						rowsDDMFormFieldOptions.getOptionLabels(key);
+
+					String value = jsonObject.getString(key);
+
+					LocalizedValue optionValueLabelsLocalizedValue =
+						columnsDDMFormFieldOptions.getOptionLabels(value);
+
+					localizedSelectedDataJSONObject.put(
+						optionKeyLabelsLocalizedValue.getString(locale),
+						optionValueLabelsLocalizedValue.getString(locale));
+
+					selectedValuesJSONObject.put(
+						rowsDDMFormFieldOptions.getOptionReference(key),
+						columnsDDMFormFieldOptions.getOptionReference(value));
+				}
+
+				return new ContentFieldValue() {
+					{
+						data = JSONUtil.toString(
+							localizedSelectedDataJSONObject);
+						value = JSONUtil.toString(selectedValuesJSONObject);
+					}
+				};
+			}
+			else if (Objects.equals(
 						DDMFormFieldType.IMAGE, ddmFormField.getType()) ||
 					 Objects.equals(
 						 DDMFormFieldTypeConstants.IMAGE,
@@ -243,7 +285,9 @@ public class ContentFieldUtil {
 
 						String alt = jsonObject.getString("alt");
 
-						if (Validator.isNotNull(alt) && JSONUtil.isValid(alt)) {
+						if (Validator.isNotNull(alt) &&
+							JSONUtil.isJSONObject(alt)) {
+
 							JSONObject altJSONObject = jsonObject.getJSONObject(
 								"alt");
 
@@ -328,12 +372,17 @@ public class ContentFieldUtil {
 				DDMFormFieldOptions ddmFormFieldOptions =
 					ddmFormField.getDDMFormFieldOptions();
 
-				List<String> values = TransformUtil.transform(
+				List<String> values = new ArrayList<>();
+
+				List<String> list = TransformUtil.transform(
 					JSONUtil.toStringList(
 						JSONFactoryUtil.createJSONArray(valueString)),
 					value -> {
 						LocalizedValue localizedValue =
 							ddmFormFieldOptions.getOptionLabels(value);
+
+						values.add(
+							ddmFormFieldOptions.getOptionReference(value));
 
 						return localizedValue.getString(locale);
 					});
@@ -341,6 +390,17 @@ public class ContentFieldUtil {
 				return new ContentFieldValue() {
 					{
 						setData(
+							() -> {
+								if (!ddmFormField.isMultiple() &&
+									(list.size() == 1)) {
+
+									return list.get(0);
+								}
+
+								return String.valueOf(
+									JSONFactoryUtil.createJSONArray(list));
+							});
+						setValue(
 							() -> {
 								if (!ddmFormField.isMultiple() &&
 									(values.size() == 1)) {
@@ -368,6 +428,8 @@ public class ContentFieldUtil {
 					{
 						data = selectedOptionLabelLocalizedValue.getString(
 							locale);
+						value = ddmFormFieldOptions.getOptionReference(
+							valueString);
 					}
 				};
 			}

@@ -61,13 +61,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -707,8 +709,8 @@ definition {
 	@description = "Feature ID: LRAC-6280 | Automation ID: LRAC-10562 | Test Summary: Pagination for analysis report"
 	@priority = 4
 	test CanPaginationAnalysisReportList {
-		var eventAnalysisNameList1 = "Save Analysis 0,Save Analysis 1,Save Analysis 2,Save Analysis 3,Save Analysis 4";
-		var eventAnalysisNameList2 = "Save Analysis 5,Save Analysis 6,Save Analysis 7,Save Analysis 8,Save Analysis 9";
+		var eventAnalysisNameList1 = "Save Analysis 0,Save Analysis 1,Save Analysis 2,Save Analysis 3";
+		var eventAnalysisNameList2 = "Save Analysis 4,Save Analysis 5,Save Analysis 6,Save Analysis 7";
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
@@ -762,10 +764,10 @@ definition {
 			ACUtils.viewResultsPages(pageNumber = 1);
 		}
 
-		task ("Change the pagination to "5" and Check pagination for "5" item filter") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Change the pagination to "4" and Check pagination for "5" item filter") {
+			ACUtils.changePagination(itemsPerPage = 4);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 5 of 10 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 10 entries.");
 
 			ACUtils.viewResultsPages(pageNumber = 1);
 
@@ -781,7 +783,7 @@ definition {
 		task ("Navigate to the next page and check the pagination") {
 			ACUtils.checkPreviousNextButton(nextButton = "true");
 
-			ACUtils.viewResultsMessage(results = "Showing 6 to 10 of 10 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 5 to 8 of 10 entries.");
 		}
 
 		task ("Assert the analysis is saved and show up on event analysis list") {
@@ -890,10 +892,10 @@ definition {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
 			task ("Switch to the documentation tab") {
-				SelectWindow(locator1 = "title=Events Analysis — Liferay Learn");
+				SelectWindow(locator1 = "title=Events Analysis - Liferay Learn");
 			}
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Events Analysis");
+			ACUtils.viewGenericText(textValueList = "Events Analysis");
 		}
 	}
 

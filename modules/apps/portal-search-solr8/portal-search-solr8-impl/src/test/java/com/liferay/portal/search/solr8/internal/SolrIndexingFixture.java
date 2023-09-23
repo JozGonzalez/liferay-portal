@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.solr8.internal;
 
-import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.IndexSearcher;
 import com.liferay.portal.kernel.search.IndexWriter;
+import com.liferay.portal.kernel.search.suggest.NGramHolderBuilder;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Digester;
@@ -31,7 +22,6 @@ import com.liferay.portal.search.internal.legacy.searcher.SearchResponseBuilderF
 import com.liferay.portal.search.solr8.internal.connection.SolrClientManager;
 import com.liferay.portal.search.solr8.internal.connection.TestSolrClientManager;
 import com.liferay.portal.search.solr8.internal.document.DefaultSolrDocumentFactory;
-import com.liferay.portal.search.solr8.internal.facet.DefaultFacetProcessor;
 import com.liferay.portal.search.solr8.internal.facet.FacetProcessor;
 import com.liferay.portal.search.solr8.internal.query.BooleanQueryTranslatorImpl;
 import com.liferay.portal.search.solr8.internal.query.DisMaxQueryTranslatorImpl;
@@ -60,6 +50,9 @@ import java.util.Map;
 import org.apache.solr.client.solrj.SolrQuery;
 
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Miguel Angelo Caldas Gallindo
@@ -109,21 +102,19 @@ public class SolrIndexingFixture implements IndexingFixture {
 
 	@Override
 	public void setUp() throws Exception {
-		if (_facetProcessor == null) {
-			_facetProcessor = createFacetProcessor();
-		}
-
 		SolrClientManager solrClientManager = new TestSolrClientManager(
 			_properties);
 
-		SolrSearchEngineAdapterFixture solrSearchEngineAdapterFixture =
-			createSolrSearchEngineAdapterFixture(
-				solrClientManager, _facetProcessor, _properties);
+		_solrSearchEngineAdapterFixture = createSolrSearchEngineAdapterFixture(
+			solrClientManager, _facetProcessor, _properties);
 
-		solrSearchEngineAdapterFixture.setUp();
+		_solrSearchEngineAdapterFixture.setUp();
 
 		SearchEngineAdapter searchEngineAdapter =
-			solrSearchEngineAdapterFixture.getSearchEngineAdapter();
+			_solrSearchEngineAdapterFixture.getSearchEngineAdapter();
+
+		_serviceRegistration = _bundleContext.registerService(
+			NGramHolderBuilder.class, new NGramHolderBuilderImpl(), null);
 
 		_indexSearcher = createIndexSearcher(
 			searchEngineAdapter, solrClientManager);
@@ -133,46 +124,51 @@ public class SolrIndexingFixture implements IndexingFixture {
 
 	@Override
 	public void tearDown() throws Exception {
+		if (_serviceRegistration == null) {
+			return;
+		}
+
+		_serviceRegistration.unregister();
 	}
 
 	protected static SolrQueryTranslator createSolrQueryTranslator() {
 		SolrQueryTranslator solrQueryTranslator = new SolrQueryTranslator();
 
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_booleanQueryTranslator",
+			solrQueryTranslator, "booleanQueryTranslator",
 			new BooleanQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_disMaxQueryTranslator",
+			solrQueryTranslator, "disMaxQueryTranslator",
 			new DisMaxQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_fuzzyQueryTranslator",
+			solrQueryTranslator, "fuzzyQueryTranslator",
 			new FuzzyQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_matchAllQueryTranslator",
+			solrQueryTranslator, "matchAllQueryTranslator",
 			new MatchAllQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_matchQueryTranslator",
+			solrQueryTranslator, "matchQueryTranslator",
 			new MatchQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_moreLikeThisQueryTranslator",
+			solrQueryTranslator, "moreLikeThisQueryTranslator",
 			new MoreLikeThisQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_multiMatchQueryTranslator",
+			solrQueryTranslator, "multiMatchQueryTranslator",
 			new MultiMatchQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_nestedQueryTranslator",
+			solrQueryTranslator, "nestedQueryTranslator",
 			new NestedQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_stringQueryTranslator",
+			solrQueryTranslator, "stringQueryTranslator",
 			new StringQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_termQueryTranslator",
+			solrQueryTranslator, "termQueryTranslator",
 			new TermQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_termRangeQueryTranslator",
+			solrQueryTranslator, "termRangeQueryTranslator",
 			new TermRangeQueryTranslatorImpl());
 		ReflectionTestUtil.setFieldValue(
-			solrQueryTranslator, "_wildcardQueryTranslator",
+			solrQueryTranslator, "wildcardQueryTranslator",
 			new WildcardQueryTranslatorImpl());
 
 		return solrQueryTranslator;
@@ -213,16 +209,6 @@ public class SolrIndexingFixture implements IndexingFixture {
 		);
 
 		return digester;
-	}
-
-	protected FacetProcessor<SolrQuery> createFacetProcessor() {
-		DefaultFacetProcessor defaultFacetProcessor =
-			new DefaultFacetProcessor();
-
-		ReflectionTestUtil.setFieldValue(
-			defaultFacetProcessor, "_jsonFactory", _jsonFactory);
-
-		return defaultFacetProcessor;
 	}
 
 	protected IndexSearcher createIndexSearcher(
@@ -268,17 +254,6 @@ public class SolrIndexingFixture implements IndexingFixture {
 			createSolrSpellCheckIndexWriter(searchEngineAdapter));
 
 		return solrIndexWriter;
-	}
-
-	protected NGramQueryBuilderImpl createNGramQueryBuilder() {
-		NGramQueryBuilderImpl nGramQueryBuilderImpl =
-			new NGramQueryBuilderImpl();
-
-		ReflectionTestUtil.setFieldValue(
-			nGramQueryBuilderImpl, "_nGramHolderBuilder",
-			new NGramHolderBuilderImpl());
-
-		return nGramQueryBuilderImpl;
 	}
 
 	protected Props createProps() {
@@ -332,7 +307,7 @@ public class SolrIndexingFixture implements IndexingFixture {
 
 		ReflectionTestUtil.setFieldValue(
 			solrQuerySuggester, "_nGramQueryBuilder",
-			createNGramQueryBuilder());
+			new NGramQueryBuilderImpl());
 		ReflectionTestUtil.setFieldValue(
 			solrQuerySuggester, "_solrClientManager", solrClientManager);
 
@@ -346,7 +321,6 @@ public class SolrIndexingFixture implements IndexingFixture {
 			new SolrSpellCheckIndexWriter() {
 				{
 					digester = createDigester();
-					nGramHolderBuilder = new NGramHolderBuilderImpl();
 
 					activate(_properties);
 				}
@@ -361,12 +335,16 @@ public class SolrIndexingFixture implements IndexingFixture {
 
 	private static final long _COMPANY_ID = RandomTestUtil.randomLong();
 
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+	private static ServiceRegistration<NGramHolderBuilder> _serviceRegistration;
+
 	private FacetProcessor<SolrQuery> _facetProcessor;
 	private IndexSearcher _indexSearcher;
 	private IndexWriter _indexWriter;
-	private final JSONFactory _jsonFactory = new JSONFactoryImpl();
 	private final Localization _localization = new LocalizationImpl();
 	private final Map<String, Object> _properties;
 	private SearchEngineAdapter _searchEngineAdapter;
+	private SolrSearchEngineAdapterFixture _solrSearchEngineAdapterFixture;
 
 }

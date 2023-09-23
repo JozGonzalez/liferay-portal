@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.comment.web.internal.asset.model;
@@ -58,9 +49,11 @@ public class CommentAssetRenderer
 
 	public CommentAssetRenderer(
 		AssetRendererFactory<WorkflowableComment> assetRendererFactory,
-		HtmlParser htmlParser, WorkflowableComment workflowableComment) {
+		DiscussionPermission discussionPermission, HtmlParser htmlParser,
+		WorkflowableComment workflowableComment) {
 
 		_assetRendererFactory = assetRendererFactory;
+		_discussionPermission = discussionPermission;
 		_htmlParser = htmlParser;
 		_workflowableComment = workflowableComment;
 	}
@@ -248,22 +241,16 @@ public class CommentAssetRenderer
 	public boolean hasEditPermission(PermissionChecker permissionChecker)
 		throws PortalException {
 
-		DiscussionPermission discussionPermission =
-			CommentManagerUtil.getDiscussionPermission(permissionChecker);
-
-		return discussionPermission.hasUpdatePermission(
-			_workflowableComment.getCommentId());
+		return _discussionPermission.hasUpdatePermission(
+			permissionChecker, _workflowableComment.getCommentId());
 	}
 
 	@Override
 	public boolean hasViewPermission(PermissionChecker permissionChecker)
 		throws PortalException {
 
-		DiscussionPermission discussionPermission =
-			CommentManagerUtil.getDiscussionPermission(permissionChecker);
-
-		return discussionPermission.hasPermission(
-			_workflowableComment, ActionKeys.VIEW);
+		return _discussionPermission.hasPermission(
+			permissionChecker, _workflowableComment, ActionKeys.VIEW);
 	}
 
 	@Override
@@ -287,6 +274,7 @@ public class CommentAssetRenderer
 
 	private final AssetRendererFactory<WorkflowableComment>
 		_assetRendererFactory;
+	private final DiscussionPermission _discussionPermission;
 	private final HtmlParser _htmlParser;
 	private final WorkflowableComment _workflowableComment;
 

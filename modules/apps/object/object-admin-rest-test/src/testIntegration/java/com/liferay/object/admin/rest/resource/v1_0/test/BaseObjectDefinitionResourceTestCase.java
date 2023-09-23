@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.client.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -191,9 +181,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		objectDefinition.setDefaultLanguageId(regex);
 		objectDefinition.setExternalReferenceCode(regex);
 		objectDefinition.setName(regex);
+		objectDefinition.setObjectFolderExternalReferenceCode(regex);
 		objectDefinition.setPanelAppOrder(regex);
 		objectDefinition.setPanelCategoryKey(regex);
 		objectDefinition.setRestContextPath(regex);
+		objectDefinition.setRootObjectDefinitionExternalReferenceCode(regex);
 		objectDefinition.setScope(regex);
 		objectDefinition.setStorageType(regex);
 		objectDefinition.setTitleObjectFieldName(regex);
@@ -209,9 +201,14 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		Assert.assertEquals(regex, objectDefinition.getDefaultLanguageId());
 		Assert.assertEquals(regex, objectDefinition.getExternalReferenceCode());
 		Assert.assertEquals(regex, objectDefinition.getName());
+		Assert.assertEquals(
+			regex, objectDefinition.getObjectFolderExternalReferenceCode());
 		Assert.assertEquals(regex, objectDefinition.getPanelAppOrder());
 		Assert.assertEquals(regex, objectDefinition.getPanelCategoryKey());
 		Assert.assertEquals(regex, objectDefinition.getRestContextPath());
+		Assert.assertEquals(
+			regex,
+			objectDefinition.getRootObjectDefinitionExternalReferenceCode());
 		Assert.assertEquals(regex, objectDefinition.getScope());
 		Assert.assertEquals(regex, objectDefinition.getStorageType());
 		Assert.assertEquals(regex, objectDefinition.getTitleObjectFieldName());
@@ -293,41 +290,37 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	public void testGetObjectDefinitionsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetObjectDefinitionsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetObjectDefinitionsPageWithFilterStringContains()
+		throws Exception {
 
-		ObjectDefinition objectDefinition1 =
-			testGetObjectDefinitionsPage_addObjectDefinition(
-				randomObjectDefinition());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectDefinition objectDefinition2 =
-			testGetObjectDefinitionsPage_addObjectDefinition(
-				randomObjectDefinition());
-
-		for (EntityField entityField : entityFields) {
-			Page<ObjectDefinition> page =
-				objectDefinitionResource.getObjectDefinitionsPage(
-					null, null,
-					getFilterString(entityField, "eq", objectDefinition1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(objectDefinition1),
-				(List<ObjectDefinition>)page.getItems());
-		}
+		testGetObjectDefinitionsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetObjectDefinitionsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetObjectDefinitionsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetObjectDefinitionsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetObjectDefinitionsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetObjectDefinitionsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -346,7 +339,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			Page<ObjectDefinition> page =
 				objectDefinitionResource.getObjectDefinitionsPage(
 					null, null,
-					getFilterString(entityField, "eq", objectDefinition1),
+					getFilterString(entityField, operator, objectDefinition1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -975,23 +968,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 	@Test
 	public void testPostObjectDefinitionPublish() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectDefinition objectDefinition =
-			testPostObjectDefinitionPublish_addObjectDefinition();
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
 
-		assertHttpResponseStatusCode(
-			204,
-			objectDefinitionResource.postObjectDefinitionPublishHttpResponse(
-				objectDefinition.getId()));
+		ObjectDefinition postObjectDefinition =
+			testPostObjectDefinitionPublish_addObjectDefinition(
+				randomObjectDefinition);
 
-		assertHttpResponseStatusCode(
-			404,
-			objectDefinitionResource.postObjectDefinitionPublishHttpResponse(
-				0L));
+		assertEquals(randomObjectDefinition, postObjectDefinition);
+		assertValid(postObjectDefinition);
 	}
 
 	protected ObjectDefinition
-			testPostObjectDefinitionPublish_addObjectDefinition()
+			testPostObjectDefinitionPublish_addObjectDefinition(
+				ObjectDefinition objectDefinition)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1171,6 +1160,26 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"enableLocalization", additionalAssertFieldName)) {
+
+				if (objectDefinition.getEnableLocalization() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"enableObjectEntryDraft", additionalAssertFieldName)) {
+
+				if (objectDefinition.getEnableObjectEntryDraft() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"enableObjectEntryHistory", additionalAssertFieldName)) {
 
 				if (objectDefinition.getEnableObjectEntryHistory() == null) {
@@ -1224,6 +1233,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 			if (Objects.equals("objectFields", additionalAssertFieldName)) {
 				if (objectDefinition.getObjectFields() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectFolderExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (objectDefinition.getObjectFolderExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -1316,6 +1338,20 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"rootObjectDefinitionExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (objectDefinition.
+						getRootObjectDefinitionExternalReferenceCode() ==
+							null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("scope", additionalAssertFieldName)) {
 				if (objectDefinition.getScope() == null) {
 					valid = false;
@@ -1390,14 +1426,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1585,6 +1626,32 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"enableLocalization", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getEnableLocalization(),
+						objectDefinition2.getEnableLocalization())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"enableObjectEntryDraft", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getEnableObjectEntryDraft(),
+						objectDefinition2.getEnableObjectEntryDraft())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"enableObjectEntryHistory", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
@@ -1668,6 +1735,22 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				if (!Objects.deepEquals(
 						objectDefinition1.getObjectFields(),
 						objectDefinition2.getObjectFields())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectFolderExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.
+							getObjectFolderExternalReferenceCode(),
+						objectDefinition2.
+							getObjectFolderExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1791,6 +1874,22 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"rootObjectDefinitionExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.
+							getRootObjectDefinitionExternalReferenceCode(),
+						objectDefinition2.
+							getRootObjectDefinitionExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("scope", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						objectDefinition1.getScope(),
@@ -1885,14 +1984,16 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1922,18 +2023,18 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1956,12 +2057,48 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("accountEntryRestrictedObjectFieldName")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					objectDefinition.
-						getAccountEntryRestrictedObjectFieldName()));
-			sb.append("'");
+			Object object =
+				objectDefinition.getAccountEntryRestrictedObjectFieldName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2045,9 +2182,47 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("defaultLanguageId")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getDefaultLanguageId()));
-			sb.append("'");
+			Object object = objectDefinition.getDefaultLanguageId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2062,16 +2237,63 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("enableLocalization")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("enableObjectEntryDraft")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("enableObjectEntryHistory")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(objectDefinition.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = objectDefinition.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2092,9 +2314,47 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getName()));
-			sb.append("'");
+			Object object = objectDefinition.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2107,6 +2367,53 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		if (entityFieldName.equals("objectFields")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("objectFolderExternalReferenceCode")) {
+			Object object =
+				objectDefinition.getObjectFolderExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("objectLayouts")) {
@@ -2130,17 +2437,93 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("panelAppOrder")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getPanelAppOrder()));
-			sb.append("'");
+			Object object = objectDefinition.getPanelAppOrder();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("panelCategoryKey")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getPanelCategoryKey()));
-			sb.append("'");
+			Object object = objectDefinition.getPanelCategoryKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2161,17 +2544,142 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("restContextPath")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getRestContextPath()));
-			sb.append("'");
+			Object object = objectDefinition.getRestContextPath();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals(
+				"rootObjectDefinitionExternalReferenceCode")) {
+
+			Object object =
+				objectDefinition.getRootObjectDefinitionExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("scope")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getScope()));
-			sb.append("'");
+			Object object = objectDefinition.getScope();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2182,9 +2690,47 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("storageType")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectDefinition.getStorageType()));
-			sb.append("'");
+			Object object = objectDefinition.getStorageType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2195,10 +2741,47 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("titleObjectFieldName")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(objectDefinition.getTitleObjectFieldName()));
-			sb.append("'");
+			Object object = objectDefinition.getTitleObjectFieldName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2257,12 +2840,16 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 					RandomTestUtil.randomString());
 				enableCategorization = RandomTestUtil.randomBoolean();
 				enableComments = RandomTestUtil.randomBoolean();
+				enableLocalization = RandomTestUtil.randomBoolean();
+				enableObjectEntryDraft = RandomTestUtil.randomBoolean();
 				enableObjectEntryHistory = RandomTestUtil.randomBoolean();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				modifiable = RandomTestUtil.randomBoolean();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				objectFolderExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				panelAppOrder = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				panelCategoryKey = StringUtil.toLowerCase(
@@ -2271,6 +2858,8 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				portlet = RandomTestUtil.randomBoolean();
 				restContextPath = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				rootObjectDefinitionExternalReferenceCode =
+					StringUtil.toLowerCase(RandomTestUtil.randomString());
 				scope = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				storageType = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());

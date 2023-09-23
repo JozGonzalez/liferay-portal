@@ -32,6 +32,11 @@
 <!--MESSAGE_ADDED_EMAIL-->
 
 <tr>
+	<td>DEFINITION_OF_TERMS</td>
+	<td>//div[contains(@id,'definition-of-terms_${key_number}')]//*[normalize-space()='${key_definitionOfTerm}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MESSAGE_ADDED_EMAIL_ENABLED_CHECKBOX</td>
 	<td>//input[contains(@id,'emailMessageAddedEnabled')]</td>
 	<td></td>
@@ -59,17 +64,17 @@
 
 <tr>
 	<td>SETUP_NAVIGATION_EMAIL_FROM</td>
-	<td>//ul[contains(@class,'nav nav-underline')]/li/a[contains(.,'Email From')]</td>
+	<td>//ul[contains(@class,'nav nav-tabs')]/li/a[contains(.,'Email From')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SETUP_NAVIGATION_MESSAGE_ADDED_EMAIL</td>
-	<td>//ul[contains(@class,'nav nav-underline')]/li/a[contains(.,'Message Added Email')]</td>
+	<td>//ul[contains(@class,'nav nav-tabs')]/li/a[contains(.,'Message Added Email')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SETUP_NAVIGATION_MESSAGE_UPDATED_EMAIL</td>
-	<td>//ul[contains(@class,'nav nav-underline')]/li/a[contains(.,'Message Updated Email')]</td>
+	<td>//ul[contains(@class,'nav nav-tabs')]/li/a[contains(.,'Message Updated Email')]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -12,6 +12,24 @@ definition {
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
+	macro verifyNotPresent {
+		VerifyElementNotPresent(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	macro verifyPresent {
+		VerifyElementPresent(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	macro verifyVisible {
+		VerifyVisible(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
 	macro viewDisabled {
 		AssertElementPresent(
 			key_menuItem = ${menuItem},

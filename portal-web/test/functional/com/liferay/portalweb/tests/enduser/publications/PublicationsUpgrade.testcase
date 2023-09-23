@@ -4,12 +4,41 @@ definition {
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.main.component.name = "Upgrades Publications";
 
 	setUp {
 		SignIn.signIn();
 
 		SearchAdministration.executeReindex();
+	}
+
+	@priority = 5
+	test AssertPublicationsHistoryRemainsAfterUpgradingArchive7413u73 {
+		property custom.properties = "feature.flag.LPS-161033=true";
+		property data.archive.type = "data-archive-publications-timeline";
+		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
+		property osgi.module.configurations = "enabled=B\"true\"";
+		property portal.version = "7.4.13.u73";
+
+		task ("Go to Documents and Media admin and click edit in the present document") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Edit",
+				rowEntry = "DM Document Title Edit Publication 2");
+		}
+
+		task ("Assert timeline is present") {
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 2");
+		}
+
+		task ("Assert timeline isn't present for Publication Name 1") {
+			Publications.viewPublicationTimeline(
+				isNotPresent = "true",
+				publicationName = "Publication Name 1");
+		}
 	}
 
 	@priority = 5
@@ -50,7 +79,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.5";
 
-		PublicationsUpgrade.viewAdminRoleName();
+		ValidatePublicationsUpgrade.viewAdminRoleName();
 	}
 
 	@priority = 5
@@ -59,7 +88,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		PublicationsUpgrade.viewAdminRoleName();
+		ValidatePublicationsUpgrade.viewAdminRoleName();
 	}
 
 	@priority = 5
@@ -69,7 +98,7 @@ definition {
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewAdminRoleName();
+		ValidatePublicationsUpgrade.viewAdminRoleName();
 	}
 
 	@priority = 5
@@ -79,7 +108,7 @@ definition {
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewAdminRoleName();
+		ValidatePublicationsUpgrade.viewAdminRoleName();
 	}
 
 	@priority = 5
@@ -89,7 +118,7 @@ definition {
 		property portal.version = "7.3.10.1";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewAdminRoleName();
+		ValidatePublicationsUpgrade.viewAdminRoleName();
 	}
 
 	@priority = 5
@@ -99,7 +128,7 @@ definition {
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewNoUnrelatedPreviews();
+		ValidatePublicationsUpgrade.viewNoUnrelatedPreviews();
 	}
 
 	@priority = 5
@@ -109,7 +138,7 @@ definition {
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewNoUnrelatedPreviews();
+		ValidatePublicationsUpgrade.viewNoUnrelatedPreviews();
 	}
 
 	@priority = 5
@@ -118,7 +147,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.5";
 
-		PublicationsUpgrade.viewOutOfDatePublications();
+		ValidatePublicationsUpgrade.viewOutOfDatePublications();
 	}
 
 	@priority = 5
@@ -127,7 +156,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		PublicationsUpgrade.viewOutOfDatePublications();
+		ValidatePublicationsUpgrade.viewOutOfDatePublications();
 	}
 
 	@priority = 5
@@ -137,7 +166,7 @@ definition {
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewOutOfDatePublications();
+		ValidatePublicationsUpgrade.viewOutOfDatePublications();
 	}
 
 	@priority = 5
@@ -147,7 +176,7 @@ definition {
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewOutOfDatePublications();
+		ValidatePublicationsUpgrade.viewOutOfDatePublications();
 	}
 
 	@priority = 5
@@ -157,7 +186,7 @@ definition {
 		property portal.version = "7.3.10.1";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewOutOfDatePublications();
+		ValidatePublicationsUpgrade.viewOutOfDatePublications();
 	}
 
 	@priority = 5
@@ -166,7 +195,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.5";
 
-		PublicationsUpgrade.viewPublicationsUserRolePermissions();
+		ValidatePublicationsUpgrade.viewPublicationsUserRolePermissions();
 	}
 
 	@priority = 5
@@ -175,7 +204,7 @@ definition {
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		PublicationsUpgrade.viewPublicationsUserRolePermissions();
+		ValidatePublicationsUpgrade.viewPublicationsUserRolePermissions();
 	}
 
 	@priority = 5
@@ -185,7 +214,7 @@ definition {
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewPublicationsUserRolePermissions();
+		ValidatePublicationsUpgrade.viewPublicationsUserRolePermissions();
 	}
 
 	@priority = 5
@@ -195,7 +224,7 @@ definition {
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewPublicationsUserRolePermissions();
+		ValidatePublicationsUpgrade.viewPublicationsUserRolePermissions();
 	}
 
 	@priority = 5
@@ -205,12 +234,11 @@ definition {
 		property portal.version = "7.3.10.1";
 		property test.run.environment = "EE";
 
-		PublicationsUpgrade.viewPublicationsUserRolePermissions();
+		ValidatePublicationsUpgrade.viewPublicationsUserRolePermissions();
 	}
 
 	@priority = 4
 	test ViewTemplateAndCreatePublicationWithItArchive7413u63 {
-		property custom.properties = "feature.flag.LPS-161313=true";
 		property data.archive.type = "data-archive-publications-with-template";
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";

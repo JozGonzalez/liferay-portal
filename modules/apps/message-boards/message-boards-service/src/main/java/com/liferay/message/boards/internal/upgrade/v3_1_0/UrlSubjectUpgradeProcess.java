@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.internal.upgrade.v3_1_0;
@@ -21,11 +12,15 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
+import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Javier Gamarra
@@ -80,29 +75,28 @@ public class UrlSubjectUpgradeProcess extends UpgradeProcess {
 					"update MBMessage set urlSubject = ? where messageId = " +
 						"?")) {
 
-			int count = 0;
-			String curURLSubject = null;
-			String previousURLSubject = null;
+			Map<String, IntegerWrapper> counts = new HashMap<>();
 
 			while (resultSet.next()) {
 				long messageId = resultSet.getLong(1);
 				String subject = resultSet.getString(2);
 
-				curURLSubject = _getURLSubject(messageId, subject);
+				String suffix = StringPool.BLANK;
 
-				String suffix = null;
+				String urlSubject = _getURLSubject(messageId, subject);
 
-				if (StringUtil.equals(previousURLSubject, curURLSubject)) {
-					count++;
-					suffix = StringPool.DASH + count;
+				IntegerWrapper count = counts.computeIfAbsent(
+					urlSubject, key -> new IntegerWrapper(0));
+
+				if (count.getValue() > 0) {
+					suffix = StringPool.DASH + count.getValue();
+
+					counts.put(urlSubject + suffix, new IntegerWrapper(1));
 				}
-				else {
-					count = 0;
-					previousURLSubject = curURLSubject;
-					suffix = StringPool.BLANK;
-				}
 
-				preparedStatement2.setString(1, curURLSubject + suffix);
+				count.increment();
+
+				preparedStatement2.setString(1, urlSubject + suffix);
 				preparedStatement2.setLong(2, messageId);
 
 				preparedStatement2.addBatch();

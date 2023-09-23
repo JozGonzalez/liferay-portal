@@ -8,142 +8,122 @@ definition {
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Testray";
 
-	var testSiteName = "Testray 2";
+	var caseType = "Case Type 1";
 	var projectName = "Project 1";
 	var routineName = "Routine 1";
+	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
-
-			Testray.addTR2Site(siteName = ${testSiteName});
 		}
 
-		task ("Go to Testray, Create Project and change pagination") {
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
+
+		task ("Create project and case type via API and go to Testray Site") {
 			JSONTestray.addProject(
 				projectDescription = "Project Description 1",
 				projectName = ${projectName});
 
+			JSONTestray.addCaseType(caseType = ${caseType});
+
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(quantity = 150);
 		}
 	}
 
 	tearDown {
-		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		Testray.testrayApisTearDown();
+		task ("Delete case type and project via API, Testray Site and Client Extensions") {
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = ${caseType});
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
-		if (${testPortalInstance} == "true") {
+			Testray.testrayApisTearDown();
+		}
+
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "Automation ID: LPS-160583 | Test Summary: Verify if as an Administrator I should be able to add and delete a Routine with Default Environment Factors"
-	@priority = 5
+	@description = "Story ID: LPS-146913 | Test Summary: Verify if as an Administrator I should be able to add and delete a Routine with Default Environment Factors"
+	@priority = 3
 	test AdminCanAddAndDeleteRoutineWithDefaultEnvironmentFactors {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanAddAndDeleteRoutineWithDefaultEnvironmentFactors";
-
-		task ("Given that the user add a new Routine") {
+		task ("Given that the administrator adds a new Routine") {
 			JSONTestray.addRoutine(
 				projectName = ${projectName},
 				routineName = ${routineName});
-
-			Testray.goToProjectPage(projectName = ${projectName});
 		}
 
-		task ("And that the user add default environments factors") {
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
-
+		task ("And that the administrator adds default environments factors") {
 			JSONTestray.addEnvironmentFactors(environmentFactorsName = "Environment Factors 1");
+
+			Testray.clickTableEntry(tableEntry = ${projectName});
 		}
 
-		task ("Then the routine is deleted with predefined environment factors, they should not appear in the list") {
-			JSONTestrayAPI.deleteObjectViaAPI(
-				object = "routines",
-				objectName = ${routineName});
+		task ("Then the routine is deleted with default environment factors, which should not appear in the list") {
+			Testray.deleteItem(itemName = ${routineName});
 
-			TR2Utils.clickBreadcrumb(text = ${projectName});
-
-			Testray.projectTabNavigator(navTabName = "Routines");
-
-			Testray.assertItemNotPresent(itemName = ${routineName});
+			Testray.viewTableEntryListNotPresent(listEntry = ${routineName});
 		}
 
-		task ("Delete objects") {
+		task ("Delete the factor categories via API") {
 			JSONTestrayAPI.deleteObjectViaAPI(
 				object = "factorcategories",
 				objectName = "Category 1");
 		}
 	}
 
-	@description = "Automation ID: LPS-160582 | Test Summary: Verify if as an Administrator I am able to add a Routine"
+	@description = "Story ID: LPS-146913 | Test Summary: Verify if as an Administrator I am able to add a Routine"
 	@priority = 5
 	test AdminCanAddRoutine {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanAddRoutine";
+		task ("When the administrator adds a new Routine") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-		task ("Given that the user add a new Routine") {
-			JSONTestray.addRoutine(
-				projectName = ${projectName},
-				routineName = ${routineName});
-
-			Testray.goToProjectPage(projectName = ${projectName});
+			TestrayRoutines.createRoutine(routineName = ${routineName});
 		}
 
 		task ("Then the Routine should appear on the list") {
-			Testray.assertItemName(text = ${routineName});
+			Testray.viewTableEntryList(listEntry = ${routineName});
 		}
 	}
 
-	@description = "Automation ID: LPS-160581 | Test Summary: Verify if as an Administrator I am able to delete a Routine"
+	@description = "Story ID: LPS-146913 | Test Summary: Verify if as an Administrator I am able to delete a Routine"
 	@priority = 5
 	test AdminCanDeleteRoutine {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanDeleteRoutine";
-
-		task ("Given that the user add a new Routine") {
+		task ("Given that the administrator adds a new Routine via API") {
 			JSONTestray.addRoutine(
 				projectName = ${projectName},
 				routineName = ${routineName});
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 		}
 
-		task ("Then the routine should appear on the list") {
-			Testray.assertItemName(text = ${routineName});
-
-			TestrayLayout.clickResultsOnSidebar();
-		}
-
-		task ("And when a routine is deleted") {
-			JSONTestrayAPI.deleteObjectViaAPI(
-				object = "routines",
-				objectName = ${routineName});
+		task ("When a routine is deleted") {
+			Testray.deleteItem(itemName = ${routineName});
 		}
 
 		task ("Then the routine should not appear on the list") {
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
-
-			Testray.goToProjectPage(projectName = ${projectName});
-
-			Testray.assertItemNotPresent(itemName = ${routineName});
+			Testray.viewTableEntryListNotPresent(listEntry = ${routineName});
 		}
 	}
 
-	@description = "Automation ID: LPS-160586 | Test Summary: Verify if as an Administrator I should be able to delete a routine that contains builds"
-	@priority = 5
+	@description = "Story ID: LPS-146913 | Test Summary: Verify if as an Administrator I should be able to delete a routine that contains builds"
+	@priority = 4
 	test AdminCanDeleteRoutineWithBuilds {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanDeleteRoutineWithBuilds";
-
-		task ("Given that the user add a new Routine and a new Case") {
+		task ("Given that the administrator adds a new Routine and a new Case") {
 			JSONTestray.addTeam(
 				projectName = ${projectName},
 				teamName = "Team 1");
@@ -157,20 +137,18 @@ definition {
 				projectName = ${projectName},
 				routineName = ${routineName});
 
-			JSONTestray.addCaseType(caseType = "Case Type 1");
-
 			JSONTestray.addCases(
 				caseName = "Case 1",
 				caseType = "Case Type 1",
 				componentName = "Component 1",
 				projectName = ${projectName});
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.projectTabNavigator(navTabName = "Routines");
+			Navigator.gotoNavTab(navTab = "Routines");
 		}
 
-		task ("When the user goes add a new build with enviroments") {
+		task ("And the administrator adds a new build with enviroments") {
 			JSONTestray.addEnvironmentFactors(environmentFactorsName = "Environment Factors 1");
 
 			JSONTestray.addProductVersion(
@@ -183,75 +161,71 @@ definition {
 				projectName = ${projectName},
 				routineName = ${routineName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 
-			Testray.assertItemName(text = "Build 1");
+			Testray.viewTableEntryList(listEntry = "Build 1");
 
-			TestrayLayout.clickResultsOnSidebar();
+			TestrayDropdown.goToResultSidebar();
 		}
 
-		task ("And when a routine is deleted") {
+		task ("When a routine is deleted") {
 			JSONTestrayAPI.deleteObjectViaAPI(
 				object = "routines",
 				objectName = ${routineName});
 		}
 
 		task ("Then the routine should not appear on the list") {
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(quantity = 150);
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.assertItemNotPresent(itemName = ${routineName});
+			Testray.viewTableEntryListNotPresent(listEntry = ${routineName});
 		}
 
-		task ("Delete objects") {
+		task ("Delete the factor categories via API") {
 			JSONTestrayAPI.deleteObjectViaAPI(
 				object = "factorcategories",
 				objectName = "Category 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160580 - Verify if as an Administrator I am able to edit a Routine"
+	@description = "Story ID: LPS-146913 | Test Summary: Verify if as an Administrator I am able to edit a Routine"
 	@priority = 5
 	test AdminCanEditRoutine {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanEditRoutine";
-
-		task ("Given that the user add a new Routine") {
+		task ("Given that the administrator adds a new Routine") {
 			JSONTestray.addRoutine(
 				projectName = ${projectName},
 				routineName = ${routineName});
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 		}
 
-		task ("When the user goes to edit the Routine and change the name") {
-			SelectFrameTop();
+		task ("When the administrator edit the Routine") {
+			TestrayManage.selectTableRowOption(
+				rowOption = "Edit",
+				tableEntry = ${routineName});
 
-			TestrayRoutines.editRoutine(
-				newNameRoutine = "Routine 1 Edited",
-				routineName = ${routineName});
+			TestrayRoutines.editRoutine(newName = "Routine 1 Edited");
 		}
 
-		task ("Then the Routine should be updated on the list") {
-			Testray.assertItemName(text = "Routine 1 Edited");
+		task ("The routine should appear in the list with the new information") {
+			Testray.viewTableEntryList(listEntry = "Routine 1 Edited");
 		}
 	}
 
-	@description = "This is a test for LPS-160585 - Verify if as an Administrator I should not be able to add a duplicate routine"
-	@priority = 5
+	@description = "Story ID: LPS-165582 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate routine"
+	@priority = 3
 	test AdminCanNotAddDuplicateRoutine {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanNotAddDuplicateRoutine";
-
-		task ("Given that the user add Routine with duplicated name") {
+		task ("Given that adds Routine via API") {
 			JSONTestray.addRoutine(
 				projectName = ${projectName},
 				routineName = ${routineName});
+		}
 
-			Testray.goToProjectPage(projectName = ${projectName});
+		task ("When the administrator adds Routine with duplicate name") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayRoutines.createRoutine(key_name = ${routineName});
+			TestrayRoutines.createRoutine(routineName = ${routineName});
 		}
 
 		task ("Then the error message should appear") {
@@ -259,15 +233,13 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-164145 - Verify that the user can not create a routine if all the required fields are not filled in"
-	@priority = 3
+	@description = "Story ID: LPS-146913 | Test Summary: Verify that the user can not create a routine if all the required fields are not filled in"
+	@priority = 2
 	test AdminCanViewRequiredField {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#AdminCanViewRequiredField";
+		task ("Given that the administrator adds a new Routine without name") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-		task ("Given that the user add a new Routine without name") {
-			Testray.goToProjectPage(projectName = ${projectName});
-
-			TestrayRoutines.createRoutine(key_name = "");
+			TestrayRoutines.createRoutine();
 		}
 
 		task ("Then a warning message is displayed") {
@@ -277,30 +249,26 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-164144 - Verify the user can access a project on Project Directory"
-	@priority = 3
+	@description = "Story ID: LPS-146908 | Test Summary: Verify the user can access a project on Project Directory"
+	@priority = 2
 	test CanGoToProjectDirectory {
-		property test.name.skip.portal.instance = "TestrayRoutinesAdministrator#CanGoToProjectDirectory";
-
-		task ("Given that the user add a new Project") {
+		task ("Given that the administrator adds a new Project via API") {
 			JSONTestray.addProject(
 				projectDescription = "Project Description 2",
 				projectName = "Project 2");
 		}
 
-		task ("And the user goes to the new Project from the project directory") {
-			Testray.goToProjectPage(projectName = ${projectName});
+		task ("When the administrator go to the Project 2 by project directory") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.assertProjectTitleHeader(projectName = ${projectName});
-
-			TestrayDropdown.selectProjectDirectory(project = "Project 2");
+			TestrayDropdown.selectProjectDirectory(projectName = "Project 2");
 		}
 
-		task ("Then the user goes to another project") {
-			Testray.assertProjectTitleHeader(projectName = "Project 2");
+		task ("Then should be redirected to project 2") {
+			TestrayDropdown.assertBreadcrumbTitle(text = "Project 2");
 		}
 
-		task ("Delete project") {
+		task ("Delete the project via API") {
 			JSONTestrayAPI.deleteProject(projectName = "Project 2");
 		}
 	}

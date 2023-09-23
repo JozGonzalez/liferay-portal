@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -38,22 +29,24 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 	<aui:input name="commerceChannelIds" type="hidden" value="" />
 	<aui:input name="workflowAction" type="hidden" value="<%= WorkflowConstants.ACTION_SAVE_DRAFT %>" />
 
-	<commerce-ui:panel
-		bodyClasses="p-0"
-		collapsed="<%= !cpDefinition.isChannelFilterEnabled() %>"
-		collapseLabel='<%= LanguageUtil.get(request, "filter") %>'
-		collapseSwitchName='<%= liferayPortletResponse.getNamespace() + "channelFilterEnabled" %>'
-		title='<%= LanguageUtil.get(request, "channels") %>'
-	>
-		<frontend-data-set:classic-display
-			contextParams="<%= contextParams %>"
-			creationMenu="<%= cpDefinitionsDisplayContext.getChannelsCreationMenu() %>"
-			dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_CHANNELS %>"
-			formName="fm"
-			id="<%= CommerceProductFDSNames.PRODUCT_CHANNELS %>"
-			itemsPerPage="<%= 10 %>"
-		/>
-	</commerce-ui:panel>
+	<c:if test="<%= cpDefinitionsDisplayContext.hasManageCommerceProductChannelVisibility() %>">
+		<commerce-ui:panel
+			bodyClasses="p-0"
+			collapsed="<%= !cpDefinition.isChannelFilterEnabled() %>"
+			collapseLabel='<%= LanguageUtil.get(request, "filter") %>'
+			collapseSwitchName='<%= liferayPortletResponse.getNamespace() + "channelFilterEnabled" %>'
+			title='<%= LanguageUtil.get(request, "channels") %>'
+		>
+			<frontend-data-set:classic-display
+				contextParams="<%= contextParams %>"
+				creationMenu="<%= cpDefinitionsDisplayContext.getChannelsCreationMenu() %>"
+				dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_CHANNELS %>"
+				formName="fm"
+				id="<%= CommerceProductFDSNames.PRODUCT_CHANNELS %>"
+				itemsPerPage="<%= 10 %>"
+			/>
+		</commerce-ui:panel>
+	</c:if>
 
 	<commerce-ui:panel
 		bodyClasses="p-0"

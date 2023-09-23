@@ -1,6 +1,7 @@
 @component-name = "portal-lima"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "default.layout.template.id=1_column${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.acceptance = "true";
 	property portal.release = "true";
@@ -46,9 +47,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -208,7 +209,7 @@ definition {
 	test CanMarkNotificationAsReadAndAcceptRequest {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -372,7 +373,7 @@ definition {
 	test CanViewEditedArticleNotificationInStagingEnvironment {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		JSONGroup.addGroup(groupName = "Subscribe Site");
+		HeadlessSite.addSite(siteName = "Subscribe Site");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Subscribe Site",
@@ -445,7 +446,7 @@ definition {
 	test CanViewFolderArticleNotification {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -568,7 +569,7 @@ definition {
 	test CanViewNotificationAfterRestoring {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",

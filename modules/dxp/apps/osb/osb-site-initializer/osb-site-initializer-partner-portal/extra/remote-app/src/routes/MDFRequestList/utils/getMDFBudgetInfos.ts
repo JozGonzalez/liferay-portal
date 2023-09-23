@@ -1,22 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {MDFColumnKey} from '../../../common/enums/mdfColumnKey';
 import LiferayPicklist from '../../../common/interfaces/liferayPicklist';
 import getIntlNumberFormat from '../../../common/utils/getIntlNumberFormat';
 
+const APPROVED_STATUS = 'approved';
 export default function getMDFBudgetInfos(
 	totalCostOfExpense?: number,
 	totalRequested?: number,
-	currency?: LiferayPicklist
+	currency?: LiferayPicklist,
+	requestStatus?: string
 ) {
 	if (totalCostOfExpense && totalRequested) {
 		return {
@@ -26,6 +22,10 @@ export default function getMDFBudgetInfos(
 			[MDFColumnKey.REQUESTED]: getIntlNumberFormat(currency).format(
 				totalRequested
 			),
+			[MDFColumnKey.APPROVED]:
+				requestStatus === APPROVED_STATUS
+					? getIntlNumberFormat(currency).format(totalRequested)
+					: '-',
 		};
 	}
 }

@@ -1,22 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.suggestions.portlet;
 
-import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
-
-import java.util.Optional;
+import com.liferay.portal.search.web.internal.portlet.preferences.BasePortletPreferences;
 
 import javax.portlet.PortletPreferences;
 
@@ -24,57 +13,50 @@ import javax.portlet.PortletPreferences;
  * @author Adam Brandizzi
  */
 public class SuggestionsPortletPreferencesImpl
-	implements SuggestionsPortletPreferences {
+	extends BasePortletPreferences implements SuggestionsPortletPreferences {
 
 	public SuggestionsPortletPreferencesImpl(
-		Optional<PortletPreferences> portletPreferencesOptional) {
+		PortletPreferences portletPreferences) {
 
-		_portletPreferencesHelper = new PortletPreferencesHelper(
-			portletPreferencesOptional);
+		super(portletPreferences);
 	}
 
 	@Override
 	public int getQueryIndexingThreshold() {
-		return _portletPreferencesHelper.getInteger(
-			PREFERENCE_KEY_QUERY_INDEXING_THRESHOLD, 50);
+		return getInteger(PREFERENCE_KEY_QUERY_INDEXING_THRESHOLD, 50);
 	}
 
 	@Override
 	public int getRelatedQueriesSuggestionsDisplayThreshold() {
-		return _portletPreferencesHelper.getInteger(
+		return getInteger(
 			PREFERENCE_KEY_RELATED_QUERIES_SUGGESTIONS_DISPLAY_THRESHOLD, 50);
 	}
 
 	@Override
 	public int getRelatedQueriesSuggestionsMax() {
-		return _portletPreferencesHelper.getInteger(
-			PREFERENCE_KEY_RELATED_QUERIES_SUGGESTIONS_MAX, 10);
+		return getInteger(PREFERENCE_KEY_RELATED_QUERIES_SUGGESTIONS_MAX, 10);
 	}
 
 	@Override
 	public int getSpellCheckSuggestionDisplayThreshold() {
-		return _portletPreferencesHelper.getInteger(
+		return getInteger(
 			PREFERENCE_KEY_SPELL_CHECK_SUGGESTION_DISPLAY_THRESHOLD, 50);
 	}
 
 	@Override
 	public boolean isQueryIndexingEnabled() {
-		return _portletPreferencesHelper.getBoolean(
-			PREFERENCE_KEY_QUERY_INDEXING_ENABLED, false);
+		return getBoolean(PREFERENCE_KEY_QUERY_INDEXING_ENABLED, false);
 	}
 
 	@Override
 	public boolean isRelatedQueriesSuggestionsEnabled() {
-		return _portletPreferencesHelper.getBoolean(
+		return getBoolean(
 			PREFERENCE_KEY_RELATED_QUERIES_SUGGESTIONS_ENABLED, false);
 	}
 
 	@Override
 	public boolean isSpellCheckSuggestionEnabled() {
-		return _portletPreferencesHelper.getBoolean(
-			PREFERENCE_KEY_SPELL_CHECK_SUGGESTION_ENABLED, false);
+		return getBoolean(PREFERENCE_KEY_SPELL_CHECK_SUGGESTION_ENABLED, false);
 	}
-
-	private final PortletPreferencesHelper _portletPreferencesHelper;
 
 }

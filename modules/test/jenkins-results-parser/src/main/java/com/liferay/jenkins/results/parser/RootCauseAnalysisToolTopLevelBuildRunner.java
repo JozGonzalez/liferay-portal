@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -26,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -409,8 +401,12 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 
 		List<String> list = new ArrayList<>();
 
-		if (portalBatchTestSelector.isEmpty()) {
-			return list;
+		if (JenkinsResultsParserUtil.isNullOrEmpty(portalBatchTestSelector)) {
+			if (!_isModulesBatch()) {
+				return list;
+			}
+
+			_setBuildStartProperty("PORTAL_BATCH_TEST_SELECTOR", "**/*");
 		}
 
 		BatchTestClassGroup batchTestClassGroup =
@@ -443,6 +439,65 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 		}
 
 		return list;
+	}
+
+	private boolean _isFunctionalBatch() {
+		String portalBatchName = getBuildParameter(
+			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
+
+		if (portalBatchName.startsWith("functional")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isJUnitBatch() {
+		String portalBatchName = getBuildParameter(
+			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
+
+		if (portalBatchName.startsWith("integration") ||
+			portalBatchName.startsWith("modules-integration") ||
+			portalBatchName.startsWith("modules-unit") ||
+			portalBatchName.startsWith("unit")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isModulesBatch() {
+		String portalBatchName = getBuildParameter(
+			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
+
+		if (portalBatchName.startsWith("js-unit") ||
+			portalBatchName.startsWith("modules-compile") ||
+			portalBatchName.startsWith("modules-semantic-versioning") ||
+			portalBatchName.startsWith("rest-builder") ||
+			portalBatchName.startsWith("service-builder")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private void _setBuildStartProperty(
+		String propertyName, String propertyValue) {
+
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+		Properties startProperties = new Properties();
+
+		if (buildDatabase.hasProperties("start.properties")) {
+			startProperties.putAll(
+				buildDatabase.getProperties("start.properties"));
+		}
+
+		startProperties.put(propertyName, propertyValue);
+
+		buildDatabase.putProperties("start.properties", startProperties);
 	}
 
 	private void _validateBuildParameterJenkinsGitHubURL() {
@@ -516,29 +571,24 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 	}
 
 	private void _validateBuildParameterPortalBatchTestSelector() {
-		String portalBatchName = getBuildParameter(
-			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
-
-		if (!portalBatchName.startsWith("integration") &&
-			!portalBatchName.startsWith("functional") &&
-			!portalBatchName.startsWith("modules-integration") &&
-			!portalBatchName.startsWith("modules-unit") &&
-			!portalBatchName.startsWith("unit")) {
-
+		if (!_isFunctionalBatch() && !_isJUnitBatch()) {
 			return;
 		}
 
 		String portalBatchTestSelector = getBuildParameter(
 			_NAME_BUILD_PARAMETER_PORTAL_BATCH_TEST_SELECTOR);
 
-		if ((portalBatchTestSelector == null) ||
-			portalBatchTestSelector.isEmpty()) {
-
-			failBuildRunner(
-				JenkinsResultsParserUtil.combine(
-					_NAME_BUILD_PARAMETER_PORTAL_BATCH_TEST_SELECTOR,
-					" is required for ", portalBatchName));
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(portalBatchTestSelector)) {
+			return;
 		}
+
+		String portalBatchName = getBuildParameter(
+			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
+
+		failBuildRunner(
+			JenkinsResultsParserUtil.combine(
+				_NAME_BUILD_PARAMETER_PORTAL_BATCH_TEST_SELECTOR,
+				" is required for ", portalBatchName));
 	}
 
 	private void _validateBuildParameterPortalBranchSHAs() {

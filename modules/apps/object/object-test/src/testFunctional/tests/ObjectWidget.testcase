@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -45,7 +45,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 5280");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -71,7 +71,9 @@ definition {
 
 		AssertElementPresent(locator1 = "Button#PLUS");
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-143122 - Verify that a widget button is displayed on the Objects details page"
@@ -141,7 +143,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 295");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -165,7 +167,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 295");
 
-		Uncheck.uncheckToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Uncheck.uncheckToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -176,9 +178,9 @@ definition {
 		ObjectPortlet.viewWarningMessage(warningMessage = "This object is not available.");
 	}
 
-	@description = "LPS-143122 - Verify that by default the widget button is disabled"
+	@description = "LPS-143122 - Verify that by default the widget button is enabled"
 	@priority = 3
-	test WidgetButtonDisabledByDefault {
+	test WidgetButtonEnabledByDefault {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153256",
 			objectName = "CustomObject153256",
@@ -188,7 +190,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 153256");
 
-		AssertNotChecked.assertNotCheckedNotVisible(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		AssertChecked.assertCheckedNotVisible(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 	}
 
 }

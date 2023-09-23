@@ -18,9 +18,25 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
+		if (isSet(deliveryTerm) && (IsElementPresent(key_radioOption = "", locator1 = "CommerceEntry#RADIO_BUTTON"))) {
+			Click(
+				key_radioOption = ${deliveryTerm},
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Click(locator1 = "Button#CONTINUE");
+		}
+
 		if (isSet(paymentMethod) && (IsElementPresent(key_radioOption = "", locator1 = "CommerceEntry#RADIO_BUTTON"))) {
 			Click(
 				key_radioOption = ${paymentMethod},
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Click(locator1 = "Button#CONTINUE");
+		}
+
+		if (isSet(paymentTerm) && (IsElementPresent(key_radioOption = "", locator1 = "CommerceEntry#RADIO_BUTTON"))) {
+			Click(
+				key_radioOption = ${paymentTerm},
 				locator1 = "CommerceEntry#RADIO_BUTTON");
 
 			Click(locator1 = "Button#CONTINUE");
@@ -43,7 +59,10 @@ definition {
 			var deliveryCost = ${customDeliveryValue};
 		}
 
-		if (isSet(deliveryDiscountPercentage)) {
+		if (isSet(deliveryDiscountFixedAmount)) {
+			var deliveryCost = ${deliveryCost} - ${deliveryDiscountFixedAmount};
+		}
+		else if (isSet(deliveryDiscountPercentage)) {
 			var deliverydiscountAmount = MathUtil.percent(${deliveryDiscountPercentage}, ${deliveryCost});
 
 			var deliveryCost = ${deliveryCost} - ${deliverydiscountAmount};
@@ -122,6 +141,7 @@ definition {
 			if (isSet(shippingMethod)) {
 				var deliveryCost = CommerceCheckout.getDeliveryCost(
 					customDeliveryValue = ${customDeliveryValue},
+					deliveryDiscountFixedAmount = ${deliveryDiscountFixedAmount},
 					deliveryDiscountPercentage = ${deliveryDiscountPercentage},
 					shippingMethod = ${shippingMethod});
 
@@ -168,6 +188,7 @@ definition {
 
 			var deliveryCost = CommerceCheckout.getDeliveryCost(
 				customDeliveryValue = ${customDeliveryValue},
+				deliveryDiscountFixedAmount = ${deliveryDiscountFixedAmount},
 				deliveryDiscountPercentage = ${deliveryDiscountPercentage},
 				shippingMethod = ${shippingMethod});
 
@@ -175,6 +196,10 @@ definition {
 		}
 		else {
 			var total = ${subtotal};
+		}
+
+		if (isSet(taxValue)) {
+			var total = ${total} + ${taxValue};
 		}
 
 		if (isSet(setBillingAddress)) {
@@ -302,6 +327,7 @@ definition {
 			productQuantity = ${productQuantity},
 			shippingOption = ${shippingOption},
 			subtotalValue = ${subtotal},
+			taxValue = ${taxValue},
 			totalValue = ${total},
 			viewBillingAddressPermission = ${viewBillingAddressPermission});
 
@@ -544,10 +570,10 @@ definition {
 		}
 
 		if (isSet(taxValue)) {
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				key_taxValue = ${taxValue},
 				locator1 = "CommerceAccelerators#CHECKOUT_SUMMARY_TAX",
-				value1 = ${taxValue});
+				value1 = "$ ${taxValue}");
 		}
 
 		if (isSet(totalValue)) {

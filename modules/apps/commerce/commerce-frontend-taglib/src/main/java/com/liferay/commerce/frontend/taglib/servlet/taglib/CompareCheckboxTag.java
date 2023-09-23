@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
@@ -43,10 +34,6 @@ public class CompareCheckboxTag extends IncludeTag {
 	@Override
 	public int doStartTag() throws JspException {
 		try {
-			CPDefinition cpDefinition =
-				CPDefinitionLocalServiceUtil.getCPDefinition(
-					_cpCatalogEntry.getCPDefinitionId());
-
 			HttpServletRequest httpServletRequest = getRequest();
 
 			CommerceContext commerceContext =
@@ -56,8 +43,8 @@ public class CompareCheckboxTag extends IncludeTag {
 			long commerceAccountId = CommerceUtil.getCommerceAccountId(
 				commerceContext);
 
-			_pictureUrl = cpDefinition.getDefaultImageThumbnailSrc(
-				commerceAccountId);
+			_commerceChannelGroupId =
+				commerceContext.getCommerceChannelGroupId();
 
 			List<Long> cpDefinitionIds = _getCPDefinitionIds(
 				commerceContext.getCommerceChannelGroupId(), commerceAccountId,
@@ -68,6 +55,13 @@ public class CompareCheckboxTag extends IncludeTag {
 
 			_inCompare = cpDefinitionIds.contains(
 				_cpCatalogEntry.getCPDefinitionId());
+
+			CPDefinition cpDefinition =
+				CPDefinitionLocalServiceUtil.getCPDefinition(
+					_cpCatalogEntry.getCPDefinitionId());
+
+			_pictureUrl = cpDefinition.getDefaultImageThumbnailSrc(
+				commerceAccountId);
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -86,6 +80,10 @@ public class CompareCheckboxTag extends IncludeTag {
 		return _label;
 	}
 
+	public boolean getRefreshOnRemove() {
+		return _refreshOnRemove;
+	}
+
 	public void setCPCatalogEntry(CPCatalogEntry cpCatalogEntry) {
 		_cpCatalogEntry = cpCatalogEntry;
 	}
@@ -101,15 +99,21 @@ public class CompareCheckboxTag extends IncludeTag {
 		setServletContext(ServletContextUtil.getServletContext());
 	}
 
+	public void setRefreshOnRemove(boolean refreshOnRemove) {
+		_refreshOnRemove = refreshOnRemove;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_commerceChannelGroupId = 0;
 		_cpCatalogEntry = null;
 		_disabled = false;
 		_inCompare = false;
 		_label = StringPool.BLANK;
 		_pictureUrl = null;
+		_refreshOnRemove = false;
 	}
 
 	@Override
@@ -119,6 +123,9 @@ public class CompareCheckboxTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-commerce:compare-checkbox:commerceChannelGroupId",
+			_commerceChannelGroupId);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:compare-checkbox:cpCatalogEntry",
 			_cpCatalogEntry);
@@ -130,6 +137,9 @@ public class CompareCheckboxTag extends IncludeTag {
 			"liferay-commerce:compare-checkbox:label", _label);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:compare-checkbox:pictureUrl", _pictureUrl);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:compare-checkbox:refreshOnRemove",
+			_refreshOnRemove);
 	}
 
 	private List<Long> _getCPDefinitionIds(
@@ -157,10 +167,12 @@ public class CompareCheckboxTag extends IncludeTag {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CompareCheckboxTag.class);
 
+	private long _commerceChannelGroupId;
 	private CPCatalogEntry _cpCatalogEntry;
 	private boolean _disabled;
 	private boolean _inCompare;
 	private String _label = StringPool.BLANK;
 	private String _pictureUrl;
+	private boolean _refreshOnRemove;
 
 }

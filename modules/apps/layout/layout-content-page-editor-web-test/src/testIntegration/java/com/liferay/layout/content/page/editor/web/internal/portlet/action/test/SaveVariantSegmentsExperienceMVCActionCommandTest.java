@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
@@ -49,7 +40,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -116,16 +106,14 @@ public class SaveVariantSegmentsExperienceMVCActionCommandTest {
 
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentLocalService.addSegmentsExperiment(
-				defaultSegmentsExperienceId,
-				_portal.getClassNameId(Layout.class), _layout.getPlid(),
-				"AB test", "A/B test description",
+				defaultSegmentsExperienceId, _layout.getPlid(), "AB test",
+				"A/B test description",
 				SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
 				StringPool.BLANK, _serviceContext);
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceService.addSegmentsExperience(
-				_group.getGroupId(), 0, _portal.getClassNameId(Layout.class),
-				_layout.getPlid(),
+				_group.getGroupId(), 0, _layout.getPlid(),
 				Collections.singletonMap(
 					LocaleUtil.getSiteDefault(), "Variant 1"),
 				false, new UnicodeProperties(true), _serviceContext);
@@ -315,9 +303,6 @@ public class SaveVariantSegmentsExperienceMVCActionCommandTest {
 		type = MVCActionCommand.class
 	)
 	private MVCActionCommand _mvcActionCommand;
-
-	@Inject
-	private Portal _portal;
 
 	@Inject
 	private PortletLocalService _portletLocalService;

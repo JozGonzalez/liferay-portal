@@ -35,13 +35,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -52,8 +54,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8327 | Test Summary: Assert Sites Cohort Analysis sort Anonymous Visitors"
 	@priority = 3
 	test AssertSitesCohortAnalysisSortAnonymousVisitors {
-		property analytics.cloud.upstream = "false";
-
 		task ("Logout from DXP") {
 			User.logoutPG();
 		}
@@ -86,9 +86,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8326 | Test Summary: Site overview cohort analysis card shows which individuals are returning after their first views"
+	@ignore = "true"
 	@priority = 5
 	test ShowsIndividualsReturningAfterFirstViews {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		task ("Add a new user") {
 			JSONUser.addUser(

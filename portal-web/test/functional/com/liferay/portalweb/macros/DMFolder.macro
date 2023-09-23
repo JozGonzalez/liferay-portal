@@ -242,6 +242,84 @@ definition {
 		}
 	}
 
+	macro copy {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Copy To",
+			rowEntry = ${dmFolderName});
+
+		Alert.viewWarningSpecific(warningMessage = "The copying process may take some time. Only categories, tags, ratings, and document types in the global scope or asset libraries connected to both sites will be copied. Document type fields will be displayed empty.");
+
+		AssertElementPresent(
+			key_fieldLabel = "Copy From",
+			locator1 = "FormFields#FIELD_DISABLED");
+
+		AssertElementPresent(
+			key_fieldLabel = "Copy To",
+			locator1 = "FormFields#FIELD_DISABLED");
+
+		AssertVisible(
+			key_text = "Copy",
+			locator1 = "Button#ANY_DISABLED");
+
+		Button.clickSelect();
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		WaitForVisible(
+			key_breadcrumbName = "Sites and Libraries",
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
+
+		if (isSet(siteName) || isSet(depotName)) {
+			AssertClick(
+				key_breadcrumbName = "Sites and Libraries",
+				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
+				value1 = "Sites and Libraries");
+		}
+
+		if (isSet(siteName)) {
+			LexiconCard.clickCard(card = ${siteName});
+		}
+
+		if (isSet(depotName)) {
+			AssertClick(
+				key_groupTab = "Asset Library",
+				locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
+				value1 = "Asset Library");
+
+			LexiconCard.clickCard(card = ${depotName});
+		}
+
+		if (isSet(homeFolder)) {
+			AssertClick(
+				key_text = "Select This Folder",
+				locator1 = "Button#ANY",
+				value1 = "Select This Folder");
+		}
+		else {
+			AssertClick(
+				key_dmFolderName = ${targetFolderName},
+				locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON",
+				value1 = "Select");
+		}
+
+		SelectFrame(locator1 = "relative=top");
+
+		Button.click(button = "Copy");
+
+		if (isSet(copyDuplicatedDocument)) {
+			Alert.viewErrorMessage(errorMessage = "A folder already exists with name ${dmFolderName}");
+		}
+		else if (isSet(copyToUnconnectedSite)) {
+			Alert.viewErrorMessage(errorMessage = "The item is not copied because the site and asset library are not connected.");
+		}
+		else if (isSet(copyToStagingSite)) {
+			Alert.viewErrorMessage(errorMessage = "Cannot copy folders to the live version of a site. Make your changes in staging and publish them to Live afterwards to make them public.");
+		}
+		else {
+			Alert.viewSuccessMessage();
+		}
+	}
+
 	macro deleteCP {
 		var key_dmFolderName = ${dmFolderName};
 
@@ -449,9 +527,7 @@ definition {
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
-			value1 = "There are no documents or media files in this folder.");
+		DMFolder.viewEntryNotPresent(dmFolderName = ${dmFolderName});
 	}
 
 	macro removePermissions {
@@ -477,7 +553,7 @@ definition {
 	}
 
 	macro subscribePG {
-		Click(locator1 = "Icon#INFO");
+		Click(locator1 = "Icon#INFO_DM");
 
 		Click(locator1 = "Icon#SUBSCRIBE_BELL");
 
@@ -567,6 +643,30 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no documents or media files in this folder.");
+	}
+
+	macro viewDetailsInListView {
+		var key_dmFolderName = ${dmFolderName};
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = ${dmFolderName});
+
+		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_ICON");
+
+		var key_authorName = ${authorName};
+
+		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_AUTHOR_AND_DATE");
+
+		var key_contextualBreadcrumb = ${contextualBreadcrumb};
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_BREADCRUMB",
+			value1 = ${contextualBreadcrumb});
+	}
+
+	macro viewEntryNotPresent {
+		LexiconCard.viewCardNotPresent(card = ${dmFolderName});
 	}
 
 	macro viewEntryPresent {

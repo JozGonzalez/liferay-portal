@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.internal.info.item.provider;
@@ -19,7 +10,7 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
@@ -30,6 +21,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.staging.StagingGroupHelper;
@@ -43,6 +35,7 @@ import com.liferay.template.transformer.TemplateNodeFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,7 +79,12 @@ public class TemplateInfoItemFieldSetProviderImpl
 				_getTemplateEntries(
 					infoItemClassName, infoItemFormVariationKey)) {
 
-			infoFieldValues.add(_getInfoFieldValue(templateEntry, itemObject));
+			infoFieldValues.add(
+				new InfoFieldValue<>(
+					_getInfoField(templateEntry),
+					() -> InfoLocalizedValue.function(
+						locale -> _getValue(
+							itemObject, locale, templateEntry))));
 		}
 
 		return infoFieldValues;
@@ -98,66 +96,20 @@ public class TemplateInfoItemFieldSetProviderImpl
 
 		return InfoField.builder(
 		).infoFieldType(
-			TextInfoFieldType.INSTANCE
+			HTMLInfoFieldType.INSTANCE
 		).namespace(
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX
 		).name(
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
 				templateEntry.getTemplateEntryId()
-		).attribute(
-			TextInfoFieldType.HTML, true
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.<String>builder(
-			).value(
-				LocaleUtil.getDefault(),
-				ddmTemplate.getName(LocaleUtil.getDefault())
 			).defaultLocale(
-				LocaleUtil.getDefault()
+				LocaleUtil.fromLanguageId(ddmTemplate.getDefaultLanguageId())
+			).values(
+				ddmTemplate.getNameMap()
 			).build()
 		).build();
-	}
-
-	private InfoFieldValue<Object> _getInfoFieldValue(
-		TemplateEntry templateEntry, Object itemObject) {
-
-		if (templateEntry == null) {
-			return null;
-		}
-
-		return new InfoFieldValue<>(
-			_getInfoField(templateEntry),
-			() -> {
-				InfoItemFieldValues infoItemFieldValues =
-					InfoItemFieldValues.builder(
-					).build();
-
-				InfoItemFieldValuesProvider<Object>
-					infoItemFieldValuesProvider =
-						_infoItemServiceRegistry.getFirstInfoItemService(
-							InfoItemFieldValuesProvider.class,
-							templateEntry.getInfoItemClassName());
-
-				if (infoItemFieldValuesProvider != null) {
-					infoItemFieldValues =
-						infoItemFieldValuesProvider.getInfoItemFieldValues(
-							itemObject);
-				}
-
-				TemplateDisplayTemplateTransformer
-					templateDisplayTemplateTransformer =
-						new TemplateDisplayTemplateTransformer(
-							templateEntry, infoItemFieldValues,
-							_templateNodeFactory);
-
-				try {
-					return templateDisplayTemplateTransformer.transform();
-				}
-				catch (Exception exception) {
-					_log.error("Unable to transform template", exception);
-				}
-
-				return StringPool.BLANK;
-			});
 	}
 
 	private List<TemplateEntry> _getTemplateEntries(
@@ -186,6 +138,66 @@ public class TemplateInfoItemFieldSetProviderImpl
 
 			return Collections.emptyList();
 		}
+	}
+
+	private String _getValue(
+		Object itemObject, Locale locale, TemplateEntry templateEntry) {
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if ((serviceContext == null) ||
+			(serviceContext.getThemeDisplay() == null)) {
+
+			return StringPool.BLANK;
+		}
+
+		ThemeDisplay currentThemeDisplay = serviceContext.getThemeDisplay();
+
+		ThemeDisplay themeDisplay = null;
+
+		try {
+			themeDisplay = (ThemeDisplay)currentThemeDisplay.clone();
+
+			themeDisplay.setLocale(locale);
+		}
+		catch (CloneNotSupportedException cloneNotSupportedException) {
+			_log.error(
+				"Unable to clone theme display", cloneNotSupportedException);
+		}
+
+		if (themeDisplay == null) {
+			return StringPool.BLANK;
+		}
+
+		InfoItemFieldValues infoItemFieldValues = InfoItemFieldValues.builder(
+		).build();
+
+		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemFieldValuesProvider.class,
+				templateEntry.getInfoItemClassName());
+
+		if (infoItemFieldValuesProvider != null) {
+			infoItemFieldValues =
+				infoItemFieldValuesProvider.getInfoItemFieldValues(itemObject);
+		}
+
+		TemplateDisplayTemplateTransformer templateDisplayTemplateTransformer =
+			new TemplateDisplayTemplateTransformer(
+				templateEntry, infoItemFieldValues, _templateNodeFactory);
+
+		try {
+			return templateDisplayTemplateTransformer.transform(themeDisplay);
+		}
+		catch (Exception exception) {
+			_log.error("Unable to transform template", exception);
+		}
+		finally {
+			themeDisplay.setLocale(currentThemeDisplay.getLocale());
+		}
+
+		return StringPool.BLANK;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.provider;
@@ -42,20 +33,27 @@ import net.shibboleth.utilities.java.support.xml.ParserPool;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.util.XMLObjectSupport;
-import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.filter.MetadataFilter;
 import org.opensaml.saml.metadata.resolver.impl.AbstractMetadataResolver;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ServiceScope;
-
 /**
  * @author Mika Koivisto
  */
-@Component(scope = ServiceScope.PROTOTYPE, service = MetadataResolver.class)
 public class DBMetadataResolver extends AbstractMetadataResolver {
+
+	public DBMetadataResolver(
+		ParserPool parserPool,
+		SamlIdpSpConnectionLocalService samlIdpSpConnectionLocalService,
+		SamlProviderConfigurationHelper samlProviderConfigurationHelper,
+		SamlSpIdpConnectionLocalService samlSpIdpConnectionLocalService) {
+
+		setParserPool(parserPool);
+
+		_samlIdpSpConnectionLocalService = samlIdpSpConnectionLocalService;
+		_samlProviderConfigurationHelper = samlProviderConfigurationHelper;
+		_samlSpIdpConnectionLocalService = samlSpIdpConnectionLocalService;
+	}
 
 	@Nonnull
 	@Override
@@ -86,13 +84,6 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		catch (Exception exception) {
 			throw new ResolverException(exception);
 		}
-	}
-
-	@Override
-	public void setParserPool(ParserPool parserPool) {
-		super.setParserPool(parserPool);
-
-		_parserPool = parserPool;
 	}
 
 	@Nonnull
@@ -129,7 +120,7 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		}
 
 		XMLObject metadataXMLObject = XMLObjectSupport.unmarshallFromReader(
-			_parserPool, new StringReader(metadataXml));
+			getParserPool(), new StringReader(metadataXml));
 
 		MetadataFilter metadataFilter = getMetadataFilter();
 
@@ -194,16 +185,11 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DBMetadataResolver.class);
 
-	@Reference
-	private ParserPool _parserPool;
-
-	@Reference
-	private SamlIdpSpConnectionLocalService _samlIdpSpConnectionLocalService;
-
-	@Reference
-	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;
-
-	@Reference
-	private SamlSpIdpConnectionLocalService _samlSpIdpConnectionLocalService;
+	private final SamlIdpSpConnectionLocalService
+		_samlIdpSpConnectionLocalService;
+	private final SamlProviderConfigurationHelper
+		_samlProviderConfigurationHelper;
+	private final SamlSpIdpConnectionLocalService
+		_samlSpIdpConnectionLocalService;
 
 }

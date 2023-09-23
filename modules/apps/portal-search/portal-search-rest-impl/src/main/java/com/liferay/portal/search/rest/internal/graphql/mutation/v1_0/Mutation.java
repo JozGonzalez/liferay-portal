@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.rest.internal.graphql.mutation.v1_0;
@@ -17,15 +8,22 @@ package com.liferay.portal.search.rest.internal.graphql.mutation.v1_0;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.search.rest.dto.v1_0.SearchRequestBody;
+import com.liferay.portal.search.rest.dto.v1_0.SearchResult;
 import com.liferay.portal.search.rest.dto.v1_0.SuggestionsContributorConfiguration;
 import com.liferay.portal.search.rest.dto.v1_0.SuggestionsContributorResults;
+import com.liferay.portal.search.rest.resource.v1_0.SearchResultResource;
 import com.liferay.portal.search.rest.resource.v1_0.SuggestionResource;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.function.BiFunction;
 
@@ -45,12 +43,49 @@ import org.osgi.service.component.ComponentServiceObjects;
 @Generated("")
 public class Mutation {
 
+	public static void setSearchResultResourceComponentServiceObjects(
+		ComponentServiceObjects<SearchResultResource>
+			searchResultResourceComponentServiceObjects) {
+
+		_searchResultResourceComponentServiceObjects =
+			searchResultResourceComponentServiceObjects;
+	}
+
 	public static void setSuggestionResourceComponentServiceObjects(
 		ComponentServiceObjects<SuggestionResource>
 			suggestionResourceComponentServiceObjects) {
 
 		_suggestionResourceComponentServiceObjects =
 			suggestionResourceComponentServiceObjects;
+	}
+
+	@GraphQLField(
+		description = "Search the company index for matching content. This endpoint is beta and requires setting the portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Beta."
+	)
+	public java.util.Collection<SearchResult> createSearchPage(
+			@GraphQLName("entryClassNames") String entryClassNames,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("searchRequestBody") SearchRequestBody
+				searchRequestBody)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_searchResultResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			searchResultResource -> {
+				Page paginationPage = searchResultResource.postSearchPage(
+					entryClassNames, search,
+					_filterBiFunction.apply(searchResultResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(searchResultResource, sortsString),
+					searchRequestBody);
+
+				return paginationPage.getItems();
+			});
 	}
 
 	@GraphQLField
@@ -121,6 +156,27 @@ public class Mutation {
 		}
 	}
 
+	private void _populateResourceContext(
+			SearchResultResource searchResultResource)
+		throws Exception {
+
+		searchResultResource.setContextAcceptLanguage(_acceptLanguage);
+		searchResultResource.setContextCompany(_company);
+		searchResultResource.setContextHttpServletRequest(_httpServletRequest);
+		searchResultResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		searchResultResource.setContextUriInfo(_uriInfo);
+		searchResultResource.setContextUser(_user);
+		searchResultResource.setGroupLocalService(_groupLocalService);
+		searchResultResource.setRoleLocalService(_roleLocalService);
+
+		searchResultResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		searchResultResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
 	private void _populateResourceContext(SuggestionResource suggestionResource)
 		throws Exception {
 
@@ -134,11 +190,14 @@ public class Mutation {
 		suggestionResource.setRoleLocalService(_roleLocalService);
 	}
 
+	private static ComponentServiceObjects<SearchResultResource>
+		_searchResultResourceComponentServiceObjects;
 	private static ComponentServiceObjects<SuggestionResource>
 		_suggestionResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -146,5 +205,9 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
+	private VulcanBatchEngineImportTaskResource
+		_vulcanBatchEngineImportTaskResource;
 
 }

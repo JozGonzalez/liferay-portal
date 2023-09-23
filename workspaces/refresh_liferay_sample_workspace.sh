@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd $(dirname "${0}")
+
 function check_blade {
 	if [ -e ~/jpm/bin/blade ]
 	then
@@ -44,11 +46,11 @@ function refresh_liferay_sample_workspace {
 
 	pushd ${temp_dir}
 
-	${BLADE_PATH} init --liferay-version dxp-7.4-u65
+	${BLADE_PATH} init -v $(${BLADE_PATH} init --all --list | grep dxp-7.4 | head -1)
 
 	echo -en "\n**/dist\n**/node_modules_cache\n.DS_Store" >> .gitignore
 
-	echo -en "\n\nfeature.flag.LPS-166479=true" >> configs/local/portal-ext.properties
+	echo -en "\n\nfeature.flag.LPS-166479=true\nfeature.flag.LPS-172903=true\nfeature.flag.LPS-164563=true\nfeature.flag.LPS-177027=true" >> configs/local/portal-ext.properties
 
 	#echo -en "\nliferay.workspace.docker.image.liferay=liferay/dxp:7.4.13-u54-d5.0.5-20221208173455" >> gradle.properties
 	echo -en "\nliferay.workspace.node.package.manager=yarn" >> gradle.properties
@@ -62,11 +64,28 @@ function refresh_liferay_sample_workspace {
 
 	mv gradle.properties.tmp gradle.properties
 
-	sed -i 's/name: "com.liferay.gradle.plugins.workspace", version: ".*"/name: "com.liferay.gradle.plugins.workspace", version: "4.1.28"/' settings.gradle
+	sed -i 's/name: "biz.aQute.bnd", version: ".*"/name: "biz.aQute.bnd.gradle", version: "5.2.0"/' settings.gradle
+	sed -i 's/name: "com.liferay.gradle.plugins.workspace", version: ".*"/name: "com.liferay.gradle.plugins.workspace", version: "9.0.1"/' settings.gradle
+
+	echo -en "\ninclude \"poshi\"" >> settings.gradle
 
 	popd
 
-	cp ${temp_dir}/.gitignore liferay-sample-workspace
+	cat <<EOF > liferay-sample-workspace/.gitignore
+.DS_Store
+/bundles
+/poshi/poshi-ext.properties
+/poshi/test-results
+/poshi/tests
+bin
+build
+dist
+node_modules
+node_modules_cache
+EOF
+
+	truncate -s -1 liferay-sample-workspace/.gitignore
+
 	cp ${temp_dir}/gradle.properties liferay-sample-workspace
 	cp ${temp_dir}/gradlew liferay-sample-workspace
 	cp ${temp_dir}/settings.gradle liferay-sample-workspace
@@ -79,12 +98,12 @@ function refresh_liferay_sample_workspace {
 
 	mkdir -p liferay-sample-workspace/modules
 
-	echo "Client extensions are the recommended way of customizing Liferay. Modules and" > liferay-sample-workspace/modules/README.txt
-	echo "themes are supported for backwards compatibility." >> liferay-sample-workspace/modules/README.txt
+	echo "Client extensions are the recommended way of customizing Liferay. Modules and" > liferay-sample-workspace/modules/README.markdown
+	echo -n "themes are supported for backwards compatibility." >> liferay-sample-workspace/modules/README.markdown
 
 	mkdir -p liferay-sample-workspace/themes
 
-	cp liferay-sample-workspace/modules/README.txt liferay-sample-workspace/themes
+	cp liferay-sample-workspace/modules/README.markdown liferay-sample-workspace/themes
 
 	#
 	# Client Extension: Sample Custom Element 2
@@ -94,62 +113,127 @@ function refresh_liferay_sample_workspace {
 
 	../tools/create_custom_element.sh liferay-sample-custom-element-2 react
 
+	sed '/"eslintConfig": {/,/},/d' liferay-sample-custom-element-2/package.json | awk '!/^,$/' > temp.json && mv temp.json liferay-sample-custom-element-2/package.json
+
 	mkdir -p liferay-sample-custom-element-2/src/common/components
 
-	cat <<EOF > liferay-sample-custom-element-2/src/common/components/DadJoke.js
+	cat <<EOF > liferay-sample-custom-element-2/src/common/components/Comic.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 
-class DadJoke extends React.Component {
-	constructor(props) {
-		super(props);
+import {Liferay} from '../services/liferay/liferay.js';
 
-		this.oAuth2Client = props.oAuth2Client;
-		this.state = {"joke": ""};
-	}
+let oAuth2Client;
 
-	componentDidMount() {
-		this._request = this.oAuth2Client.fetch(
-			'/dad/joke'
-		).then(response => response.text()
-		).then(text => {
-			this._request = null;
-			this.setState({"joke": text});
+try {
+	oAuth2Client = Liferay.OAuth2Client.FromUserAgentApplication(
+		'liferay-sample-etc-node-oauth-application-user-agent'
+	);
+}
+catch (error) {
+	console.error(error);
+}
+
+function Comic() {
+	const [comicData, setComicData] = React.useState(null);
+
+	React.useEffect(() => {
+		oAuth2Client
+			?.fetch('/comic')
+			.then((comic) => {
+			setComicData({
+				alt: comic.alt,
+				img: comic.img,
+				title: comic.safe_title,
+			});
 		});
+	}, []);
+
+	return !comicData ? (
+		<div>Loading...</div>
+	) : (
+		<div>
+			<h2>{comicData.title}</h2>
+
+			<p>
+				<img alt={comicData.alt} src={comicData.img} />
+			</p>
+		</div>
+	);
+}
+
+export default Comic;
+EOF
+
+	cat <<EOF > liferay-sample-custom-element-2/src/common/components/DadJoke.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import React from 'react';
+
+import {Liferay} from '../services/liferay/liferay.js';
+
+let oAuth2Client;
+
+try {
+	oAuth2Client = Liferay.OAuth2Client.FromUserAgentApplication(
+		'liferay-sample-etc-spring-boot-oauth-application-user-agent'
+	);
+}
+catch (error) {
+	console.error(error);
+}
+
+function DadJoke() {
+	const [joke, setJoke] = React.useState(null);
+
+	React.useEffect(() => {
+		oAuth2Client
+			?.fetch('/dad/joke')
+			.then((response) => response.text())
+			.then((joke) => {
+				setJoke(joke);
+			})
+			// eslint-disable-next-line no-console
+			.catch((error) => console.log(error));
+	}, []);
+
+	if (!joke) {
+		return <div>Loading...</div>;
 	}
 
-	componentWillUnmount() {
-		if (this._request) {
-			this._request.cancel();
-		}
-	}
-
-	render() {
-		if (this.state === null) {
-			return <div>Loading...</div>
-		}
-		else {
-			return <div>{this.state.joke}</div>
-		}
-	}
+	return <div>{joke}</div>;
 }
 
 export default DadJoke;
 EOF
 
 	cat <<EOF > liferay-sample-custom-element-2/src/index.js
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 
-import DadJoke from './common/components/DadJoke';
-import api from './common/services/liferay/api';
-import {Liferay} from './common/services/liferay/liferay';
-import HelloBar from './routes/hello-bar/pages/HelloBar';
-import HelloFoo from './routes/hello-foo/pages/HelloFoo';
-import HelloWorld from './routes/hello-world/pages/HelloWorld';
+import Comic from './common/components/Comic.js';
+import DadJoke from './common/components/DadJoke.js';
+import api from './common/services/liferay/api.js';
+import {Liferay} from './common/services/liferay/liferay.js';
+import HelloBar from './routes/hello-bar/pages/HelloBar.js';
+import HelloFoo from './routes/hello-foo/pages/HelloFoo.js';
+import HelloWorld from './routes/hello-world/pages/HelloWorld.js';
 
 import './common/styles/index.scss';
 
-const App = ({oAuth2Client, route}) => {
+const App = ({route}) => {
 	if (route === 'hello-bar') {
 		return <HelloBar />;
 	}
@@ -164,7 +248,11 @@ const App = ({oAuth2Client, route}) => {
 
 			{Liferay.ThemeDisplay.isSignedIn() && (
 				<div>
-					<DadJoke oAuth2Client={oAuth2Client} />
+					<Comic />
+
+					<hr />
+
+					<DadJoke />
 				</div>
 			)}
 		</div>
@@ -172,20 +260,9 @@ const App = ({oAuth2Client, route}) => {
 };
 
 class WebComponent extends HTMLElement {
-	constructor() {
-		super();
-
-		this.oAuth2Client = Liferay.OAuth2Client.FromUserAgentApplication(
-			'liferay-sample-oauth-application-user-agent'
-		);
-	}
-
 	connectedCallback() {
 		createRoot(this).render(
-			<App
-				oAuth2Client={this.oAuth2Client}
-				route={this.getAttribute('route')}
-			/>,
+			<App route={this.getAttribute('route')} />,
 			this
 		);
 
@@ -194,14 +271,17 @@ class WebComponent extends HTMLElement {
 				.then((response) => response.json())
 				.then((response) => {
 					if (response.givenName) {
-						const nameElements = document.getElementsByClassName(
-							'hello-world-name'
-						);
+						const nameElements =
+							document.getElementsByClassName('hello-world-name');
 
 						if (nameElements.length) {
 							nameElements[0].innerHTML = response.givenName;
 						}
 					}
+				})
+				.catch((error) => {
+					// eslint-disable-next-line no-console
+					console.log(error);
 				});
 		}
 	}

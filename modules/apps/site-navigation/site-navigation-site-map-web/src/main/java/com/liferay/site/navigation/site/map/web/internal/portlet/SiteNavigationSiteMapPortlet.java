@@ -1,26 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.site.map.web.internal.portlet;
 
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.site.navigation.site.map.web.internal.constants.SiteNavigationSiteMapPortletKeys;
 
 import javax.portlet.Portlet;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -28,7 +22,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"com.liferay.fragment.entry.processor.portlet.alias=site-map",
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-site-map",
 		"com.liferay.portlet.display-category=category.cms",
@@ -52,6 +45,22 @@ import org.osgi.service.component.annotations.Reference;
 	service = Portlet.class
 )
 public class SiteNavigationSiteMapPortlet extends MVCPortlet {
+
+	@Activate
+	protected void activate() {
+		_portletRegistry.registerAlias(
+			_ALIAS, SiteNavigationSiteMapPortletKeys.SITE_NAVIGATION_SITE_MAP);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_portletRegistry.unregisterAlias(_ALIAS);
+	}
+
+	private static final String _ALIAS = "site-map";
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.site.navigation.site.map.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"

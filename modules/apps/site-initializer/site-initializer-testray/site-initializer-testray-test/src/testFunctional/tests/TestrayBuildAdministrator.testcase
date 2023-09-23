@@ -21,15 +21,20 @@ definition {
 	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
-
-			Testray.addTR2Site(siteName = ${testSiteName});
 		}
 
-		task ("Given that I create all the necessary objects") {
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
+
+		task ("create project, team, component, routine, case, case type, enviroment factor via API") {
 			JSONTestray.addProject(
 				projectDescription = "Project Description 1",
 				projectName = ${projectName});
@@ -65,82 +70,82 @@ definition {
 		task ("Then I go to TR2 and change the paging") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(quantity = 150);
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "casetypes",
-			objectName = ${caseType});
+		task ("Delete case type, factor categorie and project via API, Testray Site and Client Extensions") {
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = ${caseType});
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "factorcategories",
-			objectName = "Category 1");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "factorcategories",
+				objectName = "Category 1");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "productversions",
-			objectName = ${productVersion});
+			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
-		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.testrayApisTearDown();
-
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "Automation ID: LPS-156438 | Test Summary: Verify if as an Administrator can Add a Build"
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator can Add a Build"
 	@priority = 5
 	test AdminCanAddBuild {
-		task ("Given that the user add a new build") {
-			JSONTestray.addBuild(
-				buildName = ${buildName},
-				productVersion = ${productVersion},
-				projectName = ${projectName},
-				routineName = ${routineName});
+		task ("Given that I go to build page") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.goToProjectPage(projectName = ${projectName});
-
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 		}
 
-		task ("Then the Routine should appear on the list") {
-			Testray.assertItemName(text = "Build 1");
-		}
-	}
-
-	@description = "Automation ID: LPS-163712 | Test Summary: Verify if as an administrator can add a build with multiple options(Suite, Case, Option and Select Stacks)"
-	@priority = 5
-	test AdminCanAddBuildWithMultipleOptions {
-		task ("Given that the user add a new build") {
-			JSONTestray.addSuite(suiteName = ${suiteName});
-
-			Testray.goToProjectPage(projectName = ${projectName});
-
-			Testray.projectTabNavigator(navTabName = "Suites");
-
-			Testray.assertItemName(text = "Suite 1");
-
-			Testray.projectTabNavigator(navTabName = "Routines");
-
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
-
+		task ("When I add a new build") {
 			TestrayBuild.addBuildViaUI(
 				buildFieldName = ${buildName},
-				caseName = ${caseName},
+				caseList = ${caseName},
 				dropdownItem = "New Build",
 				productVersionOption = ${productVersion},
 				routine = ${routineName});
 		}
 
 		task ("Then the Build should appear on the list") {
-			Testray.assertItemName(text = "Build 1");
+			Testray.viewTableEntryList(listEntry = ${buildName});
+		}
+	}
+
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an administrator can add a build with multiple options(Suite, Case, Option and Select Stacks)"
+	@priority = 4
+	test AdminCanAddBuildWithMultipleOptions {
+		task ("When the user add a new build with multiple options") {
+			JSONTestray.addSuite(suiteName = ${suiteName});
+
+			Testray.clickTableEntry(tableEntry = ${projectName});
+
+			Testray.clickTableEntry(tableEntry = ${routineName});
+
+			TestrayBuild.addBuildWithMultipleOptions(
+				caseList = ${caseName},
+				categoryName = "Category 1",
+				description = "Build description",
+				dropdownItem = "New Build",
+				fieldName = ${buildName},
+				gitHash = 12345,
+				labelStack = "Category 1",
+				optionName = "Option 1",
+				productVersion = ${productVersion},
+				routine = ${routineName},
+				stackName = "Option 1",
+				suiteName = ${suiteName});
+		}
+
+		task ("Then the Build should appear on the list") {
+			Testray.viewTableEntryList(listEntry = ${buildName});
 		}
 	}
 
@@ -162,141 +167,129 @@ definition {
 
 	}
 
-	@description = "Automation ID: LPS-156513 | Test Summary: Verify if as an Administrator I can delete Builds"
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator I can delete Builds"
 	@priority = 5
 	test AdminCanDeleteBuild {
-		task ("Then I create a build") {
+		task ("Given that I create a build via API and go to build page") {
 			JSONTestray.addBuild(
 				buildName = ${buildName},
 				productVersion = ${productVersion},
 				projectName = ${projectName},
 				routineName = ${routineName});
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 
-			Testray.assertItemName(text = "Build 1");
+			Testray.viewTableEntryList(listEntry = ${buildName});
 		}
 
 		task ("When a build is deleted") {
-			JSONTestrayAPI.deleteObjectViaAPI(
-				object = "builds",
-				objectName = ${buildName});
+			Testray.deleteItem(itemName = ${buildName});
 		}
 
 		task ("Then the build should not appear on the list") {
-			TestrayLayout.clickResultsOnSidebar();
-
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
-
-			Testray.goToProjectPage(projectName = ${projectName});
-
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
-
-			Testray.assertItemNotPresent(itemName = "Build 1");
+			Testray.viewTableEntryListNotPresent(listEntry = ${buildName});
 		}
 	}
 
-	@description = "Automation ID: LPS-156575 | Test Summary: Verify if as an Administrator I should be able to delete a build that contains runs"
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator I should be able to delete a build that contains runs"
 	@priority = 4
 	test AdminCanDeleteBuildContainsRuns {
 		task ("Given that the user add a new build with Environments Factors") {
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 
 			TestrayBuild.addBuildViaUI(
 				buildFieldName = ${buildName},
-				caseName = ${caseName},
+				caseList = ${caseName},
 				dropdownItem = "New Build",
 				productVersionOption = ${productVersion},
 				routine = ${routineName});
 		}
 
-		task ("And deleted build with runs") {
-			TestrayBuild.goToBuild(buildName = "Build 1");
+		task ("When delete build with runs") {
+			Testray.clickTableEntry(tableEntry = ${buildName});
 
-			Testray.projectTabNavigator(navTabName = "Runs");
+			Navigator.gotoNavTab(navTab = "Runs");
 
-			Testray.assertItemName(text = "Option 1");
+			Testray.clickTableEntry(tableEntry = "Option 1");
 
 			JSONTestrayAPI.deleteObjectViaAPI(
 				object = "builds",
 				objectName = "Build 1");
+		}
 
-			TestrayLayout.clickResultsOnSidebar();
+		task ("And go to build page") {
+			TestrayDropdown.goToResultSidebar();
 
-			Testray.changePagination(
-				numberItems = 20,
-				valuePagination = 150);
+			Testray.changePagination(quantity = 150);
 
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayContextMenu.clickContextMenuProjects(name = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 		}
 
 		task ("Then the build with runs should not appear on the list") {
-			Testray.assertItemNotPresent(itemName = "Build 1");
+			Testray.viewTableEntryListNotPresent(listEntry = ${buildName});
 		}
 	}
 
-	@description = "Automation ID: LPS-156543 | Test Summary: Verify if as an Administrator I am able to edit Builds"
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator I am able to edit Builds"
 	@priority = 5
 	test AdminCanEditBuild {
 		task ("Given that the user add a new build") {
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 
 			TestrayBuild.addBuildViaUI(
 				buildFieldName = ${buildName},
-				caseName = ${caseName},
+				caseList = ${caseName},
 				dropdownItem = "New Build",
 				productVersionOption = ${productVersion},
 				routine = ${routineName});
 		}
 
 		task ("When a build is edited") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Build 1");
-
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Edit");
+			TestrayManage.selectTableRowOption(
+				rowOption = "Edit",
+				tableEntry = ${buildName});
 
 			TestrayBuild.editBuild(
+				caseList = ${caseName},
 				description = "Description Edited",
-				fieldName = "Build 1 Edited",
 				gitHash = 12345,
-				productVersion = "1.2",
-				routine = "Routine 1");
+				newName = "Build 1 Edited",
+				productVersion = ${productVersion},
+				routine = ${routineName});
 		}
 
-		task ("Then the build should appear on the list with name edited") {
-			Testray.assertItemName(text = "Build 1 Edited");
+		task ("Then the build should appear on the list with edited name") {
+			Testray.viewTableEntryList(listEntry = "Build 1 Edited");
 		}
 	}
 
-	@description = "Automation ID: LPS-156546 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate build"
-	@priority = 5
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate build"
+	@priority = 3
 	test AdminCanNotAddDuplicateBuild {
 		task ("Given that the user add a new build") {
-			Testray.goToProjectPage(projectName = ${projectName});
+			JSONTestray.addBuild(
+				buildName = ${buildName},
+				productVersion = ${productVersion},
+				projectName = ${projectName},
+				routineName = ${routineName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayBuild.addBuildViaUI(
-				buildFieldName = ${buildName},
-				caseName = ${caseName},
-				dropdownItem = "New Build",
-				productVersionOption = ${productVersion},
-				routine = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 		}
 
 		task ("When add a build with duplicated name") {
 			TestrayBuild.addBuildViaUI(
 				buildFieldName = ${buildName},
-				caseName = ${caseName},
+				caseList = ${caseName},
 				dropdownItem = "New Build",
 				productVersionOption = "1.3",
 				routine = ${routineName});
@@ -325,30 +318,30 @@ definition {
 
 	}
 
-	@description = "Automation ID: LPS-156583 | Test Summary: Verify if as an Administrator I should be able to promote a build"
-	@priority = 5
+	@description = "Story ID: LPS-158466 | Test Summary: Verify if as an Administrator I should be able to promote a build"
+	@priority = 3
 	test AdminCanPromoteBuild {
 		task ("Given that the user add a new build") {
-			Testray.goToProjectPage(projectName = ${projectName});
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			TestrayRoutines.goToRoutine(routineName = ${routineName});
+			Testray.clickTableEntry(tableEntry = ${routineName});
 
 			TestrayBuild.addBuildViaUI(
 				buildFieldName = ${buildName},
-				caseName = ${caseName},
+				caseList = ${caseName},
 				dropdownItem = "New Build",
 				productVersionOption = ${productVersion},
 				routine = ${routineName});
 		}
 
 		task ("When a build is promoted") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Build 1");
-
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Promote");
+			TestrayManage.selectTableRowOption(
+				rowOption = "Promote",
+				tableEntry = ${buildName});
 		}
 
-		task ("Then the promoted build should appear on the list") {
-			TestrayBuild.verifyPromoteBuild();
+		task ("Then the icon of the promoted build should appear on the list") {
+			TestrayBuild.verifyPromotedBuild();
 		}
 	}
 

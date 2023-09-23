@@ -194,9 +194,7 @@ definition {
 			content = "Web Content Content",
 			fieldLabel = "Content");
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "Icon#ASTERISK");
 
@@ -219,6 +217,29 @@ definition {
 		UploadCommonFile(
 			locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT",
 			value1 = ${uploadFileName});
+	}
+
+	macro addFeaturedImageFromDocumentsAndMedia {
+		Panel.expandPanel(panel = "Featured Image");
+
+		Select(
+			locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_TYPE",
+			value1 = "From Documents and Media");
+
+		if (IsTextEqual(locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT", value1 = "")) {
+			Click(
+				key_title = "Select Image",
+				locator1 = "Button#ANY_TITLE");
+		}
+		else {
+			Click(
+				key_title = "Change Image",
+				locator1 = "Button#ANY_TITLE");
+		}
+
+		ItemSelector.selectDMImage(
+			dmFolderName = ${dmFolderName},
+			imageFileName = ${imageFileName});
 	}
 
 	macro addFeaturedImageFromURL {
@@ -255,9 +276,7 @@ definition {
 				fieldLabel = "Content");
 		}
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 
@@ -271,9 +290,7 @@ definition {
 			webContentContent = ${webContentContent},
 			webContentTitle = ${webContentTitle});
 
-		AssertClickNoError(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		PortletEntry.publish();
 
 		WaitForPageLoad();
 
@@ -301,9 +318,7 @@ definition {
 			webContentContent = ${webContentContent},
 			webContentTitle = ${webContentTitle});
 
-		AssertClickNoError(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		WaitForPageLoad();
 	}
@@ -314,6 +329,22 @@ definition {
 		Type(
 			locator1 = "WC#PRIORITY",
 			value1 = ${priority});
+	}
+
+	macro addReviewDate {
+		Panel.expandPanel(panel = "Schedule");
+
+		Uncheck(locator1 = "Checkbox#NEVER_REVIEW");
+
+		Type.clickAtType(
+			locator1 = "TextInput#REVIEW_DATE",
+			value1 = ${reviewDate});
+
+		if (isSet(reviewTime)) {
+			Type.clickAtType(
+				locator1 = "TextInput#REVIEW_DATE_TIME",
+				value1 = ${reviewTime});
+		}
 	}
 
 	macro addViaCKEditor {
@@ -354,7 +385,7 @@ definition {
 
 		ItemSelector.gotoItemSelectorViaCKEditor();
 
-		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		var key_imageFileName = ${dmDocumentTitle};
 		var key_imageFileName = StringUtil.replace(${dmDocumentTitle}, " ", "+");
@@ -433,7 +464,7 @@ definition {
 
 		Panel.expandPanel(panel = "Categorization");
 
-		Type(
+		Type.typeNotVisibleNoMouseOverNoError(
 			locator1 = "TextInput#ASSET_PRIORITY",
 			value1 = ${assetPriority});
 
@@ -533,15 +564,34 @@ definition {
 						navTab = ${navTab});
 				}
 				else if (isSet(imageFileName)) {
-					ItemSelector.selectDMImage(
-						dmFolderName = ${dmFolderName},
-						imageFileName = ${webContentImage},
-						navTab = ${navTab});
-				}
-				else {
-					ItemSelector.uploadFile(
-						navTab = ${navTab},
-						uploadFileName = ${webContentImage});
+					if (isSet(otherSiteName)) {
+						SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+						AssertClick(
+							key_breadcrumbName = "Sites and Libraries",
+							locator1 = "Breadcrumb#BREADCRUMB_ENTRY_LINK",
+							value1 = "Sites and Libraries");
+
+						AssertClick(
+							key_siteName = ${otherSiteName},
+							locator1 = "ItemSelector#SITE_SELECTOR",
+							value1 = ${otherSiteName});
+
+						SelectFrame(value1 = "relative=top");
+
+						ItemSelector.selectDMImage(
+							dmFolderName = ${dmFolderName},
+							imageFileName = ${webContentImage},
+							navTab = ${navTab});
+
+						SelectFrame(value1 = "relative=top");
+					}
+					else {
+						ItemSelector.selectDMImage(
+							dmFolderName = ${dmFolderName},
+							imageFileName = ${webContentImage},
+							navTab = ${navTab});
+					}
 				}
 			}
 			else if (${navTab} == "Web Content Images") {
@@ -620,6 +670,8 @@ definition {
 				Type.typeCodeMirrorEditorNoError(
 					locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
 					value1 = ${webContentRichText});
+
+				Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 			}
 			else {
 				CKEditor.addContentInWebContent(
@@ -706,12 +758,14 @@ definition {
 				}
 				else {
 					ItemSelector.uploadFile(
+						invalidFileValidation = ${invalidFileValidation},
 						navTab = ${dmNavTab},
 						uploadFileName = ${webContentUpload});
 				}
 			}
 			else if (${dmNavTab} == "User Personal Folder") {
 				ItemSelector.uploadFile(
+					invalidFileValidation = ${invalidFileValidation},
 					navTab = ${dmNavTab},
 					uploadFileName = ${webContentUpload});
 			}
@@ -894,7 +948,7 @@ definition {
 	macro copyCP {
 		WebContentNavigator.gotoEntryMenuItem(
 			entry = ${webContentTitle},
-			menuItem = "Copy");
+			menuItem = "Make a Copy");
 
 		Alert.viewSuccessMessage();
 	}
@@ -1118,7 +1172,9 @@ definition {
 			value1 = ${displayDate});
 
 		if (isSet(displayTime)) {
-			Type.clickAtType(
+			var displayTime = StringUtil.removeSpaces(${displayTime});
+
+			Type.sendKeys(
 				locator1 = "TextInput#DISPLAY_DATE_TIME",
 				value1 = ${displayTime});
 		}
@@ -1317,9 +1373,7 @@ definition {
 				fieldLabel = "Content");
 		}
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 	}
@@ -1362,7 +1416,7 @@ definition {
 				value1 = "Draft");
 		}
 		else {
-			PortletEntry.publish();
+			Button.clickPublish();
 		}
 	}
 
@@ -1497,12 +1551,14 @@ definition {
 		var displayDateMinute = selenium.getAttribute("//input[contains(@id,'displayDateMinute')]@value");
 
 		var displayDateMinuteFuture = ${displayDateMinute} + ${minuteIncrease};
-
+		var currentTime = "${displayDateHour}:${displayDateMinute} ${displayDateAmpm}";
 		var displayTime = "${displayDateHour}:${displayDateMinuteFuture} ${displayDateAmpm}";
 
 		WebContent.editDisplayDate(
 			displayDate = ${displayDate},
 			displayTime = ${displayTime});
+
+		echo("Web Content display time increased ${minuteIncrease} minutes from: ${currentTime} to: ${displayTime}");
 	}
 
 	macro moveArticlesToFolderCP {
@@ -1667,9 +1723,9 @@ definition {
 
 	macro removeDuplicatedFieldsGroup {
 		Click(
-			key_fieldName = "Field",
+			key_class = "delete-button",
 			key_index = ${index},
-			locator1 = "FormFields#FIELD_REMOVE");
+			locator1 = "Button#ANY_WITH_CLASS_AND_INDEX");
 	}
 
 	macro saveAsDraftViaAP {
@@ -2374,15 +2430,6 @@ definition {
 			value1 = ${webContentContent});
 	}
 
-	macro viewPublicationTimelineEntry {
-		Click(locator1 = "WCEditWebContent#TIMELINE_TAB");
-
-		AssertElementPresent(
-			key_index = ${index},
-			key_publicationName = ${publicationName},
-			locator1 = "WCEditWebContent#TIMELINE_ENTRY_SPECIFIC");
-	}
-
 	macro viewRepeatedField {
 		AssertElementPresent(locator1 = "xpath=(//div[@data-fieldname='${fieldName}'][1]//a[contains(@class,'ddm-repeatable-add-button')]/../div)");
 
@@ -2866,9 +2913,7 @@ definition {
 
 				var actual = TestUtils.getElementTextContent(element = "//label[normalize-space(text())='${webContentTextFieldLabel}']//..//textarea");
 
-				TestUtils.assertEquals(
-					actual = ${actual},
-					expected = ${webContentText});
+				StringUtil.assertEquals(${webContentText}, ${actual});
 			}
 			else {
 				AssertTextEquals.assertValue(

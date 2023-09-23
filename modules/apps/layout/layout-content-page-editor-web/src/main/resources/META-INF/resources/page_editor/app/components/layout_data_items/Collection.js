@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import React, {useContext, useEffect, useMemo, useState} from 'react';
@@ -30,13 +22,13 @@ import {
 import {useDisplayPagePreviewItem} from '../../contexts/DisplayPagePreviewItemContext';
 import {useDispatch, useSelector} from '../../contexts/StoreContext';
 import selectLanguageId from '../../selectors/selectLanguageId';
+import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
 import CollectionService from '../../services/CollectionService';
 import updateItemConfig from '../../thunks/updateItemConfig';
 import {collectionIsMapped} from '../../utils/collectionIsMapped';
 import getLayoutDataItemClassName from '../../utils/getLayoutDataItemClassName';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
-import isNullOrUndefined from '../../utils/isNullOrUndefined';
 import UnsafeHTML from '../UnsafeHTML';
 import CollectionPagination from './CollectionPagination';
 
@@ -291,7 +283,7 @@ const Collection = React.memo(
 
 		const [activePage, setActivePage] = useState(1);
 		const [collection, setCollection] = useState(emptyCollection);
-		const [loading, setLoading] = useState(false);
+		const [loading, setLoading] = useState(!!collectionConfig.collection);
 
 		const numberOfItems = getNumberOfItems(collection, collectionConfig);
 
@@ -311,7 +303,8 @@ const Collection = React.memo(
 		]);
 
 		const context = useContext(CollectionItemContext);
-		const {classNameId, classPK} = context.collectionItem || {};
+		const {classNameId, classPK, externalReferenceCode} =
+			context.collectionItem || {};
 
 		const displayPagePreviewItemData =
 			useDisplayPagePreviewItem()?.data ?? {};
@@ -319,6 +312,10 @@ const Collection = React.memo(
 		const itemClassNameId =
 			classNameId || displayPagePreviewItemData.classNameId;
 		const itemClassPK = classPK || displayPagePreviewItemData.classPK;
+		const itemExternalReferenceCode =
+			externalReferenceCode ||
+			displayPagePreviewItemData.externalReferenceCode;
+		const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
 
 		useEffect(() => {
 			if (
@@ -335,6 +332,7 @@ const Collection = React.memo(
 					collection: collectionConfig.collection,
 					displayAllItems: collectionConfig.displayAllItems,
 					displayAllPages: collectionConfig.displayAllPages,
+					externalReferenceCode: itemExternalReferenceCode,
 					languageId,
 					listItemStyle: collectionConfig.listItemStyle || null,
 					listStyle: collectionConfig.listStyle,
@@ -343,6 +341,7 @@ const Collection = React.memo(
 					numberOfPages: collectionConfig.numberOfPages,
 					onNetworkStatus: dispatch,
 					paginationType: collectionConfig.paginationType,
+					segmentsExperienceId,
 					templateKey: collectionConfig.templateKey || null,
 				})
 					.then((response) => {
@@ -410,7 +409,9 @@ const Collection = React.memo(
 			item.itemId,
 			itemClassNameId,
 			itemClassPK,
+			itemExternalReferenceCode,
 			languageId,
+			segmentsExperienceId,
 		]);
 
 		const selectedViewportSize = useSelector(

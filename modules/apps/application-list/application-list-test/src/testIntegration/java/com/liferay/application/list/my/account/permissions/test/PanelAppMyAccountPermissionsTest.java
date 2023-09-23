@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.application.list.my.account.permissions.test;
@@ -20,11 +11,11 @@ import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -35,9 +26,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.WebAppPool;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -48,6 +39,7 @@ import javax.portlet.Portlet;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,6 +60,14 @@ public class PanelAppMyAccountPermissionsTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@BeforeClass
+	public static void setUpClass() {
+		Bundle bundle = FrameworkUtil.getBundle(
+			PanelAppMyAccountPermissionsTest.class);
+
+		_bundleContext = bundle.getBundleContext();
+	}
 
 	@Before
 	public void setUp() {
@@ -96,7 +96,7 @@ public class PanelAppMyAccountPermissionsTest {
 
 		_testCompany = addCompany();
 
-		_registerTestPortlet(_testPortletId);
+		_registerTestPortlet();
 
 		long defaultCompanyId = TestPropsValues.getCompanyId();
 
@@ -108,7 +108,7 @@ public class PanelAppMyAccountPermissionsTest {
 		Assert.assertFalse(
 			_hasMyAccountPermission(testCompanyId, _testPortletId));
 
-		_registerTestPanelApp(_testPortletId);
+		_registerTestPanelApp();
 
 		Assert.assertTrue(
 			_hasMyAccountPermission(defaultCompanyId, _testPortletId));
@@ -120,9 +120,9 @@ public class PanelAppMyAccountPermissionsTest {
 	public void testPermissionsAddedForPanelAppFromNewCompany()
 		throws Exception {
 
-		_registerTestPortlet(_testPortletId);
+		_registerTestPortlet();
 
-		_registerTestPanelApp(_testPortletId);
+		_registerTestPanelApp();
 
 		_testCompany = addCompany();
 
@@ -134,9 +134,7 @@ public class PanelAppMyAccountPermissionsTest {
 	protected Company addCompany() throws Exception {
 		Company company = CompanyTestUtil.addCompany();
 
-		WebAppPool.put(
-			company.getCompanyId(), WebKeys.PORTLET_CATEGORY,
-			new PortletCategory());
+		PortalInstances.initCompany(company);
 
 		return company;
 	}
@@ -153,37 +151,30 @@ public class PanelAppMyAccountPermissionsTest {
 			ActionKeys.ACCESS_IN_CONTROL_PANEL);
 	}
 
-	private void _registerTestPanelApp(String portletId) {
+	private void _registerTestPanelApp() {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
-				PanelApp.class, new TestPanelApp(portletId),
+				PanelApp.class,
+				new TestPanelApp(
+					_portletLocalService.getPortletById(_testPortletId)),
 				HashMapDictionaryBuilder.put(
 					"panel.category.key", PanelCategoryKeys.USER_MY_ACCOUNT
 				).build()));
 	}
 
-	private void _registerTestPortlet(String portletId) throws Exception {
+	private void _registerTestPortlet() {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
 				Portlet.class, new TestPortlet(),
 				HashMapDictionaryBuilder.put(
-					"javax.portlet.name", portletId
+					"javax.portlet.name", _testPortletId
 				).build()));
 	}
 
-	private static final BundleContext _bundleContext;
+	private static BundleContext _bundleContext;
 
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			PanelAppMyAccountPermissionsTest.class);
-
-		if (bundle == null) {
-			_bundleContext = null;
-		}
-		else {
-			_bundleContext = bundle.getBundleContext();
-		}
-	}
+	@Inject
+	private PortletLocalService _portletLocalService;
 
 	private final List<ServiceRegistration<?>> _serviceRegistrations =
 		new CopyOnWriteArrayList<>();
@@ -193,21 +184,26 @@ public class PanelAppMyAccountPermissionsTest {
 
 	private String _testPortletId;
 
-	private class TestPanelApp extends BasePanelApp {
+	private static class TestPanelApp extends BasePanelApp {
 
-		public TestPanelApp(String portletId) {
-			_portletId = portletId;
+		public TestPanelApp(com.liferay.portal.kernel.model.Portlet portlet) {
+			_portlet = portlet;
+		}
+
+		@Override
+		public com.liferay.portal.kernel.model.Portlet getPortlet() {
+			return _portlet;
 		}
 
 		public String getPortletId() {
-			return _portletId;
+			return _portlet.getPortletId();
 		}
 
-		private final String _portletId;
+		private final com.liferay.portal.kernel.model.Portlet _portlet;
 
 	}
 
-	private class TestPortlet extends GenericPortlet {
+	private static class TestPortlet extends GenericPortlet {
 	}
 
 }

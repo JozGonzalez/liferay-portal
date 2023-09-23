@@ -1,0 +1,9 @@
+definition {
+
+	macro assertGraphValue {
+		AssertElementPresent(
+			locator1 = "RaylifeAPPolicies#TOTAL_ACTIVE",
+			value1 = ${number});
+	}
+
+}

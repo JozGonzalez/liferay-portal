@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -257,6 +248,12 @@ AUI.add(
 					return shortDurationEventIntersecting;
 				},
 
+				_onColorChange(event) {
+					const instance = this;
+
+					instance._uiSetColor(event.newVal);
+				},
+
 				_onLoadingChange(event) {
 					const instance = this;
 
@@ -273,6 +270,16 @@ AUI.add(
 					const instance = this;
 
 					instance._uiSetStatus(event.newVal);
+				},
+
+				_uiSetColor(value) {
+					const instance = this;
+					const node = instance.get('node');
+					const opacity = instance._isPastEvent() ? '26' : 'B3';
+
+					node.setStyles({
+						backgroundColor: value + opacity,
+					});
 				},
 
 				_uiSetEndDate(val) {
@@ -354,6 +361,7 @@ AUI.add(
 					instance._uiSetStartDate(instance.get('startDate'));
 					instance._uiSetStatus(instance.get('status'));
 
+					instance.on('colorChange', instance._onColorChange);
 					instance.on('loadingChange', instance._onLoadingChange);
 					instance.on('startDateChange', instance._onStartDateChange);
 					instance.on('statusChange', instance._onStatusChange);
@@ -696,7 +704,7 @@ AUI.add(
 						date = DateMath.add(
 							date,
 							DateMath.DAY,
-							maxDaysDisplayed
+							maxDaysDisplayed - 1
 						);
 
 						date = DateMath.subtract(date, DateMath.MINUTES, 1);

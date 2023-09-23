@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.model.impl;
@@ -121,20 +112,20 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
+	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long CLASSPK_COLUMN_BITMASK = 2L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMMERCEPAYMENTMETHODGROUPRELID_COLUMN_BITMASK =
-		1L;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
-	 */
-	@Deprecated
-	public static final long CLASSNAMEID_COLUMN_BITMASK = 2L;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
-	 */
-	@Deprecated
-	public static final long CLASSPK_COLUMN_BITMASK = 4L;
+		4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
@@ -292,7 +283,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 			attributeGetterFunctions.put(
 				"classPK", CommercePaymentMethodGroupRelQualifier::getClassPK);
 			attributeGetterFunctions.put(
-				"CommercePaymentMethodGroupRelId",
+				"commercePaymentMethodGroupRelId",
 				CommercePaymentMethodGroupRelQualifier::
 					getCommercePaymentMethodGroupRelId);
 
@@ -354,7 +345,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
 					CommercePaymentMethodGroupRelQualifier::setClassPK);
 			attributeSetterBiConsumers.put(
-				"CommercePaymentMethodGroupRelId",
+				"commercePaymentMethodGroupRelId",
 				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
 					CommercePaymentMethodGroupRelQualifier::
 						setCommercePaymentMethodGroupRelId);
@@ -572,18 +563,18 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	@JSON
 	@Override
 	public long getCommercePaymentMethodGroupRelId() {
-		return _CommercePaymentMethodGroupRelId;
+		return _commercePaymentMethodGroupRelId;
 	}
 
 	@Override
 	public void setCommercePaymentMethodGroupRelId(
-		long CommercePaymentMethodGroupRelId) {
+		long commercePaymentMethodGroupRelId) {
 
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_CommercePaymentMethodGroupRelId = CommercePaymentMethodGroupRelId;
+		_commercePaymentMethodGroupRelId = commercePaymentMethodGroupRelId;
 	}
 
 	/**
@@ -846,7 +837,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 		commercePaymentMethodGroupRelQualifierCacheModel.classPK = getClassPK();
 
 		commercePaymentMethodGroupRelQualifierCacheModel.
-			CommercePaymentMethodGroupRelId =
+			commercePaymentMethodGroupRelId =
 				getCommercePaymentMethodGroupRelId();
 
 		return commercePaymentMethodGroupRelQualifierCacheModel;
@@ -925,7 +916,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	private boolean _setModifiedDate;
 	private long _classNameId;
 	private long _classPK;
-	private long _CommercePaymentMethodGroupRelId;
+	private long _commercePaymentMethodGroupRelId;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -969,7 +960,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 		_columnOriginalValues.put("classNameId", _classNameId);
 		_columnOriginalValues.put("classPK", _classPK);
 		_columnOriginalValues.put(
-			"CPaymentMethodGroupRelId", _CommercePaymentMethodGroupRelId);
+			"CPaymentMethodGroupRelId", _commercePaymentMethodGroupRelId);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -981,7 +972,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 			"CPMethodGroupRelQualifierId",
 			"commercePaymentMethodGroupRelQualifierId");
 		attributeNames.put(
-			"CPaymentMethodGroupRelId", "CommercePaymentMethodGroupRelId");
+			"CPaymentMethodGroupRelId", "commercePaymentMethodGroupRelId");
 
 		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
