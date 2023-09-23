@@ -4,7 +4,7 @@
 		"gulp": "4.0.2",
 		"liferay-font-awesome": "3.5.1",
 		"liferay-frontend-css-common": "6.0.4",
-		"liferay-frontend-theme-styled": "6.0.10",
+		"liferay-frontend-theme-styled": "6.0.65",
 		"liferay-frontend-theme-unstyled": "6.0.12",
 		"liferay-theme-tasks": "^11.2.2"
 	},
