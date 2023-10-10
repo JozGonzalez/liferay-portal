@@ -23,7 +23,7 @@
 	"main": "js/index.js",
 	"name": "@liferay/layout-js-components-web",
 	"optionalDependencies": {
-		"fsevents": "^1.2.7"
+		"fsevents": "^2.2.1"
 	},
 	"scripts": {
 		"build": "liferay-npm-scripts build",
