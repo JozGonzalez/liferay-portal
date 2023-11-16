@@ -6,7 +6,7 @@
 		"babel-cli": "6.26.0",
 		"babel-loader": "7.1.5",
 		"babel-preset-env": "1.7.0",
-		"copy-webpack-plugin": "4.6.0",
+		"copy-webpack-plugin": "5.0.5",
 		"liferay-npm-build-support": "^2.18.2",
 		"liferay-npm-bundler": "^2.18.2",
 		"webpack": "4.29.6",
