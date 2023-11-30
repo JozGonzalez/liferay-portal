@@ -6,12 +6,12 @@
 		"babel-cli": "6.26.0",
 		"babel-loader": "7.1.5",
 		"babel-preset-env": "1.7.0",
-		"copy-webpack-plugin": "4.6.0",
+		"copy-webpack-plugin": "7.0.0",
 		"liferay-npm-build-support": "^2.18.2",
 		"liferay-npm-bundler": "^2.18.2",
-		"webpack": "4.29.6",
+		"webpack": "5.1.1",
 		"webpack-cli": "3.3.0",
-		"webpack-dev-server": "3.2.1"
+		"webpack-dev-server": "4.8.0"
 	},
 	"main": "index.js",
 	"name": "js-widget",
