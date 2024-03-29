@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
-		"gulp": "^3.9.0"
+		"gulp": "^5.0.0"
 	},
 	"name": "sample",
 	"version": "1.0.0"
