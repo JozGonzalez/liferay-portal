@@ -50,7 +50,7 @@
 		"rollup-plugin-commonjs": "^8.0.2",
 		"rollup-plugin-node-resolve": "3.0.0",
 		"shelljs": "0.7.7",
-		"sorcery": "0.10.0",
+		"sorcery": "1.0.0",
 		"ts-node": "~2.0.0",
 		"tslint": "5.4.0",
 		"typescript": "2.4.2",
