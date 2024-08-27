@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"webpack": "5.70.0"
+		"webpack": "5.94.0"
 	},
 	"main": "index.js",
 	"name": "frontend-js-svg4everybody-web",
