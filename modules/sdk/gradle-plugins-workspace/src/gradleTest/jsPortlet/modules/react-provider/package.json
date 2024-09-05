@@ -4,12 +4,12 @@
 		"prop-types": "15.6.2",
 		"react": "16.8.6",
 		"react-dom": "16.8.6",
-		"react-jsx-highcharts": "3.5.0"
+		"react-jsx-highcharts": "4.2.0"
 	},
 	"description": "React Provider",
 	"devDependencies": {
 		"liferay-npm-build-support": "^2.8.0",
-		"liferay-npm-bundler": "^2.8.0"
+		"liferay-npm-bundler": "^2.27.0"
 	},
 	"name": "react-provider",
 	"scripts": {
