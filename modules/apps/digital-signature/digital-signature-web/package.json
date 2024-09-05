@@ -17,7 +17,7 @@
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
 		"date-fns": "2.29.3",
-		"formik": "2.1.4",
+		"formik": "2.2.9",
 		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"history": "4.9.0",
