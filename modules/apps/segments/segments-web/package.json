@@ -16,7 +16,7 @@
 		"@liferay/layout-js-components-web": "*",
 		"classnames": "2.3.1",
 		"date-fns": "2.29.3",
-		"formik": "2.1.4",
+		"formik": "2.2.9",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0",
