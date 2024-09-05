@@ -7,7 +7,7 @@
 		"@clayui/layout": "3.93.0",
 		"@clayui/progress-bar": "3.65.0",
 		"@liferay/frontend-js-react-web": "*",
-		"formik": "2.1.4",
+		"formik": "2.2.9",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0"
