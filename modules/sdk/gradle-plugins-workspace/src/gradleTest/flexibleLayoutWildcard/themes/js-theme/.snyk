@@ -1,0 +1,10 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.1
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:lodash:20180130':
+    - liferay-theme-tasks > gulp-replace-task > applause > lodash:
+        patched: '2024-09-10T21:01:27.114Z'
+        id: 'npm:lodash:20180130'
+        path: liferay-theme-tasks > gulp-replace-task > applause > lodash
