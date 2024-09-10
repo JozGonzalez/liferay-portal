@@ -6,7 +6,7 @@
 		"@clayui/icon": "3.56.0",
 		"@clayui/layout": "3.93.0",
 		"@clayui/modal": "3.104.0",
-		"graphiql": "1.4.7",
+		"graphiql": "1.8.5",
 		"graphql": "^15.0.0",
 		"html-webpack-plugin": "5.5.0",
 		"mini-css-extract-plugin": "2.6.1",
