@@ -16,7 +16,7 @@
 		"zone.js": "0.8.12"
 	},
 	"devDependencies": {
-		"@angular/cli": "^1.6.7",
+		"@angular/cli": "^6.0.0",
 		"@angular/compiler-cli": "^5.0.0",
 		"@compodoc/compodoc": "1.0.0-beta.10",
 		"@types/bootstrap": "^3.3.33",
@@ -44,7 +44,7 @@
 		"karma-junit-reporter": "1.2.0",
 		"karma-remap-istanbul": "^0.2.1",
 		"karma-spec-reporter": "0.0.31",
-		"liferay-npm-bundler": "2.7.0",
+		"liferay-npm-bundler": "2.14.0",
 		"protractor": "~5.1.0",
 		"rollup": "0.41.6",
 		"rollup-plugin-commonjs": "^8.0.2",
