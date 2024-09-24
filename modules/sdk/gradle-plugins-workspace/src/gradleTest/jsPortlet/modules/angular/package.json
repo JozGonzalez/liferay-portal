@@ -46,7 +46,7 @@
 		"karma-spec-reporter": "0.0.31",
 		"liferay-npm-bundler": "2.7.0",
 		"protractor": "~5.1.0",
-		"rollup": "0.41.6",
+		"rollup": "3.29.5",
 		"rollup-plugin-commonjs": "^8.0.2",
 		"rollup-plugin-node-resolve": "3.0.0",
 		"shelljs": "0.7.7",
