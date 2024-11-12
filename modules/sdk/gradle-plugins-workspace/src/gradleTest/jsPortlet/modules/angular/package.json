@@ -16,7 +16,7 @@
 		"zone.js": "0.8.12"
 	},
 	"devDependencies": {
-		"@angular/cli": "^1.6.7",
+		"@angular/cli": "^6.0.0",
 		"@angular/compiler-cli": "^5.0.0",
 		"@compodoc/compodoc": "1.0.0-beta.10",
 		"@types/bootstrap": "^3.3.33",
@@ -31,7 +31,7 @@
 		"del": "^3.0.0",
 		"gulp": "^3.9.1",
 		"gulp-flatten": "^0.3.1",
-		"gulp-sass": "^3.1.0",
+		"gulp-sass": "^5.0.0",
 		"inline-ng2-resources": "^1.1.0",
 		"jasmine-core": "~2.6.2",
 		"jasmine-spec-reporter": "~3.2.0",
@@ -55,7 +55,7 @@
 		"tslint": "5.4.0",
 		"typescript": "2.4.2",
 		"webpack": "2.6.1",
-		"yargs": "8.0.1"
+		"yargs": "13.3.0"
 	},
 	"main": "lib/angular-loader.js",
 	"name": "angular",
