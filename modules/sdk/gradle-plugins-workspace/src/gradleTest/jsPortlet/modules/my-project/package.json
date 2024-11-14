@@ -13,8 +13,8 @@
 		"liferay-npm-build-support": "^2.11.0",
 		"liferay-npm-bundler": "^2.11.0",
 		"webpack": "4.29.6",
-		"webpack-cli": "3.3.0",
-		"webpack-dev-server": "3.2.1"
+		"webpack-cli": "4.0.0",
+		"webpack-dev-server": "4.6.0"
 	},
 	"main": "index.js",
 	"name": "my-project",
