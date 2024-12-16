@@ -1,11 +1,11 @@
 {
 	"dependencies": {
 		"compass-mixins": "0.12.10",
-		"gulp": "4.0.2",
+		"gulp": "5.0.0",
 		"liferay-frontend-css-common": "6.0.4",
 		"liferay-frontend-theme-styled": "*",
 		"liferay-frontend-theme-unstyled": "*",
-		"liferay-theme-tasks": "^11.4.0"
+		"liferay-theme-tasks": "^11.5.5"
 	},
 	"keywords": [
 		"liferay-theme"
